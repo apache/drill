@@ -108,27 +108,39 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     private boolean first = true;
 
+    private boolean done = false;
+
     // Generator mapping for the build side
+    // Generator mapping for the build side : scalar
     private static final GeneratorMapping PROJECT_BUILD = GeneratorMapping.create("doSetup"/* setup method */,
                                                                                   "projectBuildRecord" /* eval method */,
                                                                                   null /* reset */, null /* cleanup */);
+    // Generator mapping for the build side : constant
+    private static final GeneratorMapping PROJECT_BUILD_CONSTANT = GeneratorMapping.create("doSetup"/* setup method */,
+                                                                                  "doSetup" /* eval method */,
+                                                                                   null /* reset */, null /* cleanup */);
 
-    // Generator mapping for the probe side
+    // Generator mapping for the probe side : scalar
     private static final GeneratorMapping PROJECT_PROBE = GeneratorMapping.create("doSetup" /* setup method */,
                                                                                   "projectProbeRecord" /* eval method */,
                                                                                   null /* reset */, null /* cleanup */);
+    // Generator mapping for the probe side : constant
+    private static final GeneratorMapping PROJECT_PROBE_CONSTANT = GeneratorMapping.create("doSetup" /* setup method */,
+                                                                                  "doSetup" /* eval method */,
+                                                                                  null /* reset */, null /* cleanup */);
+
 
     // Mapping set for the build side
     private final MappingSet projectBuildMapping = new MappingSet("buildIndex" /* read index */, "outIndex" /* write index */,
                                                                   "buildBatch" /* read container */,
                                                                   "outgoing" /* write container */,
-                                                                  PROJECT_BUILD, PROJECT_BUILD);
+                                                                  PROJECT_BUILD_CONSTANT, PROJECT_BUILD);
 
     // Mapping set for the probe side
     private final MappingSet projectProbeMapping = new MappingSet("probeIndex" /* read index */, "outIndex" /* write index */,
                                                                   "probeBatch" /* read container */,
                                                                   "outgoing" /* write container */,
-                                                                  PROJECT_PROBE, PROJECT_PROBE);
+                                                                  PROJECT_PROBE_CONSTANT, PROJECT_PROBE);
 
     // indicates if we have previously returned an output batch
     boolean firstOutputBatch = true;
@@ -160,6 +172,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     @Override
     public IterOutcome innerNext() {
+        if (done) {
+          return IterOutcome.NONE;
+        }
         try {
             /* If we are here for the first time, execute the build phase of the
              * hash join and setup the run time generated class for the probe side
@@ -227,6 +242,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                     for (VectorWrapper<?> wrapper : left) {
                       wrapper.getValueVector().clear();
                     }
+                    left.kill(true);
                     leftUpstream = next(HashJoinHelper.LEFT_INPUT, left);
                     while (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
                       for (VectorWrapper<?> wrapper : left) {
@@ -238,11 +254,14 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             }
 
             // No more output records, clean up and return
+            done = true;
+            if (first) {
+              return IterOutcome.OK_NEW_SCHEMA;
+            }
             return IterOutcome.NONE;
-
         } catch (ClassTransformationException | SchemaChangeException | IOException e) {
             context.fail(e);
-            killIncoming();
+            killIncoming(false);
             return IterOutcome.STOP;
         }
     }
@@ -325,7 +344,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                     // For every record in the build batch , hash the key columns
                     for (int i = 0; i < currentRecordCount; i++) {
 
-                        HashTable.PutStatus status = hashTable.put(i, htIndex);
+                        HashTable.PutStatus status = hashTable.put(i, htIndex, 1 /* retry count */);
 
                         if (status != HashTable.PutStatus.PUT_FAILED) {
                             /* Use the global index returned by the hash table, to store
@@ -465,9 +484,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
 
     @Override
-    public void killIncoming() {
-        this.left.kill();
-        this.right.kill();
+    public void killIncoming(boolean sendUpstream) {
+        this.left.kill(sendUpstream);
+        this.right.kill(sendUpstream);
     }
 
     @Override

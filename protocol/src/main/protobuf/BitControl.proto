@@ -19,15 +19,16 @@ enum RpcType {
   REQ_INIATILIZE_FRAGMENT = 3; // Returns Handle
     
   REQ_CANCEL_FRAGMENT = 6; // send a cancellation message for a fragment, returns Ack
-  REQ_FRAGMENT_STATUS = 7; // send a fragment status, return Ack
-  REQ_BIT_STATUS = 8; // get bit status.
-  REQ_QUERY_STATUS = 9;
+  REQ_RECEIVER_FINISHED = 7;
+  REQ_FRAGMENT_STATUS = 8; // send a fragment status, return Ack
+  REQ_BIT_STATUS = 9; // get bit status.
+  REQ_QUERY_STATUS = 10;
       
     // bit responses
-  RESP_FRAGMENT_HANDLE = 10;
-  RESP_FRAGMENT_STATUS = 11;
-  RESP_BIT_STATUS = 12;
-  RESP_QUERY_STATUS = 13;
+  RESP_FRAGMENT_HANDLE = 11;
+  RESP_FRAGMENT_STATUS = 12;
+  RESP_BIT_STATUS = 13;
+  RESP_QUERY_STATUS = 14;
 }
 
 
@@ -68,4 +69,9 @@ message WorkQueueStatus{
   optional DrillbitEndpoint endpoint = 1;
   optional int32 queue_length = 2;
   optional int64 report_time = 3;
+}
+
+message FinishedReceiver {
+  optional FragmentHandle receiver = 1;
+  optional FragmentHandle sender = 2;
 }

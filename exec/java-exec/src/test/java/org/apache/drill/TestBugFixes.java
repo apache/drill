@@ -48,4 +48,16 @@ public class TestBugFixes extends BaseTestQuery {
   public void DRILL883() throws Exception {
     test("select n1.n_regionkey from cp.`tpch/nation.parquet` n1, (select n_nationkey from cp.`tpch/nation.parquet`) as n2 where n1.n_nationkey = n2.n_nationkey");
   }
+
+  @Test
+  public void DRILL1061() throws Exception {
+    String query = "select foo.mycol.x as COMPLEX_COL from (select convert_from('{ x : [1,2], y : 100 }', 'JSON') as mycol from cp.`tpch/nation.parquet`) as foo(mycol) limit 1";
+    test(query);
+  }
+
+  @Test
+  public void DRILL1126() throws Exception {
+    String query = "select sum(cast(employee_id as decimal(38, 18))), avg(cast(employee_id as decimal(38, 18))) from cp.`employee.json` group by (department_id)";
+    test(query);
+  }
 }

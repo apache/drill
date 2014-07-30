@@ -227,7 +227,7 @@ public class DateTypeFunctions {
 
     }
 
-    @FunctionTemplate(names = {"current_timestamp", "now"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"current_timestamp", "now", "statement_timestamp", "transaction_timestamp"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class CurrentTimeStamp implements DrillSimpleFunc {
         @Workspace long queryStartDate;
         @Workspace int timezoneIndex;
@@ -370,6 +370,105 @@ public class DateTypeFunctions {
             if (1 == 1) {
                 throw new UnsupportedOperationException("date_part function should be rewritten as extract() functions");
             }
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class AgeTimeStampFunction implements DrillSimpleFunc {
+        @Param TimeStampHolder left;
+        @Param TimeStampHolder right;
+        @Output IntervalHolder out;
+
+        public void setup(RecordBatch incoming) {
+        }
+
+        public void eval() {
+            long diff = left.value - right.value;
+            long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
+            out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
+            out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
+            out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class AgeTimeStamp2Function implements DrillSimpleFunc {
+        @Param TimeStampHolder right;
+        @Workspace long queryStartDate;
+        @Output IntervalHolder out;
+
+        public void setup(RecordBatch incoming) {
+            int timeZoneIndex = incoming.getContext().getRootFragmentTimeZone();
+            org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime(), timeZone);
+            queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
+        }
+
+        public void eval() {
+            long diff = queryStartDate - right.value;
+            long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
+            out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
+            out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
+            out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class AgeDateFunction implements DrillSimpleFunc {
+        @Param DateHolder left;
+        @Param DateHolder right;
+        @Output IntervalHolder out;
+
+        public void setup(RecordBatch incoming) {
+        }
+
+        public void eval() {
+          long diff = left.value - right.value;
+          long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
+          out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
+          out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
+          out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class AgeDate2Function implements DrillSimpleFunc {
+        @Param DateHolder right;
+        @Workspace long queryStartDate;
+        @Output IntervalHolder out;
+
+        public void setup(RecordBatch incoming) {
+            int timeZoneIndex = incoming.getContext().getRootFragmentTimeZone();
+            org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime(), timeZone);
+            queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
+        }
+
+        public void eval() {
+            long diff = queryStartDate - right.value;
+            long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
+            out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
+            out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
+            out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        }
+    }
+
+    @FunctionTemplate(name = "castTIME", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class CastTimeStampToTime implements DrillSimpleFunc {
+        @Param TimeStampHolder in;
+        @Output TimeHolder out;
+
+        @Override
+        public void setup(RecordBatch incoming) {
+        }
+
+        @Override
+        public void eval() {
+            out.value = (int) (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         }
     }
 }

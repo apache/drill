@@ -23,7 +23,6 @@ import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -37,9 +36,7 @@ import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
@@ -77,6 +74,7 @@ public class TestStringFunctions extends ExecTest {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+      bitContext.getConfig(); result = c;
     }};
 
     String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
@@ -243,4 +241,9 @@ public class TestStringFunctions extends ExecTest {
     runTest(bitContext, connection, expected, "functions/string/testUpper.json");
   }
 
+  @Test
+  public void testNewStringFuncs(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable{
+    Object [] expected = new Object[] {97, 65, -32, "A", "btrim", "Peace Peace Peace ", "हकुना मताता हकुना मताता ", "katcit", "\u00C3\u00A2pple", "नदम"};
+    runTest(bitContext, connection, expected, "functions/string/testStringFuncs.json");
+  }
 }

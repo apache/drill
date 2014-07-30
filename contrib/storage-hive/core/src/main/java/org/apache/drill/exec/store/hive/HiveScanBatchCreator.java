@@ -57,14 +57,15 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
       for (InputSplit split : splits) {
         readers.add(new HiveRecordReader(table,
             (hasPartitions ? partitions.get(i++) : null),
-            split, config.getColumns(), context));
+            split, config.getColumns(), context, config.getHiveReadEntry().hiveConfigOverride));
       }
     //}
 
     // If there are no readers created (which is possible when the table is empty), create an empty RecordReader to
     // output the schema
     if (readers.size() == 0) {
-      readers.add(new HiveRecordReader(table, null, null, config.getColumns(), context));
+      readers.add(new HiveRecordReader(table, null, null, config.getColumns(), context,
+          config.getHiveReadEntry().hiveConfigOverride));
     }
 
     return new ScanBatch(config, context, readers.iterator());

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import static org.apache.drill.exec.store.parquet.TestFileGenerator.intVals;
 import static org.apache.drill.exec.store.parquet.TestFileGenerator.populateFieldInfoMap;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -46,16 +45,17 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.CachedSingleFileSystem;
 import org.apache.drill.exec.store.TestOutputMutator;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -127,7 +127,15 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     readEntries = "\"/tmp/lineitem_null_dict.parquet\"";
 
     String planText = Files.toString(FileUtils.getResourceAsFile("/parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
-    testParquetFullEngineLocalText(planText, fileName, 1, 1, 100000, false);
+    //testParquetFullEngineLocalText(planText, fileName, 1, 1, 100000, false);
+
+    testFull(QueryType.SQL, "select L_RECEIPTDATE from dfs.`/tmp/lineitem_null_dict.parquet`", "", 1, 1, 100000, false);
+  }
+
+  @Ignore
+  @Test
+  public void testDictionaryError_419() throws Exception {
+    testFull(QueryType.SQL, "select c_address from dfs.`/tmp/customer_snappyimpala_drill_419.parquet`", "", 1, 1, 150000, false);
   }
 
   @Test
@@ -265,7 +273,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   @Test
   public void testMultipleRowGroups() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(3, 3000, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(2, 300, DEFAULT_BYTES_PER_PAGE, fields);
     populateFieldInfoMap(props);
     testParquetFullEngineEventBased(true, "/parquet/parquet_scan_screen.json", "/tmp/test.parquet", 1, props);
   }
@@ -277,7 +285,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   @Test
   public void testNullableColumns() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(1, 3000000, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(1, 1500000, DEFAULT_BYTES_PER_PAGE, fields);
     Object[] boolVals = {true, null, null};
     props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals, TypeProtos.MinorType.BIT, props));
     testParquetFullEngineEventBased(false, "/parquet/parquet_nullable.json", "/tmp/nullable_test.parquet", 1, props);
@@ -289,23 +297,38 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
    * Tests the reading of nullable var length columns, runs the tests twice, once on a file that has
    * a converted type of UTF-8 to make sure it can be read
    */
-  public void testNullableColumnsVarLen() throws Exception {
+public void testNullableColumnsVarLen() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(1, 3000000, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(1, 300000, DEFAULT_BYTES_PER_PAGE, fields);
     byte[] val = {'b'};
     byte[] val2 = {'b', '2'};
     byte[] val3 = {'b', '3'};
     byte[] val4 = { 'l','o','n','g','e','r',' ','s','t','r','i','n','g'};
-    Object[] boolVals = { val, val2, val4};
-    props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals, TypeProtos.MinorType.BIT, props));
+    Object[] byteArrayVals = { val, val2, val4};
+    props.fields.put("a", new FieldInfo("boolean", "a", 1, byteArrayVals, TypeProtos.MinorType.BIT, props));
     testParquetFullEngineEventBased(false, "/parquet/parquet_nullable_varlen.json", "/tmp/nullable_varlen.parquet", 1, props);
-    fields.clear();
+    HashMap<String, FieldInfo> fields2 = new HashMap<>();
     // pass strings instead of byte arrays
-    Object[] boolVals2 = { new org.apache.hadoop.io.Text("b"), new org.apache.hadoop.io.Text("b2"),
+    Object[] textVals = { new org.apache.hadoop.io.Text("b"), new org.apache.hadoop.io.Text("b2"),
         new org.apache.hadoop.io.Text("b3")};
-    props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals2, TypeProtos.MinorType.BIT, props));
+    ParquetTestProperties props2 = new ParquetTestProperties(1, 30000, DEFAULT_BYTES_PER_PAGE, fields2);
+    props2.fields.put("a", new FieldInfo("boolean", "a", 1, textVals, TypeProtos.MinorType.BIT, props2));
     testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",
-        "\"/tmp/varLen.parquet/a\"", "unused", 1, props);
+        "\"/tmp/varLen.parquet/a\"", "unused", 1, props2);
+
+  }
+
+  @Ignore
+  @Test
+  public void testFileWithNulls() throws Exception {
+    HashMap<String, FieldInfo> fields3 = new HashMap<>();
+    ParquetTestProperties props3 = new ParquetTestProperties(1, 3000, DEFAULT_BYTES_PER_PAGE, fields3);
+    // actually include null values
+    Object[] valuesWithNull = {new Text(""), new Text("longer string"), null};
+    props3.fields.put("a", new FieldInfo("boolean", "a", 1, valuesWithNull, TypeProtos.MinorType.BIT, props3));
+    testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",
+        "\"/tmp/nullable_with_nulls.parquet\"", "unused", 1, props3);
+
   }
 
   @Ignore
@@ -319,7 +342,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     props.fields.put("n_regionkey", null);
     props.fields.put("n_comment", null);
     testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json",
-        "\"/tmp/nation_dictionary_fail.parquet\"", "unused", 1, props, true);
+        "\"/tmp/nation_dictionary_fail.parquet\"", "unused", 1, props, QueryType.LOGICAL);
 
     fields = new HashMap<>();
     props = new ParquetTestProperties(1, 5, DEFAULT_BYTES_PER_PAGE, fields);
@@ -332,7 +355,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     props.fields.put("height", null);
     props.fields.put("hair_thickness", null);
     testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json",
-        "\"/tmp/employees_5_16_14.parquet\"", "unused", 1, props, true);
+        "\"/tmp/employees_5_16_14.parquet\"", "unused", 1, props, QueryType.LOGICAL);
   }
 
   @Test
@@ -352,25 +375,36 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
         "/tmp/test.parquet", i, props);
   }
 
+  @Ignore
   @Test
   public void testReadError_Drill_901() throws Exception {
-    // select cast( L_COMMENT as varchar) from  dfs.`/tmp/drilltest/employee_parquet`
+    // select cast( L_COMMENT as varchar) from  dfs_test.`/tmp/drilltest/employee_parquet`
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(1, 120350, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(1, 60175, DEFAULT_BYTES_PER_PAGE, fields);
     testParquetFullEngineEventBased(false, false, "/parquet/par_writer_test.json", null,
-        "unused, no file is generated", 1, props, false);
+        "unused, no file is generated", 1, props, QueryType.PHYSICAL);
   }
 
+  @Ignore
+  @Test
+  public void testReadError_Drill_839() throws Exception {
+    // select cast( L_COMMENT as varchar) from  dfs.`/tmp/drilltest/employee_parquet`
+    HashMap<String, FieldInfo> fields = new HashMap<>();
+    ParquetTestProperties props = new ParquetTestProperties(1, 150000, DEFAULT_BYTES_PER_PAGE, fields);
+    String readEntries = "\"/tmp/customer_nonull.parquet\"";
+    testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
+        "unused, no file is generated", 1, props, QueryType.LOGICAL);
+  }
 
   @Ignore
   @Test
   public void testReadBug_Drill_418() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(5, 300000, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(1, 150000, DEFAULT_BYTES_PER_PAGE, fields);
     TestFileGenerator.populateDrill_418_fields(props);
     String readEntries = "\"/tmp/customer.plain.parquet\"";
     testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
-        "unused, no file is generated", 1, props, true);
+        "unused, no file is generated", 1, props, QueryType.LOGICAL);
   }
 
   // requires binary file generated by pig from TPCH data, also have to disable assert where data is coming in
@@ -378,35 +412,35 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   @Test
   public void testMultipleRowGroupsAndReadsPigError() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(5, 300000, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(1, 1500000, DEFAULT_BYTES_PER_PAGE, fields);
     TestFileGenerator.populatePigTPCHCustomerFields(props);
     String readEntries = "\"/tmp/tpc-h/customer\"";
     testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
-        "unused, no file is generated", 1, props, true);
+        "unused, no file is generated", 1, props, QueryType.LOGICAL);
 
     fields = new HashMap();
-    props = new ParquetTestProperties(5, 300000, DEFAULT_BYTES_PER_PAGE, fields);
+    props = new ParquetTestProperties(1, 100000, DEFAULT_BYTES_PER_PAGE, fields);
     TestFileGenerator.populatePigTPCHSupplierFields(props);
     readEntries = "\"/tmp/tpc-h/supplier\"";
     testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
-        "unused, no file is generated", 1, props, true);
+        "unused, no file is generated", 1, props, QueryType.LOGICAL);
   }
 
   @Ignore
   @Test
   public void drill_958bugTest() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(5, 300000, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(1, 2880404, DEFAULT_BYTES_PER_PAGE, fields);
     TestFileGenerator.populatePigTPCHCustomerFields(props);
     String readEntries = "\"/tmp/store_sales\"";
     testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
-        "unused, no file is generated", 1, props, true);
+        "unused, no file is generated", 1, props, QueryType.LOGICAL);
   }
 
   @Test
   public void testMultipleRowGroupsEvent() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(4, 3000, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(2, 300, DEFAULT_BYTES_PER_PAGE, fields);
     populateFieldInfoMap(props);
     testParquetFullEngineEventBased(true, "/parquet/parquet_scan_screen.json", "/tmp/test.parquet", 1, props);
   }
@@ -434,7 +468,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     props.fields.put("bigInt", new FieldInfo("int64", "bigInt", 64, TestFileGenerator.longVals, TypeProtos.MinorType.BIGINT, props));
     props.fields.put("bin", new FieldInfo("binary", "bin", -1, TestFileGenerator.binVals, TypeProtos.MinorType.VARBINARY, props));
     props.fields.put("bin2", new FieldInfo("binary", "bin2", -1, TestFileGenerator.bin2Vals, TypeProtos.MinorType.VARBINARY, props));
-    testParquetFullEngineEventBased(true, false, "/parquet/parquet_selective_column_read.json", null, "/tmp/test.parquet", 1, props, false);
+    testParquetFullEngineEventBased(true, false, "/parquet/parquet_selective_column_read.json", null, "/tmp/test.parquet", 1, props, QueryType.PHYSICAL);
   }
 
   public static void main(String[] args) throws Exception{
@@ -502,19 +536,19 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   public void testParquetFullEngineEventBased(boolean generateNew, String plan, String readEntries, String filename,
                                               int numberOfTimesRead /* specified in json plan */, ParquetTestProperties props) throws Exception{
     testParquetFullEngineEventBased(true, generateNew, plan, readEntries,filename,
-                                              numberOfTimesRead /* specified in json plan */, props, true);
+                                              numberOfTimesRead /* specified in json plan */, props, QueryType.LOGICAL);
   }
 
 
   // specific tests should call this method, but it is not marked as a test itself intentionally
   public void testParquetFullEngineEventBased(boolean generateNew, String plan, String filename, int numberOfTimesRead /* specified in json plan */, ParquetTestProperties props) throws Exception{
-    testParquetFullEngineEventBased(true, generateNew, plan, null, filename, numberOfTimesRead, props, true);
+    testParquetFullEngineEventBased(true, generateNew, plan, null, filename, numberOfTimesRead, props, QueryType.LOGICAL);
   }
 
   // specific tests should call this method, but it is not marked as a test itself intentionally
   public void testParquetFullEngineEventBased(boolean testValues, boolean generateNew, String plan, String readEntries, String filename,
                                               int numberOfTimesRead /* specified in json plan */, ParquetTestProperties props,
-                                              boolean runAsLogicalPlan) throws Exception{
+                                              QueryType queryType) throws Exception{
     if (generateNew) TestFileGenerator.generateParquetFile(filename, props);
 
     ParquetResultListener resultListener = new ParquetResultListener(getAllocator(), props, numberOfTimesRead, testValues);
@@ -524,11 +558,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     if (readEntries != null) {
       planText = planText.replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
     }
-    if (runAsLogicalPlan){
-      this.testWithListener(QueryType.LOGICAL, planText, resultListener);
-    }else{
-      this.testWithListener(QueryType.PHYSICAL, planText, resultListener);
-    }
+    this.testWithListener(queryType, planText, resultListener);
     resultListener.getResults();
     long D = System.nanoTime();
     System.out.println(String.format("Took %f s to run query", (float)(D-C) / 1E9));

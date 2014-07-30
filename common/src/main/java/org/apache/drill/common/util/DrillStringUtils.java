@@ -22,6 +22,20 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import io.netty.buffer.ByteBuf;
 
 public class DrillStringUtils {
+
+  /**
+   * Converts the long number into more human readable string.
+   */
+  public static String readable(long bytes) {
+    int unit = 1024;
+    long absBytes = Math.abs(bytes);
+    if (absBytes < unit) return bytes + " B";
+    int exp = (int) (Math.log(absBytes) / Math.log(unit));
+    char pre = ("KMGTPE").charAt(exp-1);
+    return String.format("%s%.1f %ciB", (bytes == absBytes ? "" : "-"), absBytes / Math.pow(unit, exp), pre);
+  }
+
+
   /**
    * Unescapes any Java literals found in the {@code String}.
    * For example, it will turn a sequence of {@code '\'} and

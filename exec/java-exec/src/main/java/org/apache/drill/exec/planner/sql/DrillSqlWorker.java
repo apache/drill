@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.hydromatic.optiq.config.Lex;
+import net.hydromatic.optiq.tools.FrameworkConfig;
 import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.RuleSet;
-import net.hydromatic.optiq.tools.StdFrameworkConfig;
 import net.hydromatic.optiq.tools.ValidationException;
 
 import org.apache.drill.exec.ops.QueryContext;
@@ -66,14 +66,13 @@ public class DrillSqlWorker {
     traitDefs.add(DrillDistributionTraitDef.INSTANCE);
     traitDefs.add(RelCollationTraitDef.INSTANCE);
     this.context = context;
-    DrillOperatorTable table = new DrillOperatorTable(context.getFunctionRegistry());
     RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ?
         null : new DrillCostBase.DrillCostFactory() ;
-    StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //
+    FrameworkConfig config = Frameworks.newConfigBuilder() //
         .lex(Lex.MYSQL) //
         .parserFactory(DrillParserWithCompoundIdConverter.FACTORY) //
         .defaultSchema(context.getNewDefaultSchema()) //
-        .operatorTable(table) //
+        .operatorTable(context.getDrillOperatorTable()) //
         .traitDefs(traitDefs) //
         .convertletTable(new DrillConvertletTable()) //
         .context(context.getPlannerSettings()) //
@@ -92,7 +91,7 @@ public class DrillSqlWorker {
           RuleSet drillPhysicalMem = DrillRuleSets.mergedRuleSets(
               DrillRuleSets.getPhysicalRules(context),
               storagePluginRegistry.getStoragePluginRuleSet());
-          allRules = new RuleSet[] {DrillRuleSets.DRILL_BASIC_RULES, drillPhysicalMem};
+          allRules = new RuleSet[] {DrillRuleSets.getDrillBasicRules(context), drillPhysicalMem};
         }
       }
     }

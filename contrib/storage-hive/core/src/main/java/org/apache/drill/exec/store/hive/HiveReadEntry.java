@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive;
 
 import java.util.List;
+import java.util.Map;
 
 import net.hydromatic.optiq.Schema.TableType;
 
@@ -35,12 +36,16 @@ public class HiveReadEntry {
   public HiveTable table;
   @JsonProperty("partitions")
   public List<HiveTable.HivePartition> partitions;
+  @JsonProperty("hiveConfigOverride")
+  public Map<String, String> hiveConfigOverride;
 
   @JsonIgnore
   private List<Partition> partitionsUnwrapped = Lists.newArrayList();
 
   @JsonCreator
-  public HiveReadEntry(@JsonProperty("table") HiveTable table, @JsonProperty("partitions") List<HiveTable.HivePartition> partitions) {
+  public HiveReadEntry(@JsonProperty("table") HiveTable table,
+                       @JsonProperty("partitions") List<HiveTable.HivePartition> partitions,
+                       @JsonProperty("hiveConfigOverride") Map<String, String> hiveConfigOverride) {
     this.table = table;
     this.partitions = partitions;
     if (partitions != null) {
@@ -48,6 +53,7 @@ public class HiveReadEntry {
         partitionsUnwrapped.add(part.getPartition());
       }
     }
+    this.hiveConfigOverride = hiveConfigOverride;
   }
 
   @JsonIgnore

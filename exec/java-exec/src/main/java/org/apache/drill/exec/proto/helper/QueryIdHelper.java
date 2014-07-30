@@ -31,6 +31,11 @@ public class QueryIdHelper {
     return (new UUID(queryId.getPart1(), queryId.getPart2())).toString();
   }
 
+  public static QueryId getQueryIdFromString(String queryId) {
+    UUID uuid = UUID.fromString(queryId);
+    return QueryId.newBuilder().setPart1(uuid.getMostSignificantBits()).setPart2(uuid.getLeastSignificantBits()).build();
+  }
+
   public static String getQueryIdentifier(FragmentHandle h) {
     return getQueryId(h.getQueryId()) + ":" + h.getMajorFragmentId() + ":" + h.getMinorFragmentId();
   }

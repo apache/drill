@@ -66,4 +66,9 @@ public class ComplexToJsonPrel extends SingleRel implements Prel {
     return logicalVisitor.visitPrel(this, value);
   }
 
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
+  
 }

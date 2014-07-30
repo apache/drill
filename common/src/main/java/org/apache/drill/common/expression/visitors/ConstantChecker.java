@@ -90,10 +90,10 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr, ErrorCollector errors) {
-    for (IfCondition c : ifExpr.conditions) {
-      if (!c.condition.accept(this, errors) || !c.expression.accept(this, errors))
-        return false;
-    }
+    IfCondition c = ifExpr.ifCondition;
+    if (!c.condition.accept(this, errors) || !c.expression.accept(this, errors))
+      return false;
+
     if (!ifExpr.elseExpression.accept(this, errors)) return false;
     return true;
   }

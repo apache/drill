@@ -129,6 +129,11 @@ public class ${name}Accessor extends AbstractSqlAccessor{
 
   @Override
   public Date getDate(int index) {
+    <#if mode == "Nullable">
+    if (ac.isNull(index)) {
+      return null;
+    }
+    </#if>
     org.joda.time.DateTime date = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
     date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
     return new Date(date.getMillis());
@@ -140,6 +145,11 @@ public class ${name}Accessor extends AbstractSqlAccessor{
 
   @Override
   public Timestamp getTimestamp(int index) {
+    <#if mode == "Nullable">
+    if (ac.isNull(index)) {
+      return null;
+    }
+    </#if>
     org.joda.time.DateTime date = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
     date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
     return new Timestamp(date.getMillis());
@@ -151,6 +161,11 @@ public class ${name}Accessor extends AbstractSqlAccessor{
 
   @Override
   public Time getTime(int index) {
+    <#if mode == "Nullable">
+    if (ac.isNull(index)) {
+      return null;
+    }
+    </#if>
     org.joda.time.DateTime time = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
     time = time.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
     return new Time(time.getMillis());

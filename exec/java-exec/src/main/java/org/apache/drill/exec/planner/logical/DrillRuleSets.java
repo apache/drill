@@ -41,7 +41,6 @@ import org.apache.drill.exec.planner.physical.StreamAggPrule;
 import org.apache.drill.exec.planner.physical.UnionAllPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
 import org.eigenbase.rel.RelFactories;
-import org.eigenbase.rel.rules.MergeProjectRule;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
 import org.eigenbase.rel.rules.PushFilterPastProjectRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
@@ -61,8 +60,12 @@ import com.google.common.collect.ImmutableSet.Builder;
 public class DrillRuleSets {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
-  public static final RuleSet DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.of( //
-      // Add support for WHERE style joins.
+  public static RuleSet DRILL_BASIC_RULES = null;
+
+  public static RuleSet getDrillBasicRules(QueryContext context) {
+    if (DRILL_BASIC_RULES == null) {
+    DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.of( //
+        // Add support for WHERE style joins.
       PushFilterPastProjectRule.INSTANCE,
       PushFilterPastJoinRule.FILTER_ON_JOIN,
       PushFilterPastJoinRule.JOIN,
@@ -82,7 +85,7 @@ public class DrillRuleSets {
 
 //      TableAccessRule.INSTANCE, //
       //MergeProjectRule.INSTANCE, //
-      new MergeProjectRule(true, RelFactories.DEFAULT_PROJECT_FACTORY),
+      DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
       RemoveDistinctAggregateRule.INSTANCE, //
       ReduceAggregatesRule.INSTANCE, //
       PushProjectPastJoinRule.INSTANCE,
@@ -103,9 +106,11 @@ public class DrillRuleSets {
       DrillLimitRule.INSTANCE,
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
-      DrillUnionRule.INSTANCE,
-      MergeProjectRule.INSTANCE
+      DrillUnionRule.INSTANCE
       ));
+    }
+    return DRILL_BASIC_RULES;
+  }
 
   /* 
   public static final RuleSet DRILL_PHYSICAL_MEM = new DrillRuleSet(ImmutableSet.of( //

@@ -18,9 +18,10 @@
 package org.apache.drill.exec.sql;
 
 import net.hydromatic.optiq.config.Lex;
+import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
+import net.hydromatic.optiq.tools.FrameworkConfig;
 import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
-import net.hydromatic.optiq.tools.StdFrameworkConfig;
 
 import org.apache.drill.exec.planner.sql.DrillConvertletTable;
 import org.apache.drill.exec.planner.sql.parser.CompoundIdentifierConverter;
@@ -34,10 +35,10 @@ public class TestSqlBracketlessSyntax {
 
   @Test
   public void checkComplexExpressionParsing() throws Exception{
-    StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //
+    FrameworkConfig config = Frameworks.newConfigBuilder() //
         .lex(Lex.MYSQL) //
         .parserFactory(DrillParserImpl.FACTORY) //
-        .defaultSchema(Frameworks.createRootSchema(false)) //
+        .defaultSchema(SimpleOptiqSchema.createRootSchema(false)) //
         .convertletTable(new DrillConvertletTable()) //
         .build();
     Planner planner = Frameworks.getPlanner(config);

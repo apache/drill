@@ -37,7 +37,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.vector.complex.impl.NullableBigIntSingularReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import com.google.common.base.Preconditions;
@@ -147,9 +146,9 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
         ValueReference parameter = parameters[i];
         HoldingContainer inputVariable = inputVariables[i];
-        if (parameter.isFieldReader && ! Types.isComplex(inputVariable.getMajorType()) && ! Types.isRepeated(inputVariable.getMajorType())) {
-          JType singularReaderClass = g.getModel()._ref(TypeHelper.getSingularReaderImpl(inputVariable.getMajorType().getMinorType(), 
-                                                                                         inputVariable.getMajorType().getMode()));   
+        if (parameter.isFieldReader && ! inputVariable.isReader() && ! Types.isComplex(inputVariable.getMajorType())) {
+          JType singularReaderClass = g.getModel()._ref(TypeHelper.getHolderReaderImpl(inputVariable.getMajorType().getMinorType(),
+              inputVariable.getMajorType().getMode()));
           JType fieldReadClass = g.getModel()._ref(FieldReader.class);
           sub.decl(fieldReadClass, parameter.name, JExpr._new(singularReaderClass).arg(inputVariable.getHolder()));
         } else {
@@ -197,10 +196,12 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return true;
   }
 
+  @Override
   public MajorType getParmMajorType(int i) {
     return this.parameters[i].type;
   }
 
+  @Override
   public int getParamCount() {
     return this.parameters.length;
   }
@@ -239,9 +240,9 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   public int getCostCategory() {
-    return this.costCategory.getValue(); 
+    return this.costCategory.getValue();
   }
-  
+
   @Override
   public String toString() {
     final int maxLen = 10;
@@ -291,7 +292,11 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
       return ref;
     }
-    
+
+    public boolean isComplexWriter() {
+      return isComplexWriter;
+    }
+
   }
 
   public static class WorkspaceReference {
@@ -319,5 +324,9 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   public MajorType getReturnType() {
     return returnValue.type;
+  }
+
+  public ValueReference getReturnValue() {
+    return returnValue;
   }
 }

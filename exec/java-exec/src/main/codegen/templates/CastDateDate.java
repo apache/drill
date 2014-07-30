@@ -53,7 +53,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   public void eval() {
     <#if type.to == "Date">
-    out.value = (new DateMidnight(in.value, DateTimeZone.UTC)).getMillis();
+    out.value = (new org.joda.time.DateMidnight(in.value, org.joda.time.DateTimeZone.UTC)).getMillis();
     <#elseif type.to == "TimeStamp">
     out.value = in.value;
     <#elseif type.to == "TimeStampTZ">

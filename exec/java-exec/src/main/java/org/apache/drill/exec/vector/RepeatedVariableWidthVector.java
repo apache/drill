@@ -35,6 +35,8 @@ public interface RepeatedVariableWidthVector extends ValueVector{
    */
   public int getByteCapacity();
 
+  public abstract RepeatedFixedWidthVector.RepeatedAccessor getAccessor();
+
   /**
    * Load the records in the provided buffer based on the given number of values.
    * @param dataBytes   The number of bytes associated with the data array.

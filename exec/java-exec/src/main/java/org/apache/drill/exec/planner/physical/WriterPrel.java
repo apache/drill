@@ -77,5 +77,10 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-
+  
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
+  
 }

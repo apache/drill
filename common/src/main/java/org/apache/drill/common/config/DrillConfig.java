@@ -122,6 +122,9 @@ public final class DrillConfig extends NestedConfig{
     return create(overrideFileName, true);
   }
 
+  /**
+   * <b><u>Do not use this method outside of test code.</u></b>
+   */
   @VisibleForTesting
   public static DrillConfig create(Properties testConfigurations) {
     return create(null, testConfigurations, true);

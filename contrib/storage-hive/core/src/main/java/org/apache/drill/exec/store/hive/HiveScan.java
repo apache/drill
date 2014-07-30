@@ -89,9 +89,10 @@ public class HiveScan extends AbstractGroupScan {
   Map<InputSplit, Partition> partitionMap = new HashMap();
 
   @JsonCreator
-  public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry, @JsonProperty("storage-plugin") String storagePluginName,
-      @JsonProperty("columns") List<SchemaPath> columns,
-      @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+  public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry,
+                  @JsonProperty("storage-plugin") String storagePluginName,
+                  @JsonProperty("columns") List<SchemaPath> columns,
+                  @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this.hiveReadEntry = hiveReadEntry;
     this.table = hiveReadEntry.getTable();
     this.storagePluginName = storagePluginName;
@@ -137,6 +138,9 @@ public class HiveScan extends AbstractGroupScan {
         for (Object obj : properties.keySet()) {
           job.set((String) obj, (String) properties.get(obj));
         }
+        for(Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
+          job.set(entry.getKey(), entry.getValue());
+        }
         InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
         job.setInputFormat(format.getClass());
         Path path = new Path(table.getSd().getLocation());
@@ -157,6 +161,9 @@ public class HiveScan extends AbstractGroupScan {
           JobConf job = new JobConf();
           for (Object obj : properties.keySet()) {
             job.set((String) obj, (String) properties.get(obj));
+          }
+          for(Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
+            job.set(entry.getKey(), entry.getValue());
           }
           InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(partition.getSd().getInputFormat()).getConstructor().newInstance();
           job.setInputFormat(format.getClass());
@@ -300,4 +307,8 @@ public class HiveScan extends AbstractGroupScan {
     return newScan;
   }
 
+  @Override
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
+  }
 }

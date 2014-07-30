@@ -38,6 +38,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
+import org.apache.drill.exec.planner.logical.RewriteProjectRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -50,11 +51,14 @@ import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ProducerConsumerPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlNode;
 
@@ -112,6 +116,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     SqlNode rewrittenSqlNode = rewrite(sqlNode);
     SqlNode validated = validateNode(rewrittenSqlNode);
     RelNode rel = convertToRel(validated);
+
+    /* Traverse the tree and replace the convert_from, convert_to function to actual implementations
+     * Eg: convert_from(EXPR, 'JSON') be converted to convert_fromjson(EXPR);
+     * TODO: Ideally all function rewrites would move here instead of DrillOptiq
+     */
+    rel = rel.accept(new RewriteProjectRel(planner.getTypeFactory(), context.getDrillOperatorTable()));
     log("Optiq Logical", rel);
     DrillRel drel = convertToDrel(rel);
     log("Drill Logical", drel);
@@ -120,7 +130,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
     log("Drill Plan", plan);
-
     return plan;
   }
 
@@ -149,6 +158,15 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     /*  The order of the following transformation is important */
 
+    /*
+     * 0.) For select * from join query, we need insert project on top of scan and a top project just
+     * under screen operator. The project on top of scan will rename from * to T1*, while the top project
+     * will rename T1* to *, before it output the final result. Only the top project will allow
+     * duplicate columns, since user could "explicitly" ask for duplicate columns ( select *, col, *).
+     * The rest of projects will remove the duplicate column when we generate POP in json format.  
+     */
+    phyRelNode = StarColumnConverter.insertRenameProject(phyRelNode, phyRelNode.getRowType());
+    
     /*
      * 1.)
      * Join might cause naming conflicts from its left and right child.
@@ -183,10 +201,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * Add ProducerConsumer after each scan if the option is set
      * Use the configured queueSize
      */
+    // Disabling for now, as this causes memory leaks. See DRILL-1202
+    /*
     if (context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER.getOptionName()).bool_val) {
       long queueSize = context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE.getOptionName()).num_val;
       phyRelNode = ProducerConsumerPrelVisitor.addProducerConsumerToScans(phyRelNode, (int) queueSize);
     }
+    */
 
     /* 6.)
      * if the client does not support complex types (Map, Repeated)
@@ -201,7 +222,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * Finally, Make sure that the no rels are repeats.
      * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
      */
-    phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
+    phyRelNode = RelUniqifier.uniqifyGraph(phyRelNode);
 
     return phyRelNode;
   }

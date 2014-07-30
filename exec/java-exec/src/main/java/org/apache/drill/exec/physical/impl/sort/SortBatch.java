@@ -74,11 +74,6 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   @Override
-  public void kill() {
-    incoming.kill();
-  }
-
-  @Override
   public SelectionVector2 getSelectionVector2() {
     throw new UnsupportedOperationException();
   }
@@ -148,7 +143,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       return IterOutcome.OK_NEW_SCHEMA;
 
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
-      kill();
+      kill(false);
       logger.error("Failure during query", ex);
       context.fail(ex);
       return IterOutcome.STOP;
@@ -209,8 +204,8 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   @Override
-  protected void killIncoming() {
-    incoming.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
 

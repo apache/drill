@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.List;
 
-import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.eigenbase.rel.RelNode;

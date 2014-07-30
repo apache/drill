@@ -116,7 +116,7 @@ public abstract class RecordGenerator {
     public boolean visitSchema(String schemaName, SchemaPlus schema) {
       if (shouldVisitSchema(schema) && schemaName != null && !schemaName.isEmpty()) {
         AbstractSchema as = schema.unwrap(AbstractSchema.class);
-        records.add(new Records.Schema("DRILL", schemaName, "<owner>", as.getTypeName()));
+        records.add(new Records.Schema("DRILL", schemaName, "<owner>", as.getTypeName(), as.isMutable()));
       }
       return false;
     }

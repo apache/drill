@@ -23,6 +23,13 @@ import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
+
+  @Test
+  public void testParquetComplex() throws Exception {
+    test("select recipe from cp.`parquet/complex.parquet`");
+    test("select * from cp.`parquet/complex.parquet`");
+    test("select recipe, c.inventor.name as name, c.inventor.age as age from cp.`parquet/complex.parquet` c");
+  }
   
   @Test // see DRILL-553
   public void testQueryWithNullValues() throws Exception {
@@ -38,7 +45,103 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select count(*) from cp.`customer.json` limit 1");
     test("select count(*) from cp.`customer.json` limit 1");
   }
-  
+
+  @Test
+  public void testSelStarOrderBy() throws Exception{
+    test("select * from cp.`employee.json` order by last_name");
+  }
+
+  @Test
+  public void testSelStarOrderByLimit() throws Exception{
+    test("select * from cp.`employee.json` order by employee_id limit 2;");
+  }
+
+  @Test
+  public void testSelStarPlusRegCol() throws Exception{
+    test("select *, n_nationkey from cp.`tpch/nation.parquet` limit 2;");
+  }
+
+  @Test
+  public void testSelStarWhereOrderBy() throws Exception{
+    test("select * from cp.`employee.json` where first_name = 'James' order by employee_id");
+  }
+
+  @Test
+  public void testSelStarJoin() throws Exception {
+    test("select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+  }
+
+  @Test
+  public void testSelLeftStarJoin() throws Exception {
+    test("select n.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+  }
+
+  @Test
+  public void testSelRightStarJoin() throws Exception {
+    test("select r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+  }
+
+  @Test
+  public void testSelStarRegColConstJoin() throws Exception {
+    test("select *, n.n_nationkey, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+  }
+
+  @Test
+  public void testSelStarBothSideJoin() throws Exception {
+    test("select n.*, r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey;");
+  }
+
+  @Test
+  public void testSelStarJoinSameColName() throws Exception {
+    test("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey;");
+  }
+
+
+  @Test
+  public void testJoinExpOn() throws Exception{
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a join cp.`tpch/region.parquet` b on a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");
+  }
+
+  @Test
+  public void testJoinExpWhere() throws Exception{
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a , cp.`tpch/region.parquet` b where a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");
+  }
+
+  @Test
+  public void testPushExpInJoinConditionInnerJoin() throws Exception {
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a join cp.`tpch/region.parquet` b " + "" +
+        " on a.n_regionkey + 100  = b.r_regionkey + 200" +      // expressions in both sides of equal join filter
+        "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+        "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+  }
+
+  @Test
+  public void testPushExpInJoinConditionWhere() throws Exception {
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a , cp.`tpch/region.parquet` b " + "" +
+        " where a.n_regionkey + 100  = b.r_regionkey + 200" +      // expressions in both sides of equal join filter
+        "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+        "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+  }
+
+  @Test
+  public void testPushExpInJoinConditionLeftJoin() throws Exception {
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a left join cp.`tpch/region.parquet` b " + "" +
+        " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter
+        "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+        "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+  }
+
+  @Test
+  public void testPushExpInJoinConditionRightJoin() throws Exception {
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a right join cp.`tpch/region.parquet` b " + "" +
+        " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter
+        "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+        "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+  }
 
   @Test
   public void testCaseReturnValueVarChar() throws Exception{
@@ -89,14 +192,22 @@ public class TestExampleQueries extends BaseTestQuery{
   @Test
   public void testText() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
-    String query = String.format("select * from dfs.`%s`", root);
+    String query = String.format("select * from dfs_test.`%s`", root);
+    test(query);
+  }
+
+  @Test
+  public void testFilterOnArrayTypes() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    String query = String.format("select columns[0] from dfs_test.`%s` " +
+        " where cast(columns[0] as int) > 1 and cast(columns[1] as varchar(20))='ASIA'", root);
     test(query);
   }
 
   @Test
   public void testTextPartitions() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/data/").toURI().toString();
-    String query = String.format("select * from dfs.`%s`", root);
+    String query = String.format("select * from dfs_test.`%s`", root);
     test(query);
   }
 
@@ -107,9 +218,9 @@ public class TestExampleQueries extends BaseTestQuery{
         "  nations.N_NAME,\n" +
         "  regions.R_NAME\n" +
         "FROM\n" +
-        "  dfs.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" +
+        "  cp.`tpch/nation.parquet` nations\n" +
         "JOIN\n" +
-        "  dfs.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" +
+        "  cp.`tpch/region.parquet` regions\n" +
         "  on nations.N_REGIONKEY = regions.R_REGIONKEY where 1 = 0");
   }
 
@@ -159,48 +270,16 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select count(*) as mycnt, count(*) + 2 * count(*) as mycnt2 from cp.`tpch/nation.parquet` where 1 < 2");
   }
 
-
-  @Test    // Simple Union-All over two scans
-  public void testUnionAll1() throws Exception {
-    test("select n_regionkey from cp.`tpch/nation.parquet` union all select r_regionkey from cp.`tpch/region.parquet`");  
-  }
-
-  @Test  // Union-All over inner joins
-  public void testUnionAll2() throws Exception {
-    test("select n1.n_nationkey from cp.`tpch/nation.parquet` n1 inner join cp.`tpch/region.parquet` r1 on n1.n_regionkey = r1.r_regionkey where n1.n_nationkey in (1, 2)  union all select n2.n_nationkey from cp.`tpch/nation.parquet` n2 inner join cp.`tpch/region.parquet` r2 on n2.n_regionkey = r2.r_regionkey where n2.n_nationkey in (3, 4)");
-  }
-  
-  @Test  // Union-All over grouped aggregates
-  public void testUnionAll3() throws Exception {
-    test("select n1.n_nationkey from cp.`tpch/nation.parquet` n1 where n1.n_nationkey in (1, 2) group by n1.n_nationkey union all select r1.r_regionkey from cp.`tpch/region.parquet` r1 group by r1.r_regionkey");
-  }
-  
-  @Test    // Chain of Union-Alls
-  public void testUnionAll4() throws Exception {
-    test("select n_regionkey from cp.`tpch/nation.parquet` union all select r_regionkey from cp.`tpch/region.parquet` union all select n_nationkey from cp.`tpch/nation.parquet` union all select c_custkey from cp.`tpch/customer.parquet` where c_custkey < 5");  
-  }
-  
-  @Test  // Union-All of all columns in the table
-  public void testUnionAll5() throws Exception {
-    test("select * from cp.`tpch/region.parquet` r1 union all select * from cp.`tpch/region.parquet` r2");
-  }
-  
   @Test
-  @Ignore // Produces wrong result
-  public void testUnionAll6() throws Exception {
-    test("select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` where n_regionkey = 1 union all select r_regionkey, r_regionkey from cp.`tpch/region.parquet` where r_regionkey = 2");
-  }  
-
-  @Test
-  // cast non-exist column from json file. Should return null value. 
+  // cast non-exist column from json file. Should return null value.
   public void testDrill428() throws Exception {
     test("select cast(NON_EXIST_COL as varchar(10)) from cp.`employee.json` limit 2; ");
   }
-  
+
   @Test  // Bugs DRILL-727, DRILL-940
   public void testOrderByDiffColumn() throws Exception {
-    test("select r_name from cp.`tpch/region.parquet` order by r_regionkey");  
-    test("select r_name from cp.`tpch/region.parquet` order by r_name, r_regionkey");  
+    test("select r_name from cp.`tpch/region.parquet` order by r_regionkey");
+    test("select r_name from cp.`tpch/region.parquet` order by r_name, r_regionkey");
     test("select cast(r_name as varchar(20)) from cp.`tpch/region.parquet` order by r_name");
   }
 

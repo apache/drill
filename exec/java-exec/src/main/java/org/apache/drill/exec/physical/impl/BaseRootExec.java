@@ -23,6 +23,7 @@ import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
@@ -72,4 +73,9 @@ public abstract class BaseRootExec implements RootExec {
   }
 
   public abstract boolean innerNext();
+
+  @Override
+  public void receivingFragmentFinished(FragmentHandle handle) {
+    logger.warn("Currently not handling FinishedFragment message");
+  }
 }

@@ -57,11 +57,24 @@ public class ShowFileHandler extends DefaultSqlHandler {
 
     DrillFileSystem fs = null;
     String defaultLocation = null;
+    String fromDir = "./";
 
     try {
+      SchemaPlus defaultSchema = context.getNewDefaultSchema();
+      SchemaPlus drillSchema = defaultSchema;
 
-      // Traverse and find the schema
-      SchemaPlus drillSchema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(), from.names.subList(0, from.names.size() - 1));
+      // Show files can be used without from clause, in which case we display the files in the default schema
+      if (from != null) {
+        // We are not sure if the full from clause is just the schema or includes table name, first try to see if the full path specified is a schema
+        try {
+          drillSchema = findSchema(context.getRootSchema(), defaultSchema, from.names);
+        } catch (Exception e) {
+            // Entire from clause is not a schema, try to obtain the schema without the last part of the specified clause.
+            drillSchema = findSchema(context.getRootSchema(), defaultSchema, from.names.subList(0, from.names.size() - 1));
+            fromDir = fromDir + from.names.get((from.names.size() - 1));
+        }
+      }
+
       AbstractSchema tempSchema = getDrillSchema(drillSchema);
       WorkspaceSchema schema = null;
       if (tempSchema instanceof WorkspaceSchema) {
@@ -76,12 +89,14 @@ public class ShowFileHandler extends DefaultSqlHandler {
       // Get the default path
       defaultLocation = schema.getDefaultLocation();
     } catch (Exception e) {
+        if (from == null) {
+          return DirectPlan.createDirectPlan(context, false, "Show files without FROM / IN clause can be used only after specifying a default file system schema");
+        }
         return DirectPlan.createDirectPlan(context, false, String.format("Current schema '%s' is not a file system schema. " +
                                            "Can't execute show files on this schema.", from.toString()));
     }
 
     List<ShowFilesCommandResult> rows = new ArrayList<>();
-    String fromDir = from.names.get((from.names.size() - 1));
 
     for (FileStatus fileStatus : fs.list(false, new Path(defaultLocation, fromDir))) {
       ShowFilesCommandResult result = new ShowFilesCommandResult(fileStatus.getPath().getName(), fileStatus.isDir(),

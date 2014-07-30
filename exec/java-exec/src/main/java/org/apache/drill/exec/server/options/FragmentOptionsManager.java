@@ -51,7 +51,7 @@ public class FragmentOptionsManager implements OptionManager{
   @Override
   public OptionValue getOption(String name) {
     OptionValue value = options.get(name);
-    if (value == null) {
+    if (value == null && systemOptions != null) {
       value = systemOptions.getOption(name);
     }
     return value;

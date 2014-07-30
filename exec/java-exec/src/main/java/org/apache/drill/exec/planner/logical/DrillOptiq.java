@@ -102,13 +102,13 @@ public class DrillOptiq {
         if (FunctionCallFactory.isBooleanOperator(funcName)) {
           LogicalExpression func = FunctionCallFactory.createBooleanOperator(funcName, args);
           return func;
-        } else { 
+        } else {
           args = Lists.reverse(args);
           LogicalExpression lastArg = args.get(0);
           for(int i = 1; i < args.size(); i++){
             lastArg = FunctionCallFactory.createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
           }
-  
+
           return lastArg;
         }
       case FUNCTION:
@@ -118,6 +118,9 @@ public class DrillOptiq {
       case POSTFIX:
         logger.debug("Postfix");
         switch(call.getKind()){
+        case IS_NOT_NULL:
+        case IS_NOT_TRUE:
+        case IS_NOT_FALSE:
         case IS_NULL:
         case IS_TRUE:
         case IS_FALSE:
@@ -157,7 +160,7 @@ public class DrillOptiq {
           for (int i=1; i<caseArgs.size(); i=i+2) {
             elseExpression = IfExpression.newBuilder()
               .setElse(elseExpression)
-              .addCondition(new IfCondition(caseArgs.get(i + 1), caseArgs.get(i))).build();
+              .setIfCondition(new IfCondition(caseArgs.get(i + 1), caseArgs.get(i))).build();
           }
           return elseExpression;
         }
@@ -251,6 +254,7 @@ public class DrillOptiq {
 
         case "INTERVAL_YEAR_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
         case "INTERVAL_DAY_TIME": castType = Types.required(MinorType.INTERVALDAY); break;
+        case "BOOLEAN": castType = Types.required(MinorType.BIT); break;
         case "ANY": return arg; // Type will be same as argument.
         default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
@@ -312,6 +316,11 @@ public class DrillOptiq {
         trimArgs.add(args.get(1));
 
         return FunctionCallFactory.createExpression(trimFunc, trimArgs);
+      } else if (functionName.equals("ltrim") || functionName.equals("rtrim") || functionName.equals("btrim")) {
+        if (args.size() == 1) {
+          args.add(ValueExpressions.getChar(" "));
+        }
+        return FunctionCallFactory.createExpression(functionName, args);
       } else if (functionName.equals("date_part")) {
         // Rewrite DATE_PART functions as extract functions
         // assert that the function has exactly two arguments
@@ -377,7 +386,7 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.BIGINT);
         }
-        long l = ((BigDecimal) literal.getValue()).longValue();
+        long l = (((BigDecimal) literal.getValue()).setScale(0, BigDecimal.ROUND_HALF_UP)).longValue();
         return ValueExpressions.getBigInt(l);
       case BOOLEAN:
         if (isLiteralNull(literal)) {
@@ -405,7 +414,7 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.INT);
         }
-        int a = ((BigDecimal) literal.getValue()).intValue();
+        int a = (((BigDecimal) literal.getValue()).setScale(0, BigDecimal.ROUND_HALF_UP)).intValue();
         return ValueExpressions.getInt(a);
 
       case DECIMAL:

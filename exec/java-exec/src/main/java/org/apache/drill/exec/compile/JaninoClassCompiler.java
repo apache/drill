@@ -20,6 +20,7 @@ package org.apache.drill.exec.compile;
 import java.io.IOException;
 import java.io.StringReader;
 
+import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.ClassLoaderIClassLoader;
@@ -30,58 +31,31 @@ import org.codehaus.janino.Scanner;
 import org.codehaus.janino.UnitCompiler;
 import org.codehaus.janino.util.ClassFile;
 
-public class JaninoClassCompiler implements ClassCompiler{
+public class JaninoClassCompiler extends AbstractClassCompiler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JaninoClassCompiler.class);
 
   private IClassLoader compilationClassLoader;
 
-  private boolean debugLines = true;
-  private boolean debugVars = true;
-  private boolean debugSource = true;
-
-  public JaninoClassCompiler(ClassLoader parentClassLoader) {
+  public JaninoClassCompiler(ClassLoader parentClassLoader, boolean debug) {
+    super(debug);
     this.compilationClassLoader = new ClassLoaderIClassLoader(parentClassLoader);
   }
 
-  public byte[][] getClassByteCode(final String className, final String code) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
-    if(logger.isDebugEnabled()){
-      logger.debug("Compiling:\n {}", prefixLineNumbers(code));
-    }
-    StringReader reader = new StringReader(code);
+  protected byte[][] getByteCode(final ClassNames className, final String sourcecode)
+      throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
+    StringReader reader = new StringReader(sourcecode);
     Scanner scanner = new Scanner((String) null, reader);
     Java.CompilationUnit compilationUnit = new Parser(scanner).parseCompilationUnit();
-    ClassFile[] classFiles = new UnitCompiler(compilationUnit, compilationClassLoader).compileUnit(this.debugSource,
-        this.debugLines, this.debugVars);
-    
+    ClassFile[] classFiles = new UnitCompiler(compilationUnit, compilationClassLoader)
+                                  .compileUnit(this.debug, this.debug, this.debug);
+
     byte[][] byteCodes = new byte[classFiles.length][];
-    for(int i =0; i < classFiles.length; i++){
+    for(int i = 0; i < classFiles.length; i++){
       byteCodes[i] = classFiles[i].toByteArray();
     }
     return byteCodes;
   }
 
+  protected org.slf4j.Logger getLogger() { return logger; }
 
-  private String prefixLineNumbers(String code) {
-    if (!debugLines) return code;
-    StringBuilder out = new StringBuilder();
-    int i = 1;
-    for (String line : code.split("\n")) {
-      int start = out.length();
-      out.append(i++);
-      int numLength = out.length() - start;
-      out.append(":");
-      for (int spaces = 0; spaces < 7 - numLength; ++spaces){
-        out.append(" ");
-      }
-      out.append(line);
-      out.append('\n');
-    }
-    return out.toString();
-  }
-
-  public void setDebuggingInformation(boolean debugSource, boolean debugLines, boolean debugVars) {
-    this.debugSource = debugSource;
-    this.debugLines = debugLines;
-    this.debugVars = debugVars;
-  }
 }

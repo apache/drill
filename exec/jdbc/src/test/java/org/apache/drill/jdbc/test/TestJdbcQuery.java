@@ -43,19 +43,19 @@ public class TestJdbcQuery extends JdbcTestQueryBase{
 
   @Test
   public void testCast() throws Exception{
-    testQuery(String.format("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from dfs_test.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
   @Ignore
   public void testWorkspace() throws Exception{
-    testQuery(String.format("select * from dfs.home.`%s/../../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("select * from dfs_test.home.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
   @Ignore
   public void testWildcard() throws Exception{
-    testQuery(String.format("select * from dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("select * from dfs_test.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
@@ -71,19 +71,19 @@ public class TestJdbcQuery extends JdbcTestQueryBase{
   @Test
   @Ignore
   public void testLogicalExplain() throws Exception{
-    testQuery(String.format("EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR select * from dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR select * from dfs_test.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
   @Ignore
   public void testPhysicalExplain() throws Exception{
-    testQuery(String.format("EXPLAIN PLAN FOR select * from dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("EXPLAIN PLAN FOR select * from dfs_test.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
   @Ignore
   public void checkUnknownColumn() throws Exception{
-    testQuery(String.format("SELECT unknownColumn FROM dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("SELECT unknownColumn FROM dfs_test.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test

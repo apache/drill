@@ -40,6 +40,10 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
     this.mapRoot = new SingleMapWriter(mapVector, this);
   }
 
+  public MapVector getMapVector() {
+    return mapVector;
+  }
+
   public void reset() {
     setPosition(0);
     resetState();

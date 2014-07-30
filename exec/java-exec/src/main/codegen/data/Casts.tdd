@@ -24,10 +24,12 @@
     {from: "BigInt", to: "Float8", major: "Fixed" },
     {to: "Int", from: "BigInt", explicit: "int", major: "Fixed"},
     {to: "Float4", from: "Float8" , explicit: "float", major: "Fixed"}, 
-    {to: "Int", from: "Float4" , explicit: "int", major: "Fixed"},
-    {to: "BigInt", from: "Float4" , explicit: "long", major: "Fixed"},
-    {to: "Int", from: "Float8" , explicit: "int", major: "Fixed"},
-    {to: "BigInt", from: "Float8" , explicit: "long", major: "Fixed"},
+    {to: "Int", from: "Float4" , explicit: "int", native: "float", major: "Fixed"},
+    {to: "BigInt", from: "Float4" , explicit: "long", native: "float", major: "Fixed"},
+    {to: "Int", from: "Float8" , explicit: "int", native: "double", major: "Fixed"},
+    {to: "BigInt", from: "Float8" , explicit: "long", native: "double", major: "Fixed"},
+    {from: "TinyInt", to: "Bit", major: "Fixed"},
+    {from: "Bit", to: "TinyInt", explicit: "byte", major: "Fixed"},
     
     {from: "VarChar", to: "BigInt", major: "SrcVarlen", javaType: "Long", primeType: "long"},
     {from: "VarChar", to: "Int", major: "SrcVarlen", javaType:"Integer", primeType:"int"},
@@ -155,6 +157,16 @@
     {from: "Decimal9", to: "VarChar", major: "DecimalSimpleVarChar", bufferSize: "11", javatype: "int"},
     {from: "Decimal18", to: "VarChar", major: "DecimalSimpleVarChar", bufferSize: "20", javatype: "long"},
     {from: "Decimal28Sparse", to: "VarChar", major: "DecimalComplexVarChar", bufferSize: "30", arraySize: "5"},
-    {from: "Decimal38Sparse", to: "VarChar", major: "DecimalComplexVarChar", bufferSize: "40", arraySize: "6"}
+    {from: "Decimal38Sparse", to: "VarChar", major: "DecimalComplexVarChar", bufferSize: "40", arraySize: "6"},
+
+    {from: "Decimal18", to: "Decimal9", major: "DownwardDecimalSimpleDecimalSimple", javatype: "int"},
+
+    {from: "Decimal28Sparse", to: "Decimal18", major: "DownwardDecimalSimpleDecimalComplex", javatype: "long"},
+    {from: "Decimal28Sparse", to: "Decimal9", major: "DownwardDecimalSimpleDecimalComplex", javatype: "int"},
+
+    {from: "Decimal38Sparse", to: "Decimal28Sparse", major: "DownwardDecimalComplexDecimalComplex", arraySize: "5"},
+    {from: "Decimal38Sparse", to: "Decimal18", major: "DownwardDecimalComplexDecimalSimple", javatype: "long"},
+    {from: "Decimal38Sparse", to: "Decimal9", major: "DownwardDecimalComplexDecimalSimple", javatype: "int"}
+
   ]
 } 

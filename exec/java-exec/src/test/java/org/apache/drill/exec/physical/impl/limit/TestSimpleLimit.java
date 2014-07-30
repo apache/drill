@@ -61,6 +61,7 @@ public class TestSimpleLimit extends ExecTest {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+      bitContext.getConfig(); result = c;
     }};
 
     verifyLimitCount(bitContext, connection, "test1.json", 5);
@@ -72,6 +73,7 @@ public class TestSimpleLimit extends ExecTest {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+      bitContext.getConfig(); result = c;
     }};
 
     verifyLimitCount(bitContext, connection, "test3.json", 95);
@@ -88,6 +90,7 @@ public class TestSimpleLimit extends ExecTest {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+      bitContext.getConfig(); result = c;
     }};
 
     verifyLimitCount(bitContext, connection, "test2.json", 69999);

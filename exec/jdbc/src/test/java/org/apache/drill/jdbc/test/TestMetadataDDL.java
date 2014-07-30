@@ -54,16 +54,35 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   }
 
   @Test
+  public void testSchemata() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT * FROM INFORMATION_SCHEMA.SCHEMATA")
+        .returns(
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.root; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.tmp; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=YES\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=sys; SCHEMA_OWNER=<owner>; TYPE=system-tables; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.home; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.tmp; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=YES\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=cp.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=hive_test.default; SCHEMA_OWNER=<owner>; TYPE=hive; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=hive_test.db1; SCHEMA_OWNER=<owner>; TYPE=hive; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=INFORMATION_SCHEMA; SCHEMA_OWNER=<owner>; TYPE=ischema; IS_MUTABLE=NO\n"
+        );
+  }
+
+  @Test
   public void testShowTables() throws Exception{
-    JdbcAssert.withFull("hive.default")
+    JdbcAssert.withFull("hive_test.default")
         .sql("SHOW TABLES")
         .returns(
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=readtest\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=empty_table\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=infoschematest\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=hiveview\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n"
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=readtest\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=empty_table\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=infoschematest\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=kv\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate\n"
         );
   }
 
@@ -79,15 +98,15 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
             "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA\n"
         );
 
-    JdbcAssert.withFull("dfs.tmp")
-        .sql("SHOW TABLES IN hive.`default`")
+    JdbcAssert.withFull("dfs_test.tmp")
+        .sql("SHOW TABLES IN hive_test.`default`")
         .returns(
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=readtest\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=empty_table\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=infoschematest\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=hiveview\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n");
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=readtest\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=empty_table\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=infoschematest\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=kv\n" +
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate\n");
   }
 
   @Test
@@ -107,13 +126,16 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   @Test
   public void testShowDatabases() throws Exception{
     String expected =
-        "SCHEMA_NAME=hive.default\n" +
-        "SCHEMA_NAME=hive.db1\n" +
-        "SCHEMA_NAME=dfs.home\n" +
         "SCHEMA_NAME=dfs.default\n" +
+        "SCHEMA_NAME=dfs.root\n" +
         "SCHEMA_NAME=dfs.tmp\n" +
-        "SCHEMA_NAME=cp.default\n" +
         "SCHEMA_NAME=sys\n" +
+        "SCHEMA_NAME=dfs_test.home\n" +
+        "SCHEMA_NAME=dfs_test.default\n" +
+        "SCHEMA_NAME=dfs_test.tmp\n" +
+        "SCHEMA_NAME=cp.default\n" +
+        "SCHEMA_NAME=hive_test.default\n" +
+        "SCHEMA_NAME=hive_test.db1\n" +
         "SCHEMA_NAME=INFORMATION_SCHEMA\n";
 
     JdbcAssert.withNoDefaultSchema().sql("SHOW DATABASES").returns(expected);
@@ -123,8 +145,8 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   @Test
   public void testShowDatabasesWhere() throws Exception{
     JdbcAssert.withNoDefaultSchema()
-        .sql("SHOW DATABASES WHERE SCHEMA_NAME='dfs.tmp'")
-        .returns("SCHEMA_NAME=dfs.tmp\n");
+        .sql("SHOW DATABASES WHERE SCHEMA_NAME='dfs_test.tmp'")
+        .returns("SCHEMA_NAME=dfs_test.tmp\n");
   }
 
   @Test
@@ -132,8 +154,8 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
     JdbcAssert.withNoDefaultSchema()
         .sql("SHOW DATABASES LIKE '%i%'")
         .returns(
-            "SCHEMA_NAME=hive.default\n"+
-            "SCHEMA_NAME=hive.db1");
+            "SCHEMA_NAME=hive_test.default\n"+
+            "SCHEMA_NAME=hive_test.db1");
   }
 
   @Test
@@ -150,7 +172,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   @Test
   public void testDescribeTableNullableColumns() throws Exception{
     JdbcAssert.withNoDefaultSchema()
-        .sql("DESCRIBE hive.`default`.kv")
+        .sql("DESCRIBE hive_test.`default`.kv")
         .returns(
             "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=YES\n" +
             "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=YES\n"
@@ -174,10 +196,10 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
       public Void apply(Connection connection) {
         try {
           Statement statement = connection.createStatement();
-          statement.executeQuery("USE dfs.tmp").close();
+          statement.executeQuery("USE dfs_test.tmp").close();
 
-          // INFORMATION_SCHEMA already has a table named "TABLES". Now create a table with same name in "dfs.tmp" schema
-          statement.executeQuery("CREATE OR REPLACE VIEW `TABLES` AS SELECT key FROM hive.kv").close();
+          // INFORMATION_SCHEMA already has a table named "TABLES". Now create a table with same name in "dfs_test.tmp" schema
+          statement.executeQuery("CREATE OR REPLACE VIEW `TABLES` AS SELECT key FROM hive_test.kv").close();
 
           // Test describe of `TABLES` with no schema qualifier
           ResultSet resultSet = statement.executeQuery("DESCRIBE `TABLES`");
@@ -247,7 +269,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
     JdbcAssert.withNoDefaultSchema()
         .sql("SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION " +
             "FROM INFORMATION_SCHEMA.`COLUMNS` " +
-            "WHERE TABLE_SCHEMA = 'hive.default' AND TABLE_NAME = 'infoschematest' AND " +
+            "WHERE TABLE_SCHEMA = 'hive_test.default' AND TABLE_NAME = 'infoschematest' AND " +
             "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR " +
             "COLUMN_NAME = 'inttype' OR COLUMN_NAME = 'decimaltype')")
         .returns(
@@ -259,7 +281,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
 
   @Test
   public void testDefaultSchemaDfs() throws Exception{
-    JdbcAssert.withFull("dfs")
+    JdbcAssert.withFull("dfs_test")
         .sql(String.format("SELECT R_REGIONKEY FROM `%s/../../sample-data/region.parquet` LIMIT 2", WORKING_PATH))
         .returns(
             "R_REGIONKEY=0\n" +
@@ -277,7 +299,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
 
   @Test
   public void testDefaultSchemaHive() throws Exception{
-    JdbcAssert.withFull("hive")
+    JdbcAssert.withFull("hive_test")
         .sql("SELECT * FROM kv LIMIT 2")
         .returns(
             "key=1; value= key_1\n" +
@@ -286,7 +308,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
 
   @Test
   public void testDefaultTwoLevelSchemaHive() throws Exception{
-    JdbcAssert.withFull("hive.db1")
+    JdbcAssert.withFull("hive_test.db1")
         .sql("SELECT * FROM `kv_db1` LIMIT 2")
         .returns(
             "key=1; value= key_1\n" +
@@ -295,7 +317,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
 
   @Test
   public void testQueryFromNonDefaultSchema() throws Exception{
-    JdbcAssert.withFull("hive")
+    JdbcAssert.withFull("hive_test")
         .sql("SELECT full_name FROM cp.`employee.json` LIMIT 2")
         .returns(
             "full_name=Sheri Nowmer\n" +
@@ -305,8 +327,8 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   @Test
   public void testUseSchema() throws Exception{
     JdbcAssert.withNoDefaultSchema()
-        .sql("USE hive.`default`")
-        .returns("ok=true; summary=Default schema changed to 'hive.default'");
+        .sql("USE hive_test.`default`")
+        .returns("ok=true; summary=Default schema changed to 'hive_test.default'");
   }
 
   @Test
@@ -322,10 +344,10 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
       public Void apply(Connection connection) {
         try {
           Statement statement = connection.createStatement();
-          ResultSet resultSet = statement.executeQuery("USE hive.db1");
+          ResultSet resultSet = statement.executeQuery("USE hive_test.db1");
           String result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          String expected = "ok=true; summary=Default schema changed to 'hive.db1'";
+          String expected = "ok=true; summary=Default schema changed to 'hive_test.db1'";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
 
@@ -344,7 +366,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   }
 
   // Tests using backticks around the complete schema path
-  // select * from `dfs.tmp`.`/tmp/nation.parquet`;
+  // select * from `dfs_test.tmp`.`/tmp/nation.parquet`;
   @Test
   public void testCompleteSchemaRef1() throws Exception {
     testQuery("select * from `cp.default`.`employee.json` limit 2");
@@ -358,10 +380,10 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
           Statement statement = connection.createStatement();
 
           // change default schema
-          ResultSet resultSet = statement.executeQuery("USE `dfs.default`");
+          ResultSet resultSet = statement.executeQuery("USE `dfs_test.default`");
           String result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          String expected = "ok=true; summary=Default schema changed to 'dfs.default'";
+          String expected = "ok=true; summary=Default schema changed to 'dfs_test.default'";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
           resultSet =  statement.executeQuery(
@@ -382,8 +404,8 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
 
   @Test
   public void testShowFiles() throws Exception {
-    testQuery("show files from dfs.`/tmp`");
-    testQuery("show files from `dfs.default`.`/tmp`");
+    testQuery("show files from dfs_test.`/tmp`");
+    testQuery("show files from `dfs_test.default`.`/tmp`");
 
   }
 
@@ -395,7 +417,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs.`default`");
+          statement.executeQuery("USE dfs_test.`default`");
 
           // show files
           ResultSet resultSet = statement.executeQuery("show files from `/tmp`");

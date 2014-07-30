@@ -23,19 +23,15 @@ import java.util.Map;
 
 import net.hydromatic.linq4j.Ord;
 
-import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
-import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionType;
-import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelCollationImpl;
 import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
@@ -64,26 +60,33 @@ public class ProjectPrule extends Prule {
     RelNode convertedInput = convert(input, traits);
 
     Map<Integer, Integer> inToOut = getProjectMap(project);
+    boolean traitPull = new ProjectTraitPull(call, inToOut).go(project, convertedInput);
 
-    if (convertedInput instanceof RelSubset) {
-      RelSubset subset = (RelSubset) convertedInput;
-      for (RelNode rel : subset.getRelList()) {
-        if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
-          DrillDistributionTrait childDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
-          RelCollation childCollation = rel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE);
-
-
-          DrillDistributionTrait newDist = convertDist(childDist, inToOut);
-          RelCollation newCollation = convertRelCollation(childCollation, inToOut);
-
-          call.transformTo(new ProjectPrel(project.getCluster(), project.getTraitSet().plus(newDist).plus(newCollation).plus(Prel.DRILL_PHYSICAL),
-              rel, project.getProjects(), project.getRowType()));
-        }
-      }
-
-    } else{
+    if(!traitPull){
       call.transformTo(new ProjectPrel(project.getCluster(), convertedInput.getTraitSet(), convertedInput, project.getProjects(), project.getRowType()));
     }
+  }
+
+  private class ProjectTraitPull extends SubsetTransformer<DrillProjectRel, RuntimeException> {
+    final Map<Integer, Integer> inToOut;
+
+    public ProjectTraitPull(RelOptRuleCall call, Map<Integer, Integer> inToOut) {
+      super(call);
+      this.inToOut = inToOut;
+    }
+
+    @Override
+    public RelNode convertChild(DrillProjectRel project, RelNode rel) throws RuntimeException {
+      DrillDistributionTrait childDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
+      RelCollation childCollation = rel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE);
+
+
+      DrillDistributionTrait newDist = convertDist(childDist, inToOut);
+      RelCollation newCollation = convertRelCollation(childCollation, inToOut);
+      RelTraitSet newProjectTraits = rel.getTraitSet().plus(newDist).plus(newCollation);
+      return new ProjectPrel(project.getCluster(), newProjectTraits, rel, project.getProjects(), project.getRowType());
+    }
+
   }
 
   private DrillDistributionTrait convertDist(DrillDistributionTrait srcDist, Map<Integer, Integer> inToOut) {

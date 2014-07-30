@@ -79,27 +79,27 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
                      GM("doSetup", "doSetup", null, null));
   public final MappingSet copyLeftMapping =
       new MappingSet("leftIndex", "outIndex",
-                     GM("doSetup", "doCopyLeft", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCopyLeft", null, null));
   public final MappingSet copyRightMappping =
       new MappingSet("rightIndex", "outIndex",
-                     GM("doSetup", "doCopyRight", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCopyRight", null, null));
   public final MappingSet compareMapping =
       new MappingSet("leftIndex", "rightIndex",
-                     GM("doSetup", "doCompare", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCompare", null, null));
   public final MappingSet compareRightMapping =
       new MappingSet("rightIndex", "null",
-                     GM("doSetup", "doCompare", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCompare", null, null));
   public final MappingSet compareLeftMapping =
       new MappingSet("leftIndex", "null",
-                     GM("doSetup", "doCompareNextLeftKey", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCompareNextLeftKey", null, null));
   public final MappingSet compareNextLeftMapping =
       new MappingSet("nextLeftIndex", "null",
-                     GM("doSetup", "doCompareNextLeftKey", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCompareNextLeftKey", null, null));
 
 
@@ -172,7 +172,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           first = true;
         } catch (ClassTransformationException | IOException | SchemaChangeException e) {
           context.fail(new SchemaChangeException(e));
-          kill();
+          kill(false);
           return IterOutcome.STOP;
         } finally {
           stats.stopSetup();
@@ -191,7 +191,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         setRecordCountInContainer();
         return first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
       case FAILURE:
-        kill();
+        kill(false);
         return IterOutcome.STOP;
       case NO_MORE_DATA:
         logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : (first ? "OK_NEW_SCHEMA" :"NONE")));
@@ -233,9 +233,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   @Override
-  protected void killIncoming() {
-    left.kill();
-    right.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    left.kill(sendUpstream);
+    right.kill(sendUpstream);
   }
 
   @Override

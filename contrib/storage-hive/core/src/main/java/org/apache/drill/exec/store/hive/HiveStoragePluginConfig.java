@@ -31,23 +31,12 @@ import java.util.Map;
 public class HiveStoragePluginConfig extends StoragePluginConfigBase {
   @JsonProperty
   public Map<String, String> configProps;
-  @JsonIgnore
-  private HiveConf hiveConf;
 
   public static final String NAME = "hive";
 
   @JsonIgnore
-  public HiveConf getHiveConf() {
-    if (hiveConf == null) {
-      hiveConf = new HiveConf();
-      if (configProps != null) {
-        for (Map.Entry<String, String> entry : configProps.entrySet()) {
-          hiveConf.set(entry.getKey(), entry.getValue());
-        }
-      }
-    }
-
-    return hiveConf;
+  public Map<String, String> getHiveConfigOverride() {
+    return configProps;
   }
 
   @JsonCreator

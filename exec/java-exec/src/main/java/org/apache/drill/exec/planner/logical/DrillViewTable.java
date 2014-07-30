@@ -36,11 +36,9 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillViewTable.class);
 
   private final View view;
-  private final List<String> path;
 
   public DrillViewTable(List<String> path, View view){
     this.view = view;
-    this.path = path;
   }
 
   @Override
@@ -56,7 +54,7 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
   @Override
   public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
     RelDataType rowType = relOptTable.getRowType();
-    RelNode rel = context.expandView(rowType, view.getSql(), path);
+    RelNode rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath());
 
     if (view.isDynamic()){
       return rel;

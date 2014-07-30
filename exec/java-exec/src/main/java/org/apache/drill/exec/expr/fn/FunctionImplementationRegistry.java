@@ -126,4 +126,15 @@ public class FunctionImplementationRegistry {
 
     return null;
   }
+
+  // Method to find if the output type of a drill function if of complex type
+  public boolean isFunctionComplexOutput(String name) {
+    List<DrillFuncHolder> methods = drillFuncRegistry.getMethods(name);
+    for (DrillFuncHolder holder : methods) {
+      if (holder.getReturnValue().isComplexWriter()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

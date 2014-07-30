@@ -67,7 +67,16 @@ public class GMathFunctions{
     }
 
     public void eval() {
-      out.value =(${type.castType}) ${func.javaFunc}(in.value);
+
+      <#if func.funcName=='trunc'>
+      <#if type.roundingRequired ??>
+      java.math.BigDecimal bd = java.math.BigDecimal.valueOf(in.value).setScale(0, java.math.BigDecimal.ROUND_DOWN);
+      out.value = <#if type.extraCast ??>(${type.extraCast})</#if>bd.${type.castType}Value();
+      <#else>
+      out.value = (${type.castType}) (in.value);</#if>
+      <#else>
+      out.value = (${type.castType}) ${func.javaFunc}(in.value);
+      </#if>
     }
   }
   
@@ -93,7 +102,18 @@ public class GMathFunctions{
     }
 
     public void eval() {
-      out.value =(${type.castType}) ( input1.value ${func.javaFunc} input2.value);
+	<#if func.funcName == 'div'>
+	<#if type.roundingRequired ??>
+    java.math.BigDecimal bdOut = java.math.BigDecimal.valueOf(input1.value ${func.javaFunc} input2.value).setScale(0, java.math.BigDecimal.ROUND_DOWN);
+    out.value = bdOut.${type.castType}Value();
+    <#else>
+    out.value = (${type.castType}) ( input1.value ${func.javaFunc} input2.value);
+    </#if>
+    <#elseif func.funcName == 'mod'>
+    out.value = (${type.castType}) (input2.value == 0 ? input1.value : (input1.value ${func.javaFunc} input2.value));
+    <#else>
+    out.value =(${type.castType}) ( input1.value ${func.javaFunc} input2.value);
+    </#if>
     }
   }
   </#list>

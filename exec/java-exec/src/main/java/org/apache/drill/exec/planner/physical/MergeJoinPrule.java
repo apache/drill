@@ -62,11 +62,13 @@ public class MergeJoinPrule extends JoinPruleBase {
       return;
     }
     
+    boolean hashSingleKey = PrelUtil.getPlannerSettings(call.getPlanner()).isHashSingleKey();
+    
     try {            
       RelCollation collationLeft = getCollation(join.getLeftKeys());
       RelCollation collationRight = getCollation(join.getRightKeys());
 
-      createDistBothPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight);
+      createDistBothPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight, hashSingleKey);
 
       if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
         createBroadcastPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight);

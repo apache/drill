@@ -27,6 +27,7 @@ import java.io.IOException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
@@ -74,7 +75,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     switch (rpcType) {
 
     case RpcType.RUN_QUERY_VALUE:
-      logger.trace("Received query to run.  Returning query handle.");
+      logger.debug("Received query to run.  Returning query handle.");
       try {
         RunQuery query = RunQuery.PARSER.parseFrom(new ByteBufInputStream(pBody));
         return new Response(RpcType.QUERY_HANDLE, worker.submitWork(connection, query));
@@ -83,7 +84,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       }
 
     case RpcType.REQUEST_RESULTS_VALUE:
-      logger.trace("Received results requests.  Returning empty query result.");
+      logger.debug("Received results requests.  Returning empty query result.");
       try {
         RequestResults req = RequestResults.PARSER.parseFrom(new ByteBufInputStream(pBody));
         return new Response(RpcType.QUERY_RESULT, worker.getResult(connection, req));
@@ -92,8 +93,12 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       }
 
     case RpcType.CANCEL_QUERY_VALUE:
-      logger.warn("Cancel requested but not supported yet.");
-      return new Response(RpcType.ACK, Acks.OK);
+      try {
+        QueryId queryId = QueryId.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        return new Response(RpcType.ACK, worker.cancelQuery(queryId));
+      } catch (InvalidProtocolBufferException e) {
+        throw new RpcException("Failure while decoding QueryId body.", e);
+      }
 
     default:
       throw new UnsupportedOperationException(String.format("UserServer received rpc of unknown type.  Type was %d.", rpcType));
@@ -125,7 +130,12 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
     public void sendResult(RpcOutcomeListener<Ack> listener, QueryWritableBatch result){
       logger.trace("Sending result to client with {}", result);
-      send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, result.getBuffers());
+      send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, false, result.getBuffers());
+    }
+
+    public void sendResult(RpcOutcomeListener<Ack> listener, QueryWritableBatch result, boolean allowInEventThread){
+      logger.trace("Sending result to client with {}", result);
+      send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, allowInEventThread, result.getBuffers());
     }
 
     @Override

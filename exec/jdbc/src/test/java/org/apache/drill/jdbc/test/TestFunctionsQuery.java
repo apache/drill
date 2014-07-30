@@ -44,7 +44,7 @@ public class TestFunctionsQuery {
         "abs(cast('-12345678912345678912.4567' as decimal(28, 5))) DEC28_ABS_2, " +
         "abs(cast('1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_ABS_1, " +
         "abs(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_ABS_2 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -82,7 +82,7 @@ public class TestFunctionsQuery {
         "ceil(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
         "ceil(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
         "ceil(cast('-1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_5 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -130,7 +130,7 @@ public class TestFunctionsQuery {
         "floor(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
         "floor(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
         "floor(cast('-999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_5 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -177,7 +177,7 @@ public class TestFunctionsQuery {
         "trunc(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
         "trunc(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
         "trunc(cast('-999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_5 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -224,7 +224,7 @@ public class TestFunctionsQuery {
         "trunc(cast('999999999.1234' as decimal(38, 4)), 12) DEC38_3, " +
         "trunc(cast('-123456789123456789.4' as decimal(38, 1)), 10) DEC38_4, " +
         "trunc(cast('-999999999999999999999999999999999999.4' as decimal(38, 1)), 1) DEC38_5 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -263,21 +263,21 @@ public class TestFunctionsQuery {
       "trunc(-1234, -4) as T_8, " +
       "trunc(8124674407369523212, 0) as T_9, " +
       "trunc(81246744073695.395, 1) as T_10 " +
-      "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+      "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
       .sql(query)
       .returns(
-        "T_1=1234.45; " +
-          "T_2=-1234.45; " +
-          "T_3=1200.0; " +
-          "T_4=-1200.0; " +
-          "T_5=1234.0; " +
-          "T_6=-1234.0; " +
-          "T_7=0.0; " +
-          "T_8=0.0; " +
-          "T_9=8.1246744073695232E18; " +
-          "T_10=8.12467440736953E13\n"
+          "T_1=1234.45; " +
+              "T_2=-1234.45; " +
+              "T_3=1200.0; " +
+              "T_4=-1200.0; " +
+              "T_5=1234.0; " +
+              "T_6=-1234.0; " +
+              "T_7=0.0; " +
+              "T_8=0.0; " +
+              "T_9=8.1246744073695232E18; " +
+              "T_10=8.12467440736953E13\n"
       );
   }
 
@@ -303,7 +303,7 @@ public class TestFunctionsQuery {
         "round(cast('1234567891234567891234567891234567891.2' as decimal(38, 1))) DEC38_4, " +
         "round(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_5, " +
         "round(cast('-999999999999999999999999999999999999.9' as decimal(38, 1))) DEC38_6 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -354,7 +354,7 @@ public class TestFunctionsQuery {
         "round(cast('999999999.9999999995678' as decimal(38, 18)), 21) DEC38_5, " +
         "round(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1)), 1) DEC38_6, " +
         "round(cast('-999999999999999999999999999999999999.9' as decimal(38, 1)), 0) DEC38_7 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -396,21 +396,21 @@ public class TestFunctionsQuery {
       "round(-1234, -4) as T_8, " +
       "round(8124674407369523212, -4) as T_9, " +
       "round(81246744073695.395, 1) as T_10 " +
-      "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+      "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
       .sql(query)
       .returns(
-        "T_1=1234.46; " +
-          "T_2=-1234.46; " +
-          "T_3=1200.0; " +
-          "T_4=-1200.0; " +
-          "T_5=1234.0; " +
-          "T_6=-1234.0; " +
-          "T_7=0.0; " +
-          "T_8=0.0; " +
-          "T_9=8.1246744073695201E18; " +
-          "T_10=8.12467440736954E13\n"
+          "T_1=1234.46; " +
+              "T_2=-1234.46; " +
+              "T_3=1200.0; " +
+              "T_4=-1200.0; " +
+              "T_5=1234.0; " +
+              "T_6=-1234.0; " +
+              "T_7=0.0; " +
+              "T_8=0.0; " +
+              "T_9=8.1246744073695201E18; " +
+              "T_10=8.12467440736954E13\n"
       );
   }
 
@@ -423,7 +423,7 @@ public class TestFunctionsQuery {
         "to_char(cast('99999912399.9567' as decimal(18, 5)), '#.#####') DEC18_1, " +
         "to_char(cast('12345678912345678912.5567' as decimal(28, 5)), '#,###.#####') DEC28_1, " +
         "to_char(cast('999999999999999999999999999.5' as decimal(38, 1)), '#.#') DEC38_1 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -442,7 +442,7 @@ public class TestFunctionsQuery {
   public void testConcatFunction() throws Exception {
     String query = String.format("SELECT " +
         "concat('1234', ' COL_VALUE ', R_REGIONKEY, ' - STRING') as STR_1 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -456,13 +456,23 @@ public class TestFunctionsQuery {
   public void testTimeStampConstant() throws Exception {
     String query = String.format("SELECT " +
         "timestamp '2008-2-23 12:23:23' as TS " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
         .returns(
             "TS=2008-02-23 12:23:23.0\n"
         );
+  }
+
+  @Test
+  public void testNullConstantsTimeTimeStampAndDate() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT CAST(NULL AS TIME) AS t, " +
+            "CAST(NULL AS TIMESTAMP) AS ts, " +
+            "CAST(NULL AS DATE) AS d " +
+            "FROM cp.`region.json` LIMIT 1")
+        .returns("t=null; ts=null; d=null");
   }
 
   @Test
@@ -490,7 +500,7 @@ public class TestFunctionsQuery {
 
   @Test
   public void testDecimalAddConstant() throws Exception {
-    String query = "select (cast('-1' as decimal(38, 3)) + cast (employee_id as decimal(38, 3))) as CNT " +
+    String query = "select (cast('-1' as decimal(37, 3)) + cast (employee_id as decimal(37, 3))) as CNT " +
         "from cp.`employee.json` where employee_id <= 4";
 
     JdbcAssert.withNoDefaultSchema()
@@ -503,7 +513,7 @@ public class TestFunctionsQuery {
 
   @Test
   public void testDecimalAddIntConstant() throws Exception {
-    String query = "select 1 + cast(employee_id as decimal(9, 3)) as DEC_9 , 1 + cast(employee_id as decimal(38, 5)) as DEC_38 " +
+    String query = "select 1 + cast(employee_id as decimal(9, 3)) as DEC_9 , 1 + cast(employee_id as decimal(37, 5)) as DEC_38 " +
         "from cp.`employee.json` where employee_id <= 2";
 
     JdbcAssert.withNoDefaultSchema()
@@ -528,6 +538,27 @@ public class TestFunctionsQuery {
             "SIGN_INT=1\n");
   }
 
+  @Test
+  public void testDateTrunc() throws Exception {
+    String query = "select "
+        + "date_trunc('MINUTE', time '2:30:21.5') as TIME1, "
+        + "date_trunc('SECOND', time '2:30:21.5') as TIME2, "
+        + "date_trunc('HOUR', timestamp '1991-05-05 10:11:12.100') as TS1, "
+        + "date_trunc('SECOND', timestamp '1991-05-05 10:11:12.100') as TS2, "
+        + "date_trunc('MONTH', date '2011-2-2') as DATE1, "
+        + "date_trunc('YEAR', date '2011-2-2') as DATE2 "
+        + "from cp.`employee.json` where employee_id < 2";
+    JdbcAssert.withNoDefaultSchema()
+    .sql(query)
+    .returns(
+        "TIME1=02:30:00; " +
+        "TIME2=02:30:21; " +
+        "TS1=1991-05-05 10:00:00.0; " +
+        "TS2=1991-05-05 10:11:12.0; " +
+        "DATE1=2011-02-01; " +
+        "DATE2=2011-01-01\n");
+  }
+  
   @Test
   @Ignore
   public void testToTimeStamp() throws Exception {
@@ -586,16 +617,19 @@ public class TestFunctionsQuery {
             "DECIMAL_DOUBLE_CAST=1.0001\n");
   }
 
+  @Ignore("we don't have decimal division")
   @Test
   public void testCastDecimalDivide() throws Exception {
     String query = "select  (cast('9' as decimal(9, 1)) / cast('2' as decimal(4, 1))) as DEC9_DIV, " +
+        "cast('999999999' as decimal(9,0)) / cast('0.000000000000000000000000001' as decimal(28,28)) as DEC38_DIV, " +
         "cast('123456789.123456789' as decimal(18, 9)) * cast('123456789.123456789' as decimal(18, 9)) as DEC18_MUL " +
         "from cp.`employee.json` where employee_id = 1";
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
         .returns(
-            "DEC9_DIV=4.5000000; " +
+            "DEC9_DIV=4.500000000; " +
+            "DEC38_DIV=999999999000000000000000000000000000.0; " +
             "DEC18_MUL=15241578780673678.515622620750190521\n");
   }
 
@@ -687,5 +721,37 @@ public class TestFunctionsQuery {
         .sql(query)
         .returns(
             "NEG=-2\n");
+  }
+
+  @Test
+  public void testOptiqValidationFunctions() throws Exception {
+    String query = "select trim(first_name) as TRIM_STR, substring(first_name, 2) as SUB_STR " +
+                   "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns("TRIM_STR=Sheri; "+
+                 "SUB_STR=heri\n");
+  }
+  @Test
+  public void testDecimalDownwardCast() throws Exception {
+    String query = "select cast((cast('12345.6789' as decimal(18, 4))) as decimal(9, 4)) as DEC18_DEC9_1, " +
+                   "cast((cast('12345.6789' as decimal(18, 4))) as decimal(9, 2)) as DEC18_DEC9_2, " +
+                   "cast((cast('-12345.6789' as decimal(18, 4))) as decimal(9, 0)) as DEC18_DEC9_3, " +
+                   "cast((cast('999999999.6789' as decimal(38, 4))) as decimal(9, 0)) as DEC38_DEC19_1, " +
+                   "cast((cast('-999999999999999.6789' as decimal(38, 4))) as decimal(18, 2)) as DEC38_DEC18_1, " +
+                   "cast((cast('-999999999999999.6789' as decimal(38, 4))) as decimal(18, 0)) as DEC38_DEC18_2, " +
+                   "cast((cast('100000000999999999.6789' as decimal(38, 4))) as decimal(28, 0)) as DEC38_DEC28_1 " +
+                   "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns("DEC18_DEC9_1=12345.6789; "+
+                 "DEC18_DEC9_2=12345.68; " +
+                 "DEC18_DEC9_3=-12346; " +
+                 "DEC38_DEC19_1=1000000000; " +
+                 "DEC38_DEC18_1=-999999999999999.68; " +
+                 "DEC38_DEC18_2=-1000000000000000; " +
+                 "DEC38_DEC28_1=100000001000000000\n");
   }
 }

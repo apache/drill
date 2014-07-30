@@ -43,6 +43,7 @@ import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
 import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
@@ -71,7 +72,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   private final BufferAllocator allocator;
   private int reconnectTimes;
   private int reconnectDelay;
-  private boolean supportComplexTypes = true;
+  private boolean supportComplexTypes;
   private final boolean ownsZkConnection;
   private final boolean ownsAllocator;
 
@@ -99,6 +100,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     this.clusterCoordinator = coordinator;
     this.reconnectTimes = config.getInt(ExecConstants.BIT_RETRY_TIMES);
     this.reconnectDelay = config.getInt(ExecConstants.BIT_RETRY_DELAY);
+    this.supportComplexTypes = config.getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES);
   }
 
   public DrillConfig getConfig(){
@@ -161,7 +163,8 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     // just use the first endpoint for now
     DrillbitEndpoint endpoint = endpoints.iterator().next();
 
-    this.client = new UserClient(allocator, TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-"));
+    this.client = new UserClient(supportComplexTypes, allocator,
+                                 TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-"));
     logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
     connect(endpoint);
     connected = true;
@@ -193,7 +196,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
     FutureHandler f = new FutureHandler();
     try {
-      client.setSupportComplexTypes(supportComplexTypes).connect(f, endpoint, props);
+      client.connect(f, endpoint, props);
       f.checkedGet();
     } catch (InterruptedException e) {
       throw new RpcException(e);
@@ -237,8 +240,9 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     return listener.getResults();
   }
 
-  public void cancelQuery(QueryId id){
-    client.send(RpcType.CANCEL_QUERY, id, Ack.class);
+  public DrillRpcFuture<Ack> cancelQuery(QueryId id){
+    logger.debug("Cancelling query {}", QueryIdHelper.getQueryId(id));
+    return client.send(RpcType.CANCEL_QUERY, id, Ack.class);
   }
 
 
@@ -289,9 +293,6 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     @Override
     public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
 //      logger.debug("Result arrived.  Is Last Chunk: {}.  Full Result: {}", result.getHeader().getIsLastChunk(), result);
-      if (result.getHeader().getErrorCount() > 0) {
-        fail(new Exception(result.getHeader().getError(0).getMessage()));
-      }
       results.add(result);
       if(result.getHeader().getIsLastChunk()){
         future.set(results);

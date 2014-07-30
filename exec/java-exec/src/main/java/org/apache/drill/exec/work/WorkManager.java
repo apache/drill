@@ -187,6 +187,10 @@ public class WorkManager implements Closeable {
       return runningFragments.get(handle);
     }
 
+    public void removeFragment(FragmentHandle handle) {
+      runningFragments.remove(handle);
+    }
+
     public Foreman getForemanForQueryId(QueryId queryId) {
       return queries.get(queryId);
     }
@@ -212,9 +216,13 @@ public class WorkManager implements Closeable {
       try {
         while (true) {
           // logger.debug("Polling for pending work tasks.");
-          Runnable r = pendingTasks.take();
+          RunnableWrapper r = pendingTasks.take();
           if (r != null) {
             logger.debug("Starting pending task {}", r);
+            if (r.inner instanceof FragmentExecutor) {
+              FragmentExecutor fragmentExecutor = (FragmentExecutor) r.inner;
+              runningFragments.put(fragmentExecutor.getContext().getHandle(), fragmentExecutor);
+            }
             executor.execute(r);
           }
 
@@ -228,7 +236,7 @@ public class WorkManager implements Closeable {
 
   private class RunnableWrapper implements Runnable {
 
-    private final Runnable inner;
+    final Runnable inner;
     private final String id;
 
     public RunnableWrapper(Runnable r, String id){

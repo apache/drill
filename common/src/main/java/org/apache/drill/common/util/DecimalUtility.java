@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Arrays;
 
 public class DecimalUtility {
@@ -267,6 +268,11 @@ public class DecimalUtility {
      */
     public static void getSparseFromBigDecimal(BigDecimal input, ByteBuf data, int startIndex, int scale, int precision, int nDecimalDigits) {
 
+        // Initialize the buffer
+        for (int i = 0; i < nDecimalDigits; i++) {
+          data.setInt(startIndex + (i * integerSize), 0);
+        }
+
         boolean sign = false;
 
         if (input.signum() == -1) {
@@ -340,6 +346,15 @@ public class DecimalUtility {
 
         return (input.unscaledValue().longValue());
     }
+
+    public static BigDecimal getBigDecimalFromPrimitiveTypes(int input, int scale, int precision) {
+      return BigDecimal.valueOf(input, scale);
+    }
+
+    public static BigDecimal getBigDecimalFromPrimitiveTypes(long input, int scale, int precision) {
+      return BigDecimal.valueOf(input, scale);
+    }
+
 
     public static int compareDenseBytes(ByteBuf left, int leftStart, boolean leftSign, ByteBuf right, int rightStart, boolean rightSign, int width) {
 
@@ -683,6 +698,31 @@ public class DecimalUtility {
    */
   public static int getPrecisionRange(int precision) {
     return getMaxPrecision(getDecimalDataType(precision));
+  }
+
+  public static int getFirstFractionalDigit(int decimal, int scale) {
+    if (scale == 0) {
+      return 0;
+    }
+    int temp = (int) adjustScaleDivide(decimal, scale - 1);
+    return Math.abs(temp % 10);
+  }
+
+  public static int getFirstFractionalDigit(long decimal, int scale) {
+    if (scale == 0) {
+      return 0;
+    }
+    long temp = adjustScaleDivide(decimal, scale - 1);
+    return (int) (Math.abs(temp % 10));
+  }
+
+  public static int getFirstFractionalDigit(ByteBuf data, int scale, int start, int nDecimalDigits) {
+    if (scale == 0) {
+      return 0;
+    }
+
+    int index = nDecimalDigits - roundUp(scale);
+    return (int) (adjustScaleDivide(data.getInt(start + (index * integerSize)), MAX_DIGITS - 1));
   }
 }
 

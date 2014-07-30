@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.BitControl.RpcType;
@@ -51,10 +52,14 @@ public class ControlTunnel {
     manager.runCommand(b);
   }
 
-  public DrillRpcFuture<Ack> cancelFragment(FragmentHandle handle){
-    CancelFragment b = new CancelFragment(handle);
+  public void cancelFragment(RpcOutcomeListener<Ack> outcomeListener, FragmentHandle handle){
+    CancelFragment b = new CancelFragment(outcomeListener, handle);
     manager.runCommand(b);
-    return b.getFuture();
+  }
+
+  public void informReceiverFinished(RpcOutcomeListener<Ack> outcomeListener, FinishedReceiver finishedReceiver){
+    ReceiverFinished b = new ReceiverFinished(outcomeListener, finishedReceiver);
+    manager.runCommand(b);
   }
 
   public DrillRpcFuture<Ack> sendFragmentStatus(FragmentStatus status){
@@ -85,17 +90,32 @@ public class ControlTunnel {
 
   }
 
-  public static class CancelFragment extends FutureBitCommand<Ack, ControlConnection> {
+
+  public static class ReceiverFinished extends ListeningCommand<Ack, ControlConnection> {
+    final FinishedReceiver finishedReceiver;
+
+    public ReceiverFinished(RpcOutcomeListener<Ack> listener, FinishedReceiver finishedReceiver) {
+      super(listener);
+      this.finishedReceiver = finishedReceiver;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_RECEIVER_FINISHED, finishedReceiver, Ack.class);
+    }
+  }
+
+  public static class CancelFragment extends ListeningCommand<Ack, ControlConnection> {
     final FragmentHandle handle;
 
-    public CancelFragment(FragmentHandle handle) {
-      super();
+    public CancelFragment(RpcOutcomeListener<Ack> listener, FragmentHandle handle) {
+      super(listener);
       this.handle = handle;
     }
 
     @Override
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_CANCEL_FRAGMENT, handle,  Ack.class);
+      connection.sendUnsafe(outcomeListener, RpcType.REQ_CANCEL_FRAGMENT, handle, Ack.class);
     }
 
   }
@@ -128,5 +148,4 @@ public class ControlTunnel {
       connection.send(outcomeListener, RpcType.REQ_QUERY_STATUS, queryId, QueryProfile.class);
     }
   }
-
 }

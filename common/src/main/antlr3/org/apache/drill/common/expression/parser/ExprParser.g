@@ -150,7 +150,7 @@ ifStatement returns [LogicalExpression e]
 	@after {
 	  $e = s.build();
 	}  
-  :  i1=ifStat {s.addCondition($i1.i); s.setPosition(pos($i1.start)); } (elseIfStat { s.addCondition($elseIfStat.i); } )* Else expression { s.setElse($expression.e); }End 
+  :  i1=ifStat {s.setIfCondition($i1.i); s.setPosition(pos($i1.start)); } (elseIfStat { s.setIfCondition($elseIfStat.i); } )* Else expression { s.setElse($expression.e); }End
   ;
 
 ifStat returns [IfExpression.IfCondition i]
@@ -167,11 +167,11 @@ caseStatement returns [LogicalExpression e]
 	@after {
 	  $e = s.build();
 	}  
-  : Case (caseWhenStat {s.addCondition($caseWhenStat.i); }) + caseElseStat { s.setElse($caseElseStat.e); } End 
+  : Case (caseWhenStat {s.setIfCondition($caseWhenStat.e); }) + caseElseStat { s.setElse($caseElseStat.e); } End
   ;
   
-caseWhenStat returns [IfExpression.IfCondition i]
-  : When e1=expression Then e2=expression {$i = new IfExpression.IfCondition($e1.e, $e2.e); }
+caseWhenStat returns [IfExpression.IfCondition e]
+  : When e1=expression Then e2=expression {$e = new IfExpression.IfCondition($e1.e, $e2.e); }
   ;
   
 caseElseStat returns [LogicalExpression e]

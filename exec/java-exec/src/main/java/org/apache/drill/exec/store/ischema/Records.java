@@ -124,12 +124,14 @@ public class Records {
     public final String SCHEMA_NAME;
     public final String SCHEMA_OWNER;
     public final String TYPE;
+    public final String IS_MUTABLE;
 
-    public Schema(String catalog, String name, String owner, String type) {
+    public Schema(String catalog, String name, String owner, String type, boolean isMutable) {
       this.CATALOG_NAME = catalog;
       this.SCHEMA_NAME = name;
       this.SCHEMA_OWNER = owner;
       this.TYPE = type;
+      this.IS_MUTABLE = isMutable ? "YES" : "NO";
     }
   }
 }

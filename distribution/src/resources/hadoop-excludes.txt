@@ -12,3 +12,4 @@ eclipse
 common
 guava
 servlet
+parquet

@@ -32,6 +32,7 @@ public abstract class BaseDataValueVector extends BaseValueVector{
 
   protected ByteBuf data = DeadBuf.DEAD_BUFFER;
   protected int valueCount;
+  protected int currentValueCount;
 
   public BaseDataValueVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
@@ -48,6 +49,14 @@ public abstract class BaseDataValueVector extends BaseValueVector{
       data = DeadBuf.DEAD_BUFFER;
       valueCount = 0;
     }
+  }
+
+  public void setCurrentValueCount(int count) {
+    currentValueCount = count;
+  }
+
+  public int getCurrentValueCount() {
+    return currentValueCount;
   }
 
 

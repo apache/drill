@@ -40,7 +40,7 @@ public class SmallIntBEConvertTo implements DrillSimpleFunc {
 
   @Override
   public void setup(RecordBatch incoming) {
-    buffer = org.apache.drill.exec.util.ConvertUtil.createBuffer(2);
+    buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(2);
   }
 
   @Override

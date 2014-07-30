@@ -35,7 +35,6 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.physical.impl.SimpleRootExec;
-import org.apache.drill.exec.physical.impl.TestStringFunctions;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -83,6 +82,7 @@ public class TestNewMathFunctions {
 	      bitContext.getMetrics(); result = new MetricRegistry();
 	      bitContext.getAllocator(); result = new TopLevelAllocator();
 	      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+	      bitContext.getConfig(); result = c;
 	    }};
 
 	    String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
@@ -96,14 +96,9 @@ public class TestNewMathFunctions {
 	      Object [] res = getRunResult(exec);
 	      assertEquals("return count does not match", res.length, expectedResults.length);
 
-	      System.out.println("-----------------------------------------------");
-	      System.out.println("ACTUAL_RESULTS\t\tEXPECTED_RESULTS");
-	      System.out.println("-----------------------------------------------");
 	      for (int i = 0; i<res.length; i++) {
-	      System.out.println(res[i] + "\t" + expectedResults[i]);
 	        assertEquals(String.format("column %s does not match", i),  res[i], expectedResults[i]);
 	      }
-	      System.out.println("-----------------------------------------------");
 	    }
 
 	    if(context.getFailureCause() != null){
@@ -128,5 +123,12 @@ public class TestNewMathFunctions {
 	    Object [] expected = new Object[] {Math.cbrt(1000), Math.log(10), (Math.log(64.0)/Math.log(2.0)), Math.exp(10), Math.toDegrees(0.5), Math.toRadians(45.0), Math.PI, Math.cbrt(d.doubleValue()), Math.log(d.doubleValue()), (Math.log(d.doubleValue())/Math.log(2)), Math.exp(d.doubleValue()), Math.toDegrees(d.doubleValue()), Math.toRadians(d.doubleValue())};
 
 	    runTest(bitContext, connection, expected, "functions/testExtendedMathFunctions.json");
+	  }
+
+	  @Test
+	  public void testTruncDivMod(@Injectable final DrillbitContext bitContext,
+	                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+	    Object [] expected = new Object[] {101.0, 0, 101, 1010.0, 101, 481.0, 0.001099999999931267};
+	    runTest(bitContext, connection, expected, "functions/testDivModTruncFunctions.json");
 	  }
 }

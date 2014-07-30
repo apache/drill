@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.List;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -185,7 +186,9 @@ public class BroadcastSenderRootExec extends BaseRootExec {
     public void failed(RpcException ex) {
       sendCount.decrement();
       logger.error("Failure while sending data to user.", ex);
-      ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
+      boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
+      ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger,
+        verbose);
       ok = false;
       this.ex = ex;
     }

@@ -224,6 +224,9 @@ public class FunctionConverter {
       case DECIMAL_AGGREGATE:
         return new DrillDecimalAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
           template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+      case DECIMAL_SUM_AGGREGATE:
+        return new DrillDecimalSumAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+          template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case SIMPLE:
         if (outputField.isComplexWriter)
           return new DrillComplexWriterFuncHolder(template.scope(), template.nulls(), 
@@ -244,14 +247,20 @@ public class FunctionConverter {
       case DECIMAL_MAX_SCALE:
           return new DrillDecimalMaxScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
-      case DECIMAL_SUM_SCALE:
+      case DECIMAL_MUL_SCALE:
           return new DrillDecimalSumScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+                  template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+      case DECIMAL_ADD_SCALE:
+          return new DrillDecimalAddFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case DECIMAL_CAST:
           return new DrillDecimalCastFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case DECIMAL_DIV_SCALE:
           return new DrillDecimalDivScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+                  template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+      case DECIMAL_MOD_SCALE:
+          return new DrillDecimalModScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case DECIMAL_SET_SCALE:
           return new DrillDecimalSetScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),

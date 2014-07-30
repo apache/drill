@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import net.hydromatic.optiq.tools.FrameworkContext;
-
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
@@ -26,8 +24,9 @@ import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
+import org.eigenbase.relopt.Context;
 
-public class PlannerSettings implements FrameworkContext{
+public class PlannerSettings implements Context{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
 
   private int numEndPoints = 0;
@@ -44,8 +43,9 @@ public class PlannerSettings implements FrameworkContext{
   public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", true);
   public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD, 1000000);
   public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, 100, 1.0d);
-  public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer", true);
+  public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer", false);
   public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size", 10);
+  public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key", true);
 
   public OptionManager options = null;
 
@@ -99,6 +99,10 @@ public class PlannerSettings implements FrameworkContext{
 
   public boolean isBroadcastJoinEnabled() {
     return options.getOption(BROADCAST.getOptionName()).bool_val;
+  }
+
+  public boolean isHashSingleKey() {
+    return options.getOption(HASH_SINGLE_KEY.getOptionName()).bool_val;
   }
 
   public long getBroadcastThreshold() {

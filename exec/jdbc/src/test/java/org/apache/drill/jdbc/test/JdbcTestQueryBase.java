@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class JdbcTestQueryBase extends JdbcTest {
   // Set a timeout unless we're debugging.
   @Rule
-  public TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
+  public TestRule TIMEOUT = TestTools.getTimeoutRule(40000);
 
   protected static final String WORKING_PATH;
   static{

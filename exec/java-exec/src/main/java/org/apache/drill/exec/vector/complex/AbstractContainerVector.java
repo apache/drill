@@ -24,6 +24,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.vector.ValueVector;
 
+import java.util.List;
+
 public abstract class AbstractContainerVector implements ValueVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
 
@@ -39,70 +41,74 @@ public abstract class AbstractContainerVector implements ValueVector{
     }
   }
 
+  public abstract List<ValueVector> getPrimitiveVectors();
+
   public abstract VectorWithOrdinal getVectorWithOrdinal(String name);
 
 
-  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg){
-    if(seg == null){
+  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
+    if (seg == null) {
       if(addToBreadCrumb) builder.intermediateType(this.getField().getType());
       return builder.finalType(this.getField().getType()).build();
     }
 
-    if(seg.isArray()){
-
-      if(seg.isLastPath()){
-
-        //if(addToBreadCrumb) builder.intermediateType(this.getField().getType());
-
+    if (seg.isArray()) {
+      if (seg.isLastPath()) {
         return builder //
           .remainder(seg) //
           .withIndex() //
           .finalType(getLastPathType()) //
           .build();
-      }else{
-        if(addToBreadCrumb){
+      } else {
+        if (addToBreadCrumb) {
           addToBreadCrumb = false;
           builder.remainder(seg);
         }
         // this is a complex array reference, which means it doesn't correspond directly to a vector by itself.
         seg = seg.getChild();
-
       }
-
-    }else{
+    } else {
       // name segment.
     }
 
     VectorWithOrdinal vord = getVectorWithOrdinal(seg.isArray() ? null : seg.getNameSegment().getPath());
-    if(vord == null) return null;
+    if (vord == null) return null;
 
     ValueVector v = vord.vector;
-
-    if(addToBreadCrumb){
-      //builder.intermediateType(this.getField().getType());
+    if (addToBreadCrumb) {
       builder.intermediateType(v.getField().getType());
       builder.addId(vord.ordinal);
     }
 
-    if(v instanceof AbstractContainerVector){
+    if (v instanceof AbstractContainerVector) {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) v;
       return c.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
-    }else{
-      if (seg != null && seg.isLastPath() && ! seg.isArray()) {
+    } else {
+      if (seg.isNamed()) {
         if(addToBreadCrumb) builder.intermediateType(v.getField().getType());
-        return builder.finalType(v.getField().getType()).build();
-      }else if(seg != null && seg.isLastPath() && seg.isArray()){
-        //if(addToBreadCrumb) builder.intermediateType(v.getField().getType());
-        return builder
-                .finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build())
-                .build();
-      }else{
-        logger.warn("You tried to request a complex type inside a scalar object or path or type is wrong.");
-        return null;
+        builder.finalType(v.getField().getType());
+      } else {
+        builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
+      }
+
+      if (seg.isLastPath()) {
+        return builder.build();
+      } else {
+        PathSegment child = seg.getChild();
+        if (child.isLastPath() && child.isArray()) {
+          if (addToBreadCrumb) {
+            builder.remainder(child);
+          }
+          builder.withIndex();
+          builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
+          return builder.build();
+        } else {
+          logger.warn("You tried to request a complex type inside a scalar object or path or type is wrong.");
+          return null;
+        }
       }
     }
-
   }
 
   private MajorType getLastPathType() {

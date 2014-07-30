@@ -147,4 +147,8 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
     return SelectionVectorMode.NONE;
   }
 
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
 }

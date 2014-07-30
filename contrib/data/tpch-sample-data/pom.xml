@@ -15,7 +15,7 @@
   <parent>
     <artifactId>drill-contrib-data-parent</artifactId>
     <groupId>org.apache.drill.contrib.data</groupId>
-    <version>1.0.0-m2-incubating-SNAPSHOT</version>
+    <version>0.4.0-incubating-SNAPSHOT</version>
   </parent>
 
   <artifactId>tpch-sample-data</artifactId>
@@ -38,7 +38,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>http://apache-drill.s3.amazonaws.com/files/sf-0.01_tpc-h_parquet.tgz</url>
+              <url>http://apache-drill.s3.amazonaws.com/files/sf-0.01_tpc-h_parquet_typed.tgz</url>
               <outputFileName>tpch.tgz</outputFileName>
               <unpack>true</unpack>
               <outputDirectory>${project.build.directory}/classes/tpch</outputDirectory>

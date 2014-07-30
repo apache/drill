@@ -125,4 +125,11 @@ public abstract class AbstractSchema implements Schema{
   public Expression getExpression(SchemaPlus parentSchema, String name) {
     return EXPRESSION;
   }
+
+  @Override
+  public boolean contentsHaveChangedSince(long lastCheck, long now) {
+    return true;
+  }
+
+
 }

@@ -74,6 +74,7 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     if(ok()){
       // update to inform(addSafe) once available for all repeated vector types for holders.
       inform(mutator.addSafe(idx(), h));
+      vector.setCurrentValueCount(idx());
     }
   }
   
@@ -81,6 +82,7 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     if(ok()){
       // update to inform(addSafe) once available for all repeated vector types for holders.
       inform(mutator.addSafe(idx(), h));
+      vector.setCurrentValueCount(idx());
     }
   }
 
@@ -96,6 +98,7 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     if(ok()){
       // update to inform(setSafe) once available for all vector types for holders.
       inform(mutator.setSafe(idx(), h));
+      vector.setCurrentValueCount(idx());
     }
   }
   
@@ -103,6 +106,7 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     if(ok()){
       // update to inform(setSafe) once available for all vector types for holders.
       inform(mutator.setSafe(idx(), h));
+      vector.setCurrentValueCount(idx());
     }
   }
   

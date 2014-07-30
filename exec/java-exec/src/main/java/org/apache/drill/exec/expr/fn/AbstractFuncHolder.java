@@ -22,6 +22,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.fn.FuncHolder;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 
@@ -42,4 +43,8 @@ public abstract class AbstractFuncHolder implements FuncHolder {
   }
 
   public abstract FunctionHolderExpression getExpr(String name, List<LogicalExpression> args, ExpressionPosition pos);
+
+  public abstract MajorType getParmMajorType(int i);
+
+  public abstract int getParamCount();
 }

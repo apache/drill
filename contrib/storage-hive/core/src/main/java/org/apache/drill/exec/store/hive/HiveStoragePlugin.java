@@ -48,7 +48,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   public HiveStoragePlugin(HiveStoragePluginConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
     this.config = config;
     this.context = context;
-    this.schemaFactory = new HiveSchemaFactory(this, name, config.getHiveConf());
+    this.schemaFactory = new HiveSchemaFactory(this, name, config.getHiveConfigOverride());
     this.name = name;
   }
 
@@ -72,7 +72,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
         throw new UnsupportedOperationException("Querying Hive views from Drill is not supported in current version.");
       }
 
-      return new HiveScan(hiveReadEntry, this, null);   
+      return new HiveScan(hiveReadEntry, this, columns);
     } catch (ExecutionSetupException e) {
       throw new IOException(e);
     }

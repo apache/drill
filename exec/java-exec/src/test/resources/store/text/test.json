@@ -15,7 +15,7 @@
             ],
             storage : {
               type : "named",
-              name: "dfs"
+              name: "dfs_test"
             },
             format: {
               type: "named",

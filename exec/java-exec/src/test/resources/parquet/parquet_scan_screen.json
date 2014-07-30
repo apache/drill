@@ -8,10 +8,10 @@
     }
   },
   storage:{
-    "dfs" :
+    "dfs_test" :
       {
         "type":"named",
-        "name":"dfs"
+        "name":"dfs_test"
       }
   },
   query:[
@@ -19,7 +19,7 @@
       @id:"1",
       op:"scan",
       memo:"initial_scan",
-      storageengine:"dfs",
+      storageengine:"dfs_test",
       selection: {
         format: {type: "parquet"},
         files: [

@@ -79,4 +79,9 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   public List<SqlOperator> getOperatorList() {
     return operators;
   }
+
+  // Get the list of SqlOperator's with the given name.
+  public List<SqlOperator> getSqlOperator(String name) {
+    return opMap.get(name.toLowerCase());
+  }
 }

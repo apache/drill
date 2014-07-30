@@ -15,8 +15,7 @@
   <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/plug-ins/be7019ee387/integration/jqueryui/dataTables.jqueryui.css">
 
   <script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
-  <script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.min.js"></script>
-  <script type="text/javascript" language="javascript" src="//cdn.datatables.net/plug-ins/be7019ee387/integration/jqueryui/dataTables.jqueryui.js"></script>
+  <script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
 
   <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/colvis/1.1.0/css/dataTables.colVis.css">
   <script type="text/javascript" language="javascript" src="//cdn.datatables.net/colvis/1.1.0/js/dataTables.colVis.min.js"></script>
@@ -26,35 +25,32 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <h2>Result</h2>
-  <div style="width=100%; overflow: auto;">
-    <table id="relation" class="table table-striped table-bordered table-condensed" style="table-layout: auto; width=100%;">
-      <#assign rows = model[0]>
+  <div>
+    <table id="result" class="table table-striped table-bordered table-condensed" style="table-layout: auto; width=100%;">
       <thead>
         <tr>
-          <#list rows as row>
-          <th>${row}</th>
+          <#list model.getColumnNames() as value>
+          <th>${value}</th>
           </#list>
         </tr>
       </thead>
       <tbody>
-      <#list model as rows>
-        <#if (rows_index > 0)>
-          <tr>
-            <#list rows as row>
-            <td>${row}</td>
-            </#list>
-          </tr>
-        </#if>
+      <#list model.getRecords() as record>
+        <tr>
+          <#list record as value>
+          <td>${value}</td>
+          </#list>
+        </tr>
       </#list>
       </tbody>
     </table>
   </div>
   <script charset="utf-8">
     $(document).ready(function() {
-      $('#relation').dataTable( {
+      $('#result').dataTable( {
         "scrollX" : true,
-        "dom": '<Clfrtip>'
+        "dom": '<"H"lCfr>t<"F"ip>',
+        "jQueryUI" : true
       } );
     } );
   </script>

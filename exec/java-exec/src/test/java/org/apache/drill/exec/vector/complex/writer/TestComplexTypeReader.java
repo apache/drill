@@ -146,6 +146,13 @@ public class TestComplexTypeReader extends BaseTestQuery{
     test("  select convert_to(types[1].minor[0].valueHolder, 'JSON') from cp.`jsoninput/vvtypes.json`;");
   }
 
+
+  @Test
+  //Two complex type functions in SELECT clause : repeated map (map) --> Json,
+  public void testA4() throws Exception{
+    test("  select convert_to(types[1], 'JSON'), convert_to(modes[2], 'JSON') from cp.`jsoninput/vvtypes.json`;");
+  }
+
   @Test
   //repeated map (map) .
   public void testB1() throws Exception{

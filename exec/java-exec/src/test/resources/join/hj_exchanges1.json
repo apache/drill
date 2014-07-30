@@ -86,9 +86,6 @@
     "pop" : "project",
     "@id" : 9,
     "exprs" : [ {
-      "ref" : "`*1`",
-      "expr" : "`*`"
-    }, {
       "ref" : "`l_orderkey`",
       "expr" : "`l_orderkey`"
     }, {
@@ -137,9 +134,6 @@
     "pop" : "project",
     "@id" : 14,
     "exprs" : [ {
-      "ref" : "`*0`",
-      "expr" : "`*`"
-    }, {
       "ref" : "`o_orderdate`",
       "expr" : "`o_orderdate`"
     }, {

@@ -133,11 +133,18 @@ public class TestTpchExplain extends BaseTestQuery{
   }
 
   @Test
+  public void tpch19_1() throws Exception{
+    doExplain("queries/tpch/19_1.sql");
+  }
+
+
+  @Test
   public void tpch20() throws Exception{
     doExplain("queries/tpch/20.sql");
   }
 
   @Test
+  @Ignore
   public void tpch21() throws Exception{
     doExplain("queries/tpch/21.sql");
   }

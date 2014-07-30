@@ -52,6 +52,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 public class ParquetRecordWriter extends ParquetOutputRecordWriter {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordWriter.class);
 
   private static final int MINIMUM_BUFFER_SIZE = 64 * 1024;
   private static final int MINIMUM_RECORD_COUNT_FOR_CHECK = 100;
@@ -147,7 +148,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     if (recordCount >= recordCountForNextMemCheck) { // checking the memory size is relatively expensive, so let's not do it for every record.
       long memSize = store.memSize();
       if (memSize > blockSize) {
-        System.out.println("Reached block size " + blockSize);
+        logger.debug("Reached block size " + blockSize);
         flush();
         newSchema();
         recordCountForNextMemCheck = min(max(MINIMUM_RECORD_COUNT_FOR_CHECK, recordCount / 2), MAXIMUM_RECORD_COUNT_FOR_CHECK);

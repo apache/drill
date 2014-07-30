@@ -82,4 +82,9 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
     return SelectionVectorMode.TWO_BYTE;
   }
 
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
+  
 }

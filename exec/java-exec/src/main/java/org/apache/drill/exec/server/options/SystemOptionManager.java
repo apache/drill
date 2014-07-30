@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
+import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
@@ -56,8 +57,10 @@ public class SystemOptionManager implements OptionManager{
       PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR,
       PlannerSettings.PRODUCER_CONSUMER,
       PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE,
+      PlannerSettings.HASH_SINGLE_KEY,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
+      ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR,
       ExecConstants.SLICE_TARGET_OPTION,
       ExecConstants.AFFINITY_FACTOR,
       ExecConstants.MAX_WIDTH_GLOBAL,
@@ -66,9 +69,13 @@ public class SystemOptionManager implements OptionManager{
       ExecConstants.LARGE_QUEUE_SIZE,
       ExecConstants.QUEUE_THRESHOLD_SIZE,
       ExecConstants.QUEUE_TIMEOUT,
-      ExecConstants.SMALL_QUEUE_SIZE, 
+      ExecConstants.SMALL_QUEUE_SIZE,
       ExecConstants.MIN_HASH_TABLE_SIZE,
-      ExecConstants.MAX_HASH_TABLE_SIZE
+      ExecConstants.MAX_HASH_TABLE_SIZE,
+      QueryClassLoader.JAVA_COMPILER_VALIDATOR,
+      QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
+      QueryClassLoader.JAVA_COMPILER_DEBUG,
+      ExecConstants.ENABLE_VERBOSE_ERRORS
   };
 
   public final PStoreConfig<OptionValue> config;

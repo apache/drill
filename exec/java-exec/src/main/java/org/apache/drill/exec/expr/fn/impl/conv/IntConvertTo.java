@@ -40,7 +40,7 @@ public class IntConvertTo implements DrillSimpleFunc {
 
   @Override
   public void setup(RecordBatch incoming) {
-    buffer = org.apache.drill.exec.util.ConvertUtil.createBuffer(4);
+    buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(4);
   }
 
   @Override

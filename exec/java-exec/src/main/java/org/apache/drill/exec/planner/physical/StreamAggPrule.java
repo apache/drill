@@ -23,11 +23,9 @@ import java.util.logging.Logger;
 import net.hydromatic.optiq.util.BitSets;
 
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
-import org.apache.drill.exec.planner.logical.DrillRel;
+import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
-import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
-import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelCollationImpl;
@@ -47,21 +45,21 @@ public class StreamAggPrule extends AggPruleBase {
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
   private StreamAggPrule() {
-    super(RelOptHelper.any(DrillAggregateRel.class), "Prel.StreamAggPrule");
+    super(RelOptHelper.some(DrillAggregateRel.class, RelOptHelper.any(RelNode.class)), "StreamAggPrule");
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
     return PrelUtil.getPlannerSettings(call.getPlanner()).isStreamAggEnabled();
   }
-  
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
     final RelNode input = aggregate.getChild();
-    RelCollation collation = getCollation(aggregate);
+    final RelCollation collation = getCollation(aggregate);
     RelTraitSet traits = null;
-    
+
     if (aggregate.containsDistinctCall()) {
       // currently, don't use StreamingAggregate if any of the logical aggrs contains DISTINCT
       return;
@@ -70,119 +68,110 @@ public class StreamAggPrule extends AggPruleBase {
     try {
       if (aggregate.getGroupSet().isEmpty()) {
         DrillDistributionTrait singleDist = DrillDistributionTrait.SINGLETON;
-        RelTraitSet singleDistTrait = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(singleDist);
-        
+        final RelTraitSet singleDistTrait = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(singleDist);
+
         if (create2PhasePlan(call, aggregate)) {
           traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL) ;
 
-          RelNode convertedInput = convert(input, traits);  
+          RelNode convertedInput = convert(input, traits);
+          new SubsetTransformer<DrillAggregateRel, InvalidRelException>(call){
 
-          if (convertedInput instanceof RelSubset) {
-            RelSubset subset = (RelSubset) convertedInput;
-            for (RelNode rel : subset.getRelList()) {
-              if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
-                DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);              
-                traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
-                RelNode newInput = convert(input, traits);
+            public RelNode convertChild(final DrillAggregateRel join, final RelNode rel) throws InvalidRelException {
+              DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
+              RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, toDist);
+              RelNode newInput = convert(input, traits);
 
-                StreamAggPrel phase1Agg = new StreamAggPrel(aggregate.getCluster(), traits, newInput,
-                    aggregate.getGroupSet(),
-                    aggregate.getAggCallList(), 
-                    OperatorPhase.PHASE_1of2);
+              StreamAggPrel phase1Agg = new StreamAggPrel(aggregate.getCluster(), traits, newInput,
+                  aggregate.getGroupSet(),
+                  aggregate.getAggCallList(),
+                  OperatorPhase.PHASE_1of2);
 
-                UnionExchangePrel exch = 
-                    new UnionExchangePrel(phase1Agg.getCluster(), singleDistTrait, phase1Agg);
-        
-                StreamAggPrel phase2Agg =  new StreamAggPrel(aggregate.getCluster(), singleDistTrait, exch,
-                    aggregate.getGroupSet(),
-                    phase1Agg.getPhase2AggCalls(),
-                    OperatorPhase.PHASE_2of2);
+              UnionExchangePrel exch =
+                  new UnionExchangePrel(phase1Agg.getCluster(), singleDistTrait, phase1Agg);
 
-                call.transformTo(phase2Agg);  
-              }
+              return  new StreamAggPrel(aggregate.getCluster(), singleDistTrait, exch,
+                  aggregate.getGroupSet(),
+                  phase1Agg.getPhase2AggCalls(),
+                  OperatorPhase.PHASE_2of2);
             }
-          }
-        } else {        
+          }.go(aggregate, convertedInput);
+
+        } else {
           createTransformRequest(call, aggregate, input, singleDistTrait);
         }
       } else {
         // hash distribute on all grouping keys
-        DrillDistributionTrait distOnAllKeys = 
-            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
+        final DrillDistributionTrait distOnAllKeys =
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
                                        ImmutableList.copyOf(getDistributionField(aggregate, true)));
-         
+
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(distOnAllKeys);
         createTransformRequest(call, aggregate, input, traits);
 
         // hash distribute on one grouping key
-        DrillDistributionTrait distOnOneKey = 
-            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
+        DrillDistributionTrait distOnOneKey =
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
                                        ImmutableList.copyOf(getDistributionField(aggregate, false)));
-    
+
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(distOnOneKey);
         // Temporarily commenting out the single distkey plan since a few tpch queries (e.g 01.sql) get stuck
         // in VolcanoPlanner.canonize() method. Note that the corresponding single distkey plan for HashAggr works
-        // ok.  One possibility is that here we have dist on single key but collation on all keys, so that 
-        // might be causing some problem. 
-        /// TODO: re-enable this plan after resolving the issue.  
+        // ok.  One possibility is that here we have dist on single key but collation on all keys, so that
+        // might be causing some problem.
+        /// TODO: re-enable this plan after resolving the issue.
         // createTransformRequest(call, aggregate, input, traits);
- 
+
         if (create2PhasePlan(call, aggregate)) {
           traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL) ;
+          RelNode convertedInput = convert(input, traits);
 
-          RelNode convertedInput = convert(input, traits);  
+          new SubsetTransformer<DrillAggregateRel, InvalidRelException>(call){
 
-          if (convertedInput instanceof RelSubset) {
-            RelSubset subset = (RelSubset) convertedInput;
-            for (RelNode rel : subset.getRelList()) {
-              if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
-                DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);              
-                traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(toDist);
-                RelNode newInput = convert(input, traits);
+            public RelNode convertChild(final DrillAggregateRel aggregate, final RelNode rel) throws InvalidRelException {
+              DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
+              RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, collation, toDist);
+              RelNode newInput = convert(input, traits);
 
-                StreamAggPrel phase1Agg = new StreamAggPrel(aggregate.getCluster(), traits, newInput,
-                    aggregate.getGroupSet(),
-                    aggregate.getAggCallList(), 
-                    OperatorPhase.PHASE_1of2);
+              StreamAggPrel phase1Agg = new StreamAggPrel(aggregate.getCluster(), traits, newInput,
+                  aggregate.getGroupSet(),
+                  aggregate.getAggCallList(),
+                  OperatorPhase.PHASE_1of2);
 
-                int numEndPoints = PrelUtil.getSettings(phase1Agg.getCluster()).numEndPoints();
+              int numEndPoints = PrelUtil.getSettings(phase1Agg.getCluster()).numEndPoints();
 
-                HashToMergeExchangePrel exch =
-                    new HashToMergeExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
-                        phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)),
-                        collation,
-                        numEndPoints);
+              HashToMergeExchangePrel exch =
+                  new HashToMergeExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
+                      phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)),
+                      collation,
+                      numEndPoints);
 
-                StreamAggPrel phase2Agg =  new StreamAggPrel(aggregate.getCluster(), traits, exch,
-                    aggregate.getGroupSet(),
-                    phase1Agg.getPhase2AggCalls(), 
-                    OperatorPhase.PHASE_2of2);
-
-                call.transformTo(phase2Agg);                   
-              }
+              return new StreamAggPrel(aggregate.getCluster(), exch.getTraitSet(), exch,
+                  aggregate.getGroupSet(),
+                  phase1Agg.getPhase2AggCalls(),
+                  OperatorPhase.PHASE_2of2);
             }
-          }    
+          }.go(aggregate, convertedInput);
         }
-      } 
+      }
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }
   }
 
-  private void createTransformRequest(RelOptRuleCall call, DrillAggregateRel aggregate, 
+  private void createTransformRequest(RelOptRuleCall call, DrillAggregateRel aggregate,
                                       RelNode input, RelTraitSet traits) throws InvalidRelException {
 
     final RelNode convertedInput = convert(input, traits);
-    
+
     StreamAggPrel newAgg = new StreamAggPrel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
                                              aggregate.getAggCallList(), OperatorPhase.PHASE_1of1);
-      
+
     call.transformTo(newAgg);
   }
-  
-  
+
+
   private RelCollation getCollation(DrillAggregateRel rel){
-    
+
     List<RelFieldCollation> fields = Lists.newArrayList();
     for (int group : BitSets.toIter(rel.getGroupSet())) {
       fields.add(new RelFieldCollation(group));

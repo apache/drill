@@ -60,9 +60,10 @@ public class ClassGenerator<T>{
   public static final GeneratorMapping DEFAULT_SCALAR_MAP = GM("doSetup", "doEval", null, null);
   public static final GeneratorMapping DEFAULT_CONSTANT_MAP = GM("doSetup", "doSetup", null, null);
 
-
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassGenerator.class);
   public static enum BlockType {SETUP, EVAL, RESET, CLEANUP};
+
+  private static final int MAX_BLOCKS_IN_FUNCTION = 50;
 
   private final SignatureHolder sig;
   private final EvaluationVisitor evaluationVisitor;
@@ -83,7 +84,6 @@ public class ClassGenerator<T>{
   public static MappingSet getDefaultMapping(){
     return new MappingSet("inIndex", "outIndex", DEFAULT_CONSTANT_MAP, DEFAULT_SCALAR_MAP);
   }
-
 
   @SuppressWarnings("unchecked")
   ClassGenerator(CodeGenerator<T> codeGenerator, MappingSet mappingSet, SignatureHolder signature, EvaluationVisitor eval, JDefinedClass clazz, JCodeModel model) throws JClassAlreadyExistsException {
@@ -155,16 +155,16 @@ public class ClassGenerator<T>{
     String methodName = getCurrentMapping().getMethodName(BlockType.EVAL);
     this.blocks[sig.get(methodName)].addLast(block);
   }
-  
+
   public void unNestEvalBlock() {
     String methodName = getCurrentMapping().getMethodName(BlockType.EVAL);
     this.blocks[sig.get(methodName)].removeLast();
   }
-  
+
   public JLabel getEvalBlockLabel (String prefix) {
     return getEvalBlock().label(prefix + labelIndex ++);
   }
-  
+
   public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId){
     return declareVectorValueSetupAndMember( DirectExpression.direct(batchName), fieldId);
   }
@@ -205,7 +205,6 @@ public class ClassGenerator<T>{
         getNextVar("tmp"), //
         invoke.invoke(vectorAccess));
 
-
     b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(String.format("Failure while loading vector %s with id: %s.", vv.name(), fieldId.toString()))));
     //b.assign(vv, JExpr.cast(retClass, ((JExpression) JExpr.cast(wrapperClass, obj) ).invoke(vectorAccess)));
     b.assign(vv, JExpr.cast(retClass, obj ));
@@ -230,31 +229,54 @@ public class ClassGenerator<T>{
     }
   }
 
-
-
-  void flushCode(){
-    int i =0;
-    for(CodeGeneratorMethod method : sig){
-      JMethod m = clazz.method(JMod.PUBLIC, model._ref(method.getReturnType()), method.getMethodName());
-      for(CodeGeneratorArgument arg : method){
-        m.param(arg.getType(), arg.getName());
+  void flushCode() {
+    int i = 0;
+    for(CodeGeneratorMethod method : sig) {
+      JMethod outer = clazz.method(JMod.PUBLIC, model._ref(method.getReturnType()), method.getMethodName());
+      for(CodeGeneratorArgument arg : method) {
+        outer.param(arg.getType(), arg.getName());
       }
-      for(Class<?> c : method.getThrowsIterable()){
-        m._throws(model.ref(c));
+      for(Class<?> c : method.getThrowsIterable()) {
+        outer._throws(model.ref(c));
       }
-      m._throws(SchemaChangeException.class);
+      outer._throws(SchemaChangeException.class);
 
-      for(JBlock b : blocks[i++]){
-        if(!b.isEmpty()) m.body().add(b);
+      int methodIndex = 0;
+      int blocksInMethod = 0;
+      boolean isVoidMethod = method.getReturnType() == void.class;
+      for(JBlock b : blocks[i++]) {
+        if(!b.isEmpty()) {
+          if (blocksInMethod > MAX_BLOCKS_IN_FUNCTION) {
+            JMethod inner = clazz.method(JMod.PRIVATE, model._ref(method.getReturnType()), method.getMethodName() + methodIndex);
+            JInvocation methodCall = JExpr.invoke(inner);
+            for(CodeGeneratorArgument arg : method){
+              inner.param(arg.getType(), arg.getName());
+              methodCall.arg(JExpr.direct(arg.getName()));
+            }
+            for(Class<?> c : method.getThrowsIterable()){
+              inner._throws(model.ref(c));
+            }
+            inner._throws(SchemaChangeException.class);
+
+            if (isVoidMethod) {
+              outer.body().add(methodCall);
+            } else {
+              outer.body()._return(methodCall);
+            }
+            outer = inner;
+            blocksInMethod = 0;
+            ++methodIndex;
+          }
+          outer.body().add(b);
+          ++blocksInMethod;
+        }
       }
-
     }
 
-    for(ClassGenerator<T> child : innerClasses.values()){
+    for(ClassGenerator<T> child : innerClasses.values()) {
       child.flushCode();
-    }
+    } 
   }
-
 
   public JCodeModel getModel() {
     return model;
@@ -345,9 +367,7 @@ public class ClassGenerator<T>{
       return true;
     }
 
-
   }
-
 
   public static class HoldingContainer{
     private final JVar holder;
@@ -356,19 +376,24 @@ public class ClassGenerator<T>{
     private final MajorType type;
     private boolean isConstant;
     private final boolean singularRepeated;
+    private final boolean isReader;
 
     public HoldingContainer(MajorType t, JVar holder, JFieldRef value, JFieldRef isSet) {
-      this(t, holder, value, isSet, false);
+      this(t, holder, value, isSet, false, false);
     }
 
-    public HoldingContainer(MajorType t, JVar holder, JFieldRef value, JFieldRef isSet, boolean singularRepeated) {
-      super();
+    public HoldingContainer(MajorType t, JVar holder, JFieldRef value, JFieldRef isSet, boolean singularRepeated, boolean isReader) {
       this.holder = holder;
       this.value = value;
       this.isSet = isSet;
       this.type = t;
       this.isConstant = false;
       this.singularRepeated = singularRepeated;
+      this.isReader = isReader;
+    }
+
+    public boolean isReader() {
+      return this.isReader;
     }
 
     public boolean isSingularRepeated(){
@@ -417,4 +442,5 @@ public class ClassGenerator<T>{
   public JType getHolderType(MajorType t){
     return TypeHelper.getHolderType(model, t.getMinorType(), t.getMode());
   }
+
 }

@@ -38,6 +38,6 @@ public class BigIntVLongConvertFrom implements DrillSimpleFunc {
 
   @Override
   public void eval() {
-    out.value = org.apache.drill.exec.util.ConvertUtil.HadoopWritables.readVLong(in.buffer, in.start, in.end);
+    out.value = org.apache.drill.exec.util.ByteBufUtil.HadoopWritables.readVLong(in.buffer, in.start, in.end);
   }
 }

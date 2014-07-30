@@ -21,8 +21,10 @@ import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.List;
 
+import net.hydromatic.avatica.ArrayImpl.Factory;
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.Cursor;
+import net.hydromatic.avatica.Cursor.Accessor;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema;
@@ -34,23 +36,23 @@ public class DrillCursor implements Cursor{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillCursor.class);
 
   private static final String UNKNOWN = "--UNKNOWN--";
-  
+
   private boolean started = false;
   private boolean finished = false;
   private final RecordBatchLoader currentBatch;
   private final DrillResultSet.Listener listener;
   private boolean redoFirstNext = false;
   private boolean first = true;
-  
+
   private DrillColumnMetaDataList columnMetaDataList;
   private BatchSchema schema;
-  
+
   final DrillResultSet results;
   int currentRecord = 0;
   private long recordBatchCount;
   private final DrillAccessorList accessors = new DrillAccessorList();
 
-  
+
   public DrillCursor(DrillResultSet results) {
     super();
     this.results = results;
@@ -59,7 +61,7 @@ public class DrillCursor implements Cursor{
   }
 
   @Override
-  public List<Accessor> createAccessors(List<ColumnMetaData> types, Calendar localCalendar) {
+  public List<Accessor> createAccessors(List<ColumnMetaData> types, Calendar localCalendar, Factory factory) {
     columnMetaDataList = (DrillColumnMetaDataList) types;
     return accessors;
   }
@@ -73,9 +75,9 @@ public class DrillCursor implements Cursor{
       redoFirstNext = false;
       return true;
     }
-    
+
     if(finished) return false;
-    
+
     if(currentRecord+1 < currentBatch.getRecordCount()){
       currentRecord++;
       return true;
@@ -90,7 +92,7 @@ public class DrillCursor implements Cursor{
         }
 
         first = false;
-        
+
         if(qrb == null){
           finished = true;
           return false;
@@ -107,16 +109,16 @@ public class DrillCursor implements Cursor{
       } catch (RpcException | InterruptedException | SchemaChangeException e) {
         throw new SQLException("Failure while trying to get next result batch.", e);
       }
-      
+
     }
   }
-  
+
   void updateColumns(){
     accessors.generateAccessors(this, currentBatch);
     columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, schema);
     if(results.changeListener != null) results.changeListener.schemaChanged(schema);
   }
-  
+
   public long getRecordBatchCount(){
     return recordBatchCount;
   }
@@ -130,5 +132,5 @@ public class DrillCursor implements Cursor{
   public boolean wasNull() throws SQLException {
     return accessors.wasNull();
   }
-  
+
 }

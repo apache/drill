@@ -15,6 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
+
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
@@ -72,6 +77,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   
   public int getByteCapacity(){
     return data.capacity(); 
+  }
+
+  public int getCurrentSizeInBytes() {
+    return offsetVector.getAccessor().get(currentValueCount);
   }
   
   /**
@@ -279,7 +288,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return mutator;
   }
   
-  public final class Accessor extends BaseValueVector.BaseAccessor{
+  public final class Accessor extends BaseValueVector.BaseAccessor implements VariableWidthAccessor {
     final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
     
     public FieldReader getReader(){
@@ -294,6 +303,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       byte[] dst = new byte[length];
       data.getBytes(startIdx, dst, 0, length);
       return dst;
+    }
+
+    public int getValueLength(int index) {
+      return offsetVector.getAccessor().get(index + 1) - offsetVector.getAccessor().get(index);
     }
     
     public void get(int index, ${minor.class}Holder holder){
@@ -355,7 +368,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
    *
    * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
    */
-  public final class Mutator extends BaseValueVector.BaseMutator{
+  public final class Mutator extends BaseValueVector.BaseMutator implements VariableWidthVector.VariableWidthMutator {
 
     /**
      * Set the variable length element at the specified index to the supplied byte array.
@@ -417,7 +430,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       return true;
     }
 
-   
+    public boolean setValueLengthSafe(int index, int length) {
+      return offsetVector.getMutator().setSafe(index + 1, offsetVector.getAccessor().get(index) + length);
+    }
+
     public boolean setSafe(int index, Nullable${minor.class}Holder holder){
       assert holder.isSet == 1;
 

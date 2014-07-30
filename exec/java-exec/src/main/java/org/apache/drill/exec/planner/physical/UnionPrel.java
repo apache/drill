@@ -44,5 +44,10 @@ public abstract class UnionPrel extends DrillUnionRelBase implements Prel{
   public Iterator<Prel> iterator() {
     return PrelUtil.iter(this.getInputs());
   }
+  
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return false;
+  }
 
 }

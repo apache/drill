@@ -132,8 +132,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   @Override
-  public void kill() {
-    incoming.kill();
+  public void kill(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
   @Override
@@ -324,7 +324,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       return IterOutcome.OK_NEW_SCHEMA;
 
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
-      kill();
+      kill(false);
       logger.error("Failure during query", ex);
       context.fail(ex);
       return IterOutcome.STOP;
@@ -339,6 +339,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     VectorContainer hyperBatch = new VectorContainer();
     VectorContainer outputContainer = new VectorContainer();
     List<BatchGroup> batchGroupList = Lists.newArrayList();
+    int recordCount = 0;
     for (int i = 0; i < SPILL_BATCH_GROUP_SIZE; i++) {
       if (batchGroups.size() == 0) {
         break;
@@ -346,13 +347,15 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       if (batchGroups.peekLast().getSecondContainer() != null) {
         break;
       }
-      batchGroupList.add(batchGroups.pollLast());
+      BatchGroup batch = batchGroups.pollLast();
+      recordCount += batch.getSv2().getCount();
+      batchGroupList.add(batch);
     }
     if (batchGroupList.size() == 0) {
       return;
     }
     constructHyperBatch(batchGroupList, hyperBatch);
-    createCopier(hyperBatch, batchGroupList, outputContainer);
+    createCopier(hyperBatch, batchGroupList, outputContainer, recordCount);
 
     int count = copier.next();
     assert count > 0;
@@ -471,8 +474,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }else{
         jc._then()._return(out.getValue().minus());
       }
+      g.rotateBlock();
     }
 
+    g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
 
     return context.getImplementationClass(cg);
@@ -514,8 +519,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }else{
         jc._then()._return(out.getValue().minus());
       }
+      g.rotateBlock();
     }
 
+    g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
   }
 
@@ -535,7 +542,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     }
   }
 
-  private void createCopier(VectorAccessible batch, List<BatchGroup> batchGroupList, VectorContainer outputContainer) throws SchemaChangeException {
+  private void createCopier(VectorAccessible batch, List<BatchGroup> batchGroupList, VectorContainer outputContainer, int recordCount) throws SchemaChangeException {
     try {
       if (copier == null) {
         CodeGenerator<PriorityQueueCopier> cg = CodeGenerator.get(PriorityQueueCopier.TEMPLATE_DEFINITION, context.getFunctionRegistry());
@@ -555,7 +562,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         outputContainer.add(v);
         allocators.add(VectorAllocator.getAllocator(v, 110));
       }
-      copier.setup(context, copierAllocator, batch, batchGroupList, outputContainer, allocators);
+      copier.setup(context, copierAllocator, batch, batchGroupList, outputContainer, allocators, recordCount);
     } catch (ClassTransformationException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {
@@ -570,8 +577,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   @Override
-  protected void killIncoming() {
-    incoming.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
 }

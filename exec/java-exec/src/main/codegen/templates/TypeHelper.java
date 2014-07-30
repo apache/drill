@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/TypeHelper.java" />
 
@@ -110,6 +111,8 @@ public class TypeHelper {
         }
   </#list>
 </#list>
+    case GENERIC_OBJECT      :
+      return ObjectVector.class  ;
     default:
       break;
     }
@@ -205,16 +208,18 @@ public class TypeHelper {
       throw new UnsupportedOperationException();    
   }
 
-  public static Class<?> getSingularReaderImpl( MinorType type, DataMode mode){
+  public static Class<?> getHolderReaderImpl( MinorType type, DataMode mode){
     switch (type) {      
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
         switch (mode) {
           case REQUIRED:
-            return ${minor.class}SingularReaderImpl.class;
+            return ${minor.class}HolderReaderImpl.class;
           case OPTIONAL:
-            return Nullable${minor.class}SingularReaderImpl.class;
+            return Nullable${minor.class}HolderReaderImpl.class;
+          case REPEATED:
+            return Repeated${minor.class}HolderReaderImpl.class;
         }
   </#list>
 </#list>
@@ -243,6 +248,8 @@ public class TypeHelper {
         }
   </#list>
 </#list>
+      case GENERIC_OBJECT:
+        return model._ref(ObjectHolder.class);
       default:
         break;
       }
@@ -280,6 +287,8 @@ public class TypeHelper {
       }
   </#list>
 </#list>
+    case GENERIC_OBJECT:
+      return new ObjectVector(field, allocator)        ;
     default:
       break;
     }
@@ -304,6 +313,10 @@ public class TypeHelper {
       </#if>
   </#list>
 </#list>
+    case GENERIC_OBJECT:
+      holder = new ObjectHolder();
+      ((ObjectHolder)holder).obj = ((ObjectVector) vector).getAccessor().getObject(index)         ;
+      break;
     default:
       throw new UnsupportedOperationException(type.getMinorType() + " type is not supported."); 
     }
@@ -321,6 +334,9 @@ public class TypeHelper {
       break;
   </#list>
 </#list>
+    case GENERIC_OBJECT:
+      ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
+      break          ;
     default:
       throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");    
     }

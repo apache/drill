@@ -22,10 +22,12 @@ data: {
     mathFunc:tdd(../data/MathFunc.tdd),
     aggrtypes1: tdd(../data/AggrTypes1.tdd),
     decimalaggrtypes1: tdd(../data/DecimalAggrTypes1.tdd),
+    decimalaggrtypes2: tdd(../data/DecimalAggrTypes2.tdd),
     aggrtypes2: tdd(../data/AggrTypes2.tdd),
     aggrtypes3: tdd(../data/AggrTypes3.tdd),
     covarTypes: tdd(../data/CovarTypes.tdd),
     corrTypes: tdd(../data/CorrelationTypes.tdd),
+    logicalTypes: tdd(../data/AggrBitwiseLogicalTypes.tdd),
     date: tdd(../data/DateTypes.tdd),
     extract: tdd(../data/ExtractTypes.tdd),
     parser: tdd(../data/Parser.tdd),
@@ -33,6 +35,7 @@ data: {
     dateIntervalFunc: tdd(../data/DateIntervalFunc.tdd),
     intervalNumericTypes: tdd(../data/IntervalNumericTypes.tdd),
     extract: tdd(../data/ExtractTypes.tdd),
+    sumzero: tdd(../data/SumZero.tdd),
     numericTypes: tdd(../data/NumericTypes.tdd)
 }
 freemarkerLinks: {

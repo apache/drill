@@ -105,4 +105,10 @@ public class SortPrel extends SortRel implements Prel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.FOUR_BYTE;
   }
+  
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
+  
 }

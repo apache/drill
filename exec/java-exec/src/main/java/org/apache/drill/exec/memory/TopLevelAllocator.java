@@ -24,9 +24,9 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocatorL;
 
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -37,7 +37,7 @@ public class TopLevelAllocator implements BufferAllocator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopLevelAllocator.class);
 
   private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
-  private final Set<ChildAllocator> children;
+  private final Map<ChildAllocator, StackTraceElement[]> childrenMap;
   private final PooledByteBufAllocator innerAllocator = PooledByteBufAllocatorL.DEFAULT;
   private final Accountor acct;
   private final boolean errorOnLeak;
@@ -55,7 +55,7 @@ public class TopLevelAllocator implements BufferAllocator {
   private TopLevelAllocator(long maximumAllocation, boolean errorOnLeak){
     this.errorOnLeak = errorOnLeak;
     this.acct = new Accountor(errorOnLeak, null, null, maximumAllocation, 0);
-    this.children = ENABLE_ACCOUNTING ? new HashSet<ChildAllocator>() : null;
+    this.childrenMap = ENABLE_ACCOUNTING ? new IdentityHashMap<ChildAllocator, StackTraceElement[]>() : null;
   }
 
   public TopLevelAllocator(DrillConfig config) {
@@ -99,16 +99,24 @@ public class TopLevelAllocator implements BufferAllocator {
     };
     logger.debug("New child allocator with initial reservation {}", initialReservation);
     ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation);
-    if(ENABLE_ACCOUNTING) children.add(allocator);
+    if(ENABLE_ACCOUNTING) childrenMap.put(allocator, Thread.currentThread().getStackTrace());
+
     return allocator;
   }
 
   @Override
   public void close() {
     if (ENABLE_ACCOUNTING) {
-      for (ChildAllocator child : children) {
-        if (!child.isClosed()) {
-          throw new IllegalStateException("Failure while trying to close allocator: Child level allocators not closed.");
+      for (Entry<ChildAllocator, StackTraceElement[]> child : childrenMap.entrySet()) {
+        if (!child.getKey().isClosed()) {
+          StringBuilder sb = new StringBuilder();
+          StackTraceElement[] elements = child.getValue();
+          for (int i = 0; i < elements.length; i++) {
+            sb.append("\t\t");
+            sb.append(elements[i]);
+            sb.append("\n");
+          }
+          throw new IllegalStateException("Failure while trying to close allocator: Child level allocators not closed. Stack trace: \n" + sb);
         }
       }
     }

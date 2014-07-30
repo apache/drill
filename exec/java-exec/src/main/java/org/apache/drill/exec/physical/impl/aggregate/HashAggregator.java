@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public interface HashAggregator {
@@ -48,7 +49,7 @@ public interface HashAggregator {
                              HashAggBatch outgoing, LogicalExpression[] valueExprs, 
                              List<TypedFieldId> valueFieldIds,
                              TypedFieldId[] keyFieldIds,
-                             VectorAllocator[] keyAllocators, VectorAllocator[] valueAllocators)
+                             VectorContainer outContainer) 
     throws SchemaChangeException, IOException, ClassTransformationException;
 
   public abstract IterOutcome getOutcome();

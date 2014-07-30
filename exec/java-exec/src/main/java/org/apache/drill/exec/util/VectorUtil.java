@@ -19,6 +19,7 @@ package org.apache.drill.exec.util;
 
 import java.util.List;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.record.MaterializedField;
@@ -69,6 +70,40 @@ public class VectorUtil {
     }
   }
 
+  public static void appendVectorAccessibleContent(VectorAccessible va, StringBuilder formattedResults,
+      final String delimiter, boolean includeHeader) {
+    if (includeHeader) {
+      List<String> columns = Lists.newArrayList();
+      for (VectorWrapper<?> vw : va) {
+        columns.add(vw.getValueVector().getField().getPath().getAsUnescapedPath());
+      }
+
+      formattedResults.append(Joiner.on(delimiter).join(columns));
+      formattedResults.append("\n");
+    }
+
+    int rows = va.getRecordCount();
+    for (int row = 0; row < rows; row++) {
+      List<String> rowValues = Lists.newArrayList();
+      for (VectorWrapper<?> vw : va) {
+        Object o = vw.getValueVector().getAccessor().getObject(row);
+        if (o == null) {
+          rowValues.add("null");
+        } else if (o instanceof byte[]) {
+          rowValues.add(new String((byte[]) o));
+        } else {
+          rowValues.add(o.toString());
+        }
+      }
+      formattedResults.append(Joiner.on(delimiter).join(rowValues));
+      formattedResults.append("\n");
+    }
+
+    for (VectorWrapper<?> vw : va) {
+      vw.clear();
+    }
+  }
+
   public static void showVectorAccessibleContent(VectorAccessible va) {
     showVectorAccessibleContent(va, DEFAULT_COLUMN_WIDTH);
   }
@@ -87,7 +122,7 @@ public class VectorUtil {
       width += columnWidth + 2;
       formats.add("| %-" + columnWidth + "s");
       MaterializedField field = vw.getValueVector().getField();
-      columns.add(field.getPath().getAsUnescapedPath() + "<" + field.getType().getMinorType() + ">");
+      columns.add(field.getPath().getAsUnescapedPath() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">");
       columnIndex++;
     }
 

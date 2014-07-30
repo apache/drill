@@ -74,5 +74,10 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
+  
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return false;
+  }
 
 }

@@ -104,6 +104,15 @@ public class TestDateFunctions extends PopUnitTestBase {
     }
 
     @Test
+    public void testAge() throws Exception {
+        String[] expectedResults = { "P109M16DT82800S",
+                                     "P172M27D",
+                                     "P-172M-27D",
+                                     "P-39M-18DT-63573S"};
+        testCommon(expectedResults, "/functions/date/age.json", "/test_simple_date.json");
+    }
+
+    @Test
     public void testIntervalArithmetic() throws Exception {
 
       String expectedResults[] = {"P2Y2M",

@@ -20,35 +20,68 @@ package org.apache.drill.exec.compile;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
+import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
+import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.codehaus.commons.compiler.CompileException;
+import org.eigenbase.sql.SqlLiteral;
 
 import com.google.common.collect.MapMaker;
 
 public class QueryClassLoader extends URLClassLoader {
-
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryClassLoader.class);
 
-  private final ClassCompiler classCompiler;
+  public static final String JAVA_COMPILER_OPTION = "exec.java_compiler";
+  public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION, CompilerPolicy.DEFAULT.toString()) {
+    @Override
+    public OptionValue validate(SqlLiteral value) throws ExpressionParsingException {
+      OptionValue ov = super.validate(value);
+      try {
+        CompilerPolicy.valueOf(ov.string_val.toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new ExpressionParsingException(String.format("Invalid value '%s' specified for option '%s'. Valid values are %s.",
+            ov.string_val, getOptionName(), Arrays.toString(CompilerPolicy.values())));
+      }
+      return ov;
+    }
+  };
+
+  public static final String JAVA_COMPILER_DEBUG_OPTION = "exec.java_compiler_debug";
+  public static final OptionValidator JAVA_COMPILER_DEBUG = new BooleanValidator(JAVA_COMPILER_DEBUG_OPTION, true);
+
+  public static final String JAVA_COMPILER_JANINO_MAXSIZE_OPTION = "exec.java_compiler_janino_maxsize";
+  public static final OptionValidator JAVA_COMPILER_JANINO_MAXSIZE = new LongValidator(JAVA_COMPILER_JANINO_MAXSIZE_OPTION, 256*1024);
+  
+  public static final String JAVA_COMPILER_CONFIG = "drill.exec.compile.compiler";
+  public static final String JAVA_COMPILER_DEBUG_CONFIG = "drill.exec.compile.debug";
+  public static final String JAVA_COMPILER_JANINO_MAXSIZE_CONFIG = "drill.exec.compile.janino_maxsize";
+
+  private ClassCompilerSelector compilerSelector;
+
   private AtomicLong index = new AtomicLong(0);
+  
   private ConcurrentMap<String, byte[]> customClasses = new MapMaker().concurrencyLevel(4).makeMap();
 
-  public QueryClassLoader(boolean useJanino) {
+  public QueryClassLoader(DrillConfig config, OptionManager sessionOptions) {
     super(new URL[0]);
-    if (useJanino) {
-      this.classCompiler = new JaninoClassCompiler(this);
-    } else {
-      throw new UnsupportedOperationException("Drill no longer supports using the JDK class compiler.");
-    }
+    compilerSelector = new ClassCompilerSelector(config, sessionOptions);
   }
 
   public long getNextClassIndex(){
     return index.getAndIncrement();
   }
-  
+
   public void injectByteCode(String className, byte[] classBytes) throws IOException {
     if(customClasses.containsKey(className)) throw new IOException(String.format("The class defined {} has already been loaded.", className));
     customClasses.put(className, classBytes);
@@ -64,10 +97,57 @@ public class QueryClassLoader extends URLClassLoader {
     }
   }
 
-  public byte[][] getClassByteCode(final String className, final String sourcecode) throws CompileException, IOException,
-      ClassNotFoundException, ClassTransformationException {
-    byte[][] bc = classCompiler.getClassByteCode(className, sourcecode);
-    return bc;
+  public byte[][] getClassByteCode(final ClassNames className, final String sourceCode)
+      throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
+    return compilerSelector.getClassByteCode(className, sourceCode);
+  }
+
+  public enum CompilerPolicy {
+    DEFAULT, JDK, JANINO;
+  }
+
+  private class ClassCompilerSelector {
+    private final CompilerPolicy policy;
+    private final long janinoThreshold;
+
+    private final AbstractClassCompiler jdkClassCompiler;
+    private final AbstractClassCompiler janinoClassCompiler;
+
+
+    ClassCompilerSelector(DrillConfig config, OptionManager sessionOptions) {
+      OptionValue value = sessionOptions.getOption(JAVA_COMPILER_OPTION);
+      this.policy = CompilerPolicy.valueOf((value != null) ? value.string_val.toUpperCase() : config.getString(JAVA_COMPILER_CONFIG).toUpperCase());
+
+      value = sessionOptions.getOption(JAVA_COMPILER_JANINO_MAXSIZE_OPTION);
+      this.janinoThreshold = (value != null) ? value.num_val : config.getLong(JAVA_COMPILER_JANINO_MAXSIZE_CONFIG);
+
+      value = sessionOptions.getOption(JAVA_COMPILER_DEBUG_OPTION);
+      boolean debug = (value != null) ? value.bool_val : config.getBoolean(JAVA_COMPILER_DEBUG_CONFIG);
+
+      this.janinoClassCompiler = (policy == CompilerPolicy.JANINO || policy == CompilerPolicy.DEFAULT) ? new JaninoClassCompiler(QueryClassLoader.this, debug) : null;
+      this.jdkClassCompiler = (policy == CompilerPolicy.JDK || policy == CompilerPolicy.DEFAULT) ? new JDKClassCompiler(QueryClassLoader.this, debug) : null;
+    }
+
+    private byte[][] getClassByteCode(ClassNames className, String sourceCode)
+        throws CompileException, ClassNotFoundException, ClassTransformationException, IOException {
+      AbstractClassCompiler classCompiler;
+      if (policy == CompilerPolicy.JDK || (policy == CompilerPolicy.DEFAULT && sourceCode.length() > janinoThreshold)) {
+        classCompiler = jdkClassCompiler;
+      } else {
+        classCompiler = janinoClassCompiler;
+      }
+
+      byte[][] bc = classCompiler.getClassByteCode(className, sourceCode);
+      /*
+       * final String baseDir = System.getProperty("java.io.tmpdir") + File.separator + classCompiler.getClass().getSimpleName();
+       * File classFile = new File(baseDir + className.clazz);
+       * classFile.getParentFile().mkdirs();
+       * BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(classFile));
+       * out.write(bc[0]);
+       * out.close();
+       */
+      return bc;
+    }
 
   }
 

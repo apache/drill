@@ -89,17 +89,16 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitIfExpression(IfExpression ifExpr, StringBuilder sb) throws RuntimeException {
-    ImmutableList<IfCondition> conditions = ifExpr.conditions;
+
+    // serialize the if expression
     sb.append(" ( ");
-    for(int i =0; i < conditions.size(); i++){
-      IfCondition c = conditions.get(i);
-      if(i !=0) sb.append(" else ");
-      sb.append("if (");
-      c.condition.accept(this, sb);
-      sb.append(" ) then (");
-      c.expression.accept(this, sb);
-      sb.append(" ) ");
-    }
+    IfCondition c = ifExpr.ifCondition;
+    sb.append("if (");
+    c.condition.accept(this, sb);
+    sb.append(" ) then (");
+    c.expression.accept(this, sb);
+    sb.append(" ) ");
+
     sb.append(" else (");
     ifExpr.elseExpression.accept(this, sb);
     sb.append(" ) ");

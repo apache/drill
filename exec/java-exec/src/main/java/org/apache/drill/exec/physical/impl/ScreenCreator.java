@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -32,6 +33,7 @@ import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
 import org.apache.drill.exec.physical.impl.materialize.VectorRecordMaterializer;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
@@ -98,10 +100,13 @@ public class ScreenCreator implements RootCreator<Screen>{
       switch(outcome){
       case STOP: {
           sendCount.waitForSendComplete();
-          QueryResult header = QueryResult.newBuilder() //
+        boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
+        QueryResult header = QueryResult.newBuilder() //
               .setQueryId(context.getHandle().getQueryId()) //
               .setRowCount(0) //
-              .addError(ErrorHelper.logAndConvertError(context.getIdentity(), "Screen received stop request sent.", context.getFailureCause(), logger))
+              .setQueryState(QueryState.FAILED)
+              .addError(ErrorHelper.logAndConvertError(context.getIdentity(), "Screen received stop request sent.",
+                context.getFailureCause(), logger, verbose))
               .setDef(RecordBatchDef.getDefaultInstance()) //
               .setIsLastChunk(true) //
               .build();
@@ -191,7 +196,9 @@ public class ScreenCreator implements RootCreator<Screen>{
       public void failed(RpcException ex) {
         sendCount.decrement();
         logger.error("Failure while sending data to user.", ex);
-        ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
+        boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
+        ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger,
+          verbose);
         ok = false;
         this.ex = ex;
       }

@@ -52,8 +52,6 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   @Rule public TestName TEST_NAME = new TestName();
 
-  private int[] columnWidths = new int[] { 8 };
-
   @Before
   public void printID() throws Exception {
     System.out.printf("Running %s#%s\n", getClass().getName(), TEST_NAME.getMethodName());
@@ -80,14 +78,6 @@ public class BaseHBaseTest extends BaseTestQuery {
     HBaseTestsSuite.tearDownCluster();
   }
 
-  protected void setColumnWidth(int columnWidth) {
-    this.columnWidths = new int[] { columnWidth };
-  }
-
-  protected void setColumnWidths(int[] columnWidths) {
-    this.columnWidths = columnWidths;
-  }
-
   protected String getPlanText(String planFile, String tableName) throws IOException {
     return Files.toString(FileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
         .replaceFirst("\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+", "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())
@@ -109,23 +99,6 @@ public class BaseHBaseTest extends BaseTestQuery {
   protected void runHBaseSQLVerifyCount(String sql, int expectedRowCount) throws Exception{
     List<QueryResultBatch> results = runHBaseSQLlWithResults(sql);
     printResultAndVerifyRowCount(results, expectedRowCount);
-  }
-
-  protected int printResult(List<QueryResultBatch> results) throws SchemaChangeException {
-    int rowCount = 0;
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryResultBatch result : results){
-      rowCount += result.getHeader().getRowCount();
-      loader.load(result.getHeader().getDef(), result.getData());
-      if (loader.getRecordCount() <= 0) {
-        break;
-      }
-      VectorUtil.showVectorAccessibleContent(loader, columnWidths);
-      loader.clear();
-      result.release();
-    }
-    System.out.println("Total record count: " + rowCount);
-    return rowCount;
   }
 
   private void printResultAndVerifyRowCount(List<QueryResultBatch> results, int expectedRowCount) throws SchemaChangeException {

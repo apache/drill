@@ -95,39 +95,34 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
   @Override
   public Void visitIfExpression(IfExpression ifExpr, ErrorCollector errors) throws RuntimeException {
     // confirm that all conditions are required boolean values.
-    int i = 0;
-    for (IfCondition c : ifExpr.conditions) {
-      MajorType mt = c.condition.getMajorType();
-      if ( mt.getMinorType() != MinorType.BIT) {
-        errors
-            .addGeneralError(
-                c.condition.getPosition(),
-                String
-                    .format(
-                        "Failure composing If Expression.  All conditions must return a boolean type.  Condition %d was of Type %s.",
-                        i, mt.getMinorType()));
-      }
-      i++;
+    IfCondition cond = ifExpr.ifCondition;
+    MajorType majorType = cond.condition.getMajorType();
+    if ( majorType
+        .getMinorType() != MinorType.BIT) {
+      errors
+          .addGeneralError(
+              cond.condition.getPosition(),
+              String
+                  .format(
+                      "Failure composing If Expression.  All conditions must return a boolean type.  Condition was of Type %s.",
+                      majorType.getMinorType()));
     }
 
     // confirm that all outcomes are the same type.
     final MajorType mt = ifExpr.elseExpression.getMajorType();
-    i = 0;
-    for (IfCondition c : ifExpr.conditions) {
-      MajorType innerT = c.expression.getMajorType();
-      if ((innerT.getMode() == DataMode.REPEATED && mt.getMode() != DataMode.REPEATED) || //
-          ((innerT.getMinorType() != mt.getMinorType()) &&
-          (innerT.getMode() != DataMode.OPTIONAL && mt.getMode() != DataMode.OPTIONAL &&
-          (innerT.getMinorType() != MinorType.NULL && mt.getMinorType() != MinorType.NULL)))) {
-        errors
-            .addGeneralError(
-                c.condition.getPosition(),
-                String
-                    .format(
-                        "Failure composing If Expression.  All expressions must return the same MinorType as the else expression.  The %d if condition returned type type %s but the else expression was of type %s",
-                        i, innerT, mt));
-      }
-      i++;
+    cond = ifExpr.ifCondition;
+    MajorType innerT = cond.expression.getMajorType();
+    if ((innerT.getMode() == DataMode.REPEATED && mt.getMode() != DataMode.REPEATED) || //
+        ((innerT.getMinorType() != mt.getMinorType()) &&
+        (innerT.getMode() != DataMode.OPTIONAL && mt.getMode() != DataMode.OPTIONAL &&
+        (innerT.getMinorType() != MinorType.NULL && mt.getMinorType() != MinorType.NULL)))) {
+      errors
+          .addGeneralError(
+              cond.condition.getPosition(),
+              String
+                  .format(
+                      "Failure composing If Expression.  All expressions must return the same MinorType as the else expression.  The if condition returned type type %s but the else expression was of type %s",
+                      innerT, mt));
     }
     return null;
   }

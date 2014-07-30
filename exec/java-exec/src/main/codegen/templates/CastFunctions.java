@@ -46,7 +46,20 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
   public void setup(RecordBatch incoming) {}
 
   public void eval() {
-    <#if type.explicit??>
+    <#if (type.from.startsWith("Float") && type.to.endsWith("Int"))>
+    boolean sign = (in.value < 0);
+    in.value = java.lang.Math.abs(in.value);
+    ${type.native} fractional = in.value % 1;
+    int digit = ((int) (fractional * 10));
+    int carry = 0;
+    if (digit > 4) {
+      carry = 1;
+    }
+    out.value = ((${type.explicit}) in.value) + carry;
+    if (sign == true) {
+      out.value *= -1;
+    }
+    <#elseif type.explicit??>
     out.value = (${type.explicit}) in.value;
     <#else>
     out.value = in.value;

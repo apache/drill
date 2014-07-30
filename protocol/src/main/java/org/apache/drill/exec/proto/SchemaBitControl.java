@@ -730,4 +730,126 @@ public final class SchemaBitControl
         }
     }
 
+    public static final class FinishedReceiver
+    {
+        public static final org.apache.drill.exec.proto.SchemaBitControl.FinishedReceiver.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaBitControl.FinishedReceiver.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaBitControl.FinishedReceiver.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaBitControl.FinishedReceiver.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.FinishedReceiver>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.FinishedReceiver message) throws java.io.IOException
+            {
+                if(message.hasReceiver())
+                    output.writeObject(1, message.getReceiver(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.WRITE, false);
+
+                if(message.hasSender())
+                    output.writeObject(2, message.getSender(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.FinishedReceiver message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.FinishedReceiver.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.FinishedReceiver.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.FinishedReceiver> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.FinishedReceiver.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.FinishedReceiver.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.FinishedReceiver.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.FinishedReceiver message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.BitControl.FinishedReceiver newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.FinishedReceiver.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.FinishedReceiver.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setReceiver(input.mergeObject(org.apache.drill.exec.proto.ExecProtos.FragmentHandle.newBuilder(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.MERGE));
+
+                            break;
+                        case 2:
+                            builder.setSender(input.mergeObject(org.apache.drill.exec.proto.ExecProtos.FragmentHandle.newBuilder(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.FinishedReceiver.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.BitControl.FinishedReceiver.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.BitControl.FinishedReceiver.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.FinishedReceiver.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.FinishedReceiver.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.FinishedReceiver.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.FinishedReceiver.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.FinishedReceiver.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.FinishedReceiver.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.FinishedReceiver.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "receiver";
+                case 2: return "sender";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("receiver", 1);
+            fieldMap.put("sender", 2);
+        }
+    }
+
 }

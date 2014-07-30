@@ -44,7 +44,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   private int targetRecordCount = ExternalSortBatch.SPILL_TARGET_RECORD_COUNT;
 
   @Override
-  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups, VectorAccessible outgoing, List<VectorAllocator> allocators) throws SchemaChangeException {
+  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups, VectorAccessible outgoing, List<VectorAllocator> allocators, int recordCnt) throws SchemaChangeException {
     this.context = context;
     this.allocator = allocator;
     this.hyperBatch = hyperBatch;
@@ -63,6 +63,11 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
       vector4.set(i, i * 2, batchGroups.get(i).getNextIndex());
       siftUp();
       queueSize++;
+    }
+
+    // Check if the we have enough records to create BatchData with two containers.
+    if (recordCnt < (2 * targetRecordCount)) {
+      targetRecordCount = (recordCnt / 2);
     }
   }
 

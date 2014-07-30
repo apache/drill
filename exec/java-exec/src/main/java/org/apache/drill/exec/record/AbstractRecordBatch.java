@@ -69,6 +69,9 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     IterOutcome next = null;
     stats.stopProcessing();
     try{
+      if (context.isCancelled()) {
+        return IterOutcome.STOP;
+      }
       next = b.next();
     }finally{
       stats.startProcessing();
@@ -82,6 +85,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
       stats.batchReceived(inputIndex, b.getRecordCount(), false);
       break;
     }
+
     return next;
   }
 
@@ -102,11 +106,11 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   @Override
-  public void kill() {
-    killIncoming();
+  public void kill(boolean sendUpstream) {
+    killIncoming(sendUpstream);
   }
 
-  protected abstract void killIncoming();
+  protected abstract void killIncoming(boolean sendUpstream);
 
   public void cleanup(){
     container.clear();

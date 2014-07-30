@@ -20,9 +20,11 @@ package org.apache.drill.exec.resolver;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -768,11 +770,46 @@ public class TypeCastRules {
     rules.put(MinorType.VARBINARY, rule);
   }
 
-  public static boolean isCastable(MajorType from, MajorType to, NullHandling nullHandling) {
+  public static boolean isCastableWithNullHandling(MajorType from, MajorType to, NullHandling nullHandling) {
     if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) return false;
+    return isCastable(from.getMinorType(), to.getMinorType());
+  }
 
-    return from.getMinorType().equals(MinorType.NULL) ||      //null could be casted to any other type.
-           (rules.get(to.getMinorType()) == null ? false : rules.get(to.getMinorType()).contains(from.getMinorType()));
+  private static boolean isCastable(MinorType from, MinorType to) {
+    return from.equals(MinorType.NULL) ||      //null could be casted to any other type.
+        (rules.get(to) == null ? false : rules.get(to).contains(from));
+  }
+
+  /*
+   * Function checks if casting is allowed from the 'from' -> 'to' minor type. If its allowed
+   * we also check if the precedence map allows such a cast and return true if both cases are satisfied
+   */
+  public static MinorType getLeastRestrictiveType(List<MinorType> types) {
+    assert types.size() >= 2;
+    MinorType result = types.get(0);
+    int resultPrec = ResolverTypePrecedence.precedenceMap.get(result);
+
+    for (int i = 1; i < types.size(); i++) {
+      MinorType next = types.get(i);
+      if (next == result) {
+        // both args are of the same type; continue
+        continue;
+      }
+
+      int nextPrec = ResolverTypePrecedence.precedenceMap.get(next);
+
+      if (isCastable(next, result) && resultPrec >= nextPrec) {
+        // result is the least restrictive between the two args; nothing to do continue
+        continue;
+      } else if(isCastable(result, next) && nextPrec >= resultPrec) {
+        result = next;
+        resultPrec = nextPrec;
+      } else {
+        throw new DrillRuntimeException("Case expression branches have different output types ");
+      }
+    }
+
+    return result;
   }
 
   private static final int DATAMODE_CAST_COST = 1;
@@ -817,7 +854,7 @@ public class TypeCastRules {
 //          return -1;
       }
 
-      if (!TypeCastRules.isCastable(argType, parmType, holder.getNullHandling())) {
+      if (!TypeCastRules.isCastableWithNullHandling(argType, parmType, holder.getNullHandling())) {
         return -1;
       }
 

@@ -38,7 +38,7 @@ public class IntBEConvertFrom implements DrillSimpleFunc {
 
   @Override
   public void eval() {
-    org.apache.drill.exec.util.ConvertUtil.checkBufferLength(in.buffer, in.start, in.end, 4);
+    org.apache.drill.exec.util.ByteBufUtil.checkBufferLength(in.buffer, in.start, in.end, 4);
 
     in.buffer.readerIndex(in.start);
     out.value = Integer.reverseBytes(in.buffer.readInt());

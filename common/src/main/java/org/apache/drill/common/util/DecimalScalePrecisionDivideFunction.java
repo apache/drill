@@ -22,44 +22,41 @@ package org.apache.drill.common.util;
  * Here we compute the scale and precision of the output decimal data type
  * based on the input scale and precision. Since division operation can be
  * a multiplication operation we compute the scale to be the sum of the inputs.
- * The precision is computed by getting the sum of integer digits of the input
- * and adding it with scale. The scale is further expanded to occupy the remaining
- * digits in the given precision range
- *
  * Eg: Input1 : precision = 5, scale = 3 ==> max integer digits = 2
  *     Input2 : precision = 7, scale = 4 ==> max integer digits = 3
  *
- *     Output: max integer digits ==> 2 + 3 = 5
+ *     Output: max integer digits ==> 2 (left integer digits) + 4 (right scale, when divide results in multiplication)
  *             max scale          ==> 3 + 4 = 7
  *
- *             Minimum precision required ==> 5 + 7 = 12
+ *             Minimum precision required ==> 6 + 7 = 13
  *
- * Since our minimum precision required is 12, we will use DECIMAL18 as the output type
+ * Since our minimum precision required is 13, we will use DECIMAL18 as the output type
  * but since this is divide we will grant the remaining digits in DECIMAL18 to scale
  * so we have the following
- *    output scale      ==> 7 + (18 - 12) = 13
+ *    output scale      ==> 7 + (18 - 13) = 12
  *    output precision  ==> 18
  */
-public class DecimalScalePrecisionDivideFunction {
-  private int outputScale = 0;
-  private int outputPrecision = 0;
+public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePrecision {
 
   public DecimalScalePrecisionDivideFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
+    super(leftPrecision, leftScale, rightPrecision, rightScale);
+  }
+
+  @Override
+  public void computeScalePrecision(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
+
     // compute the output scale and precision here
     outputScale = leftScale + rightScale;
-    int integerDigits = (leftPrecision - leftScale) + (rightPrecision - rightScale);
+    int leftIntegerDigits = leftPrecision - leftScale;
+    int maxResultIntegerDigits = leftIntegerDigits + rightScale;
 
-    outputPrecision = DecimalUtility.getPrecisionRange(outputScale + integerDigits);
+
+    outputPrecision = DecimalUtility.getPrecisionRange(outputScale + maxResultIntegerDigits);
+
+    // Output precision should be greater or equal to the input precision
+    outputPrecision = Math.max(outputPrecision, Math.max(leftPrecision, rightPrecision));
 
     // Try and increase the scale if we have any room
-    outputScale = (outputPrecision - integerDigits >= 0) ? (outputPrecision - integerDigits) : 0;
-  }
-
-  public int getOutputScale() {
-    return outputScale;
-  }
-
-  public int getOutputPrecision() {
-    return outputPrecision;
+    outputScale = (outputPrecision - maxResultIntegerDigits >= 0) ? (outputPrecision - maxResultIntegerDigits) : 0;
   }
 }

@@ -33,11 +33,6 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <#macro subtractBlock holderType in1 in2 result>
 
-            /* compute the result's size, integer part and fractional part */
-            result.scale   = Math.max(${in1}.scale, ${in2}.scale);
-            result.precision = result.maxPrecision;
-
-
             int resultScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(result.scale);
             int resultIndex = result.nDecimalDigits- 1;
 
@@ -124,10 +119,6 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 </#macro>
 
 <#macro addBlock holderType in1 in2 result>
-
-        /* compute the result scale */
-        result.scale = Math.max(${in1}.scale, ${in2}.scale);
-        result.precision = result.maxPrecision;
 
         int resultScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(result.scale);
 
@@ -267,67 +258,52 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("unused")
 public class ${type.name}Functions {
 
-    @FunctionTemplate(name = "subtract", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "subtract", scope = FunctionTemplate.FunctionScope.DECIMAL_ADD_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}SubtractFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
         @Workspace ByteBuf buffer;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
         @Output ${type.name}Holder result;
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
             buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
             buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
-
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionAddFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
+            result.precision = outputPrecision;
+            result.scale = outputScale;
             result.buffer = buffer;
             result.start = 0;
 
-            // Re initialize the buffer everytime
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
-            }
+            java.math.BigDecimal leftInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
+            java.math.BigDecimal rightInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
+            java.math.BigDecimal addResult = leftInput.subtract(rightInput);
 
-            /* If the sign of the two inputs is different, then the subtract
-             * causes the sign of one of the inputs to change and hence it effectively
-             * becomes addition
-             */
-            if (left.getSign() != right.getSign()) {
-                <@addBlock holderType=type.name in1="left" in2="right" result="result"/>
-                result.setSign(left.getSign());
-            } else {
-                /* Sign of the inputs are the same, meaning we have to perform subtraction
-                 * For subtraction we need left input to be greater than right input
-                 * Compare the two inputs, swap if necessary
-                 */
-                int cmp;
-                <@compareBlock holderType=type.name left="left" right="right" absCompare="true" output="cmp"/>
-
-                if (cmp == -1) {
-                  <@subtractBlock holderType=type.name in1="right" in2="left" result="result"/>
-                } else {
-                  <@subtractBlock holderType=type.name in1="left" in2="right" result="result"/>
-                }
-
-                //Determine the sign of the result
-                if ((left.getSign() == false && cmp == -1) || (left.getSign() == true && cmp == 1)) {
-                    result.setSign(true);
-                } else {
-                    result.setSign(false);
-                }
-            }
-
+            // set the scale
+            addResult.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
+            org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(addResult, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
     }
 
-    @FunctionTemplate(name = "add", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "add", scope = FunctionTemplate.FunctionScope.DECIMAL_ADD_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}AddFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
         @Workspace ByteBuf buffer;
         @Output ${type.name}Holder result;
 
@@ -335,44 +311,32 @@ public class ${type.name}Functions {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
             buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
             buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionAddFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
+            result.precision = outputPrecision;
+            result.scale = outputScale;
             result.buffer = buffer;
             result.start = 0;
 
-            // Re initialize the buffer everytime
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
-            }
+            java.math.BigDecimal leftInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
+            java.math.BigDecimal rightInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
+            java.math.BigDecimal addResult = leftInput.add(rightInput);
 
-            /* If sign is different use the subtraction logic */
-            if (left.getSign() != right.getSign()) {
-
-                /* Subtract logic assumes, left input is greater than right input
-                 * swap if necessary
-                 */
-                int cmp;
-                <@compareBlock holderType=type.name left="left" right="right" absCompare="true" output="cmp"/>
-
-                if (cmp == -1) {
-                    <@subtractBlock holderType=type.name in1="right" in2="left" result="result"/>
-                    result.setSign(right.getSign());
-                } else {
-                    <@subtractBlock holderType=type.name in1="left" in2="right" result="result"/>
-                    result.setSign(left.getSign());
-                }
-
-
-            } else {
-                /* Sign of the two input decimals is the same, use the add logic */
-                <@addBlock holderType=type.name in1="left" in2="right" result="result"/>
-                result.setSign(left.getSign());
-            }
+            // set the scale
+            addResult.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
+            org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(addResult, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
     }
 
-    @FunctionTemplate(name = "multiply", scope = FunctionTemplate.FunctionScope.DECIMAL_SUM_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "multiply", scope = FunctionTemplate.FunctionScope.DECIMAL_MUL_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}MultiplyFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -541,7 +505,7 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "exact_divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}DivideFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -573,18 +537,13 @@ public class ${type.name}Functions {
             java.math.BigDecimal numerator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
             java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
 
-            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_DOWN);
-
-            // Initialize the result buffer
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
-            }
+            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
             org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
     }
 
-    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_MOD_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}ModFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -603,8 +562,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.common.util.DecimalScalePrecisionModFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionModFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -617,12 +576,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
 
             java.math.BigDecimal output = numerator.remainder(denominator);
-            output.setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
-
-            // Initialize the result buffer
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
-            }
+            output.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
             org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
@@ -1248,44 +1202,63 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("unused")
 public class ${type.name}Functions {
 
-    @FunctionTemplate(name = "add", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "add", scope = FunctionTemplate.FunctionScope.DECIMAL_ADD_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}AddFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
         @Output ${type.name}Holder result;
 
-        public void setup(RecordBatch incoming) {}
+        public void setup(RecordBatch incoming) {
+            outputPrecision = Integer.MIN_VALUE;
+        }
+
 
         public void eval() {
-
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionAddFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
             <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
 
             result.value = left.value + right.value;
-            result.precision = result.maxPrecision;
-            result.scale = Math.max(left.scale, right.scale);
+            result.precision = outputPrecision;
+            result.scale = outputScale;
         }
     }
 
-    @FunctionTemplate(name = "subtract", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "subtract", scope = FunctionTemplate.FunctionScope.DECIMAL_ADD_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}SubtractFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
         @Output ${type.name}Holder result;
 
-        public void setup(RecordBatch incoming) {}
+        public void setup(RecordBatch incoming) {
+            outputPrecision = Integer.MIN_VALUE;
+        }
 
         public void eval() {
-
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionAddFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
             <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
 
             result.value = left.value - right.value;
-            result.precision = result.maxPrecision;
-            result.scale = Math.max(left.scale, right.scale);
+            result.precision = outputPrecision;
+            result.scale = outputScale;
         }
     }
-    @FunctionTemplate(name = "multiply", scope = FunctionTemplate.FunctionScope.DECIMAL_SUM_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "multiply", scope = FunctionTemplate.FunctionScope.DECIMAL_MUL_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}MultiplyFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1331,7 +1304,7 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "exact_divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}DivideFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1358,13 +1331,13 @@ public class ${type.name}Functions {
             java.math.BigDecimal numerator = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
             java.math.BigDecimal denominator = new java.math.BigDecimal(java.math.BigInteger.valueOf(right.value), right.scale);
 
-            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_DOWN);
+            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
             result.value = output.unscaledValue().${type.storage}Value();
         }
     }
 
-    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_MOD_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}ModFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1379,8 +1352,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.common.util.DecimalScalePrecisionModFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionModFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -1390,7 +1363,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal denominator = new java.math.BigDecimal(java.math.BigInteger.valueOf(right.value), right.scale);
 
             java.math.BigDecimal output = numerator.remainder(denominator);
-            output.setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
+            output.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
             result.value = output.unscaledValue().${type.storage}Value();
         }

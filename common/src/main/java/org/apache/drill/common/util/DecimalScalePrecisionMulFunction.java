@@ -23,11 +23,14 @@ package org.apache.drill.common.util;
  * We simply add the input scale and precision to determine the output's scale
  * and precision
  */
-public class DecimalScalePrecisionMulFunction {
-  private int outputScale = 0;
-  private int outputPrecision = 0;
+public class DecimalScalePrecisionMulFunction extends DrillBaseComputeScalePrecision {
 
   public DecimalScalePrecisionMulFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
+    super(leftPrecision, leftScale, rightPrecision, rightScale);
+  }
+
+  @Override
+  public void computeScalePrecision(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
     // compute the output scale and precision here
     outputScale = leftScale + rightScale;
     int integerDigits = (leftPrecision - leftScale) + (rightPrecision - rightScale);
@@ -39,14 +42,6 @@ public class DecimalScalePrecisionMulFunction {
       outputPrecision = 38;
       outputScale = (outputPrecision - integerDigits >= 0) ? (outputPrecision - integerDigits) : 0;
     }
-  }
-
-  public int getOutputScale() {
-    return outputScale;
-  }
-
-  public int getOutputPrecision() {
-    return outputPrecision;
   }
 }
 

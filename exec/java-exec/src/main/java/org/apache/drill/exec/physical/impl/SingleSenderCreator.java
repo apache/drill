@@ -56,6 +56,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     private int recMajor;
     private FragmentContext context;
     private volatile boolean ok = true;
+    private volatile boolean done = false;
     private final SendingAccountor sendCount = new SendingAccountor();
 
     public enum Metric implements MetricDef {
@@ -81,11 +82,18 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     @Override
     public boolean innerNext() {
       if(!ok){
-        incoming.kill();
+        incoming.kill(false);
         
         return false;
       }
-      IterOutcome out = next(incoming);
+
+      IterOutcome out;
+      if (!done) {
+        out = next(incoming);
+      } else {
+        incoming.kill(true);
+        out = IterOutcome.NONE;
+      }
 //      logger.debug("Outcome of sender next {}", out);
       switch(out){
       case STOP:
@@ -132,14 +140,20 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       oContext.close();
       incoming.cleanup();
     }
-    
-    
+
+    @Override
+    public void receivingFragmentFinished(FragmentHandle handle) {
+      done = true;
+    }
+
     private class RecordSendFailure extends BaseRpcOutcomeListener<Ack>{
 
       @Override
       public void failed(RpcException ex) {
         sendCount.decrement();
-        context.fail(ex);
+        if (!context.isCancelled() && !context.isFailed()) {
+          context.fail(ex);
+        }
         stop();
       }
 

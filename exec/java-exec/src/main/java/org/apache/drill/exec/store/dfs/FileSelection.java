@@ -125,17 +125,26 @@ public class FileSelection {
 
   public static FileSelection create(DrillFileSystem fs, String parent, String path) throws IOException {
     if ( !(path.contains("*") || path.contains("?")) ) {
-      Path p = new Path(parent, path);
+      Path p = new Path(parent, removeLeadingSlash(path));
       FileStatus status = fs.getFileStatus(p);
       return new FileSelection(Collections.singletonList(status), p.toUri().getPath());
     } else {
-      Path p = new Path(parent, path);
+      Path p = new Path(parent,removeLeadingSlash(path));
       FileStatus[] status = fs.getUnderlying().globStatus(p);
       if(status == null || status.length == 0) return null;
       String[] s = p.toUri().getPath().split("/");
       String newPath = StringUtils.join(ArrayUtils.subarray(s, 0, s.length - 1), "/");
       Preconditions.checkState(!newPath.contains("*") && !newPath.contains("?"), String.format("Unsupported selection path: %s", p));
       return new FileSelection(Lists.newArrayList(status), newPath);
+    }
+  }
+
+  private static String removeLeadingSlash(String path) {
+    if (path.charAt(0) == '/') {
+      String newPath = path.substring(1);
+      return removeLeadingSlash(newPath);
+    } else {
+      return path;
     }
   }
 

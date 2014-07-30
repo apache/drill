@@ -21,91 +21,37 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
-import com.google.common.io.CharStreams;
+public class ReaderJSONRecordSplitter extends JsonRecordSplitterBase {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReaderJSONRecordSplitter.class);
 
-public class ReaderJSONRecordSplitter implements JsonRecordSplitter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReaderJSONRecordSplitter.class);
-
-  private static final int OPEN_CBRACKET = '{';
-  private static final int OPEN_BRACKET = '[';
-  private static final int CLOSE_CBRACKET = '}';
-  private static final int CLOSE_BRACKET = ']';
-
-  private static final int SPACE = ' ';
-  private static final int TAB = '\t';
-  private static final int NEW_LINE = '\n';
-  private static final int FORM_FEED = '\f';
-  private static final int CR = '\r';
-
-  private long start = 0;
   private Reader reader;
+
+  public ReaderJSONRecordSplitter(String str){
+    this(new StringReader(str));
+  }
 
   public ReaderJSONRecordSplitter(Reader reader){
     this.reader = reader;
   }
 
-  public ReaderJSONRecordSplitter(String str){
-    this.reader = new StringReader(str);
+  @Override
+  protected void preScan() throws IOException {
+    reader.mark(MAX_RECORD_SIZE);
   }
 
   @Override
-  public Reader getNextReader() throws IOException{
+  protected void postScan() throws IOException {
+    reader.reset();
+  }
 
-    boolean inCandidate = false;
-    boolean found = false;
+  @Override
+  protected int readNext() throws IOException {
+    return reader.read();
+  }
 
-    reader.mark(128*1024);
-    long endOffset = start;
-    outside: while(true){
-      int c = reader.read();
-//      System.out.println(b);
-      endOffset++;
-
-      if(c == -1){
-        if(inCandidate){
-          found = true;
-        }
-        break;
-      }
-
-      switch(c){
-      case CLOSE_BRACKET:
-      case CLOSE_CBRACKET:
-//        System.out.print("c");
-        inCandidate = true;
-        break;
-      case OPEN_BRACKET:
-      case OPEN_CBRACKET:
-//        System.out.print("o");
-        if(inCandidate){
-          found = true;
-          break outside;
-        }
-        break;
-
-      case SPACE:
-      case TAB:
-      case NEW_LINE:
-      case CR:
-      case FORM_FEED:
-//        System.out.print(' ');
-        break;
-
-      default:
-//        System.out.print('-');
-        inCandidate = false;
-      }
-    }
-
-    if(found){
-      long maxBytes = endOffset - 1 - start;
-      start = endOffset;
-      reader.reset();
-      return new LimitedReader(reader, (int) maxBytes);
-    }else{
-      return null;
-    }
-
+  @Override
+  protected Reader createReader(long maxBytes) {
+    return new LimitedReader(reader, (int)maxBytes);
   }
 
   private class LimitedReader extends Reader {
@@ -128,10 +74,7 @@ public class ReaderJSONRecordSplitter implements JsonRecordSplitter {
         bytes++;
         return incoming.read();
       }
-
-
     }
-
 
     @Override
     public void mark(int readAheadLimit) throws IOException {
@@ -158,21 +101,6 @@ public class ReaderJSONRecordSplitter implements JsonRecordSplitter {
     }
 
     @Override
-    public void close() throws IOException {
-    }
-
-  }
-
-  public static void main(String[] args) throws Exception{
-    String str = " { \"b\": \"hello\", \"c\": \"goodbye\", r: []}\n { \"b\": \"yellow\", \"c\": \"red\"}\n ";
-    JsonRecordSplitter splitter = new ReaderJSONRecordSplitter(new StringReader(str));
-    Reader obj = null;
-    System.out.println();
-
-    while( (obj = splitter.getNextReader()) != null){
-      System.out.println();
-      System.out.println(CharStreams.toString(obj));
-      System.out.println("===end obj===");
-    }
+    public void close() throws IOException { }
   }
 }

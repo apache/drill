@@ -75,12 +75,14 @@ public interface ExecConstants {
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
   public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
 
-
+  public static final String CLIENT_SUPPORT_COMPLEX_TYPES = "drill.client.supports-complex-types";
 
   public static final String OUTPUT_FORMAT_OPTION = "store.format";
   public static final OptionValidator OUTPUT_FORMAT_VALIDATOR = new StringValidator(OUTPUT_FORMAT_OPTION, "parquet");
   public static final String PARQUET_BLOCK_SIZE = "store.parquet.block-size";
   public static final OptionValidator PARQUET_BLOCK_SIZE_VALIDATOR = new LongValidator(PARQUET_BLOCK_SIZE, 512*1024*1024);
+  public static String PARQUET_NEW_RECORD_READER = "store.parquet.use_new_reader";
+  public static OptionValidator PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR = new BooleanValidator(PARQUET_NEW_RECORD_READER, false);
 
 
 
@@ -131,4 +133,8 @@ public interface ExecConstants {
   public static final String QUEUE_TIMEOUT_KEY = "exec.queue.timeout_millis";
   public static final OptionValidator QUEUE_TIMEOUT = new PositiveLongValidator(QUEUE_TIMEOUT_KEY, Long.MAX_VALUE, 60*1000*5);
 
+  public static final String ENABLE_VERBOSE_ERRORS_KEY = "exec.errors.verbose";
+  public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY, false);
+
+  public static final String BOOTSTRAP_STORAGE_PLUGINS_FILE = "bootstrap-storage-plugins.json";
 }

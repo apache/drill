@@ -34,6 +34,8 @@ public interface VariableWidthVector extends ValueVector{
    * @return
    */
   public int getByteCapacity();
+
+  public int getCurrentSizeInBytes();
   
   /**
    * Load the records in the provided buffer based on the given number of values.
@@ -44,5 +46,15 @@ public interface VariableWidthVector extends ValueVector{
    */
   public int load(int dataBytes, int valueCount, ByteBuf buf);
   
-  public abstract Mutator getMutator();
+  public abstract VariableWidthMutator getMutator();
+
+  public abstract VariableWidthAccessor getAccessor();
+
+  public interface VariableWidthAccessor extends Accessor {
+    public int getValueLength(int index);
+  }
+
+  public interface VariableWidthMutator extends Mutator {
+    public boolean setValueLengthSafe(int index, int length);
+  }
 }

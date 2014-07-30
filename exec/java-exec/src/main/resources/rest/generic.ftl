@@ -23,6 +23,7 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
       <title>Apache Drill</title>
+      <link rel="shortcut icon" href="/www/drill.ico">
 
       <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
 
@@ -49,11 +50,10 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">Apache Drill</a>
+            <a class="navbar-brand">Apache Drill</a>
           </div>
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-              <li><a href="/status">Status</a></li>
               <li><a href="/query">Query</a></li>
               <li><a href="/profiles">Profiles</a></li>
               <li><a href="/storage">Storage</a></li>

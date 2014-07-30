@@ -75,9 +75,9 @@ public class TestProjectPushDown extends PlanTestBase {
 
     testPhysicalPlan("SELECT\n" + "  nations.N_NAME,\n" + "  regions.R_NAME\n"
         + "FROM\n"
-        + "  dfs.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n"
+        + "  dfs_test.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n"
         + "JOIN\n"
-        + "  dfs.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n"
+        + "  dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n"
         + "  on nations.N_REGIONKEY = regions.R_REGIONKEY", expectedColNames1,
         expectedColNames2);
   }

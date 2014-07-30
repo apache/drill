@@ -101,7 +101,8 @@ public abstract class InfoSchemaTable{
         Field.create("CATALOG_NAME", VARCHAR),
         Field.create("SCHEMA_NAME", VARCHAR),
         Field.create("SCHEMA_OWNER", VARCHAR),
-        Field.create("TYPE", VARCHAR));
+        Field.create("TYPE", VARCHAR),
+        Field.create("IS_MUTABLE", VARCHAR));
 
     public Schemata() {
       super("SCHEMATA", fields);

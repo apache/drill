@@ -12,11 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 DRILL_MAX_DIRECT_MEMORY="8G"
-DRILL_INIT_HEAP="1g"
-DRILL_MAX_HEAP="4g"
-export DRILL_JAVA_OPTS="-Xms$DRILL_INIT_HEAP -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:+UseConcMarkSweepGC"
+DRILL_MAX_HEAP="4G"
+
+export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea"
 
 # Class unloading is disabled by default in Java 7
 # http://hg.openjdk.java.net/jdk7u/jdk7u60/hotspot/file/tip/src/share/vm/runtime/globals.hpp#l1622
-export SERVER_GC_OPTS="-XX:+CMSClassUnloadingEnabled"
+export SERVER_GC_OPTS="-XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"

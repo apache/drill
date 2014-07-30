@@ -41,6 +41,7 @@ public class PrintingResultsListener implements UserResultsListener {
   int    columnWidth;
   BufferAllocator allocator;
   volatile Exception exception;
+  QueryId queryId;
 
   public PrintingResultsListener(DrillConfig config, Format format, int columnWidth) {
     this.allocator = new TopLevelAllocator(config);
@@ -97,7 +98,12 @@ public class PrintingResultsListener implements UserResultsListener {
     return count.get();
   }
 
+  public QueryId getQueryId() {
+    return queryId;
+  }
+
   @Override
   public void queryIdArrived(QueryId queryId) {
+    this.queryId = queryId;
   }
 }

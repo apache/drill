@@ -71,7 +71,31 @@ if "!atleastonearg!"=="0" (
 goto argactionstart
 :argactionend
 
-echo DRILL_ARGS - %DRILL_ARGS%
+rem ----
+rem Validate JAVA_HOME
+rem ----
+if "%JAVA_EXE%" == "" (set JAVA_EXE=java.exe)
+
+if not "%JAVA_HOME%" == "" goto javaHomeSet
+echo.
+echo WARN: JAVA_HOME not found in your environment.
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation
+echo.
+goto initDrillEnv
+
+:javaHomeSet
+if exist "%JAVA_HOME%\bin\%JAVA_EXE%" goto initDrillEnv
+echo.
+echo ERROR: JAVA_HOME is set to an invalid directory.
+echo JAVA_HOME = %JAVA_HOME%
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation
+echo.
+goto error
+
+:initDrillEnv
+echo DRILL_ARGS - "%DRILL_ARGS%"
 
 rem ----
 rem Deal with Drill variables
@@ -79,7 +103,7 @@ rem ----
 
 set DRILL_BIN_DIR=%~dp0
 pushd %DRILL_BIN_DIR%..
-set DRILL_HOME=^"%cd%^"
+set DRILL_HOME=%cd%
 popd
 
 if "test%DRILL_CONF_DIR%" == "test" (
@@ -144,14 +168,27 @@ set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\lib\*
 set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\contrib\*
 if NOT "test%DRILL_CLASSPATH%"=="test" set DRILL_CP=!DRILL_CP!;%DRILL_CLASSPATH%
 
-set "DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path=%DRILL_LOG_DIR%\sqlline.log"
+set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path="%DRILL_LOG_DIR%\sqlline.log"
+
+SET JAVA_CMD=%JAVA_HOME%\bin\%JAVA_EXE%
+if "%JAVA_HOME%" == "" (set JAVA_CMD=%JAVA_EXE%)
+set ERROR_CODE=0
 
 if NOT "test%QUERY%"=="test" (
-  echo %QUERY% | java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CP% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
+  echo %QUERY% | "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
 ) else (
   if NOT "test%FILE%"=="test" (
-    java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CP% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS% --run=%FILE%
+    "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS% --run=%FILE%
   ) else (
-    java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CP% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
+    "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
   )
 )
+if ERRORLEVEL 1 goto error
+goto end
+
+:error
+set ERROR_CODE=1
+
+:end
+endlocal
+exit /B %ERROR_CODE%

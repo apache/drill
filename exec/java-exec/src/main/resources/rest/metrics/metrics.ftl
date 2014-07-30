@@ -60,7 +60,7 @@
       <h3 id="histograms">Histograms</h3>
       <div id="histogramsVal">
         <div class="alert alert-info">
-          <strong>No counters.</strong>
+          <strong>No histograms.</strong>
         </div>
       </div>
       <h3 id="meters">Meters</h3>
@@ -114,13 +114,12 @@
       });
     };
 
-    function updateTimers(timers) {
-      console.log("yup");
-      $("#timersVal").html(function() {
+    function createTable(metric, name) {
+      $("#" + name + "Val").html(function() {
         var tables = "";
-        $.each(timers, function(name, stats) {
+        $.each(metric, function(clazz, stats) {
 
-          var table = "<strong>Reporting class:</strong> " + name + "<br>";
+          var table = "<strong>Reporting class:</strong> " + clazz + "<br>";
           table += "<table class=\"table table-striped\"><tbody>";
           $.each(stats, function(key, value) {
             table += "<tr>";
@@ -140,7 +139,7 @@
     };
 
     function updateOthers(metrics) {
-      $.each(["counters", "histograms", "meters"], function(i, key) {
+      $.each(["counters", "meters"], function(i, key) {
         if(! $.isEmptyObject(metrics[key])) {
           $("#" + key + "Val").html(JSON.stringify(metrics[key], null, 2));
         }
@@ -151,7 +150,8 @@
       $.get("/status/metrics", function(metrics) {
         updateGauges(metrics.gauges);
         updateBars(metrics.gauges);
-        if(! $.isEmptyObject(metrics.timers)) updateTimers(metrics.timers);
+        if(! $.isEmptyObject(metrics.timers)) createTable(metrics.timers, "timers");
+        if(! $.isEmptyObject(metrics.histograms)) createTable(metrics.histograms, "histograms");
         updateOthers(metrics);
       });
     };

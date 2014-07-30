@@ -61,7 +61,15 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public int getValueCapacity(){
     return Math.min(bits.getValueCapacity(), values.getValueCapacity());
   }
-  
+
+  public int getCurrentValueCount() {
+    return values.getCurrentValueCount();
+  }
+
+  public void setCurrentValueCount(int count) {
+    values.setCurrentValueCount(count);
+  }
+
   @Override
   public ByteBuf[] getBuffers() {
     ByteBuf[] buffers = ObjectArrays.concat(bits.getBuffers(), values.getBuffers(), ByteBuf.class);
@@ -141,6 +149,11 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   @Override
   public int getByteCapacity(){
     return values.getByteCapacity();
+  }
+
+  @Override
+  public int getCurrentSizeInBytes(){
+    return values.getCurrentSizeInBytes();
   }
 
   <#else>
@@ -309,7 +322,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
 
   
-  public final class Accessor implements ValueVector.Accessor{
+  public final class Accessor implements ValueVector.Accessor<#if type.major = "VarLen">, VariableWidthVector.VariableWidthAccessor</#if>{
 
     final FieldReader reader = new Nullable${minor.class}ReaderImpl(Nullable${minor.class}Vector.this);
     
@@ -335,7 +348,14 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     public int isSet(int index){
       return bits.getAccessor().get(index);
     }
-    
+
+
+    <#if type.major == "VarLen">
+    public int getValueLength(int index) {
+      return values.getAccessor().getValueLength(index);
+    }
+    </#if>
+
     public void get(int index, Nullable${minor.class}Holder holder){
       values.getAccessor().get(index, holder);
       holder.isSet = bits.getAccessor().get(index);
@@ -372,7 +392,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     public void reset(){}
   }
   
-  public final class Mutator implements ValueVector.Mutator, NullableVectorDefinitionSetter{
+  public final class Mutator implements ValueVector.Mutator, NullableVectorDefinitionSetter<#if type.major = "VarLen">, VariableWidthVector.VariableWidthMutator</#if> {
     
     private int setCount;
     <#if type.major = "VarLen"> private int lastSet = -1;</#if>
@@ -412,8 +432,12 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
         if(!values.getMutator().setSafe(i, new byte[]{})) return false;
       }
       lastSet = index;
-      
+
       return true;
+    }
+
+    public boolean setValueLengthSafe(int index, int length) {
+      return values.getMutator().setValueLengthSafe(index, length);
     }
     </#if>
     

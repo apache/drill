@@ -22,9 +22,11 @@ import io.netty.buffer.ByteBuf;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.proto.beans.DrillPBError;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcException;
@@ -37,26 +39,28 @@ import com.google.common.collect.Queues;
  * Encapsulates the future management of query submissions. This entails a potential race condition. Normal ordering is:
  * 1. Submit query to be executed. 2. Receive QueryHandle for buffer management 3. Start receiving results batches for
  * query.
- * 
+ *
  * However, 3 could potentially occur before 2. As such, we need to handle this case and then do a switcheroo.
- * 
+ *
  */
 public class QueryResultHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResultHandler.class);
 
   private ConcurrentMap<QueryId, UserResultsListener> resultsListener = Maps.newConcurrentMap();
 
-  
+
   public RpcOutcomeListener<QueryId> getWrappedListener(UserResultsListener listener){
     return new SubmissionListener(listener);
   }
-  
+
   public void batchArrived(ConnectionThrottle throttle, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     final QueryResult result = RpcBus.get(pBody, QueryResult.PARSER);
     final QueryResultBatch batch = new QueryResultBatch(result, dBody);
+    final boolean failed = (batch.getHeader().getQueryState() == QueryState.FAILED);
+
+    assert failed || batch.getHeader().getErrorCount() == 0 : "Error count for the query batch is non-zero but QueryState != FAILED";
+
     UserResultsListener l = resultsListener.get(result.getQueryId());
-    
-    boolean failed = batch.getHeader().getQueryState() == QueryState.FAILED;
     // logger.debug("For QueryId [{}], retrieved result listener {}", result.getQueryId(), l);
     if (l == null) {
       BufferingListener bl = new BufferingListener();
@@ -68,18 +72,19 @@ public class QueryResultHandler {
       }
     }
 
-    if(failed){
-      l.submissionFailed(new RpcException("Remote failure while running query." + batch.getHeader().getErrorList()));
+    if(failed) {
+      String message = buildErrorMessage(batch);
+      l.submissionFailed(new RpcException(message));
       resultsListener.remove(result.getQueryId(), l);
     }else{
       try {
-      l.resultArrived(batch, throttle);
+        l.resultArrived(batch, throttle);
       } catch (Exception e) {
         batch.release();
         l.submissionFailed(new RpcException(e));
       }
     }
-    
+
     if (
         (failed || result.getIsLastChunk())
         &&
@@ -89,14 +94,21 @@ public class QueryResultHandler {
     }
   }
 
+  protected String buildErrorMessage(QueryResultBatch batch) {
+    StringBuilder sb = new StringBuilder();
+    for (UserBitShared.DrillPBError error:batch.getHeader().getErrorList()) {
+      sb.append(error.getMessage());
+      sb.append("\n");
+    }
+    return sb.toString();
+  }
+
   private void failAll() {
     for (UserResultsListener l : resultsListener.values()) {
       l.submissionFailed(new RpcException("Received result without QueryId"));
     }
   }
 
-  
-  
   private class BufferingListener implements UserResultsListener {
 
     private ConcurrentLinkedQueue<QueryResultBatch> results = Queues.newConcurrentLinkedQueue();
@@ -104,6 +116,7 @@ public class QueryResultHandler {
     private volatile RpcException ex;
     private volatile UserResultsListener output;
     private volatile ConnectionThrottle throttle;
+
     public boolean transferTo(UserResultsListener l) {
       synchronized (this) {
         output = l;
@@ -120,12 +133,11 @@ public class QueryResultHandler {
       }
     }
 
-    
     @Override
     public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
       this.throttle = throttle;
       if(result.getHeader().getIsLastChunk()) finished = true;
-      
+
       synchronized (this) {
         if (output == null) {
           this.results.add(result);
@@ -146,11 +158,10 @@ public class QueryResultHandler {
         }
       }
     }
-    
+
     public boolean isFinished(){
       return finished;
     }
-
 
     @Override
     public void queryIdArrived(QueryId queryId) {
@@ -200,4 +211,5 @@ public class QueryResultHandler {
     }
 
   }
+
 }

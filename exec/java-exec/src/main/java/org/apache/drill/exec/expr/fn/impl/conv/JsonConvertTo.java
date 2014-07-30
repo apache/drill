@@ -51,7 +51,7 @@ public class JsonConvertTo {
     @Workspace ByteBuf buffer;
 
     public void setup(RecordBatch incoming){
-      buffer = org.apache.drill.exec.util.ConvertUtil.createBuffer(256);
+      buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(256);
     }
 
     public void eval(){
@@ -70,7 +70,7 @@ public class JsonConvertTo {
       byte [] bytea = stream.toByteArray();
 
       if (bytea.length > buffer.capacity()) {
-        buffer = org.apache.drill.exec.util.ConvertUtil.createBuffer(bytea.length);
+        buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(bytea.length);
         out.buffer = buffer;
       }
       

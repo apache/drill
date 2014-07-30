@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.common;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.inject.Named;
 
@@ -27,6 +28,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -36,7 +38,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public abstract class HashTableTemplate implements HashTable {
 
@@ -124,7 +125,7 @@ public abstract class HashTableTemplate implements HashTable {
         htContainer = new VectorContainer();
         for (VectorWrapper<?> w : htContainerOrig) {
           ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
-          VectorAllocator.getAllocator(vv, 50 /* avg width */).alloc(HashTable.BATCH_SIZE);
+          vv.allocateNew();
           htContainer.add(vv);
         }
       }
@@ -275,14 +276,28 @@ public abstract class HashTableTemplate implements HashTable {
       hashValues = newHashValues;
     }
 
-    private boolean outputKeys() {
+    private boolean outputKeys(VectorContainer outContainer, int outStartIndex, int numRecords) {
 
       /** for debugging
         BigIntVector vv0 = getValueVector(0);
         BigIntHolder holder = new BigIntHolder();
       */
-
-      for (int i = 0; i <= maxOccupiedIdx; i++) {
+      
+      // set the value count for htContainer's value vectors before the transfer ..
+      setValueCount();
+      
+      Iterator<VectorWrapper<?>> outgoingIter = outContainer.iterator();
+      
+      for (VectorWrapper<?> sourceWrapper : htContainer) {
+        ValueVector sourceVV = sourceWrapper.getValueVector();
+        ValueVector targetVV = outgoingIter.next().getValueVector();
+        TransferPair tp = sourceVV.makeTransferPair(targetVV);
+        tp.splitAndTransfer(outStartIndex, numRecords);
+      }
+      
+/*
+      logger.debug("Attempting to output keys for batch index: {} from index {} to maxOccupiedIndex {}.", this.batchIndex, 0, maxOccupiedIdx);
+      for (int i = batchOutputCount; i <= maxOccupiedIdx; i++) {
         if (outputRecordKeys(i, batchOutputCount) ) {
           if (EXTRA_DEBUG) logger.debug("Outputting keys to output index: {}", batchOutputCount) ;
 
@@ -297,9 +312,17 @@ public abstract class HashTableTemplate implements HashTable {
           return false;
         }
       }
+ */     
       return true;
     }
 
+    private void setValueCount() {
+      for (VectorWrapper<?> vw : htContainer) {
+        ValueVector vv = vw.getValueVector();
+        vv.getMutator().setValueCount(maxOccupiedIdx + 1); 
+      }
+    }
+    
     private void dump(int idx) {
       while (true) {
         int idxWithinBatch = idx & BATCH_MASK;
@@ -443,8 +466,23 @@ public abstract class HashTableTemplate implements HashTable {
 
         return rounded;
   }
+  
+  public PutStatus put(int incomingRowIdx, IntHolder htIdxHolder, int retryCount) {
+    HashTable.PutStatus putStatus = put(incomingRowIdx, htIdxHolder) ;
+    int count = retryCount;
+    int numBatchHolders;
+    while (putStatus == PutStatus.PUT_FAILED && count > 0) {
+      logger.debug("Put into hash table failed .. Retrying with new batch holder...");
+      numBatchHolders = batchHolders.size();
+      this.addBatchHolder();
+      freeIndex = numBatchHolders * BATCH_SIZE;
+      putStatus = put(incomingRowIdx, htIdxHolder);
+      count--;
+    }
+    return putStatus;
+  }
 
-  public PutStatus put(int incomingRowIdx, IntHolder htIdxHolder) {
+  private PutStatus put(int incomingRowIdx, IntHolder htIdxHolder) {
 
     int hash = getHashBuild(incomingRowIdx);
     hash = Math.abs(hash);
@@ -467,7 +505,8 @@ public abstract class HashTableTemplate implements HashTable {
 
       if (insertEntry(incomingRowIdx, currentIdx, hash, lastEntryBatch, lastEntryIdxWithinBatch)) {
         // update the start index array
-        startIndices.getMutator().setSafe(getBucketIndex(hash, numBuckets()), currentIdx);
+        boolean status = startIndices.getMutator().setSafe(getBucketIndex(hash, numBuckets()), currentIdx);
+        assert status : "Unable to set start indices in the hash table.";
         htIdxHolder.value = currentIdx;
         return PutStatus.KEY_ADDED;
       }
@@ -649,9 +688,9 @@ public abstract class HashTableTemplate implements HashTable {
     numResizing++;
   }
 
-  public boolean outputKeys(int batchIdx) {
+  public boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords) {
     assert batchIdx < batchHolders.size();
-    if (! batchHolders.get(batchIdx).outputKeys()) {
+    if (! batchHolders.get(batchIdx).outputKeys(outContainer, outStartIndex, numRecords)) {
       return false;
     }
     return true;

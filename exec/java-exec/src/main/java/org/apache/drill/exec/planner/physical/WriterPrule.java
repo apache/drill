@@ -45,25 +45,29 @@ public class WriterPrule extends Prule{
     final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     final RelNode convertedInput = convert(input, traits);
 
-    if (convertedInput instanceof RelSubset) {
-      RelSubset subset = (RelSubset) convertedInput;
-      for (RelNode rel : subset.getRelList()) {
-        if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
-          DrillDistributionTrait childDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
-          RelCollation childCollation = rel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE);
-
-          DrillWriterRelBase newWriter = new WriterPrel(writer.getCluster(),
-              writer.getTraitSet().plus(childDist).plus(childCollation).plus(Prel.DRILL_PHYSICAL),
-              rel, writer.getCreateTableEntry());
-
-          call.transformTo(newWriter);
-        }
-      }
-    } else {
+    if (!new WriteTraitPull(call).go(writer, convertedInput)) {
       DrillWriterRelBase newWriter = new WriterPrel(writer.getCluster(), convertedInput.getTraitSet(),
           convertedInput, writer.getCreateTableEntry());
 
       call.transformTo(newWriter);
     }
+  }
+
+  private class WriteTraitPull extends SubsetTransformer<DrillWriterRelBase, RuntimeException> {
+
+    public WriteTraitPull(RelOptRuleCall call) {
+      super(call);
+    }
+
+    @Override
+    public RelNode convertChild(DrillWriterRelBase writer, RelNode rel) throws RuntimeException {
+      DrillDistributionTrait childDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
+      RelCollation childCollation = rel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE);
+
+      return new WriterPrel(writer.getCluster(),
+          writer.getTraitSet().plus(childDist).plus(childCollation).plus(Prel.DRILL_PHYSICAL),
+          rel, writer.getCreateTableEntry());
+    }
+
   }
 }

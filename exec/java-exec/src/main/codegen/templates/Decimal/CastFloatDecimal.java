@@ -70,15 +70,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.start = 0;
         out.buffer = buffer;
 
-        // Initialize the buffer
-        for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
-        }
-
-        if (in.value < 0) {
-            out.setSign(true);
-        }
-        // Assign the integer part of the decimal to the output holder
+       // Assign the integer part of the decimal to the output holder
         org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
 
         <#elseif type.to.endsWith("Decimal9")>

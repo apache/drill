@@ -19,7 +19,6 @@ package org.apache.drill.exec.server.options;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
@@ -46,7 +45,7 @@ public class SessionOptionManager implements OptionManager{
   @Override
   public OptionValue getOption(String name) {
     OptionValue opt = options.get(name);
-    if(opt == null){
+    if(opt == null && systemOptions != null){
       return systemOptions.getOption(name);
     }else{
       return opt;
@@ -58,7 +57,6 @@ public class SessionOptionManager implements OptionManager{
     systemOptions.getAdmin().validate(value);
     setValidatedOption(value);
   }
-
 
   @Override
   public OptionList getSessionOptionList() {
@@ -93,6 +91,5 @@ public class SessionOptionManager implements OptionManager{
   public OptionManager getSystemManager() {
     return systemOptions;
   }
-
 
 }

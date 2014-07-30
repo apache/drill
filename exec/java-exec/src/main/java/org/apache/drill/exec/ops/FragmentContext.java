@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.Frameworks;
+import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -75,10 +75,10 @@ public class FragmentContext implements Closeable {
 
   private volatile Throwable failureCause;
   private volatile boolean failed = false;
+  private volatile boolean cancelled = false;
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
       FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
-    this.loader = new QueryClassLoader(true);
     this.transformer = new ClassTransformer();
     this.stats = new FragmentStats(dbContext.getMetrics());
     this.context = dbContext;
@@ -101,6 +101,7 @@ public class FragmentContext implements Closeable {
       throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
+    this.loader = new QueryClassLoader(dbContext.getConfig(), sessionOptions);
   }
 
   public OptionManager getOptions(){
@@ -117,6 +118,10 @@ public class FragmentContext implements Closeable {
     failureCause = cause;
   }
 
+  public void cancel() {
+    cancelled = true;
+  }
+
   public DrillbitContext getDrillbitContext() {
     return context;
   }
@@ -127,7 +132,7 @@ public class FragmentContext implements Closeable {
           "This is a non-root fragment."));
       return null;
     } else {
-      SchemaPlus root = Frameworks.createRootSchema(false);
+      SchemaPlus root = SimpleOptiqSchema.createRootSchema(false);
       context.getStorage().getSchemaFactory().registerSchemas(connection.getSession(), root);
       return root;
     }
@@ -179,13 +184,7 @@ public class FragmentContext implements Closeable {
   }
 
   public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException {
-    long t1 = System.nanoTime();
-
-    T t = transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(),
-        cg.getMaterializedClassName());
-    logger.debug("Compile time: {} millis.", (System.nanoTime() - t1) / 1000 / 1000);
-    return t;
-
+    return transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
   }
 
   /**
@@ -231,6 +230,10 @@ public class FragmentContext implements Closeable {
 
   public boolean isFailed() {
     return failed;
+  }
+
+  public boolean isCancelled() {
+    return cancelled;
   }
 
   public FunctionImplementationRegistry getFunctionRegistry() {

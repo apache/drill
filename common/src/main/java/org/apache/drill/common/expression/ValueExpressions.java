@@ -60,7 +60,12 @@ public class ValueExpressions {
   }
 
   public static LogicalExpression getTime(GregorianCalendar time) {
-      return new TimeExpression((int) time.getTimeInMillis());
+      int millis = time.get(GregorianCalendar.HOUR_OF_DAY) * 60 * 60 * 1000 +
+                   time.get(GregorianCalendar.MINUTE) * 60 * 1000 +
+                   time.get(GregorianCalendar.SECOND) * 1000 +
+                   time.get(GregorianCalendar.MILLISECOND);
+
+      return new TimeExpression(millis);
   }
 
   public static LogicalExpression getTimeStamp(GregorianCalendar date) {

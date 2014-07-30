@@ -17,49 +17,116 @@
  */
 package org.apache.drill.exec.compile;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecTest;
+import java.io.IOException;
+
+import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.compile.ClassTransformer.ClassSet;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
-import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.SessionOptionManager;
+import org.codehaus.commons.compiler.CompileException;
+import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestClassTransformation extends ExecTest{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestClassTransformation.class);
+public class TestClassTransformation extends BaseTestQuery {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestClassTransformation.class);
 
+  private static final int ITERATION_COUNT = Integer.valueOf(System.getProperty("TestClassTransformation.iteration", "1"));
 
+  private static SessionOptionManager sessionOptions;
 
+  @BeforeClass
+  public static void beforeTestClassTransformation() throws Exception {
+    sessionOptions = new SessionOptionManager(bit.getContext().getOptionManager());
+  }
+
+  @Test
+  public void testJaninoClassCompiler() throws Exception {
+    logger.debug("Testing JaninoClassCompiler");
+    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_OPTION, QueryClassLoader.CompilerPolicy.JANINO.name()));
+    QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      compilationInnerClass(loader);
+    }
+    loader.close();
+  }
+
+  @Test
+  public void testJDKClassCompiler() throws Exception {
+    logger.debug("Testing JDKClassCompiler");
+    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_OPTION, QueryClassLoader.CompilerPolicy.JDK.name()));
+    QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      compilationInnerClass(loader);
+    }
+    loader.close();
+  }
+
+  @Test
+  public void testCompilationNoDebug() throws CompileException, ClassNotFoundException, ClassTransformationException, IOException {
+    CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
+    ClassSet classSet = new ClassSet(null, cg.getDefinition().getTemplateClassName(), cg.getMaterializedClassName());
+    String sourceCode = cg.generate();
+    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_OPTION, QueryClassLoader.CompilerPolicy.JDK.name()));
+
+    sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_DEBUG_OPTION, false));
+    QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
+    final byte[][] codeWithoutDebug = loader.getClassByteCode(classSet.generated, sourceCode);
+    loader.close();
+    int sizeWithoutDebug = 0;
+    for (byte[] bs : codeWithoutDebug) {
+      sizeWithoutDebug += bs.length;
+    }
+
+    sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_DEBUG_OPTION, true));
+    loader = new QueryClassLoader(config, sessionOptions);
+    final byte[][] codeWithDebug = loader.getClassByteCode(classSet.generated, sourceCode);
+    loader.close();
+    int sizeWithDebug = 0;
+    for (byte[] bs : codeWithDebug) {
+      sizeWithDebug += bs.length;
+    }
+
+    Assert.assertTrue("Debug code is smaller than optimized code!!!", sizeWithDebug > sizeWithoutDebug);
+    logger.debug("Optimized code is {}% smaller than debug code.", (int)((sizeWithDebug - sizeWithoutDebug)/(double)sizeWithDebug*100));
+  }
 
   /**
    * Do a test of a three level class to ensure that nested code generators works correctly.
    * @throws Exception
    */
-  @Test
-  public void testInnerClassCompilation() throws Exception{
-    final TemplateClassDefinition<ExampleInner> template = new TemplateClassDefinition<>(ExampleInner.class, ExampleTemplateWithInner.class);
+  private void compilationInnerClass(QueryClassLoader loader) throws Exception{
+    CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
 
     ClassTransformer ct = new ClassTransformer();
-    QueryClassLoader loader = new QueryClassLoader(true);
-    CodeGenerator<ExampleInner> cg = CodeGenerator.get(template, new FunctionImplementationRegistry(DrillConfig.create()));
+    ExampleInner t = ct.getImplementationClass(loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
 
-    ClassGenerator<ExampleInner> root = cg.getRoot();
+    t.doOutside();
+    t.doInsideOutside();
+  }
+
+  private <T, X extends T> CodeGenerator<T> newCodeGenerator(Class<T> iface, Class<X> impl) {
+    final TemplateClassDefinition<T> template = new TemplateClassDefinition<T>(iface, impl);
+    CodeGenerator<T> cg = CodeGenerator.get(template, bit.getContext().getFunctionImplementationRegistry());
+
+    ClassGenerator<T> root = cg.getRoot();
     root.setMappingSet(new MappingSet(new GeneratorMapping("doOutside", null, null, null)));
     root.getSetupBlock().directStatement("System.out.println(\"outside\");");
 
 
-    ClassGenerator<ExampleInner> inner = root.getInnerGenerator("TheInnerClass");
+    ClassGenerator<T> inner = root.getInnerGenerator("TheInnerClass");
     inner.setMappingSet(new MappingSet(new GeneratorMapping("doInside", null, null, null)));
     inner.getSetupBlock().directStatement("System.out.println(\"inside\");");
 
-    ClassGenerator<ExampleInner> doubleInner = inner.getInnerGenerator("DoubleInner");
+    ClassGenerator<T> doubleInner = inner.getInnerGenerator("DoubleInner");
     doubleInner.setMappingSet(new MappingSet(new GeneratorMapping("doDouble", null, null, null)));
     doubleInner.getSetupBlock().directStatement("System.out.println(\"double\");");
-
-    ExampleInner t = ct.getImplementationClass(loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
-    t.doOutside();
-    t.doInsideOutside();
-
+    return cg;
   }
 }
