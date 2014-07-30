@@ -209,498 +209,300 @@ their respective licenses.
 
 For
 
-  ant (http://www.apache.org/ant/) ant:ant:jar:1.6.5
-  Bean Validation API  javax.validation:validation-api:jar:1.0.0.GA
-  Common (Logical Plan, Base expressions) (http://www.apache.org/drill-root/common/) org.apache.drill:common:jar:1.0.0-m1
-  Commons BeanUtils Core (http://commons.apache.org/beanutils/) commons-beanutils:commons-beanutils-core:jar:1.8.0
-  Commons CLI (http://commons.apache.org/cli/) commons-cli:commons-cli:jar:1.2
-  Commons Codec (http://commons.apache.org/codec/) commons-codec:commons-codec:jar:1.4
-  Commons Codec (http://commons.apache.org/codec/) commons-codec:commons-codec:jar:1.7
-  Commons Collections (http://commons.apache.org/collections/) commons-collections:commons-collections:jar:3.2.1
-  Commons Configuration (http://commons.apache.org/${pom.artifactId.substring(8)}/) commons-configuration:commons-configuration:jar:1.6
-  Commons DBCP (http://commons.apache.org/dbcp/) commons-dbcp:commons-dbcp:jar:1.4
-  Commons IO (http://commons.apache.org/io/) commons-io:commons-io:jar:2.1
-  Commons Lang (http://commons.apache.org/lang/) commons-lang:commons-lang:jar:2.4
-  Commons Lang (http://commons.apache.org/lang/) org.apache.commons:commons-lang3:jar:3.1
-  Commons Math (http://commons.apache.org/math/) org.apache.commons:commons-math:jar:2.1
-  Commons Pool (http://commons.apache.org/pool/) commons-pool:commons-pool:jar:1.5.4
-  config (https://github.com/typesafehub/config) com.typesafe:config:bundle:1.0.0
-  curator-client (https://github.com/Netflix/curator) com.netflix.curator:curator-client:jar:1.1.9
-  curator-framework (https://github.com/Netflix/curator) com.netflix.curator:curator-framework:jar:1.1.9
-  curator-x-discovery (https://github.com/Netflix/curator) com.netflix.curator:curator-x-discovery:jar:1.1.9
-  Data Mapper for Jackson (http://jackson.codehaus.org) org.codehaus.jackson:jackson-mapper-asl:jar:1.8.8
-  Data Mapper for Jackson (http://jackson.codehaus.org) org.codehaus.jackson:jackson-mapper-asl:jar:1.9.2
-  Digester (http://jakarta.apache.org/commons/digester/) commons-digester:commons-digester:jar:1.8
-  eigenbase-properties (http://github.com/julianhyde/eigenbase-properties) eigenbase:eigenbase-properties:jar:1.1.2
-  eigenbase-resgen (http://github.com/julianhyde/eigenbase-resgen) eigenbase:eigenbase-resgen:jar:1.3.1
-  eigenbase-xom (http://github.com/julianhyde/eigenbase-xom) eigenbase:eigenbase-xom:jar:1.3.1
-  EL (http://jakarta.apache.org/commons/el/) commons-el:commons-el:jar:1.0
-  exec/Java Execution Engine (http://www.apache.org/drill-root/exec-parent/java-exec/) org.apache.drill.exec:java-exec:jar:1.0.0-m1
-  exec/Netty Little Endian Buffers (http://www.apache.org/drill-root/exec-parent/netty-bufferl/) org.apache.drill.exec:netty-bufferl:jar:4.0.7.Final
-  exec/Reference Interpreter (http://www.apache.org/drill-root/exec-parent/ref/) org.apache.drill.exec:ref:jar:1.0.0-m1
-  Glassfish Jasper API (http://jetty.mortbay.org/project/modules/jsp-api-2.1) org.mortbay.jetty:jsp-api-2.1:jar:6.1.14
-  Guava: Google Core Libraries for Java (http://code.google.com/p/guava-libraries/guava) com.google.guava:guava:bundle:14.0.1
-  hazelcast (http://www.hazelcast.com/hazelcast/) com.hazelcast:hazelcast:jar:2.5.1
-  Hibernate Validator Engine (http://validator.hibernate.org/hibernate-validator) org.hibernate:hibernate-validator:jar:4.3.1.Final
-  HPPC Collections (http://labs.carrotsearch.com/hppc.html/hppc) com.carrotsearch:hppc:jar:0.4.2
-  HttpClient (http://jakarta.apache.org/commons/httpclient/) commons-httpclient:commons-httpclient:jar:3.0.1
-  Jackson (http://jackson.codehaus.org) org.codehaus.jackson:jackson-core-asl:jar:1.7.1
-  Jackson (http://jackson.codehaus.org) org.codehaus.jackson:jackson-core-asl:jar:1.9.2
-  Jackson-annotations (http://wiki.fasterxml.com/JacksonHome) com.fasterxml.jackson.core:jackson-annotations:jar:2.1.1
-  Jackson-core (http://wiki.fasterxml.com/JacksonHome) com.fasterxml.jackson.core:jackson-core:jar:2.1.1
-  jackson-databind (http://wiki.fasterxml.com/JacksonHome) com.fasterxml.jackson.core:jackson-databind:jar:2.1.1
-  Jakarta Commons Net (http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/) commons-net:commons-net:jar:1.4.1
-  Javassist (http://www.javassist.org/) org.javassist:javassist:jar:3.16.1-GA
-  javax.inject (http://code.google.com/p/atinject/) javax.inject:javax.inject:jar:1
-  JAX-RS provider for JSON content type (http://jackson.codehaus.org) org.codehaus.jackson:jackson-jaxrs:jar:1.7.1
-  JCL 1.1.1 implemented over SLF4J (http://www.slf4j.org) org.slf4j:jcl-over-slf4j:jar:1.7.5
-  JCommander (http://beust.com/jcommander) com.beust:jcommander:jar:1.30
-  Jetty Server (http://www.eclipse.org/jetty/jetty-parent/project/modules/jetty) org.mortbay.jetty:jetty:jar:6.1.26
-  Jetty Utilities (http://www.eclipse.org/jetty/jetty-parent/project/jetty-util) org.mortbay.jetty:jetty-util:jar:6.1.26
-  JSON.simple (http://code.google.com/p/json-simple/) com.googlecode.json-simple:json-simple:bundle:1.1.1
-  linq4j (http://github.com/julianhyde/linq4j) net.hydromatic:linq4j:jar:0.1.8
-  Log4j Implemented Over SLF4J (http://www.slf4j.org) org.slf4j:log4j-over-slf4j:jar:1.7.5
-  MessagePack for Java (http://msgpack.org/) org.msgpack:msgpack:bundle:0.6.6
-  Metrics Core Library (http://metrics.codahale.com/metrics-core/) com.yammer.metrics:metrics-core:bundle:3.0.0-BETA1
-  mondrian-data-foodmart-json (http://mondrian.pentaho.com) pentaho:mondrian-data-foodmart-json:jar:0.2
-  MongoDB Java Driver (http://www.mongodb.org) org.mongodb:mongo-java-driver:jar:2.11.1
-  Netty/Buffer (http://netty.io/netty-buffer/) io.netty:netty-buffer:bundle:4.0.7.Final
-  Netty/Codec (http://netty.io/netty-codec/) io.netty:netty-codec:bundle:4.0.7.Final
-  Netty/Common (http://netty.io/netty-common/) io.netty:netty-common:bundle:4.0.7.Final
-  Netty/Handler (http://netty.io/netty-handler/) io.netty:netty-handler:bundle:4.0.7.Final
-  Netty/Transport (http://netty.io/netty-transport/) io.netty:netty-transport:bundle:4.0.7.Final
-  optiq (http://github.com/julianhyde/optiq) net.hydromatic:optiq:jar:0.4.11
-  Parquet Column (https://github.com/Parquet/parquet-mr) com.twitter:parquet-column:jar:1.0.1
-  Parquet Common (https://github.com/Parquet/parquet-mr) com.twitter:parquet-common:jar:1.0.1
-  Parquet Encodings (https://github.com/Parquet/parquet-mr) com.twitter:parquet-encoding:jar:1.0.1
-  parquet format metadata (http://github.com/Parquet/parquet-format) com.twitter:parquet-format:jar:1.0.0
-  Parquet Generator (https://github.com/Parquet/parquet-mr) com.twitter:parquet-generator:jar:1.0.1
-  Parquet Hadoop (https://github.com/Parquet/parquet-mr) com.twitter:parquet-hadoop:jar:1.0.1
-  Servlet Specification API (http://jetty.mortbay.org/servlet-api) org.mortbay.jetty:servlet-api:jar:2.5-20081211
-  Snappy for Java (http://github.com/xerial/snappy-java/) org.xerial.snappy:snappy-java:bundle:1.0.5-M3
-  SQL Parser (http://www.apache.org/drill-root/sqlparser/) org.apache.drill:sqlparser:jar:1.0.0-m1
-  StAX API (http://stax.codehaus.org/) stax:stax-api:jar:1.0.1
-  The Netty Project (http://www.jboss.org/netty/) org.jboss.netty:netty:bundle:3.2.2.Final
-  Xalan Java (http://xml.apache.org/xalan-j/) xalan:xalan:jar:2.7.1
-  Xalan Java Serializer (http://xml.apache.org/xalan-j/) xalan:serializer:jar:2.7.1
-  Xerces2 Java Parser (http://xerces.apache.org/xerces2-j) xerces:xercesImpl:jar:2.9.1
-  XML Commons External Components XML APIs (http://xml.apache.org/commons/#external) xml-apis:xml-apis:jar:1.0.b2
-  XML Commons External Components XML APIs (http://xml.apache.org/commons/components/external/) xml-apis:xml-apis:jar:1.3.04
-  Xml Compatibility extensions for Jackson (http://jackson.codehaus.org) org.codehaus.jackson:jackson-xc:jar:1.7.1
-  Y2038 (https://github.com/schwern/y2038)
+	ant (ant:ant:1.6.5 - http://www.apache.org/ant/)
+	Apache Avro (org.apache.avro:avro:1.5.3 - http://avro.apache.org)
+	Apache Avro (org.apache.avro:avro:1.7.1 - http://avro.apache.org)
+	Apache Avro IPC (org.apache.avro:avro-ipc:1.5.3 - http://avro.apache.org)
+	Apache Avro IPC (org.apache.avro:avro-ipc:1.7.1 - http://avro.apache.org)
+	Apache Avro Mapred API (org.apache.avro:avro-mapred:1.7.1 - http://avro.apache.org/avro-mapred)
+	Apache Commons Pool (org.apache.commons:commons-pool2:2.1 - http://commons.apache.org/proper/commons-pool/)
+	Apache Ftplet API (org.apache.ftpserver:ftplet-api:1.0.0 - http://mina.apache.org/ftpserver)
+	Apache FtpServer Core (org.apache.ftpserver:ftpserver-core:1.0.0 - http://mina.apache.org/ftpserver/ftpserver-core)
+	Apache FtpServer Deprecated classes (org.apache.ftpserver:ftpserver-deprecated:1.0.0-M2 - http://mina.apache.org/ftpserver/ftpserver-deprecated)
+	Apache MINA Core (org.apache.mina:mina-core:2.0.0-M5 - http://mina.apache.org/mina-core)
+	Apache Thrift (org.apache.thrift:libfb303:0.9.0 - http://thrift.apache.org)
+	Apache Thrift (org.apache.thrift:libthrift:0.8.0 - http://thrift.apache.org)
+	Apache Thrift (org.apache.thrift:libthrift:0.9.0 - http://thrift.apache.org)
+	Apache Velocity (org.apache.velocity:velocity:1.7 - http://velocity.apache.org/engine/devel/)
+	Bean Validation API (javax.validation:validation-api:1.0.0.GA - no url defined)
+	Bean Validation API (javax.validation:validation-api:1.1.0.Final - http://beanvalidation.org)
+	BoneCP :: Core Library (com.jolbox:bonecp:0.7.1.RELEASE - http://jolbox.com/bonecp)
+	Common (Logical Plan, Base expressions) (org.apache.drill:drill-common:1.0.0-m2-incubating-SNAPSHOT - http://www.apache.org/drill-root/drill-common/)
+	Commons BeanUtils Core (commons-beanutils:commons-beanutils-core:1.8.0 - http://commons.apache.org/beanutils/)
+	Commons CLI (commons-cli:commons-cli:1.2 - http://commons.apache.org/cli/)
+	Commons Codec (commons-codec:commons-codec:1.4 - http://commons.apache.org/codec/)
+	Commons Codec (commons-codec:commons-codec:1.5 - http://commons.apache.org/codec/)
+	Commons Collections (commons-collections:commons-collections:3.2.1 - http://commons.apache.org/collections/)
+	Commons Compress (org.apache.commons:commons-compress:1.4.1 - http://commons.apache.org/compress/)
+	Commons Configuration (commons-configuration:commons-configuration:1.6 - http://commons.apache.org/${pom.artifactId.substring(8)}/)
+	Commons DBCP (commons-dbcp:commons-dbcp:1.4 - http://commons.apache.org/dbcp/)
+	Commons IO (commons-io:commons-io:2.1 - http://commons.apache.org/io/)
+	Commons IO (commons-io:commons-io:2.4 - http://commons.apache.org/io/)
+	Commons Lang (commons-lang:commons-lang:2.4 - http://commons.apache.org/lang/)
+	Commons Lang (commons-lang:commons-lang:2.5 - http://commons.apache.org/lang/)
+	Commons Lang (org.apache.commons:commons-lang3:3.1 - http://commons.apache.org/lang/)
+	Commons Math (org.apache.commons:commons-math:2.1 - http://commons.apache.org/math/)
+	Commons Pool (commons-pool:commons-pool:1.5.4 - http://commons.apache.org/pool/)
+	config (com.typesafe:config:1.0.0 - https://github.com/typesafehub/config)
+	Curator Client (org.apache.curator:curator-client:2.5.0 - http://curator.apache.org/curator-client)
+	Curator Framework (org.apache.curator:curator-framework:2.5.0 - http://curator.apache.org/curator-framework)
+	Curator Recipes (org.apache.curator:curator-recipes:2.5.0 - http://curator.apache.org/curator-recipes)
+	Curator Service Discovery (org.apache.curator:curator-x-discovery:2.5.0 - http://curator.apache.org/curator-x-discovery)
+	Data Mapper for Jackson (org.codehaus.jackson:jackson-mapper-asl:1.8.8 - http://jackson.codehaus.org)
+	Data Mapper for Jackson (org.codehaus.jackson:jackson-mapper-asl:1.9.11 - http://jackson.codehaus.org)
+	DataNucleus Core (org.datanucleus:datanucleus-core:3.2.2 - http://www.datanucleus.org)
+	DataNucleus JDO API plugin (org.datanucleus:datanucleus-api-jdo:3.2.1 - http://www.datanucleus.org)
+	DataNucleus RDBMS (org.datanucleus:datanucleus-rdbms:3.2.1 - http://www.datanucleus.org)
+	Digester (commons-digester:commons-digester:1.8 - http://jakarta.apache.org/commons/digester/)
+	Drill Protocol (org.apache.drill:drill-protocol:1.0.0-m2-incubating-SNAPSHOT - http://www.apache.org/drill-root/drill-protocol/)
+	eigenbase-properties (eigenbase:eigenbase-properties:1.1.4 - http://github.com/julianhyde/eigenbase-properties)
+	EL (commons-el:commons-el:1.0 - http://jakarta.apache.org/commons/el/)
+	exec/Java Execution Engine (org.apache.drill.exec:drill-java-exec:1.0.0-m2-incubating-SNAPSHOT - http://www.apache.org/drill-root/exec-parent/drill-java-exec/)
+	exec/JDBC Driver using dependencies (org.apache.drill.exec:drill-jdbc:1.0.0-m2-incubating-SNAPSHOT - http://www.apache.org/drill-root/exec-parent/drill-jdbc/)
+	Glassfish Jasper API (org.mortbay.jetty:jsp-api-2.1:6.1.14 - http://jetty.mortbay.org/project/modules/jsp-api-2.1)
+	Guava: Google Core Libraries for Java (com.google.guava:guava:14.0.1 - http://code.google.com/p/guava-libraries/guava)
+	hazelcast (com.hazelcast:hazelcast:3.1.4 - http://www.hazelcast.com/hazelcast/)
+	HBase (org.apache.hbase:hbase:0.94.11 - http://hbase.apache.org)
+	Hibernate Validator Engine (org.hibernate:hibernate-validator:4.3.1.Final - http://validator.hibernate.org/hibernate-validator)
+	hive-common (org.apache.hive:hive-common:0.12.0 - http://hive.apache.org)
+	hive-exec (org.apache.hive:hive-exec:0.12.0 - http://hive.apache.org)
+	hive-hbase-handler (org.apache.hive:hive-hbase-handler:0.12.0 - http://hive.apache.org)
+	hive-metastore (org.apache.hive:hive-metastore:0.12.0 - http://hive.apache.org)
+	hive-serde (org.apache.hive:hive-serde:0.12.0 - http://hive.apache.org)
+	hive-shims (org.apache.hive:hive-shims:0.12.0 - http://hive.apache.org)
+	HPPC Collections (com.carrotsearch:hppc:0.4.2 - http://labs.carrotsearch.com/hppc.html/hppc)
+	HttpClient (commons-httpclient:commons-httpclient:3.0.1 - http://jakarta.apache.org/commons/httpclient/)
+	HttpClient (commons-httpclient:commons-httpclient:3.1 - http://jakarta.apache.org/httpcomponents/httpclient-3.x/)
+	HttpClient (org.apache.httpcomponents:httpclient:4.1.2 - http://hc.apache.org/httpcomponents-client)
+	HttpClient (org.apache.httpcomponents:httpclient:4.1.3 - http://hc.apache.org/httpcomponents-client)
+	HttpCore (org.apache.httpcomponents:httpcore:4.1.3 - http://hc.apache.org/httpcomponents-core-ga)
+	Infinispan Commons (org.infinispan:infinispan-commons:6.0.2.Final - http://www.infinispan.org/infinispan-commons)
+	Infinispan Core (org.infinispan:infinispan-core:6.0.2.Final - http://www.infinispan.org/infinispan-core)
+	Infinispan Tree API (org.infinispan:infinispan-tree:6.0.2.Final - http://www.infinispan.org/infinispan-tree)
+	Jackson (org.codehaus.jackson:jackson-core-asl:1.8.8 - http://jackson.codehaus.org)
+	Jackson (org.codehaus.jackson:jackson-core-asl:1.9.11 - http://jackson.codehaus.org)
+	Jackson (org.codehaus.jackson:jackson-core-asl:1.9.13 - http://jackson.codehaus.org)
+	Jackson Integration for Metrics (com.codahale.metrics:metrics-json:3.0.1 - http://metrics.codahale.com/metrics-json/)
+	Jackson-annotations (com.fasterxml.jackson.core:jackson-annotations:2.2.0 - http://wiki.fasterxml.com/JacksonHome)
+	Jackson-core (com.fasterxml.jackson.core:jackson-core:2.1.1 - http://wiki.fasterxml.com/JacksonHome)
+	Jackson-core (com.fasterxml.jackson.core:jackson-core:2.2.0 - http://wiki.fasterxml.com/JacksonHome)
+	jackson-databind (com.fasterxml.jackson.core:jackson-databind:2.1.1 - http://wiki.fasterxml.com/JacksonHome)
+	jackson-databind (com.fasterxml.jackson.core:jackson-databind:2.2.0 - http://wiki.fasterxml.com/JacksonHome)
+	Jackson-JAXRS-base (com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.2.0 - http://wiki.fasterxml.com/JacksonHome/jackson-jaxrs-base)
+	Jackson-JAXRS-JSON (com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.2.0 - http://wiki.fasterxml.com/JacksonHome/jackson-jaxrs-json-provider)
+	Jackson-module-JAXB-annotations (com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.2.0 - http://wiki.fasterxml.com/JacksonJAXBAnnotations)
+	Jakarta Commons Net (commons-net:commons-net:1.4.1 - http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/)
+	jasper-compiler (tomcat:jasper-compiler:5.5.23 - http://tomcat.apache.org/jasper-compiler)
+	jasper-runtime (tomcat:jasper-runtime:5.5.23 - http://tomcat.apache.org/jasper-runtime)
+	JavaEWAH (com.googlecode.javaewah:JavaEWAH:0.3.2 - http://code.google.com/p/javaewah/)
+	Javassist (org.javassist:javassist:3.16.1-GA - http://www.javassist.org/)
+	Javassist (javassist:javassist:3.12.1.GA - http://www.javassist.org/)
+	javax.inject (javax.inject:javax.inject:1 - http://code.google.com/p/atinject/)
+	JAX-RS provider for JSON content type (org.codehaus.jackson:jackson-jaxrs:1.8.8 - http://jackson.codehaus.org)
+	JBoss Logging 3 (org.jboss.logging:jboss-logging:3.1.2.GA - http://www.jboss.org)
+	JCommander (com.beust:jcommander:1.30 - http://beust.com/jcommander)
+	JDO API (javax.jdo:jdo-api:3.0.1 - http://db.apache.org/jdo)
+	Jetty :: Continuation (org.eclipse.jetty:jetty-continuation:9.1.1.v20140108 - http://www.eclipse.org/jetty)
+	Jetty :: Http Utility (org.eclipse.jetty:jetty-http:9.1.5.v20140505 - http://www.eclipse.org/jetty)
+	Jetty :: IO Utility (org.eclipse.jetty:jetty-io:9.1.5.v20140505 - http://www.eclipse.org/jetty)
+	Jetty :: Security (org.eclipse.jetty:jetty-security:9.1.5.v20140505 - http://www.eclipse.org/jetty)
+	Jetty :: Server Core (org.eclipse.jetty:jetty-server:9.1.5.v20140505 - http://www.eclipse.org/jetty)
+	Jetty :: Servlet Handling (org.eclipse.jetty:jetty-servlet:9.1.5.v20140505 - http://www.eclipse.org/jetty)
+	Jetty :: Utilities (org.eclipse.jetty:jetty-util:9.1.5.v20140505 - http://www.eclipse.org/jetty)
+	Jetty :: Webapp Application Support (org.eclipse.jetty:jetty-webapp:9.1.1.v20140108 - http://www.eclipse.org/jetty)
+	Jetty :: XML utilities (org.eclipse.jetty:jetty-xml:9.1.1.v20140108 - http://www.eclipse.org/jetty)
+	Jetty Server (org.mortbay.jetty:jetty:6.1.26 - http://www.eclipse.org/jetty/jetty-parent/project/modules/jetty)
+	Jetty Utilities (org.mortbay.jetty:jetty-util:6.1.26 - http://www.eclipse.org/jetty/jetty-parent/project/jetty-util)
+	JGroups (org.jgroups:jgroups:3.4.1.Final - http://www.jgroups.org)
+	Joda-Time (joda-time:joda-time:2.3 - http://www.joda.org/joda-time/)
+	JSON.simple (com.googlecode.json-simple:json-simple:1.1.1 - http://code.google.com/p/json-simple/)
+	JVM Integration for Metrics (com.codahale.metrics:metrics-jvm:3.0.1 - http://metrics.codahale.com/metrics-jvm/)
+	lilith-data-converter (de.huxhorn.lilith:de.huxhorn.lilith.data.converter:0.9.43 - http://lilith.huxhorn.de)
+	lilith-data-eventsource (de.huxhorn.lilith:de.huxhorn.lilith.data.eventsource:0.9.43 - http://lilith.huxhorn.de)
+	lilith-data-logging (de.huxhorn.lilith:de.huxhorn.lilith.data.logging:0.9.43 - http://lilith.huxhorn.de)
+	lilith-data-logging-protobuf (de.huxhorn.lilith:de.huxhorn.lilith.data.logging.protobuf:0.9.43 - http://lilith.huxhorn.de)
+	lilith-sender (de.huxhorn.lilith:de.huxhorn.lilith.sender:0.9.43 - http://lilith.huxhorn.de)
+	linq4j (net.hydromatic:linq4j:0.4 - http://github.com/julianhyde/linq4j)
+	Log4j Implemented Over SLF4J (org.slf4j:log4j-over-slf4j:1.7.5 - http://www.slf4j.org)
+	logback-classic (de.huxhorn.lilith:de.huxhorn.lilith.logback.classic:0.9.43 - http://lilith.huxhorn.de)
+	logback-converter-classic (de.huxhorn.lilith:de.huxhorn.lilith.logback.converter-classic:0.9.43 - http://lilith.huxhorn.de)
+	logback-multiplex-appender-classic (de.huxhorn.lilith:de.huxhorn.lilith.logback.appender.multiplex-classic:0.9.43 - http://lilith.huxhorn.de)
+	logback-multiplex-appender-core (de.huxhorn.lilith:de.huxhorn.lilith.logback.appender.multiplex-core:0.9.43 - http://lilith.huxhorn.de)
+	MessagePack for Java (org.msgpack:msgpack:0.6.6 - http://msgpack.org/)
+	Metrics Core (com.codahale.metrics:metrics-core:3.0.1 - http://metrics.codahale.com/metrics-core/)
+	Metrics Core Library (com.yammer.metrics:metrics-core:2.1.1 - http://metrics.codahale.com/metrics-core/)
+	Metrics Core Library (com.yammer.metrics:metrics-core:2.1.2 - http://metrics.codahale.com/metrics-core/)
+	Metrics Health Checks (com.codahale.metrics:metrics-healthchecks:3.0.1 - http://metrics.codahale.com/metrics-healthchecks/)
+	Metrics Utility Servlets (com.codahale.metrics:metrics-servlets:3.0.1 - http://metrics.codahale.com/metrics-servlets/)
+	mondrian-data-foodmart-json (pentaho:mondrian-data-foodmart-json:0.3.2 - http://mondrian.pentaho.com)
+	mondrian-data-foodmart-queries (pentaho:mondrian-data-foodmart-queries:0.3 - http://mondrian.pentaho.com)
+	Netty/Buffer (io.netty:netty-buffer:4.0.20.Final - http://netty.io/netty-buffer/)
+	Netty/Codec (io.netty:netty-codec:4.0.20.Final - http://netty.io/netty-codec/)
+	Netty/Common (io.netty:netty-common:4.0.20.Final - http://netty.io/netty-common/)
+	Netty/Handler (io.netty:netty-handler:4.0.20.Final - http://netty.io/netty-handler/)
+	Netty/Transport (io.netty:netty-transport:4.0.20.Final - http://netty.io/netty-transport/)
+	Netty/Transport/Native/Epoll (io.netty:netty-transport-native-epoll:4.0.20.Final - http://netty.io/netty-transport-native-epoll/)
+	optiq-avatica (net.hydromatic:optiq-avatica:0.9-SNAPSHOT - http://github.com/julianhyde/optiq/optiq-avatica)
+	optiq-core (net.hydromatic:optiq-core:0.9-SNAPSHOT - http://github.com/julianhyde/optiq/optiq-core)
+	Parquet Column (com.twitter:parquet-column:1.5.0-SNAPSHOT - https://github.com/Parquet/parquet-mr)
+	Parquet Common (com.twitter:parquet-common:1.5.0-SNAPSHOT - https://github.com/Parquet/parquet-mr)
+	Parquet Encodings (com.twitter:parquet-encoding:1.5.0-SNAPSHOT - https://github.com/Parquet/parquet-mr)
+	parquet format metadata (com.twitter:parquet-format:2.1.1-SNAPSHOT - http://github.com/Parquet/parquet-format)
+	Parquet Generator (com.twitter:parquet-generator:1.5.0-SNAPSHOT - https://github.com/Parquet/parquet-mr)
+	Parquet Hadoop (com.twitter:parquet-hadoop:1.5.0-SNAPSHOT - https://github.com/Parquet/parquet-mr)
+	Parquet Jackson (com.twitter:parquet-jackson:1.5.0-SNAPSHOT - https://github.com/Parquet/parquet-mr)
+	protostuff :: api (com.dyuproject.protostuff:protostuff-api:1.0.8 - http://code.google.com/p/protostuff/protostuff-api/)
+	protostuff :: core (com.dyuproject.protostuff:protostuff-core:1.0.8 - http://code.google.com/p/protostuff/protostuff-core/)
+	protostuff :: json (com.dyuproject.protostuff:protostuff-json:1.0.8 - http://code.google.com/p/protostuff/protostuff-json/)
+	snappy (org.iq80.snappy:snappy:0.2 - http://github.com/dain/snappy)
+	Snappy for Java (org.xerial.snappy:snappy-java:1.0.4.1 - http://code.google.com/p/snappy-java/)
+	Snappy for Java (org.xerial.snappy:snappy-java:1.0.5-M3 - http://github.com/xerial/snappy-java/)
+	StAX API (stax:stax-api:1.0.1 - http://stax.codehaus.org/)
+	sulky-codec (de.huxhorn.sulky:de.huxhorn.sulky.codec:0.9.16 - http://sulky.huxhorn.de)
+	sulky-formatting (de.huxhorn.sulky:de.huxhorn.sulky.formatting:0.9.16 - http://sulky.huxhorn.de)
+	sulky-io (de.huxhorn.sulky:de.huxhorn.sulky.io:0.9.16 - http://sulky.huxhorn.de)
+	The Netty Project (io.netty:netty:3.4.0.Final - http://netty.io/)
+	The Netty Project (io.netty:netty:3.7.0.Final - http://netty.io/)
+	The Netty Project (org.jboss.netty:netty:3.2.2.Final - http://www.jboss.org/netty/)
+	The Netty Project (org.jboss.netty:netty:3.2.4.Final - http://www.jboss.org/netty/)
+	Xalan Java (xalan:xalan:2.7.1 - http://xml.apache.org/xalan-j/)
+	Xalan Java Serializer (xalan:serializer:2.7.1 - http://xml.apache.org/xalan-j/)
+	Xerces2-j (xerces:xercesImpl:2.11.0 - https://xerces.apache.org/xerces2-j/)
+	XML Commons External Components XML APIs (xml-apis:xml-apis:1.0.b2 - http://xml.apache.org/commons/#external)
+	XML Commons External Components XML APIs (xml-apis:xml-apis:1.4.01 - http://xml.apache.org/commons/components/external/)
+	Xml Compatibility extensions for Jackson (org.codehaus.jackson:jackson-xc:1.8.8 - http://jackson.codehaus.org)
+	commons-beanutils (commons-beanutils:commons-beanutils:1.7.0 - no url defined)
+  derby (org.apache.derby:derby:10.4.2.0 - no url defined)
+  hadoop-core (org.apache.hadoop:hadoop-core:1.2.1 - no url defined)
+  hadoop-test (org.apache.hadoop:hadoop-test:1.2.1 - no url defined)
+  jasper-compiler (tomcat:jasper-compiler:5.5.12 - no url defined)
+  jasper-runtime (tomcat:jasper-runtime:5.5.12 - no url defined)
+  Jettison (org.codehaus.jettison:jettison:1.1 - no url defined)
+  log4j (log4j:log4j:1.2.16 - no url defined)
+  oro (oro:oro:2.0.8 - no url defined)
+  zookeeper (org.apache.zookeeper:zookeeper:3.4.3 - no url defined)
+  zookeeper (org.apache.zookeeper:zookeeper:3.4.5 - no url defined)
+  zookeeper (org.apache.zookeeper:zookeeper:3.4.6 - no url defined)
 
   The Apache License, Version 2.0
-
-For 
-  Netty/BufferL Little Endian fork of Netty buffers implementation
-
- Copyright 2012 The Netty Project 
- 
- The Netty Project licenses this file to you under the Apache License, 
- version 2.0 (the "License"); you may not use this file except in compliance 
- with the License. You may obtain a copy of the License at: 
- 
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software 
- distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- License for the specific language governing permissions and limitations
- under the License.
-
+--------------------------------------------------------------------------------
 For
-  AntLR Parser Generator
-  ANTLR StringTemplate
 
-Copyright (c) 2012 Terence Parr and Sam Harwell
-All rights reserved.
+	ANTLR ST4 4.0.4 (org.antlr:ST4:4.0.4 - http://www.stringtemplate.org)
+	ANTLR StringTemplate (org.antlr:stringtemplate:3.2.1 - http://www.stringtemplate.org)
+	AntLR Parser Generator (antlr:antlr:2.7.7 - http://www.antlr.org/)
+	Javolution (javolution:javolution:5.5.1 - http://javolution.org)
+	ASM Commons (org.ow2.asm:asm-commons:4.1 - http://asm.objectweb.org/asm-commons/)
+	ASM Core (org.ow2.asm:asm:4.1 - http://asm.objectweb.org/asm/)
+	ASM Tree (org.ow2.asm:asm-tree:4.1 - http://asm.objectweb.org/asm-tree/)
+	ASM Util (org.ow2.asm:asm-util:4.1 - http://asm.objectweb.org/asm-util/)
+	JLine (jline:jline:0.9.94 - http://jline.sourceforge.net)
+	ParaNamer Core (com.thoughtworks.paranamer:paranamer:2.3 - http://paranamer.codehaus.org/paranamer)
+	ParaNamer Core (com.thoughtworks.paranamer:paranamer:2.5.6 - http://paranamer.codehaus.org/paranamer)
+	FreeMarker (org.freemarker:freemarker:2.3.19 - http://freemarker.org)
+	sqlline (sqlline:sqlline:1.1.6 - http://github.com/julianhyde/sqlline)
+	Commons Compiler Jdk (org.codehaus.janino:commons-compiler-jdk:2.7.4 - http://docs.codehaus.org/display/JANINO/Home/commons-compiler-jdk)
+	Hamcrest Core (org.hamcrest:hamcrest-core:1.3 - https://github.com/hamcrest/JavaHamcrest/hamcrest-core)
+	Janino (org.codehaus.janino:janino:2.6.1 - http://docs.codehaus.org/display/JANINO/Home/janino)
+	Janino (org.codehaus.janino:janino:2.7.4 - http://docs.codehaus.org/display/JANINO/Home/janino)
+	Janino (org.codehaus.janino:janino:2.7.3 - no url defined)
+	commons-compiler (org.codehaus.janino:commons-compiler:2.7.3 - no url defined)
+	Protocol Buffer Java API (com.google.protobuf:protobuf-java:2.5.0 - http://code.google.com/p/protobuf)
+	JLine (jline:jline:2.10 - http://nexus.sonatype.org/oss-repository-hosting.html/jline)
+	xmlenc Library (xmlenc:xmlenc:0.52 - http://xmlenc.sourceforge.net)
+  Antlr 3.4 Runtime (org.antlr:antlr-runtime:3.4 - http://www.antlr.org)
+  HSQLDB (hsqldb:hsqldb:1.8.0.10 - http://hsqldb.org/)
+  dom4j (dom4j:dom4j:1.6.1 - http://dom4j.org)
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
+  BSD (http://opensource.org/licenses/BSD-3-Clause)
 
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holders nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.
-
+  http://www.antlr.org/license.html (BSD)
+  http://hsqldb.org/web/hsqlLicense.html (BSD)
+  http://dom4j.sourceforge.net/dom4j-1.6.1/license.html (BSD)
+--------------------------------------------------------------------------------
 For
-  ASM Core (http://asm.objectweb.org/asm/) org.ow2.asm:asm:jar:4.1
-  ASM Commons (http://asm.objectweb.org/asm-commons/) org.ow2.asm:asm-commons:jar:4.1
-  ASM Tree (http://asm.objectweb.org/asm-tree/) org.ow2.asm:asm-tree:jar:4.1
-  ASM Util (http://asm.objectweb.org/asm-util/) org.ow2.asm:asm-util:jar:4.1
 
-Copyright (c) 2000-2011 INRIA, France Telecom
-All rights reserved.
+  aopalliance version 1.0 repackaged as a module (org.glassfish.hk2.external:aopalliance-repackaged:2.2.0 - https://hk2.java.net/external/aopalliance-repackaged)
+  Glassfish Jasper (org.mortbay.jetty:jsp-2.1:6.1.14 - http://jetty.mortbay.org/project/modules/jsp-2.1)
+  HK2 API module (org.glassfish.hk2:hk2-api:2.2.0 - https://hk2.java.net/hk2-api)
+  HK2 Implementation Utilities (org.glassfish.hk2:hk2-utils:2.2.0 - https://hk2.java.net/hk2-utils)
+  Injection API (JSR 330) version 1 repackaged as OSGi bundle (org.glassfish.hk2.external:javax.inject:2.2.0 - https://hk2.java.net/external/javax.inject)
+  Java Servlet API (javax.servlet:javax.servlet-api:3.1.0 - http://servlet-spec.java.net)
+  Java Transaction API (org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:1.0.1.Final - http://www.jboss.org/jboss-transaction-api_1.1_spec)
+  JavaBeans Activation Framework (JAF) (javax.activation:activation:1.1 - http://java.sun.com/products/javabeans/jaf/index.jsp)
+  javax.annotation API (javax.annotation:javax.annotation-api:1.2 - http://jcp.org/en/jsr/detail?id=250)
+  jersey-container-jetty-http (org.glassfish.jersey.containers:jersey-container-jetty-http:2.8 - https://jersey.java.net/project/jersey-container-jetty-http/)
+  jersey-container-jetty-servlet (org.glassfish.jersey.containers:jersey-container-jetty-servlet:2.8 - https://jersey.java.net/project/jersey-container-jetty-servlet/)
+  jersey-container-servlet (org.glassfish.jersey.containers:jersey-container-servlet:2.8 - https://jersey.java.net/project/jersey-container-servlet/)
+  jersey-container-servlet-core (org.glassfish.jersey.containers:jersey-container-servlet-core:2.8 - https://jersey.java.net/project/jersey-container-servlet-core/)
+  jersey-core-client (org.glassfish.jersey.core:jersey-client:2.8 - https://jersey.java.net/jersey-client/)
+  jersey-core-common (org.glassfish.jersey.core:jersey-common:2.8 - https://jersey.java.net/jersey-common/)
+  jersey-core-server (org.glassfish.jersey.core:jersey-server:2.8 - https://jersey.java.net/jersey-server/)
+  jersey-ext-mvc (org.glassfish.jersey.ext:jersey-mvc:2.8 - https://jersey.java.net/project/jersey-mvc/)
+  jersey-ext-mvc-freemarker (org.glassfish.jersey.ext:jersey-mvc-freemarker:2.8 - https://jersey.java.net/project/jersey-mvc-freemarker/)
+  jersey-media-multipart (org.glassfish.jersey.media:jersey-media-multipart:2.8 - https://jersey.java.net/project/jersey-media-multipart/)
+  jersey-repackaged-guava (org.glassfish.jersey.bundles.repackaged:jersey-guava:2.8 - https://jersey.java.net/project/project/jersey-guava/)
+  OSGi resource locator bundle - used by various API providers that rely on META-INF/services mechanism to locate providers. (org.glassfish.hk2:osgi-resource-locator:1.0.1 - http://glassfish.org/osgi-resource-locator/)
+  ServiceLocator Default Implementation (org.glassfish.hk2:hk2-locator:2.2.0 - https://hk2.java.net/hk2-locator)
+  servlet-api (javax.servlet:servlet-api:2.4 - no url defined)
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holders nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.
-
+  CDDL v1.0 (https://glassfish.java.net/public/CDDLv1.0.text)
+--------------------------------------------------------------------------------
 For
-  JLine (http://jline.sourceforge.net) jline:jline:jar:0.9.94
-  JLine (http://nexus.sonatype.org/oss-repository-hosting.html/jline) jline:jline:jar:2.10
 
-Copyright (c) 2002-2006, Marc Prud'hommeaux <mwp1@cornell.edu>
-All rights reserved.
+	javax.ws.rs-api (javax.ws.rs:javax.ws.rs-api:2.0 - http://jax-rs-spec.java.net)
+	JAXB RI (com.sun.xml.bind:jaxb-impl:2.2.3-1 - http://jaxb.java.net/)
+	jersey-core (com.sun.jersey:jersey-core:1.8 - https://jersey.dev.java.net/jersey-core/)
+	jersey-json (com.sun.jersey:jersey-json:1.8 - https://jersey.dev.java.net/jersey-json/)
+	jersey-server (com.sun.jersey:jersey-server:1.8 - https://jersey.dev.java.net/jersey-server/)
+	MIME streaming extension (org.jvnet.mimepull:mimepull:1.9.3 - http://mimepull.java.net)
+	Codemodel Core (com.sun.codemodel:codemodel:2.6 - http://codemodel.java.net/codemodel/)
+	jaxb-api (javax.xml.bind:jaxb-api:2.1 - no url defined)
 
-Redistribution and use in source and binary forms, with or
-without modification, are permitted provided that the following
-conditions are met:
-
-Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with
-the distribution.
-
-Neither the name of JLine nor the names of its contributors
-may be used to endorse or promote products derived from this
-software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
-BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-OF THE POSSIBILITY OF SUCH DAMAGE.
-
+	CDDL v1.1 (https://glassfish.java.net/public/CDDL+GPL_1_1.html)
+--------------------------------------------------------------------------------
 For
-  xmlenc Library (http://xmlenc.sourceforge.net) xmlenc:xmlenc:jar:0.52
 
-Copyright 2003-2005, Ernst de Haan <wfe.dehaan@gmail.com>
-All rights reserved.
+  JRuby Complete (org.jruby:jruby-complete:1.6.5 - http://www.jruby.org/jruby-common/jruby-complete/)
+  JUnit (junit:junit:4.11 - http://junit.org)
 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
- 3. Neither the name of the copyright holders nor the names of its
-    contributors may be used to endorse or promote products derived from
-    this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- THE POSSIBILITY OF SUCH DAMAGE.
-
+  CPL v1.0 (http://opensource.org/licenses/cpl1.0.php)
+--------------------------------------------------------------------------------
 For
-  ParaNamer Core (http://paranamer.codehaus.org/paranamer) com.thoughtworks.paranamer:paranamer:jar:2.5.6
 
-Copyright (c) 2006 Paul Hammant & ThoughtWorks Inc
- All rights reserved.
+  Logback Classic Module (ch.qos.logback:logback-classic:1.0.13 - http://logback.qos.ch)
+  Logback Core Module (ch.qos.logback:logback-core:1.0.13 - http://logback.qos.ch)
+  core (org.eclipse.jdt:core:3.1.1 - no url defined)
 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
- 3. Neither the name of the copyright holders nor the names of its
-    contributors may be used to endorse or promote products derived from
-    this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- THE POSSIBILITY OF SUCH DAMAGE.
-
+  EPL 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+--------------------------------------------------------------------------------
 For
-  Commons Compiler (http://docs.codehaus.org/display/JANINO/Home/commons-compiler) org.codehaus.janino:commons-compiler:jar:2.6.1
-  Commons Compiler Jdk (http://docs.codehaus.org/display/JANINO/Home/commons-compiler-jdk) org.codehaus.janino:commons-compiler-jdk:jar:2.6.1
-  Janino (http://docs.codehaus.org/display/JANINO/Home/janino) org.codehaus.janino:janino:jar:2.6.1
 
-Copyright (c) 2001-2010, Arno Unkrig
-All rights reserved.
+  JCL 1.1.1 implemented over SLF4J (org.slf4j:jcl-over-slf4j:1.7.5 - http://www.slf4j.org)
+  JUL to SLF4J bridge (org.slf4j:jul-to-slf4j:1.7.5 - http://www.slf4j.org)
+  Main (com.googlecode.jmockit:jmockit:1.3 - http://code.google.com/p/jmockit)
+  Mockito (org.mockito:mockito-all:1.8.2 - http://www.mockito.org)
+  Mockito (org.mockito:mockito-all:1.9.0 - http://www.mockito.org)
+  SLF4J API Module (org.slf4j:slf4j-api:1.7.5 - http://www.slf4j.org)
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-   1. Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-   2. Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials
-      provided with the distribution.
-   3. The name of the author may not be used to endorse or promote
-      products derived from this software without specific prior
-      written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
-IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+  MIT (http://opensource.org/licenses/mit-license.php)
+--------------------------------------------------------------------------------
 For
-  Protocol Buffer Java API (http://code.google.com/p/protobuf) com.google.protobuf:protobuf-java:bundle:2.5.0
-  Protocol Buffer Java API (http://code.google.com/p/protobuf) com.google.protobuf:protobuf-java:jar:2.4.1
 
-Copyright 2008, Google Inc.
-All rights reserved.
+  jamon-runtime (org.jamon:jamon-runtime:2.3.1 - http://www.jamon.org/jamon-runtime/)
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-    * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+  MPL v1.1 (http://opensource.org/licenses/mozilla1.1.php)
+--------------------------------------------------------------------------------
 For
-  sqlline (http://github.com/julianhyde/sqlline) sqlline:sqlline:jar:1.1.6
 
-Copyright (c) 2002,2003,2004,2005,2006,2007 Marc Prud'hommeaux
-Copyright (c) 2004-2010 The Eigenbase Project
-Copyright (c) 2013-2013 Julian Hyde
-All rights reserved.
+  Reflections (org.reflections:reflections:0.9.8 - http://code.google.com/p/reflections/)
 
-===============================================================================
+  WTFPL (http://en.wikipedia.org/wiki/WTFPL)
+--------------------------------------------------------------------------------
+Public domain
 
-Licensed under the Modified BSD License (the "License"); you may not
-use this file except in compliance with the License. You may obtain a
-copy of the License at:
-
-http://opensource.org/licenses/BSD-3-Clause
-
-Redistribution and use in source and binary forms,
-with or without modification, are permitted provided
-that the following conditions are met:
-
-(1) Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-
-(2) Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the
-    distribution.
-
-(3) The name of the author may not be used to endorse or promote
-    products derived from this software without specific prior written
-    permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-For
-  Glassfish Jasper (http://jetty.mortbay.org/project/modules/jsp-2.1) org.mortbay.jetty:jsp-2.1:jar:6.1.14
-  Servlet Specification 2.5 API (http://jetty.mortbay.org/project/modules/servlet-api-2.5) org.mortbay.jetty:servlet-api-2.5:jar:6.1.14
-  JavaBeans Activation Framework (JAF) (http://java.sun.com/products/javabeans/jaf/index.jsp) javax.activation:activation:jar:1.1
-
-CDDL v1.0 (https://glassfish.java.net/public/CDDLv1.0.html)
-
-For
-  JAXB API bundle for GlassFish V3 (https://jaxb.dev.java.net/) javax.xml.bind:jaxb-api:jar:2.2.2
-  JAXB RI (http://jaxb.java.net/) com.sun.xml.bind:jaxb-impl:jar:2.2.3-1
-  jersey-core (https://jersey.dev.java.net/jersey-core/) com.sun.jersey:jersey-core:bundle:1.8
-  jersey-json (https://jersey.dev.java.net/jersey-json/) com.sun.jersey:jersey-json:bundle:1.8
-
-CDDL v1.1 (https://glassfish.java.net/public/CDDL+GPL_1_1.html)
-
-
-
-For
-  Mockito (http://www.mockito.org) org.mockito:mockito-all:jar:1.9.0
-
-Copyright (c) 2007 Mockito contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-For
-  SLF4J API Module (http://www.slf4j.org) org.slf4j:slf4j-api:jar:1.7.5
-
-Copyright (c) 2004-2007 QOS.ch
-All rights reserved.
-
-Permission is hereby granted, free  of charge, to any person obtaining
-a  copy  of this  software  and  associated  documentation files  (the
-"Software"), to  deal in  the Software without  restriction, including
-without limitation  the rights to  use, copy, modify,  merge, publish,
-distribute,  sublicense, and/or sell  copies of  the Software,  and to
-permit persons to whom the Software  is furnished to do so, subject to
-the following conditions:
-
-The  above  copyright  notice  and  this permission  notice  shall  be
-included in all copies or substantial portions of the Software.
-
-THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
-EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
-MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-For
-  HSQLDB (http://hsqldb.org/) hsqldb:hsqldb:jar:1.8.0.10
-
-Copyright (c) 2001-2010, The HSQL Development Group
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-Neither the name of the HSQL Development Group nor the names of its
-contributors may be used to endorse or promote products derived from this
-software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL HSQL DEVELOPMENT GROUP, HSQLDB.ORG, 
-OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-For
- Reflections (http://code.google.com/p/reflections/) org.reflections:reflections:jar:0.9.8
-
-  License: WTFPL  (http://en.wikipedia.org/wiki/WTFPL)
-
-For
- Y2038 (https://github.com/schwern/y2038)
-
-The MIT License
-
-Copyright (c) 2007-2010 Michael G Schwern
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+  Highly Scalable Java (com.github.stephenc.high-scale-lib:high-scale-lib:1.1.1 - http://nexus.sonatype.org/oss-repository-hosting.html/high-scale-lib-parent/high-scale-lib)
+  JBoss Marshalling API (org.jboss.marshalling:jboss-marshalling:1.4.4.Final - http://www.jboss.org/jboss-marshalling-parent/jboss-marshalling)
+  JBoss Marshalling River (org.jboss.marshalling:jboss-marshalling-river:1.4.4.Final - http://www.jboss.org/jboss-marshalling-parent/jboss-marshalling-river)
+  XZ for Java (org.tukaani:xz:1.0 - http://tukaani.org/xz/java.html)
+--------------------------------------------------------------------------------
