@@ -38,7 +38,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>http://apache-drill.s3.amazonaws.com/files/sf-0.01_tpc-h_parquet.tgz</url>
+              <url>http://apache-drill.s3.amazonaws.com/files/sf-0.01_tpc-h_parquet_typed.tgz</url>
               <outputFileName>tpch.tgz</outputFileName>
               <unpack>true</unpack>
               <outputDirectory>${project.build.directory}/classes/tpch</outputDirectory>
