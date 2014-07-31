@@ -40,7 +40,7 @@ public class JsonReaderWithState {
 		reader = splitter.getNextReader();
 		jsonReader = new JsonReader();
 	}
-	
+
 	public JsonReaderWithState() throws IOException {
 		jsonReader = new JsonReader();
 	}
@@ -74,10 +74,8 @@ public class JsonReaderWithState {
 		jsonReader.write(bytes, writer);
 
 		if (!writer.ok()) {
-			reader.reset();
 			return WriteState.WRITE_FAILED;
 		} else {
-			reader = null;
 			return WriteState.WRITE_SUCCEED;
 		}
 	}
