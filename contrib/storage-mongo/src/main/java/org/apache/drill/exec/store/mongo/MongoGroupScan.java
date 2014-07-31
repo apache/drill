@@ -31,6 +31,7 @@ import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
@@ -116,7 +117,19 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     }
     
   }
-
+  
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    MongoGroupScan clone = new MongoGroupScan(this);
+    clone.columns = columns;
+    return clone;
+  }
+  
+  @Override
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
+  }
+  
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
     
@@ -174,12 +187,19 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     return collection;
   }
 
+  @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
   }
   
+  @JsonProperty("mongoScanSpec")
   public MongoScanSpec getScanSpec() {
     return scanSpec;
+  }
+  
+  @JsonProperty("storage")
+  public MongoStoragePluginConfig getStorageConfig() {
+    return storagePluginConfig;
   }
 
   @Override

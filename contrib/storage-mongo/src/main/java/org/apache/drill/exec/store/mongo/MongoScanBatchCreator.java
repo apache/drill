@@ -32,26 +32,23 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
-  static final Logger logger = LoggerFactory
-      .getLogger(MongoScanBatchCreator.class);
+  static final Logger logger = LoggerFactory.getLogger(MongoScanBatchCreator.class);
 
   @Override
   public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan,
       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
-    for (MongoSubScan.MongoSubScanSpec scanSpec : subScan
-        .getChunkScanSpecList()) {
+    for (MongoSubScan.MongoSubScanSpec scanSpec : subScan.getChunkScanSpecList()) {
       try {
-        readers.add(new MongoRecordReader(scanSpec, subScan.getColumns(),
-            context));
+        readers.add(new MongoRecordReader(scanSpec, subScan.getColumns(), context));
       } catch (Exception e) {
-        logger.info(" MongoRecordReader creation failed for subScan:  "
-            + subScan + ". " + e.getMessage());
+        logger.error("MongoRecordReader creation failed for subScan:  " + subScan + ".");
+        logger.error(e.getMessage(), e);
         throw new ExecutionSetupException(e);
       }
     }
-    logger.info(" mongo readers size for scanBatch : " + readers.size());
+    logger.info("Number of record readers initialized : " + readers.size());
     return new ScanBatch(subScan, context, readers.iterator());
   }
 

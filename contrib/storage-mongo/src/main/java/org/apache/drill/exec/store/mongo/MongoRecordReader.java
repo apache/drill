@@ -53,7 +53,6 @@ public class MongoRecordReader implements RecordReader {
   private static final int TARGET_RECORD_COUNT = 4000;
   
   private LinkedHashSet<SchemaPath> columns;
-  private OutputMutator outputMutator;
   
   private DBCollection collection;
   private DBCursor cursor;
@@ -63,20 +62,25 @@ public class MongoRecordReader implements RecordReader {
   
   private DBObject filters;
   private DBObject fields;
+  
+  private MongoClient client;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context) {
     this.columns = Sets.newLinkedHashSet();
+    this.fields = new BasicDBObject();
     if (projectedColumns != null && projectedColumns.size() != 0) {
       Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
       while (columnIterator.hasNext()) {
         SchemaPath column = columnIterator.next();
         NameSegment root = column.getRootSegment();
-        this.columns.add(SchemaPath.getSimplePath(root.getPath()));
+        String fieldName = root.getPath();
+        this.columns.add(SchemaPath.getSimplePath(fieldName));
+        logger.debug("Field selected : " + fieldName);
+        this.fields.put(fieldName, Integer.valueOf(1));
       }
     }
     this.filters = new BasicDBObject();
-    this.fields = new BasicDBObject();
-    // exclude ID field, if not mentioned by user.
+    // exclude _id field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
     init(subScanSpec);
   }
@@ -84,7 +88,7 @@ public class MongoRecordReader implements RecordReader {
   private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {
 	try {
 	  MongoClientURI clientURI = new MongoClientURI(subScanSpec.getConnection());
-	  MongoClient client = new MongoClient(clientURI);
+	  client = new MongoClient(clientURI);
 	  DB db = client.getDB(subScanSpec.getDbName());
 	  collection = db.getCollection(subScanSpec.getCollectionName());
 	} catch (UnknownHostException e) {
@@ -94,21 +98,15 @@ public class MongoRecordReader implements RecordReader {
   
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
-    this.outputMutator = output;
-    for (SchemaPath column : columns) {
-      getOrCreateVector(column.getRootSegment().getPath(), false);
-    }
     try {
       this.writer = new VectorContainerWriter(output);
-      jsonReader = new JsonReaderWithState();
+      this.jsonReader = new JsonReaderWithState();
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure in Mongo JsonReader initialization.", e);
     }
+    logger.info("Filters Applied : " + filters);
+    logger.info("Fields Selected :" + fields);
     cursor = collection.find(filters, fields);
-  }
-
-  private void getOrCreateVector(String path, boolean b) {
-
   }
 
   @Override
@@ -116,7 +114,7 @@ public class MongoRecordReader implements RecordReader {
     writer.allocate();
     writer.reset();
 
-    int i = 0;
+    int docCount = 0;
     Stopwatch watch = new Stopwatch();
     watch.start();
     int rowCount = 0;
@@ -124,7 +122,7 @@ public class MongoRecordReader implements RecordReader {
     try {
       done: 
       for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext() ; rowCount++) {
-        writer.setPosition(i);
+        writer.setPosition(docCount);
         DBObject record = cursor.next();
         if (record == null) {
           break done;
@@ -132,22 +130,22 @@ public class MongoRecordReader implements RecordReader {
 
         switch (jsonReader.write(record.toString().getBytes(Charsets.UTF_8), writer)) {
         case WRITE_SUCCEED:
-          i++;
+          docCount++;
           break;
 
         case NO_MORE:
           break done;
 
         case WRITE_FAILED:
-          if (i == 0) {
+          if (docCount == 0) {
             throw new DrillRuntimeException("Record is too big to fit into allocated ValueVector");
           }
           break done;
         }
       }
-      writer.setValueCount(i);
+      writer.setValueCount(docCount);
       logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
-      return i;
+      return docCount;
     } catch (Exception e) {
       throw new DrillRuntimeException("Failure while reading Mongo Record.", e);
     }
@@ -155,6 +153,6 @@ public class MongoRecordReader implements RecordReader {
 
   @Override
   public void cleanup() {
-
+    client.close();
   }
 }

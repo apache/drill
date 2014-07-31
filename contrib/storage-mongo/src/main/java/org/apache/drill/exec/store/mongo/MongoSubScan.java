@@ -54,9 +54,9 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
   @JsonCreator
   public MongoSubScan(@JacksonInject StoragePluginRegistry registry,
-		  			  @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
-		  			  @JsonProperty("chunkScanSpec") LinkedList<MongoSubScanSpec> chunkScanSpecList,
-		  			  @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+                      @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
+                      @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
+                      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     this.columns = columns;
     this.mongoPluginConfig = (MongoStoragePluginConfig) storagePluginConfig;
     this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(storagePluginConfig);
@@ -78,10 +78,12 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     return physicalVisitor.visitSubScan(this, value);
   }
 
+  @JsonIgnore
   public MongoStoragePluginConfig getMongoPluginConfig() {
     return mongoPluginConfig;
   }
 
+  @JsonIgnore
   public MongoStoragePlugin getMongoStoragePlugin() {
     return mongoStoragePlugin;
   }
@@ -91,10 +93,10 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   }
   
   public List<MongoSubScanSpec> getChunkScanSpecList() {
-	return chunkScanSpecList;
+    return chunkScanSpecList;
   }
 
-@Override
+  @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     return new MongoSubScan(mongoStoragePlugin, mongoPluginConfig, chunkScanSpecList, columns);
@@ -111,18 +113,18 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   }
 
   public static class MongoSubScanSpec {
-	  
+   
     protected String dbName;
     protected String collectionName;
     protected String connection;
     
     @parquet.org.codehaus.jackson.annotate.JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
-    						@JsonProperty("collectionName") String collectionName,
-    						@JsonProperty("connection") String connection) {
-    	this.dbName = dbName;
-    	this.collectionName = collectionName;
-    	this.connection = connection;
+                            @JsonProperty("collectionName") String collectionName,
+                            @JsonProperty("connection") String connection) {
+      this.dbName = dbName;
+      this.collectionName = collectionName;
+      this.connection = connection;
     }
 
     public String getConnection() {
@@ -136,7 +138,13 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     public String getCollectionName() {
       return collectionName;
     }
-
+    
+    @Override
+    public String toString() {
+      return "MongoSubScanSpec [tableName=" + collectionName
+          + ", dbName=" + dbName
+          + ", connection=" + connection + "]";
+    }
   }
 
 }
