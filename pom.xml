@@ -268,12 +268,26 @@
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
         <version>2.1.9</version>
-        <inherited>false</inherited>
         <executions>
           <execution>
+            <id>for-jars</id>
+            <inherited>true</inherited>
             <goals>
               <goal>revision</goal>
             </goals>
+            <configuration>
+              <generateGitPropertiesFilename>target/classes/git.properties</generateGitPropertiesFilename>
+            </configuration>
+          </execution>
+          <execution>
+            <id>for-source-tarball</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+            <inherited>false</inherited>
+            <configuration>
+              <generateGitPropertiesFilename>./git.properties</generateGitPropertiesFilename>
+            </configuration>
           </execution>
         </executions>
 
@@ -282,7 +296,6 @@
           <verbose>true</verbose>
           <skipPoms>false</skipPoms>
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
-          <generateGitPropertiesFilename>./git.properties</generateGitPropertiesFilename>
           <failOnNoGitDirectory>false</failOnNoGitDirectory>
           <gitDescribe>
             <skip>false</skip>
