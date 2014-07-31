@@ -68,9 +68,9 @@ $(window).load(function () {
         timetable.sort(function (r1, r2) {
             if (r1.category == r2.category) {
                 //return r1.name > r2.name;
-                return r1.start + r2.end > r1.end + r2.start;
+                return r1.end - r1.start > r2.end - r2.start ? 1 : -1;
             }
-            else return r1.category > r2.category;
+            else return r1.category > r2.category ? 1 : -1;
             
         });
         return timetable;
@@ -270,6 +270,10 @@ $(window).load(function () {
             .domain([0, d3.max(profile.fragmentProfile, accessor("majorFragmentId"))]);
 
     }
+
+    String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
 
     loadprofile(globalconfig.queryid, function (profile) {
         setupglobalconfig(profile);
