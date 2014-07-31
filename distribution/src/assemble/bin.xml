@@ -118,7 +118,7 @@
       <outputDirectory/>
     </file>
     <file>
-      <source>target/classes/git.properties</source>
+      <source>../git.properties</source>
       <outputDirectory/>
     </file>
     <file>
