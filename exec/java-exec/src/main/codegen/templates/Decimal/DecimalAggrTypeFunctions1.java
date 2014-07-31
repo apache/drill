@@ -60,9 +60,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   <#if aggrtype.funcName == "sum">
   @Workspace ObjectHolder value;
   @Workspace IntHolder outputScale;
+  <#elseif type.outputType.endsWith("Sparse")>
+  @Workspace ObjectHolder value;
   <#else>
   @Workspace ${type.runningType}Holder value;
-  @Workspace ByteBuf buffer;
   </#if>
   @Output ${type.outputType}Holder out;
 
@@ -71,26 +72,29 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   	value = new ${type.runningType}Holder();
     value.value = 0;
 	<#elseif aggrtype.funcName == "max" || aggrtype.funcName == "min">
-  	value = new ${type.runningType}Holder();
-    <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse")>
-    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[value.WIDTH]);
+    <#if type.outputType.endsWith("Sparse")>
+    value = new ObjectHolder();
+    ${type.runningType}Holder tmp = new ${type.runningType}Holder();
+    value.obj = tmp;
+    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[tmp.WIDTH]);
     buffer = new io.netty.buffer.SwappedByteBuf(buffer);
-    value.buffer = buffer;
-    value.start  = 0;
+    tmp.buffer = buffer;
+    tmp.start  = 0;
     <#if aggrtype.funcName == "max">
-    for (int i = 0; i < value.nDecimalDigits; i++) {
-      value.setInteger(i, 0xFFFFFFFF);
+    for (int i = 0; i < tmp.nDecimalDigits; i++) {
+      tmp.setInteger(i, 0xFFFFFFFF);
     }
-    value.setSign(true);
+    tmp.setSign(true);
     <#elseif aggrtype.funcName == "min">
-    for (int i = 0; i < value.nDecimalDigits; i++) {
-      value.setInteger(i, 0x7FFFFFFF);
+    for (int i = 0; i < tmp.nDecimalDigits; i++) {
+      tmp.setInteger(i, 0x7FFFFFFF);
     }
     // Set sign to be positive so initial value is maximum
-    value.setSign(false);
-    value.precision = ${type.runningType}Holder.maxPrecision;
+    tmp.setSign(false);
+    tmp.precision = ${type.runningType}Holder.maxPrecision;
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
+    value = new ${type.runningType}Holder();
     value.value = ${type.initValue};
     </#if>
   <#elseif aggrtype.funcName == "sum">
@@ -114,47 +118,33 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if aggrtype.funcName == "count">
     value.value++;
     <#elseif aggrtype.funcName == "max">
-    <#if type.outputType.endsWith("Dense")>
-    int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(in.buffer, in.start, in.getSign(), value.buffer, value.start, value.getSign(), in.WIDTH);
+    <#if type.outputType.endsWith("Sparse")>
+      ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
+      int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
+      in.scale, in.precision, tmp.buffer,
+      tmp.start, tmp.getSign(), tmp.precision,
+      tmp.scale, in.WIDTH, in.nDecimalDigits, false);
     if (cmp == 1) {
-      in.buffer.getBytes(in.start, value.buffer, 0, value.WIDTH);
-      value.setSign(in.getSign());
-      value.scale = in.scale;
-      value.precision = in.precision;
-    }
-    <#elseif type.outputType.endsWith("Sparse")>
-    int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
-      in.scale, in.precision, value.buffer,
-      value.start, value.getSign(), value.precision,
-      value.scale, in.WIDTH, in.nDecimalDigits, false);
-    if (cmp == 1) {
-      in.buffer.getBytes(in.start, value.buffer, 0, value.WIDTH);
-      value.setSign(in.getSign());
-      value.scale = in.scale;
-      value.precision = in.precision;
+      in.buffer.getBytes(in.start, tmp.buffer, 0, tmp.WIDTH);
+      tmp.setSign(in.getSign());
+      tmp.scale = in.scale;
+      tmp.precision = in.precision;
     }
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = Math.max(value.value, in.value);
     </#if>
     <#elseif aggrtype.funcName == "min">
-    <#if type.outputType.endsWith("Dense")>
-    int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(in.buffer, in.start, in.getSign(), value.buffer, value.start, value.getSign(), in.WIDTH);
-    if (cmp == -1) {
-      in.buffer.getBytes(in.start, value.buffer, 0, value.WIDTH);
-      value.setSign(in.getSign());
-      value.scale = in.scale;
-      value.precision = in.precision;
-    }
-    <#elseif type.outputType.endsWith("Sparse")>
+    <#if type.outputType.endsWith("Sparse")>
+    ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
     int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
-      in.scale, in.precision, value.buffer,
-      value.start, value.getSign(), value.precision,
-      value.scale, in.WIDTH, in.nDecimalDigits, false);
+      in.scale, in.precision, tmp.buffer,
+      tmp.start, tmp.getSign(), tmp.precision,
+      tmp.scale, in.WIDTH, in.nDecimalDigits, false);
     if (cmp == -1) {
-      in.buffer.getBytes(in.start, value.buffer, 0, value.WIDTH);
-      value.setSign(in.getSign());
-      value.scale = in.scale;
-      value.precision = in.precision;
+      in.buffer.getBytes(in.start, tmp.buffer, 0, tmp.WIDTH);
+      tmp.setSign(in.getSign());
+      tmp.scale = in.scale;
+      tmp.precision = in.precision;
     }
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = Math.min(value.value, in.value);
@@ -189,15 +179,18 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.obj = ((java.math.BigDecimal) (value.obj)).setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);
     org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal((java.math.BigDecimal) value.obj, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
    <#else>
-    <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse") || aggrtype.funcName == "sum">
-    out.buffer = value.buffer;
-    out.start = value.start;
-    out.setSign(value.getSign());
+    <#if type.outputType.endsWith("Sparse")>
+    ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
+    out.buffer = tmp.buffer;
+    out.start = tmp.start;
+    out.setSign(tmp.getSign());
+    out.scale = tmp.scale;
+    out.precision = tmp.precision;
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     out.value = value.value;
-    </#if>
     out.scale = value.scale;
     out.precision = value.precision;
+    </#if>
     </#if>
   }
 
@@ -207,21 +200,25 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	<#if aggrtype.funcName == "count">
 	  value.value = 0;
 	<#elseif aggrtype.funcName == "max" || aggrtype.funcName == "min">
-    <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse")>
-    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[value.WIDTH]);
+    <#if type.outputType.endsWith("Sparse")>
+  	value = new ObjectHolder();
+    ${type.runningType}Holder tmp = new ${type.runningType}Holder();
+    value.obj = tmp;
+    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[tmp.WIDTH]);
     buffer = new io.netty.buffer.SwappedByteBuf(buffer);
-    value.buffer = buffer;
-    value.start  = 0;
-    for (int i = 0; i < value.nDecimalDigits; i++) {
-      value.setInteger(i, 0xFFFFFFFF);
+    tmp.buffer = buffer;
+    tmp.start  = 0;
+    for (int i = 0; i < tmp.nDecimalDigits; i++) {
+      tmp.setInteger(i, 0xFFFFFFFF);
     }
     <#if aggrtype.funcName == "min">
     // Set sign to be positive so initial value is maximum
-    value.setSign(false);
+    tmp.setSign(false);
     <#elseif aggrtype.funcName == "max">
-    value.setSign(true);
+    tmp.setSign(true);
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
+    value = new ${type.runningType}Holder();
     value.value = ${type.initValue};
     </#if>
   <#elseif aggrtype.funcName == "sum">

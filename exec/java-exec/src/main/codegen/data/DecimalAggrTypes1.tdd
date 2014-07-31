@@ -21,10 +21,6 @@
       {inputType: "NullableDecimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MIN_VALUE"},
       {inputType: "Decimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Long.MIN_VALUE"},
       {inputType: "NullableDecimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Long.MIN_VALUE"},
-      {inputType: "Decimal28Dense", outputType: "Decimal28Dense", runningType: "Decimal28Dense"},
-      {inputType: "NullableDecimal28Dense", outputType: "Decimal28Dense", runningType: "Decimal28Dense"},
-      {inputType: "Decimal38Dense", outputType: "Decimal38Dense", runningType: "Decimal38Dense"},
-      {inputType: "NullableDecimal38Dense", outputType: "Decimal38Dense", runningType: "Decimal38Dense"},
       {inputType: "Decimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
       {inputType: "NullableDecimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
       {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
@@ -36,10 +32,6 @@
       {inputType: "NullableDecimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MAX_VALUE"},
       {inputType: "Decimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Integer.MAX_VALUE"},
       {inputType: "NullableDecimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Integer.MAX_VALUE"},
-      {inputType: "Decimal28Dense", outputType: "Decimal28Dense", runningType: "Decimal28Dense"},
-      {inputType: "NullableDecimal28Dense", outputType: "Decimal28Dense", runningType: "Decimal28Dense"},
-      {inputType: "Decimal38Dense", outputType: "Decimal38Dense", runningType: "Decimal38Dense"},
-      {inputType: "NullableDecimal38Dense", outputType: "Decimal38Dense", runningType: "Decimal38Dense"},
       {inputType: "Decimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
       {inputType: "NullableDecimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
       {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
@@ -54,11 +46,7 @@
          {inputType: "Decimal28Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
          {inputType: "NullableDecimal28Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
          {inputType: "Decimal38Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-         {inputType: "NullableDecimal38Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-         {inputType: "Decimal28Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-         {inputType: "NullableDecimal28Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-         {inputType: "Decimal38Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-         {inputType: "NullableDecimal38Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"}
+         {inputType: "NullableDecimal38Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"}
         ]
       },
       {className: "Sum", funcName: "sum", types: [
