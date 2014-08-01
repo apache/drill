@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+import java.lang.Override;
+import java.lang.UnsupportedOperationException;
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/StringOutputRecordWriter.java" />
 <#include "/@includes/license.ftl" />
@@ -28,7 +31,9 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
@@ -45,45 +50,65 @@ import java.util.Map;
  */
 public abstract class StringOutputRecordWriter implements RecordWriter {
 
-  private ValueVector[] columnVectors;
   private final BufferAllocator allocator;
   protected StringOutputRecordWriter(BufferAllocator allocator){
     this.allocator = allocator;
   }
   
   public void updateSchema(BatchSchema schema) throws IOException {
-    cleanupColumnVectors();
-    columnVectors = new ValueVector[schema.getFieldCount()];
-
     List<String> columnNames = Lists.newArrayList();
-    for (int i=0; i<columnVectors.length; i++) {
-      columnNames.add(schema.getColumn(i).getAsSchemaPath().getAsUnescapedPath());
+    for (int i=0; i < schema.getFieldCount(); i++) {
+      columnNames.add(schema.getColumn(i).getLastName());
     }
 
     startNewSchema(columnNames);
+  }
 
-    for (int i=0; i<columnVectors.length; i++) {
-      columnVectors[i] = TypeHelper.getNewVector(schema.getColumn(i), allocator);
-      AllocationHelper.allocate(columnVectors[i], 1, TypeHelper.getSize(schema.getColumn(i).getType()));
-    }
+  @Override
+  public FieldConverter getNewMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    throw new UnsupportedOperationException();
+  }
+  public FieldConverter getNewRepeatedMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    throw new UnsupportedOperationException();
+  }
+  public FieldConverter getNewRepeatedListConverter(int fieldId, String fieldName, FieldReader reader) {
+    throw new UnsupportedOperationException();
   }
 
 <#list vv.types as type>
   <#list type.minor as minor>
     <#list vv.modes as mode>
   @Override
-  public void add${mode.prefix}${minor.class}Holder(int fieldId, ${mode.prefix}${minor.class}Holder valueHolder) throws IOException {
+  public FieldConverter getNew${mode.prefix}${minor.class}Converter(int fieldId, String fieldName, FieldReader reader) {
+    return new ${mode.prefix}${minor.class}StringFieldConverter(fieldId, fieldName, reader);
+  }
+
+  public class ${mode.prefix}${minor.class}StringFieldConverter extends FieldConverter {
+    <#if mode.prefix == "Repeated">
+    private Repeated${minor.class}Holder holder = new Repeated${minor.class}Holder();
+    <#else>
+    private Nullable${minor.class}Holder holder = new Nullable${minor.class}Holder();
+    </#if>
+
+    public ${mode.prefix}${minor.class}StringFieldConverter(int fieldId, String fieldName, FieldReader reader) {
+      super(fieldId, fieldName, reader);
+    }
+
+    @Override
+    public void writeField() throws IOException {
   <#if mode.prefix == "Nullable" >
-    if (valueHolder.isSet == 0) {
+    if (!reader.isSet()) {
       addField(fieldId, null);
       return;
     }
   <#elseif mode.prefix == "Repeated" >
     throw new UnsupportedOperationException("Repeated types are not supported.");
+    }
   }
     <#break>
   </#if>
 
+    reader.read(holder);
   <#if  minor.class == "TinyInt" ||
         minor.class == "UInt1" ||
         minor.class == "UInt2" ||
@@ -94,9 +119,9 @@ public abstract class StringOutputRecordWriter implements RecordWriter {
         minor.class == "BigInt" ||
         minor.class == "UInt8" ||
         minor.class == "Float8">
-    addField(fieldId, String.valueOf(valueHolder.value));
+    addField(fieldId, String.valueOf(holder.value));
   <#elseif minor.class == "Bit">
-    addField(fieldId, valueHolder.value == 0 ? "false" : "true");
+    addField(fieldId, holder.value == 0 ? "false" : "true");
   <#elseif
         minor.class == "Date" ||
         minor.class == "Time" ||
@@ -114,33 +139,21 @@ public abstract class StringOutputRecordWriter implements RecordWriter {
         minor.class == "Decimal38Sparse">
 
     // TODO: error check
-    ((${mode.prefix}${minor.class}Vector)columnVectors[fieldId]).getMutator().setSafe(0, valueHolder);
-    Object obj = ((${mode.prefix}${minor.class}Vector)columnVectors[fieldId]).getAccessor().getObject(0);
-    addField(fieldId, obj.toString());
+    addField(fieldId, reader.readObject().toString());
 
   <#elseif minor.class == "VarChar" || minor.class == "Var16Char" || minor.class == "VarBinary">
-    addField(fieldId, valueHolder.toString());
+    addField(fieldId, reader.readObject().toString());
   <#else>
     throw new UnsupportedOperationException(String.format("Unsupported field type: %s"),
-      valueHolder.getCanonicalClass());
+      holder.getCanonicalClass());
    </#if>
+    }
   }
     </#list>
   </#list>
 </#list>
 
   public void cleanup() throws IOException {
-    cleanupColumnVectors();
-  }
-
-  private void cleanupColumnVectors() {
-    if (columnVectors != null){
-      for(ValueVector vector : columnVectors){
-        if(vector!=null){
-          vector.clear();
-        }
-      }
-    }
   }
 
   public abstract void startNewSchema(List<String> columnNames) throws IOException;

@@ -50,6 +50,10 @@ public class MaterializedField {
         .setNamePart(key.path.getAsNamePart());
   }
 
+  public List<MaterializedField> getChildren() {
+    return children;
+  }
+
   public void addChild(MaterializedField field){
     children.add(field);
   }

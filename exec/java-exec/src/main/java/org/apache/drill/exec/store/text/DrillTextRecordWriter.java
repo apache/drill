@@ -23,8 +23,11 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.StringOutputRecordWriter;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -114,6 +117,33 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
     // reset current record status
     currentRecord.delete(0, currentRecord.length());
     fRecordStarted = false;
+  }
+
+  @Override
+  public FieldConverter getNewMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexStringFieldConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexStringFieldConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedListConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexStringFieldConverter(fieldId, fieldName, reader);
+  }
+
+  public class ComplexStringFieldConverter extends FieldConverter {
+
+    public ComplexStringFieldConverter(int fieldId, String fieldName, FieldReader reader) {
+      super(fieldId, fieldName, reader);
+    }
+
+    @Override
+    public void writeField() throws IOException {
+      addField(fieldId, reader.readObject().toString());
+    }
   }
 
   @Override
