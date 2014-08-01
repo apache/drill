@@ -162,7 +162,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     }
 }
 
-<#elseif type.major == "VarCharDecimalComplex">  <#-- Cast function template for conversion from VarChar to Decimal9, Decimal18 -->
+<#elseif type.major == "VarCharDecimalComplex">  <#-- Cast function template for conversion from VarChar to Decimal28, Decimal38 -->
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
 
 <#include "/@includes/license.ftl" />
@@ -329,10 +329,10 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         }
 
         // Traverse and extract the fractional part
-        decimalBufferIndex = ${type.arraySize} - scaleRoundedUp;
+        decimalBufferIndex = (scaleRoundedUp > 0) ? (${type.arraySize} - scaleRoundedUp) : (${type.arraySize} - 1);
         ndigits = 0;
 
-        if (scaleIndex != -1 && out.scale > 0) {
+        if (scaleIndex != -1) {
             while (scaleIndex < scaleEndIndex) {
 
                 // check if we have scanned MAX_DIGITS and we need to move to the next index
@@ -378,8 +378,10 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                 }
             }
             // Pad zeroes in the fractional part so that number of digits = MAX_DIGITS
-            int padding = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ndigits));
-            out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex) * padding);
+            if (out.scale > 0) {
+              int padding = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ndigits));
+              out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex) * padding);
+            }
 
             int carry = 0;
             do {
