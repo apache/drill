@@ -61,7 +61,6 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     Preconditions.checkArgument(children.isEmpty());
     String partitionDesignator = context.getConfig().getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
     List<SchemaPath> columns = rowGroupScan.getColumns();
-
     List<RecordReader> readers = Lists.newArrayList();
 
     List<String[]> partitionColumns = Lists.newArrayList();
@@ -71,16 +70,19 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     if (columns == null || columns.size() == 0) {
       selectAllColumns = true;
     } else {
+      List<SchemaPath> newColums = Lists.newArrayList();
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {
         Matcher m = pattern.matcher(column.getAsUnescapedPath());
         if (m.matches()) {
-          columns.remove(column);
           selectedPartitionColumns.add(Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
+        } else {
+          newColums.add(column);
         }
       }
+      // Create the new row group scan with the new columns
+      rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getStorageEngine(), rowGroupScan.getRowGroupReadEntries(), newColums, rowGroupScan.getSelectionRoot());
     }
-
 
     FileSystem fs = rowGroupScan.getStorageEngine().getFileSystem().getUnderlying();
     Configuration conf = fs.getConf();
