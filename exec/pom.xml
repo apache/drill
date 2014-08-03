@@ -33,5 +33,6 @@
   <modules>
     <module>java-exec</module>
     <module>jdbc</module>
+    <module>jdbc-all</module>
   </modules>
 </project>
