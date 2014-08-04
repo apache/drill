@@ -96,6 +96,13 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey;");
   }
 
+  @Test // DRILL-1293
+  public void testStarView1() throws Exception { 
+    test("use dfs.tmp");  
+    test("create view vt1 as select * from cp.`tpch/region.parquet` r, cp.`tpch/nation.parquet` n where r.r_regionkey = n.n_regionkey");
+    test("select * from vt1");
+    test("drop view vt1");
+  }
 
   @Test
   public void testJoinExpOn() throws Exception{

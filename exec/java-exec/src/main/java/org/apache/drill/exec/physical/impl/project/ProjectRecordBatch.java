@@ -453,6 +453,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     boolean refHasPrefix = ref.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
     boolean exprIsStar = expr.getPath().equals(StarColumnHelper.STAR_COLUMN);
     boolean refIsStar = ref.getPath().equals(StarColumnHelper.STAR_COLUMN);
+    boolean refContainsStar = ref.getPath().contains(StarColumnHelper.STAR_COLUMN);
     boolean exprContainsStar = expr.getPath().contains(StarColumnHelper.STAR_COLUMN);
     boolean refEndsWithStar = ref.getPath().endsWith(StarColumnHelper.STAR_COLUMN);
 
@@ -533,11 +534,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         }
       } else {
         result.outputNames = Lists.newArrayList();
-        if (exprIsStar) {
+        if (exprContainsStar) {
           for (VectorWrapper<?> wrapper : incoming) {
             ValueVector vvIn = wrapper.getValueVector();
             String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
-            if (refIsStar) {
+            if (refContainsStar) {
               addToResultMaps(incomingName, result, true); // allow dups since this is likely top-level project
             } else {
               addToResultMaps(incomingName, result, false);
