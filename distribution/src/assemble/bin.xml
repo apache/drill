@@ -110,7 +110,7 @@
       <outputDirectory/>
     </file>
     <file>
-      <source>../LICENSE</source>
+      <source>src/resources/LICENSE</source>
       <outputDirectory/>
     </file>
     <file>
