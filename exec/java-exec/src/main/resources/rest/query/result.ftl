@@ -38,7 +38,7 @@
       <#list model.getRecords() as record>
         <tr>
           <#list record as value>
-          <td>${value}</td>
+          <td><#if value??>${value}<#else>null</#if></td>
           </#list>
         </tr>
       </#list>

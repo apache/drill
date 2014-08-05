@@ -141,7 +141,7 @@ public class QueryWrapper {
             if (object != null) {
               record.put(columnNames.get(j), object);
             } else {
-              record.put(columnNames.get(j), "null");
+              record.put(columnNames.get(j), null);
             }
             ++j;
           }
