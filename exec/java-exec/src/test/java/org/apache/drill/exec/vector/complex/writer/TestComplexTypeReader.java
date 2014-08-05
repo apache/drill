@@ -171,4 +171,10 @@ public class TestComplexTypeReader extends BaseTestQuery{
     test("  select types[1].minor[0].valueholder from cp.`jsoninput/vvtypes.json`;");
   }
 
+  @Test  // DRILL-1250
+  //repeated scalar values evaluation.
+  public void test_repeatedList() throws Exception{
+    test("select l, l from cp.`jsoninput/input2.json`;");
+  }
+
 }
