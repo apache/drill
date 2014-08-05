@@ -33,6 +33,10 @@ public interface BaseWriter extends Positionable{
   WriteState getState();
   
   public interface MapWriter extends BaseWriter{
+
+    MaterializedField getField();
+    void checkValueCapacity();
+
     <#list vv.types as type><#list type.minor as minor>
     <#assign lowerName = minor.class?uncap_first />
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>

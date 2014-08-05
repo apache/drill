@@ -34,6 +34,7 @@ public abstract class BaseValueVector implements ValueVector{
 
   protected final BufferAllocator allocator;
   protected final MaterializedField field;
+  public static final int INITIAL_VALUE_ALLOCATION = 4096;
 
   BaseValueVector(MaterializedField field, BufferAllocator allocator) {
     this.allocator = allocator;

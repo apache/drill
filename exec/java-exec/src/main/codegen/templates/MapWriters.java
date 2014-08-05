@@ -41,6 +41,7 @@ import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 import com.google.common.collect.Maps;
 
+/* This class is generated using freemarker and the MapWriters.java template */
 @SuppressWarnings("unused")
 public class ${mode}MapWriter extends AbstractFieldWriter{
   
@@ -53,7 +54,14 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
     this.container = container;
   }
 
-  
+  public MaterializedField getField() {
+      return container.getField();
+  }
+
+  public void checkValueCapacity(){
+    inform(container.getValueCapacity() > idx());
+  }
+
   public MapWriter map(String name){
     FieldWriter writer = fields.get(name);
     if(writer == null){
@@ -153,7 +161,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
     FieldWriter writer = fields.get(name);
     if(writer == null){
       ${vectName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
-      AllocationHelper.allocate(vector, 1000, 100, 10);
+      vector.allocateNewSafe();
       writer = new ${vectName}WriterImpl(vector, this);
       writer.setPosition(${index});
       fields.put(name, writer);

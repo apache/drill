@@ -22,7 +22,9 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -37,10 +39,18 @@ public class JsonReaderWithState {
   private JsonRecordSplitter splitter;
   private JsonReader jsonReader;
 
-  public JsonReaderWithState(JsonRecordSplitter splitter, DrillBuf workspace) throws IOException{
+  public JsonReaderWithState(JsonRecordSplitter splitter, DrillBuf workspace, List<SchemaPath> columns) throws IOException{
     this.splitter = splitter;
     reader = splitter.getNextReader();
-    jsonReader = new JsonReader(workspace);
+    jsonReader = new JsonReader(workspace, columns);
+  }
+
+  public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException{
+    this(splitter, null, null);
+  }
+
+  public List<SchemaPath> getNullColumns() {
+    return jsonReader.getNullColumns();
   }
 
   public WriteState write(ComplexWriter writer) throws JsonParseException, IOException {

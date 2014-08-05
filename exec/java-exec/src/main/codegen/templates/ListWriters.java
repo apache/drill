@@ -36,7 +36,7 @@ package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
 
-
+/* This class is generated using freemarker and the ListWriters.java template */
 @SuppressWarnings("unused")
 public class ${mode}ListWriter extends AbstractFieldWriter{
   
@@ -135,6 +135,14 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     throw new IllegalStateException(String.format("Needed to be in state INIT or IN_${upperName} but in mode %s", mode.name()));
   }
   </#list></#list>
+
+  public MaterializedField getField() {
+    return container.getField();
+  }
+
+  public void checkValueCapacity() {
+    inform(container.getValueCapacity() > idx());
+  }
 
   <#if mode == "Repeated">
   public void start(){

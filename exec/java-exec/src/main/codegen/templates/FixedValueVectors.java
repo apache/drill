@@ -44,7 +44,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
 
-  private int allocationValueCount = 4096;
+  private int allocationValueCount = INITIAL_VALUE_ALLOCATION;
   private int allocationMonitor = 0;
   
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {

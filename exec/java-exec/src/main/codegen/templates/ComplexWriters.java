@@ -40,6 +40,7 @@ package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
 
+/* This class is generated using freemarker and the ComplexWriters.java template */
 @SuppressWarnings("unused")
 public class ${eName}WriterImpl extends AbstractFieldWriter {
   
@@ -51,7 +52,15 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     this.mutator = vector.getMutator();
     this.vector = vector;
   }
-  
+
+  public MaterializedField getField(){
+    return vector.getField();
+  }
+
+  public void checkValueCapacity() {
+    inform(vector.getValueCapacity() > idx());
+  }
+
   public void allocate(){
     inform(vector.allocateNewSafe());
   }
@@ -111,7 +120,7 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
       vector.setCurrentValueCount(idx());
     }
   }
-  
+
   </#if>
 
 }
