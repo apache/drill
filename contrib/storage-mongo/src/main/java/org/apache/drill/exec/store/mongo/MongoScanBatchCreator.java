@@ -35,8 +35,8 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
   static final Logger logger = LoggerFactory.getLogger(MongoScanBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan,
-      List<RecordBatch> children) throws ExecutionSetupException {
+  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
     for (MongoSubScan.MongoSubScanSpec scanSpec : subScan.getChunkScanSpecList()) {

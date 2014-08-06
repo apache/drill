@@ -45,27 +45,27 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 
 public class MongoRecordReader implements RecordReader {
   static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
-  
+
   private static final int TARGET_RECORD_COUNT = 4000;
-  
+
   private LinkedHashSet<SchemaPath> columns;
-  
+
   private DBCollection collection;
   private DBCursor cursor;
-  
+
   private JsonReaderWithState jsonReader;
   private VectorContainerWriter writer;
-  
+
   private DBObject filters;
   private DBObject fields;
-  
+
   private MongoClient client;
 
-  public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context) {
+  public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
+      FragmentContext context) {
     this.columns = Sets.newLinkedHashSet();
     this.fields = new BasicDBObject();
     if (projectedColumns != null && projectedColumns.size() != 0) {
@@ -84,18 +84,17 @@ public class MongoRecordReader implements RecordReader {
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
     init(subScanSpec);
   }
-  
+
   private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {
-	try {
-	  MongoClientURI clientURI = new MongoClientURI(subScanSpec.getConnection());
-	  client = new MongoClient(clientURI);
-	  DB db = client.getDB(subScanSpec.getDbName());
-	  collection = db.getCollection(subScanSpec.getCollectionName());
-	} catch (UnknownHostException e) {
-	  throw new DrillRuntimeException(e.getMessage(), e);
-	}
+    try {
+      client = new MongoClient(subScanSpec.getShard(), subScanSpec.getPort());
+      DB db = client.getDB(subScanSpec.getDbName());
+      collection = db.getCollection(subScanSpec.getCollectionName());
+    } catch (UnknownHostException e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
-  
+
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try {
@@ -120,8 +119,7 @@ public class MongoRecordReader implements RecordReader {
     int rowCount = 0;
 
     try {
-      done: 
-      for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext() ; rowCount++) {
+      done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         writer.setPosition(docCount);
         DBObject record = cursor.next();
         if (record == null) {

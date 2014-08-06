@@ -49,24 +49,22 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   @JsonIgnore
   private final MongoStoragePlugin mongoStoragePlugin;
   private final List<SchemaPath> columns;
-  
+
   private final List<MongoSubScanSpec> chunkScanSpecList;
 
   @JsonCreator
   public MongoSubScan(@JacksonInject StoragePluginRegistry registry,
-                      @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
-                      @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
-                      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+      @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
+      @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
+      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     this.columns = columns;
     this.mongoPluginConfig = (MongoStoragePluginConfig) storagePluginConfig;
     this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(storagePluginConfig);
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
-  public MongoSubScan(MongoStoragePlugin storagePlugin,
-                      MongoStoragePluginConfig storagePluginConfig,
-                      List<MongoSubScanSpec> chunkScanSpecList,
-                      List<SchemaPath> columns) {
+  public MongoSubScan(MongoStoragePlugin storagePlugin, MongoStoragePluginConfig storagePluginConfig,
+      List<MongoSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
     this.mongoStoragePlugin = storagePlugin;
     this.mongoPluginConfig = storagePluginConfig;
     this.columns = columns;
@@ -91,7 +89,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   public List<SchemaPath> getColumns() {
     return columns;
   }
-  
+
   public List<MongoSubScanSpec> getChunkScanSpecList() {
     return chunkScanSpecList;
   }
@@ -113,37 +111,66 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   }
 
   public static class MongoSubScanSpec {
-   
+
     protected String dbName;
     protected String collectionName;
-    protected String connection;
-    
+    protected String shard;
+    protected int port;
+
     @parquet.org.codehaus.jackson.annotate.JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
-                            @JsonProperty("collectionName") String collectionName,
-                            @JsonProperty("connection") String connection) {
+        @JsonProperty("collectionName") String collectionName, @JsonProperty("shard") String shard,
+        @JsonProperty("port") int port) {
       this.dbName = dbName;
       this.collectionName = collectionName;
-      this.connection = connection;
+      this.shard = shard;
+      this.port = port;
     }
 
-    public String getConnection() {
-      return connection;
+    MongoSubScanSpec() {
+
     }
-    
+
+    public String getShard() {
+      return this.shard;
+    }
+
+    public MongoSubScanSpec setShard(String shard) {
+      this.shard = shard;
+      return this;
+    }
+
     public String getDbName() {
       return dbName;
+    }
+
+    public MongoSubScanSpec setDbName(String dbName) {
+      this.dbName = dbName;
+      return this;
     }
 
     public String getCollectionName() {
       return collectionName;
     }
+
+    public MongoSubScanSpec setCollectionName(String collectionName) {
+      this.collectionName = collectionName;
+      return this;
+    }
     
+    public int getPort() {
+      return port;
+    }
+
+    public MongoSubScanSpec setPort(int port) {
+      this.port = port;
+      return this;
+    }
+
     @Override
     public String toString() {
-      return "MongoSubScanSpec [tableName=" + collectionName
-          + ", dbName=" + dbName
-          + ", connection=" + connection + "]";
+      return "MongoSubScanSpec [tableName=" + collectionName + ", dbName=" + dbName + ", shard=" + shard + ", port="
+          + port + "]";
     }
   }
 

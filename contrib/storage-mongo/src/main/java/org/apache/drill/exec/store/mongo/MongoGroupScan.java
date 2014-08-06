@@ -19,12 +19,12 @@ package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
@@ -39,52 +39,78 @@ import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.ServerAddress;
 
 @JsonTypeName("mongo-scan")
 public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConstants {
+
+  private static final String SHARDS = "shards";
+
+  private static final String NS = "ns";
+
+  private static final String SHARD = "shard";
+
+  private static final String HOST = "host";
+
+  private static final String CHUNKS = "chunks";
+
+  private static final Integer select = Integer.valueOf(1);
 
   private static final String SIZE = "size";
 
   private static final String COUNT = "count";
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoGroupScan.class);
-  
+  private static final String CONFIG = "config";
+
+  static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
+
   private MongoStoragePlugin storagePlugin;
-  
+
   private MongoStoragePluginConfig storagePluginConfig;
-  
+
   private MongoScanSpec scanSpec;
-  
+
   private List<SchemaPath> columns;
-  
-  @JsonIgnore
-  private DBCollection collection;
-  
+
+  private Map<Integer, List<MongoSubScanSpec>> endpointFragmentMapping;
+
+  // Sharding with replica sets contains all the replica server addresses for
+  // each chunk.
+  private Map<String, Set<ServerAddress>> chunksMapping;
+
+  private Map<ServerAddress, Set<String>> chunksInverseMapping;
+
   private Stopwatch watch = new Stopwatch();
-  
+
   @JsonCreator
   public MongoGroupScan(@JsonProperty("mongoScanSpec") MongoScanSpec scanSpec,
-                        @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
-                        @JsonProperty("columns") List<SchemaPath> columns,
-                        @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this ((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), scanSpec, columns);
+      @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
+      @JsonProperty("columns") List<SchemaPath> columns, @JacksonInject StoragePluginRegistry pluginRegistry)
+      throws IOException, ExecutionSetupException {
+    this((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), scanSpec, columns);
   }
-  
+
   public MongoGroupScan(MongoStoragePlugin storagePlugin, MongoScanSpec scanSpec, List<SchemaPath> columns) {
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
@@ -93,60 +119,161 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     this.storagePluginConfig.getConnection();
     init();
   }
-  
+
   /**
    * Private constructor, used for cloning.
-   * @param that The MongoGroupScan to clone
+   * 
+   * @param that
+   *          The MongoGroupScan to clone
    */
-  private MongoGroupScan (MongoGroupScan that) {
+  private MongoGroupScan(MongoGroupScan that) {
     this.scanSpec = that.scanSpec;
-    this.collection = that.collection;
     this.columns = that.columns;
     this.storagePlugin = that.storagePlugin;
     this.storagePluginConfig = that.storagePluginConfig;
+    this.chunksMapping = that.chunksMapping;
+    this.chunksInverseMapping = that.chunksInverseMapping;
+    this.endpointFragmentMapping = that.endpointFragmentMapping;
   }
-  
+
   private void init() {
+    MongoClient client = null;
     try {
       MongoClientURI clientURI = new MongoClientURI(this.storagePluginConfig.getConnection());
-      MongoClient client = new MongoClient(clientURI);
-      DB db = client.getDB(this.scanSpec.getDbName());
-      collection = db.getCollection(this.scanSpec.getCollectionName());
+      client = new MongoClient(clientURI);
+      List<String> databaseNames = client.getDatabaseNames();
+
+      chunksMapping = Maps.newHashMap();
+      chunksInverseMapping = Maps.newHashMap();
+      if (databaseNames.contains(CONFIG)) {
+        DB db = client.getDB(CONFIG);
+        DBCollection chunksCollection = db.getCollectionFromString(CHUNKS);
+
+        DBObject query = new BasicDBObject(1);
+        query.put(NS, this.scanSpec.getDbName() + "." + this.scanSpec.getCollectionName());
+
+        DBObject fields = new BasicDBObject();
+        fields.put(SHARD, select);
+
+        DBCursor chunkCursor = chunksCollection.find(query, fields);
+
+        DBCollection shardsCollection = db.getCollectionFromString(SHARDS);
+
+        fields = new BasicDBObject();
+        fields.put(HOST, select);
+
+        while (chunkCursor.hasNext()) {
+          DBObject chunkObj = chunkCursor.next();
+          String shardName = (String) chunkObj.get(SHARD);
+          String chunkId = (String) chunkObj.get(ID);
+          query = new BasicDBObject().append(ID, shardName);
+          DBCursor hostCursor = shardsCollection.find(query, fields);
+          while (hostCursor.hasNext()) {
+            DBObject hostObj = hostCursor.next();
+            String host = (String) hostObj.get(HOST);
+            String[] tagAndHost = StringUtils.split(host, '/');
+            if (tagAndHost.length > 1) {
+              host = tagAndHost[1];
+            }
+            Set<ServerAddress> addressList = chunksMapping.get(chunkId);
+            if (addressList == null) {
+              addressList = Sets.newHashSet();
+              chunksMapping.put(chunkId, addressList);
+            }
+            ServerAddress address = new ServerAddress(host);
+            addressList.add(address);
+            
+            Set<String> shardsList = chunksInverseMapping.get(address);
+            if (shardsList == null) {
+              shardsList = Sets.newHashSet();
+              chunksInverseMapping.put(address, shardsList);
+            }
+            shardsList.add(chunkId);
+          }
+        }
+      } else {
+        String chunkName = scanSpec.getDbName() + "." + scanSpec.getCollectionName();
+        MongoClientURI uri = new MongoClientURI(this.storagePluginConfig.getConnection());
+        List<String> hosts = uri.getHosts();
+        Set<ServerAddress> addressList = Sets.newHashSet();
+        
+        for (String host : hosts) {
+          addressList.add(new ServerAddress(host));
+        }
+        chunksMapping.put(chunkName, addressList);
+        
+        String host = hosts.get(0);
+        ServerAddress address = new ServerAddress(host);
+        Set<String> chunksList = Sets.newHashSet();
+        chunksList.add(chunkName);
+        chunksInverseMapping.put(address, chunksList);
+      }
+      client.close();
     } catch (UnknownHostException e) {
       throw new DrillRuntimeException(e.getMessage(), e);
+    } finally {
+      client.close();
     }
-    
+
   }
-  
+
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     MongoGroupScan clone = new MongoGroupScan(this);
     clone.columns = columns;
     return clone;
   }
-  
+
   @Override
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
   }
-  
+
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+    endpointFragmentMapping = Maps.newHashMap();
+    // As of now, performing direct assignments to drill bits
+    int fragmentIndex = 0;
+    for (int fragmentId = 0; fragmentId < endpoints.size(); ++fragmentId) {
+      DrillbitEndpoint ep = endpoints.get(fragmentId);
+      List<MongoSubScanSpec> mongoSubScanSpecList = Lists.newArrayList();
+      Set<String> chunks = chunksInverseMapping.get(ep.getAddress());
+      if (chunks == null || chunks.isEmpty()) {
+        continue;
+      }
+      for (int i = 0; i < chunks.size(); ++i) {
+        MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
+            .setCollectionName(scanSpec.getCollectionName()).setShard(ep.getAddress());
+        mongoSubScanSpecList.add(spec);
+      }
+      endpointFragmentMapping.put(Integer.valueOf(fragmentIndex++), mongoSubScanSpecList);
+    }
     
+    //If drill bits and mongo servers are not running on same machines, assign in round robin fashion.
+    if (endpointFragmentMapping.isEmpty()) {
+      int endPointsSize = endpoints.size();
+      for (fragmentIndex = 0; fragmentIndex < chunksInverseMapping.size(); ++fragmentIndex) {
+        List<MongoSubScanSpec> list = endpointFragmentMapping.get(fragmentIndex % endPointsSize);
+        if (list == null) {
+          list = Lists.newArrayList();
+          endpointFragmentMapping.put(fragmentIndex % endPointsSize, list);
+        }
+        DrillbitEndpoint ep = endpoints.get(fragmentIndex);
+        MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
+            .setCollectionName(scanSpec.getCollectionName()).setShard(ep.getAddress());
+        list.add(spec);
+      }
+    }
   }
-  
+
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-	MongoSubScanSpec subScanSpec = new MongoSubScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(), storagePluginConfig.getConnection());
-	List<MongoSubScanSpec> subScanList = new LinkedList<MongoSubScanSpec>();
-	subScanList.add(subScanSpec);
-	return new MongoSubScan(this.storagePlugin, this.storagePluginConfig, subScanList, this.columns);
+    return new MongoSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns);
   }
 
   @Override
   public int getMaxParallelizationWidth() {
-    // NO APIs to get the number of chunks, a collection has.
-    return Integer.MAX_VALUE;
+    return chunksMapping.size();
   }
 
   @Override
@@ -156,8 +283,21 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public ScanStats getScanStats() {
-    CommandResult stats = collection.getStats();
-    return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
+    MongoClientURI clientURI = new MongoClientURI(this.storagePluginConfig.getConnection());
+    MongoClient client = null;
+    try {
+      client = new MongoClient(clientURI);
+      DB db = client.getDB(scanSpec.getDbName());
+      DBCollection collection = db.getCollectionFromString(scanSpec.getCollectionName());
+      CommandResult stats = collection.getStats();
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
+    } catch (Exception e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    } finally {
+      if (client != null) {
+        client.close();
+      }
+    }
   }
 
   @Override
@@ -170,33 +310,41 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   public List<EndpointAffinity> getOperatorAffinity() {
     watch.reset();
     watch.start();
-    
-    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
-    
-    //assign each end point equal affinity. No APIs to get shards information.
-    for (DrillbitEndpoint ep : storagePlugin.getContext().getBits()) {
-      affinityMap.put(ep, new EndpointAffinity(ep, 1));
-      logger.debug("endpoing address: {}", ep.getAddress());
+
+    Map<String, DrillbitEndpoint> endpointMap = Maps.newHashMap();
+    for (DrillbitEndpoint endpoint : storagePlugin.getContext().getBits()) {
+      endpointMap.put(endpoint.getAddress(), endpoint);
+      logger.debug("Endpoint address: {}", endpoint.getAddress());
     }
 
-    logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS)/1000);
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = Maps.newHashMap();
+    // As of now, considering only the first replica, though there may be
+    // multiple replicas for each chunk.
+    for (Set<ServerAddress> addressList : chunksMapping.values()) {
+      DrillbitEndpoint ep = endpointMap.get(addressList.iterator().next().getHost());
+      if (ep != null) {
+        EndpointAffinity affinity = affinityMap.get(ep);
+        if (affinity == null) {
+          affinityMap.put(ep, new EndpointAffinity(ep, 1));
+        } else {
+          affinity.addAffinity(1);
+        }
+      }
+    }
+    logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
     return Lists.newArrayList(affinityMap.values());
-  }
-  
-  public DBCollection getCollection() {
-    return collection;
   }
 
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
   }
-  
+
   @JsonProperty("mongoScanSpec")
   public MongoScanSpec getScanSpec() {
     return scanSpec;
   }
-  
+
   @JsonProperty("storage")
   public MongoStoragePluginConfig getStorageConfig() {
     return storagePluginConfig;
@@ -204,9 +352,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public String toString() {
-    return "MongoGroupScan [MongoScanSpec="
-        + scanSpec + ", columns=" 
-        + columns + "]";
+    return "MongoGroupScan [MongoScanSpec=" + scanSpec + ", columns=" + columns + "]";
   }
 
 }
