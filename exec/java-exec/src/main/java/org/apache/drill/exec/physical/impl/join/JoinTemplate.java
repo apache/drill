@@ -157,7 +157,7 @@ public abstract class JoinTemplate implements JoinWorker {
           }
           status.advanceRight();
 
-        } while (status.isRightPositionInCurrentBatch() && doCompare(status.getLeftPosition(), status.getRightPosition()) == 0);
+        } while ((!status.isLeftRepeating() || status.isRightPositionInCurrentBatch()) && status.isRightPositionAllowed() && doCompare(status.getLeftPosition(), status.getRightPosition()) == 0);
 
         if (status.getRightPosition() > initialRightPosition &&
             (status.isLeftRepeating() || ! status.isNextLeftPositionInCurrentBatch()))
