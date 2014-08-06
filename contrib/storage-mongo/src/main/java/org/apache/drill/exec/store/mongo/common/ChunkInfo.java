@@ -17,32 +17,30 @@
  */
 package org.apache.drill.exec.store.mongo.common;
 
-import java.util.Set;
-
 import com.mongodb.ServerAddress;
 
 public class ChunkInfo {
 
   private ServerAddress serverAddress;
 
-  private Set<String> chunksList;
+  private String chunkId;
 
-  public ChunkInfo(ServerAddress serverAddress, Set<String> chunkList) {
+  public ChunkInfo(ServerAddress serverAddress, String chunkId) {
     this.serverAddress = serverAddress;
-    this.chunksList = chunkList;
+    this.chunkId = chunkId;
   }
 
   public ServerAddress getServerAddress() {
     return serverAddress;
   }
 
-  public Set<String> getChunksList() {
-    return chunksList;
+  public String getChunkId() {
+    return chunkId;
   }
 
   @Override
   public String toString() {
-    return "ChunkInfo [ " + "serverAddress " + serverAddress + " + chunkList " + chunksList + " ]";
+    return "ChunkInfo [ " + "serverAddress " + serverAddress + " + chunkId " + chunkId + " ]";
   }
 
 }

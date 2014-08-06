@@ -19,6 +19,8 @@ package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +41,7 @@ import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
+import org.apache.drill.exec.store.mongo.common.ChunkInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,7 +102,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   // each chunk.
   private Map<String, Set<ServerAddress>> chunksMapping;
 
-  private Map<ServerAddress, Set<String>> chunksInverseMapping;
+  private Map<String, List<ChunkInfo>> chunksInverseMapping;
 
   private Stopwatch watch = new Stopwatch();
 
@@ -183,12 +186,13 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
             ServerAddress address = new ServerAddress(host);
             addressList.add(address);
             
-            Set<String> shardsList = chunksInverseMapping.get(address);
-            if (shardsList == null) {
-              shardsList = Sets.newHashSet();
-              chunksInverseMapping.put(address, shardsList);
+            List<ChunkInfo> chunkList = chunksInverseMapping.get(address.getHost());
+            if (chunkList == null) {
+              chunkList = Lists.newArrayList();
+              chunksInverseMapping.put(address.getHost(), chunkList);
             }
-            shardsList.add(chunkId);
+            ChunkInfo chunkInfo = new ChunkInfo(address, chunkId);
+            chunkList.add(chunkInfo);
           }
         }
       } else {
@@ -204,9 +208,10 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
         
         String host = hosts.get(0);
         ServerAddress address = new ServerAddress(host);
-        Set<String> chunksList = Sets.newHashSet();
-        chunksList.add(chunkName);
-        chunksInverseMapping.put(address, chunksList);
+        ChunkInfo chunkInfo = new ChunkInfo(address, chunkName);
+        List<ChunkInfo> chunksList = Lists.newArrayList();
+        chunksList.add(chunkInfo);
+        chunksInverseMapping.put(address.getHost(), chunksList);
       }
       client.close();
     } catch (UnknownHostException e) {
@@ -237,13 +242,15 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     for (int fragmentId = 0; fragmentId < endpoints.size(); ++fragmentId) {
       DrillbitEndpoint ep = endpoints.get(fragmentId);
       List<MongoSubScanSpec> mongoSubScanSpecList = Lists.newArrayList();
-      Set<String> chunks = chunksInverseMapping.get(ep.getAddress());
+      List<ChunkInfo> chunks = chunksInverseMapping.get(ep.getAddress());
       if (chunks == null || chunks.isEmpty()) {
         continue;
       }
       for (int i = 0; i < chunks.size(); ++i) {
+        ChunkInfo chunkInfo = chunks.get(i);
         MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-            .setCollectionName(scanSpec.getCollectionName()).setShard(ep.getAddress());
+            .setCollectionName(scanSpec.getCollectionName()).setShard(chunkInfo.getServerAddress().getHost())
+            .setPort(chunkInfo.getServerAddress().getPort());
         mongoSubScanSpecList.add(spec);
       }
       endpointFragmentMapping.put(Integer.valueOf(fragmentIndex++), mongoSubScanSpecList);
@@ -252,15 +259,19 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     //If drill bits and mongo servers are not running on same machines, assign in round robin fashion.
     if (endpointFragmentMapping.isEmpty()) {
       int endPointsSize = endpoints.size();
-      for (fragmentIndex = 0; fragmentIndex < chunksInverseMapping.size(); ++fragmentIndex) {
+      Collection<List<ChunkInfo>> values = chunksInverseMapping.values();
+      Iterator<List<ChunkInfo>> iterator = values.iterator();
+      for (fragmentIndex = 0; fragmentIndex < values.size(); ++fragmentIndex) {
         List<MongoSubScanSpec> list = endpointFragmentMapping.get(fragmentIndex % endPointsSize);
         if (list == null) {
           list = Lists.newArrayList();
           endpointFragmentMapping.put(fragmentIndex % endPointsSize, list);
         }
-        DrillbitEndpoint ep = endpoints.get(fragmentIndex);
+        // Take the first replica info, for assignment
+        ChunkInfo chunkInfo = iterator.next().get(0);
         MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-            .setCollectionName(scanSpec.getCollectionName()).setShard(ep.getAddress());
+            .setCollectionName(scanSpec.getCollectionName()).setShard(chunkInfo.getServerAddress().getHost())
+            .setPort(chunkInfo.getServerAddress().getPort());
         list.add(spec);
       }
     }
