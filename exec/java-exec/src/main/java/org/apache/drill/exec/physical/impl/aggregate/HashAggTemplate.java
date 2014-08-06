@@ -120,6 +120,9 @@ public abstract class HashAggTemplate implements HashAggregator {
     private int maxOccupiedIdx = -1;
     private int batchOutputCount = 0;
 
+    private int capacity = Integer.MAX_VALUE;
+    private boolean allocatedNextBatch = false;
+
     private BatchHolder() {
 
       aggrValuesContainer = new VectorContainer();
@@ -131,10 +134,10 @@ public abstract class HashAggTemplate implements HashAggregator {
         // Create a type-specific ValueVector for this value
         vector = TypeHelper.getNewVector(outputField, allocator) ;
         vector.allocateNew();
+        capacity = Math.min(capacity, vector.getValueCapacity());
 
         aggrValuesContainer.add(vector) ;
       }
-
     }
 
     private boolean updateAggrValues(int incomingRowIdx, int idxWithinBatch) {
@@ -545,6 +548,14 @@ public abstract class HashAggTemplate implements HashAggregator {
       BatchHolder bh = batchHolders.get( (currentIdx >>> 16) & HashTable.BATCH_MASK);
       int idxWithinBatch = currentIdx & HashTable.BATCH_MASK;
 
+      // Check if we have almost filled up the workspace vectors and add a batch if necessary
+      if ((idxWithinBatch ==  (bh.capacity - 1)) && (bh.allocatedNextBatch == false)) {
+        htable.addNewKeyBatch();
+        addBatchHolder();
+        bh.allocatedNextBatch = true;
+      }
+
+
       if (putStatus == HashTable.PutStatus.KEY_PRESENT) {
         if (EXTRA_DEBUG_2) logger.debug("Group-by key already present in hash table, updating the aggregate values");
 
@@ -567,7 +578,6 @@ public abstract class HashAggTemplate implements HashAggregator {
         numGroupedRecords++;
         return true;
       }
-
     }
 
     logger.debug("HashAggr Put failed ! incomingRowIdx = {}, hash table size = {}.", incomingRowIdx, htable.size());
