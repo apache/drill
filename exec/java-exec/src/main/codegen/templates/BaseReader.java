@@ -49,6 +49,7 @@ public interface BaseReader extends Positionable{
   public interface RepeatedListReader extends ListReader{
     boolean next();
     int size();
+    void copyAsValue(ListWriter writer);
   }
   
   public interface ScalarReader extends  

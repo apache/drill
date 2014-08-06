@@ -49,13 +49,18 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   protected ValueVector innerVector;
   
   <#if mode == "Repeated">private int currentChildIndex = 0;</#if>
-  ${mode}ListWriter(String name, ${containerClass} container, FieldWriter parent){
+  public ${mode}ListWriter(String name, ${containerClass} container, FieldWriter parent){
     super(parent);
     this.name = name;
     this.container = container;
   }
-  
-  
+
+  public ${mode}ListWriter(${containerClass} container, FieldWriter parent){
+    super(parent);
+    this.name = null;
+    this.container = container;
+  }
+
   public void allocate(){
     if(writer != null) writer.allocate();
     <#if mode == "Repeated">
