@@ -87,8 +87,10 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
   }
 
   public void setPosition(int idx){
-    super.setPosition(idx);
-    inform(mutator.startNewGroup(idx));
+    if (ok()){
+      super.setPosition(idx);
+      inform(mutator.startNewGroup(idx));
+    }
   }
   
   
