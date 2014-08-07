@@ -1,13 +1,3 @@
-From 64697ddd8a90f29d1693658f04e975e435e3c869 Mon Sep 17 00:00:00 2001
-From: unknown <norrisl@NorrisL.simba.ad>
-Date: Thu, 5 Jun 2014 16:40:48 -0700
-Subject: [PATCH] Allow zookeeper to build in x64
-
----
- src/c/include/winstdint.h |  4 ++++
- src/c/src/mt_adaptor.c    | 54 +++++++++++++++++++++++------------------------
- 2 files changed, 30 insertions(+), 28 deletions(-)
-
 diff --git a/src/c/include/winstdint.h b/src/c/include/winstdint.h
 index d02608a..df405f7 100644
 --- a/src/c/include/winstdint.h
@@ -158,6 +148,13 @@ index 974063f..5ce0fd9 100644
  void enter_critical(zhandle_t* zh)
  {
      struct adaptor_threads *adaptor = zh->adaptor_priv;
--- 
-1.9.2.msysgit.0
-
+diff --git a/src/c/zookeeper.vcproj b/src/c/zookeeper.vcproj
+index dc3ab43..ffc6f90 100644
+--- a/src/c/zookeeper.vcproj
++++ b/src/c/zookeeper.vcproj
+@@ -1,4 +1,4 @@
+-???<?xml version="1.0" encoding="UTF-8"?>
++<?xml version="1.0" encoding="UTF-8"?>
+ <VisualStudioProject
+ 	ProjectType="Visual C++"
+ 	Version="9.00"

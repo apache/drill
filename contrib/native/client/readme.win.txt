@@ -35,6 +35,7 @@ Windows platforms should be more or less similar.
     Note: For 64 bit builds, change the platform toolset to Windows SDK for your
     project.
     (Root node, i.e. the projectname) Properties ->Configuration Properties->General->Platform Toolset = Windows7.1SDK
+	If your are running Windows 7 and having problem follow the instructions here http://stackoverflow.com/questions/19366006/error-when-installing-windows-sdk-7-1
 
 1.3 [Optional] Windows Driver kit 
     The Windows Driver kit is required to get the 64 bit assembler ml64. The
@@ -76,7 +77,9 @@ Windows platforms should be more or less similar.
 
 2.1 Boost (version 1.55)
     a) Download Boost from:
-        http://www.boost.org/users/history/version_1_55_0.html
+        i) http://www.boost.org/users/history/version_1_55_0.html
+		ii) open boost_1_55_0\boost/archive/iterators/transform_width.hpp and add the following to the include statements: #include <algorithm>
+		iii) Yes somehow this header was not included and is missing! See here for more info: https://svn.boost.org/trac/boost/ticket/8757
     b) i) Boost 32 bit build - 
         Open a  Visual Studio command prompt from the Visual Studio IDE
       ii) Boost 64 bit build -
@@ -113,12 +116,17 @@ Windows platforms should be more or less similar.
         build. It is safe to ignore it as boost-context is not needed for Drill
 
 2.2 Protobuf (2.5.0)
+	Get protobuf from here: svn checkout http://protobuf.googlecode.com/svn/trunk/ protobuf-read-only
+	apply the patch as instructed in https://code.google.com/p/protobuf/source/diff?spec=svn480&r=480&format=side&path=/tags/2.5.0rc2/gtest/msvc/gtest.vcproj
+
+
     a) Protobuf builds static libraries
     b) In Visual Studio, open <PROTOBUF_HOME>/vsprojects/protobuf.sln. The IDE may
     update the solution file. This should go thru successfully.
     c) If build for 64 bit, add a 64 bit project configuration for each project. (Make sure the
         platform toolset is set to Windows7.1SDK)
-    d) Build
+    d) Build the protobuf project first (not the solution)
+	e) Build the solution!
 
 2.3 Zookeeper (3.4.6) 
     a) Set the ZOOKEEPER_HOME environment variable
