@@ -33,7 +33,8 @@ public class MongoScanSpec {
     this.collectionName = collectionName;
   }
 
-  public MongoScanSpec(String dbName, String collectionName, BasicDBObject filters) {
+  public MongoScanSpec(String dbName, String collectionName,
+      BasicDBObject filters) {
     this.dbName = dbName;
     this.collectionName = collectionName;
     this.filter = filters;

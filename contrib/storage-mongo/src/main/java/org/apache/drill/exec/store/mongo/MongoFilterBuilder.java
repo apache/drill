@@ -54,12 +54,10 @@ public class MongoFilterBuilder extends
 
     switch (functionName) {
     case "booleanAnd":
-      newFilter = MongoUtils.andFilterAtIndex(leftScanSpec.getFilters(),
-          MongoUtils.LAST_FILTER, rightScanSpec.getFilters());
+      newFilter = MongoUtils.andFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
       break;
     case "booleanOr":
-      newFilter = MongoUtils.orFilterAtIndex(leftScanSpec.getFilters(),
-          MongoUtils.LAST_FILTER, rightScanSpec.getFilters());
+      newFilter = MongoUtils.orFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
     }
     return new MongoScanSpec(groupScan.getDb().getName(), groupScan.getCollection().getName(), newFilter);
   }
