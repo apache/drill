@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +64,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 
 @JsonTypeName("mongo-scan")
@@ -150,6 +152,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
       chunksInverseMapping = Maps.newHashMap();
       if (databaseNames.contains(CONFIG)) {
         DB db = client.getDB(CONFIG);
+        db.setReadPreference(ReadPreference.nearest());
         DBCollection chunksCollection = db.getCollectionFromString(CHUNKS);
 
         DBObject query = new BasicDBObject(1);
@@ -173,7 +176,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
           DBCursor hostCursor = shardsCollection.find(query, fields);
           while (hostCursor.hasNext()) {
             DBObject hostObj = hostCursor.next();
-            String host = (String) hostObj.get(HOST);
+            String host = (String) hostObj.get(HOST); //needs to verify this
             String[] tagAndHost = StringUtils.split(host, '/');
             if (tagAndHost.length > 1) {
               host = tagAndHost[1];
@@ -191,7 +194,9 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
               chunkList = Lists.newArrayList();
               chunksInverseMapping.put(address.getHost(), chunkList);
             }
-            ChunkInfo chunkInfo = new ChunkInfo(address, chunkId);
+            List<String> hosts = new ArrayList<>();
+            hosts.add(host);
+            ChunkInfo chunkInfo = new ChunkInfo(hosts, chunkId);
             chunkList.add(chunkInfo);
           }
         }
@@ -208,7 +213,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
         
         String host = hosts.get(0);
         ServerAddress address = new ServerAddress(host);
-        ChunkInfo chunkInfo = new ChunkInfo(address, chunkName);
+        ChunkInfo chunkInfo = new ChunkInfo(hosts, chunkName);
         List<ChunkInfo> chunksList = Lists.newArrayList();
         chunksList.add(chunkInfo);
         chunksInverseMapping.put(address.getHost(), chunksList);
@@ -249,8 +254,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
       for (int i = 0; i < chunks.size(); ++i) {
         ChunkInfo chunkInfo = chunks.get(i);
         MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-            .setCollectionName(scanSpec.getCollectionName()).setShard(chunkInfo.getServerAddress().getHost())
-            .setPort(chunkInfo.getServerAddress().getPort());
+            .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList());
         mongoSubScanSpecList.add(spec);
       }
       endpointFragmentMapping.put(Integer.valueOf(fragmentIndex++), mongoSubScanSpecList);
@@ -270,8 +274,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
         // Take the first replica info, for assignment
         ChunkInfo chunkInfo = iterator.next().get(0);
         MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-            .setCollectionName(scanSpec.getCollectionName()).setShard(chunkInfo.getServerAddress().getHost())
-            .setPort(chunkInfo.getServerAddress().getPort());
+            .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList());
         list.add(spec);
       }
     }
@@ -299,6 +302,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     try {
       client = new MongoClient(clientURI);
       DB db = client.getDB(scanSpec.getDbName());
+      db.setReadPreference(ReadPreference.nearest());
       DBCollection collection = db.getCollectionFromString(scanSpec.getCollectionName());
       CommandResult stats = collection.getStats();
       return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
@@ -332,13 +336,17 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     // As of now, considering only the first replica, though there may be
     // multiple replicas for each chunk.
     for (Set<ServerAddress> addressList : chunksMapping.values()) {
-      DrillbitEndpoint ep = endpointMap.get(addressList.iterator().next().getHost());
-      if (ep != null) {
-        EndpointAffinity affinity = affinityMap.get(ep);
-        if (affinity == null) {
-          affinityMap.put(ep, new EndpointAffinity(ep, 1));
-        } else {
-          affinity.addAffinity(1);
+      //Each replica can be on multiple machines, take the first one, which meets affinity.
+      for (ServerAddress address : addressList) {
+        DrillbitEndpoint ep = endpointMap.get(address.getHost());
+        if (ep != null) {
+          EndpointAffinity affinity = affinityMap.get(ep);
+          if (affinity == null) {
+            affinityMap.put(ep, new EndpointAffinity(ep, 1));
+          } else {
+            affinity.addAffinity(1);
+          }
+          break;
         }
       }
     }

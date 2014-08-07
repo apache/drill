@@ -17,21 +17,21 @@
  */
 package org.apache.drill.exec.store.mongo.common;
 
-import com.mongodb.ServerAddress;
+import java.util.List;
 
 public class ChunkInfo {
 
-  private ServerAddress serverAddress;
+  private List<String> chunkLocList;
 
   private String chunkId;
 
-  public ChunkInfo(ServerAddress serverAddress, String chunkId) {
-    this.serverAddress = serverAddress;
+  public ChunkInfo(List<String> chunkLocList, String chunkId) {
+    this.chunkLocList = chunkLocList;
     this.chunkId = chunkId;
   }
 
-  public ServerAddress getServerAddress() {
-    return serverAddress;
+  public List<String> getChunkLocList() {
+    return chunkLocList;
   }
 
   public String getChunkId() {
@@ -40,7 +40,7 @@ public class ChunkInfo {
 
   @Override
   public String toString() {
-    return "ChunkInfo [ " + "serverAddress " + serverAddress + " + chunkId " + chunkId + " ]";
+    return "ChunkInfo [ " + "chunkLocList" + chunkLocList + " + chunkId " + chunkId + " ]";
   }
 
 }

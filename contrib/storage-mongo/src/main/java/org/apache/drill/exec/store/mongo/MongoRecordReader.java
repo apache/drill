@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -45,6 +46,9 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 
 public class MongoRecordReader implements RecordReader {
   static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
@@ -63,10 +67,12 @@ public class MongoRecordReader implements RecordReader {
   private DBObject fields;
 
   private MongoClient client;
+  private MongoClientOptions clientOptions;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
-      FragmentContext context) {
+      FragmentContext context, MongoClientOptions clientOptions) {
     this.columns = Sets.newLinkedHashSet();
+    this.clientOptions = clientOptions;
     this.fields = new BasicDBObject();
     if (projectedColumns != null && projectedColumns.size() != 0) {
       Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
@@ -87,8 +93,14 @@ public class MongoRecordReader implements RecordReader {
 
   private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {
     try {
-      client = new MongoClient(subScanSpec.getShard(), subScanSpec.getPort());
+      List<String> hosts = subScanSpec.getHosts();
+      List<ServerAddress> addresses = Lists.newArrayList();
+      for (String host : hosts) {
+        addresses.add(new ServerAddress(host));
+      }
+      client = new MongoClient(addresses, this.clientOptions);
       DB db = client.getDB(subScanSpec.getDbName());
+      db.setReadPreference(ReadPreference.nearest());
       collection = db.getCollection(subScanSpec.getCollectionName());
     } catch (UnknownHostException e) {
       throw new DrillRuntimeException(e.getMessage(), e);

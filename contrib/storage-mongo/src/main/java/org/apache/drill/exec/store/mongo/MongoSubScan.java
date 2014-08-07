@@ -114,30 +114,19 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
     protected String dbName;
     protected String collectionName;
-    protected String shard;
-    protected int port;
+    protected List<String> hosts;
 
     @parquet.org.codehaus.jackson.annotate.JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
-        @JsonProperty("collectionName") String collectionName, @JsonProperty("shard") String shard,
-        @JsonProperty("port") int port) {
+        @JsonProperty("collectionName") String collectionName, @JsonProperty("hosts") List<String> hosts)
+        {
       this.dbName = dbName;
       this.collectionName = collectionName;
-      this.shard = shard;
-      this.port = port;
+      this.hosts = hosts;
     }
 
     MongoSubScanSpec() {
 
-    }
-
-    public String getShard() {
-      return this.shard;
-    }
-
-    public MongoSubScanSpec setShard(String shard) {
-      this.shard = shard;
-      return this;
     }
 
     public String getDbName() {
@@ -158,19 +147,18 @@ public class MongoSubScan extends AbstractBase implements SubScan {
       return this;
     }
     
-    public int getPort() {
-      return port;
+    public List<String> getHosts() {
+      return hosts;
     }
 
-    public MongoSubScanSpec setPort(int port) {
-      this.port = port;
+    public MongoSubScanSpec setHosts(List<String> hosts) {
+      this.hosts = hosts;
       return this;
     }
 
     @Override
     public String toString() {
-      return "MongoSubScanSpec [tableName=" + collectionName + ", dbName=" + dbName + ", shard=" + shard + ", port="
-          + port + "]";
+      return "MongoSubScanSpec [tableName=" + collectionName + ", dbName=" + dbName + ", hosts=" + hosts + "]";
     }
   }
 
