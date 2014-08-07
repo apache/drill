@@ -253,7 +253,7 @@ int main(int argc, char* argv[]) {
         std::string logLevel=qsOptionValues["logLevel"];
         std::string testCancel=qsOptionValues["testCancel"];
 
-        exec::shared::QueryType type;
+        Drill::QueryType type;
 
         if(!validate(type_str, queryList, planList)){
             exit(1);
@@ -264,16 +264,16 @@ int main(int argc, char* argv[]) {
         std::vector<std::string> queryInputs;
         if(type_str=="sql" ){
             readQueries(queryList, queryInputs);
-            type=exec::shared::SQL;
+            type=Drill::SQL;
         }else if(type_str=="physical" ){
             readPlans(planList, queryInputs);
-            type=exec::shared::PHYSICAL;
+            type=Drill::PHYSICAL;
         }else if(type_str == "logical"){
             readPlans(planList, queryInputs);
-            type=exec::shared::LOGICAL;
+            type=Drill::LOGICAL;
         }else{
             readQueries(queryList, queryInputs);
-            type=exec::shared::SQL;
+            type=Drill::SQL;
         }
 
         bTestCancel = !strcmp(testCancel.c_str(), "true")?true:false;

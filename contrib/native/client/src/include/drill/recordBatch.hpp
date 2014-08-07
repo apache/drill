@@ -30,7 +30,8 @@
 #include <boost/lexical_cast.hpp>
 #include "drill/common.hpp"
 #include "drill/decimalUtils.hpp"
-#include "drill/protobuf/User.pb.h"
+#include "drill/protobuf/Types.pb.h"
+
 
 #if defined _WIN32 || defined __CYGWIN__
   #ifdef DRILL_CLIENT_EXPORTS
@@ -50,6 +51,13 @@
   #endif
 #endif
 
+namespace exec{
+    namespace shared {
+        class SerializedField;
+        class RecordBatchDef;
+        class QueryResult;
+    };
+};
 
 namespace Drill {
 
@@ -759,16 +767,9 @@ typedef NullableValueVectorTyped<IntervalYearHolder, ValueVectorIntervalYear>  N
 
 class DECLSPEC_DRILL_CLIENT FieldMetadata{
     public:
+
         FieldMetadata(){};
-        void set(const exec::shared::SerializedField& f){
-            m_name=f.name_part().name();
-            m_minorType=f.major_type().minor_type();
-            m_dataMode=f.major_type().mode();
-            m_valueCount=f.value_count();
-            m_scale=f.major_type().scale();
-            m_precision=f.major_type().precision();
-            m_bufferLength=f.buffer_length();
-        }
+        void set(const exec::shared::SerializedField& f);
         const std::string& getName() const{ return m_name;}
         common::MinorType getMinorType() const{ return m_minorType;}
         common::DataMode getDataMode() const{return m_dataMode;}
@@ -839,16 +840,7 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
         //m_allocatedBuffer is the memory block allocated to hold the incoming RPC message. Record Batches operate on
         //slices of the allocated buffer. The first slice (the first Field Batch), begins at m_buffer. Data in the
         //allocated buffer before m_buffer is mostly the RPC header, and the QueryResult object.
-        RecordBatch(exec::shared::QueryResult* pResult, AllocatedBufferPtr r, ByteBuf_t b)
-                :m_fieldDefs(new(std::vector<Drill::FieldMetadata*>)){
-            m_pQueryResult=pResult;
-            m_pRecordBatchDef=&pResult->def();
-            m_numRecords=pResult->row_count();
-            m_allocatedBuffer=r;
-            m_buffer=b;
-            m_numFields=pResult->def().field_size();
-            m_bHasSchemaChanged=false;
-        }
+        RecordBatch(exec::shared::QueryResult* pResult, AllocatedBufferPtr r, ByteBuf_t b);
 
         ~RecordBatch();
 
@@ -860,8 +852,8 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
 
         size_t getNumRecords(){ return m_numRecords;}
         std::vector<FieldBatch*>& getFields(){ return m_fields;}
-        size_t getNumFields() { return m_pRecordBatchDef->field_size(); }
-        bool isLastChunk() { return m_pQueryResult->is_last_chunk(); }
+        size_t getNumFields();
+        bool isLastChunk();
 
         boost::shared_ptr<std::vector<Drill::FieldMetadata*> > getColumnDefs(){ return m_fieldDefs;}
 

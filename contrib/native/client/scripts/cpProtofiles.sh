@@ -40,8 +40,6 @@ main() {
     fi
 
     mv ${TARGDIR}/Types.pb.h ${INCDIR}
-    mv ${TARGDIR}/User.pb.h ${INCDIR}
-
 }
 
 main

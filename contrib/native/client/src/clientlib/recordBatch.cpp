@@ -19,6 +19,7 @@
 #include "drill/common.hpp"
 #include "drill/recordBatch.hpp"
 #include "utils.hpp"
+#include "../protobuf/User.pb.h"
 
 const int32_t YEARS_TO_MONTHS=12;
 const int32_t DAYS_TO_MILLIS=24*60*60*1000;
@@ -300,6 +301,18 @@ ret_t FieldBatch::load(){
     return RET_SUCCESS;
 }
 
+RecordBatch::RecordBatch(exec::shared::QueryResult* pResult, AllocatedBufferPtr r, ByteBuf_t b)
+    :m_fieldDefs(new(std::vector<Drill::FieldMetadata*>)){
+        m_pQueryResult=pResult;
+        m_pRecordBatchDef=&pResult->def();
+        m_numRecords=pResult->row_count();
+        m_allocatedBuffer=r;
+        m_buffer=b;
+        m_numFields=pResult->def().field_size();
+        m_bHasSchemaChanged=false;
+}
+
+
 RecordBatch::~RecordBatch(){
     m_buffer=NULL;
     //free memory allocated for FieldBatch objects saved in m_fields;
@@ -369,6 +382,26 @@ void RecordBatch::print(std::ostream& s, size_t num){
         s<<values<<std::endl;
     }
 }
+size_t RecordBatch::getNumFields(){
+    return m_pRecordBatchDef->field_size(); 
+}
+
+bool RecordBatch::isLastChunk(){
+    return m_pQueryResult->is_last_chunk(); 
+}
+
+
+
+void FieldMetadata::set(const exec::shared::SerializedField& f){
+    m_name=f.name_part().name();
+    m_minorType=f.major_type().minor_type();
+    m_dataMode=f.major_type().mode();
+    m_valueCount=f.value_count();
+    m_scale=f.major_type().scale();
+    m_precision=f.major_type().precision();
+    m_bufferLength=f.buffer_length();
+}
+
 
 void DateHolder::load(){
     m_year=1970;
