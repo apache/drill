@@ -706,6 +706,12 @@ public abstract class HashTableTemplate implements HashTable {
     return vector;
   }
 
+  public void addNewKeyBatch() {
+    int numberOfBatches = batchHolders.size();
+    this.addBatchHolder();
+    freeIndex = numberOfBatches * BATCH_SIZE;
+  }
+
   // These methods will be code-generated in the context of the outer class
   protected abstract void doSetup(@Named("incomingBuild") RecordBatch incomingBuild, @Named("incomingProbe") RecordBatch incomingProbe);
   protected abstract int getHashBuild(@Named("incomingRowIdx") int incomingRowIdx) ;

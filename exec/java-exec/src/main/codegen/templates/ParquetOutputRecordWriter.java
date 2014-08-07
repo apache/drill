@@ -33,9 +33,11 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.parquet.ParquetTypeHelper;
 import org.apache.drill.exec.vector.*;
 import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import parquet.io.api.RecordConsumer;
 import parquet.schema.MessageType;
 import parquet.io.api.Binary;
@@ -63,7 +65,7 @@ import java.util.Map;
  *
  * This is useful for text format writers such as CSV, TSV etc.
  */
-public abstract class ParquetOutputRecordWriter implements RecordWriter {
+public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter implements RecordWriter {
 
   private RecordConsumer consumer;
   private MessageType schema;
@@ -78,17 +80,30 @@ public abstract class ParquetOutputRecordWriter implements RecordWriter {
   <#list type.minor as minor>
     <#list vv.modes as mode>
   @Override
-  public void add${mode.prefix}${minor.class}Holder(int fieldId, ${mode.prefix}${minor.class}Holder valueHolder) throws IOException {
+  public FieldConverter getNew${mode.prefix}${minor.class}Converter(int fieldId, String fieldName, FieldReader reader) {
+    return new ${mode.prefix}${minor.class}ParquetConverter(fieldId, fieldName, reader);
+  }
+
+  public class ${mode.prefix}${minor.class}ParquetConverter extends FieldConverter {
+    private Nullable${minor.class}Holder holder = new Nullable${minor.class}Holder();
+
+    public ${mode.prefix}${minor.class}ParquetConverter(int fieldId, String fieldName, FieldReader reader) {
+      super(fieldId, fieldName, reader);
+    }
+
+    @Override
+    public void writeField() throws IOException {
   <#if mode.prefix == "Nullable" >
-    if (valueHolder.isSet == 0) {
+    if (!reader.isSet()) {
       return;
     }
   <#elseif mode.prefix == "Repeated" >
     // empty lists are represented by simply not starting a field, rather than starting one and putting in 0 elements
-    if (valueHolder.start == valueHolder.end)
+    if (reader.size() == 0) {
       return;
-    consumer.startField(schema.getFieldName(fieldId), fieldId);
-    for (int i = valueHolder.start; i < valueHolder.end; i++) {
+    }
+    consumer.startField(fieldName, fieldId);
+    for (int i = 0; i < reader.size(); i++) {
   </#if>
 
   <#if  minor.class == "TinyInt" ||
@@ -101,20 +116,24 @@ public abstract class ParquetOutputRecordWriter implements RecordWriter {
         minor.class == "Decimal9" ||
         minor.class == "UInt4">
     <#if mode.prefix == "Repeated" >
-            consumer.addInteger(valueHolder.vector.getAccessor().get(i));
+            reader.read(i, holder);
+            consumer.addInteger(holder.value);
     <#else>
-    consumer.startField(schema.getFieldName(fieldId), fieldId);
-    consumer.addInteger(valueHolder.value);
-    consumer.endField(schema.getFieldName(fieldId), fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addInteger(holder.value);
+    consumer.endField(fieldName, fieldId);
     </#if>
   <#elseif
         minor.class == "Float4">
       <#if mode.prefix == "Repeated" >
-              consumer.addFloat(valueHolder.vector.getAccessor().get(i));
+              reader.read(i, holder);
+              consumer.addFloat(holder.value);
       <#else>
-    consumer.startField(schema.getFieldName(fieldId), fieldId);
-    consumer.addFloat(valueHolder.value);
-    consumer.endField(schema.getFieldName(fieldId), fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addFloat(holder.value);
+    consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif
         minor.class == "BigInt" ||
@@ -122,59 +141,64 @@ public abstract class ParquetOutputRecordWriter implements RecordWriter {
         minor.class == "TimeStamp" ||
         minor.class == "UInt8">
       <#if mode.prefix == "Repeated" >
-              consumer.addLong(valueHolder.vector.getAccessor().get(i));
+              reader.read(i, holder);
+              consumer.addLong(holder.value);
       <#else>
-    consumer.startField(schema.getFieldName(fieldId), fieldId);
-    consumer.addLong(valueHolder.value);
-    consumer.endField(schema.getFieldName(fieldId), fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addLong(holder.value);
+    consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif minor.class == "Date">
     <#if mode.prefix == "Repeated" >
-      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(valueHolder.vector.getAccessor().get(i)) + JULIAN_DAY_EPOC));
+      reader.read(i, holder);
+      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) + JULIAN_DAY_EPOC));
     <#else>
-      consumer.startField(schema.getFieldName(fieldId), fieldId);
+      consumer.startField(fieldName, fieldId);
+      reader.read(holder);
       // convert from internal Drill date format to Julian Day centered around Unix Epoc
-      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(valueHolder.value) + JULIAN_DAY_EPOC));
-      consumer.endField(schema.getFieldName(fieldId), fieldId);
+      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) + JULIAN_DAY_EPOC));
+      consumer.endField(fieldName, fieldId);
     </#if>
   <#elseif
         minor.class == "Float8">
       <#if mode.prefix == "Repeated" >
-              consumer.addDouble(valueHolder.vector.getAccessor().get(i));
+              reader.read(i, holder);
+              consumer.addDouble(holder.value);
       <#else>
-    consumer.startField(schema.getFieldName(fieldId), fieldId);
-    consumer.addDouble(valueHolder.value);
-    consumer.endField(schema.getFieldName(fieldId), fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addDouble(holder.value);
+    consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif
         minor.class == "Bit">
       <#if mode.prefix == "Repeated" >
-              consumer.addBoolean(valueHolder.vector.getAccessor().get(i) == 1);
+              reader.read(i, holder);
+              consumer.addBoolean(holder.value == 1);
       <#else>
-    consumer.startField(schema.getFieldName(fieldId), fieldId);
-    consumer.addBoolean(valueHolder.value == 1);
-    consumer.endField(schema.getFieldName(fieldId), fieldId);
+    consumer.startField(fieldName, fieldId);
+    consumer.addBoolean(holder.value == 1);
+    consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif
         minor.class == "Decimal28Sparse" ||
         minor.class == "Decimal38Sparse">
       <#if mode.prefix == "Repeated" >
       <#else>
-      consumer.startField(schema.getFieldName(fieldId), fieldId);
-      ${minor.class}Vector tempVec = new ${minor.class}Vector(MaterializedField.create("", TypeProtos.MajorType.getDefaultInstance()), new TopLevelAllocator());
-      tempVec.allocateNew(10);
-      tempVec.getMutator().setSafe(0, valueHolder);
+      consumer.startField(fieldName, fieldId);
+      reader.read(holder);
       byte[] bytes = DecimalUtility.getBigDecimalFromSparse(
-              valueHolder.buffer, valueHolder.start, ${minor.class}Holder.nDecimalDigits, valueHolder.scale).unscaledValue().toByteArray();
+              holder.buffer, holder.start, ${minor.class}Holder.nDecimalDigits, holder.scale).unscaledValue().toByteArray();
       byte[] output = new byte[ParquetTypeHelper.getLengthForMinorType(MinorType.${minor.class?upper_case})];
-      if (valueHolder.getSign()) {
+      if (holder.getSign()) {
         Arrays.fill(output, 0, output.length - bytes.length, (byte)0xFF);
       } else {
         Arrays.fill(output, 0, output.length - bytes.length, (byte)0x0);
       }
       System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
       consumer.addBinary(Binary.fromByteArray(output));
-      consumer.endField(schema.getFieldName(fieldId), fieldId);
+      consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif
         minor.class == "TimeTZ" ||
@@ -190,22 +214,23 @@ public abstract class ParquetOutputRecordWriter implements RecordWriter {
       </#if>
   <#elseif minor.class == "VarChar" || minor.class == "Var16Char" || minor.class == "VarBinary">
     <#if mode.prefix == "Repeated">
-      ${minor.class}Holder singleHolder = new ${minor.class}Holder();
-      valueHolder.vector.getAccessor().get(i, singleHolder);
-      consumer.startField(schema.getFieldName(fieldId), fieldId);
-      consumer.addBinary(Binary.fromByteBuffer(singleHolder.buffer.nioBuffer(singleHolder.start, singleHolder.end - singleHolder.start)));
-      consumer.endField(schema.getFieldName(fieldId), fieldId);
+      reader.read(i, holder);
+      consumer.startField(fieldName, fieldId);
+      consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
+      consumer.endField(fieldName, fieldId);
     <#else>
-    ByteBuf buf = valueHolder.buffer;
-    consumer.startField(schema.getFieldName(fieldId), fieldId);
-    consumer.addBinary(Binary.fromByteBuffer(valueHolder.buffer.nioBuffer(valueHolder.start, valueHolder.end - valueHolder.start)));
-    consumer.endField(schema.getFieldName(fieldId), fieldId);
+    reader.read(holder);
+    ByteBuf buf = holder.buffer;
+    consumer.startField(fieldName, fieldId);
+    consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
+    consumer.endField(fieldName, fieldId);
     </#if>
   </#if>
   <#if mode.prefix == "Repeated">
     }
-    consumer.endField(schema.getFieldName(fieldId), fieldId);
+    consumer.endField(fieldName, fieldId);
   </#if>
+    }
   }
     </#list>
   </#list>

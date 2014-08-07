@@ -72,13 +72,11 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
 
   @Override
   public SelectionVectorMode[] getSupportedEncodings() {
-    return SelectionVectorMode.ALL;
+    return SelectionVectorMode.NONE_AND_TWO;
   }
 
   @Override
   public SelectionVectorMode getEncoding() {
-    SelectionVectorMode m = ((Prel) this.getChild()).getEncoding();
-    if(m == SelectionVectorMode.FOUR_BYTE) return SelectionVectorMode.FOUR_BYTE;
     return SelectionVectorMode.TWO_BYTE;
   }
 

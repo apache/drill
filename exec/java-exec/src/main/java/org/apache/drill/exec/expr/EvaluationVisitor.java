@@ -265,14 +265,14 @@ public class EvaluationVisitor {
 
       final LogicalExpression child = e.getChild();
       final HoldingContainer inputContainer = child.accept(this, generator);
-      final boolean complex = Types.isComplex(inputContainer.getMajorType());
-      final boolean repeated = Types.isRepeated(inputContainer.getMajorType());
 
       JBlock block = generator.getEvalBlock();
       JExpression outIndex = generator.getMappingSet().getValueWriteIndex();
       JVar vv = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getOutgoing(), e.getFieldId());
 
-      if (complex || repeated) {
+      // Only when the input is a reader, use writer interface to copy value.
+      // Otherwise, input is a holder and we use vv mutator to set value.
+      if (inputContainer.isReader()) {
         JType writerImpl = generator.getModel()._ref(
             TypeHelper.getWriterImpl(inputContainer.getMinorType(), inputContainer.getMajorType().getMode()));
         JType writerIFace = generator.getModel()._ref(

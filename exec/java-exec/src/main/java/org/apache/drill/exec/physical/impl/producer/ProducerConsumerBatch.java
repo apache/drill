@@ -40,6 +40,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public class ProducerConsumerBatch extends AbstractRecordBatch {
@@ -52,6 +53,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
   private int recordCount;
   private BatchSchema schema;
   private boolean stop = false;
+  private final CountDownLatch cleanUpLatch = new CountDownLatch(1); // used to wait producer to clean up
 
   protected ProducerConsumerBatch(ProducerConsumer popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -124,50 +126,40 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
     @Override
     public void run() {
       try {
-      if (stop) return;
-      outer: while (true) {
-        IterOutcome upstream = incoming.next();
-        switch (upstream) {
-          case NONE:
-            break outer;
-          case STOP:
-            try {
-              queue.putFirst(new RecordBatchDataWrapper(null, false, true));
-            } catch (InterruptedException e) {
-              throw new RuntimeException(e);
-            }
-            return;
-          case OK_NEW_SCHEMA:
-          case OK:
-            try {
-              if (!stop) {
-                wrapper = new RecordBatchDataWrapper(new RecordBatchData(incoming), false, false);
-                queue.put(wrapper);
-              }
-            } catch (InterruptedException e) {
-              if (!(context.isCancelled() || context.isFailed())) {
-                context.fail(e);
-              }
-              wrapper.batch.getContainer().zeroVectors();
-              incoming.cleanup();
+        if (stop) return;
+        outer:
+        while (true) {
+          IterOutcome upstream = incoming.next();
+          switch (upstream) {
+            case NONE:
               break outer;
-            }
-            break;
-          default:
-            throw new UnsupportedOperationException();
+            case STOP:
+              queue.putFirst(new RecordBatchDataWrapper(null, false, true));
+              return;
+            case OK_NEW_SCHEMA:
+            case OK:
+              try {
+                if (!stop) {
+                  wrapper = new RecordBatchDataWrapper(new RecordBatchData(incoming), false, false);
+                  queue.put(wrapper);
+                }
+              } catch (InterruptedException e) {
+                wrapper.batch.getContainer().zeroVectors();
+                throw e;
+              }
+              break;
+            default:
+              throw new UnsupportedOperationException();
+          }
         }
-      }
-      try {
+
         queue.put(new RecordBatchDataWrapper(null, true, false));
       } catch (InterruptedException e) {
         if (!(context.isCancelled() || context.isFailed())) {
           context.fail(e);
         }
-
-      }
       } finally {
-        incoming.cleanup();
-        logger.debug("Producer thread finished");
+        cleanUpLatch.countDown();
       }
     }
   }
@@ -183,8 +175,8 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
 
   @Override
   protected void killIncoming(boolean sendUpstream) {
-    producer.interrupt();
     stop = true;
+    producer.interrupt();
     try {
       producer.join();
     } catch (InterruptedException e) {
@@ -195,8 +187,15 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
   @Override
   public void cleanup() {
     stop = true;
-    clearQueue();
-    super.cleanup();
+    try {
+      cleanUpLatch.await();
+    } catch (InterruptedException e) {
+      logger.warn("Interrupted while waiting for producer to clean up first. I will try to clean up now...", e);
+    } finally {
+      super.cleanup();
+      clearQueue();
+      incoming.cleanup();
+    }
   }
 
   @Override

@@ -33,6 +33,7 @@ import org.apache.drill.common.logical.FormatPluginConfigBase;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.drill.common.logical.data.LogicalOperatorBase;
 import org.apache.drill.common.util.PathScanner;
+import org.reflections.util.ClasspathHelper;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -138,7 +139,15 @@ public final class DrillConfig extends NestedConfig{
     overrideFileName = overrideFileName == null ? CommonConstants.CONFIG_OVERRIDE : overrideFileName;
 
     // first we load defaults.
-    Config fallback = ConfigFactory.load(CommonConstants.CONFIG_DEFAULT);
+    Config fallback = null;
+    final ClassLoader[] classLoaders = ClasspathHelper.classLoaders();
+    for (ClassLoader classLoader : classLoaders) {
+      if (classLoader.getResource(CommonConstants.CONFIG_DEFAULT) != null) {
+        fallback = ConfigFactory.load(classLoader, CommonConstants.CONFIG_DEFAULT);
+        break;
+      }
+    }
+
     Collection<URL> urls = PathScanner.getConfigURLs();
     logger.debug("Loading configs at the following URLs {}", urls);
     for (URL url : urls) {

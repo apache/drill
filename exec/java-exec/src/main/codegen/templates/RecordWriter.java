@@ -23,6 +23,8 @@ package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
@@ -52,11 +54,16 @@ public interface RecordWriter {
    */
   void startRecord() throws IOException;
 
+  /** Add the field value given in <code>valueHolder</code> at the given column number <code>fieldId</code>. */
+  public FieldConverter getNewMapConverter(int fieldId, String fieldName, FieldReader reader);
+  public FieldConverter getNewRepeatedMapConverter(int fieldId, String fieldName, FieldReader reader);
+  public FieldConverter getNewRepeatedListConverter(int fieldId, String fieldName, FieldReader reader);
+
 <#list vv.types as type>
   <#list type.minor as minor>
     <#list vv.modes as mode>
   /** Add the field value given in <code>valueHolder</code> at the given column number <code>fieldId</code>. */
-  void add${mode.prefix}${minor.class}Holder(int fieldId, ${mode.prefix}${minor.class}Holder valueHolder) throws IOException;
+  public FieldConverter getNew${mode.prefix}${minor.class}Converter(int fieldId, String fieldName, FieldReader reader);
 
     </#list>
   </#list>

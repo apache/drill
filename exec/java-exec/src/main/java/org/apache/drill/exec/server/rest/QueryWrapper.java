@@ -135,10 +135,14 @@ public class QueryWrapper {
           for (VectorWrapper<?> vw : loader) {
             ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
             Object object = accessor.getObject(i);
-            if (! object.getClass().getName().startsWith("java.lang")) {
+            if (object != null && (! object.getClass().getName().startsWith("java.lang"))) {
               object = object.toString();
             }
-            record.put(columnNames.get(j), object);
+            if (object != null) {
+              record.put(columnNames.get(j), object);
+            } else {
+              record.put(columnNames.get(j), null);
+            }
             ++j;
           }
           output.add(record);

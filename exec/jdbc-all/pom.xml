@@ -1,66 +1,143 @@
 <?xml version="1.0"?>
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
-  license agreements. See the NOTICE file distributed with this work for additional 
-  information regarding copyright ownership. The ASF licenses this file to 
-  You under the Apache License, Version 2.0 (the "License"); you may not use 
-  this file except in compliance with the License. You may obtain a copy of 
-  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
-  by applicable law or agreed to in writing, software distributed under the 
-  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
-  OF ANY KIND, either express or implied. See the License for the specific 
-  language governing permissions and limitations under the License. -->
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>0.4.0-incubating-SNAPSHOT</version>
+    <version>0.5.0-incubating-SNAPSHOT</version>
   </parent>
+
   <artifactId>drill-jdbc-all</artifactId>
-  <version>${projectVersion}</version>
   <name>JDBC JAR with all dependencies</name>
-  
+
   <dependencies>
     <dependency>
       <groupId>net.hydromatic</groupId>
       <artifactId>optiq-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>drill-common</artifactId>
-      <version>${baseDrillVersion}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
-      <version>${baseDrillVersion}</version>
+      <version>${project.version}</version>
       <exclusions>
-        <exclusion>
-          <groupId>org.codehaus.jackson</groupId>
-          <artifactId>jackson-mapper-asl</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.jackson</groupId>
-          <artifactId>jackson-core-asl</artifactId>
-        </exclusion>
         <exclusion>
           <groupId>log4j</groupId>
           <artifactId>log4j</artifactId>
         </exclusion>
+        <exclusion>
+          <artifactId>jersey-container-jetty-servlet</artifactId>
+          <groupId>org.glassfish.jersey.containers</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jetty-server</artifactId>
+          <groupId>org.eclipse.jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>hadoop-core</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jersey-media-multipart</artifactId>
+          <groupId>org.glassfish.jersey.media</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jersey-mvc-freemarker</artifactId>
+          <groupId>org.glassfish.jersey.ext</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jetty-servlet</artifactId>
+          <groupId>org.eclipse.jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>parquet-hadoop</artifactId>
+          <groupId>com.twitter</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>parquet-column</artifactId>
+          <groupId>com.twitter</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>infinispan-core</artifactId>
+          <groupId>org.infinispan</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>asm-util</artifactId>
+          <groupId>org.ow2.asm</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>codemodel</artifactId>
+          <groupId>com.sun.codemodel</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>asm-commons</artifactId>
+          <groupId>org.ow2.asm</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>infinispan-tree</artifactId>
+          <groupId>org.infinispan</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jetty-util</artifactId>
+          <groupId>org.mortbay.jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>freemarker</artifactId>
+          <groupId>org.freemarker</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>hazelcast</artifactId>
+          <groupId>com.hazelcast</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-compiler-jdk</artifactId>
+          <groupId>org.codehaus.janino</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>pentaho</groupId>
-      <artifactId>mondrian-data-foodmart-queries</artifactId>
-      <version>0.3</version>
-      <scope>test</scope>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>javassist</artifactId>
+          <groupId>javassist</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
-      <groupId>pentaho</groupId>
-      <artifactId>mondrian-data-foodmart-json</artifactId>
-      <version>0.3.2</version>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-jdbc</artifactId>
+      <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>drill-storage-hive-core</artifactId>
+          <groupId>org.apache.drill.contrib.storage-hive</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>mondrian-data-foodmart-json</artifactId>
+          <groupId>pentaho</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
+
     <dependency>
       <groupId>org.codehaus.janino</groupId>
       <artifactId>janino</artifactId>
@@ -87,39 +164,20 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.0.13</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>1.0.13</version>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.8</version>
-        <executions>
-          <execution>
-            <id>copy</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.apache.drill.exec</groupId>
-                  <artifactId>drill-jdbc</artifactId>
-                  <version>${baseDrillVersion}</version>
-                  <type>jar</type>
-                  <outputDirectory>${project.build.directory}</outputDirectory>
-                </artifactItem>
-              </artifactItems>
-              <overWriteReleases>true</overWriteReleases>
-              <overWriteSnapshots>true</overWriteSnapshots>
-              <useBaseVersion>true</useBaseVersion>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
 
       <plugin>
         <groupId>com.github.wvengen</groupId>
@@ -145,7 +203,6 @@
           <proguardVersion>4.11</proguardVersion>
           <obfuscate>false</obfuscate>
           <includeDependencyInjar>true</includeDependencyInjar>
-          <injar>drill-jdbc-${baseDrillVersion}.jar</injar>
           <outjar>${project.build.finalName}-dirty.jar</outjar>
           <outputDirectory>${project.build.directory}</outputDirectory>
           <maxMemory>6g</maxMemory>
@@ -154,6 +211,8 @@
             <option>-dontobfuscate</option>
             <option>-dontoptimize</option>
             <option>-ignorewarnings</option>
+            <option>-keep class org.apache.drill.exec.proto.** { *; }</option>
+            <option>-keep class org.apache.drill.common.types.** { *; }</option>
             <option>-keep class org.apache.drill.jdbc.Driver { *; }</option>
             <option>-keep class org.apache.drill.jdbc.DrillJdbc40Factory { *; }</option>
             <option>-keep class org.apache.drill.jdbc.DrillJdbc41Factory { *; }</option>
@@ -161,8 +220,12 @@
             <option>-keep class org.apache.drill.common.config.ConfigProvider { *; }</option>
             <option>-keep class org.apache.drill.common.config.DrillConfig { *; }</option>
             <option>-keep class org.apache.drill.common.config.NestedConfig { *; }</option>
+            <option>-keep class ch.qos.logback.** { *; }</option>
+            <option>-keep class org.slf4j.** { *; }</option>
             <option>-keep class * implements com.fasterxml.jackson.databind.cfg.ConfigFeature { *; }</option>
             <option>-keep class * implements com.fasterxml.jackson.databind.jsontype.TypeIdResolver { *; }</option>
+            <!-- do not mess with enums, Java doesn't like it -->
+            <option>-keep enum ** { *; }</option>
           </options>
           <libs>
             <lib>${java.home}/lib/rt.jar</lib>
@@ -170,31 +233,30 @@
           </libs>
         </configuration>
       </plugin>
-    
+
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.7</version>
         <executions>
           <execution>
             <phase>package</phase>
             <configuration>
               <target>
-                <delete dir="dirty"/>
-                <mkdir dir="dirty"/>
-                <unzip src="${project.build.directory}/${project.build.finalName}-dirty.jar" dest="dirty"/>
-                <delete>
-                  <fileset dir="dirty">
-                    <include name="**/*.SF"/>
-                    <include name="**/*.RSA"/>
-                    <include name="**/*.DSA"/>
-                    <include name="META-INF/*.SF"/>
-                    <include name="META-INF/*.RSA"/>
-                    <include name="META-INF/*.DSA"/>
-                    <include name="*.conf"/>
-                  </fileset>
-                </delete>
-                <jar destfile="${project.build.directory}/${project.build.finalName}.jar" basedir="dirty"/>
-                <delete dir="dirty"/>
+                <delete dir="${project.build.directory}/dirty"/>
+                <mkdir dir="${project.build.directory}/dirty"/>
+                <unzip src="${project.build.directory}/${project.build.finalName}-dirty.jar" dest="${project.build.directory}/dirty">
+                  <patternset>
+                    <exclude name="**/*.java"/>
+                    <exclude name="org.codehaus.commons.compiler.properties"/> <!-- This leads jad-ui to not parse classes under 'org/' -->
+                    <exclude name="**/*.SF"/>
+                    <exclude name="**/*.RSA"/>
+                    <exclude name="**/*.DSA"/>
+                    <exclude name="META-INF/*.SF"/>
+                    <exclude name="META-INF/*.RSA"/>
+                    <exclude name="META-INF/*.DSA"/>
+                  </patternset>
+                </unzip>
+                <jar destfile="${project.build.directory}/${project.build.finalName}.jar" basedir="${project.build.directory}/dirty"/>
+                <delete dir="${project.build.directory}/dirty"/>
               </target>
             </configuration>
             <goals>
@@ -221,37 +283,53 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
-  
-  <properties>
-    <baseDrillVersion>1.0.0-m2-incubating-SNAPSHOT</baseDrillVersion>
-  </properties>
 
   <profiles>
+    <!-- mondrian data includes 10s of MBs of JSON file
+        if you want to include them run maven with -Pwith-mondrian-data -->
+    <profile>
+      <id>with-mondrian-data</id>
+      <activation><activeByDefault>false</activeByDefault></activation>
+      <dependencies>
+        <dependency>
+          <groupId>pentaho</groupId>
+          <artifactId>mondrian-data-foodmart-queries</artifactId>
+          <version>0.3</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>pentaho</groupId>
+          <artifactId>mondrian-data-foodmart-json</artifactId>
+          <version>0.3.2</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
     <profile>
       <id>default-hadoop</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <projectVersion>${baseDrillVersion}</projectVersion>
+        <projectVersion>${project.version}</projectVersion>
       </properties>
     </profile>
     <profile>
       <id>mapr</id>
       <properties>
-        <projectVersion>mapr-${baseDrillVersion}</projectVersion>
+        <projectVersion>${project.version}-mapr</projectVersion>
       </properties>
     </profile>
     <profile>
       <id>cdh</id>
       <properties>
-        <projectVersion>cdh-${baseDrillVersion}</projectVersion>
+        <projectVersion>${project.version}-mapr</projectVersion>
       </properties>
     </profile>
     <profile>
       <id>hdp</id>
       <properties>
-        <projectVersion>hdp-${baseDrillVersion}</projectVersion>
+        <projectVersion>${project.version}-hdp</projectVersion>
       </properties>
     </profile>
   </profiles>

@@ -38,6 +38,7 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -81,6 +82,7 @@ public class TestSimpleFilter extends ExecTest {
   }
 
   @Test
+  @Ignore ("Filter does not support SV4")
   public void testSV4Filter(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();

@@ -168,7 +168,7 @@ public class ${name}Accessor extends AbstractSqlAccessor{
     </#if>
     org.joda.time.DateTime time = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
     time = time.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-    return new Time(time.getMillis());
+    return new TimePrintMillis(time.getMillis());
   }
   <#else>
   @Override

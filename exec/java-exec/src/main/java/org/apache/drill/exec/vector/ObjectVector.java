@@ -37,7 +37,7 @@ public class ObjectVector extends BaseValueVector{
   private Mutator mutator = new Mutator();
   private int maxCount = 0;
   private int count = 0;
-  private int allocationSize = 4024;
+  private int allocationSize = 4096;
 
   private List<Object[]> objectArrayList = new ArrayList<>();
 
@@ -54,7 +54,7 @@ public class ObjectVector extends BaseValueVector{
 
     public void set(int index, Object obj) {
       int listOffset = index / allocationSize;
-      if (listOffset > objectArrayList.size()) {
+      if (listOffset >= objectArrayList.size()) {
         addNewArray();
       }
       objectArrayList.get(listOffset)[index % allocationSize] = obj;
@@ -193,7 +193,7 @@ public class ObjectVector extends BaseValueVector{
     @Override
     public Object getObject(int index) {
       int listOffset = index / allocationSize;
-      if (listOffset > objectArrayList.size()) {
+      if (listOffset >= objectArrayList.size()) {
         addNewArray();
       }
       return objectArrayList.get(listOffset)[index % allocationSize];

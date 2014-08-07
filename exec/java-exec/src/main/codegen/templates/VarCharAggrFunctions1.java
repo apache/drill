@@ -67,12 +67,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value = new ObjectHolder();
     ${type.runningType}Holder tmp = new ${type.runningType}Holder();
     tmp.start = 0;
-    tmp.end = ${type.bufferEnd};
-    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [65536]);
-    for (int i = 0; i < 65536; i++) {
-      buffer.setByte(i, ${type.initialValue});
-    }
-    tmp.buffer = buffer;
+    tmp.end = 0;
+    tmp.buffer = null;
     value.obj = tmp;
 
     <#else>
@@ -95,33 +91,44 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     int cmp = 0;
     boolean swap = false;
 
-    // Compare the bytes
-    for (int l = in.start, r = tmp.start; l < in.end && r < tmp.end; l++, r++) {
-      byte leftByte = in.buffer.getByte(l);
-      byte rightByte = tmp.buffer.getByte(r);
-      if (leftByte != rightByte) {
-        cmp = ((leftByte & 0xFF) - (rightByte & 0xFF)) > 0 ? 1 : -1;
-        break;
+    // if buffer is null then swap
+    if (tmp.buffer == null) {
+      swap = true;
+    } else {
+      // Compare the bytes
+      for (int l = in.start, r = tmp.start; l < in.end && r < tmp.end; l++, r++) {
+        byte leftByte = in.buffer.getByte(l);
+        byte rightByte = tmp.buffer.getByte(r);
+        if (leftByte != rightByte) {
+          cmp = ((leftByte & 0xFF) - (rightByte & 0xFF)) > 0 ? 1 : -1;
+          break;
+        }
       }
-    }
 
-    if (cmp == 0) {
-      int l = (in.end - in.start) - (tmp.end - tmp.start);
-      if (l > 0) {
-        cmp = 1;
-      } else {
-        cmp = -1;
+      if (cmp == 0) {
+        int l = (in.end - in.start) - (tmp.end - tmp.start);
+        if (l > 0) {
+          cmp = 1;
+        } else {
+          cmp = -1;
+        }
       }
+
+      <#if aggrtype.className == "Min">
+      swap = (cmp == -1);
+      <#elseif aggrtype.className == "Max">
+      swap = (cmp == 1);
+      </#if>
     }
-
-    <#if aggrtype.className == "Min">
-    swap = (cmp == -1);
-    <#elseif aggrtype.className == "Max">
-    swap = (cmp == 1);
-    </#if>
-
     if (swap) {
       int length = in.end - in.start;
+      if (length > (tmp.end - tmp.start)) {
+        // if workspace buffer is smaller, release and allocate a new one
+        if (tmp.buffer != null) {
+          tmp.buffer.release();
+        }
+        tmp.buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [length]);
+      }
       in.buffer.getBytes(in.start, tmp.buffer, 0, length);
       tmp.end = length;
     }
@@ -151,12 +158,11 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value = new ObjectHolder();
     ${type.runningType}Holder tmp = new ${type.runningType}Holder();
     tmp.start = 0;
-    tmp.end = ${type.bufferEnd};
-    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [65536]);
-    for (int i = 0; i < 65536; i++) {
-      buffer.setByte(i, ${type.initialValue});
+    tmp.end = 0;
+    if (tmp.buffer != null) {
+      tmp.buffer.release();
+      tmp.buffer = null;
     }
-    tmp.buffer = buffer;
     value.obj = tmp;
     <#else>
     value = new ${type.runningType}Holder();
