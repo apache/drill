@@ -40,7 +40,7 @@ public class ChunkInfo {
 
   @Override
   public String toString() {
-    return "ChunkInfo [ " + "chunkLocList" + chunkLocList + ", chunkId " + chunkId + " ]";
+    return "ChunkInfo [" + "chunkLocList=" + chunkLocList + ", chunkId=" + chunkId + "]";
   }
 
 }
