@@ -116,8 +116,7 @@ Windows platforms should be more or less similar.
         build. It is safe to ignore it as boost-context is not needed for Drill
 
 2.2 Protobuf (2.5.0)
-	Get protobuf from here: svn checkout http://protobuf.googlecode.com/svn/trunk/ protobuf-read-only
-	apply the patch as instructed in https://code.google.com/p/protobuf/source/diff?spec=svn480&r=480&format=side&path=/tags/2.5.0rc2/gtest/msvc/gtest.vcproj
+	Get protobuf from here: https://protobuf.googlecode.com/files/protobuf-2.5.0.zip
 
 
     a) Protobuf builds static libraries
