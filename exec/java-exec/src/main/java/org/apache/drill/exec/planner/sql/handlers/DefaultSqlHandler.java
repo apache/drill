@@ -163,10 +163,10 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * under screen operator. The project on top of scan will rename from * to T1*, while the top project
      * will rename T1* to *, before it output the final result. Only the top project will allow
      * duplicate columns, since user could "explicitly" ask for duplicate columns ( select *, col, *).
-     * The rest of projects will remove the duplicate column when we generate POP in json format.  
+     * The rest of projects will remove the duplicate column when we generate POP in json format.
      */
     phyRelNode = StarColumnConverter.insertRenameProject(phyRelNode, phyRelNode.getRowType());
-    
+
     /*
      * 1.)
      * Join might cause naming conflicts from its left and right child.
@@ -201,13 +201,10 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * Add ProducerConsumer after each scan if the option is set
      * Use the configured queueSize
      */
-    // Disabling for now, as this causes memory leaks. See DRILL-1202
-    /*
     if (context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER.getOptionName()).bool_val) {
       long queueSize = context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE.getOptionName()).num_val;
       phyRelNode = ProducerConsumerPrelVisitor.addProducerConsumerToScans(phyRelNode, (int) queueSize);
     }
-    */
 
     /* 6.)
      * if the client does not support complex types (Map, Repeated)
