@@ -20,24 +20,26 @@ package org.apache.drill.exec.store.mongo;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 public class MongoScanSpec {
   private String dbName;
   private String collectionName;
-  private BasicDBObject filter;
+  
+  private BasicDBObject filters;
 
   @JsonCreator
-  public MongoScanSpec(@JsonProperty("dbName") String dbName,
+  public MongoScanSpec(
+      @JsonProperty("dbName") String dbName,
       @JsonProperty("collectionName") String collectionName) {
     this.dbName = dbName;
     this.collectionName = collectionName;
   }
-
-  public MongoScanSpec(String dbName, String collectionName,
-      BasicDBObject filters) {
+  
+  public MongoScanSpec(String dbName, String collectionName, BasicDBObject filters){
     this.dbName = dbName;
     this.collectionName = collectionName;
-    this.filter = filters;
+    this.filters = filters;
   }
 
   public String getDbName() {
@@ -47,27 +49,16 @@ public class MongoScanSpec {
   public String getCollectionName() {
     return collectionName;
   }
+  
+  
 
   public BasicDBObject getFilters() {
-    return filter;
-  }
-
-  public void setFilters(BasicDBObject filters) {
-    this.filter = filters;
-  }
-
-  public void setDbName(String dbName) {
-    this.dbName = dbName;
-  }
-
-  public void setCollectionName(String collectionName) {
-    this.collectionName = collectionName;
+    return filters;
   }
 
   @Override
   public String toString() {
     return "MongoScanSpec [dbName=" + dbName + ", collectionName="
-        + collectionName + ", filters=" + filter + "]";
+        + collectionName + "]";
   }
-
 }

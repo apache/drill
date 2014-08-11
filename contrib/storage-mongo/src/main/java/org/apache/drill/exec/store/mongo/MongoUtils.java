@@ -20,10 +20,22 @@ package org.apache.drill.exec.store.mongo;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.LazyBSONCallback;
+
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.LazyWriteableDBObject;
 
 public class MongoUtils {
-
+  
+//  private final static ObjectMapper mapper = new ObjectMapper(MongoBsonFactory.createFactory());
+//
+//
+//  static {
+//    mapper.setVisibilityChecker(VisibilityChecker.Std.defaultInstance().withFieldVisibility(
+//            JsonAutoDetect.Visibility.ANY));
+//}
+  
   public static BasicDBObject andFilterAtIndex(BasicDBObject leftFilter,
       BasicDBObject rightFilter) {
     BasicDBObject andQueryFilter = new BasicDBObject();
@@ -42,6 +54,13 @@ public class MongoUtils {
     filters.add(rightFilter);
     orQueryFilter.put("$or", filters);
     return orQueryFilter;
+  }
+
+  public static BasicDBObject deserializeFilter(byte[] filterBytes) {
+    DBObject dbo = new LazyWriteableDBObject(filterBytes, new LazyBSONCallback());
+    BasicDBObject result = new BasicDBObject();
+    result.putAll(dbo);
+    return result;
   }
 
 }

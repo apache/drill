@@ -59,7 +59,7 @@ public class MongoFilterBuilder extends
     case "booleanOr":
       newFilter = MongoUtils.orFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
     }
-    return new MongoScanSpec(groupScan.getDb().getName(), groupScan.getCollection().getName(), newFilter);
+    return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan.getScanSpec().getCollectionName(), newFilter);
   }
 
   public boolean isAllExpressionsConverted() {
@@ -157,7 +157,7 @@ public class MongoFilterBuilder extends
       }else{
         queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
       }
-      return new MongoScanSpec(groupScan.getDb().getName(), groupScan.getCollection().getName(), queryFilter);
+      return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan.getScanSpec().getCollectionName(), queryFilter);
     }
      return null;
   }

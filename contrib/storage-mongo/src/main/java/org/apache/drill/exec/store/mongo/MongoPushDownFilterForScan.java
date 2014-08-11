@@ -45,6 +45,10 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     final FilterPrel filter = (FilterPrel) call.rel(0);
     final RexNode condition = filter.getCondition();
 
+    if (!(scan.getGroupScan() instanceof MongoGroupScan)) {
+      return;
+    }
+
     MongoGroupScan groupScan = (MongoGroupScan) scan.getGroupScan();
     if (groupScan.isFilterPushedDown()) {
       return;

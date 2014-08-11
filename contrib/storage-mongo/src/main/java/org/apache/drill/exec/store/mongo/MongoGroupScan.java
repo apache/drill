@@ -56,46 +56,38 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 
 @JsonTypeName("mongo-scan")
-public class MongoGroupScan extends AbstractGroupScan implements
-    DrillMongoConstants {
+public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConstants {
 
   private static final String SIZE = "size";
 
   private static final String COUNT = "count";
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MongoGroupScan.class);
-
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoGroupScan.class);
+  
   private MongoStoragePlugin storagePlugin;
-
+  
   private MongoStoragePluginConfig storagePluginConfig;
-
+  
   private MongoScanSpec scanSpec;
-
+  
   private List<SchemaPath> columns;
-
-  private boolean filterPushedDown = false;
-
+  
   @JsonIgnore
   private DBCollection collection;
-
-  @JsonIgnore
-  private DB db;
-
+  
   private Stopwatch watch = new Stopwatch();
-
+  
+  private boolean filterPushedDown = false;
+  
   @JsonCreator
   public MongoGroupScan(@JsonProperty("mongoScanSpec") MongoScanSpec scanSpec,
-      @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
-      @JsonProperty("columns") List<SchemaPath> columns,
-      @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException,
-      ExecutionSetupException {
-    this((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig),
-        scanSpec, columns);
+                        @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
+                        @JsonProperty("columns") List<SchemaPath> columns,
+                        @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
+    this ((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), scanSpec, columns);
   }
-
-  public MongoGroupScan(MongoStoragePlugin storagePlugin,
-      MongoScanSpec scanSpec, List<SchemaPath> columns) {
+  
+  public MongoGroupScan(MongoStoragePlugin storagePlugin, MongoScanSpec scanSpec, List<SchemaPath> columns) {
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.scanSpec = scanSpec;
@@ -103,63 +95,55 @@ public class MongoGroupScan extends AbstractGroupScan implements
     this.storagePluginConfig.getConnection();
     init();
   }
-
+  
   /**
    * Private constructor, used for cloning.
-   * 
-   * @param that
-   *          The MongoGroupScan to clone
+   * @param that The MongoGroupScan to clone
    */
-  private MongoGroupScan(MongoGroupScan that) {
+  private MongoGroupScan (MongoGroupScan that) {
     this.scanSpec = that.scanSpec;
-    this.db = that.db;
     this.collection = that.collection;
     this.columns = that.columns;
     this.storagePlugin = that.storagePlugin;
     this.storagePluginConfig = that.storagePluginConfig;
     this.filterPushedDown = that.filterPushedDown;
   }
-
+  
   private void init() {
     try {
-      MongoClientURI clientURI = new MongoClientURI(
-          this.storagePluginConfig.getConnection());
+      MongoClientURI clientURI = new MongoClientURI(this.storagePluginConfig.getConnection());
       MongoClient client = new MongoClient(clientURI);
       DB db = client.getDB(this.scanSpec.getDbName());
       collection = db.getCollection(this.scanSpec.getCollectionName());
     } catch (UnknownHostException e) {
       throw new DrillRuntimeException(e.getMessage(), e);
     }
-
+    
   }
-
+  
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     MongoGroupScan clone = new MongoGroupScan(this);
     clone.columns = columns;
     return clone;
   }
-
+  
   @Override
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
   }
-
+  
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints)
-      throws PhysicalOperatorSetupException {
-
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+    
   }
-
+  
   @Override
-  public SubScan getSpecificScan(int minorFragmentId)
-      throws ExecutionSetupException {
-    MongoSubScanSpec subScanSpec = new MongoSubScanSpec(scanSpec.getDbName(),
-        scanSpec.getCollectionName(), storagePluginConfig.getConnection());
-    List<MongoSubScanSpec> subScanList = new LinkedList<MongoSubScanSpec>();
-    subScanList.add(subScanSpec);
-    return new MongoSubScan(this.storagePlugin, this.storagePluginConfig,
-        subScanList, this.columns);
+  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
+	MongoSubScanSpec subScanSpec = new MongoSubScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(), storagePluginConfig.getConnection());
+	List<MongoSubScanSpec> subScanList = new LinkedList<MongoSubScanSpec>();
+	subScanList.add(subScanSpec);
+	return new MongoSubScan(this.storagePlugin, this.storagePluginConfig, subScanList, this.columns);
   }
 
   @Override
@@ -176,13 +160,11 @@ public class MongoGroupScan extends AbstractGroupScan implements
   @Override
   public ScanStats getScanStats() {
     CommandResult stats = collection.getStats();
-    return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT,
-        stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
+    return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
-      throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     return new MongoGroupScan(this);
   }
@@ -191,40 +173,39 @@ public class MongoGroupScan extends AbstractGroupScan implements
   public List<EndpointAffinity> getOperatorAffinity() {
     watch.reset();
     watch.start();
-
+    
     Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
-
-    // assign each end point equal affinity. No APIs to get shards information.
+    
+    //assign each end point equal affinity. No APIs to get shards information.
     for (DrillbitEndpoint ep : storagePlugin.getContext().getBits()) {
       affinityMap.put(ep, new EndpointAffinity(ep, 1));
       logger.debug("endpoing address: {}", ep.getAddress());
     }
 
-    logger.debug("Took {} µs to get operator affinity",
-        watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
+    logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS)/1000);
     return Lists.newArrayList(affinityMap.values());
   }
-
-  @JsonIgnore
+  
   public DBCollection getCollection() {
     return collection;
   }
 
-  @JsonIgnore
+  @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
   }
-
+  
   @JsonProperty("mongoScanSpec")
   public MongoScanSpec getScanSpec() {
     return scanSpec;
   }
-
+  
   @JsonProperty("storage")
   public MongoStoragePluginConfig getStorageConfig() {
     return storagePluginConfig;
   }
-
+  
+  
   @JsonIgnore
   public boolean isFilterPushedDown() {
     return filterPushedDown;
@@ -235,26 +216,16 @@ public class MongoGroupScan extends AbstractGroupScan implements
     this.filterPushedDown = filterPushedDown;
   }
 
+  @JsonIgnore
   public MongoStoragePlugin getStoragePlugin() {
     return storagePlugin;
   }
 
-  public void setScanSpec(MongoScanSpec scanSpec) {
-    this.scanSpec = scanSpec;
-  }
-
-  public DB getDb() {
-    return db;
-  }
-
-  public void setDb(DB db) {
-    this.db = db;
-  }
-
   @Override
   public String toString() {
-    return "MongoGroupScan [MongoScanSpec=" + scanSpec + ", columns=" + columns
-        + "]";
+    return "MongoGroupScan [MongoScanSpec="
+        + scanSpec + ", columns=" 
+        + columns + "]";
   }
 
 }
