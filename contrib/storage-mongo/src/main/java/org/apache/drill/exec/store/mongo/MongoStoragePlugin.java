@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
+import java.util.Set;
 
 import net.hydromatic.optiq.SchemaPlus;
 
@@ -27,13 +28,14 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.collect.ImmutableSet;
 
 public class MongoStoragePlugin extends AbstractStoragePlugin {
   static final Logger logger = LoggerFactory.getLogger(MongoStoragePlugin.class);
@@ -72,6 +74,10 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
     MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>(){});
     return new MongoGroupScan(this, mongoScanSpec, null);
+  }
+  
+  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+    return ImmutableSet.of(MongoPushDownFilterForScan.INSTANCE);
   }
 
 }
