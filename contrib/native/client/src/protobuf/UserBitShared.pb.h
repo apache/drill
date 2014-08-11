@@ -171,7 +171,7 @@ enum CoreOperatorType {
   MERGING_RECEIVER = 8,
   ORDERED_PARTITION_SENDER = 9,
   PROJECT = 10,
-  RANDOM_RECEIVER = 11,
+  UNORDERED_RECEIVER = 11,
   RANGE_SENDER = 12,
   SCREEN = 13,
   SELECTION_VECTOR_REMOVER = 14,
@@ -191,11 +191,12 @@ enum CoreOperatorType {
   TEXT_SUB_SCAN = 28,
   JSON_SUB_SCAN = 29,
   INFO_SCHEMA_SUB_SCAN = 30,
-  COMPLEX_TO_JSON = 31
+  COMPLEX_TO_JSON = 31,
+  PRODUCER_CONSUMER = 32
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = COMPLEX_TO_JSON;
+const CoreOperatorType CoreOperatorType_MAX = PRODUCER_CONSUMER;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();

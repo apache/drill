@@ -91,7 +91,7 @@ void protobuf_AddDesc_Types_2eproto() {
     "inor_type\030\001 \001(\0162\021.common.MinorType\022\036\n\004mo"
     "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001("
     "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t"
-    "imeZone\030\006 \001(\005*\374\003\n\tMinorType\022\010\n\004LATE\020\000\022\007\n"
+    "imeZone\030\006 \001(\005*\220\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n"
     "\003MAP\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT"
     "\020\005\022\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL1"
     "8\020\010\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPA"
@@ -104,9 +104,10 @@ void protobuf_AddDesc_Types_2eproto() {
     "\036\022\t\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022\n\016DECIMAL28DENS"
     "E\020!\022\022\n\016DECIMAL38DENSE\020\"\022\016\n\nDM_UNKNOWN\020%\022"
     "\020\n\014INTERVALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LI"
-    "ST\020(*=\n\010DataMode\022\017\n\013DM_OPTIONAL\020\000\022\017\n\013DM_"
-    "REQUIRED\020\001\022\017\n\013DM_REPEATED\020\002B-\n\035org.apach"
-    "e.drill.common.typesB\nTypeProtosH\001", 794);
+    "ST\020(\022\022\n\016GENERIC_OBJECT\020)*=\n\010DataMode\022\017\n\013"
+    "DM_OPTIONAL\020\000\022\017\n\013DM_REQUIRED\020\001\022\017\n\013DM_REP"
+    "EATED\020\002B-\n\035org.apache.drill.common.types"
+    "B\nTypeProtosH\001", 814);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "Types.proto", &protobuf_RegisterTypes);
   MajorType::default_instance_ = new MajorType();
@@ -162,6 +163,7 @@ bool MinorType_IsValid(int value) {
     case 38:
     case 39:
     case 40:
+    case 41:
       return true;
     default:
       return false;

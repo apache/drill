@@ -35,7 +35,7 @@ Windows platforms should be more or less similar.
     Note: For 64 bit builds, change the platform toolset to Windows SDK for your
     project.
     (Root node, i.e. the projectname) Properties ->Configuration Properties->General->Platform Toolset = Windows7.1SDK
-	If your are running Windows 7 and having problem follow the instructions here http://stackoverflow.com/questions/19366006/error-when-installing-windows-sdk-7-1
+	If your are running Windows 7 and having problem isntalling windows SDK follow the instructions here http://stackoverflow.com/questions/19366006/error-when-installing-windows-sdk-7-1
 
 1.3 [Optional] Windows Driver kit 
     The Windows Driver kit is required to get the 64 bit assembler ml64. The
@@ -79,7 +79,7 @@ Windows platforms should be more or less similar.
     a) Download Boost from:
         i) http://www.boost.org/users/history/version_1_55_0.html
 		ii) open boost_1_55_0\boost/archive/iterators/transform_width.hpp and add the following to the include statements: #include <algorithm>
-		iii) Yes somehow this header was not included and is missing! See here for more info: https://svn.boost.org/trac/boost/ticket/8757
+		iii) Yes somehow this header was not included and has been missed! See here for more info: https://svn.boost.org/trac/boost/ticket/8757
     b) i) Boost 32 bit build - 
         Open a  Visual Studio command prompt from the Visual Studio IDE
       ii) Boost 64 bit build -
@@ -92,19 +92,19 @@ Windows platforms should be more or less similar.
     and build the libraries. Boost build will write the libraries to
     <BOOST_HOME>/stage/lib. Copy them to an appropriately named directory
 
-        C:> .\b2 variant=debug link=static threading=multi address-model=64 toolset=msvc runtime-link=shared
+        C:> .\b2 variant=debug link=static threading=multi address-model=64 toolset=msvc-10.0 runtime-link=shared
         C:>  mkdir Debug64
         C:>  copy stage\lib\* Debug64
 
-        C:> .\b2 variant=release link=static threading=multi address-model=64 toolset=msvc runtime-link=shared
+        C:> .\b2 variant=release link=static threading=multi address-model=64 toolset=msvc-10.0 runtime-link=shared
         C:>  mkdir Release64
         C:>  copy stage\lib\* Release64
 
-        C:> .\b2 variant=debug link=static threading=multi address-model=32 toolset=msvc runtime-link=shared
+        C:> .\b2 variant=debug link=static threading=multi address-model=32 toolset=msvc-10.0 runtime-link=shared
         C:>  mkdir Debug32
         C:>  copy stage\lib\* Debug32
 
-        C:> .\b2 variant=release link=static threading=multi address-model=32 toolset=msvc runtime-link=shared
+        C:> .\b2 variant=release link=static threading=multi address-model=32 toolset=msvc-10.0 runtime-link=shared
         C:>  mkdir Release32
         C:>  copy stage\lib\* Release32
     e) Notes: 
@@ -126,6 +126,7 @@ Windows platforms should be more or less similar.
         platform toolset is set to Windows7.1SDK)
     d) Build the protobuf project first (not the solution)
 	e) Build the solution!
+	f) If building the solution failed build once more and it will probabley build for the second time!!
 
 2.3 Zookeeper (3.4.6) 
     a) Set the ZOOKEEPER_HOME environment variable
@@ -139,7 +140,9 @@ Windows platforms should be more or less similar.
        ii) Change the output type for the zookeeper project to a static lib
             Properties->Configuration Properties->General->Configuration Type = Static Library
       iii) In the cli project add the preprocessor define USE_STATIC_LIB
-     iiii) Build. Build zookeeper lib first, then build cli
+      iv) Build. Build zookeeper lib first, then build cli
+	  v)If building the solution failed build once more and it will probabley build for the second time!!
+	 
 
 3 Building Drill Clientlib
 3.1 SET the following environment variables

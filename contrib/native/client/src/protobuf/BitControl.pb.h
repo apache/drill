@@ -44,6 +44,7 @@ class BitStatus;
 class FragmentStatus;
 class PlanFragment;
 class WorkQueueStatus;
+class FinishedReceiver;
 
 enum RpcType {
   HANDSHAKE = 0,
@@ -51,13 +52,14 @@ enum RpcType {
   GOODBYE = 2,
   REQ_INIATILIZE_FRAGMENT = 3,
   REQ_CANCEL_FRAGMENT = 6,
-  REQ_FRAGMENT_STATUS = 7,
-  REQ_BIT_STATUS = 8,
-  REQ_QUERY_STATUS = 9,
-  RESP_FRAGMENT_HANDLE = 10,
-  RESP_FRAGMENT_STATUS = 11,
-  RESP_BIT_STATUS = 12,
-  RESP_QUERY_STATUS = 13
+  REQ_RECEIVER_FINISHED = 7,
+  REQ_FRAGMENT_STATUS = 8,
+  REQ_BIT_STATUS = 9,
+  REQ_QUERY_STATUS = 10,
+  RESP_FRAGMENT_HANDLE = 11,
+  RESP_FRAGMENT_STATUS = 12,
+  RESP_BIT_STATUS = 13,
+  RESP_QUERY_STATUS = 14
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
@@ -702,6 +704,102 @@ class WorkQueueStatus : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static WorkQueueStatus* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class FinishedReceiver : public ::google::protobuf::Message {
+ public:
+  FinishedReceiver();
+  virtual ~FinishedReceiver();
+
+  FinishedReceiver(const FinishedReceiver& from);
+
+  inline FinishedReceiver& operator=(const FinishedReceiver& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const FinishedReceiver& default_instance();
+
+  void Swap(FinishedReceiver* other);
+
+  // implements Message ----------------------------------------------
+
+  FinishedReceiver* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const FinishedReceiver& from);
+  void MergeFrom(const FinishedReceiver& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.bit.FragmentHandle receiver = 1;
+  inline bool has_receiver() const;
+  inline void clear_receiver();
+  static const int kReceiverFieldNumber = 1;
+  inline const ::exec::bit::FragmentHandle& receiver() const;
+  inline ::exec::bit::FragmentHandle* mutable_receiver();
+  inline ::exec::bit::FragmentHandle* release_receiver();
+  inline void set_allocated_receiver(::exec::bit::FragmentHandle* receiver);
+
+  // optional .exec.bit.FragmentHandle sender = 2;
+  inline bool has_sender() const;
+  inline void clear_sender();
+  static const int kSenderFieldNumber = 2;
+  inline const ::exec::bit::FragmentHandle& sender() const;
+  inline ::exec::bit::FragmentHandle* mutable_sender();
+  inline ::exec::bit::FragmentHandle* release_sender();
+  inline void set_allocated_sender(::exec::bit::FragmentHandle* sender);
+
+  // @@protoc_insertion_point(class_scope:exec.bit.control.FinishedReceiver)
+ private:
+  inline void set_has_receiver();
+  inline void clear_has_receiver();
+  inline void set_has_sender();
+  inline void clear_has_sender();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::bit::FragmentHandle* receiver_;
+  ::exec::bit::FragmentHandle* sender_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_BitControl_2eproto();
+  friend void protobuf_AssignDesc_BitControl_2eproto();
+  friend void protobuf_ShutdownFile_BitControl_2eproto();
+
+  void InitAsDefaultInstance();
+  static FinishedReceiver* default_instance_;
 };
 // ===================================================================
 
@@ -1480,6 +1578,86 @@ inline ::google::protobuf::int64 WorkQueueStatus::report_time() const {
 inline void WorkQueueStatus::set_report_time(::google::protobuf::int64 value) {
   set_has_report_time();
   report_time_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// FinishedReceiver
+
+// optional .exec.bit.FragmentHandle receiver = 1;
+inline bool FinishedReceiver::has_receiver() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void FinishedReceiver::set_has_receiver() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void FinishedReceiver::clear_has_receiver() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void FinishedReceiver::clear_receiver() {
+  if (receiver_ != NULL) receiver_->::exec::bit::FragmentHandle::Clear();
+  clear_has_receiver();
+}
+inline const ::exec::bit::FragmentHandle& FinishedReceiver::receiver() const {
+  return receiver_ != NULL ? *receiver_ : *default_instance_->receiver_;
+}
+inline ::exec::bit::FragmentHandle* FinishedReceiver::mutable_receiver() {
+  set_has_receiver();
+  if (receiver_ == NULL) receiver_ = new ::exec::bit::FragmentHandle;
+  return receiver_;
+}
+inline ::exec::bit::FragmentHandle* FinishedReceiver::release_receiver() {
+  clear_has_receiver();
+  ::exec::bit::FragmentHandle* temp = receiver_;
+  receiver_ = NULL;
+  return temp;
+}
+inline void FinishedReceiver::set_allocated_receiver(::exec::bit::FragmentHandle* receiver) {
+  delete receiver_;
+  receiver_ = receiver;
+  if (receiver) {
+    set_has_receiver();
+  } else {
+    clear_has_receiver();
+  }
+}
+
+// optional .exec.bit.FragmentHandle sender = 2;
+inline bool FinishedReceiver::has_sender() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void FinishedReceiver::set_has_sender() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void FinishedReceiver::clear_has_sender() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void FinishedReceiver::clear_sender() {
+  if (sender_ != NULL) sender_->::exec::bit::FragmentHandle::Clear();
+  clear_has_sender();
+}
+inline const ::exec::bit::FragmentHandle& FinishedReceiver::sender() const {
+  return sender_ != NULL ? *sender_ : *default_instance_->sender_;
+}
+inline ::exec::bit::FragmentHandle* FinishedReceiver::mutable_sender() {
+  set_has_sender();
+  if (sender_ == NULL) sender_ = new ::exec::bit::FragmentHandle;
+  return sender_;
+}
+inline ::exec::bit::FragmentHandle* FinishedReceiver::release_sender() {
+  clear_has_sender();
+  ::exec::bit::FragmentHandle* temp = sender_;
+  sender_ = NULL;
+  return temp;
+}
+inline void FinishedReceiver::set_allocated_sender(::exec::bit::FragmentHandle* sender) {
+  delete sender_;
+  sender_ = sender;
+  if (sender) {
+    set_has_sender();
+  } else {
+    clear_has_sender();
+  }
 }
 
 

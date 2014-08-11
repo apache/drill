@@ -25,11 +25,6 @@
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
-#ifdef _WIN32
-#include <zookeeper.h>
-#else
-#include <zookeeper/zookeeper.h>
-#endif
 
 #include "drill/drillClient.hpp"
 #include "drill/recordBatch.hpp"

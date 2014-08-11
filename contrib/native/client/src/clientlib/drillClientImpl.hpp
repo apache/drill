@@ -37,7 +37,9 @@
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/thread.hpp>
 #ifdef _WIN32
+extern "C"{
 #include <zookeeper.h>
+}
 #else
 #include <zookeeper/zookeeper.h>
 #endif
