@@ -88,33 +88,6 @@ if [ ! -d $DRILL_LOG_DIR ]; then
   mkdir -p $DRILL_LOG_DIR
 fi
 
-# If HADOOP_HOME is specified, add all Hadoop jars except those
-# specifically excluded in $DRILL_HOME/bin/hadoop-excludes.txt
-if [ "${HADOOP_HOME}x" != "x" ] ; then
-  HADOOP_CLASSPATH=""
-  for jar in `ls $HADOOP_HOME/lib/*jar` ; do
-    echo $jar | grep -v -f $DRILL_HOME/bin/hadoop-excludes.txt >/dev/null
-    if [ "$?" -eq "0" ] ; then
-      HADOOP_CLASSPATH=$jar:$HADOOP_CLASSPATH
-    fi
-  done
-  HADOOP_CLASSPATH=$HADOOP_HOME/conf:$HADOOP_CLASSPATH
-fi
-if [ "${HBASE_HOME}x" != "x" ]
-then
-  HBASE_CLASSPATH=""
-  for jar in `ls $HBASE_HOME/*jar`
-  do
-    echo $jar | grep -v -f $DRILL_HOME/bin/hadoop-excludes.txt >/dev/null
-    if [ "$?" -eq "0" ]
-    then
-      HBASE_CLASSPATH=$jar:$HBASE_CLASSPATH
-    fi
-  done
-  HBASE_CLASSPATH=$HBASE_HOME/conf:$HBASE_CLASSPATH
-  export HBASE_CLASSPATH=$HBASE_CLASSPATH
-fi
-
 # Add Drill conf folder at the beginning of the classpath
 CP=$DRILL_CONF_DIR
 

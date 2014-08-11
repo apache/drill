@@ -90,7 +90,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>com.google.protobuf:protobuf-java:jar:2.4.1</include>
+        <include>com.google.protobuf:protobuf-java:jar:2.5</include>
       </includes>
       <scope>test</scope>
     </dependencySet>

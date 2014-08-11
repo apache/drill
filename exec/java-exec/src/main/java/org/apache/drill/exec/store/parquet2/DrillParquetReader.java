@@ -46,6 +46,7 @@ import parquet.schema.GroupType;
 import parquet.schema.MessageType;
 import parquet.schema.Type;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +62,7 @@ public class DrillParquetReader implements RecordReader {
   private RowGroupReadEntry entry;
   private List<SchemaPath> columns;
   private VectorContainerWriter writer;
+  private ColumnChunkIncReadStore pageReadStore;
   private parquet.io.RecordReader<Void> recordReader;
   private DrillParquetRecordMaterializer recordMaterializer;
   private int recordCount;
@@ -142,8 +144,8 @@ public class DrillParquetReader implements RecordReader {
 
       recordCount = (int) blockMetaData.getRowCount();
 
-      ColumnChunkIncReadStore pageReadStore = new ColumnChunkIncReadStore(recordCount,
-              codecFactoryExposer.getCodecFactory(), fs, filePath);
+      pageReadStore = new ColumnChunkIncReadStore(recordCount,
+              codecFactoryExposer.getCodecFactory(), operatorContext.getAllocator(), fs, filePath);
 
       for (String[] path : schema.getPaths()) {
         Type type = schema.getType(path);
@@ -203,6 +205,11 @@ public class DrillParquetReader implements RecordReader {
 
   @Override
   public void cleanup() {
+    try {
+      pageReadStore.close();
+    } catch (IOException e) {
+      logger.warn("Failure while closing PageReadStore", e);
+    }
   }
 
   public void setOperatorContext(OperatorContext operatorContext) {

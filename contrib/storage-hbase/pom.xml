@@ -180,6 +180,18 @@
               <artifactId>asm</artifactId>
               <groupId>asm</groupId>
             </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-core</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-json</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-server</artifactId>
+            </exclusion>
           </exclusions>
         </dependency>
         <!-- test dependencies -->
@@ -192,6 +204,18 @@
             <exclusion>
               <artifactId>commons-logging</artifactId>
               <groupId>commons-logging</groupId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-core</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-json</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-server</artifactId>
             </exclusion>
           </exclusions>
         </dependency>
@@ -232,7 +256,7 @@
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase</artifactId>
-          <version>0.94.13-mapr-1401-m7-3.0.2</version>
+          <version>0.94.17-mapr-1405-m7-4.0.0-FCS</version>
           <exclusions>
             <exclusion>
               <artifactId>commons-logging</artifactId>

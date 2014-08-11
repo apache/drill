@@ -507,7 +507,7 @@
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
       <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
-      <version>0.9.43</version>
+      <version>0.9.44</version>
       <scope>test</scope>
     </dependency>
 
@@ -804,7 +804,7 @@
           <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase</artifactId>
-            <version>0.94.17-mapr-1405-4.0.0-FCS</version>
+            <version>0.94.17-mapr-1405-m7-4.0.0-FCS</version>
             <exclusions>
               <exclusion>
                 <groupId>commons-logging</groupId>

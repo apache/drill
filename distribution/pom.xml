@@ -65,6 +65,12 @@
       <groupId>org.apache.drill.contrib</groupId>
       <artifactId>drill-storage-hbase</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.contrib.storage-hive</groupId>
@@ -72,14 +78,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>2.4.1</version>
-    </dependency>
-    <dependency>
       <groupId>de.huxhorn.lilith</groupId>
       <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
-      <version>0.9.42.1</version>
+      <version>0.9.44</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
