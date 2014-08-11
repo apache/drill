@@ -22,6 +22,8 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -86,9 +88,32 @@ public class MongoRecordReader implements RecordReader {
       }
     }
     this.filters = new BasicDBObject();
+    createChunkScan(filters, subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
     // exclude _id field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
     init(subScanSpec);
+  }
+  
+  //Exclude Min and include Max.
+  private void createChunkScan(DBObject filters, Map<String, Object> minFilters, Map<String, Object> maxFilters) {
+    for(Entry<String, Object> entry : minFilters.entrySet()) {
+      Object value = entry.getValue();
+      if(value instanceof String || value instanceof Number) {
+        filters.put(entry.getKey(), new BasicDBObject("$gt", entry.getValue()));
+      }
+    }
+    
+    for(Entry<String, Object> entry : maxFilters.entrySet()) {
+      Object value = entry.getValue();
+      if(value instanceof String || value instanceof Number) {
+        if (filters.get(entry.getKey()) == null) {
+          filters.put(entry.getKey(), new BasicDBObject("$lte", entry.getValue()));
+        } else {
+          BasicDBObject dbObj = (BasicDBObject) filters.get(entry.getKey());
+          dbObj.append("$lte", entry.getValue());
+        }
+      }
+    }
   }
 
   private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {

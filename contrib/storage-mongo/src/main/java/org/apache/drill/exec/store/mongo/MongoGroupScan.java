@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,6 +44,8 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
 import org.apache.drill.exec.store.mongo.common.ChunkInfo;
+import org.bson.types.MaxKey;
+import org.bson.types.MinKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,23 +73,7 @@ import com.mongodb.ServerAddress;
 @JsonTypeName("mongo-scan")
 public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConstants {
 
-  private static final String SHARDS = "shards";
-
-  private static final String NS = "ns";
-
-  private static final String SHARD = "shard";
-
-  private static final String HOST = "host";
-
-  private static final String CHUNKS = "chunks";
-
   private static final Integer select = Integer.valueOf(1);
-
-  private static final String SIZE = "size";
-
-  private static final String COUNT = "count";
-
-  private static final String CONFIG = "config";
 
   static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
 
@@ -116,7 +103,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     this((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), scanSpec, columns);
   }
 
-  public MongoGroupScan(MongoStoragePlugin storagePlugin, MongoScanSpec scanSpec, List<SchemaPath> columns) {
+  public MongoGroupScan(MongoStoragePlugin storagePlugin, MongoScanSpec scanSpec, List<SchemaPath> columns) throws IOException {
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.scanSpec = scanSpec;
@@ -141,7 +128,8 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     this.endpointFragmentMapping = that.endpointFragmentMapping;
   }
 
-  private void init() {
+  @SuppressWarnings("rawtypes")
+  private void init() throws IOException {
     MongoClient client = null;
     try {
       MongoClientURI clientURI = new MongoClientURI(this.storagePluginConfig.getConnection());
@@ -160,6 +148,8 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
         DBObject fields = new BasicDBObject();
         fields.put(SHARD, select);
+        fields.put(MIN, select);
+        fields.put(MAX, select);
 
         DBCursor chunkCursor = chunksCollection.find(query, fields);
 
@@ -197,6 +187,31 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
             List<String> hosts = new ArrayList<>();
             hosts.add(host);
             ChunkInfo chunkInfo = new ChunkInfo(hosts, chunkId);
+            DBObject minObj = (BasicDBObject) chunkObj.get(MIN);
+            
+            Map<String, Object> minFilters = Maps.newHashMap();
+            Map minMap = minObj.toMap();
+            Set keySet = minMap.keySet();
+            for(Object keyObj : keySet) {
+              Object object = minMap.get(keyObj);
+              if(!(object instanceof MinKey) && object instanceof Serializable) {
+                minFilters.put(keyObj.toString(), object);
+              }
+            }
+            chunkInfo.setMinFilters(minFilters);
+            
+            DBObject maxObj = (BasicDBObject) chunkObj.get(MAX);
+            Map<String, Object> maxFilters = Maps.newHashMap();
+            Map maxMap = maxObj.toMap();
+            keySet = maxMap.keySet();
+            for(Object keyObj : keySet) {
+              Object object = maxMap.get(keyObj);
+              if(!(object instanceof MaxKey) && object instanceof Serializable) {
+                maxFilters.put(keyObj.toString(), object);
+              }
+            }
+            
+            chunkInfo.setMaxFilters(maxFilters);
             chunkList.add(chunkInfo);
           }
         }
@@ -272,10 +287,13 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
           endpointFragmentMapping.put(fragmentIndex % endPointsSize, list);
         }
         // Take the first replica info, for assignment
-        ChunkInfo chunkInfo = iterator.next().get(0);
-        MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-            .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList());
-        list.add(spec);
+        List<ChunkInfo> chunksList = iterator.next();
+        for(ChunkInfo chunkInfo : chunksList) {
+          MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
+              .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList())
+              .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
+          list.add(spec);
+        }
       }
     }
   }

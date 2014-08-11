@@ -20,7 +20,11 @@ package org.apache.drill.exec.store.mongo.common;
 public class MongoFilter {
   private String fieldName;
   private Object fieldValue;
-  private Condition condition;
+  
+  public MongoFilter(String fieldName, Object fieldValue) {
+    this.fieldName = fieldName;
+    this.fieldValue = fieldValue;
+  }
 
   public String getFieldName() {
     return fieldName;
@@ -38,17 +42,8 @@ public class MongoFilter {
     this.fieldValue = fieldValue;
   }
 
-  public Condition getCondition() {
-    return condition;
-  }
-
-  public void setCondition(Condition condition) {
-    this.condition = condition;
-  }
-
   @Override
   public String toString() {
-    return "MongoFilter [fieldName=" + fieldName + ", fieldValue=" + fieldValue
-        + ", condition=" + condition + "]";
+    return "MongoFilter [fieldName=" + fieldName + ", fieldValue=" + fieldValue + "]";
   }
 }

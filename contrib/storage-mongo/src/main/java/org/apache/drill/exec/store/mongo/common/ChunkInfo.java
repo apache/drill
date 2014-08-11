@@ -18,13 +18,18 @@
 package org.apache.drill.exec.store.mongo.common;
 
 import java.util.List;
+import java.util.Map;
 
 public class ChunkInfo {
 
   private List<String> chunkLocList;
 
   private String chunkId;
-
+  
+  private Map<String, Object> minFilters;
+  
+  private Map<String, Object> maxFilters;
+  
   public ChunkInfo(List<String> chunkLocList, String chunkId) {
     this.chunkLocList = chunkLocList;
     this.chunkId = chunkId;
@@ -37,10 +42,25 @@ public class ChunkInfo {
   public String getChunkId() {
     return chunkId;
   }
+  
+  public void setMinFilters(Map<String, Object> minFilters) {
+    this.minFilters = minFilters;
+  }
+
+  public Map<String, Object> getMinFilters() {
+    return minFilters;
+  }
+  
+  public void setMaxFilters(Map<String, Object> maxFilters) {
+    this.maxFilters = maxFilters;
+  }
+
+  public Map<String, Object> getMaxFilters() {
+    return maxFilters;
+  }
 
   @Override
   public String toString() {
     return "ChunkInfo [" + "chunkLocList=" + chunkLocList + ", chunkId=" + chunkId + "]";
   }
-
 }

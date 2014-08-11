@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mongo;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -115,14 +116,19 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     protected String dbName;
     protected String collectionName;
     protected List<String> hosts;
+    protected Map<String, Object> minFilters;
+    protected Map<String, Object> maxFilters;
 
     @parquet.org.codehaus.jackson.annotate.JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
-        @JsonProperty("collectionName") String collectionName, @JsonProperty("hosts") List<String> hosts)
-        {
+        @JsonProperty("collectionName") String collectionName, @JsonProperty("hosts") List<String> hosts,
+        @JsonProperty("minFilters") Map<String, Object> minFilters,
+        @JsonProperty("maxFilters") Map<String, Object> maxFilters) {
       this.dbName = dbName;
       this.collectionName = collectionName;
       this.hosts = hosts;
+      this.minFilters = minFilters;
+      this.maxFilters = maxFilters;
     }
 
     MongoSubScanSpec() {
@@ -153,6 +159,24 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
     public MongoSubScanSpec setHosts(List<String> hosts) {
       this.hosts = hosts;
+      return this;
+    }
+    
+    public Map<String, Object> getMinFilters() {
+      return minFilters;
+    }
+
+    public MongoSubScanSpec setMinFilters(Map<String, Object> minFilters) {
+      this.minFilters = minFilters;
+      return this;
+    }
+
+    public Map<String, Object> getMaxFilters() {
+      return maxFilters;
+    }
+
+    public MongoSubScanSpec setMaxFilters(Map<String, Object> maxFilters) {
+      this.maxFilters = maxFilters;
       return this;
     }
 
