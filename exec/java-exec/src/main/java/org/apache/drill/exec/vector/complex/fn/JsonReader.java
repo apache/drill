@@ -42,6 +42,8 @@ import com.google.common.base.Charsets;
 
 public class JsonReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
+  public final static int MAX_RECORD_SIZE = 128*1024;
+
 
 
   private final JsonFactory factory = new JsonFactory();
@@ -55,7 +57,7 @@ public class JsonReader {
   public boolean write(Reader reader, ComplexWriter writer) throws JsonParseException, IOException {
 
     parser = factory.createJsonParser(reader);
-    reader.mark(1024*128);
+    reader.mark(MAX_RECORD_SIZE);
     JsonToken t = parser.nextToken();
     while(!parser.hasCurrentToken()) t = parser.nextToken();
 

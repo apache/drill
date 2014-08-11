@@ -20,9 +20,11 @@ package org.apache.drill.exec.vector.complex.fn;
 import java.io.IOException;
 import java.io.Reader;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+
 public abstract class JsonRecordSplitterBase implements JsonRecordSplitter {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReaderJSONRecordSplitter.class);
-  public final static int MAX_RECORD_SIZE = 128*1024;
+  public final static int MAX_RECORD_SIZE = JsonReader.MAX_RECORD_SIZE;
 
   private static final int OPEN_CBRACKET = '{';
   private static final int OPEN_BRACKET = '[';
@@ -58,10 +60,15 @@ public abstract class JsonRecordSplitterBase implements JsonRecordSplitter {
     boolean found = false;
 
     long endOffset = start;
+    long curBytes = 0;
     int cur;
     outside: while(true) {
       cur = readNext();
       endOffset++;
+      curBytes = endOffset - 1 - start;
+      if (curBytes > MAX_RECORD_SIZE) {
+        throw new DrillRuntimeException(String.format("Record is too long. Max allowed record size is %s bytes.", MAX_RECORD_SIZE));
+      }
 
       if(cur == -1) {
         if(inCandidate){
@@ -110,8 +117,7 @@ public abstract class JsonRecordSplitterBase implements JsonRecordSplitter {
     }
 
     postScan();
-    long maxBytes = endOffset - 1 - start;
     start = endOffset;
-    return createReader(maxBytes);
+    return createReader(curBytes);
   }
 }

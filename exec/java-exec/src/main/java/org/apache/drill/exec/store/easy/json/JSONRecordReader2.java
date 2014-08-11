@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -48,6 +49,7 @@ public class JSONRecordReader2 implements RecordReader{
   private FileSystem fileSystem;
   private InputStream stream;
   private JsonReaderWithState jsonReader;
+  private int recordCount;
 
   public JSONRecordReader2(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
                           List<SchemaPath> columns) throws OutOfMemoryException {
@@ -63,9 +65,19 @@ public class JSONRecordReader2 implements RecordReader{
       this.writer = new VectorContainerWriter(output);
       this.mutator = output;
       jsonReader = new JsonReaderWithState(splitter);
-    }catch(IOException e){
-      throw new ExecutionSetupException("Failure reading JSON file.", e);
+    }catch(Exception e){
+      handleAndRaise("Failure reading JSON file.", e);
     }
+  }
+
+  protected void handleAndRaise(String msg, Exception e) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(msg).append(" - Parser was at record: ").append(recordCount+1);
+    if (e instanceof JsonParseException) {
+      JsonParseException ex = JsonParseException.class.cast(e);
+      sb.append(" column: ").append(ex.getLocation().getColumnNr());
+    }
+    throw new DrillRuntimeException(sb.toString(), e);
   }
 
   @Override
@@ -73,36 +85,33 @@ public class JSONRecordReader2 implements RecordReader{
     writer.allocate();
     writer.reset();
 
-    int i =0;
+    recordCount = 0;
 
     try{
       outside: while(true){
-        writer.setPosition(i);
+        writer.setPosition(recordCount);
 
         switch(jsonReader.write(writer)){
         case WRITE_SUCCEED:
-          i++;
+          recordCount++;
           break;
 
         case NO_MORE:
           break outside;
 
         case WRITE_FAILED:
-          if (i == 0) {
+          if (recordCount == 0) {
             throw new DrillRuntimeException("Record is too big to fit into allocated ValueVector");
           }
           break outside;
         };
       }
-
-
-      writer.setValueCount(i);
-      return i;
-
-    }catch(IOException e){
-      throw new DrillRuntimeException("Failure while reading JSON file.", e);
+    } catch(Exception e) {
+      handleAndRaise("Failure while parsing JSON file.", e);
     }
 
+    writer.setValueCount(recordCount);
+    return recordCount;
   }
 
   @Override
