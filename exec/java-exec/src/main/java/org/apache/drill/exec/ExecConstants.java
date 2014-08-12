@@ -23,6 +23,7 @@ import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
+import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 
 public interface ExecConstants {
@@ -117,6 +118,38 @@ public interface ExecConstants {
    */
   public static final String AFFINITY_FACTOR_KEY = "planner.affinity_factor";
   public static final OptionValidator AFFINITY_FACTOR = new DoubleValidator(AFFINITY_FACTOR_KEY, 1.2d);
+
+  public static final String ENABLE_MEMORY_ESTIMATION_KEY = "planner.memory.enable_memory_estimation";
+  public static final OptionValidator ENABLE_MEMORY_ESTIMATION = new BooleanValidator(ENABLE_MEMORY_ESTIMATION_KEY, false);
+
+  /**
+   * Maximum query memory per node (in MB). Re-plan with cheaper operators if memory estimation exceeds this limit.
+   * <p/>
+   * DEFAULT: 2048 MB
+   */
+  public static final String MAX_QUERY_MEMORY_PER_NODE_KEY = "planner.memory.max_query_memory_per_node";
+  public static final OptionValidator MAX_QUERY_MEMORY_PER_NODE = new PowerOfTwoLongValidator(
+    MAX_QUERY_MEMORY_PER_NODE_KEY, Runtime.getRuntime().maxMemory(), 1 << 11);
+
+  /**
+   * Extra query memory per node for non-blocking operators.
+   * NOTE: This option is currently used only for memory estimation.
+   * <p/>
+   * DEFAULT: 64 MB
+   * MAXIMUM: 2048 MB
+   */
+  public static final String NON_BLOCKING_OPERATORS_MEMORY_KEY = "planner.memory.non_blocking_operators_memory";
+  public static final OptionValidator NON_BLOCKING_OPERATORS_MEMORY = new PowerOfTwoLongValidator(
+    NON_BLOCKING_OPERATORS_MEMORY_KEY, 1 << 11, 1 << 6);
+
+  public static final String HASH_JOIN_TABLE_FACTOR_KEY = "planner.memory.hash_join_table_factor";
+  public static final OptionValidator HASH_JOIN_TABLE_FACTOR = new DoubleValidator(HASH_JOIN_TABLE_FACTOR_KEY, 1.1d);
+
+  public static final String HASH_AGG_TABLE_FACTOR_KEY = "planner.memory.hash_agg_table_factor";
+  public static final OptionValidator HASH_AGG_TABLE_FACTOR = new DoubleValidator(HASH_AGG_TABLE_FACTOR_KEY, 1.1d);
+
+  public static final String AVERAGE_FIELD_WIDTH_KEY = "planner.memory.average_field_width";
+  public static final OptionValidator AVERAGE_FIELD_WIDTH = new PositiveLongValidator(AVERAGE_FIELD_WIDTH_KEY, Long.MAX_VALUE, 8);
 
   public static final String ENABLE_QUEUE_KEY = "exec.queue.enable";
   public static final OptionValidator ENABLE_QUEUE = new BooleanValidator(ENABLE_QUEUE_KEY, false);

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.base.Preconditions;
@@ -25,7 +26,7 @@ import com.google.common.base.Preconditions;
 public class OptionValue{
 
   public static enum OptionType {
-    BOOT, SYSTEM, SESSION
+    BOOT, SYSTEM, SESSION, QUERY
   }
 
   public static enum Kind {
@@ -58,6 +59,21 @@ public class OptionValue{
 
   public OptionValue(){}
 
+  public static OptionValue createOption(Kind kind, OptionType type, String name, String val) {
+    switch (kind) {
+      case BOOLEAN:
+        return createBoolean(type, name, Boolean.valueOf(val));
+      case LONG:
+        return createLong(type, name, Long.valueOf(val));
+      case STRING:
+        return createString(type, name, val);
+      case DOUBLE:
+        return createDouble(type, name, Double.valueOf(val));
+    }
+    return null;
+  }
+
+
   private OptionValue(Kind kind, OptionType type, String name, Long num_val, String string_val, Boolean bool_val, Double float_val) {
     super();
     Preconditions.checkArgument(num_val != null || string_val != null || bool_val != null || float_val != null);
@@ -69,6 +85,21 @@ public class OptionValue{
     this.string_val = string_val;
     this.bool_val = bool_val;
     this.type = type;
+  }
+
+  @JsonIgnore
+  public Object getValue() {
+    switch (kind) {
+      case BOOLEAN:
+        return bool_val;
+      case LONG:
+        return num_val;
+      case STRING:
+        return string_val;
+      case DOUBLE:
+        return float_val;
+    }
+    return null;
   }
 
   @Override

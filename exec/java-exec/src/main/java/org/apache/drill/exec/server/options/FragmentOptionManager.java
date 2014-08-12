@@ -17,24 +17,21 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.eigenbase.sql.SqlLiteral;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import org.eigenbase.sql.SqlLiteral;
 
-public class FragmentOptionsManager implements OptionManager{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentOptionsManager.class);
+import java.util.Iterator;
+import java.util.Map;
+
+public class FragmentOptionManager implements OptionManager {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentOptionManager.class);
 
   ImmutableMap<String, OptionValue> options;
   OptionManager systemOptions;
 
-  public FragmentOptionsManager(OptionManager systemOptions, OptionList options){
+  public FragmentOptionManager(OptionManager systemOptions, OptionList options) {
     Map<String, OptionValue> tmp = Maps.newHashMap();
     for(OptionValue v : options){
       tmp.put(v.name, v);
@@ -63,7 +60,7 @@ public class FragmentOptionsManager implements OptionManager{
   }
 
   @Override
-  public void setOption(String name, SqlLiteral literal) throws SetOptionException {
+  public void setOption(String name, SqlLiteral literal, OptionValue.OptionType type) throws SetOptionException {
     throw new UnsupportedOperationException();
   }
 
@@ -78,7 +75,7 @@ public class FragmentOptionsManager implements OptionManager{
   }
 
   @Override
-  public OptionList getSessionOptionList() {
+  public OptionList getOptionList() {
     throw new UnsupportedOperationException();
   }
 

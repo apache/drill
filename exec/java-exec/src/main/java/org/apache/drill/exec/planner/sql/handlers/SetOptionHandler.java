@@ -17,17 +17,17 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import java.io.IOException;
-
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
-
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlSetOption;
+
+import java.io.IOException;
 
 public class SetOptionHandler extends AbstractSqlHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
@@ -47,18 +47,22 @@ public class SetOptionHandler extends AbstractSqlHandler{
     String scope = option.getScope();
     String name = option.getName();
     SqlNode value = option.getValue();
-    if(value instanceof SqlLiteral){
-      switch(scope.toLowerCase()){
-      case "session":
-        context.getOptions().setOption(option.getName(), (SqlLiteral) value);
-        break;
-      case "system":
-        context.getOptions().getSystemManager().setOption(name, (SqlLiteral) value);
-        break;
-      default:
-        throw new ValidationException("Invalid OPTION scope.  Scope must be SESSION or SYSTEM.");
+    OptionValue.OptionType type;
+    if (value instanceof SqlLiteral) {
+      switch (scope.toLowerCase()) {
+        case "session":
+          type = OptionValue.OptionType.SESSION;
+          break;
+        case "system":
+          type = OptionValue.OptionType.SYSTEM;
+          break;
+//        case "query":
+//          type = OptionValue.OptionType.QUERY;
+//          break;
+        default:
+          throw new ValidationException("Invalid OPTION scope. Scope must be SESSION or SYSTEM.");
       }
-
+      context.getOptions().setOption(name, (SqlLiteral) value, type);
     }else{
       throw new ValidationException("Sql options can only be literals.");
     }

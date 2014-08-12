@@ -17,15 +17,15 @@
  */
 package org.apache.drill;
 
-import java.io.IOException;
-import java.net.URL;
-
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 import mockit.Mocked;
 import mockit.NonStrictExpectations;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 import net.hydromatic.optiq.tools.Frameworks;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
@@ -41,7 +41,7 @@ import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -49,10 +49,8 @@ import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 
-import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
+import java.io.IOException;
+import java.net.URL;
 
 public class PlanningBase extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningBase.class);
@@ -77,9 +75,10 @@ public class PlanningBase extends ExecTest{
     final LocalPStoreProvider provider = new LocalPStoreProvider(config);
     provider.start();
 
-    final SystemOptionManager opt = new SystemOptionManager(config, provider);
-    opt.init();
-    final OptionManager sess = new SessionOptionManager(opt);
+    final SystemOptionManager systemOptions = new SystemOptionManager(config, provider);
+    systemOptions.init();
+    final SessionOptionManager sessionOptions = new SessionOptionManager(systemOptions);
+    final QueryOptionManager queryOptions = new QueryOptionManager(sessionOptions);
 
     new NonStrictExpectations() {
       {
@@ -90,7 +89,7 @@ public class PlanningBase extends ExecTest{
         dbContext.getConfig();
         result = config;
         dbContext.getOptionManager();
-        result = opt;
+        result = systemOptions;
         dbContext.getCache();
         result = cache;
         dbContext.getPersistentStoreProvider();
@@ -121,9 +120,9 @@ public class PlanningBase extends ExecTest{
         context.getActiveEndpoints();
         result = ImmutableList.of(DrillbitEndpoint.getDefaultInstance());
         context.getPlannerSettings();
-        result = new PlannerSettings(sess);
+        result = new PlannerSettings(queryOptions);
         context.getOptions();
-        result = sess;
+        result = queryOptions;
         context.getConfig();
         result = config;
         context.getCache();

@@ -17,22 +17,116 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.Kind;
+import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
+import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.LinkedList;
+import java.util.List;
 
-@Path("/status")
+@Path("/")
 public class StatusResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatusResources.class);
 
+  @Inject
+  WorkManager work;
+
   @GET
+  @Path("/status")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
     String status = "Running!";
     return new Viewable("/rest/status.ftl", status);
+  }
+
+  @GET
+  @Path("/options.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List getSystemOptionsJSON() {
+    List<OptionWrapper> options = new LinkedList<>();
+    for (OptionValue option : work.getContext().getOptionManager()) {
+      options.add(new OptionWrapper(option.name, option.getValue(), option.type, option.kind));
+    }
+    return options;
+  }
+
+  @GET
+  @Path("/options")
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable getSystemOptions() {
+    return new Viewable("/rest/options.ftl", getSystemOptionsJSON());
+  }
+
+  @POST
+  @Path("/option/{optionName}")
+  @Consumes("application/x-www-form-urlencoded")
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable updateSystemOption(@FormParam("name") String name, @FormParam("value") String value,
+                                   @FormParam("kind") String kind) {
+    try {
+      work.getContext()
+        .getOptionManager()
+        .setOption(OptionValue.createOption(
+          OptionValue.Kind.valueOf(kind),
+          OptionValue.OptionType.SYSTEM,
+          name,
+          value));
+    } catch (Exception e) {
+      logger.debug("Could not update.", e);
+    }
+    return getSystemOptions();
+  }
+
+  @XmlRootElement
+  public class OptionWrapper {
+
+    private String name;
+    private Object value;
+    private OptionValue.OptionType type;
+    private String kind;
+
+    @JsonCreator
+    public OptionWrapper(String name, Object value, OptionValue.OptionType type, Kind kind) {
+      this.name = name;
+      this.value = value;
+      this.type = type;
+      this.kind = kind.name();
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    @JsonIgnore
+    public String getValueAsString() {
+      return value.toString();
+    }
+
+    public Object getValue() {
+      return value;
+    }
+
+    public OptionValue.OptionType getType() {
+      return type;
+    }
+
+    public String getKind() {
+      return kind;
+    }
   }
 
 }

@@ -17,13 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
-
+import com.google.common.collect.MapMaker;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
@@ -35,9 +29,13 @@ import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.codehaus.commons.compiler.CompileException;
-import org.eigenbase.sql.SqlLiteral;
 
-import com.google.common.collect.MapMaker;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class QueryClassLoader extends URLClassLoader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryClassLoader.class);
@@ -45,15 +43,14 @@ public class QueryClassLoader extends URLClassLoader {
   public static final String JAVA_COMPILER_OPTION = "exec.java_compiler";
   public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION, CompilerPolicy.DEFAULT.toString()) {
     @Override
-    public OptionValue validate(SqlLiteral value) throws ExpressionParsingException {
-      OptionValue ov = super.validate(value);
+    public void validate(OptionValue v) throws ExpressionParsingException {
+      super.validate(v);
       try {
-        CompilerPolicy.valueOf(ov.string_val.toUpperCase());
+        CompilerPolicy.valueOf(v.string_val.toUpperCase());
       } catch (IllegalArgumentException e) {
         throw new ExpressionParsingException(String.format("Invalid value '%s' specified for option '%s'. Valid values are %s.",
-            ov.string_val, getOptionName(), Arrays.toString(CompilerPolicy.values())));
+            v.string_val, getOptionName(), Arrays.toString(CompilerPolicy.values())));
       }
-      return ov;
     }
   };
 

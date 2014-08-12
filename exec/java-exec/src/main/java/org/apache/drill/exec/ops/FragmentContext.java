@@ -17,14 +17,10 @@
  */
 package org.apache.drill.exec.ops;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.compile.ClassTransformer;
@@ -42,13 +38,15 @@ import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.FragmentOptionsManager;
+import org.apache.drill.exec.server.options.FragmentOptionManager;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Contextual objects required for execution of a particular fragment.
@@ -71,7 +69,7 @@ public class FragmentContext implements Closeable {
   private IncomingBuffers buffers;
   private final long queryStartTime;
   private final int rootFragmentTimeZone;
-  private final OptionManager sessionOptions;
+  private final OptionManager fragmentOptions;
 
   private volatile Throwable failureCause;
   private volatile boolean failed = false;
@@ -96,16 +94,16 @@ public class FragmentContext implements Closeable {
       }else{
         list = dbContext.getConfig().getMapper().readValue(fragment.getOptionsJson(), OptionList.class);
       }
-      this.sessionOptions = new FragmentOptionsManager(context.getOptionManager(), list);
+      this.fragmentOptions = new FragmentOptionManager(context.getOptionManager(), list);
     }catch(Exception e){
       throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
-    this.loader = new QueryClassLoader(dbContext.getConfig(), sessionOptions);
+    this.loader = new QueryClassLoader(dbContext.getConfig(), fragmentOptions);
   }
 
-  public OptionManager getOptions(){
-    return sessionOptions;
+  public OptionManager getOptions() {
+    return fragmentOptions;
   }
 
   public void setBuffers(IncomingBuffers buffers) {

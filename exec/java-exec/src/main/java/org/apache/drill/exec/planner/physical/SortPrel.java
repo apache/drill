@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.io.IOException;
-import java.util.Iterator;
-
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ExternalSort;
-import org.apache.drill.exec.physical.config.SingleMergeExchange;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
@@ -37,6 +34,9 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
+
+import java.io.IOException;
+import java.util.Iterator;
 
 public class SortPrel extends SortRel implements Prel {
 
@@ -63,8 +63,17 @@ public class SortPrel extends SortRel implements Prel {
     int numSortFields = this.collation.getFieldCollations().size();
     double cpuCost = DrillCostBase.COMPARE_CPU_COST * numSortFields * inputRows * (Math.log(inputRows)/Math.log(2));
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0);
+
+    // TODO: use rowWidth instead of avgFieldWidth * numFields
+    // avgFieldWidth * numFields * inputRows
+    double numFields = this.getRowType().getFieldCount();
+    long fieldWidth = PrelUtil.getPlannerSettings(planner).getOptions()
+      .getOption(ExecConstants.AVERAGE_FIELD_WIDTH_KEY).num_val;
+
+    double memCost = fieldWidth * numFields * inputRows;
+
+    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0, memCost);
   }
 
   @Override

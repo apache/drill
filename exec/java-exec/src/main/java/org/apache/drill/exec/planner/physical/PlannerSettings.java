@@ -53,6 +53,10 @@ public class PlannerSettings implements Context{
     this.options = options;
   }
 
+  public OptionManager getOptions() {
+    return options;
+  }
+
   public boolean isSingleMode() {
     return options.getOption(EXCHANGE.getOptionName()).bool_val;
   }
@@ -111,6 +115,10 @@ public class PlannerSettings implements Context{
 
   public long getSliceTarget(){
     return options.getOption(ExecConstants.SLICE_TARGET).num_val;
+  }
+
+  public boolean isMemoryEstimationEnabled() {
+    return options.getOption(ExecConstants.ENABLE_MEMORY_ESTIMATION_KEY).bool_val;
   }
 
   @Override

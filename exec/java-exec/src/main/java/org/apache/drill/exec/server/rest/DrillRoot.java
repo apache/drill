@@ -17,21 +17,75 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.google.common.collect.Lists;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.work.WorkManager;
+import org.glassfish.jersey.server.mvc.Viewable;
+
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import org.glassfish.jersey.server.mvc.Viewable;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 @Path("/")
 public class DrillRoot {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRoot.class);
 
+  @Inject
+  WorkManager work;
+
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getHello() {
-    String status = "Running!";
-    return new Viewable("/rest/index.ftl", status);
+  public Viewable getStats() {
+    return new Viewable("/rest/index.ftl", getStatsJSON());
   }
 
+  @GET
+  @Path("/stats.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<Stat> getStatsJSON() {
+    List<Stat> stats = Lists.newLinkedList();
+    stats.add(new Stat("Number of Drill Bits", work.getContext().getBits().size()));
+    int number = 0;
+    for (CoordinationProtos.DrillbitEndpoint bit : work.getContext().getBits()) {
+      String initialized = bit.isInitialized() ? " initialized" : " not initialized";
+      stats.add(new Stat("Bit #" + number, bit.getAddress() + initialized));
+      ++number;
+    }
+    stats.add(new Stat("Data Port Address", work.getContext().getEndpoint().getAddress() +
+      ":" + work.getContext().getEndpoint().getDataPort()));
+    stats.add(new Stat("User Port Address", work.getContext().getEndpoint().getAddress() +
+      ":" + work.getContext().getEndpoint().getUserPort()));
+    stats.add(new Stat("Control Port Address", work.getContext().getEndpoint().getAddress() +
+      ":" + work.getContext().getEndpoint().getControlPort()));
+    stats.add(new Stat("Maximum Direct Memory", DrillConfig.getMaxDirectMemory()));
+
+    return stats;
+  }
+
+  @XmlRootElement
+  public class Stat {
+    private String name;
+    private Object value;
+
+    @JsonCreator
+    public Stat(String name, Object value) {
+      this.name = name;
+      this.value = value;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public Object getValue() {
+      return value;
+    }
+
+  }
 }

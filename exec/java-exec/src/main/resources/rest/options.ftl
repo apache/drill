@@ -17,13 +17,26 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
+  <h4>System options</h4>
+  <div align="right">
+    <a href="https://cwiki.apache.org/confluence/display/DRILL/Planning+and+Execution+Options">Documentation</a>
+  </div>
   <div class="table-responsive">
     <table class="table table-hover">
       <tbody>
-        <#list model as stat>
+        <#list model as option>
           <tr>
-            <td style="border:none;"><b>${stat.getName()}</b></td>
-            <td style="border:none; font-family: Courier;">${stat.getValue()}</td>
+            <td style="border:none;">${option.getName()}</td>
+            <td style="border:none;">
+              <form class="form-inline" role="form" action="/option/${option.getName()}" method="POST">
+                <div class="form-group">
+                  <input type="text" class="form-control" name="value" value="${option.getValueAsString()}">
+                  <input type="hidden" class="form-control" name="kind" value="${option.getKind()}">
+                  <input type="hidden" class="form-control" name="name" value="${option.getName()}">
+                </div>
+                <button type="submit" class="btn btn-default">Update</button>
+              </form>
+            </td>
           </tr>
         </#list>
       </tbody>

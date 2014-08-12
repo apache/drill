@@ -19,67 +19,66 @@ package org.apache.drill.exec.server.options;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 
 import java.util.Iterator;
 import java.util.Map;
 
-public class SessionOptionManager implements OptionManager{
+public class QueryOptionManager implements OptionManager {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
 
   private Map<String, OptionValue> options = Maps.newConcurrentMap();
-  private OptionManager systemOptions;
+  private OptionManager sessionOptions;
 
-  public SessionOptionManager(OptionManager systemOptions) {
+  public QueryOptionManager(OptionManager sessionOptions) {
     super();
-    this.systemOptions = systemOptions;
+    this.sessionOptions = sessionOptions;
   }
 
   @Override
   public Iterator<OptionValue> iterator() {
-    return Iterables.concat(systemOptions, options.values()).iterator();
+    return Iterables.concat(sessionOptions, options.values()).iterator();
   }
 
   @Override
   public OptionValue getOption(String name) {
     OptionValue opt = options.get(name);
-    if(opt == null && systemOptions != null){
-      return systemOptions.getOption(name);
-    }else{
+    if (opt == null && sessionOptions != null) {
+      return sessionOptions.getOption(name);
+    } else {
       return opt;
     }
   }
 
   @Override
   public void setOption(OptionValue value) {
-    systemOptions.getAdmin().validate(value);
+    sessionOptions.getAdmin().validate(value);
     setValidatedOption(value);
   }
 
   @Override
-  public void setOption(String name, SqlLiteral literal, OptionType type) {
-    OptionValue val = systemOptions.getAdmin().validate(name, literal);
+  public void setOption(String name, SqlLiteral literal, OptionValue.OptionType type) {
+    OptionValue val = sessionOptions.getAdmin().validate(name, literal);
     val.type = type;
     setValidatedOption(val);
   }
 
   private void setValidatedOption(OptionValue value) {
-    if (value.type == OptionType.SESSION) {
+    if (value.type == OptionValue.OptionType.QUERY) {
       options.put(value.name, value);
     } else {
-      systemOptions.setOption(value);
+      sessionOptions.setOption(value);
     }
   }
 
   @Override
-  public OptionAdmin getAdmin() {
-    return systemOptions.getAdmin();
+  public OptionManager.OptionAdmin getAdmin() {
+    return sessionOptions.getAdmin();
   }
 
   @Override
   public OptionManager getSystemManager() {
-    return systemOptions;
+    return sessionOptions.getSystemManager();
   }
 
   @Override
@@ -89,6 +88,10 @@ public class SessionOptionManager implements OptionManager{
       list.add(o);
     }
     return list;
+  }
+
+  public OptionList getSessionOptionList() {
+    return sessionOptions.getOptionList();
   }
 
 }

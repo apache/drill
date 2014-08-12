@@ -17,21 +17,15 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.logging.Logger;
-
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.trace.EigenbaseTrace;
 
-import com.google.common.collect.ImmutableList;
+import java.util.logging.Logger;
 
 public class HashJoinPrule extends JoinPruleBase {
   public static final RelOptRule INSTANCE = new HashJoinPrule();
@@ -44,11 +38,14 @@ public class HashJoinPrule extends JoinPruleBase {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    return PrelUtil.getPlannerSettings(call.getPlanner()).isHashJoinEnabled();
+    PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+    return settings.isMemoryEstimationEnabled() || settings.isHashJoinEnabled();
   }
   
   @Override
   public void onMatch(RelOptRuleCall call) {
+    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashJoinEnabled()) return;
+
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
