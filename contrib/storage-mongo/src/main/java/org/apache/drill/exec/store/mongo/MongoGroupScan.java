@@ -39,7 +39,6 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
-import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
@@ -52,8 +51,10 @@ import org.slf4j.LoggerFactory;
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
@@ -256,10 +257,13 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+    logger.debug("Incoming endpoints for assigments : " + endpoints);
     endpointFragmentMapping = Maps.newHashMap();
-    // As of now, performing direct assignments to drill bits
+    
     int fragmentIndex = 0;
-    for (int fragmentId = 0; fragmentId < endpoints.size(); ++fragmentId) {
+    int endPointsSize = endpoints.size();
+    
+    for (int fragmentId = 0; fragmentId < endPointsSize; ++fragmentId) {
       DrillbitEndpoint ep = endpoints.get(fragmentId);
       List<MongoSubScanSpec> mongoSubScanSpecList = Lists.newArrayList();
       List<ChunkInfo> chunks = chunksInverseMapping.get(ep.getAddress());
@@ -269,24 +273,25 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
       for (int i = 0; i < chunks.size(); ++i) {
         ChunkInfo chunkInfo = chunks.get(i);
         MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-            .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList());
+            .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList())
+            .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
         mongoSubScanSpecList.add(spec);
       }
+      chunksInverseMapping.remove(ep.getAddress());
       endpointFragmentMapping.put(Integer.valueOf(fragmentIndex++), mongoSubScanSpecList);
     }
     
-    //If drill bits and mongo servers are not running on same machines, assign in round robin fashion.
-    if (endpointFragmentMapping.isEmpty()) {
-      int endPointsSize = endpoints.size();
+    //For the remaining chunks, assign in round robin fashion.
+    if (fragmentIndex < endPointsSize) {
       Collection<List<ChunkInfo>> values = chunksInverseMapping.values();
       Iterator<List<ChunkInfo>> iterator = values.iterator();
-      for (fragmentIndex = 0; fragmentIndex < values.size(); ++fragmentIndex) {
+      int startIndex = fragmentIndex;
+      for (;fragmentIndex < startIndex + values.size(); ++fragmentIndex) {
         List<MongoSubScanSpec> list = endpointFragmentMapping.get(fragmentIndex % endPointsSize);
         if (list == null) {
           list = Lists.newArrayList();
           endpointFragmentMapping.put(fragmentIndex % endPointsSize, list);
         }
-        // Take the first replica info, for assignment
         List<ChunkInfo> chunksList = iterator.next();
         for(ChunkInfo chunkInfo : chunksList) {
           MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
@@ -299,7 +304,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   }
 
   @Override
-  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
+  public MongoSubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
     return new MongoSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns);
   }
 
@@ -369,6 +374,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
       }
     }
     logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
+    logger.debug("Affined drillbits : " + affinityMap.values());
     return Lists.newArrayList(affinityMap.values());
   }
 
@@ -390,6 +396,27 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   @Override
   public String toString() {
     return "MongoGroupScan [MongoScanSpec=" + scanSpec + ", columns=" + columns + "]";
+  }
+  
+  @VisibleForTesting
+  MongoGroupScan() {}
+  
+  @JsonIgnore
+  @VisibleForTesting
+  void setChunksMapping(Map<String, Set<ServerAddress>> chunksMapping) {
+    this.chunksMapping = chunksMapping;
+  }
+  
+  @JsonIgnore
+  @VisibleForTesting
+  void setScanSpec(MongoScanSpec scanSpec) {
+    this.scanSpec = scanSpec;
+  }
+  
+  @JsonIgnore
+  @VisibleForTesting
+  void setInverseChunsMapping(Map<String, List<ChunkInfo>> chunksInverseMapping) {
+    this.chunksInverseMapping = chunksInverseMapping;
   }
 
 }
