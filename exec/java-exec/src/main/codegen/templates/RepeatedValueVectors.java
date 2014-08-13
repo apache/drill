@@ -49,8 +49,7 @@ package org.apache.drill.exec.vector;
 
   private int parentValueCount;
   private int childValueCount;
-  protected int sliceOffset = 0;
-  
+
   private final UInt4Vector offsets;   // offsets to start of each record
   private final ${minor.class}Vector values;
   private final Mutator mutator = new Mutator();
@@ -103,13 +102,16 @@ package org.apache.drill.exec.vector;
   }
 
   public void splitAndTransferTo(int startIndex, int length, Repeated${minor.class}Vector target) {
-   int startValue = offsets.getAccessor().get(startIndex);
-    int endValue = offsets.getAccessor().get(startIndex + length);
-    values.splitAndTransferTo(startValue, endValue - startValue, target.values);
-    offsets.splitAndTransferTo(startIndex, length, target.offsets);
-    target.parentValueCount = parentValueCount;
-    target.childValueCount = childValueCount;
-    sliceOffset = startIndex;
+    int startPos = offsets.getAccessor().get(startIndex);
+    int endPos = offsets.getAccessor().get(startIndex+length);
+    values.splitAndTransferTo(startIndex, endPos-startPos, target.values);
+    target.offsets.clear();
+    target.offsets.allocateNew(length+1);
+    int normalizedPos = 0;
+    for (int i=0; i<length+1;i++) {
+      normalizedPos = offsets.getAccessor().get(startIndex+i) - startPos;
+      target.offsets.getMutator().set(i, normalizedPos);
+    }
   }
   
   private class TransferImpl implements TransferPair{
@@ -166,7 +168,6 @@ package org.apache.drill.exec.vector;
     if(!values.allocateNewSafe()) return false;
     mutator.reset();
     accessor.reset();
-    sliceOffset = 0;
     return true;
   }
   
@@ -176,7 +177,6 @@ package org.apache.drill.exec.vector;
     values.allocateNew();
     mutator.reset();
     accessor.reset();
-    sliceOffset = 0;
   }
 
   <#if type.major == "VarLen">
@@ -196,7 +196,6 @@ package org.apache.drill.exec.vector;
     values.allocateNew(totalBytes, childValueCount);
     mutator.reset();
     accessor.reset();
-    sliceOffset = 0;
   }
   
   @Override
@@ -302,8 +301,8 @@ package org.apache.drill.exec.vector;
     
     public List<${friendlyType}> getObject(int index) {
       List<${friendlyType}> vals = new JsonStringArrayList();
-      int start = offsets.getAccessor().get(index) - sliceOffset;
-      int end = offsets.getAccessor().get(index+1) - sliceOffset;
+      int start = offsets.getAccessor().get(index);
+      int end = offsets.getAccessor().get(index+1);
       for(int i = start; i < end; i++){
         vals.add(values.getAccessor().getObject(i));
       }
@@ -326,7 +325,7 @@ package org.apache.drill.exec.vector;
     public <#if type.major == "VarLen">byte[]
            <#else>${minor.javaType!type.javaType}
            </#if> get(int index, int positionIndex) {
-      return values.getAccessor().get(offsets.getAccessor().get(index) - sliceOffset + positionIndex);
+      return values.getAccessor().get(offsets.getAccessor().get(index) + positionIndex);
     }
         
            
@@ -335,8 +334,8 @@ package org.apache.drill.exec.vector;
     }
     
     public void get(int index, Repeated${minor.class}Holder holder){
-      holder.start = offsets.getAccessor().get(index) - sliceOffset;
-      holder.end =  offsets.getAccessor().get(index+1) - sliceOffset;
+      holder.start = offsets.getAccessor().get(index);
+      holder.end =  offsets.getAccessor().get(index+1);
       holder.vector = values;
     }
 
