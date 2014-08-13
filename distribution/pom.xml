@@ -56,11 +56,11 @@
       <artifactId>drill-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
-<!--    <dependency>
+    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-jdbc-all</artifactId>
       <version>${project.version}</version>
-    </dependency> -->
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.contrib</groupId>
       <artifactId>drill-storage-hbase</artifactId>
