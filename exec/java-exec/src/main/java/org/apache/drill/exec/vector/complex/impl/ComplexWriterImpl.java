@@ -183,7 +183,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
     private final VectorContainer vc;
 
     public VectorAccessibleFacade(VectorContainer vc) {
-      super("", null);
+      super("", null, null);
       this.vc = vc;
     }
 

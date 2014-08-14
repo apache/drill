@@ -30,6 +30,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 
@@ -80,14 +81,19 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     add(vv, releasable);
   }
 
+
   public <T extends ValueVector> T addOrGet(MaterializedField field) {
+    return addOrGet(field, null);
+  }
+
+  public <T extends ValueVector> T addOrGet(MaterializedField field, SchemaChangeCallBack callBack) {
     TypedFieldId id = getValueVectorId(field.getPath());
     ValueVector v = null;
     Class clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
     if (id != null) {
       v = getValueAccessorById(id.getFieldIds()).getValueVector();
       if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(v.getClass())) {
-        ValueVector newVector = TypeHelper.getNewVector(field, this.oContext.getAllocator());
+        ValueVector newVector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
         replace(v, newVector);
         return (T) newVector;
       }

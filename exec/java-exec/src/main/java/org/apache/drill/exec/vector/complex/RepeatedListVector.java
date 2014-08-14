@@ -40,6 +40,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.impl.NullReader;
@@ -61,6 +62,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   private final RepeatedListReaderImpl reader = new RepeatedListReaderImpl(null, this);
   private int allocationValueCount = 4000;
   private int allocationMonitor = 0;
+  private CallBack callBack;
 
   private int lastSet = 0;
 
@@ -68,10 +70,15 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
 
   public static MajorType TYPE = Types.repeated(MinorType.LIST);
 
-  public RepeatedListVector(MaterializedField field, BufferAllocator allocator) {
+  public RepeatedListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
     this.allocator = allocator;
     this.offsets = new UInt4Vector(null, allocator);
     this.field = field;
+    this.callBack = callBack;
+  }
+
+  public RepeatedListVector(SchemaPath path, BufferAllocator allocator, CallBack callBack){
+    this(MaterializedField.create(path, TYPE), allocator, callBack);
   }
 
   @Override
@@ -91,10 +98,6 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     }
     primitiveVectors.add(offsets);
     return primitiveVectors;
-  }
-
-  public RepeatedListVector(SchemaPath path, BufferAllocator allocator) {
-    this(MaterializedField.create(path, TYPE), allocator);
   }
 
   transient private RepeatedListTransferPair ephPair;
@@ -313,7 +316,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     }
 
     private RepeatedListTransferPair(SchemaPath path) {
-      this.to = new RepeatedListVector(path, allocator);
+      this.to = new RepeatedListVector(path, allocator, callBack);
       vectorTransfer = vector.getTransferPair();
       this.to.vector = vectorTransfer.getTo();
     }
@@ -437,8 +440,11 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
     Preconditions.checkArgument(name == null);
 
-    if (vector == null) {
-      vector = TypeHelper.getNewVector(MaterializedField.create(field.getPath().getUnindexedArrayChild(), type), allocator);
+    if(vector == null){
+      vector = TypeHelper.getNewVector(MaterializedField.create(field.getPath().getUnindexedArrayChild(), type), allocator, callBack);
+      if (callBack != null) {
+        callBack.doWork();
+      }
     }
     return typeify(vector, clazz);
   }

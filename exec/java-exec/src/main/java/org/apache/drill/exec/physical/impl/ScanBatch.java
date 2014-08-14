@@ -47,8 +47,10 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
@@ -80,6 +82,7 @@ public class ScanBatch implements RecordBatch {
   private String partitionColumnDesignator;
   private boolean first = false;
   private boolean done = false;
+  private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
     this.context = context;
@@ -313,7 +316,7 @@ public class ScanBatch implements RecordBatch {
 
       if (v == null || v.getClass() != clazz) {
         // Field does not exist add it to the map and the output container
-        v = TypeHelper.getNewVector(field, oContext.getAllocator());
+        v = TypeHelper.getNewVector(field, oContext.getAllocator(), callBack);
         if (!clazz.isAssignableFrom(v.getClass())) {
           throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
         }
@@ -345,7 +348,8 @@ public class ScanBatch implements RecordBatch {
 
     @Override
     public boolean isNewSchema() {
-      if (schemaChange == true) {
+      // Check if top level schema has changed, second condition checks if one of the deeper map schema has changed
+      if (schemaChange == true || callBack.getSchemaChange()) {
         schemaChange = false;
         return true;
       }

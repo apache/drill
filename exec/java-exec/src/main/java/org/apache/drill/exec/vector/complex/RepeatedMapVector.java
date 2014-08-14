@@ -37,6 +37,7 @@ import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BaseDataValueVector;
@@ -68,12 +69,14 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   private final BufferAllocator allocator;
   private final MaterializedField field;
   private int lastPopulatedValueIndex = -1;
+  private int lastSet = -1;
+  private CallBack callBack;
 
-  public RepeatedMapVector(MaterializedField field, BufferAllocator allocator) {
+  public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
     this.field = field;
     this.allocator = allocator;
     this.offsets = new UInt4Vector(null, allocator);
-
+    this.callBack = callBack;
   }
 
   @Override
@@ -122,6 +125,9 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       v = TypeHelper.getNewVector(field.getPath(), name, allocator, type);
       Preconditions.checkNotNull(v, String.format("Failure to create vector of type %s.", type));
       put(name, v);
+      if (callBack != null) {
+        callBack.doWork();
+      }
     }
     return typeify(v, clazz);
   }
@@ -243,7 +249,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     public SingleMapTransferPair(SchemaPath path) {
 
       MaterializedField mf = MaterializedField.create(path, Types.required(field.getType().getMinorType()));
-      MapVector v = new MapVector(mf, allocator);
+      MapVector v = new MapVector(mf, allocator, callBack);
       pairs = new TransferPair[vectors.size()];
       int i =0;
       for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
@@ -310,7 +316,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     private final RepeatedMapVector from = RepeatedMapVector.this;
 
     public MapTransferPair(SchemaPath path) {
-      RepeatedMapVector v = new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator);
+      RepeatedMapVector v = new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator, callBack);
       pairs = new TransferPair[vectors.size()];
       int i =0;
       for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {

@@ -21,7 +21,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.Project;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
@@ -30,6 +30,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   private boolean first = true;
   protected boolean done = false;
   protected boolean outOfMemory = false;
+  protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
 
   public AbstractSingleRecordBatch(T popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -86,10 +87,17 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       assert !first : "First batch should be OK_NEW_SCHEMA";
       container.zeroVectors();
       doWork();
+
       if (outOfMemory) {
         outOfMemory = false;
         return IterOutcome.OUT_OF_MEMORY;
       }
+
+      // Check if schema has changed
+      if (callBack.getSchemaChange()) {
+        return IterOutcome.OK_NEW_SCHEMA;
+      }
+
       return upstream; // change if upstream changed, otherwise normal.
     default:
       throw new UnsupportedOperationException();

@@ -130,7 +130,7 @@ public class TestRepeated {
      *
      */
 
-    MapVector v = new MapVector("", allocator);
+    MapVector v = new MapVector("", allocator, null);
     ComplexWriterImpl writer = new ComplexWriterImpl("col", v);
     writer.allocate();
 

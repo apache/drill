@@ -40,6 +40,7 @@ import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
@@ -65,16 +66,18 @@ public class MapVector extends AbstractContainerVector {
   private final BufferAllocator allocator;
   private MaterializedField field;
   private int valueCount;
+  private CallBack callBack;
 
-  public MapVector(String path, BufferAllocator allocator) {
+  public MapVector(String path, BufferAllocator allocator, CallBack callBack){
     this.field = MaterializedField.create(SchemaPath.getSimplePath(path), TYPE);
     this.allocator = allocator;
+    this.callBack = callBack;
   }
-  public MapVector(MaterializedField field, BufferAllocator allocator) {
+  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
     this.field = field;
     this.allocator = allocator;
+    this.callBack = callBack;
   }
-
   @Override
   public int size() {
     return vectors.size();
@@ -120,6 +123,9 @@ public class MapVector extends AbstractContainerVector {
       v = TypeHelper.getNewVector(field.getPath(), name, allocator, type);
       Preconditions.checkNotNull(v, String.format("Failure to create vector of type %s.", type));
       put(name, v);
+      if (callBack != null) {
+        callBack.doWork();
+      }
     }
     return typeify(v, clazz);
 
@@ -222,7 +228,7 @@ public class MapVector extends AbstractContainerVector {
     private MapVector to;
 
     public MapTransferPair(SchemaPath path) {
-      MapVector v = new MapVector(MaterializedField.create(path, TYPE), allocator);
+      MapVector v = new MapVector(MaterializedField.create(path, TYPE), allocator, callBack);
       pairs = new TransferPair[vectors.size()];
       int i =0;
       for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
