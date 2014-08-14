@@ -283,4 +283,14 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select cast(r_name as varchar(20)) from cp.`tpch/region.parquet` order by r_name");
   }
 
+  @Test  // tests with LIMIT 0
+  public void testLimit0_1() throws Exception {
+    test("select n_nationkey, n_name from cp.`tpch/nation.parquet` limit 0");
+    test("select n_nationkey, n_name from cp.`tpch/nation.parquet` limit 0 offset 5");
+    test("select n_nationkey, n_name from cp.`tpch/nation.parquet` order by n_nationkey limit 0");
+    test("select * from cp.`tpch/nation.parquet` limit 0");
+    test("select n.n_nationkey from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey limit 0");
+    test("select n_regionkey, count(*) from cp.`tpch/nation.parquet` group by n_regionkey limit 0");
+  }
+  
 }
