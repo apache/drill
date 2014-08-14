@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
+
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -54,7 +57,13 @@ public class MongoFilterBuilder extends
 
     switch (functionName) {
     case "booleanAnd":
-      newFilter = MongoUtils.andFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
+      if(leftScanSpec.getFilters() != null && rightScanSpec.getFilters() != null){
+        newFilter = MongoUtils.andFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
+      }else if(leftScanSpec.getFilters() != null){
+        newFilter = leftScanSpec.getFilters();
+      }else{
+        newFilter = rightScanSpec.getFilters();
+      }
       break;
     case "booleanOr":
       newFilter = MongoUtils.orFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
@@ -153,13 +162,25 @@ public class MongoFilterBuilder extends
       BasicDBObject queryFilter = new BasicDBObject();
       if(compareOp == MongoCompareOp.IFNULL || compareOp == MongoCompareOp.IFNOTNULL){
         // need to verify whether "$eq" or "$ne" needs or not.
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
+        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), new String(fieldValue)));
       }else{
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
+        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), new String(fieldValue)));
       }
       return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan.getScanSpec().getCollectionName(), queryFilter);
     }
      return null;
   }
+  
+  
+  public static Object toObject(byte[] bytes){
+    Object obj = null;
+    try(ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
+        ObjectInputStream ois = new ObjectInputStream(bis);
+        obj = ois.readObject();
+    }catch(Exception e){
+      System.out.println(e.getMessage());
+    }
+    return obj;
+}
 
 }

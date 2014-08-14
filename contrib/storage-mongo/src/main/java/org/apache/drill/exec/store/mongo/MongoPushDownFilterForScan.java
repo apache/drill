@@ -45,10 +45,6 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     final FilterPrel filter = (FilterPrel) call.rel(0);
     final RexNode condition = filter.getCondition();
 
-    if (!(scan.getGroupScan() instanceof MongoGroupScan)) {
-      return;
-    }
-
     MongoGroupScan groupScan = (MongoGroupScan) scan.getGroupScan();
     if (groupScan.isFilterPushedDown()) {
       return;
@@ -80,6 +76,15 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
           ImmutableList.of((RelNode) newScanPrel)));
     }
 
+  }
+  
+  @Override
+  public boolean matches(RelOptRuleCall call) {
+    final ScanPrel scan = (ScanPrel) call.rel(1);
+    if (scan.getGroupScan() instanceof MongoGroupScan) {
+      return super.matches(call);
+    }
+    return false;
   }
 
 }

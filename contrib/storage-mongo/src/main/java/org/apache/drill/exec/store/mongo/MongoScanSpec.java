@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.mongo;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 public class MongoScanSpec {
   private String dbName;
@@ -59,6 +58,7 @@ public class MongoScanSpec {
   @Override
   public String toString() {
     return "MongoScanSpec [dbName=" + dbName + ", collectionName="
-        + collectionName + "]";
+        + collectionName + ", filters=" + filters + "]";
   }
+  
 }

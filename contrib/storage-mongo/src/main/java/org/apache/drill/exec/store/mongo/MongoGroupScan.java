@@ -140,7 +140,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-	MongoSubScanSpec subScanSpec = new MongoSubScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(), storagePluginConfig.getConnection());
+	MongoSubScanSpec subScanSpec = new MongoSubScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(), storagePluginConfig.getConnection(),scanSpec.getFilters());
 	List<MongoSubScanSpec> subScanList = new LinkedList<MongoSubScanSpec>();
 	subScanList.add(subScanSpec);
 	return new MongoSubScan(this.storagePlugin, this.storagePluginConfig, subScanList, this.columns);
@@ -159,8 +159,11 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public ScanStats getScanStats() {
-    CommandResult stats = collection.getStats();
-    return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
+    if(collection != null){
+      CommandResult stats = collection.getStats();
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
+    }
+    return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, 0, 1, 0);
   }
 
   @Override
