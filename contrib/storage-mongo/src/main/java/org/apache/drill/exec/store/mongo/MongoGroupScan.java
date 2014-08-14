@@ -138,7 +138,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
       List<String> databaseNames = client.getDatabaseNames();
 
       chunksMapping = Maps.newHashMap();
-      chunksInverseMapping = Maps.newHashMap();
+      chunksInverseMapping = Maps.newLinkedHashMap();
       if (databaseNames.contains(CONFIG)) {
         DB db = client.getDB(CONFIG);
         db.setReadPreference(ReadPreference.nearest());
@@ -282,7 +282,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     }
     
     //For the remaining chunks, assign in round robin fashion.
-    if (fragmentIndex < endPointsSize) {
+    if (!chunksInverseMapping.isEmpty()) {
       Collection<List<ChunkInfo>> values = chunksInverseMapping.values();
       Iterator<List<ChunkInfo>> iterator = values.iterator();
       int startIndex = fragmentIndex;
