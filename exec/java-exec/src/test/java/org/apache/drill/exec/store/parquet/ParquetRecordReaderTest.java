@@ -37,6 +37,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -58,8 +59,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
+import org.junit.rules.TestRule;
 import parquet.bytes.BytesInput;
 import parquet.column.page.Page;
 import parquet.column.page.PageReadStore;
@@ -136,6 +139,27 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   @Test
   public void testDictionaryError_419() throws Exception {
     testFull(QueryType.SQL, "select c_address from dfs.`/tmp/customer_snappyimpala_drill_419.parquet`", "", 1, 1, 150000, false);
+  }
+
+  @Test
+  public void testNonExistentColumn() throws Exception {
+    testFull(QueryType.SQL, "select non_existent_column from cp.`tpch/nation.parquet`", "", 1, 1, 150000, false);
+  }
+
+
+  @Test
+  public void testNonExistentColumnLargeFile() throws Exception {
+    testFull(QueryType.SQL, "select non_existent_column, non_existent_col_2 from dfs.`/tmp/customer.dict.parquet`", "", 1, 1, 150000, false);
+  }
+
+  @Test
+  public void testNonExistentColumnsSomePresentColumnsLargeFile() throws Exception {
+    testFull(QueryType.SQL, "select cust_key, address,  non_existent_column, non_existent_col_2 from dfs.`/tmp/customer.dict.parquet`", "", 1, 1, 150000, false);
+  }
+
+  @Test
+  public void testTPCHPerformace_SF1() throws Exception {
+    testFull(QueryType.SQL, "select * from dfs.`/tmp/orders_part-m-00001.parquet`", "", 1, 1, 150000, false);
   }
 
   @Test
