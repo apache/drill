@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -230,6 +231,8 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
         String host = hosts.get(0);
         ServerAddress address = new ServerAddress(host);
         ChunkInfo chunkInfo = new ChunkInfo(hosts, chunkName);
+        chunkInfo.setMinFilters(Collections.<String, Object> emptyMap());
+        chunkInfo.setMaxFilters(Collections.<String, Object> emptyMap());
         List<ChunkInfo> chunksList = Lists.newArrayList();
         chunksList.add(chunkInfo);
         chunksInverseMapping.put(address.getHost(), chunksList);
