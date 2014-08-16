@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "drill/drillc.hpp"
+//#include "../protobuf/User.pb.h"
+
+
 
 Drill::status_t SchemaListener(void* ctx, Drill::FieldDefPtr fields, Drill::DrillClientError* err){
     if(!err){
@@ -229,6 +232,8 @@ Drill::logLevel_t getLogLevel(const char *s){
     return Drill::LOG_ERROR;
 }
 
+
+
 int main(int argc, char* argv[]) {
     try {
 
@@ -244,7 +249,7 @@ int main(int argc, char* argv[]) {
         std::string type_str=qsOptionValues["type"];
         std::string logLevel=qsOptionValues["logLevel"];
 
-        exec::shared::QueryType type;
+        Drill::QueryType type;
 
         if(!validate(type_str, queryList, planList)){
             exit(1);
@@ -255,16 +260,16 @@ int main(int argc, char* argv[]) {
         std::vector<std::string> queryInputs;
         if(type_str=="sql" ){
             readQueries(queryList, queryInputs);
-            type=exec::shared::SQL;
+            type=Drill::SQL;
         }else if(type_str=="physical" ){
             readPlans(planList, queryInputs);
-            type=exec::shared::PHYSICAL;
+            type=Drill::PHYSICAL;
         }else if(type_str == "logical"){
             readPlans(planList, queryInputs);
-            type=exec::shared::LOGICAL;
+            type=Drill::LOGICAL;
         }else{
             readQueries(queryList, queryInputs);
-            type=exec::shared::SQL;
+            type=Drill::SQL;
         }
 
         std::vector<std::string>::iterator queryInpIter;
@@ -329,7 +334,7 @@ int main(int argc, char* argv[]) {
         }else{
             for(queryInpIter = queryInputs.begin(); queryInpIter != queryInputs.end(); queryInpIter++) {
                 Drill::QueryHandle_t* qryHandle = new Drill::QueryHandle_t;
-                client.submitQuery(type, *queryInpIter, QueryResultsListener, NULL, qryHandle);
+                //client.submitQuery(type, *queryInpIter, QueryResultsListener, NULL, qryHandle);
                 client.registerSchemaChangeListener(qryHandle, SchemaListener);
                 queryHandles.push_back(qryHandle);
             }

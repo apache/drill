@@ -23,7 +23,6 @@
 #include "drill/drillClient.hpp"
 #include "drill/recordBatch.hpp"
 #include "drill/protobuf/Types.pb.h"
-#include "drill/protobuf/User.pb.h"
 
 #endif
 
