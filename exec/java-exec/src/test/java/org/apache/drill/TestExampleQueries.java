@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.rpc.RpcException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -319,6 +320,155 @@ public class TestExampleQueries extends BaseTestQuery{
     String root1 = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
     String query = String.format("select t1.columns[1] from dfs_test.`%s` t1,  dfs_test.`%s` t2 where t1.columns[0] = t2.columns[0]", root, root1);
     test(query);
+  }
+
+  @Test
+  public void testSelStarSubQJson2() throws Exception {
+    test("select v.first_name from (select * from cp.`employee.json`) v limit 2" );
+  }
+
+  // Select * in SubQuery,  View  or CTE (With clause)
+  @Test  // Select * in SubQuery : regular columns appear in select clause, where, group by, order by.
+  public void testSelStarSubQPrefix() throws Exception {
+    test("select t.n_nationkey, t.n_name, t.n_regionkey from (select * from cp.`tpch/nation.parquet`) t where t.n_regionkey > 1 order by t.n_name" );
+
+    test("select n.n_regionkey, count(*) as cnt from ( select * from ( select * from cp.`tpch/nation.parquet`) t where t.n_nationkey < 10 ) n where n.n_nationkey >1 group by n.n_regionkey order by n.n_regionkey ; ");
+
+    test("select t.n_regionkey, count(*) as cnt from (select * from cp.`tpch/nation.parquet`) t where t.n_nationkey > 1 group by t.n_regionkey order by t.n_regionkey;" );
+  }
+
+  @Test  // Select * in SubQuery : regular columns appear in select clause, where, group by, order by.
+  public void testSelStarSubQNoPrefix() throws Exception {
+    test("select n_nationkey, n_name, n_regionkey from (select * from cp.`tpch/nation.parquet`)  where n_regionkey > 1 order by n_name" );
+
+    test("select n_regionkey, count(*) as cnt from ( select * from ( select * from cp.`tpch/nation.parquet`)  where n_nationkey < 10 ) where n_nationkey >1 group by n_regionkey order by n_regionkey ; ");
+
+    test("select n_regionkey, count(*) as cnt from (select * from cp.`tpch/nation.parquet`) t where n_nationkey > 1 group by n_regionkey order by n_regionkey;" );
+  }
+
+  @Test  // join two SubQuery, each having select * : regular columns appear in the select , where and on clause, group by, order by.
+  public void testSelStarSubQJoin() throws Exception {
+    // select clause, where.
+    test(" select n.n_nationkey, n.n_name, n.n_regionkey, r.r_name \n" +
+         " from (select * from cp.`tpch/nation.parquet`) n, \n" +
+         "      (select * from cp.`tpch/region.parquet`) r \n" +
+         " where n.n_regionkey = r.r_regionkey " );
+
+    // select clause, where, group by, order by
+    test(" select n.n_regionkey, count(*) as cnt \n" +
+         " from (select * from cp.`tpch/nation.parquet`) n  \n" +
+         "    , (select * from cp.`tpch/region.parquet`) r  \n" +
+         " where n.n_regionkey = r.r_regionkey and n.n_nationkey > 10 \n" +
+         " group by n.n_regionkey \n" +
+         " order by n.n_regionkey; " );
+
+    // select clause, where, on, group by, order by.
+    test(" select n.n_regionkey, count(*) as cnt \n" +
+         " from   (select * from cp.`tpch/nation.parquet`) n  \n" +
+         "   join (select * from cp.`tpch/region.parquet`) r  \n" +
+         " on n.n_regionkey = r.r_regionkey \n" +
+         " where n.n_nationkey > 10 \n" +
+         " group by n.n_regionkey \n" +
+         " order by n.n_regionkey; " );
+
+    // Outer query use select *. Join condition in where clause.
+    test(" select *  \n" +
+         " from (select * from cp.`tpch/nation.parquet`) n \n" +
+         "    , (select * from cp.`tpch/region.parquet`) r \n" +
+         " where n.n_regionkey = r.r_regionkey " );
+
+    // Outer query use select *. Join condition in on clause.
+    test(" select *  \n" +
+         " from (select * from cp.`tpch/nation.parquet`) n \n" +
+         "    join (select * from cp.`tpch/region.parquet`) r \n" +
+         " on n.n_regionkey = r.r_regionkey " );
+  }
+
+  @Test // DRILL-595 : Select * in CTE WithClause : regular columns appear in select clause, where, group by, order by.
+  public void testDRILL_595WithClause() throws Exception {
+    test(" with x as (select * from cp.`region.json`) \n" +
+         " select x.region_id, x.sales_city \n" +
+         " from x where x.region_id > 10 limit 5;");
+
+    test(" with x as (select * from cp.`region.json`) \n" +
+        " select region_id, sales_city \n" +
+        " from x where region_id > 10 limit 5;");
+
+    test(" with x as (select * from cp.`tpch/nation.parquet`) \n" +
+         " select x.n_regionkey, count(*) as cnt \n" +
+         " from x \n" +
+         " where x.n_nationkey > 5 \n" +
+         " group by x.n_regionkey \n" +
+         " order by cnt limit 5; ");
+
+  }
+
+  @Test // DRILL-595 : Join two CTE, each having select * : regular columns appear in the select , where and on clause, group by, order by.
+  public void testDRILL_595WithClauseJoin() throws Exception {
+    test("with n as (select * from cp.`tpch/nation.parquet`), \n " +
+        "     r as (select * from cp.`tpch/region.parquet`) \n" +
+        "select n.n_nationkey, n.n_name, n.n_regionkey, r.r_name \n" +
+        "from  n, r \n" +
+        "where n.n_regionkey = r.r_regionkey ;" );
+
+    test("with n as (select * from cp.`tpch/nation.parquet`), \n " +
+        "     r as (select * from cp.`tpch/region.parquet`) \n" +
+        "select n.n_regionkey, count(*) as cnt \n" +
+        "from  n, r \n" +
+        "where n.n_regionkey = r.r_regionkey  and n.n_nationkey > 5 \n" +
+        "group by n.n_regionkey \n" +
+        "order by cnt;" );
+  }
+
+  @Test // DRILL-811
+  public void testDRILL_811View() throws Exception {
+    test("use dfs.tmp");
+    test("create view nation_view as select * from cp.`tpch/nation.parquet`;");
+
+    test("select n.n_nationkey, n.n_name, n.n_regionkey from nation_view n where n.n_nationkey > 8 order by n.n_regionkey");
+
+    test("select n.n_regionkey, count(*) as cnt from nation_view n where n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
+
+    test("drop view nation_view ");
+  }
+
+  @Test  // DRILL-811
+  public void testDRILL_811ViewJoin() throws Exception {
+    test("use dfs.tmp");
+    test("create view nation_view as select * from cp.`tpch/nation.parquet`;");
+    test("create view region_view as select * from cp.`tpch/region.parquet`;");
+
+    test("select n.n_nationkey, n.n_regionkey, r.r_name from region_view r , nation_view n where r.r_regionkey = n.n_regionkey ");
+
+    test("select n.n_regionkey, count(*) as cnt from region_view r , nation_view n where r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
+
+    test("select n.n_regionkey, count(*) as cnt from region_view r join nation_view n on r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
+
+    test("drop view region_view ");
+    test("drop view nation_view ");
+  }
+
+  @Test  // DRILL-811
+  public void testDRILL_811Json() throws Exception {
+    test("use dfs.tmp");
+    test("create view region_view as select * from cp.`region.json`;");
+    test("select sales_city, sales_region from region_view where region_id > 50 order by sales_country; ");
+    test("drop view region_view ");
+  }
+
+  @Test(expected = RpcException.class)  // Should get "At line 1, column 8: Column 'n_nationkey' is ambiguous"
+  public void testSelStarAmbiguousJoin() throws Exception {
+    test("select x.n_nationkey, x.n_name, x.n_regionkey, x.r_name from (select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey) x " ) ;
+  }
+
+  @Test  // select star for a SchemaTable.
+  public void testSelStarSubQSchemaTable() throws Exception {
+    test("select name, kind, type from (select * from sys.options);");
+  }
+
+  @Test  // Join a select star of SchemaTable, with a select star of Schema-less table.
+  public void testSelStarJoinSchemaWithSchemaLess() throws Exception {
+    test("select t1.name, t1.kind, t2.n_nationkey from (select * from sys.options) t1 join (select * from cp.`tpch/nation.parquet`) t2 on t1.name = t2.n_name;");
   }
 
 }

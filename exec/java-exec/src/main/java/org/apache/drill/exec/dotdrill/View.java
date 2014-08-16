@@ -20,6 +20,7 @@ package org.apache.drill.exec.dotdrill;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 import org.eigenbase.reltype.RelDataType;
@@ -133,6 +134,15 @@ public class View {
   @JsonIgnore
   public boolean isDynamic(){
     return fields.isEmpty();
+  }
+
+  @JsonIgnore
+  public boolean hasStar() {
+    for (FieldType field : fields) {
+      if (StarColumnHelper.isNonPrefixedStarColumn(field.name))
+        return true;
+    }
+    return false;
   }
 
   public String getSql() {
