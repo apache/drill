@@ -30,6 +30,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.HyperVectorWrapper;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
@@ -228,10 +229,12 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   private Copier getGenerated2Copier() throws SchemaChangeException{
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
 
-    for(VectorWrapper<?> i : incoming){
-      ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
-      container.add(v);
+    List<ValueVector> out = Lists.newArrayList();
+    for(VectorWrapper<?> vv : incoming){
+      TransferPair tp = vv.getValueVector().getTransferPair();
+      out.add(tp.getTo());
     }
+    container.addCollection(out);
 
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
@@ -252,11 +255,14 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, BufferAllocator allocator, VectorContainer container, RecordBatch outgoing) throws SchemaChangeException{
 
-    for(VectorWrapper<?> i : batch){
+    List<ValueVector> out = Lists.newArrayList();
 
-      ValueVector v = TypeHelper.getNewVector(i.getField(), allocator);
-      container.add(v);
+    for(VectorWrapper<?> vv : batch){
+      ValueVector v = vv.getValueVectors()[0];
+      TransferPair tp = v.getTransferPair();
+      out.add(tp.getTo());
     }
+    container.addCollection(out);
 
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
