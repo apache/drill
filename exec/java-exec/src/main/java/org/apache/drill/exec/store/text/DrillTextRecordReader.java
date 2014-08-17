@@ -69,6 +69,8 @@ public class DrillTextRecordReader implements RecordReader {
   public DrillTextRecordReader(FileSplit split, FragmentContext context, char delimiter, List<SchemaPath> columns) {
     this.context = context;
     this.delimiter = (byte) delimiter;
+    boolean getEntireRow = false;
+
     if(columns != null) {
       for (SchemaPath path : columns) {
         assert path.getRootSegment().isNamed();
@@ -78,12 +80,20 @@ public class DrillTextRecordReader implements RecordReader {
           Preconditions.checkArgument(path.getRootSegment().getChild().isArray(),"Selected column must be an array index");
           int index = path.getRootSegment().getChild().getArraySegment().getIndex();
           columnIds.add(index);
+        } else {
+          getEntireRow = true;
         }
       }
       Collections.sort(columnIds);
     }
     targetRecordCount = context.getConfig().getInt(ExecConstants.TEXT_LINE_READER_BATCH_SIZE);
-    numCols = columnIds.size();
+
+    /* If one of the columns requested is the entire row ('columns') then ignore the rest of the columns
+     * we are going copy all the values in the repeated varchar vector
+     */
+    if (!getEntireRow) {
+      numCols = columnIds.size();
+    }
     TextInputFormat inputFormat = new TextInputFormat();
     JobConf job = new JobConf();
     job.setInt("io.file.buffer.size", context.getConfig().getInt(ExecConstants.TEXT_LINE_READER_BUFFER_SIZE));

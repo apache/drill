@@ -300,4 +300,12 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select n_regionkey, count(*) from cp.`tpch/nation.parquet` group by n_regionkey limit 0");
   }
   
+  @Test
+  public void testTextJoin() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/nations.csv").toURI().toString();
+    String root1 = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    String query = String.format("select t1.columns[1] from dfs_test.`%s` t1,  dfs_test.`%s` t2 where t1.columns[0] = t2.columns[0]", root, root1);
+    test(query);
+  }
+
 }
