@@ -774,6 +774,21 @@
             </exclusions>
           </dependency>
           <dependency>
+            <groupId>com.mapr.fs</groupId>
+            <artifactId>libprotodefs</artifactId>
+            <version>2.4.1-mapr-4.0.0-SNAPSHOT</version>
+          </dependency>
+          <dependency>
+            <groupId>com.mapr.fs</groupId>
+            <artifactId>mapr-hbase</artifactId>
+            <version>2.4.1-mapr-4.0.0-SNAPSHOT</version>
+          </dependency>
+          <dependency>
+            <groupId>com.mapr.hadoop</groupId>
+            <artifactId>maprfs</artifactId>
+            <version>2.4.1-mapr-4.0.0-SNAPSHOT</version>
+          </dependency>
+          <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>2.11.0</version>

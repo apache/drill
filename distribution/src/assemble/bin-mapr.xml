@@ -29,7 +29,7 @@
 
   </moduleSets>
   <dependencySets>
-
+<!--
     <dependencySet>
       <includes>
         <include>org.apache.drill.exec:drill-jdbc-all:jar</include>
@@ -37,7 +37,7 @@
       <outputDirectory>jdbc-driver</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>
-
+-->
     <dependencySet>
       <!-- Now, select which projects to include in this module-set. -->
       <includes>
@@ -49,7 +49,6 @@
         <include>org.apache.drill.contrib.storage-hive:drill-hive-exec-shaded</include>
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
         <include>org.apache.drill.contrib:drill-storage-hbase</include>
-        <include>org.apache.drill.contrib:drill-hbase-shaded</include>
       </includes>
       <excludes>
         <exclude>org.apache.drill.contrib.storage-hive:drill-storage-hive-core:jar:tests</exclude>
@@ -116,10 +115,6 @@
     </file>
     <file>
       <source>../NOTICE</source>
-      <outputDirectory/>
-    </file>
-    <file>
-      <source>../DISCLAIMER</source>
       <outputDirectory/>
     </file>
     <file>
