@@ -24,17 +24,22 @@ public class AllocationHelper {
     allocate(v, valueCount, bytesPerValue, 5);
   }
 
-  public static void allocate(ValueVector v, int valueCount, int bytesPerValue, int repeatedPerTop){
+  public static void allocatePrecomputedChildCount(ValueVector v, int valueCount, int bytesPerValue, int childValCount){
     if(v instanceof FixedWidthVector){
       ((FixedWidthVector) v).allocateNew(valueCount);
     } else if (v instanceof VariableWidthVector) {
       ((VariableWidthVector) v).allocateNew(valueCount * bytesPerValue, valueCount);
     }else if(v instanceof RepeatedFixedWidthVector){
-      ((RepeatedFixedWidthVector) v).allocateNew(valueCount, valueCount * repeatedPerTop);
+      ((RepeatedFixedWidthVector) v).allocateNew(valueCount, childValCount);
     }else if(v instanceof RepeatedVariableWidthVector){
-      ((RepeatedVariableWidthVector) v).allocateNew(valueCount * bytesPerValue * repeatedPerTop, valueCount, valueCount * repeatedPerTop);
+      ((RepeatedVariableWidthVector) v).allocateNew(childValCount * bytesPerValue, valueCount, childValCount);
     }else{
       v.allocateNew();
     }
   }
+
+  public static void allocate(ValueVector v, int valueCount, int bytesPerValue, int repeatedPerTop){
+    allocatePrecomputedChildCount(v, valueCount, bytesPerValue, repeatedPerTop * valueCount);
+  }
+
 }

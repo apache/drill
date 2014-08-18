@@ -67,7 +67,7 @@ public class JsonConvertFrom {
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
 
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, null);
+        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, null, false);
 
         jsonReader.write(new java.io.StringReader(input), writer);
 
@@ -94,7 +94,7 @@ public class JsonConvertFrom {
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
 
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, null);
+        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, null, false);
 
         jsonReader.write(new java.io.StringReader(input), writer);
 

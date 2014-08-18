@@ -39,14 +39,14 @@ public class JsonReaderWithState {
   private JsonRecordSplitter splitter;
   private JsonReader jsonReader;
 
-  public JsonReaderWithState(JsonRecordSplitter splitter, DrillBuf workspace, List<SchemaPath> columns) throws IOException{
+  public JsonReaderWithState(JsonRecordSplitter splitter, DrillBuf workspace, List<SchemaPath> columns, boolean allTextMode) throws IOException{
     this.splitter = splitter;
     reader = splitter.getNextReader();
-    jsonReader = new JsonReader(workspace, columns);
+    jsonReader = new JsonReader(workspace, columns, allTextMode);
   }
 
   public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException{
-    this(splitter, null, null);
+    this(splitter, null, null, false);
   }
 
   public List<SchemaPath> getNullColumns() {

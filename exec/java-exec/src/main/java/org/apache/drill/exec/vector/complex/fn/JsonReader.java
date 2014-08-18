@@ -24,6 +24,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -62,12 +63,13 @@ public class JsonReader {
   // A flag set at setup time if the start column is in the requested column list, prevents
   // doing a more computational intensive check if we are supposed to be reading a column
   private boolean starRequested;
+  private boolean allTextMode;
 
   public JsonReader() throws IOException {
-    this(null, null);
+    this(null, null, false);
   }
 
-  public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns) throws JsonParseException, IOException {
+  public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean allTextMode) throws JsonParseException, IOException {
     factory.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     factory.configure(Feature.ALLOW_COMMENTS, true);
     this.workBuf = managedBuf;
@@ -76,6 +78,7 @@ public class JsonReader {
     if (this.columns == null) {
       this.columns = new ArrayList();
       this.columns.add(new SchemaPath(new PathSegment.NameSegment("*")));
+    this.allTextMode = allTextMode;
     }
     this.columnsFound = new boolean[this.columns.size()];
     this.starRequested = containsStar();
@@ -201,34 +204,53 @@ public class JsonReader {
 
       case VALUE_EMBEDDED_OBJECT:
       case VALUE_FALSE: {
+        if (allTextMode) {
+          handleString(parser, map, fieldName);
+          break;
+        }
         BitHolder h = new BitHolder();
         h.value = 0;
         map.bit(fieldName).write(h);
         break;
       }
       case VALUE_TRUE: {
+        if (allTextMode) {
+          handleString(parser, map, fieldName);
+          break;
+        }
         BitHolder h = new BitHolder();
         h.value = 1;
         map.bit(fieldName).write(h);
         break;
       }
       case VALUE_NULL:
+        if (allTextMode) {
+          map.checkValueCapacity();
+          break;
+        }
         map.checkValueCapacity();
         // do nothing as we don't have a type.
         break;
       case VALUE_NUMBER_FLOAT:
+        if (allTextMode) {
+          handleString(parser, map, fieldName);
+          break;
+        }
         Float8Holder fh = new Float8Holder();
         fh.value = parser.getDoubleValue();
         map.float8(fieldName).write(fh);
         break;
       case VALUE_NUMBER_INT:
+        if (allTextMode) {
+          handleString(parser, map, fieldName);
+          break;
+        }
         BigIntHolder bh = new BigIntHolder();
         bh.value = parser.getLongValue();
         map.bigInt(fieldName).write(bh);
         break;
       case VALUE_STRING:
-        VarCharHolder vh = new VarCharHolder();
-        map.varChar(fieldName).write(prepareVarCharHolder(vh, parser));
+        handleString(parser, map, fieldName);
         break;
 
       default:
@@ -245,8 +267,7 @@ public class JsonReader {
     workBuf = workBuf.reallocIfNeeded(length);
   }
 
-  private VarCharHolder prepareVarCharHolder(VarCharHolder vh, JsonParser parser) throws IOException {
-    String value = parser.getText();
+  private VarCharHolder prepareVarCharHolder(VarCharHolder vh, String value) throws IOException {
     byte[] b = value.getBytes(Charsets.UTF_8);
     ensure(b.length);
     workBuf.setBytes(0, b);
@@ -254,6 +275,21 @@ public class JsonReader {
     vh.start = 0;
     vh.end = b.length;
     return vh;
+  }
+
+  private void handleString(JsonParser parser, MapWriter writer, String fieldName) throws IOException {
+    VarCharHolder vh = new VarCharHolder();
+    writer.varChar(fieldName).write(prepareVarCharHolder(vh, parser.getText()));
+  }
+
+  private void handleString(JsonParser parser, ListWriter writer) throws IOException {
+    VarCharHolder vh = new VarCharHolder();
+    writer.varChar().write(prepareVarCharHolder(vh, parser.getText()));
+  }
+
+  private void handleString(String value, ListWriter writer) throws IOException {
+    VarCharHolder vh = new VarCharHolder();
+    writer.varChar().write(prepareVarCharHolder(vh, parser.getText()));
   }
 
   private void writeData(ListWriter list) throws JsonParseException, IOException {
@@ -273,33 +309,53 @@ public class JsonReader {
 
       case VALUE_EMBEDDED_OBJECT:
       case VALUE_FALSE:{
+        if (allTextMode) {
+          handleString(parser, list);
+          break;
+        }
         BitHolder h = new BitHolder();
         h.value = 0;
         list.bit().write(h);
         break;
       }
       case VALUE_TRUE: {
+        if (allTextMode) {
+          handleString(parser, list);
+          break;
+        }
         BitHolder h = new BitHolder();
         h.value = 1;
         list.bit().write(h);
         break;
       }
       case VALUE_NULL:
-        // do nothing as we don't have a type.
-        break;
+        if (allTextMode) {
+          handleString("null", list);
+          break;
+        }
+        throw new DrillRuntimeException("Null values are not supported in lists be default. " +
+            "Please set jason_all_text_mode to true to read lists containing nulls. " +
+            "Be advised that this will treat JSON null values as string containing the word 'null'.");
       case VALUE_NUMBER_FLOAT:
+        if (allTextMode) {
+          handleString(parser, list);
+          break;
+        }
         Float8Holder fh = new Float8Holder();
         fh.value = parser.getDoubleValue();
         list.float8().write(fh);
         break;
       case VALUE_NUMBER_INT:
+        if (allTextMode) {
+          handleString(parser, list);
+          break;
+        }
         BigIntHolder bh = new BigIntHolder();
         bh.value = parser.getLongValue();
         list.bigInt().write(bh);
         break;
       case VALUE_STRING:
-        VarCharHolder vh = new VarCharHolder();
-        list.varChar().write(prepareVarCharHolder(vh, parser));
+        handleString(parser, list);
         break;
       default:
         throw new IllegalStateException("Unexpected token " + parser.getCurrentToken());

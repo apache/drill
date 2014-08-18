@@ -96,7 +96,7 @@ public class TestJsonReader extends BaseTestQuery {
         System.out.println("======");
       }
       int rowCount = testRunAndPrint(queryType, query);
-      assertEquals( rowCount, rowCounts[i]);
+      assertEquals(rowCounts[i], rowCount);
       System.out.println();
       i++;
     }
@@ -118,6 +118,14 @@ public class TestJsonReader extends BaseTestQuery {
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
   }
 
+  public void testAllTextMode() throws Exception {
+    test("alter system set `store.json.all_text_mode` = true");
+    String[] queries = {"select * from cp.`/store/json/schema_change_int_to_string.json`"};
+    long[] rowCounts = {3};
+    String filename = "/store/json/schema_change_int_to_string.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+  }
+
   @Test
   public void readComplexWithStar() throws Exception {
     List<QueryResultBatch> results = testSqlWithResults("select * from cp.`/store/json/test_complex_read_with_star.json`");
@@ -132,6 +140,24 @@ public class TestJsonReader extends BaseTestQuery {
 
     batch.release();
     batchLoader.clear();
+  }
+
+  @Test
+  public void testNullWhereListExpected() throws Exception {
+    test("alter system set `store.json.all_text_mode` = true");
+    String[] queries = {"select * from cp.`/store/json/null_where_list_expected.json`"};
+    long[] rowCounts = {3};
+    String filename = "/store/json/null_where_list_expected.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+  }
+
+  @Test
+  public void testNullWhereMapExpected() throws Exception {
+    test("alter system set `store.json.all_text_mode` = true");
+    String[] queries = {"select * from cp.`/store/json/null_where_map_expected.json`"};
+    long[] rowCounts = {3};
+    String filename = "/store/json/null_where_map_expected.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
   }
 
   // The project pushdown rule is correctly adding the projected columns to the scan, however it is not removing
@@ -245,7 +271,7 @@ public class TestJsonReader extends BaseTestQuery {
     writer.allocate();
 
     DrillBuf buffer = allocator.buffer(255);
-    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound), buffer, null);
+    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound), buffer, null, false);
     int i =0;
     List<Integer> batchSizes = Lists.newArrayList();
 

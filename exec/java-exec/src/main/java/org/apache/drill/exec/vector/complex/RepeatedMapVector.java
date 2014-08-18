@@ -81,7 +81,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     offsets.allocateNew(parentValueCount+1);
     offsets.zeroVector();
     for(ValueVector v : vectors.values()){
-      AllocationHelper.allocate(v, parentValueCount, 50, childValueCount);
+      AllocationHelper.allocatePrecomputedChildCount(v, parentValueCount, 50, childValueCount);
     }
     mutator.reset();
     accessor.reset();
