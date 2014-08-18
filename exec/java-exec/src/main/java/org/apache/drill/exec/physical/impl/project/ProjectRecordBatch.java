@@ -317,9 +317,12 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
       String outputName = getRef(namedExpression).getRootSegment().getPath();
       if (result != null && result.outputNames != null && result.outputNames.size() > 0) {
-        // TODO: Revisit this logic. It is possible that the output names array does not contain the expression of interest in index 0
-        if (result.outputNames.get(0) == EMPTY_STRING) continue;
-        outputName = result.outputNames.get(0);
+        for (int j = 0; j < result.outputNames.size(); j++) {
+          if (!result.outputNames.get(j).equals(EMPTY_STRING)) {
+            outputName = result.outputNames.get(j);
+            break;
+          }
+        }
       }
       
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
@@ -460,18 +463,19 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     boolean exprHasPrefix = expr.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
     boolean refHasPrefix = ref.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
     boolean exprIsStar = expr.getPath().equals(StarColumnHelper.STAR_COLUMN);
-    boolean refIsStar = ref.getPath().equals(StarColumnHelper.STAR_COLUMN);
     boolean refContainsStar = ref.getPath().contains(StarColumnHelper.STAR_COLUMN);
     boolean exprContainsStar = expr.getPath().contains(StarColumnHelper.STAR_COLUMN);
     boolean refEndsWithStar = ref.getPath().endsWith(StarColumnHelper.STAR_COLUMN);
 
     String exprPrefix = EMPTY_STRING;
+    String exprSuffix = expr.getPath();
     
     if (exprHasPrefix) {
       // get the prefix of the expr
       String[] exprComponents = expr.getPath().split(StarColumnHelper.PREFIX_DELIMITER, 2);
       assert(exprComponents.length == 2); 
       exprPrefix = exprComponents[0];
+      exprSuffix = exprComponents[1];
       result.prefix = exprPrefix;
     }
 
@@ -568,14 +572,14 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       String newName = ref.getPath();
       addToResultMaps(newName, result, false);
     }
-    // input has prefix but output does not; this would happen for a top-level project
+    // input has prefix but output does not
     else if (exprHasPrefix && !refHasPrefix) {
       int k = 0;
       result.outputNames = Lists.newArrayListWithCapacity(incomingSchemaSize);
       for (int j=0; j < incomingSchemaSize; j++) {
         result.outputNames.add(EMPTY_STRING);  // initialize
       }
-      // remove the prefix from the incoming column names      
+
       for(VectorWrapper<?> wrapper : incoming) {
         ValueVector vvIn = wrapper.getValueVector();
         String name = vvIn.getField().getPath().getRootSegment().getPath();
@@ -587,8 +591,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         String namePrefix = components[0];
         String nameSuffix = components[1];
         if (exprPrefix.equals(namePrefix)) {
-          String newName = getUniqueName(nameSuffix, result);  // for top level we need to make names unique        
-          result.outputNames.set(k, newName);
+          if (refContainsStar) {
+            // remove the prefix from the incoming column names      
+            String newName = getUniqueName(nameSuffix, result);  // for top level we need to make names unique        
+            result.outputNames.set(k, newName);
+          } else if (exprSuffix.equals(nameSuffix)) {
+            // example: ref: $f1, expr: T0<PREFIX><column_name>
+            String newName = ref.getPath();
+            result.outputNames.set(k, newName);
+          }
         } else {
           result.outputNames.add(EMPTY_STRING);
         }
@@ -599,11 +610,30 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     else if (exprHasPrefix && refHasPrefix) {
       String[] input = expr.getPath().split(StarColumnHelper.PREFIX_DELIMITER, 2);
       assert(input.length == 2); 
-      String inputSuffix = input[1];    
       assert false : "Unexpected project expression or reference";  // not handled yet   
     } 
     else {
-      assert false : "Unexpected project expression or reference." ;
+      // if the incoming schema's column name matches the expression name of the Project, 
+      // then we just want to pick the ref name as the output column name
+      result.outputNames = Lists.newArrayListWithCapacity(incomingSchemaSize);
+      for (int j=0; j < incomingSchemaSize; j++) {
+        result.outputNames.add(EMPTY_STRING);  // initialize
+      }
+
+      int k = 0;
+      for(VectorWrapper<?> wrapper : incoming) {
+        ValueVector vvIn = wrapper.getValueVector();
+        String incomingName = vvIn.getField().getPath().getRootSegment().getPath(); 
+
+        if (expr.getPath().equals(incomingName)) {
+          String newName = ref.getPath(); 
+          if (!result.outputMap.containsKey(newName)) {
+            result.outputNames.set(k, newName);
+            result.outputMap.put(newName,  newName);
+          }
+        }
+        k++;
+      }
     }              
   }
 
