@@ -129,18 +129,23 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     this.chunksInverseMapping = that.chunksInverseMapping;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
   }
-
+  
+  private boolean isShardedCluster(MongoClient client) {
+    //need to check better way of identifying
+    List<String> databaseNames = client.getDatabaseNames();
+    return databaseNames.contains(CONFIG);
+  }
+ 
   @SuppressWarnings("rawtypes")
   private void init() throws IOException {
     MongoClient client = null;
     try {
       MongoClientURI clientURI = new MongoClientURI(this.storagePluginConfig.getConnection());
       client = new MongoClient(clientURI);
-      List<String> databaseNames = client.getDatabaseNames();
 
       chunksMapping = Maps.newHashMap();
       chunksInverseMapping = Maps.newLinkedHashMap();
-      if (databaseNames.contains(CONFIG)) {
+      if (isShardedCluster(client)) {
         DB db = client.getDB(CONFIG);
         db.setReadPreference(ReadPreference.nearest());
         DBCollection chunksCollection = db.getCollectionFromString(CHUNKS);
@@ -219,8 +224,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
         }
       } else {
         String chunkName = scanSpec.getDbName() + "." + scanSpec.getCollectionName();
-        MongoClientURI uri = new MongoClientURI(this.storagePluginConfig.getConnection());
-        List<String> hosts = uri.getHosts();
+        List<String> hosts = clientURI.getHosts();
         Set<ServerAddress> addressList = Sets.newHashSet();
         
         for (String host : hosts) {
