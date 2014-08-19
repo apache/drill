@@ -62,6 +62,8 @@ public interface HashTable {
   public void clear();
 
   public boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords);
+
+  public void addNewKeyBatch();
 }
 
 

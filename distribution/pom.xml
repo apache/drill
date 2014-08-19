@@ -15,7 +15,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>0.4.0-incubating-SNAPSHOT</version>
+    <version>0.5.0-incubating-SNAPSHOT</version>
   </parent>
 
   <artifactId>distribution</artifactId>
@@ -56,11 +56,11 @@
       <artifactId>drill-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
-<!--    <dependency>
+    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-jdbc-all</artifactId>
       <version>${project.version}</version>
-    </dependency> -->
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.contrib</groupId>
       <artifactId>drill-storage-hbase</artifactId>

@@ -17,27 +17,27 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-
+import com.google.common.collect.Maps;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
 import org.apache.drill.exec.compile.QueryClassLoader;
-import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
-import org.apache.drill.exec.work.foreman.Foreman;
 import org.eigenbase.sql.SqlLiteral;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 public class SystemOptionManager implements OptionManager{
+
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
   public static final CacheConfig<String, OptionValue> OPTION_CACHE = CacheConfig //
       .newBuilder(OptionValue.class) //
@@ -72,6 +72,12 @@ public class SystemOptionManager implements OptionManager{
       ExecConstants.SMALL_QUEUE_SIZE,
       ExecConstants.MIN_HASH_TABLE_SIZE,
       ExecConstants.MAX_HASH_TABLE_SIZE,
+      ExecConstants.ENABLE_MEMORY_ESTIMATION,
+      ExecConstants.MAX_QUERY_MEMORY_PER_NODE,
+      ExecConstants.NON_BLOCKING_OPERATORS_MEMORY,
+      ExecConstants.HASH_JOIN_TABLE_FACTOR,
+      ExecConstants.HASH_AGG_TABLE_FACTOR,
+      ExecConstants.AVERAGE_FIELD_WIDTH,
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
       QueryClassLoader.JAVA_COMPILER_DEBUG,
@@ -133,21 +139,22 @@ public class SystemOptionManager implements OptionManager{
 
   @Override
   public void setOption(OptionValue value) {
-    admin.validate(value);
     assert value.type == OptionType.SYSTEM;
+    admin.validate(value);
     options.put(value.name, value);
   }
 
   @Override
-  public void setOption(String name, SqlLiteral literal) {
+  public void setOption(String name, SqlLiteral literal, OptionType type) {
+    assert type == OptionValue.OptionType.SYSTEM;
     OptionValue v = admin.validate(name, literal);
-    v.type = OptionValue.OptionType.SYSTEM;
+    v.type = type;
     options.put(name, v);
   }
 
   @Override
-  public OptionList getSessionOptionList() {
-    throw new UnsupportedOperationException();
+  public OptionList getOptionList() {
+    return (OptionList) IteratorUtils.toList(iterator());
   }
 
   @Override
@@ -159,9 +166,6 @@ public class SystemOptionManager implements OptionManager{
   public OptionAdmin getAdmin() {
     return admin;
   }
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
-
 
   private class SystemOptionAdmin implements OptionAdmin{
 

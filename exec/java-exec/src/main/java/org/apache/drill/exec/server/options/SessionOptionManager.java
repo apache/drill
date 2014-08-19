@@ -17,14 +17,13 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.util.Iterator;
-import java.util.Map;
-
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
+import java.util.Iterator;
+import java.util.Map;
 
 public class SessionOptionManager implements OptionManager{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
@@ -59,27 +58,18 @@ public class SessionOptionManager implements OptionManager{
   }
 
   @Override
-  public OptionList getSessionOptionList() {
-    OptionList list = new OptionList();
-    for(OptionValue o : options.values()){
-      list.add(o);
-    }
-    return list;
-  }
-
-  private void setValidatedOption(OptionValue value){
-    if(value.type == OptionType.SYSTEM){
-      systemOptions.setOption(value);
-    }else{
-      options.put(value.name, value);
-    }
-  }
-
-  @Override
-  public void setOption(String name, SqlLiteral literal) {
-    OptionValue val = systemOptions.getAdmin().validate(name,  literal);
-    val.type = OptionValue.OptionType.SESSION;
+  public void setOption(String name, SqlLiteral literal, OptionType type) {
+    OptionValue val = systemOptions.getAdmin().validate(name, literal);
+    val.type = type;
     setValidatedOption(val);
+  }
+
+  private void setValidatedOption(OptionValue value) {
+    if (value.type == OptionType.SESSION) {
+      options.put(value.name, value);
+    } else {
+      systemOptions.setOption(value);
+    }
   }
 
   @Override
@@ -90,6 +80,15 @@ public class SessionOptionManager implements OptionManager{
   @Override
   public OptionManager getSystemManager() {
     return systemOptions;
+  }
+
+  @Override
+  public OptionList getOptionList() {
+    OptionList list = new OptionList();
+    for (OptionValue o : options.values()) {
+      list.add(o);
+    }
+    return list;
   }
 
 }

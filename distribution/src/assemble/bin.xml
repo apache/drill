@@ -29,7 +29,7 @@
 
   </moduleSets>
   <dependencySets>
-<!--
+
     <dependencySet>
       <includes>
         <include>org.apache.drill.exec:drill-jdbc-all:jar</include>
@@ -37,7 +37,7 @@
       <outputDirectory>jdbc-driver</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>
--->
+
     <dependencySet>
       <!-- Now, select which projects to include in this module-set. -->
       <includes>
@@ -119,7 +119,11 @@
       <outputDirectory/>
     </file>
     <file>
-      <source>target/classes/git.properties</source>
+      <source>../DISCLAIMER</source>
+      <outputDirectory/>
+    </file>
+    <file>
+      <source>../git.properties</source>
       <outputDirectory/>
     </file>
     <file>

@@ -63,6 +63,13 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
+  public void testComplex() throws Exception {
+    String selection = "*";
+    String inputTable = "cp.`donuts.json`";
+    runTestAndValidate(selection, selection, inputTable, "donuts_json");
+  }
+
+  @Test
   public void testCastProjectBug_Drill_929() throws Exception {
     String selection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
         "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as COMMITDATE, cast(L_RECEIPTDATE as DATE) AS RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
@@ -175,7 +182,6 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate("*", "*", inputTable, "nullable_test");
   }
 
-  @Ignore // fails intermittenly when being run with other tests, a patch in DRILL
   @Test
   public void testDecimal() throws Exception {
     String selection = "cast(salary as decimal(8,2)) as decimal8, cast(salary as decimal(15,2)) as decimal15, " +
@@ -285,7 +291,6 @@ public class TestParquetWriter extends BaseTestQuery {
           continue;
         if ( (actualRecords.get(i).get(column) == null && record.get(column) == null) || ! actualRecords.get(i).get(column).equals(record.get(column))) {
           missmatch++;
-          System.out.println( counter + " " + column + "[ex: " + record.get(column) + ", actual:" + actualRecords.get(i).get(column) + "]");
         }
       }
       if ( ! actualRecords.remove(record)) {

@@ -18,11 +18,18 @@
 package org.apache.drill.exec.store.parquet;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.EventBasedRecordWriter;
+import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -36,8 +43,10 @@ import parquet.io.ColumnIOFactory;
 import parquet.io.MessageColumnIO;
 import parquet.io.api.RecordConsumer;
 import parquet.schema.DecimalMetadata;
+import parquet.schema.GroupType;
 import parquet.schema.MessageType;
 import parquet.schema.OriginalType;
+import parquet.schema.PrimitiveType;
 import parquet.schema.PrimitiveType.PrimitiveTypeName;
 import parquet.schema.Type;
 import parquet.schema.Type.Repetition;
@@ -107,15 +116,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private void newSchema() throws IOException {
     List<Type> types = Lists.newArrayList();
     for (MaterializedField field : batchSchema) {
-      String name = field.getAsSchemaPath().getAsUnescapedPath();
-      MinorType minorType = field.getType().getMinorType();
-      PrimitiveTypeName primitiveTypeName = ParquetTypeHelper.getPrimitiveTypeNameForMinorType(minorType);
-      Repetition repetition = ParquetTypeHelper.getRepetitionForDataMode(field.getDataMode());
-      OriginalType originalType = ParquetTypeHelper.getOriginalTypeForMinorType(minorType);
-      DecimalMetadata decimalMetadata = ParquetTypeHelper.getDecimalMetadataForField(field);
-      int length = ParquetTypeHelper.getLengthForMinorType(minorType);
-      parquet.schema.Type type = new parquet.schema.PrimitiveType(repetition, primitiveTypeName, length, name, originalType, decimalMetadata);
-      types.add(type);
+      types.add(getType(field));
     }
     schema = new MessageType("root", types);
 
@@ -130,6 +131,34 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     MessageColumnIO columnIO = new ColumnIOFactory(validating).getColumnIO(this.schema);
     consumer = columnIO.getRecordWriter(store);
     setUp(schema, consumer);
+  }
+
+  private PrimitiveType getPrimitiveType(MaterializedField field) {
+    MinorType minorType = field.getType().getMinorType();
+    String name = field.getLastName();
+    PrimitiveTypeName primitiveTypeName = ParquetTypeHelper.getPrimitiveTypeNameForMinorType(minorType);
+    Repetition repetition = ParquetTypeHelper.getRepetitionForDataMode(field.getDataMode());
+    OriginalType originalType = ParquetTypeHelper.getOriginalTypeForMinorType(minorType);
+    DecimalMetadata decimalMetadata = ParquetTypeHelper.getDecimalMetadataForField(field);
+    int length = ParquetTypeHelper.getLengthForMinorType(minorType);
+    return new PrimitiveType(repetition, primitiveTypeName, length, name, originalType, decimalMetadata);
+  }
+
+  private parquet.schema.Type getType(MaterializedField field) {
+    MinorType minorType = field.getType().getMinorType();
+    DataMode dataMode = field.getType().getMode();
+    switch(minorType) {
+      case MAP:
+        List<parquet.schema.Type> types = Lists.newArrayList();
+        for (MaterializedField childField : field.getChildren()) {
+          types.add(getType(childField));
+        }
+        return new GroupType(dataMode == DataMode.REPEATED ? Repetition.REPEATED : Repetition.OPTIONAL, field.getLastName(), types);
+      case LIST:
+        throw new UnsupportedOperationException("Unsupported type " + minorType);
+      default:
+        return getPrimitiveType(field);
+    }
   }
 
   private void flush() throws IOException {
@@ -163,6 +192,70 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   @Override
+  public FieldConverter getNewMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new MapParquetConverter(fieldId, fieldName, reader);
+  }
+
+  public class MapParquetConverter extends FieldConverter {
+    List<FieldConverter> converters = Lists.newArrayList();
+
+    public MapParquetConverter(int fieldId, String fieldName, FieldReader reader) {
+      super(fieldId, fieldName, reader);
+      int i = 0;
+      for (String name : reader) {
+        FieldConverter converter = EventBasedRecordWriter.getConverter(ParquetRecordWriter.this, i++, name, reader.reader(name));
+        converters.add(converter);
+      }
+    }
+
+    @Override
+    public void writeField() throws IOException {
+      consumer.startField(fieldName, fieldId);
+      consumer.startGroup();
+      for (FieldConverter converter : converters) {
+        converter.writeField();
+      }
+      consumer.endGroup();
+      consumer.endField(fieldName, fieldId);
+    }
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new RepeatedMapParquetConverter(fieldId, fieldName, reader);
+  }
+
+  public class RepeatedMapParquetConverter extends FieldConverter {
+    List<FieldConverter> converters = Lists.newArrayList();
+
+    public RepeatedMapParquetConverter(int fieldId, String fieldName, FieldReader reader) {
+      super(fieldId, fieldName, reader);
+      int i = 0;
+      for (String name : reader) {
+        FieldConverter converter = EventBasedRecordWriter.getConverter(ParquetRecordWriter.this, i++, name, reader.reader(name));
+        converters.add(converter);
+      }
+    }
+
+    @Override
+    public void writeField() throws IOException {
+      if (reader.size() == 0) {
+        return;
+      }
+      consumer.startField(fieldName, fieldId);
+      while (reader.next()) {
+        consumer.startGroup();
+        for (FieldConverter converter : converters) {
+          converter.writeField();
+        }
+        consumer.endGroup();
+      }
+      consumer.endField(fieldName, fieldId);
+    }
+  }
+
+
+  @Override
   public void startRecord() throws IOException {
     consumer.startMessage();
   }
@@ -176,7 +269,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   @Override
   public void abort() throws IOException {
-    //To change body of implemented methods use File | Settings | File Templates.
   }
 
   @Override

@@ -22,10 +22,10 @@ import org.eigenbase.sql.SqlLiteral;
 public interface OptionManager extends Iterable<OptionValue>{
   public OptionValue getOption(String name);
   public void setOption(OptionValue value) throws SetOptionException;
-  public void setOption(String name, SqlLiteral literal) throws SetOptionException;
+  public void setOption(String name, SqlLiteral literal, OptionValue.OptionType type) throws SetOptionException;
   public OptionAdmin getAdmin();
   public OptionManager getSystemManager();
-  public OptionList getSessionOptionList();
+  public OptionList getOptionList();
 
   public interface OptionAdmin{
     public void registerOptionType(OptionValidator validator);

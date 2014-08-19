@@ -17,27 +17,13 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.io.IOException;
-import java.util.BitSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import net.hydromatic.linq4j.Ord;
-import net.hydromatic.optiq.util.BitSets;
-
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
-import org.apache.drill.exec.planner.logical.DrillParseContext;
-import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
@@ -49,7 +35,9 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.List;
 
 public class HashAggPrel extends AggPrelBase implements Prel{
 
@@ -84,8 +72,24 @@ public class HashAggPrel extends AggPrelBase implements Prel{
     // add cpu cost for computing the aggregate functions
     cpuCost += DrillCostBase.FUNC_CPU_COST * numAggrFields * inputRows;
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0 /* network cost */);
+
+    // TODO: use distinct row count
+    // + hash table template stuff
+    double factor = PrelUtil.getPlannerSettings(planner).getOptions()
+      .getOption(ExecConstants.HASH_AGG_TABLE_FACTOR_KEY).float_val;
+    long fieldWidth = PrelUtil.getPlannerSettings(planner).getOptions()
+      .getOption(ExecConstants.AVERAGE_FIELD_WIDTH_KEY).num_val;
+
+    // table + hashValues + links
+    double memCost =
+      (
+        (fieldWidth * numGroupByFields) +
+          IntHolder.WIDTH +
+          IntHolder.WIDTH
+      ) * inputRows * factor;
+
+    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0 /* network cost */, memCost);
   }
 
   @Override

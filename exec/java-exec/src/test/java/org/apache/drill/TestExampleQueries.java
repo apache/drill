@@ -96,6 +96,13 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey;");
   }
 
+  @Test // DRILL-1293
+  public void testStarView1() throws Exception { 
+    test("use dfs.tmp");  
+    test("create view vt1 as select * from cp.`tpch/region.parquet` r, cp.`tpch/nation.parquet` n where r.r_regionkey = n.n_regionkey");
+    test("select * from vt1");
+    test("drop view vt1");
+  }
 
   @Test
   public void testJoinExpOn() throws Exception{
@@ -281,6 +288,24 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select r_name from cp.`tpch/region.parquet` order by r_regionkey");
     test("select r_name from cp.`tpch/region.parquet` order by r_name, r_regionkey");
     test("select cast(r_name as varchar(20)) from cp.`tpch/region.parquet` order by r_name");
+  }
+
+  @Test  // tests with LIMIT 0
+  public void testLimit0_1() throws Exception {
+    test("select n_nationkey, n_name from cp.`tpch/nation.parquet` limit 0");
+    test("select n_nationkey, n_name from cp.`tpch/nation.parquet` limit 0 offset 5");
+    test("select n_nationkey, n_name from cp.`tpch/nation.parquet` order by n_nationkey limit 0");
+    test("select * from cp.`tpch/nation.parquet` limit 0");
+    test("select n.n_nationkey from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey limit 0");
+    test("select n_regionkey, count(*) from cp.`tpch/nation.parquet` group by n_regionkey limit 0");
+  }
+  
+  @Test
+  public void testTextJoin() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/nations.csv").toURI().toString();
+    String root1 = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    String query = String.format("select t1.columns[1] from dfs_test.`%s` t1,  dfs_test.`%s` t2 where t1.columns[0] = t2.columns[0]", root, root1);
+    test(query);
   }
 
 }

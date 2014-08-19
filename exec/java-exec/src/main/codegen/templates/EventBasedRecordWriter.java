@@ -25,11 +25,9 @@ package org.apache.drill.exec.store;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.RecordValueAccessor;
+import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,61 +38,44 @@ import java.util.Map;
 public class EventBasedRecordWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EventBasedRecordWriter.class);
 
-  private BatchSchema schema;
-  private RecordValueAccessor rva;
+  private VectorAccessible batch;
   private RecordWriter recordWriter;
-  private List<FieldWriter> fieldWriters;
+  private List<FieldConverter> fieldConverters;
 
-  static private Map<MajorType, Class<? extends FieldWriter>> typeClassMap;
-
-  static {
-    typeClassMap = Maps.newHashMap();
-
-<#list vv.types as type>
-  <#list type.minor as minor>
-    <#list vv.modes as mode>
-    typeClassMap.put(${mode.prefix}${minor.class}Holder.TYPE, ${mode.prefix}${minor.class}FieldWriter.class);
-    </#list>
-  </#list>
-</#list>
-  }
-
-  public EventBasedRecordWriter(BatchSchema schema, RecordValueAccessor rva, RecordWriter recordWriter)
-      throws IOException {
-    this.schema = schema;
-    this.rva = rva;
+  public EventBasedRecordWriter(VectorAccessible batch, RecordWriter recordWriter)
+          throws IOException {
+    this.batch = batch;
     this.recordWriter = recordWriter;
 
     initFieldWriters();
   }
 
-  public int write() throws IOException {
+  public int write(int recordCount) throws IOException {
     int counter = 0;
 
-    rva.resetIterator();
-    while(rva.next()) {
+    for (; counter < recordCount; counter++) {
       recordWriter.startRecord();
       // write the current record
-      int fieldId = 0;
-      for (MaterializedField field : schema) {
-        fieldWriters.get(fieldId).writeField();
-        fieldId++;
+      for (FieldConverter converter : fieldConverters) {
+        converter.setPosition(counter);
+        converter.startField();
+        converter.writeField();
+        converter.endField();
       }
       recordWriter.endRecord();
-      counter++;
     }
 
     return counter;
   }
 
   private void initFieldWriters() throws IOException {
-    fieldWriters = Lists.newArrayList();
+    fieldConverters = Lists.newArrayList();
     try {
-      for (int i = 0; i < schema.getFieldCount(); i++) {
-        MajorType mt = schema.getColumn(i).getType();
-        MajorType newMt = MajorType.newBuilder().setMinorType(mt.getMinorType()).setMode(mt.getMode()).build();
-        fieldWriters.add(i, typeClassMap.get(newMt)
-                .getConstructor(EventBasedRecordWriter.class, int.class).newInstance(this, i));
+      int fieldId = 0;
+      for (VectorWrapper w : batch) {
+        FieldReader reader = w.getValueVector().getAccessor().getReader();
+        FieldConverter converter = getConverter(recordWriter, fieldId++, w.getField().getLastName(), reader);
+        fieldConverters.add(converter);
       }
     } catch(Exception e) {
       logger.error("Failed to create FieldWriter.", e);
@@ -102,33 +83,64 @@ public class EventBasedRecordWriter {
     }
   }
 
-  abstract class FieldWriter {
+  public static abstract class FieldConverter {
     protected int fieldId;
+    protected String fieldName;
+    protected FieldReader reader;
 
-    public FieldWriter(int fieldId) {
+    public FieldConverter(int fieldId, String fieldName, FieldReader reader) {
       this.fieldId = fieldId;
+      this.fieldName = fieldName;
+      this.reader = reader;
+    }
+
+    public void setPosition(int index) {
+      reader.setPosition(index);
+    }
+
+    public void startField() throws IOException {
+      // no op
+    }
+
+    public void endField() throws IOException {
+      // no op
     }
 
     public abstract void writeField() throws IOException;
   }
 
-<#list vv.types as type>
-  <#list type.minor as minor>
-    <#list vv.modes as mode>
-  class ${mode.prefix}${minor.class}FieldWriter extends FieldWriter {
-    private ${mode.prefix}${minor.class}Holder holder = new ${mode.prefix}${minor.class}Holder();
+  public static FieldConverter getConverter(RecordWriter recordWriter, int fieldId, String fieldName, FieldReader reader) {
+    switch (reader.getType().getMinorType()) {
+      case MAP:
+        switch (reader.getType().getMode()) {
+          case REQUIRED:
+          case OPTIONAL:
+            return recordWriter.getNewMapConverter(fieldId, fieldName, reader);
+          case REPEATED:
+            return recordWriter.getNewRepeatedMapConverter(fieldId, fieldName, reader);
+        }
 
-    public ${mode.prefix}${minor.class}FieldWriter(int fieldId) {
-      super(fieldId);
-    }
+      case LIST:
+        switch (reader.getType().getMode()) {
+          case REPEATED:
+            return recordWriter.getNewRepeatedListConverter(fieldId, fieldName, reader);
+        }
 
-    public void writeField() throws IOException {
-      rva.getFieldById(fieldId, holder);
-      recordWriter.add${mode.prefix}${minor.class}Holder(fieldId, holder);
+        <#list vv.types as type>
+        <#list type.minor as minor>
+      case ${minor.class?upper_case}:
+      switch (reader.getType().getMode()) {
+        case REQUIRED:
+          return recordWriter.getNew${minor.class}Converter(fieldId, fieldName, reader);
+        case OPTIONAL:
+          return recordWriter.getNewNullable${minor.class}Converter(fieldId, fieldName, reader);
+        case REPEATED:
+          return recordWriter.getNewRepeated${minor.class}Converter(fieldId, fieldName, reader);
+      }
+      </#list>
+      </#list>
+
     }
+    throw new UnsupportedOperationException();
   }
-
-    </#list>
-  </#list>
-</#list>
 }

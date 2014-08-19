@@ -62,6 +62,12 @@ public class RecordValueAccessor {
     return ++currentIndex < batch.getRecordCount();
   }
 
+  public void getFieldById(int fieldId, ComplexHolder holder) {
+    holder.isSet = vectors[fieldId].getAccessor().isNull(currentIndex) ? 1 : 0;
+    holder.reader = (vectors[fieldId]).getAccessor().getReader();
+    holder.reader.setPosition(currentIndex);
+  }
+
 <#list vv.types as type>
   <#list type.minor as minor>
     <#list vv.modes as mode>

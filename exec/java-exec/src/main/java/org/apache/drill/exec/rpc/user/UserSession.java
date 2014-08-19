@@ -17,17 +17,15 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import java.util.Map;
-
+import com.google.common.collect.Maps;
 import net.hydromatic.optiq.SchemaPlus;
-
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
 
 public class UserSession {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
@@ -39,7 +37,7 @@ public class UserSession {
   private boolean supportComplexTypes = false;
   private UserCredentials credentials;
   private Map<String, String> properties;
-  private OptionManager options;
+  private OptionManager sessionOptions;
 
   public static class Builder {
     UserSession userSession;
@@ -54,7 +52,7 @@ public class UserSession {
     }
 
     public Builder withOptionManager(OptionManager systemOptions) {
-      userSession.options = new SessionOptionManager(systemOptions);
+      userSession.sessionOptions = new SessionOptionManager(systemOptions);
       return this;
     }
 
@@ -91,8 +89,8 @@ public class UserSession {
     return supportComplexTypes;
   }
 
-  public OptionManager getOptions(){
-    return options;
+  public OptionManager getOptions() {
+    return sessionOptions;
   }
 
   public DrillUser getUser(){

@@ -108,7 +108,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
           // fall through.
         case OK:
           try {
-            counter += eventBasedRecordWriter.write();
+            counter += eventBasedRecordWriter.write(incoming.getRecordCount());
             logger.debug("Total records written so far: {}", counter);
           } catch(IOException ex) {
             throw new RuntimeException(ex);
@@ -162,8 +162,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       stats.stopSetup();
     }
 
-    eventBasedRecordWriter = new EventBasedRecordWriter(incoming.getSchema(),
-        new RecordValueAccessor(incoming), recordWriter);
+    eventBasedRecordWriter = new EventBasedRecordWriter(incoming, recordWriter);
   }
 
   @Override

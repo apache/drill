@@ -256,12 +256,12 @@ DrillClient::~DrillClient(){
     delete this->m_pImpl;
 }
 
-connectionStatus_t DrillClient::connect(const char* connectStr ){
+connectionStatus_t DrillClient::connect(const char* connectStr, const char* defaultSchema){
     connectionStatus_t ret=CONN_SUCCESS;
     ret=this->m_pImpl->connect(connectStr);
 
     if(ret==CONN_SUCCESS)
-        ret=this->m_pImpl->validateHandShake()?CONN_SUCCESS:CONN_HANDSHAKE_FAILED;
+        ret=this->m_pImpl->validateHandShake(defaultSchema)?CONN_SUCCESS:CONN_HANDSHAKE_FAILED;
     return ret;
 
 }

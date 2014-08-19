@@ -111,6 +111,12 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
         this.filter = generateSV2Filterer();
         break;
       case FOUR_BYTE:
+        /*
+         * Filter does not support SV4 handling. There are couple of minor issues in the
+         * logic that handles SV4 + filter should always be pushed beyond sort so disabling
+         * it in FilterPrel.
+         *
+
         // set up the multi-batch selection vector
         this.svAllocator = oContext.getAllocator().getNewPreAllocator();
         if (!svAllocator.preAllocate(incoming.getRecordCount()*4))
@@ -119,6 +125,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
         sv4 = new SelectionVector4(svAllocator.getAllocation(), incoming.getRecordCount(), Character.MAX_VALUE);
         this.filter = generateSV4Filterer();
         break;
+        */
       default:
         throw new UnsupportedOperationException();
     }

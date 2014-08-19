@@ -17,12 +17,7 @@
  */
 package org.apache.drill.exec.opt;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -60,7 +55,11 @@ import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 public class BasicOptimizer extends Optimizer{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicOptimizer.class);
@@ -125,7 +124,7 @@ public class BasicOptimizer extends Optimizer{
         .type(PlanProperties.PlanType.APACHE_DRILL_PHYSICAL)
         .version(plan.getProperties().version)
         .generator(plan.getProperties().generator)
-        .options(new JSONOptions(context.getOptions().getSessionOptionList())).build();
+        .options(new JSONOptions(context.getOptions().getOptionList())).build();
     PhysicalPlan p = new PhysicalPlan(props, physOps);
     return p;
     //return new PhysicalPlan(props, physOps);

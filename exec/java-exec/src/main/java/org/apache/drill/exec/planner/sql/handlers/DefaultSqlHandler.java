@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
@@ -44,27 +44,28 @@ import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
+import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
-import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
+import org.apache.drill.exec.planner.physical.visitor.MemoryEstimationVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ProducerConsumerPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
-import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlNode;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 
 public class DefaultSqlHandler extends AbstractSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
@@ -155,6 +156,18 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     Preconditions.checkArgument(drel.getConvention() == DrillRel.DRILL_LOGICAL);
     RelTraitSet traits = drel.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     Prel phyRelNode = (Prel) planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
+    OptionManager queryOptions = context.getOptions();
+
+    if (context.getPlannerSettings().isMemoryEstimationEnabled()
+      && !MemoryEstimationVisitor.enoughMemory(phyRelNode, queryOptions, context.getActiveEndpoints().size())) {
+      log("Not enough memory for this plan", phyRelNode);
+      logger.debug("Re-planning without hash operations.");
+
+      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHJOIN.getOptionName(), false));
+      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHAGG.getOptionName(), false));
+
+      phyRelNode = (Prel) planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
+    }
 
     /*  The order of the following transformation is important */
 
@@ -163,10 +176,10 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * under screen operator. The project on top of scan will rename from * to T1*, while the top project
      * will rename T1* to *, before it output the final result. Only the top project will allow
      * duplicate columns, since user could "explicitly" ask for duplicate columns ( select *, col, *).
-     * The rest of projects will remove the duplicate column when we generate POP in json format.  
+     * The rest of projects will remove the duplicate column when we generate POP in json format.
      */
     phyRelNode = StarColumnConverter.insertRenameProject(phyRelNode, phyRelNode.getRowType());
-    
+
     /*
      * 1.)
      * Join might cause naming conflicts from its left and right child.
@@ -201,13 +214,10 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * Add ProducerConsumer after each scan if the option is set
      * Use the configured queueSize
      */
-    // Disabling for now, as this causes memory leaks. See DRILL-1202
-    /*
     if (context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER.getOptionName()).bool_val) {
       long queueSize = context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE.getOptionName()).num_val;
       phyRelNode = ProducerConsumerPrelVisitor.addProducerConsumerToScans(phyRelNode, (int) queueSize);
     }
-    */
 
     /* 6.)
      * if the client does not support complex types (Map, Repeated)
@@ -237,7 +247,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     PlanPropertiesBuilder propsBuilder = PlanProperties.builder();
     propsBuilder.type(PlanType.APACHE_DRILL_PHYSICAL);
     propsBuilder.version(1);
-    propsBuilder.options(new JSONOptions(context.getOptions().getSessionOptionList()));
+    propsBuilder.options(new JSONOptions(context.getOptions().getOptionList()));
     propsBuilder.resultMode(ResultMode.EXEC);
     propsBuilder.generator(this.getClass().getSimpleName(), "");
     return new PhysicalPlan(propsBuilder.build(), getPops(op));

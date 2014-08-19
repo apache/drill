@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.io.IOException;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
@@ -40,7 +40,8 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Pair;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
 
 public class HashJoinPrel  extends JoinPrel {
 
@@ -78,8 +79,22 @@ public class HashJoinPrel  extends JoinPrel {
     double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
 
     double cpuCost = joinConditionCost * (buildRowCount + probeRowCount) + cpuCostBuild + cpuCostProbe;
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(buildRowCount + probeRowCount, cpuCost, 0, 0);
+
+    double factor = PrelUtil.getPlannerSettings(planner).getOptions()
+      .getOption(ExecConstants.HASH_JOIN_TABLE_FACTOR_KEY).float_val;
+    long fieldWidth = PrelUtil.getPlannerSettings(planner).getOptions()
+      .getOption(ExecConstants.AVERAGE_FIELD_WIDTH_KEY).num_val;
+
+    // table + hashValues + links
+    double memCost =
+      (
+        (fieldWidth * this.getRightKeys().size()) +
+          IntHolder.WIDTH +
+          IntHolder.WIDTH
+      ) * buildRowCount * factor;
+
+    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
+    return costFactory.makeCost(buildRowCount + probeRowCount, cpuCost, 0, 0, memCost);
   }
 
   @Override

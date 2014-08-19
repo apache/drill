@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.logging.Logger;
-
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
@@ -30,7 +29,7 @@ import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.trace.EigenbaseTrace;
 
-import com.google.common.collect.ImmutableList;
+import java.util.logging.Logger;
 
 public class HashAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new HashAggPrule();
@@ -42,11 +41,14 @@ public class HashAggPrule extends AggPruleBase {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    return PrelUtil.getPlannerSettings(call.getPlanner()).isHashAggEnabled();
+    PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+    return settings.isMemoryEstimationEnabled() || settings.isHashAggEnabled();
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
+    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashAggEnabled()) return;
+
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
     final RelNode input = call.rel(1);
 

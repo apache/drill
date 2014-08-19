@@ -37,6 +37,7 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
@@ -79,6 +80,9 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     clear();
     offsets.allocateNew(parentValueCount+1);
     offsets.zeroVector();
+    for(ValueVector v : vectors.values()){
+      AllocationHelper.allocate(v, parentValueCount, 50, childValueCount);
+    }
     mutator.reset();
     accessor.reset();
   }

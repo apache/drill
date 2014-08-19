@@ -20,6 +20,7 @@
       <strong>${model}</strong>
     </div>
   </div>
+  <a href="/status/options"> System Options </a>
 </#macro>
 
 <@page_html/>

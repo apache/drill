@@ -17,11 +17,8 @@
  */
 package org.apache.drill.exec.ops;
 
-import java.util.Collection;
-
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -35,8 +32,11 @@ import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PStoreProvider;
+
+import java.util.Collection;
 
 public class QueryContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
@@ -45,6 +45,7 @@ public class QueryContext{
   private final DrillbitContext drillbitContext;
   private final WorkEventBus workBus;
   private UserSession session;
+  private OptionManager queryOptions;
   public final Multitimer<QuerySetup> timer;
   private final PlannerSettings plannerSettings;
   private final DrillOperatorTable table;
@@ -56,7 +57,8 @@ public class QueryContext{
     this.workBus = drllbitContext.getWorkBus();
     this.session = session;
     this.timer = new Multitimer<>(QuerySetup.class);
-    this.plannerSettings = new PlannerSettings(session.getOptions());
+    this.queryOptions = new QueryOptionManager(session.getOptions());
+    this.plannerSettings = new PlannerSettings(queryOptions);
     this.plannerSettings.setNumEndPoints(this.getActiveEndpoints().size());
     this.table = new DrillOperatorTable(getFunctionRegistry());
   }
@@ -89,7 +91,11 @@ public class QueryContext{
     return rootSchema;
   }
 
-  public OptionManager getOptions(){
+  public OptionManager getOptions() {
+    return queryOptions;
+  }
+
+  public OptionManager getSessionOptions() {
     return session.getOptions();
   }
 

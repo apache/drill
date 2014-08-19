@@ -23,23 +23,29 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Limit;
+import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
 import com.google.common.collect.Lists;
 
 public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
+  
   private SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
   private int recordsToSkip;
   private int recordsLeft;
   private boolean noEndLimit;
   private boolean skipBatch;
+  private boolean first = true;
+  private boolean done = false;
   List<TransferPair> transfers = Lists.newArrayList();
 
   public LimitRecordBatch(Limit popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
@@ -82,7 +88,15 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
   @Override
   public IterOutcome innerNext() {
+    if (done) {
+      return IterOutcome.NONE;
+    }
+
     if(!noEndLimit && recordsLeft <= 0) {
+      if (first) {
+        return produceEmptyFirstBatch();
+      }
+      
       incoming.kill(true);
 
       IterOutcome upStream = incoming.next();
@@ -96,9 +110,11 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
         upStream = incoming.next();
       }
 
+      first = false;
       return IterOutcome.NONE;
     }
 
+    first = false;
     return super.innerNext();
   }
 
@@ -127,6 +143,23 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     }
   }
 
+  private IterOutcome produceEmptyFirstBatch() {
+    incoming.next();
+    first = false;
+    done = true;
+    // Build the container schema and set the count
+    for (VectorWrapper<?> v : incoming) {
+      TransferPair pair = v.getValueVector().getTransferPair();
+      container.add(pair.getTo());
+      transfers.add(pair);
+    }
+    container.buildSchema(BatchSchema.SelectionVectorMode.TWO_BYTE);
+    container.setRecordCount(0);
+
+    incoming.kill(true);
+    return IterOutcome.OK_NEW_SCHEMA;
+  }
+  
   private void limitWithNoSV(int recordCount) {
     int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
     recordsToSkip -= offset;
@@ -178,4 +211,5 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     outgoingSv.clear();
     super.cleanup();
   }
+  
 }

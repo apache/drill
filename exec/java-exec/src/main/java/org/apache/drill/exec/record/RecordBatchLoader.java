@@ -83,7 +83,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
         schemaChanged = true;
         v = TypeHelper.getNewVector(fieldDef, allocator);
       }
-      if (fmd.getValueCount() == 0){
+      if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
 //        v.clear();
         v.load(fmd, new EmptyByteBuf(allocator.getUnderlyingAllocator()));
       } else {

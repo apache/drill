@@ -446,10 +446,6 @@ public class ${type.name}Functions {
                */
               int lastScaleIndex = currentIndex + resultIntegerSize + resultScaleSize - 1;
 
-              // Compute the power of 10 necessary to chop of the fractional part
-              int scaleFactor = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen(
-                                        org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (result.scale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)));
-
               // compute the power of 10 necessary to find if we need to round up
               int roundFactor = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen(
                                         org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ((result.scale + 1) % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)));
@@ -460,12 +456,18 @@ public class ${type.name}Functions {
               // Check the first chopped digit to see if we need to round up
               int carry = ((tempResult[roundIndex] / roundFactor) % 10) > 4 ? 1 : 0;
 
-              // Adjust the carry so that it gets added to the correct digit
-              carry *= scaleFactor;
+              if (result.scale > 0) {
 
-              // Chop the unwanted fractional part
-              tempResult[lastScaleIndex] /=  scaleFactor;
-              tempResult[lastScaleIndex] *= scaleFactor;
+                // Compute the power of 10 necessary to chop of the fractional part
+                int scaleFactor = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen(
+                                         org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (result.scale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)));
+                // Chop the unwanted fractional part
+                tempResult[lastScaleIndex] /=  scaleFactor;
+                tempResult[lastScaleIndex] *= scaleFactor;
+
+                // Adjust the carry so that it gets added to the correct digit
+                carry *= scaleFactor;
+              }
 
               // propogate the carry
               while (carry > 0 && lastScaleIndex >= 0) {

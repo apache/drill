@@ -453,7 +453,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
         return false;
       }
 
-      set(index, holder);
+      // set(index, holder);
 
       return true;
     }
@@ -476,7 +476,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
         return false;
       }
 
-      set(index, holder);
+      // set(index, holder);
 
       return true;
     }

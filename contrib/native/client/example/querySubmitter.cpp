@@ -104,6 +104,7 @@ struct Option{
     {"query", "Query strings, separated by semicolons", false},
     {"type", "Query type [physical|logical|sql]", true},
     {"connectStr", "Connect string", true},
+    {"schema", "Default schema", false},
     {"api", "API type [sync|async]", true},
     {"logLevel", "Logging level [trace|debug|info|warn|error|fatal]", false}
 };
@@ -236,6 +237,7 @@ int main(int argc, char* argv[]) {
         std::vector<std::string*> queries;
 
         std::string connectStr=qsOptionValues["connectStr"];
+        std::string schema=qsOptionValues["schema"];
         std::string queryList=qsOptionValues["query"];
         std::string planList=qsOptionValues["plan"];
         std::string api=qsOptionValues["api"];
@@ -279,7 +281,7 @@ int main(int argc, char* argv[]) {
         // To log to stderr
         Drill::DrillClient::initLogging(NULL, l);
 
-        if(client.connect(connectStr.c_str())!=Drill::CONN_SUCCESS){
+        if(client.connect(connectStr.c_str(), schema.c_str())!=Drill::CONN_SUCCESS){
             std::cerr<< "Failed to connect with error: "<< client.getError() << " (Using:"<<connectStr<<")"<<std::endl;
             return -1;
         }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -126,15 +127,20 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     if (columns == null || columns.size() == 0) {
       selectAllColumns = true;
     } else {
+      List<SchemaPath> newColumns = Lists.newArrayList();
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {
         Matcher m = pattern.matcher(column.getAsUnescapedPath());
         if (m.matches()) {
-          scan.getColumns().remove(column);
           selectedPartitionColumns.add(Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
+        } else {
+          newColumns.add(column);
         }
       }
+      // Create a new sub scan object with the new set of columns;
+      scan = new EasySubScan(scan.getWorkUnits(), scan.getFormatPlugin(), newColumns, scan.getSelectionRoot());
     }
+
     int numParts = 0;
     for(FileWork work : scan.getWorkUnits()){
       readers.add(getRecordReader(context, work, scan.getColumns()));

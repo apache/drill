@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlJoin;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlSelect;
 import org.eigenbase.sql.util.SqlShuttle;
@@ -144,6 +145,7 @@ public class CompoundIdentifierConverter extends SqlShuttle {
     rules.put(SqlShowFiles.class, R(D));
     rules.put(SqlShowSchemas.class, R(D, D));
     rules.put(SqlUseSchema.class, R(D));
+    rules.put(SqlJoin.class, R(D, D, D, D, D, E));
     REWRITE_RULES = ImmutableMap.copyOf(rules);
   }
 

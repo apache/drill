@@ -50,7 +50,7 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand">Apache Drill</a>
+            <a class="navbar-brand" href="/">Apache Drill</a>
           </div>
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
@@ -59,6 +59,10 @@
               <li><a href="/storage">Storage</a></li>
               <li><a href="/metrics">Metrics</a></li>
               <li><a href="/threads">Threads</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="/options">Options</a></li>
+              <li><a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+Wiki">Wiki</a>
             </ul>
           </div>
         </div>

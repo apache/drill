@@ -17,7 +17,18 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <p class="lead"> Read about Apache Drill <a href="http://incubator.apache.org/drill/drill_overview.html" rel="nofollow">here</a>.</p>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <tbody>
+        <#list model as stat>
+          <tr>
+            <td style="border:none;"><b>${stat.getName()}</b></td>
+            <td style="border:none; font-family: Courier;">${stat.getValue()}</td>
+          </tr>
+        </#list>
+      </tbody>
+    </table>
+  </div>
 </#macro>
 
 <@page_html/>

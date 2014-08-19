@@ -350,7 +350,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
         }
       }
 
-      QueryWorkUnit work = parallelizer.getFragments(context.getOptions().getSessionOptionList(), context.getCurrentEndpoint(),
+      QueryWorkUnit work = parallelizer.getFragments(context.getOptions().getOptionList(), context.getCurrentEndpoint(),
           queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, planningSet);
 
       this.context.getWorkBus().setFragmentStatusListener(work.getRootFragment().getHandle().getQueryId(), fragmentManager);

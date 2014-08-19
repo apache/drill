@@ -112,12 +112,18 @@ public class DrillCostBase implements DrillRelOptCost {
   final double cpu;
   final double io;
   final double network;
-  
+  final double memory;
+
   public DrillCostBase(double rowCount, double cpu, double io, double network) {
+    this(rowCount, cpu, io, network, 0);
+  }
+
+  public DrillCostBase(double rowCount, double cpu, double io, double network, double memory) {
     this.rowCount = rowCount;
     this.cpu = cpu;
     this.io = io;
     this.network = network;
+    this.memory = memory;
   }
 
 	@Override
@@ -139,6 +145,10 @@ public class DrillCostBase implements DrillRelOptCost {
 	public double getNetwork() {
 		return network;
 	}
+
+  public double getMemory() {
+    return memory;
+  }
 
   @Override
   public int hashCode() {
@@ -211,8 +221,9 @@ public class DrillCostBase implements DrillRelOptCost {
     return new DrillCostBase(
         this.rowCount + that.rowCount,
         this.cpu + that.cpu,
-        this.io + that.io, 
-        this.network + that.network);
+        this.io + that.io,
+        this.network + that.network,
+        this.memory + that.memory);
 	}
 
 	@Override
@@ -224,8 +235,9 @@ public class DrillCostBase implements DrillRelOptCost {
     return new DrillCostBase(
         this.rowCount - that.rowCount,
         this.cpu - that.cpu,
-        this.io - that.io, 
-        this.network - that.network);
+        this.io - that.io,
+        this.network - that.network,
+        this.memory - that.memory);
 	}
 
 	@Override
@@ -279,16 +291,21 @@ public class DrillCostBase implements DrillRelOptCost {
 	}
 
   public String toString() {
-    return "{" + rowCount + " rows, " + cpu + " cpu, " + io + " io, " + network + " network}";
+    return "{" + rowCount + " rows, " + cpu + " cpu, " + io + " io, " + network + " network, " + memory + " memory}";
   }
   
   public static class DrillCostFactory implements DrillRelOptCostFactory {
+
+    public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork, double dMemory) {
+      return new DrillCostBase(dRows, dCpu, dIo, dNetwork, dMemory);
+    }
+
     public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork) {
-      return new DrillCostBase(dRows, dCpu, dIo, dNetwork);
+      return new DrillCostBase(dRows, dCpu, dIo, dNetwork, 0);
     }
 		
     public RelOptCost makeCost(double dRows, double dCpu, double dIo) {
-      return new DrillCostBase(dRows, dCpu, dIo, 0);
+      return new DrillCostBase(dRows, dCpu, dIo, 0, 0);
     }
 		
     public RelOptCost makeHugeCost() {

@@ -23,18 +23,35 @@
 package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
 
 public abstract class AbstractRecordWriter implements RecordWriter {
 
+  @Override
+  public FieldConverter getNewMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    throw new UnsupportedOperationException("Doesn't support writing Map'");
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    throw new UnsupportedOperationException("Doesn't support writing RepeatedMap");
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedListConverter(int fieldId, String fieldName, FieldReader reader) {
+    throw new UnsupportedOperationException("Doesn't support writing RepeatedList");
+  }
+
 <#list vv.types as type>
   <#list type.minor as minor>
     <#list vv.modes as mode>
   @Override
-  public void add${mode.prefix}${minor.class}Holder(int fieldId, ${mode.prefix}${minor.class}Holder valueHolder) throws IOException {
-    throw new UnsupportedOperationException("Doesn't support writing '${mode.prefix}${minor.class}Holder'");
+  public FieldConverter getNew${mode.prefix}${minor.class}Converter(int fieldId, String fieldName, FieldReader reader) {
+    throw new UnsupportedOperationException("Doesn't support writing '${mode.prefix}${minor.class}'");
   }
     </#list>
   </#list>

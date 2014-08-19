@@ -76,7 +76,10 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   private int maxOffset;
 
   public int size(){
-    return maxOffset - currentOffset;
+    if (isNull()) {
+      return 0;
+    }
+    return maxOffset - (currentOffset < 0 ? 0 : currentOffset);
   }
 
   public void setPosition(int index){

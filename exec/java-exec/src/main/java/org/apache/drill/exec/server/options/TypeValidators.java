@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.math.BigDecimal;
-
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.util.NlsString;
+
+import java.math.BigDecimal;
 
 public class TypeValidators {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
@@ -38,10 +38,29 @@ public class TypeValidators {
     }
 
     @Override
-    public void extraValidate(OptionValue v) throws ExpressionParsingException {
+    public void validate(OptionValue v) throws ExpressionParsingException {
+      super.validate(v);
       if (v.num_val > max || v.num_val < 0)
         throw new ExpressionParsingException(String.format("Option %s must be between %d and %d.", getOptionName(), 0,
             max));
+    }
+  }
+
+  public static class PowerOfTwoLongValidator extends PositiveLongValidator {
+
+    public PowerOfTwoLongValidator(String name, long max, long def) {
+      super(name, max, def);
+    }
+
+    @Override
+    public void validate(OptionValue v) throws ExpressionParsingException {
+      super.validate(v);
+      if (!isPowerOfTwo(v.num_val))
+        throw new ExpressionParsingException(String.format("Option %s must be a power of two.", getOptionName()));
+    }
+
+    private boolean isPowerOfTwo(long num) {
+      return (num & (num - 1)) == 0;
     }
   }
 
@@ -56,7 +75,8 @@ public class TypeValidators {
     }
 
     @Override
-    public void extraValidate(OptionValue v) throws ExpressionParsingException {
+    public void validate(OptionValue v) throws ExpressionParsingException {
+      super.validate(v);
       if (v.float_val > max || v.float_val < min)
         throw new ExpressionParsingException(String.format("Option %s must be between %d and %d.", getOptionName(), min,
             max));
@@ -112,7 +132,7 @@ public class TypeValidators {
     }
 
     @Override
-    public final void validate(OptionValue v) throws ExpressionParsingException {
+    public void validate(OptionValue v) throws ExpressionParsingException {
       if (v.kind != kind)
         throw new ExpressionParsingException(String.format("Option %s must be of type %s but you tried to set to %s.",
             getOptionName(), kind.name(), v.kind.name()));

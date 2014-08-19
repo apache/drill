@@ -309,6 +309,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
       String outputName = getRef(namedExpression).getRootSegment().getPath();
       if (result != null && result.outputNames != null && result.outputNames.size() > 0) {
+        // TODO: Revisit this logic. It is possible that the output names array does not contain the expression of interest in index 0
         if (result.outputNames.get(0) == EMPTY_STRING) continue;
         outputName = result.outputNames.get(0);
       }
@@ -406,11 +407,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       if (!(ex.getExpr() instanceof SchemaPath)) continue;
       NameSegment expr = ((SchemaPath) ex.getExpr()).getRootSegment();
       NameSegment ref = ex.getRef().getRootSegment();
-      boolean exprHasPrefix = expr.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
       boolean refHasPrefix = ref.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
       boolean exprContainsStar = expr.getPath().contains(StarColumnHelper.STAR_COLUMN);
       
-      if (exprHasPrefix || refHasPrefix || exprContainsStar) {
+      if (refHasPrefix || exprContainsStar) {
         needed = true;
         break;
       }
@@ -453,6 +453,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     boolean refHasPrefix = ref.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
     boolean exprIsStar = expr.getPath().equals(StarColumnHelper.STAR_COLUMN);
     boolean refIsStar = ref.getPath().equals(StarColumnHelper.STAR_COLUMN);
+    boolean refContainsStar = ref.getPath().contains(StarColumnHelper.STAR_COLUMN);
     boolean exprContainsStar = expr.getPath().contains(StarColumnHelper.STAR_COLUMN);
     boolean refEndsWithStar = ref.getPath().endsWith(StarColumnHelper.STAR_COLUMN);
 
@@ -533,11 +534,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         }
       } else {
         result.outputNames = Lists.newArrayList();
-        if (exprIsStar) {
+        if (exprContainsStar) {
           for (VectorWrapper<?> wrapper : incoming) {
             ValueVector vvIn = wrapper.getValueVector();
             String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
-            if (refIsStar) {
+            if (refContainsStar) {
               addToResultMaps(incomingName, result, true); // allow dups since this is likely top-level project
             } else {
               addToResultMaps(incomingName, result, false);
