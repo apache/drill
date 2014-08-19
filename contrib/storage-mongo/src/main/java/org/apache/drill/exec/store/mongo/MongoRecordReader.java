@@ -99,7 +99,12 @@ public class MongoRecordReader implements RecordReader {
     for(Entry<String, Object> entry : minFilters.entrySet()) {
       Object value = entry.getValue();
       if(value instanceof String || value instanceof Number) {
-        filters.put(entry.getKey(), new BasicDBObject("$gt", entry.getValue()));
+        if (filters.get(entry.getKey()) == null) {
+          filters.put(entry.getKey(), new BasicDBObject("$gt", entry.getValue()));
+        } else {
+          BasicDBObject dbObj = (BasicDBObject) filters.get(entry.getKey());
+          dbObj.append("$gt", entry.getValue());
+        }
       }
     }
     
