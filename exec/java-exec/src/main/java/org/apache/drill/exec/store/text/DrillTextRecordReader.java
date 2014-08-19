@@ -127,8 +127,8 @@ public class DrillTextRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
-    logger.debug("vector value capacity {}", vector.getValueCapacity());
-    logger.debug("vector byte capacity {}", vector.getByteCapacity());
+//    logger.debug("vector value capacity {}", vector.getValueCapacity());
+//    logger.debug("vector byte capacity {}", vector.getByteCapacity());
     int batchSize = 0;
     try {
       int recordCount = 0;

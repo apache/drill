@@ -45,10 +45,14 @@ public class SelectionVector2 implements Closeable{
     return recordCount;
   }
 
-  public DrillBuf getBuffer()
-  {
-      DrillBuf bufferHandle = this.buffer;
+  public DrillBuf getBuffer() {
+    return getBuffer(true);
+  }
 
+  public DrillBuf getBuffer(boolean clear) {
+    DrillBuf bufferHandle = this.buffer;
+
+    if (clear) {
       /* Increment the ref count for this buffer */
       bufferHandle.retain();
 
@@ -56,8 +60,9 @@ public class SelectionVector2 implements Closeable{
        * caller. clear the buffer from within our selection vector
        */
       clear();
+    }
 
-      return bufferHandle;
+    return bufferHandle;
   }
 
   public void setBuffer(DrillBuf bufferHandle)

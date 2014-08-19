@@ -44,7 +44,8 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   private int targetRecordCount = ExternalSortBatch.SPILL_TARGET_RECORD_COUNT;
 
   @Override
-  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups, VectorAccessible outgoing, List<VectorAllocator> allocators, int recordCnt) throws SchemaChangeException {
+  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
+                    VectorAccessible outgoing, List<VectorAllocator> allocators) throws SchemaChangeException {
     this.context = context;
     this.allocator = allocator;
     this.hyperBatch = hyperBatch;
@@ -60,20 +61,15 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
 
     queueSize = 0;
     for (int i = 0; i < size; i++) {
-      vector4.set(i, i * 2, batchGroups.get(i).getNextIndex());
+      vector4.set(i, i, batchGroups.get(i).getNextIndex());
       siftUp();
       queueSize++;
-    }
-
-    // Check if the we have enough records to create BatchData with two containers.
-    if (recordCnt < (2 * targetRecordCount)) {
-      targetRecordCount = (recordCnt / 2);
     }
   }
 
   @Override
-  public int next() {
-    allocateVectors();
+  public int next(int targetRecordCount) {
+    allocateVectors(targetRecordCount);
     for (int outgoingIndex = 0; outgoingIndex < targetRecordCount; outgoingIndex++) {
       if (queueSize == 0) {
         cleanup();
@@ -81,15 +77,12 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
       }
       int compoundIndex = vector4.get(0);
       int batch = compoundIndex >>> 16;
-      assert batch < batchGroups.size() * 2 : String.format("batch: %d batchGroups: %d", batch, batchGroups.size());
-      int batchGroup = batch / 2;
+      assert batch < batchGroups.size() : String.format("batch: %d batchGroups: %d", batch, batchGroups.size());
       if (!doCopy(compoundIndex, outgoingIndex)) {
         setValueCount(outgoingIndex);
         return outgoingIndex;
       }
-      int nextIndex = batchGroups.get(batchGroup).getNextIndex();
-      batch = batch & 0xFFFE;
-      batch += batchGroups.get(batchGroup).getBatchPointer();
+      int nextIndex = batchGroups.get(batch).getNextIndex();
       if (nextIndex < 0) {
         vector4.set(0, vector4.get(--queueSize));
       } else {
@@ -117,6 +110,9 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     for (VectorWrapper w: outgoing) {
       w.getValueVector().clear();
     }
+    for (VectorWrapper w : hyperBatch) {
+      w.clear();
+    }
   }
 
   @Override
@@ -136,7 +132,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     }
   }
 
-  private void allocateVectors() {
+  private void allocateVectors(int targetRecordCount) {
     for(VectorAllocator a : allocators){
       a.alloc(targetRecordCount);
     }

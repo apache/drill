@@ -180,6 +180,7 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
+  @Ignore
   public void testRepeatedBool() throws Exception {
     String inputTable = "cp.`parquet/repeated_bool_data.json`";
     runTestAndValidate("*", "*", inputTable, "repeated_bool_parquet");
@@ -225,7 +226,7 @@ public class TestParquetWriter extends BaseTestQuery {
 
   public void runTestAndValidate(String selection, String validationSelection, String inputTable, String outputFile) throws Exception {
 
-    Path path = new Path("/tmp/drilltest/" + outputFile);
+    Path path = new Path("/tmp/" + outputFile);
     if (fs.exists(path)) {
       fs.delete(path, true);
     }

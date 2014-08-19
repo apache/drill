@@ -17,12 +17,11 @@
  */
 package org.apache.drill.exec.vector;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.FieldReference;
-
-import io.netty.buffer.ByteBuf;
-
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
@@ -62,7 +61,7 @@ public abstract class BaseValueVector implements ValueVector{
   public abstract int getCurrentValueCount();
   public abstract void setCurrentValueCount(int count);
 
-  abstract public ByteBuf getData();
+  abstract public DrillBuf getData();
 
   abstract static class BaseAccessor implements ValueVector.Accessor{
     public abstract int getValueCount();

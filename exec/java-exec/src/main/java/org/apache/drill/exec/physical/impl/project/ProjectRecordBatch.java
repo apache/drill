@@ -80,7 +80,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   private boolean hasRemainder = false;
   private int remainderIndex = 0;
   private int recordCount;
- 
+
   private static final String EMPTY_STRING = "";
   
   private class ClassifierResult { 
@@ -137,7 +137,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 //    VectorUtil.showVectorAccessibleContent(incoming, ",");
     int incomingRecordCount = incoming.getRecordCount();
 
-    doAlloc();
+    if (!doAlloc()) {
+      outOfMemory = true;
+      return;
+    }
 
     int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
     if (outputRecords < incomingRecordCount) {
@@ -161,7 +164,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
   private void handleRemainder() {
     int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
-    doAlloc();
+    if (!doAlloc()) {
+      outOfMemory = true;
+      return;
+    }
     int projRecords = projector.projectRecords(remainderIndex, remainingRecordCount, 0);
     if (projRecords < remainingRecordCount) {
       setValueCount(projRecords);

@@ -162,7 +162,7 @@ public class TopLevelAllocator implements BufferAllocator {
     public DrillBuf buffer(int size, int max) {
       if(size == 0) return empty;
       if(!childAcct.reserve(size)){
-        logger.warn("Unable to allocate buffer of size {} due to memory limit. Current allocation: {}", size, getAllocatedMemory());
+        logger.warn("Unable to allocate buffer of size {} due to memory limit. Current allocation: {}", size, getAllocatedMemory(), new Exception());
         return null;
       };
 

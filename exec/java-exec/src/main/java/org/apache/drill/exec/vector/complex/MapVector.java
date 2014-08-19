@@ -276,10 +276,10 @@ public class MapVector extends AbstractContainerVector {
   }
 
   @Override
-  public DrillBuf[] getBuffers() {
+  public DrillBuf[] getBuffers(boolean clear) {
     List<DrillBuf> bufs = Lists.newArrayList();
     for(ValueVector v : vectors.values()){
-      for(DrillBuf b : v.getBuffers()){
+      for(DrillBuf b : v.getBuffers(clear)){
         bufs.add(b);
       }
     }

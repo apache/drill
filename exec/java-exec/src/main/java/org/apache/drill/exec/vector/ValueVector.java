@@ -22,6 +22,7 @@ import io.netty.buffer.DrillBuf;
 import java.io.Closeable;
 
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
@@ -99,9 +100,12 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    * this buffer so it only should be used for in-context access. Also note that this buffer changes regularly thus
    * external classes shouldn't hold a reference to it (unless they change it).
    *
-   * @return The underlying DrillBuf.
+   * @param clear
+   *          Whether to clear vector
+   *
+   * @return The underlying ByteBuf.
    */
-  public abstract DrillBuf[] getBuffers();
+  public abstract DrillBuf[] getBuffers(boolean clear);
 
   /**
    * Load the data provided in the buffer. Typically used when deserializing from the wire.

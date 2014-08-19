@@ -18,11 +18,15 @@
 package org.apache.drill.exec.store;
 
 import java.util.Collection;
+import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.vector.ValueVector;
 
 public abstract class AbstractRecordReader implements RecordReader {
   private static final String COL_NULL_ERROR = "Columns cannot be null. Use star column to select all fields.";
@@ -59,4 +63,10 @@ public abstract class AbstractRecordReader implements RecordReader {
     }).isPresent();
   }
 
+  @Override
+  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+    for (ValueVector v : vectorMap.values()) {
+      v.allocateNew();
+    }
+  }
 }

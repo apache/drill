@@ -41,7 +41,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import parquet.io.api.RecordConsumer;
 import parquet.schema.MessageType;
 import parquet.io.api.Binary;
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -220,7 +220,7 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
       //consumer.endField(fieldName, fieldId);
     <#else>
     reader.read(holder);
-    ByteBuf buf = holder.buffer;
+    DrillBuf buf = holder.buffer;
     consumer.startField(fieldName, fieldId);
     consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
     consumer.endField(fieldName, fieldId);

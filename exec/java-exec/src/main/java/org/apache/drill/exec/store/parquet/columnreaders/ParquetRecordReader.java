@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -36,14 +37,17 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.NullableBitVector;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.hadoop.fs.FileSystem;
@@ -319,6 +323,18 @@ public class ParquetRecordReader extends AbstractRecordReader {
       throw new ExecutionSetupException(e);
     }
   }
+
+  @Override
+  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+    try {
+      for (ValueVector v : vectorMap.values()) {
+        AllocationHelper.allocate(v, recordsPerBatch, 50, 10);
+      }
+    } catch (NullPointerException e) {
+      throw new OutOfMemoryException();
+    }
+  }
+
 
   private SchemaPath toFieldName(String[] paths) {
     return SchemaPath.getCompoundPath(paths);

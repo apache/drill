@@ -24,12 +24,16 @@ import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
@@ -111,6 +115,17 @@ public class DrillParquetReader extends AbstractRecordReader {
       }
     }
     return projection;
+  }
+
+  @Override
+  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+    try {
+      for (ValueVector v : vectorMap.values()) {
+        AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
+      }
+    } catch (NullPointerException e) {
+      throw new OutOfMemoryException();
+    }
   }
 
   @Override
@@ -202,7 +217,11 @@ public class DrillParquetReader extends AbstractRecordReader {
       if (v instanceof VariableWidthVector) {
         filled = Math.max(filled, ((VariableWidthVector) v).getCurrentSizeInBytes() * 100 / ((VariableWidthVector) v).getByteCapacity());
       }
+//      if (v instanceof RepeatedFixedWidthVector) {
+//        filled = Math.max(filled, ((RepeatedFixedWidthVector) v).getAccessor().getGroupCount() * 100)
+//      }
     }
+    logger.debug("Percent filled: {}", filled);
     return filled;
   }
 

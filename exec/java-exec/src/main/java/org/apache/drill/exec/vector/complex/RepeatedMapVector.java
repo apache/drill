@@ -307,11 +307,11 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   @Override
-  public DrillBuf[] getBuffers() {
-    List<DrillBuf> bufs = Lists.newArrayList(offsets.getBuffers());
+  public DrillBuf[] getBuffers(boolean clear) {
+    List<DrillBuf> bufs = Lists.newArrayList(offsets.getBuffers(clear));
 
     for(ValueVector v : vectors.values()){
-      for(DrillBuf b : v.getBuffers()){
+      for(DrillBuf b : v.getBuffers(clear)){
         bufs.add(b);
       }
     }

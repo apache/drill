@@ -663,6 +663,10 @@ public final class DrillBuf extends AbstractByteBuf {
     return new DrillBuf(allocator, a);
   }
 
+  public boolean isRootBuffer(){
+    return rootBuffer;
+  }
+
   public static DrillBuf wrapByteBuffer(ByteBuffer b){
     if(!b.isDirect()){
       throw new IllegalStateException("DrillBufs can only refer to direct memory.");

@@ -143,7 +143,7 @@ public class WritableBatch {
         continue;
       }
 
-      for (DrillBuf b : vv.getBuffers()) {
+      for (DrillBuf b : vv.getBuffers(true)) {
         buffers.add(b);
       }
       // remove vv access to buffers.

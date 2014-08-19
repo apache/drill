@@ -19,7 +19,13 @@ package org.apache.drill.exec.store;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.vector.ValueVector;
+
+import java.util.Map;
 
 public interface RecordReader {
 
@@ -35,6 +41,8 @@ public interface RecordReader {
    * @throws ExecutionSetupException
    */
   public abstract void setup(OutputMutator output) throws ExecutionSetupException;
+
+  public abstract void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException;
 
   /**
    * Set the operator context. The Reader can use this to access the operator context and allocate direct memory

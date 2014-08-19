@@ -33,6 +33,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -59,9 +60,6 @@ import com.google.common.collect.Maps;
  */
 public class ScanBatch implements RecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
-
-  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
-  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
   private static final int MAX_RECORD_CNT = Character.MAX_VALUE;
 
@@ -147,7 +145,15 @@ public class ScanBatch implements RecordBatch {
     long t1 = System.nanoTime();
     oContext.getStats().startProcessing();
     try {
-      mutator.allocate(MAX_RECORD_CNT);
+      try {
+        currentReader.allocate(fieldVectorMap);
+      } catch (OutOfMemoryException e) {
+        logger.debug("Caught OutOfMemoryException");
+        for (ValueVector v : fieldVectorMap.values()) {
+          v.clear();
+        }
+        return IterOutcome.OUT_OF_MEMORY;
+      }
       while ((recordCount = currentReader.next()) == 0) {
         try {
           if (!readers.hasNext()) {
@@ -169,7 +175,15 @@ public class ScanBatch implements RecordBatch {
             currentReader = readers.next();
             partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
             currentReader.setup(mutator);
-            mutator.allocate(MAX_RECORD_CNT);
+            try {
+              currentReader.allocate(fieldVectorMap);
+            } catch (OutOfMemoryException e) {
+              logger.debug("Caught OutOfMemoryException");
+              for (ValueVector v : fieldVectorMap.values()) {
+                v.clear();
+              }
+              return IterOutcome.OUT_OF_MEMORY;
+            }
             addPartitionVectors();
           } finally {
             oContext.getStats().stopSetup();

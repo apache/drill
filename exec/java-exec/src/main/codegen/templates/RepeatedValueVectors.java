@@ -71,7 +71,7 @@ package org.apache.drill.exec.vector;
   }
 
   public void setCurrentValueCount(int count) {
-    values.setCurrentValueCount(count);
+    values.setCurrentValueCount(offsets.getAccessor().get(count));
   }
   
   public int getBufferSize(){
@@ -259,9 +259,11 @@ package org.apache.drill.exec.vector;
   </#if>
 
   @Override
-  public DrillBuf[] getBuffers() {
-    DrillBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(), values.getBuffers(), DrillBuf.class);
-    clear();
+  public DrillBuf[] getBuffers(boolean clear) {
+    DrillBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(clear), values.getBuffers(clear), DrillBuf.class);
+    if (clear) {
+      clear();
+    }
     return buffers;
   }
 

@@ -22,12 +22,15 @@ import java.lang.reflect.Modifier;
 import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.pojo.Writers.BitWriter;
 import org.apache.drill.exec.store.pojo.Writers.DoubleWriter;
 import org.apache.drill.exec.store.pojo.Writers.EnumWriter;
@@ -39,12 +42,12 @@ import org.apache.drill.exec.store.pojo.Writers.NDoubleWriter;
 import org.apache.drill.exec.store.pojo.Writers.NIntWriter;
 import org.apache.drill.exec.store.pojo.Writers.NTimeStampWriter;
 import org.apache.drill.exec.store.pojo.Writers.StringWriter;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 
-
-
-public class PojoRecordReader<T> implements RecordReader{
+public class PojoRecordReader<T> extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoRecordReader.class);
 
   public final int forJsonIgnore = 1;
@@ -118,6 +121,13 @@ public class PojoRecordReader<T> implements RecordReader{
     }
 
 
+  }
+
+  @Override
+  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+    for (ValueVector v : vectorMap.values()) {
+      AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
+    }
   }
 
   private void allocate(){

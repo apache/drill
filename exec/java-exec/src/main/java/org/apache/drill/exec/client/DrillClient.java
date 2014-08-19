@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -338,7 +339,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     }
 
     @Override
-    public ByteBuf getBuffer() {
+    public DrillBuf getBuffer() {
       return null;
     }
 

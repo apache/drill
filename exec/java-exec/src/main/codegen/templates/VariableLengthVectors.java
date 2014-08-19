@@ -134,9 +134,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   
   @Override
-  public DrillBuf[] getBuffers() {
-    DrillBuf[] buffers = ObjectArrays.concat(offsetVector.getBuffers(), super.getBuffers(), DrillBuf.class);
-    clear();
+  public DrillBuf[] getBuffers(boolean clear) {
+    DrillBuf[] buffers = ObjectArrays.concat(offsetVector.getBuffers(clear), super.getBuffers(clear), DrillBuf.class);
+    if (clear) {
+      clear();
+    }
     return buffers;
   }
   

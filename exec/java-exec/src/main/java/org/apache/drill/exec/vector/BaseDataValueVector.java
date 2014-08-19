@@ -45,7 +45,10 @@ public abstract class BaseDataValueVector extends BaseValueVector{
    */
   @Override
   public void clear() {
-    if (data != null) {
+    if (data == null) {
+      data = DeadBuf.DEAD_BUFFER;
+    }
+    if (data != DeadBuf.DEAD_BUFFER) {
       data.release();
       data = data.getAllocator().getEmpty();
       valueCount = 0;
@@ -62,16 +65,20 @@ public abstract class BaseDataValueVector extends BaseValueVector{
 
 
   @Override
-  public DrillBuf[] getBuffers(){
+  public DrillBuf[] getBuffers(boolean clear){
     DrillBuf[] out;
     if(valueCount == 0){
       out = new DrillBuf[0];
     }else{
       out = new DrillBuf[]{data};
-      data.readerIndex(0);
-      data.retain();
+      if (clear) {
+        data.readerIndex(0);
+        data.retain();
+      }
     }
-    clear();
+    if (clear) {
+      clear();
+    }
     return out;
   }
 

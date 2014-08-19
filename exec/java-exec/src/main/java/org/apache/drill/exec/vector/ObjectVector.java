@@ -136,7 +136,7 @@ public class ObjectVector extends BaseValueVector{
   }
 
   @Override
-  public ByteBuf getData() {
+  public DrillBuf getData() {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 
@@ -166,7 +166,7 @@ public class ObjectVector extends BaseValueVector{
   }
 
   @Override
-  public DrillBuf[] getBuffers() {
+  public DrillBuf[] getBuffers(boolean clear) {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 

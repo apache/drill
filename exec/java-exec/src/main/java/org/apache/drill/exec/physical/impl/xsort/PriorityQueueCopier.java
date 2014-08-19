@@ -32,8 +32,9 @@ import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import java.util.List;
 
 public interface PriorityQueueCopier {
-  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups, VectorAccessible outgoing, List<VectorAllocator> allocators, int recordCnt) throws SchemaChangeException;
-  public int next();
+  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
+                    VectorAccessible outgoing, List<VectorAllocator> allocators) throws SchemaChangeException;
+  public int next(int targetRecordCount);
   public List<VectorAllocator> getAllocators();
   public void cleanup();
 
