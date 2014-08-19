@@ -77,6 +77,8 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   
   private Stopwatch watch = new Stopwatch();
   
+  private boolean filterPushedDown = false;
+  
   @JsonCreator
   public MongoGroupScan(@JsonProperty("mongoScanSpec") MongoScanSpec scanSpec,
                         @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
@@ -104,6 +106,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     this.columns = that.columns;
     this.storagePlugin = that.storagePlugin;
     this.storagePluginConfig = that.storagePluginConfig;
+    this.filterPushedDown = that.filterPushedDown;
   }
   
   private void init() {
@@ -137,7 +140,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-	MongoSubScanSpec subScanSpec = new MongoSubScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(), storagePluginConfig.getConnection());
+	MongoSubScanSpec subScanSpec = new MongoSubScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(), storagePluginConfig.getConnection(),scanSpec.getFilters());
 	List<MongoSubScanSpec> subScanList = new LinkedList<MongoSubScanSpec>();
 	subScanList.add(subScanSpec);
 	return new MongoSubScan(this.storagePlugin, this.storagePluginConfig, subScanList, this.columns);
@@ -156,8 +159,11 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public ScanStats getScanStats() {
-    CommandResult stats = collection.getStats();
-    return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
+    if(collection != null){
+      CommandResult stats = collection.getStats();
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
+    }
+    return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, 0, 1, 0);
   }
 
   @Override
@@ -200,6 +206,22 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   @JsonProperty("storage")
   public MongoStoragePluginConfig getStorageConfig() {
     return storagePluginConfig;
+  }
+  
+  
+  @JsonIgnore
+  public boolean isFilterPushedDown() {
+    return filterPushedDown;
+  }
+
+  @JsonIgnore
+  public void setFilterPushedDown(boolean filterPushedDown) {
+    this.filterPushedDown = filterPushedDown;
+  }
+
+  @JsonIgnore
+  public MongoStoragePlugin getStoragePlugin() {
+    return storagePlugin;
   }
 
   @Override

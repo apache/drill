@@ -79,7 +79,7 @@ public class MongoRecordReader implements RecordReader {
         this.fields.put(fieldName, Integer.valueOf(1));
       }
     }
-    this.filters = new BasicDBObject();
+    this.filters = subScanSpec.getFilter();
     // exclude _id field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
     init(subScanSpec);

@@ -39,6 +39,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import com.mongodb.BasicDBObject;
 
 @JsonTypeName("mongo-shard-read")
 public class MongoSubScan extends AbstractBase implements SubScan {
@@ -117,14 +118,16 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     protected String dbName;
     protected String collectionName;
     protected String connection;
+    protected BasicDBObject filter;
     
     @parquet.org.codehaus.jackson.annotate.JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
                             @JsonProperty("collectionName") String collectionName,
-                            @JsonProperty("connection") String connection) {
+                            @JsonProperty("connection") String connection, @JsonProperty("filters") BasicDBObject filters) {
       this.dbName = dbName;
       this.collectionName = collectionName;
       this.connection = connection;
+      this.filter = filters;
     }
 
     public String getConnection() {
@@ -139,6 +142,10 @@ public class MongoSubScan extends AbstractBase implements SubScan {
       return collectionName;
     }
     
+    public BasicDBObject getFilter() {
+      return filter;
+    }
+
     @Override
     public String toString() {
       return "MongoSubScanSpec [tableName=" + collectionName

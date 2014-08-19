@@ -45,13 +45,15 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 
 public class MongoSchemaFactory implements SchemaFactory {
 
-  static final Logger logger = LoggerFactory.getLogger(MongoSchemaFactory.class);
+  static final Logger logger = LoggerFactory
+      .getLogger(MongoSchemaFactory.class);
 
   private static final String DATABASES = "databases";
 
@@ -121,7 +123,8 @@ public class MongoSchemaFactory implements SchemaFactory {
 
     @Override
     public LoadingCache<String, String> load(String key) throws Exception {
-      return CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).build(new TableLoader(key));
+      return CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES)
+          .build(new TableLoader(key));
     }
 
   }
@@ -224,8 +227,8 @@ public class MongoSchemaFactory implements SchemaFactory {
       }
     }
 
-    DrillTable getDrillTable(String dbName, String t) {
-      MongoScanSpec mongoScanSpec = new MongoScanSpec(dbName, t);
+    DrillTable getDrillTable(String dbName, String collectionName) {
+      MongoScanSpec mongoScanSpec = new MongoScanSpec(dbName, collectionName);
       return new DynamicDrillTable(plugin, schemaName, mongoScanSpec);
     }
 

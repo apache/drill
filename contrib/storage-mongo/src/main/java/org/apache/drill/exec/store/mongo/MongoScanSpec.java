@@ -19,10 +19,13 @@ package org.apache.drill.exec.store.mongo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mongodb.BasicDBObject;
 
 public class MongoScanSpec {
   private String dbName;
   private String collectionName;
+  
+  private BasicDBObject filters;
 
   @JsonCreator
   public MongoScanSpec(
@@ -30,6 +33,12 @@ public class MongoScanSpec {
       @JsonProperty("collectionName") String collectionName) {
     this.dbName = dbName;
     this.collectionName = collectionName;
+  }
+  
+  public MongoScanSpec(String dbName, String collectionName, BasicDBObject filters){
+    this.dbName = dbName;
+    this.collectionName = collectionName;
+    this.filters = filters;
   }
 
   public String getDbName() {
@@ -39,10 +48,17 @@ public class MongoScanSpec {
   public String getCollectionName() {
     return collectionName;
   }
+  
+  
+
+  public BasicDBObject getFilters() {
+    return filters;
+  }
 
   @Override
   public String toString() {
     return "MongoScanSpec [dbName=" + dbName + ", collectionName="
-        + collectionName + "]";
+        + collectionName + ", filters=" + filters + "]";
   }
+  
 }
