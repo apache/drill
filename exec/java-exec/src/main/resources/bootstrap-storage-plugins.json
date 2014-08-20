@@ -50,5 +50,6 @@
           type: "parquet"
         }
       }
+    }
   }
 }
