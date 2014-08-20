@@ -65,7 +65,7 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
     try {
       DBObject putObj = new BasicDBObject(2);
       putObj.put(ID, key);
-      putObj.put(MongoPStoreProvider.pKey, valueAsBytes(value));
+      putObj.put(MongoPStoreProvider.pKey, bytes(value));
       collection.insert(putObj);
     } catch (Exception e) {
       throw new DrillRuntimeException(e.getMessage(), e);
@@ -77,7 +77,7 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
     try {
       DBObject check = new BasicDBObject(1).append(ID, key);
       DBObject putObj = new BasicDBObject(2);
-      putObj.put(MongoPStoreProvider.pKey, valueAsBytes(value));
+      putObj.put(MongoPStoreProvider.pKey, bytes(value));
       WriteResult wr = collection.update(check, putObj, true, false);
       return wr.getN() == 1 ? true : false;
     } catch (Exception e) {
@@ -95,7 +95,7 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
     }
   }
   
-  private byte[] valueAsBytes(V value) {
+  private byte[] bytes(V value) {
     try {
       return config.getSerializer().serialize(value);
     } catch (IOException e) {
