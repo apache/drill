@@ -27,7 +27,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.WriterRecordBatch;
@@ -71,7 +73,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
   private final ParquetFormatConfig config;
   private final StoragePluginConfig storageConfig;
   private final String name;
-  
+
   public ParquetFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig){
     this(name, context, fs, storageConfig, new ParquetFormatConfig());
   }
@@ -118,7 +120,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
     return new ParquetWriter(child, location, this);
   }
 
-  public RecordWriter getRecordWriter(FragmentContext context, ParquetWriter writer) throws IOException {
+  public RecordWriter getRecordWriter(FragmentContext context, ParquetWriter writer) throws IOException, OutOfMemoryException {
     Map<String, String> options = Maps.newHashMap();
 
     options.put("location", writer.getLocation());
@@ -131,7 +133,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
     options.put(ExecConstants.PARQUET_BLOCK_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_BLOCK_SIZE).num_val.toString());
 
-    RecordWriter recordWriter = new ParquetRecordWriter();
+    RecordWriter recordWriter = new ParquetRecordWriter(context, writer);
     recordWriter.init(options);
 
     return recordWriter;

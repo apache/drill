@@ -125,7 +125,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-column</artifactId>
-      <version>1.5.1-drill-r2</version>
+      <version>1.5.1-drill-r3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -140,7 +140,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-hadoop</artifactId>
-      <version>1.5.1-drill-r2</version>
+      <version>1.5.1-drill-r3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -170,7 +170,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-common</artifactId>
-      <version>1.5.1-drill-r2</version>
+      <version>1.5.1-drill-r3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -185,7 +185,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-jackson</artifactId>
-      <version>1.5.1-drill-r2</version>
+      <version>1.5.1-drill-r3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -200,7 +200,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-encoding</artifactId>
-      <version>1.5.1-drill-r2</version>
+      <version>1.5.1-drill-r3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -215,7 +215,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-generator</artifactId>
-      <version>1.5.1-drill-r2</version>
+      <version>1.5.1-drill-r3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
