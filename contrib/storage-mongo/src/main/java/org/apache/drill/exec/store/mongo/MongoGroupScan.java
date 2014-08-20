@@ -284,30 +284,30 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
             .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
         mongoSubScanSpecList.add(spec);
       }
-      chunksInverseMapping.remove(ep.getAddress());
+//      chunksInverseMapping.remove(ep.getAddress());
       endpointFragmentMapping.put(Integer.valueOf(fragmentIndex++), mongoSubScanSpecList);
     }
     
     //For the remaining chunks, assign in round robin fashion.
-    if (!chunksInverseMapping.isEmpty()) {
-      Collection<List<ChunkInfo>> values = chunksInverseMapping.values();
-      Iterator<List<ChunkInfo>> iterator = values.iterator();
-      int startIndex = fragmentIndex;
-      for (;fragmentIndex < startIndex + values.size(); ++fragmentIndex) {
-        List<MongoSubScanSpec> list = endpointFragmentMapping.get(fragmentIndex % endPointsSize);
-        if (list == null) {
-          list = Lists.newArrayList();
-          endpointFragmentMapping.put(fragmentIndex % endPointsSize, list);
-        }
-        List<ChunkInfo> chunksList = iterator.next();
-        for(ChunkInfo chunkInfo : chunksList) {
-          MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-              .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList())
-              .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
-          list.add(spec);
-        }
-      }
-    }
+//    if (!chunksInverseMapping.isEmpty()) {
+//      Collection<List<ChunkInfo>> values = chunksInverseMapping.values();
+//      Iterator<List<ChunkInfo>> iterator = values.iterator();
+//      int startIndex = fragmentIndex;
+//      for (;fragmentIndex < startIndex + values.size(); ++fragmentIndex) {
+//        List<MongoSubScanSpec> list = endpointFragmentMapping.get(fragmentIndex % endPointsSize);
+//        if (list == null) {
+//          list = Lists.newArrayList();
+//          endpointFragmentMapping.put(fragmentIndex % endPointsSize, list);
+//        }
+//        List<ChunkInfo> chunksList = iterator.next();
+//        for(ChunkInfo chunkInfo : chunksList) {
+//          MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
+//              .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList())
+//              .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
+//          list.add(spec);
+//        }
+//      }
+//    }
   }
 
   @Override
