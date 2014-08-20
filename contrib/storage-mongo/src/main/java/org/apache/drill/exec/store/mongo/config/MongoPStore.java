@@ -18,12 +18,10 @@
 package org.apache.drill.exec.store.mongo.config;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 
-import org.apache.commons.lang.SerializationUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
 import org.apache.drill.exec.store.sys.PStore;
@@ -44,7 +42,7 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   private final PStoreConfig<V> config;
 
   private final DBCollection collection;
-
+  
   public MongoPStore(PStoreConfig<V> config, DBCollection collection)
       throws IOException {
     this.config = config;
@@ -53,37 +51,60 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
   @Override
   public V get(String key) {
-    DBObject get = new BasicDBObject().append(ID, key);
-    DBCursor cursor = collection.find(get);
-    return value(cursor.next().get(MongoPStoreProvider.pKey));
+    try {
+      DBObject get = new BasicDBObject().append(ID, key);
+      DBCursor cursor = collection.find(get);
+      return value((byte[]) cursor.next().get(MongoPStoreProvider.pKey));
+    } catch (Exception e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void put(String key, V value) {
-    DBObject putObj = new BasicDBObject(2);
-    putObj.put(ID, key);
-    putObj.put(MongoPStoreProvider.pKey, value);
-    collection.insert(putObj);
+    try {
+      DBObject putObj = new BasicDBObject(2);
+      putObj.put(ID, key);
+      putObj.put(MongoPStoreProvider.pKey, valueAsBytes(value));
+      collection.insert(putObj);
+    } catch (Exception e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
   @Override
   public boolean putIfAbsent(String key, V value) {
-    DBObject check = new BasicDBObject(1).append(ID, key);
-    DBObject putObj = new BasicDBObject(2);
-    putObj.put(MongoPStoreProvider.pKey, value);
-    WriteResult wr = collection.update(check, putObj, true, false);
-    return wr.getN() == 1 ? true : false;
+    try {
+      DBObject check = new BasicDBObject(1).append(ID, key);
+      DBObject putObj = new BasicDBObject(2);
+      putObj.put(MongoPStoreProvider.pKey, valueAsBytes(value));
+      WriteResult wr = collection.update(check, putObj, true, false);
+      return wr.getN() == 1 ? true : false;
+    } catch (Exception e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void delete(String key) {
-    DBObject delete = new BasicDBObject(1).append(ID, key);
-    collection.remove(delete);
+    try {
+      DBObject delete = new BasicDBObject(1).append(ID, key);
+      collection.remove(delete);
+    } catch (Exception e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
+  }
+  
+  private byte[] valueAsBytes(V value) {
+    try {
+      return config.getSerializer().serialize(value);
+    } catch (IOException e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
-  private V value(Object obj) {
+  private V value(byte[] serialize) {
     try {
-      byte[] serialize = SerializationUtils.serialize((Serializable) obj);
       return config.getSerializer().deserialize(serialize);
     } catch (IOException e) {
       throw new DrillRuntimeException(e.getMessage(), e);
