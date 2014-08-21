@@ -44,9 +44,8 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   private final PStoreConfig<V> config;
 
   private final DBCollection collection;
-  
-  public MongoPStore(PStoreConfig<V> config, DBCollection collection)
-      throws IOException {
+
+  public MongoPStore(PStoreConfig<V> config, DBCollection collection) throws IOException {
     this.config = config;
     this.collection = collection;
   }
@@ -104,7 +103,7 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
       throw new DrillRuntimeException(e.getMessage(), e);
     }
   }
-  
+
   private byte[] bytes(V value) {
     try {
       return config.getSerializer().serialize(value);
