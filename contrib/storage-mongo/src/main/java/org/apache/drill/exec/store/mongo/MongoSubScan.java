@@ -55,12 +55,12 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
   @JsonCreator
   public MongoSubScan(@JacksonInject StoragePluginRegistry registry,
-      @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
+      @JsonProperty("mongoPluginConfig") StoragePluginConfig mongoPluginConfig,
       @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     this.columns = columns;
-    this.mongoPluginConfig = (MongoStoragePluginConfig) storagePluginConfig;
-    this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(storagePluginConfig);
+    this.mongoPluginConfig = (MongoStoragePluginConfig) mongoPluginConfig;
+    this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(mongoPluginConfig);
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
