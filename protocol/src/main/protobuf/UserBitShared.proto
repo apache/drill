@@ -294,4 +294,6 @@ enum CoreOperatorType {
   WINDOW = 34;
   NESTED_LOOP_JOIN = 35;
   AVRO_SUB_SCAN = 36;
+  STATISTICS_AGGREGATE = 37;
+  UNPIVOT_MAPS = 38;
 }

@@ -58,7 +58,9 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
     HBASE_SUB_SCAN(33),
     WINDOW(34),
     NESTED_LOOP_JOIN(35),
-    AVRO_SUB_SCAN(36);
+    AVRO_SUB_SCAN(36),
+    STATISTICS_AGGREGATE(37),
+    UNPIVOT_MAPS(38);
     
     public final int number;
     
@@ -113,6 +115,8 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
             case 34: return WINDOW;
             case 35: return NESTED_LOOP_JOIN;
             case 36: return AVRO_SUB_SCAN;
+            case 37: return STATISTICS_AGGREGATE;
+            case 38: return UNPIVOT_MAPS;
             default: return null;
         }
     }

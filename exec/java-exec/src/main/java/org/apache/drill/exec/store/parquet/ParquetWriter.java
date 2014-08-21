@@ -41,6 +41,7 @@ public class ParquetWriter extends AbstractWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetWriter.class);
 
   private final String location;
+  private final boolean append;
   private final List<String> partitionColumns;
   private final ParquetFormatPlugin formatPlugin;
 
@@ -48,6 +49,7 @@ public class ParquetWriter extends AbstractWriter {
   public ParquetWriter(
           @JsonProperty("child") PhysicalOperator child,
           @JsonProperty("location") String location,
+          @JsonProperty("append") boolean append,
           @JsonProperty("partitionColumns") List<String> partitionColumns,
           @JsonProperty("storage") StoragePluginConfig storageConfig,
           @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
@@ -56,23 +58,31 @@ public class ParquetWriter extends AbstractWriter {
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, new ParquetFormatConfig());
     Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
+    this.append = append;
     this.partitionColumns = partitionColumns;
   }
 
   public ParquetWriter(PhysicalOperator child,
                        String location,
+                       boolean append,
                        List<String> partitionColumns,
                        ParquetFormatPlugin formatPlugin) {
 
     super(child);
     this.formatPlugin = formatPlugin;
     this.location = location;
+    this.append = append;
     this.partitionColumns = partitionColumns;
   }
 
   @JsonProperty("location")
   public String getLocation() {
     return location;
+  }
+
+  @JsonProperty("append")
+  public boolean getAppend() {
+    return append;
   }
 
   @JsonProperty("storage")
@@ -97,7 +107,7 @@ public class ParquetWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new ParquetWriter(child, location, partitionColumns, formatPlugin);
+    return new ParquetWriter(child, location, append, partitionColumns, formatPlugin);
   }
 
   @Override

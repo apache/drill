@@ -112,14 +112,14 @@ public class QueryWrapper {
   }
 
 
-  private static class Listener implements UserResultsListener {
+  public static class Listener implements UserResultsListener {
     private volatile UserException exception;
     private final CountDownLatch latch = new CountDownLatch(1);
     private final BufferAllocator allocator;
     public final List<Map<String, String>> results = Lists.newArrayList();
     public final Set<String> columns = Sets.newLinkedHashSet();
 
-    Listener(BufferAllocator allocator) {
+    public Listener(BufferAllocator allocator) {
       this.allocator = Preconditions.checkNotNull(allocator, "allocator cannot be null");
     }
 

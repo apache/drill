@@ -147,6 +147,10 @@
           <artifactId>commons-compiler-jdk</artifactId>
           <groupId>org.codehaus.janino</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>stream</artifactId>
+          <groupId>com.clearspring.analytics</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

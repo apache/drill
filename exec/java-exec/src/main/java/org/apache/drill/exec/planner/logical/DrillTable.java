@@ -26,6 +26,7 @@ import org.apache.calcite.schema.Table;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptTable;
@@ -39,6 +40,7 @@ public abstract class DrillTable implements Table {
   private final StoragePlugin plugin;
   private final String userName;
 
+  private DrillStatsTable statsTable;
   private GroupScan scan;
 
   /**
@@ -96,6 +98,14 @@ public abstract class DrillTable implements Table {
   @Override
   public Statistic getStatistic() {
     return Statistics.UNKNOWN;
+  }
+
+  public DrillStatsTable getStatsTable() {
+    return statsTable;
+  }
+
+  public void setStatsTable(DrillStatsTable statsTable) {
+    this.statsTable = statsTable;
   }
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {

@@ -47,6 +47,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   private static final String LINE_FEED = String.format("%n");
 
   private String location;
+  private boolean append;
   private String prefix;
 
   private String fieldDelimiter;
@@ -68,6 +69,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   @Override
   public void init(Map<String, String> writerOptions) throws IOException {
     this.location = writerOptions.get("location");
+    this.append = writerOptions.get("append").equalsIgnoreCase("true") ? true : false;
     this.prefix = writerOptions.get("prefix");
     this.fieldDelimiter = writerOptions.get("separator");
     this.extension = writerOptions.get("extension");
@@ -78,7 +80,11 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
     this.fs = FileSystem.get(conf);
 
-    Path fileName = new Path(location, prefix + "_" + index + "." + extension);
+    Path fileName;
+    do {
+      fileName = new Path(location, prefix + "_" + (index++) + "." + extension);
+    } while (append && fs.exists(fileName));
+
     try {
       stream = fs.create(fileName);
       JsonGenerator generator = factory.createGenerator(stream).useDefaultPrettyPrinter();

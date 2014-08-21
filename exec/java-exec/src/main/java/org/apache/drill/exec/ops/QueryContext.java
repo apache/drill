@@ -246,6 +246,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
     return new PartitionExplorerImpl(getRootSchema());
   }
 
+  public DrillbitContext getDrillbitContext() {
+    return drillbitContext;
+  }
+
   @Override
   public void close() throws Exception {
     try {

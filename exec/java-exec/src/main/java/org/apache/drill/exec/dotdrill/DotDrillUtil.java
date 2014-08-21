@@ -18,8 +18,10 @@
 package org.apache.drill.exec.dotdrill;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -30,6 +32,9 @@ public class DotDrillUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DotDrillUtil.class);
 
   private static List<DotDrillFile> getDrillFiles(DrillFileSystem fs, FileStatus[] statuses, DotDrillType... types){
+    if (statuses == null) {
+      return Collections.emptyList();
+    }
     List<DotDrillFile> files = Lists.newArrayList();
     for(FileStatus s : statuses){
       DotDrillFile f = DotDrillFile.create(fs, s);

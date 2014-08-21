@@ -46,12 +46,14 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
   private FileSystemConfig storageConfig;
   private FormatPlugin formatPlugin;
   private String location;
+  private boolean append;
   private final List<String> partitionColumns;
 
   @JsonCreator
   public FileSystemCreateTableEntry(@JsonProperty("storageConfig") FileSystemConfig storageConfig,
                                     @JsonProperty("formatConfig") FormatPluginConfig formatConfig,
                                     @JsonProperty("location") String location,
+                                    @JsonProperty("append") boolean append,
                                     @JsonProperty("partitionColumn") List<String> partitionColumns,
                                     @JacksonInject StoragePluginRegistry engineRegistry)
       throws ExecutionSetupException {
@@ -64,10 +66,12 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
   public FileSystemCreateTableEntry(FileSystemConfig storageConfig,
                                     FormatPlugin formatPlugin,
                                     String location,
+                                    boolean append,
                                     List<String> partitionColumns) {
     this.storageConfig = storageConfig;
     this.formatPlugin = formatPlugin;
     this.location = location;
+    this.append = append;
     this.partitionColumns = partitionColumns;
   }
 
@@ -89,7 +93,7 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
           formatPlugin.getName())).build(logger);
     }
 
-    return formatPlugin.getWriter(child, location, partitionColumns);
+    return formatPlugin.getWriter(child, location, append, partitionColumns);
   }
 
   @Override
