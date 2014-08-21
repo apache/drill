@@ -21,11 +21,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -78,6 +81,15 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   private static final Integer select = Integer.valueOf(1);
 
   static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
+  
+  private static final Comparator<List<MongoSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<MongoSubScanSpec>>() {
+    @Override
+    public int compare(List<MongoSubScanSpec> list1, List<MongoSubScanSpec> list2) {
+      return list1.size() - list2.size();
+    }
+  };
+
+  private static final Comparator<List<MongoSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
 
   private MongoStoragePlugin storagePlugin;
 
@@ -241,11 +253,12 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
         chunksList.add(chunkInfo);
         chunksInverseMapping.put(address.getHost(), chunksList);
       }
-      client.close();
     } catch (UnknownHostException e) {
       throw new DrillRuntimeException(e.getMessage(), e);
     } finally {
-      client.close();
+      if (client != null) {
+        client.close();
+      }
     }
 
   }
@@ -264,50 +277,89 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
-    logger.debug("Incoming endpoints for assigments : " + endpoints);
-    endpointFragmentMapping = Maps.newHashMap();
+    watch.reset();
+    watch.start();
+
+    final int numSlots = endpoints.size();
+    int totalAssignmentsTobeDone = chunksMapping.size();
     
-    int fragmentIndex = 0;
-    int endPointsSize = endpoints.size();
-    
-    for (int fragmentId = 0; fragmentId < endPointsSize; ++fragmentId) {
-      DrillbitEndpoint ep = endpoints.get(fragmentId);
-      List<MongoSubScanSpec> mongoSubScanSpecList = Lists.newArrayList();
-      List<ChunkInfo> chunks = chunksInverseMapping.get(ep.getAddress());
-      if (chunks == null || chunks.isEmpty()) {
-        continue;
+    Preconditions.checkArgument(numSlots <= totalAssignmentsTobeDone,
+        String.format("Incoming endpoints %d is greater than number of chunks %d", numSlots, totalAssignmentsTobeDone));
+
+    final int minPerEndpointSlot = (int) Math.floor((double)totalAssignmentsTobeDone / numSlots);
+    final int maxPerEndpointSlot = (int) Math.ceil((double)totalAssignmentsTobeDone / numSlots);
+
+    endpointFragmentMapping = Maps.newHashMapWithExpectedSize(numSlots);
+    Map<String, Queue<Integer>> endpointHostIndexListMap = Maps.newHashMap();
+
+    for (int i = 0; i < numSlots; ++i) {
+      endpointFragmentMapping.put(i, new ArrayList<MongoSubScanSpec>(maxPerEndpointSlot));
+      String hostname = endpoints.get(i).getAddress();
+      Queue<Integer> hostIndexQueue = endpointHostIndexListMap.get(hostname);
+      if (hostIndexQueue == null) {
+        hostIndexQueue = Lists.newLinkedList();
+        endpointHostIndexListMap.put(hostname, hostIndexQueue);
       }
-      for (int i = 0; i < chunks.size(); ++i) {
-        ChunkInfo chunkInfo = chunks.get(i);
-        MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-            .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList())
-            .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
-        mongoSubScanSpecList.add(spec);
-      }
-//      chunksInverseMapping.remove(ep.getAddress());
-      endpointFragmentMapping.put(Integer.valueOf(fragmentIndex++), mongoSubScanSpecList);
+      hostIndexQueue.add(i);
     }
     
-    //For the remaining chunks, assign in round robin fashion.
-//    if (!chunksInverseMapping.isEmpty()) {
-//      Collection<List<ChunkInfo>> values = chunksInverseMapping.values();
-//      Iterator<List<ChunkInfo>> iterator = values.iterator();
-//      int startIndex = fragmentIndex;
-//      for (;fragmentIndex < startIndex + values.size(); ++fragmentIndex) {
-//        List<MongoSubScanSpec> list = endpointFragmentMapping.get(fragmentIndex % endPointsSize);
-//        if (list == null) {
-//          list = Lists.newArrayList();
-//          endpointFragmentMapping.put(fragmentIndex % endPointsSize, list);
-//        }
-//        List<ChunkInfo> chunksList = iterator.next();
-//        for(ChunkInfo chunkInfo : chunksList) {
-//          MongoSubScanSpec spec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
-//              .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList())
-//              .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
-//          list.add(spec);
-//        }
-//      }
-//    }
+    Set<Entry<String, List<ChunkInfo>>> chunksToAssignSet = Sets.newHashSet(chunksInverseMapping.entrySet());
+    
+    for (Iterator<Entry<String, List<ChunkInfo>>> chunksIterator = chunksToAssignSet.iterator(); chunksIterator.hasNext();) {
+      Entry<String, List<ChunkInfo>> chunkEntry = chunksIterator.next();
+      Queue<Integer> slots = endpointHostIndexListMap.get(chunkEntry.getKey());
+      if (slots != null) {
+        for (ChunkInfo chunkInfo : chunkEntry.getValue()) {
+          Integer slotIndex = slots.poll();
+          List<MongoSubScanSpec> subScanSpecList = endpointFragmentMapping.get(slotIndex);
+          subScanSpecList.add(buildSubScanSpecAndGet(chunkInfo));
+          slots.offer(slotIndex);
+        }
+        chunksIterator.remove();
+      }
+    }
+    
+    PriorityQueue<List<MongoSubScanSpec>> minHeap = new PriorityQueue<List<MongoSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR);
+    PriorityQueue<List<MongoSubScanSpec>> maxHeap = new PriorityQueue<List<MongoSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR_REV);
+    for(List<MongoSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
+      if (listOfScan.size() < minPerEndpointSlot) {
+        minHeap.offer(listOfScan);
+      } else if (listOfScan.size() > minPerEndpointSlot){
+        maxHeap.offer(listOfScan);
+      }
+    }
+
+    if (chunksToAssignSet.size() > 0) {
+      for (Entry<String, List<ChunkInfo>> chunkEntry : chunksToAssignSet) {
+        for (ChunkInfo chunkInfo : chunkEntry.getValue()) {
+          List<MongoSubScanSpec> smallestList = minHeap.poll();
+          smallestList.add(buildSubScanSpecAndGet(chunkInfo));
+          minHeap.offer(smallestList);
+        }
+      }
+    }
+    
+    while(minHeap.peek() != null && minHeap.peek().size() < minPerEndpointSlot) {
+      List<MongoSubScanSpec> smallestList = minHeap.poll();
+      List<MongoSubScanSpec> largestList = maxHeap.poll();
+      smallestList.add(largestList.remove(largestList.size()-1));
+      if (largestList.size() > minPerEndpointSlot) {
+        maxHeap.offer(largestList);
+      }
+      if (smallestList.size() < minPerEndpointSlot) {
+        minHeap.offer(smallestList);
+      }
+    }
+    
+    logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}",
+        watch.elapsed(TimeUnit.NANOSECONDS)/1000, endpoints, endpointFragmentMapping.toString());
+  }
+  
+  private MongoSubScanSpec buildSubScanSpecAndGet(ChunkInfo chunkInfo) {
+    MongoSubScanSpec subScanSpec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
+        .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList())
+        .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
+    return subScanSpec;
   }
 
   @Override

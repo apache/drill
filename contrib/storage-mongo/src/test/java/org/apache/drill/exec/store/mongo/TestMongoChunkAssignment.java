@@ -166,13 +166,15 @@ public class TestMongoChunkAssignment {
     mongoGroupScan.applyAssignments(endpoints);
     
     //assignments for chunks on host A, assign on drill bit A
-    assertEquals(2, mongoGroupScan.getSpecificScan(0).getChunkScanSpecList().size());
+    assertEquals(1, mongoGroupScan.getSpecificScan(0).getChunkScanSpecList().size());
+    //assignments for chunks on host A, assign on drill bit A
+    assertEquals(1, mongoGroupScan.getSpecificScan(1).getChunkScanSpecList().size());
     //assignments for chunks on host B, assign on drill bit B
-    assertEquals(1, mongoGroupScan.getSpecificScan(1).getChunkScanSpecList().size()); 
+    assertEquals(1, mongoGroupScan.getSpecificScan(2).getChunkScanSpecList().size()); 
     //assignments for chunks on host D, assign on drill bit D
-    assertEquals(1, mongoGroupScan.getSpecificScan(2).getChunkScanSpecList().size());
+    assertEquals(1, mongoGroupScan.getSpecificScan(3).getChunkScanSpecList().size());
     //assignments for chunks on host C, assign on drill bit X
-    assertEquals(2, mongoGroupScan.getSpecificScan(3).getChunkScanSpecList().size());
+    assertEquals(2, mongoGroupScan.getSpecificScan(4).getChunkScanSpecList().size());
   }
   
   @Test
@@ -213,9 +215,9 @@ public class TestMongoChunkAssignment {
     mongoGroupScan.applyAssignments(endpoints);
     
     //assignments for chunks on host A, assign on drill bit M
-    assertEquals(2, mongoGroupScan.getSpecificScan(0).getChunkScanSpecList().size());
+    assertEquals(1, mongoGroupScan.getSpecificScan(0).getChunkScanSpecList().size());
     //assignments for chunks on host B, assign on drill bit M
-    assertEquals(1, mongoGroupScan.getSpecificScan(1).getChunkScanSpecList().size());
+    assertEquals(2, mongoGroupScan.getSpecificScan(1).getChunkScanSpecList().size());
     //assignments for chunks on host C, assign on drill bit L
     assertEquals(2, mongoGroupScan.getSpecificScan(2).getChunkScanSpecList().size());
     //assignments for chunks on host D, assign on drill bit X
