@@ -17,6 +17,8 @@
  */
 
 package org.apache.drill.exec.store.syslog;
+import java.io.IOException;
+import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -34,6 +36,8 @@ import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 
 import java.util.List;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
 
@@ -78,5 +82,20 @@ public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
   @Override
   public int getWriterOperatorType() {
     throw new UnsupportedOperationException("Drill does not support writing records to Syslog format.");
+  }
+
+  @Override
+  public boolean supportsStatistics() {
+    return false;
+  }
+
+  @Override
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
+  }
+
+  @Override
+  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
   }
 }

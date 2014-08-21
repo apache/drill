@@ -30,9 +30,13 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -56,6 +60,9 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.FieldsReWriterUtil;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.util.Utilities;
 
@@ -547,6 +554,101 @@ public abstract class DrillRelOptUtil {
         desiredFields.put(name, new FieldsReWriterUtil.DesiredField(name, type, originalNode));
       } else {
         desiredField.addNode(originalNode);
+      }
+    }
+  }
+
+  /**
+   * Returns whether statistics-based estimates or guesses are used by the optimizer
+   * for the {@link RelNode} rel.
+   * @param rel : input
+   * @return TRUE if the estimate is a guess, FALSE otherwise
+   * */
+  public static boolean guessRows(RelNode rel) {
+    final PlannerSettings settings =
+        rel.getCluster().getPlanner().getContext().unwrap(PlannerSettings.class);
+    if (!settings.useStatistics()) {
+      return true;
+    }
+    /* We encounter RelSubset/HepRelVertex which are CALCITE constructs, hence we
+     * cannot add guessRows() to the DrillRelNode interface.
+     */
+    if (rel instanceof RelSubset) {
+      if (((RelSubset) rel).getBest() != null) {
+        return guessRows(((RelSubset) rel).getBest());
+      } else if (((RelSubset) rel).getOriginal() != null) {
+        return guessRows(((RelSubset) rel).getOriginal());
+      }
+    } else if (rel instanceof HepRelVertex) {
+      if (((HepRelVertex) rel).getCurrentRel() != null) {
+        return guessRows(((HepRelVertex) rel).getCurrentRel());
+      }
+    } else if (rel instanceof TableScan) {
+      DrillTable table = rel.getTable().unwrap(DrillTable.class);
+      if (table == null) {
+        table = rel.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+      }
+      if (table != null
+          && table.getStatsTable() != null
+          && table.getStatsTable().isMaterialized()) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      for (RelNode child : rel.getInputs()) {
+        if (guessRows(child)) { // at least one child is a guess
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns whether the join condition is a simple equi-join or not. A simple equi-join is
+   * defined as an two-table equality join (no self-join)
+   * @param join : input join
+   * @param joinFieldOrdinals: join field ordinal w.r.t. the underlying inputs to the join
+   * @return TRUE if the join is a simple equi-join (not a self-join), FALSE otherwise
+   * */
+  public static boolean analyzeSimpleEquiJoin(Join join, int[] joinFieldOrdinals) {
+    RexNode joinExp = join.getCondition();
+    if(joinExp.getKind() != SqlKind.EQUALS) {
+      return false;
+    } else {
+      RexCall binaryExpression = (RexCall)joinExp;
+      RexNode leftComparand = (RexNode)binaryExpression.operands.get(0);
+      RexNode rightComparand = (RexNode)binaryExpression.operands.get(1);
+      if(!(leftComparand instanceof RexInputRef)) {
+        return false;
+      } else if(!(rightComparand instanceof RexInputRef)) {
+        return false;
+      } else {
+        int leftFieldCount = join.getLeft().getRowType().getFieldCount();
+        int rightFieldCount = join.getRight().getRowType().getFieldCount();
+        RexInputRef leftFieldAccess = (RexInputRef)leftComparand;
+        RexInputRef rightFieldAccess = (RexInputRef)rightComparand;
+        if(leftFieldAccess.getIndex() >= leftFieldCount+rightFieldCount ||
+           rightFieldAccess.getIndex() >= leftFieldCount+rightFieldCount) {
+          return false;
+        }
+        /* Both columns reference same table */
+        if((leftFieldAccess.getIndex() >= leftFieldCount &&
+            rightFieldAccess.getIndex() >= leftFieldCount) ||
+           (leftFieldAccess.getIndex() < leftFieldCount &&
+            rightFieldAccess.getIndex() < leftFieldCount)) {
+          return false;
+        } else {
+          if (leftFieldAccess.getIndex() < leftFieldCount) {
+            joinFieldOrdinals[0] = leftFieldAccess.getIndex();
+            joinFieldOrdinals[1] = rightFieldAccess.getIndex() - leftFieldCount;
+          } else {
+            joinFieldOrdinals[0] = rightFieldAccess.getIndex();
+            joinFieldOrdinals[1] = leftFieldAccess.getIndex() - leftFieldCount;
+          }
+          return true;
+        }
       }
     }
   }

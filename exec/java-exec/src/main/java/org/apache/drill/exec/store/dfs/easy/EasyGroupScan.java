@@ -162,6 +162,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     return selection.getFiles();
   }
 
+  @Override
   @JsonProperty("columns")
   public List<SchemaPath> getColumns() {
     return columns;

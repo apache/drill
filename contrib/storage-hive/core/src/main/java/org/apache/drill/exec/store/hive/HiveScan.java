@@ -120,6 +120,7 @@ public class HiveScan extends AbstractGroupScan {
     return hiveStoragePlugin.getConfig();
   }
 
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.pcap;
 
+import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -44,6 +45,8 @@ import org.apache.hadoop.conf.Configuration;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
 
@@ -87,6 +90,21 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
   @Override
   public FormatMatcher getMatcher() {
     return this.matcher;
+  }
+
+  @Override
+  public boolean supportsStatistics() {
+    return false;
+  }
+
+  @Override
+  public DrillStatsTable.TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+    return null;
+  }
+
+  @Override
+  public void writeStatistics(DrillStatsTable.TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+
   }
 
   private static class PcapFormatMatcher extends BasicFormatMatcher {

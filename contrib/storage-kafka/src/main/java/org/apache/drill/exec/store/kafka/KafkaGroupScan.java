@@ -304,6 +304,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
     return kafkaStoragePlugin.getConfig();
   }
 
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;

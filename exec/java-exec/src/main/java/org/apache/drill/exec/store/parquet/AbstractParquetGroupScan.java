@@ -116,6 +116,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
     this.matchAllRowGroups = that.matchAllRowGroups;
   }
 
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;

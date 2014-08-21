@@ -36,6 +36,7 @@ import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StatisticsAggregate;
+import org.apache.drill.exec.physical.config.StatisticsMerge;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.config.Trace;
 import org.apache.drill.exec.physical.config.UnionAll;
@@ -100,6 +101,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
 
   @Override
   public T visitStatisticsAggregate(StatisticsAggregate agg, X value) throws E {
+    return visitOp(agg, value);
+  }
+
+  @Override
+  public T visitStatisticsMerge(StatisticsMerge agg, X value) throws E {
     return visitOp(agg, value);
   }
 

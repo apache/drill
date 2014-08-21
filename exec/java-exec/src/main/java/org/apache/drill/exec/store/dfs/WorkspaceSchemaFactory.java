@@ -423,11 +423,15 @@ public class WorkspaceSchemaFactory {
     private final ExpandingConcurrentMap<TableInstance, DrillTable> tables = new ExpandingConcurrentMap<>(this);
     private final SchemaConfig schemaConfig;
     private DrillFileSystem fs;
+    // Drill Process User file-system
+    private DrillFileSystem dpsFs;
 
     public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig, DrillFileSystem fs) throws IOException {
       super(parentSchemaPath, wsName);
       this.schemaConfig = schemaConfig;
       this.fs = fs;
+      //this.fs = ImpersonationUtil.createFileSystem(schemaConfig.getUserName(), fsConf);
+      this.dpsFs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), fsConf);
     }
 
     DrillTable getDrillTable(TableInstance key) {
@@ -583,28 +587,59 @@ public class WorkspaceSchemaFactory {
 
       try {
         if (table.getStatsTable() == null) {
-          Table statsTable = getStatsTable(tableName);
-          if (statsTable != null) {
-            table.setStatsTable(new DrillStatsTable(getFullSchemaName(), getStatsTableName(tableName)));
-          }
+          String statsTableName = getStatsTableName(tableName);
+          Path statsTableFilePath = getStatsTableFilePath(tableName);
+          table.setStatsTable(new DrillStatsTable(getFullSchemaName(), statsTableName,
+              statsTableFilePath, fs));
         }
       } catch (final Exception e) {
-        logger.warn("Failed to find the stats table for table [{}] in schema [{}]", tableName, getFullSchemaName());
+        logger.warn("Failed to find the stats table for table [{}] in schema [{}]",
+            tableName, getFullSchemaName());
       }
     }
 
     // Get stats table name for a given table name.
     private String getStatsTableName(final String tableName) {
+      // Access stats file as DRILL process user (not impersonated user)
       final Path tablePath = new Path(config.getLocation(), tableName);
       try {
-        if (fs.isDirectory(tablePath)) {
-          return tableName + Path.SEPARATOR + STATS.getEnding();
+        String name;
+        if (dpsFs.isDirectory(tablePath)) {
+          name = tableName + Path.SEPARATOR + STATS.getEnding();
+          if (dpsFs.isDirectory(new Path(name))) {
+            return name;
+          }
         } else {
-          return tableName + STATS.getEnding();
+          //TODO: Not really useful. Remove?
+          name = tableName + STATS.getEnding();
+          if (dpsFs.isFile(new Path(name))) {
+            return name;
+          }
         }
+        return name;
       } catch (final Exception e) {
         throw new DrillRuntimeException(
-            String.format("Failed to find the location of the stats for table [%s] in schema [%s]",
+            String.format("Failed to find the stats for table [%s] in schema [%s]",
+                tableName, getFullSchemaName()));
+      }
+    }
+
+    // Get stats table file (JSON) path for the given table name.
+    private Path getStatsTableFilePath(final String tableName) {
+      // Access stats file as DRILL process user (not impersonated user)
+      final Path tablePath = new Path(config.getLocation(), tableName);
+      try {
+        Path stFPath = null;
+        if (dpsFs.isDirectory(tablePath)) {
+          stFPath = new Path(tablePath, STATS.getEnding()+ Path.SEPARATOR + "0_0.json");
+          if (dpsFs.isFile(stFPath)) {
+            return stFPath;
+          }
+        }
+        return stFPath;
+      } catch (final Exception e) {
+        throw new DrillRuntimeException(
+            String.format("Failed to find the the stats for table [%s] in schema [%s]",
                 tableName, getFullSchemaName()));
       }
     }
@@ -626,7 +661,8 @@ public class WorkspaceSchemaFactory {
     public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy storageStrategy) {
       String storage = schemaConfig.getOption(ExecConstants.OUTPUT_FORMAT_OPTION).string_val;
       FormatPlugin formatPlugin = plugin.getFormatPlugin(storage);
-      return createOrAppendToTable(tableName, false, formatPlugin, partitionColumns, storageStrategy);
+
+      return createOrAppendToTable(tableName, formatPlugin, partitionColumns, storageStrategy);
     }
 
     @Override
@@ -634,7 +670,7 @@ public class WorkspaceSchemaFactory {
       ensureNotStatsTable(tableName);
       final String statsTableName = getStatsTableName(tableName);
       FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.DEFAULT_NAME);
-      return createOrAppendToTable(statsTableName, false, formatPlugin, ImmutableList.<String>of(),
+      return createOrAppendToTable(statsTableName, formatPlugin, ImmutableList.<String>of(),
           StorageStrategy.DEFAULT);
     }
 
@@ -643,7 +679,7 @@ public class WorkspaceSchemaFactory {
       ensureNotStatsTable(tableName);
       final String statsTableName = getStatsTableName(tableName);
       FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.DEFAULT_NAME);
-      return createOrAppendToTable(statsTableName, true, formatPlugin, ImmutableList.<String>of(),
+      return createOrAppendToTable(statsTableName, formatPlugin, ImmutableList.<String>of(),
           StorageStrategy.DEFAULT);
     }
 
@@ -652,8 +688,8 @@ public class WorkspaceSchemaFactory {
       return getTable(getStatsTableName(tableName));
     }
 
-    private CreateTableEntry createOrAppendToTable(String tableName, boolean append, FormatPlugin formatPlugin,
-        List<String> partitonColumns, StorageStrategy storageStrategy) {
+    private CreateTableEntry createOrAppendToTable(String tableName, FormatPlugin formatPlugin,
+        List<String> partitionColumns, StorageStrategy storageStrategy) {
       if (formatPlugin == null) {
         throw new UnsupportedOperationException(
           String.format("Unsupported format '%s' in workspace '%s'", config.getDefaultInputFormat(),
@@ -664,8 +700,7 @@ public class WorkspaceSchemaFactory {
           (FileSystemConfig) plugin.getConfig(),
           formatPlugin,
           config.getLocation() + Path.SEPARATOR + tableName,
-          append,
-          partitonColumns,
+          partitionColumns,
           storageStrategy);
     }
 

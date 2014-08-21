@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.List;
 
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
@@ -31,15 +32,16 @@ import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 
-import java.util.List;
-
 /**
  * Drill logical node for "Analyze".
  */
 public class DrillAnalyzeRel extends SingleRel implements DrillRel {
 
-  public DrillAnalyzeRel(RelOptCluster cluster, RelTraitSet traits, RelNode child) {
+  double samplePercent;    // sampling percentage between 0-100
+
+  public DrillAnalyzeRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, double samplePercent) {
     super(cluster, traits, child);
+    this.samplePercent = samplePercent;
   }
 
   @Override
@@ -52,7 +54,7 @@ public class DrillAnalyzeRel extends SingleRel implements DrillRel {
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new DrillAnalyzeRel(getCluster(), traitSet, sole(inputs));
+    return new DrillAnalyzeRel(getCluster(), traitSet, sole(inputs), samplePercent);
   }
 
   @Override
@@ -60,12 +62,16 @@ public class DrillAnalyzeRel extends SingleRel implements DrillRel {
     final LogicalOperator inputOp = implementor.visitChild(this, 0, getInput());
     final Analyze rel = new Analyze();
     rel.setInput(inputOp);
-
     return rel;
   }
 
-  public static DrillAnalyzeRel convert(Analyze analyze, ConversionContext context) throws InvalidRelException {
+  public double getSamplePercent() {
+    return samplePercent;
+  }
+
+  public static DrillAnalyzeRel convert(Analyze analyze, ConversionContext context)
+      throws InvalidRelException {
     RelNode input = context.toRel(analyze.getInput());
-    return new DrillAnalyzeRel(context.getCluster(), context.getLogicalTraits(), input);
+    return new DrillAnalyzeRel(context.getCluster(), context.getLogicalTraits(), input, analyze.getSamplePercent());
   }
 }

@@ -231,6 +231,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
 
     try {
+      // Materialize the statistics, if available.
       StatsMaterializationVisitor.materialize(relNode, context);
 
       // HEP for rules, which are failed at the LOGICAL_PLANNING stage for Volcano planner
@@ -571,7 +572,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     /*
      * 4.)
      * If two fragments are both estimated to be parallelization one, remove the exchange
-     * separating them
+     * separating them.
      */
     phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
 

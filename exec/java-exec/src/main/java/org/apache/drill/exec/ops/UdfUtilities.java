@@ -17,14 +17,13 @@
  */
 package org.apache.drill.exec.ops;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-
-import io.netty.buffer.DrillBuf;
 
 /**
  * Defines the query state and shared resources available to UDFs through
@@ -41,6 +40,7 @@ public interface UdfUtilities {
           .put(DrillBuf.class, "getManagedBuffer")
           .put(PartitionExplorer.class, "getPartitionExplorer")
           .put(ContextInformation.class, "getContextInformation")
+          .put(OptionManager.class, "getOptions")
           .build();
 
 

@@ -257,12 +257,13 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
             cacheFileRoot, wasAllPartitionsPruned, formatSelection.getSelection().getDirStatus());
     newFileSelection.setMetaContext(metaContext);
     final FormatSelection newFormatSelection = new FormatSelection(formatSelection.getFormat(), newFileSelection);
-    final DrillTranslatableTable newTable = new DrillTranslatableTable(
-            new DynamicDrillTable(table.getPlugin(), table.getStorageEngineName(),
-            table.getUserName(),
-            newFormatSelection));
+    final DynamicDrillTable dynamicDrillTable = new DynamicDrillTable(table.getPlugin(), table.getStorageEngineName(),
+            table.getUserName(), newFormatSelection);
+    /* Copy statistics from the original table */
+    dynamicDrillTable.setStatsTable(table.getStatsTable());
+    final DrillTranslatableTable newTable = new DrillTranslatableTable(dynamicDrillTable);
     final RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(t.getRelOptSchema(), t.getRowType(), newTable,
-        GuavaUtils.convertToUnshadedImmutableList(ImmutableList.of()));
+            GuavaUtils.convertToUnshadedImmutableList(ImmutableList.of()));
 
     // return an EnumerableTableScan with fileSelection being part of digest of TableScan node.
     return DirPrunedEnumerableTableScan.create(oldScan.getCluster(), newOptTableImpl, newFileSelection.toString());

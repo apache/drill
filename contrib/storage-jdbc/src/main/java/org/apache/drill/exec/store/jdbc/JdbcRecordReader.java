@@ -35,6 +35,7 @@ import javax.sql.DataSource;
 
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -75,9 +76,9 @@ class JdbcRecordReader extends AbstractRecordReader {
   private final String sql;
   private ImmutableList<ValueVector> vectors;
   private ImmutableList<Copier<?>> copiers;
-  private final List<String> columns;
+  private final List<SchemaPath> columns;
 
-  public JdbcRecordReader(DataSource source, String sql, String storagePluginName, List<String> columns) {
+  public JdbcRecordReader(DataSource source, String sql, String storagePluginName, List<SchemaPath> columns) {
     this.source = source;
     this.sql = sql;
     this.storagePluginName = storagePluginName;
@@ -206,7 +207,7 @@ class JdbcRecordReader extends AbstractRecordReader {
       ImmutableList.Builder<Copier<?>> copierBuilder = ImmutableList.builder();
 
       for (int i = 1; i <= columnsCount; i++) {
-        String name = columns.get(i - 1);
+        String name = columns.get(i - 1).getRootSegmentPath();
         // column index in ResultSetMetaData starts from 1
         int jdbcType = meta.getColumnType(i);
         int width = meta.getPrecision(i);

@@ -22,11 +22,13 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
-import org.apache.drill.exec.server.options.TypeValidators.DateTimeFormatValidator;
-import org.apache.drill.exec.server.options.TypeValidators.IntegerValidator;
+import org.apache.drill.exec.server.options.TypeValidators.AdminUserGroupsValidator;
+import org.apache.drill.exec.server.options.TypeValidators.AdminUsersValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
+import org.apache.drill.exec.server.options.TypeValidators.DateTimeFormatValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
+import org.apache.drill.exec.server.options.TypeValidators.IntegerValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.MaxWidthValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
@@ -34,8 +36,6 @@ import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidat
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
-import org.apache.drill.exec.server.options.TypeValidators.AdminUsersValidator;
-import org.apache.drill.exec.server.options.TypeValidators.AdminUserGroupsValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -911,4 +911,38 @@ public final class ExecConstants {
       new OptionDescription("Controls whether to return result set for CREATE TABLE / VIEW / FUNCTION, DROP TABLE / VIEW / FUNCTION, " +
           "SET, USE, REFRESH METADATA TABLE queries. If set to false affected rows count will be returned instead and result set will be null. " +
           "Affects JDBC connections only. Default is true. (Drill 1.15+)"));
+
+  /**
+   * Option whose value is a long value representing the number of bits required for computing ndv (using HLL).
+   * Controls the trade-off between accuracy and memory requirements. The number of bits correlates positively with accuracy
+   */
+  public static final String HLL_ACCURACY = "exec.statistics.ndv_accuracy";
+  public static final LongValidator HLL_ACCURACY_VALIDATOR = new PositiveLongValidator(HLL_ACCURACY, 30,
+      new OptionDescription("Controls trade-off between NDV statistic computation memory cost and accuracy"));
+
+  /**
+   * Option whose value is a boolean value representing whether to perform deterministic sampling. It translates to using
+   * the same (pre-defined) seed for the underlying pseudo-random number generator.
+   */
+  public static final String DETERMINISTIC_SAMPLING = "exec.statistics.deterministic_sampling";
+  public static final BooleanValidator DETERMINISTIC_SAMPLING_VALIDATOR = new BooleanValidator(DETERMINISTIC_SAMPLING,
+      new OptionDescription("Deterministic sampling"));
+
+  /**
+   * Option whose value is a long value representing the expected number of elements in the bloom filter. The bloom filter
+   * computes the number of duplicates which is used for extrapolating the NDV when using sampling. Controls the trade-off
+   * between accuracy and memory requirements. The number of elements correlates positively with accuracy.
+   */
+  public static final String NDV_BLOOM_FILTER_ELEMENTS = "exec.statistics.ndv_extrapolation_bf_elements";
+  public static final LongValidator NDV_BLOOM_FILTER_ELEMENTS_VALIDATOR = new PositiveLongValidator(NDV_BLOOM_FILTER_ELEMENTS, Integer.MAX_VALUE,
+          new OptionDescription("Controls trade-off between NDV statistic computation memory cost and sampling extrapolation accuracy"));
+
+  /**
+   * Option whose value is a double value representing the desired max false positive probability in the bloom filter. The bloom filter
+   * computes the number of duplicates which is used for extrapolating the NDV when using sampling. Controls the trade-off
+   * between accuracy and memory requirements. The probability correlates negatively with the accuracy.
+   */
+  public static final String NDV_BLOOM_FILTER_FPOS_PROB = "exec.statistics.ndv_extrapolation_bf_fpprobability";
+  public static final LongValidator NDV_BLOOM_FILTER_FPOS_PROB_VALIDATOR = new PositiveLongValidator(NDV_BLOOM_FILTER_FPOS_PROB,
+          100, new OptionDescription("Controls trade-off between NDV statistic computation memory cost and sampling extrapolation accuracy"));
 }

@@ -149,6 +149,7 @@ public class OpenTSDBGroupScan extends AbstractGroupScan {
     return storagePluginConfig;
   }
 
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;

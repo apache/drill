@@ -26,9 +26,12 @@ import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 
 /**
  * Base class for logical/physical scan rel implemented in Drill.
@@ -71,5 +74,16 @@ public abstract class DrillScanRelBase extends TableScan implements DrillRelNode
 
   public GroupScan getGroupScan() {
     return groupScan;
+  }
+
+  @Override public double estimateRowCount(RelMetadataQuery mq) {
+    return mq.getRowCount(this);
+  }
+
+  @Override public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    double dRows = estimateRowCount(mq);
+    double dCpu = dRows + 1; // ensure non-zero cost
+    double dIo = 0;
+    return planner.getCostFactory().makeCost(dRows, dCpu, dIo);
   }
 }

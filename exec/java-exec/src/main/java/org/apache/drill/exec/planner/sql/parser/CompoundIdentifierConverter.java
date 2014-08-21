@@ -86,13 +86,18 @@ public class CompoundIdentifierConverter extends SqlShuttle {
   }
 
   private boolean enableComplex = true;
+  private boolean allowNoTableRefCompoundIdentifier = false;
+
+  public CompoundIdentifierConverter(boolean allowNoTableRefCompoundIdentifier) {
+    this.allowNoTableRefCompoundIdentifier = allowNoTableRefCompoundIdentifier;
+  }
 
   @Override
   public SqlNode visit(SqlIdentifier id) {
     if (id instanceof DrillCompoundIdentifier) {
       DrillCompoundIdentifier compoundIdentifier = (DrillCompoundIdentifier) id;
       if (enableComplex) {
-        return compoundIdentifier.getAsSqlNode();
+        return compoundIdentifier.getAsSqlNode(allowNoTableRefCompoundIdentifier);
       } else {
         return compoundIdentifier.getAsCompoundIdentifier();
       }

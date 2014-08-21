@@ -63,8 +63,8 @@ public class TestSelectivity extends BaseTestQuery {
                             "Scan.*columns=\\[`employee_id`, `department_id`\\].*rowcount = 463.0.*"};
         PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
 
-        test(String.format("alter session set `planner.filter.min_selectivity_estimate_factor` = %f", 0.9));
-        final String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 416.7,.*",
+        test(String.format("alter session set `planner.filter.min_selectivity_estimate_factor` = %f", 0.7));
+        final String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 324.0.*",
                             "Scan.*columns=\\[`employee_id`, `department_id`\\].*rowcount = 463.0.*"};
         PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
     }

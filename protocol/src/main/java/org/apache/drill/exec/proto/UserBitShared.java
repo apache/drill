@@ -609,6 +609,10 @@ public final class UserBitShared {
      * <code>UNPIVOT_MAPS = 60;</code>
      */
     UNPIVOT_MAPS(60, 60),
+    /**
+     * <code>STATISTICS_MERGE = 61;</code>
+     */
+    STATISTICS_MERGE(61, 61),
     ;
 
     /**
@@ -855,6 +859,10 @@ public final class UserBitShared {
      * <code>UNPIVOT_MAPS = 60;</code>
      */
     public static final int UNPIVOT_MAPS_VALUE = 60;
+    /**
+     * <code>STATISTICS_MERGE = 61;</code>
+     */
+    public static final int STATISTICS_MERGE_VALUE = 61;
 
 
     public final int getNumber() { return value; }
@@ -922,6 +930,7 @@ public final class UserBitShared {
         case 58: return SYSLOG_SUB_SCAN;
         case 59: return STATISTICS_AGGREGATE;
         case 60: return UNPIVOT_MAPS;
+        case 61: return STATISTICS_MERGE;
         default: return null;
       }
     }
@@ -24662,7 +24671,7 @@ public final class UserBitShared {
       "entState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCA" +
       "TION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCAN" +
       "CELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQ" +
-      "UESTED\020\006*\323\t\n\020CoreOperatorType\022\021\n\rSINGLE_" +
+      "UESTED\020\006*\351\t\n\020CoreOperatorType\022\021\n\rSINGLE_" +
       "SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTER" +
       "\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n" +
       "\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006" +
@@ -24693,10 +24702,11 @@ public final class UserBitShared {
       "T\0206\022\023\n\017PCAPNG_SUB_SCAN\0207\022\022\n\016RUNTIME_FILT" +
       "ER\0208\022\017\n\013ROWKEY_JOIN\0209\022\023\n\017SYSLOG_SUB_SCAN" +
       "\020:\022\030\n\024STATISTICS_AGGREGATE\020;\022\020\n\014UNPIVOT_" +
-      "MAPS\020<*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016" +
-      "\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014" +
-      "SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.a" +
-      "pache.drill.exec.protoB\rUserBitSharedH\001"
+      "MAPS\020<\022\024\n\020STATISTICS_MERGE\020=*g\n\nSaslStat" +
+      "us\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020" +
+      "SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013" +
+      "SASL_FAILED\020\004B.\n\033org.apache.drill.exec.p",
+      "rotoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

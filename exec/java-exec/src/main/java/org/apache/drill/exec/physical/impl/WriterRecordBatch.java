@@ -188,6 +188,9 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     }
 
     try {
+      //Perform any post processing tasks prior to cleaning up the writer
+      recordWriter.postProcessing();
+      //Perform any cleanup prior to closing the writer
       recordWriter.cleanup();
     } catch(IOException ex) {
       context.getExecutorState().fail(ex);

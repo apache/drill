@@ -61,6 +61,9 @@ import io.netty.buffer.DrillBuf;
 // in fragment contexts
 public class QueryContext implements AutoCloseable, OptimizerRulesContext, SchemaConfigInfoProvider {
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
+  public enum SqlStatementType {OTHER, ANALYZE, CTAS, EXPLAIN, DESCRIBE_TABLE, DESCRIBE_SCHEMA, REFRESH, SELECT, SETOPTION};
+
   private final DrillbitContext drillbitContext;
   private final UserSession session;
   private final QueryId queryId;
@@ -76,6 +79,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   private final SchemaTreeProvider schemaTreeProvider;
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
+  private SqlStatementType stmtType;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -102,6 +106,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     }
 
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaPath(), session.getSessionId());
+
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
 
     allocator = drillbitContext.getAllocator().newChildAllocator(
@@ -112,6 +117,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     viewExpansionContext = new ViewExpansionContext(this);
     schemaTreeProvider = new SchemaTreeProvider(drillbitContext);
     constantValueHolderCache = Maps.newHashMap();
+    stmtType = null;
   }
 
   @Override
@@ -260,6 +266,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * Re-creates drill operator table to refresh functions list from local function registry.
    */
   public void reloadDrillOperatorTable() {
+    // This is re-trying the query plan on failure so qualifies to reset the SQL statement.
+    clearSQLStatementType();
     table = new DrillOperatorTable(
         drillbitContext.getFunctionImplementationRegistry(),
         drillbitContext.getOptionManager());
@@ -286,10 +294,6 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   @Override
   public PartitionExplorer getPartitionExplorer() {
     return new PartitionExplorerImpl(getRootSchema());
-  }
-
-  public DrillbitContext getDrillbitContext() {
-    return drillbitContext;
   }
 
   @Override
@@ -324,5 +328,31 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     } finally {
       closed = true;
     }
+  }
+
+  /**
+  * @param stmtType : Sets the type {@link SqlStatementType} of the statement e.g. CTAS, ANALYZE
+  */
+  public void setSQLStatementType(SqlStatementType stmtType) {
+    if (this.stmtType == null) {
+      this.stmtType = stmtType;
+    } else {
+      throw new IllegalStateException(String.format("SQL Statement type is already set to %s", this.stmtType));
+    }
+  }
+
+  /*
+   * Clears the type {@link SqlStatementType} of the statement. Ideally we should not clear the statement type
+   * so this should never be exposed outside the QueryContext
+   */
+  private void clearSQLStatementType() {
+    this.stmtType = null;
+  }
+
+  /**
+   * @return Get the type {@link SqlStatementType} of the statement e.g. CTAS, ANALYZE
+   */
+  public SqlStatementType getSQLStatementType() {
+    return stmtType;
   }
 }

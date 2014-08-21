@@ -137,6 +137,11 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   }
 
   @Override
+  public List<SchemaPath> getColumns() {
+    return GroupScan.ALL_COLUMNS;
+  }
+
+  @Override
   public List<SchemaPath> getPartitionColumns() {
     return Lists.newArrayList();
   }

@@ -17,9 +17,11 @@
  */
 package org.apache.drill.exec.store.pcapng;
 
+import java.io.IOException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
@@ -31,6 +33,8 @@ import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.List;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class PcapngFormatPlugin extends EasyFormatPlugin<PcapngFormatConfig> {
 
@@ -72,5 +76,20 @@ public class PcapngFormatPlugin extends EasyFormatPlugin<PcapngFormatConfig> {
   @Override
   public int getWriterOperatorType() {
     throw new UnsupportedOperationException("unimplemented");
+  }
+
+  @Override
+  public boolean supportsStatistics() {
+    return false;
+  }
+
+  @Override
+  public DrillStatsTable.TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+    return null;
+  }
+
+  @Override
+  public void writeStatistics(DrillStatsTable.TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+
   }
 }
