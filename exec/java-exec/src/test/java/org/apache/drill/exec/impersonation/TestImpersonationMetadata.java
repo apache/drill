@@ -21,7 +21,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.dotdrill.DotDrillType;
+import org.apache.drill.exec.dotdrill.DotDrillUtil;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -382,6 +385,30 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     test("SELECT * from " + tableName + ";");
 
+  }
+
+  @Test
+  public void testAnalyzeTable() throws Exception {
+    final String tableName = "nation1";
+    final String tableWS = "drillTestGrp1_700";
+
+    updateClient(user1);
+    test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+    test("ALTER SESSION SET `store.format` = 'parquet'");
+    test("CREATE TABLE " + tableName + " AS SELECT * FROM cp.`tpch/nation.parquet`;");
+    test("ANALYZE TABLE " + tableName + " COMPUTE STATISTICS;");
+    test("SELECT * FROM " + tableName + ";");
+
+    final Path statsFilePath = new Path(Path.SEPARATOR + tableWS + Path.SEPARATOR + tableName
+        + Path.SEPARATOR + DotDrillType.STATS.getEnding());
+    assertTrue (fs.exists(statsFilePath) && fs.isDirectory(statsFilePath));
+    FileStatus status = fs.getFileStatus(statsFilePath);
+    // Verify process user is the directory owner
+    assert(processUser.equalsIgnoreCase(status.getOwner()));
+
+    fs.mkdirs(new Path(statsFilePath, "tmp5"));
+
+    test("SELECT * from " + tableName + ";");
   }
 
   @AfterClass

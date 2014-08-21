@@ -41,6 +41,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.json.simple.JSONArray;
@@ -407,7 +408,8 @@ public class TestLocalExchange extends PlanTestBase {
 
     findFragmentsWithPartitionSender(rootFragment, planningSet, deMuxFragments, htrFragments);
 
-    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName");
+    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName",
+        optionManager);
     QueryWorkUnit qwu = PARALLELIZER.getFragments(new OptionList(), drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
         drillbitContext.getBits(), planReader, rootFragment, USER_SESSION, queryContextInfo);

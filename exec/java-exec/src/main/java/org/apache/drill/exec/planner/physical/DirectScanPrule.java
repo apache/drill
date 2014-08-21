@@ -36,7 +36,8 @@ public class DirectScanPrule extends Prule {
     final DrillDirectScanRel scan = call.rel(0);
     final RelTraitSet traits = scan.getTraitSet().plus(Prel.DRILL_PHYSICAL);
 
-    final ScanPrel newScan = new ScanPrel(scan.getCluster(), traits, scan.getGroupScan(), scan.getRowType()) {
+    final DirectScanPrel newScan = new DirectScanPrel(scan.getCluster(), traits,
+        scan.getGroupScan(), scan.getRowType()) {
       // direct scan (no execution) => no accidental column shuffling => no reordering
       @Override
       public boolean needsFinalColumnReordering() {

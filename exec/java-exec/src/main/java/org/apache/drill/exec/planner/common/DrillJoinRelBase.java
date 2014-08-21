@@ -17,20 +17,25 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
-import org.apache.drill.exec.planner.cost.DrillRelOptCost;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
@@ -40,8 +45,6 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
-
-import com.google.common.collect.Lists;
 
 /**
  * Base class for logical and physical Joins implemented in Drill.
@@ -99,9 +102,39 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
   public double getRows() {
     if (this.condition.isAlwaysTrue()) {
       return joinRowFactor * this.getLeft().getRows() * this.getRight().getRows();
-    } else {
-      return joinRowFactor * Math.max(this.getLeft().getRows(), this.getRight().getRows());
     }
+
+    int[] joinFields = new int[2];
+
+    LogicalJoin jr = new LogicalJoin(
+        this.getCluster(),
+        this.getTraitSet(),
+        this.getLeft(),
+        this.getRight(),
+        this.getCondition(),
+        this.getJoinType(),
+        this.getVariablesStopped(),
+        false,
+        ImmutableList.<RelDataTypeField>of());
+
+    if (RelOptUtil.analyzeSimpleEquiJoin(jr, joinFields)) {
+      ImmutableBitSet leq = ImmutableBitSet.of(joinFields[0]);
+      ImmutableBitSet req = ImmutableBitSet.of(joinFields[1]);
+
+      Double ldrc = RelMetadataQuery.getDistinctRowCount(this.getLeft(), leq, null);
+      Double rdrc = RelMetadataQuery.getDistinctRowCount(this.getRight(), req, null);
+
+      Double lrc = RelMetadataQuery.getRowCount(this.getLeft());
+      Double rrc = RelMetadataQuery.getRowCount(this.getRight());
+
+      if (ldrc != null && rdrc != null && lrc != null && rrc != null) {
+        return (lrc * rrc) / Math.max(ldrc, rdrc);
+      }
+    }
+
+    return joinRowFactor * Math.max(
+        RelMetadataQuery.getRowCount(left),
+        RelMetadataQuery.getRowCount(right));
   }
 
   /**

@@ -129,6 +129,40 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   /**
+   * Create stats table entry for given <i>tableName</i>.
+   * @param tableName
+   * @return
+   */
+  public CreateTableEntry createStatsTable(String tableName) {
+    throw UserException.unsupportedError()
+        .message("Statistics tables are not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Create an append statistics table entry for given <i>tableName</i>. If there is not existing
+   * statistics table, a new one is created.
+   * @param tableName
+   * @return
+   */
+  public CreateTableEntry appendToStatsTable(String tableName) {
+    throw UserException.unsupportedError()
+        .message("Statistics tables are not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Get the statistics table for given <i>tableName</i>
+   * @param tableName
+   * @return
+   */
+  public Table getStatsTable(String tableName) {
+    throw UserException.unsupportedError()
+        .message("Statistics tables are not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
    * Reports whether to show items from this schema in INFORMATION_SCHEMA
    * tables.
    * (Controls ... TODO:  Doc.:  Mention what this typically controls or

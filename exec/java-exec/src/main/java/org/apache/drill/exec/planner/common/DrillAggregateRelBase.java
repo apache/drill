@@ -33,9 +33,7 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.pentaho.aggdes.algorithm.impl.Cost;
 
 
 /**
@@ -92,4 +90,7 @@ public abstract class DrillAggregateRelBase extends Aggregate implements DrillRe
     return computeHashAggCost(planner);
   }
 
+  @Override public double getRows() {
+    return RelMetadataQuery.getRowCount(this);
+  }
 }

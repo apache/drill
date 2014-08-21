@@ -6869,6 +6869,22 @@ public final class BitControl {
      */
     com.google.protobuf.ByteString
         getDefaultSchemaNameBytes();
+    /**
+     * <code>optional int32 time_zone = 2;</code>
+     *
+     * <pre>
+     * timezone of the Drillbit where user is connected
+     * </pre>
+     */
+    boolean hasHllMemoryLimit();
+    /**
+     * <code>optional int32 hll_memory_limit = 4;</code>
+     *
+     * <pre>
+     * hll memory limit for ANALYZE query
+     * </pre>
+     */
+    int getHllMemoryLimit();
   }
   /**
    * Protobuf type {@code exec.bit.control.QueryContextInformation}
@@ -7079,6 +7095,30 @@ public final class BitControl {
       }
     }
 
+    // optional int32 hll_memory_limit = 4;
+    private int hllMemoryLimit_;
+    /**
+     * <code>optional int32 hll_memory_limit = 4;</code>
+     *
+     * <pre>
+     * hll memory limit for ANALYZE query
+     * </pre>
+     */
+    public boolean hasHllMemoryLimit() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+
+    /**
+     * <code>optional int32 hll_memory_limit = 4;</code>
+     *
+     * <pre>
+     * hll memory limit for ANALYZE query
+     * </pre>
+     */
+    public int getHllMemoryLimit() {
+      return hllMemoryLimit_;
+    }
+
     private void initFields() {
       queryStartTime_ = 0L;
       timeZone_ = 0;
@@ -7105,6 +7145,9 @@ public final class BitControl {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, getDefaultSchemaNameBytes());
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeInt32(4, hllMemoryLimit_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -7125,6 +7168,10 @@ public final class BitControl {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, getDefaultSchemaNameBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+                .computeInt32Size(4, hllMemoryLimit_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -7248,6 +7295,8 @@ public final class BitControl {
         bitField0_ = (bitField0_ & ~0x00000002);
         defaultSchemaName_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
+        hllMemoryLimit_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -7287,6 +7336,10 @@ public final class BitControl {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
+        result.hllMemoryLimit_ = hllMemoryLimit_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
         result.defaultSchemaName_ = defaultSchemaName_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -7314,6 +7367,9 @@ public final class BitControl {
           bitField0_ |= 0x00000004;
           defaultSchemaName_ = other.defaultSchemaName_;
           onChanged();
+        }
+        if (other.hasHllMemoryLimit()) {
+          setHllMemoryLimit(other.getHllMemoryLimit());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -7534,6 +7590,58 @@ public final class BitControl {
   }
   bitField0_ |= 0x00000004;
         defaultSchemaName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 hll_memory_limit = 4;
+      private int hllMemoryLimit_ ;
+      /**
+       * <code>optional int32 hll_memory_limit = 4;</code>
+       *
+       * <pre>
+       * hll memory limit for ANALYZE query
+       * </pre>
+       */
+      public boolean hasHllMemoryLimit() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+
+      /**
+       * <code>optional int32 hll_memory_limit = 4;</code>
+       *
+       * <pre>
+       * hll memory limit for ANALYZE query
+       * </pre>
+       */
+      public int getHllMemoryLimit() {
+        return hllMemoryLimit_;
+      }
+
+      /**
+       * <code>optional int32 hll_memory_limit = 4;</code>
+       *
+       * <pre>
+       * hll memory limit for ANALYZE query
+       * </pre>
+       */
+      public Builder setHllMemoryLimit(int value) {
+        bitField0_ |= 0x00000008;
+        hllMemoryLimit_ = value;
+        onChanged();
+        return this;
+      }
+
+      /**
+       * <code>optional int32 hll_memory_limit = 4;</code>
+       *
+       * <pre>
+       * hll memory limit for ANALYZE query
+       * </pre>
+       */
+      public Builder clearHllMemoryLimit() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        hllMemoryLimit_ = 0;
         onChanged();
         return this;
       }

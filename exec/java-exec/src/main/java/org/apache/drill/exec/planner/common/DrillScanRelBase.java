@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.planner.common;
 
-import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
-import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 
 /**
  * Base class for logical scan rel implemented in Drill.
@@ -53,4 +56,14 @@ public abstract class DrillScanRelBase extends TableScan implements DrillRelNode
     return drillTable;
   }
 
+  @Override public double getRows() {
+    return RelMetadataQuery.getRowCount(this);
+  }
+
+  @Override public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    double dRows = getRows();
+    double dCpu = dRows + 1; // ensure non-zero cost
+    double dIo = 0;
+    return planner.getCostFactory().makeCost(dRows, dCpu, dIo);
+  }
 }

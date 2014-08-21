@@ -68,6 +68,21 @@ public class SubSchemaWrapper extends AbstractSchema {
   }
 
   @Override
+  public CreateTableEntry createStatsTable(String tableName) {
+    return innerSchema.createStatsTable(tableName);
+  }
+
+  @Override
+  public CreateTableEntry appendToStatsTable(String tableName) {
+    return innerSchema.appendToStatsTable(tableName);
+  }
+
+  @Override
+  public Table getStatsTable(String tableName) {
+    return innerSchema.getStatsTable(tableName);
+  }
+
+  @Override
   public Collection<Function> getFunctions(String name) {
     return innerSchema.getFunctions(name);
   }

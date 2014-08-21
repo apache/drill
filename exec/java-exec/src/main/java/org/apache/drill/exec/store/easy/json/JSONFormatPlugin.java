@@ -27,6 +27,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -49,7 +50,7 @@ import com.google.common.collect.Maps;
 public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   private static final boolean IS_COMPRESSIBLE = true;
-  private static final String DEFAULT_NAME = "json";
+  public static final String DEFAULT_NAME = "json";
 
   public JSONFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
     this(name, context, fsConf, storageConfig, new JSONFormatConfig());
@@ -68,6 +69,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   @Override
   public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
     Map<String, String> options = Maps.newHashMap();
+    RecordWriter recordWriter = null;
 
     options.put("location", writer.getLocation());
 
@@ -82,8 +84,14 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     options.put("extended", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_EXTENDED_TYPES)));
     options.put("uglify", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_UGLIFY)));
     options.put("skipnulls", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_SKIPNULLFIELDS)));
+    recordWriter = new JsonRecordWriter();
 
-    RecordWriter recordWriter = new JsonRecordWriter();
+    //ANALYZE statement requires the special statistics writer
+    if (context.getStatementType() == QueryContext.StatementType.ANALYZE) {
+      options.put("statsversion", Long.toString(context.getOptions().getOption(ExecConstants.STATISTICS_VERSION)));
+      options.put("queryid", context.getQueryId());
+      recordWriter = new JsonStatisticsRecordWriter();
+    }
     recordWriter.init(options);
 
     return recordWriter;

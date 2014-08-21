@@ -152,24 +152,41 @@ public class SchemaUtilites {
    *   3. Resolved schema is not a mutable schema.
    * @param defaultSchema
    * @param schemaPath
-   * @return
+   * @return mutable schema, if found. Otherwise, throws an {@link UserException}
    */
   public static AbstractSchema resolveToMutableDrillSchema(final SchemaPlus defaultSchema, List<String> schemaPath) {
+    return resolveToDrillSchemaInternal(defaultSchema, schemaPath, true);
+  }
+
+  /**
+   * Given reference to default schema in schema tree, search for schema with given <i>schemaPath</i>. Once a schema is
+   * found resolve it into a mutable <i>AbstractDrillSchema</i> instance. A {@link UserException} is throws when:
+   *   1. No schema for given <i>schemaPath</i> is found,
+   *   2. Schema found for given <i>schemaPath</i> is a root schema
+   * @param defaultSchema
+   * @param schemaPath
+   * @return schema, if found. Otherwise, throws an {@link UserException}
+   */
+  public static AbstractSchema resolveToDrillSchema(final SchemaPlus defaultSchema, List<String> schemaPath) {
+    return resolveToDrillSchemaInternal(defaultSchema, schemaPath, false);
+  }
+
+  private static AbstractSchema resolveToDrillSchemaInternal (SchemaPlus defaultSchema, List<String> schemaPath,
+                                                              boolean checkMutable) {
     final SchemaPlus schema = findSchema(defaultSchema, schemaPath);
 
     if (schema == null) {
       throwSchemaNotFoundException(defaultSchema, SCHEMA_PATH_JOINER.join(schemaPath));
     }
-
     if (isRootSchema(schema)) {
       throw UserException.parseError()
           .message("Root schema is immutable. Creating or dropping tables/views is not allowed in root schema." +
               "Select a schema using 'USE schema' command.")
           .build(logger);
     }
-
     final AbstractSchema drillSchema = unwrapAsDrillSchemaInstance(schema);
-    if (!drillSchema.isMutable()) {
+    if (checkMutable
+        && !drillSchema.isMutable()) {
       throw UserException.parseError()
           .message("Unable to create or drop tables/views. Schema [%s] is immutable.", getSchemaPath(schema))
           .build(logger);

@@ -62,7 +62,8 @@ public class TestFragmentChecker extends PopUnitTestBase{
       endpoints.add(b1);
     }
 
-    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName");
+    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName",
+        optionManager);
     QueryWorkUnit qwu = par.getFragments(new OptionList(), localBit, QueryId.getDefaultInstance(), endpoints, ppr, fragmentRoot,
         UserSession.Builder.newBuilder().withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build()).build(),
         queryContextInfo);

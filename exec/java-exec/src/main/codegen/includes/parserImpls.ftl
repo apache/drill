@@ -338,3 +338,47 @@ SqlNode SqlDropFunction() :
        return new SqlDropFunction(pos, jar);
    }
 }
+
+/**
+ * Parses a analyze statement.
+ * ANALYZE TABLE tblname {COMPUTE | ESTIMATE} | STATISTICS
+ *      [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
+ */
+SqlNode SqlAnalyzeTable() :
+{
+    SqlParserPos pos;
+    SqlIdentifier tblName;
+    SqlLiteral estimate = null;
+    SqlNodeList fieldList = null;
+    SqlNumericLiteral percent = null;
+}
+{
+    <ANALYZE> { pos = getPos(); }
+    <TABLE>
+    tblName = CompoundIdentifier()
+    (
+        <COMPUTE> { estimate = SqlLiteral.createBoolean(false, pos); }
+        |
+        <ESTIMATE> { estimate = SqlLiteral.createBoolean(true, pos); }
+    )
+    <STATISTICS>
+    [
+        (fieldList = ParseRequiredFieldList("Table"))
+    ]
+    [
+        <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
+        {
+            BigDecimal rate = percent.bigDecimalValue();
+            if (rate.compareTo(BigDecimal.ZERO) <= 0 ||
+                rate.compareTo(BigDecimal.valueOf(100L)) > 0)
+            {
+                throw new ParseException("Invalid percentage for ANALYZE TABLE");
+            }
+        }
+    ]
+    {
+        if (percent == null) { percent = SqlLiteral.createExactNumeric("100.0", pos); }
+        return new SqlAnalyzeTable(pos, tblName, estimate, fieldList, percent);
+    }
+}
+

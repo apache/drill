@@ -61,10 +61,10 @@ import com.sun.codemodel.JVar;
 public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggBatch.class);
 
-  private StreamingAggregator aggregator;
-  private final RecordBatch incoming;
-  private boolean done = false;
-  private boolean first = true;
+  protected StreamingAggregator aggregator;
+  protected final RecordBatch incoming;
+  protected boolean done = false;
+  protected boolean first = true;
   private int recordCount = 0;
 
   /*
@@ -82,8 +82,15 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private boolean specialBatchSent = false;
   private static final int SPECIAL_BATCH_COUNT = 1;
 
-  public StreamingAggBatch(StreamingAggregate popConfig, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
+  public StreamingAggBatch(StreamingAggregate popConfig, RecordBatch incoming, FragmentContext context)
+      throws OutOfMemoryException {
     super(popConfig, context);
+    this.incoming = incoming;
+  }
+
+  public StreamingAggBatch(StreamingAggregate popConfig, RecordBatch incoming, FragmentContext context,
+                           final boolean buildSchema) throws OutOfMemoryException {
+    super(popConfig, context, buildSchema);
     this.incoming = incoming;
   }
 
@@ -257,7 +264,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
   }
 
-  private StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
+  protected StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION,
         context.getFunctionRegistry(), context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
@@ -324,7 +331,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private final MappingSet IS_SAME_I1 = new MappingSet("index1", null, IS_SAME, IS_SAME);
   private final MappingSet IS_SAME_I2 = new MappingSet("index2", null, IS_SAME, IS_SAME);
 
-  private void setupIsSame(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] keyExprs) {
+  protected void setupIsSame(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] keyExprs) {
     cg.setMappingSet(IS_SAME_I1);
     for (final LogicalExpression expr : keyExprs) {
       // first, we rewrite the evaluation stack for each side of the comparison.
@@ -347,7 +354,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private final MappingSet ISA_B1 = new MappingSet("b1Index", null, "b1", null, IS_SAME_PREV_INTERNAL_BATCH_READ, IS_SAME_PREV_INTERNAL_BATCH_READ);
   private final MappingSet ISA_B2 = new MappingSet("b2Index", null, "incoming", null, IS_SAME_PREV, IS_SAME_PREV);
 
-  private void setupIsSameApart(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] keyExprs) {
+  protected void setupIsSameApart(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] keyExprs) {
     cg.setMappingSet(ISA_B1);
     for (final LogicalExpression expr : keyExprs) {
       // first, we rewrite the evaluation stack for each side of the comparison.
@@ -369,7 +376,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupInterior", "outputRecordValues", "resetValues", "cleanup");
   private final MappingSet EVAL = new MappingSet("index", "outIndex", "incoming", "outgoing", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
 
-  private void addRecordValues(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] valueExprs) {
+  protected void addRecordValues(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] valueExprs) {
     cg.setMappingSet(EVAL);
     for (final LogicalExpression ex : valueExprs) {
       cg.addExpr(ex);
@@ -378,7 +385,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
 
   private final MappingSet RECORD_KEYS = new MappingSet(GeneratorMapping.create("setupInterior", "outputRecordKeys", null, null));
 
-  private void outputRecordKeys(ClassGenerator<StreamingAggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs) {
+  protected void outputRecordKeys(ClassGenerator<StreamingAggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs) {
     cg.setMappingSet(RECORD_KEYS);
     for (int i = 0; i < keyExprs.length; i++) {
       cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], keyExprs[i], true));
@@ -391,7 +398,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private final GeneratorMapping PREVIOUS_KEYS = GeneratorMapping.create("outputRecordKeysPrev", "outputRecordKeysPrev", null, null);
   private final MappingSet RECORD_KEYS_PREV = new MappingSet("previousIndex", "outIndex", "previous", null, PREVIOUS_KEYS, PREVIOUS_KEYS);
 
-  private void outputRecordKeysPrev(ClassGenerator<StreamingAggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs) {
+  protected void outputRecordKeysPrev(ClassGenerator<StreamingAggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs) {
     cg.setMappingSet(RECORD_KEYS_PREV);
 
     for (int i = 0; i < keyExprs.length; i++) {
@@ -405,7 +412,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
   }
 
-  private void getIndex(ClassGenerator<StreamingAggregator> g) {
+  protected void getIndex(ClassGenerator<StreamingAggregator> g) {
     switch (incoming.getSchema().getSelectionVectorMode()) {
     case FOUR_BYTE: {
       JVar var = g.declareClassField("sv4_", g.getModel()._ref(SelectionVector4.class));

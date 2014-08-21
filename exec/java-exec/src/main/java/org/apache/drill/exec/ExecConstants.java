@@ -24,6 +24,7 @@ import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
+import org.apache.drill.exec.server.options.TypeValidators.NonNegativeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
@@ -385,4 +386,15 @@ public interface ExecConstants {
 
   String DYNAMIC_UDF_SUPPORT_ENABLED = "exec.udf.enable_dynamic_support";
   BooleanValidator DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR = new BooleanValidator(DYNAMIC_UDF_SUPPORT_ENABLED, true, true);
+
+  /**
+   * Option whose value is a long value representing the number of bits required for computing ndv (using HLL)
+   */
+  LongValidator NDV_MEMORY_LIMIT = new PositiveLongValidator("exec.statistics.ndv_memory_limit", 30, 10);
+
+  /**
+   * Option whose value represents the current version of the statistics. Decreasing the value will generate
+   * the older version of statistics
+   */
+  LongValidator STATISTICS_VERSION = new NonNegativeLongValidator("exec.statistics.capability_version", 1, 1);
 }

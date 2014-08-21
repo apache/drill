@@ -245,6 +245,16 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   }
 
   /**
+   * Tells the statement type (e.g. SELECT, CTAS, ANALYZE) from the query context.
+   * @return query statement type {@link QueryContext.StatementType}, if known.
+   */
+  public QueryContext.StatementType getStatementType() {
+    if (queryContext != null) {
+      return queryContext.getStatementType();
+    }
+    return QueryContext.StatementType.UNKNOWN;
+  }
+  /**
    * Get this node's identity.
    * @return A DrillbitEndpoint object.
    */
@@ -391,6 +401,8 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   public String getQueryUserName() {
     return fragment.getCredentials().getUserName();
   }
+
+  public String getQueryId() { return QueryIdHelper.getQueryId(fragment.getHandle().getQueryId());}
 
   public boolean isImpersonationEnabled() {
     // TODO(DRILL-2097): Until SimpleRootExec tests are removed, we need to consider impersonation disabled if there is

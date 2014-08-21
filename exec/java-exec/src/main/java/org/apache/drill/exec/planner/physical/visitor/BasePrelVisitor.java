@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import org.apache.drill.exec.planner.physical.DirectScanPrel;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
@@ -30,6 +31,11 @@ public class BasePrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> implements 
 
   @Override
   public RETURN visitScan(ScanPrel prel, EXTRA value) throws EXCEP {
+    return visitPrel(prel, value);
+  }
+
+  @Override
+  public RETURN visitScan(DirectScanPrel prel, EXTRA value) throws EXCEP {
     return visitPrel(prel, value);
   }
 

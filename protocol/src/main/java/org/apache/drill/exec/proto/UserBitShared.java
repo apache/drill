@@ -513,6 +513,14 @@ public final class UserBitShared {
      * <code>AVRO_SUB_SCAN = 36;</code>
      */
     AVRO_SUB_SCAN(36, 36),
+    /**
+     * <code>STATISTICS_AGGREGATE = 37;</code>
+     */
+    STATISTICS_AGGREGATE(37, 37),
+    /**
+     * <code>UNPIVOT_MAPS = 38;</code>
+     */
+    UNPIVOT_MAPS(38, 38),
     ;
 
     /**
@@ -663,6 +671,14 @@ public final class UserBitShared {
      * <code>AVRO_SUB_SCAN = 36;</code>
      */
     public static final int AVRO_SUB_SCAN_VALUE = 36;
+    /**
+     * <code>STATISTICS_AGGREGATE = 37;</code>
+     */
+    public static final int STATISTICS_AGGREGATE_VALUE = 37;
+    /**
+     * <code>UNPIVOT_MAPS = 38;</code>
+     */
+    public static final int UNPIVOT_MAPS_VALUE = 38;
 
 
     public final int getNumber() { return value; }
@@ -706,6 +722,8 @@ public final class UserBitShared {
         case 34: return WINDOW;
         case 35: return NESTED_LOOP_JOIN;
         case 36: return AVRO_SUB_SCAN;
+        case 37: return STATISTICS_AGGREGATE;
+        case 38: return UNPIVOT_MAPS;
         default: return null;
       }
     }

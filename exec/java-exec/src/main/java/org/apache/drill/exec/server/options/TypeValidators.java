@@ -28,6 +28,25 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class TypeValidators {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
+  public static class NonNegativeLongValidator extends LongValidator {
+    private final long max;
+
+    public NonNegativeLongValidator(String name, long max, long def) {
+      super(name, def);
+      this.max = max;
+    }
+
+    @Override
+    public void validate(final OptionValue v, final OptionManager manager) {
+      super.validate(v, manager);
+      if (v.num_val > max || v.num_val < 0) {
+        throw UserException.validationError()
+            .message(String.format("Option %s must be between %d and %d.", getOptionName(), 0, max))
+            .build(logger);
+      }
+    }
+  }
+
   public static class PositiveLongValidator extends LongValidator {
     private final long max;
 

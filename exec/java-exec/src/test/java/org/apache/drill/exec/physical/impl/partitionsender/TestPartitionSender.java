@@ -216,7 +216,8 @@ public class TestPartitionSender extends PlanTestBase {
       RecordBatch incoming, FunctionImplementationRegistry registry, PhysicalPlanReader planReader, PlanningSet planningSet, Fragment rootFragment,
       int expectedThreadsCount) throws Exception {
 
-    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName");
+    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName",
+        optionManager);
     final QueryWorkUnit qwu = PARALLELIZER.getFragments(options, drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
         drillbitContext.getBits(), planReader, rootFragment, USER_SESSION, queryContextInfo);

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import org.apache.drill.exec.planner.physical.DirectScanPrel;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
@@ -33,6 +34,7 @@ public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   public RETURN visitScreen(ScreenPrel prel, EXTRA value) throws EXCEP;
   public RETURN visitWriter(WriterPrel prel, EXTRA value) throws EXCEP;
   public RETURN visitScan(ScanPrel prel, EXTRA value) throws EXCEP;
+  public RETURN visitScan(DirectScanPrel prel, EXTRA value) throws EXCEP;
   public RETURN visitJoin(JoinPrel prel, EXTRA value) throws EXCEP;
   public RETURN visitProject(ProjectPrel prel, EXTRA value) throws EXCEP;
 

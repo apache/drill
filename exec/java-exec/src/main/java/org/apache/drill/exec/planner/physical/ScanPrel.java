@@ -22,53 +22,57 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.calcite.rel.AbstractRelNode;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelWriter;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptCost;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.type.RelDataType;
 
-public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
+public class ScanPrel extends DrillScanRelBase implements DrillScanPrel {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(ScanPrel.class);
 
   protected final GroupScan groupScan;
   private final RelDataType rowType;
 
-  public ScanPrel(RelOptCluster cluster, RelTraitSet traits,
-      GroupScan groupScan, RelDataType rowType) {
-    super(cluster, traits);
+  public ScanPrel(Convention convention, RelOptCluster cluster, RelTraitSet traits,
+      GroupScan groupScan, RelDataType rowType, RelOptTable table) {
+    super(convention, cluster, traits, table);
     this.groupScan = getCopy(groupScan);
     this.rowType = rowType;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new ScanPrel(this.getCluster(), traitSet, groupScan,
-        this.rowType);
+    return new ScanPrel(this.getConvention(), this.getCluster(), traitSet, groupScan,
+        this.rowType, this.getTable());
   }
 
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    return new ScanPrel(this.getCluster(), this.getTraitSet(), getCopy(groupScan),
-        this.rowType);
+    return new ScanPrel(this.getConvention(), this.getCluster(), this.getTraitSet(),
+        getCopy(groupScan), this.rowType, this.getTable());
   }
 
   private static GroupScan getCopy(GroupScan scan){
     try {
-      return (GroupScan) scan.getNewWithChildren((List<PhysicalOperator>) (Object) Collections.emptyList());
+      return (GroupScan) scan.getNewWithChildren((List<PhysicalOperator>) (Object)
+          Collections.emptyList());
     } catch (ExecutionSetupException e) {
       throw new DrillRuntimeException("Unexpected failure while coping node.", e);
     }
@@ -87,7 +91,8 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
 
   public static ScanPrel create(RelNode old, RelTraitSet traitSets,
       GroupScan scan, RelDataType rowType) {
-    return new ScanPrel(old.getCluster(), traitSets, getCopy(scan), rowType);
+    return new ScanPrel(old.getConvention(), old.getCluster(), traitSets,
+        getCopy(scan), rowType, old.getTable());
   }
 
   @Override
@@ -113,15 +118,17 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
     final int columnCount = this.getRowType().getFieldCount();
 
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return planner.getCostFactory().makeCost(stats.getRecordCount() * columnCount, stats.getCpuCost(), stats.getDiskCost());
+      return planner.getCostFactory().makeCost(stats.getRecordCount() * columnCount,
+          stats.getCpuCost(), stats.getDiskCost());
     }
 
-    // double rowCount = RelMetadataQuery.getRowCount(this);
-    double rowCount = stats.getRecordCount();
+    double rowCount = RelMetadataQuery.getRowCount(this);
+    //double rowCount = stats.getRecordCount();
 
     // As DRILL-4083 points out, when columnCount == 0, cpuCost becomes zero,
     // which makes the costs of HiveScan and HiveDrillNativeParquetScan the same
-    double cpuCost = rowCount * Math.max(columnCount, 1); // For now, assume cpu cost is proportional to row count.
+    // For now, assume cpu cost is proportional to row count.
+    double cpuCost = rowCount * Math.max(columnCount, 1);
 
     // If a positive value for CPU cost is given multiply the default CPU cost by given CPU cost.
     if (stats.getCpuCost() > 0) {

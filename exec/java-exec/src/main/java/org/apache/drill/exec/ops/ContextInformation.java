@@ -28,12 +28,14 @@ public class ContextInformation {
   private final String currentDefaultSchema;
   private final long queryStartTime;
   private final int rootFragmentTimeZone;
+  private final int hllMemoryLimit;
 
   public ContextInformation(final UserCredentials userCredentials, final QueryContextInformation queryContextInfo) {
     this.queryUser = userCredentials.getUserName();
     this.currentDefaultSchema = queryContextInfo.getDefaultSchemaName();
     this.queryStartTime = queryContextInfo.getQueryStartTime();
     this.rootFragmentTimeZone = queryContextInfo.getTimeZone();
+    this.hllMemoryLimit = queryContextInfo.getHllMemoryLimit();
   }
 
   /**
@@ -62,5 +64,12 @@ public class ContextInformation {
    */
   public int getRootFragmentTimeZone() {
     return rootFragmentTimeZone;
+  }
+
+  /**
+   * @return HLL accuracy parameter
+   */
+  public int getHllMemoryLimit() {
+    return hllMemoryLimit;
   }
 }

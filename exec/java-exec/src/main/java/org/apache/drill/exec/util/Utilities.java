@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.util;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.server.options.OptionManager;
 
 public class Utilities {
 
@@ -49,13 +51,15 @@ public class Utilities {
    * @param defaultSchemaName
    * @return
    */
-  public static QueryContextInformation createQueryContextInfo(final String defaultSchemaName) {
+  public static QueryContextInformation createQueryContextInfo(final String defaultSchemaName,
+    final OptionManager manager) {
     final long queryStartTime = System.currentTimeMillis();
     final int timeZone = DateUtility.getIndex(System.getProperty("user.timezone"));
     return QueryContextInformation.newBuilder()
         .setDefaultSchemaName(defaultSchemaName)
         .setQueryStartTime(queryStartTime)
         .setTimeZone(timeZone)
+        .setHllMemoryLimit((int)manager.getOption(ExecConstants.NDV_MEMORY_LIMIT))
         .build();
   }
 
