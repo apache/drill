@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.aggregate;
+package org.apache.drill.exec.physical.impl.statistics;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import java.util.List;
@@ -26,7 +26,6 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
-@SuppressWarnings("unused")
 public class StatisticsAggBatchCreator implements BatchCreator<StatisticsAggregate>{
 
   @Override

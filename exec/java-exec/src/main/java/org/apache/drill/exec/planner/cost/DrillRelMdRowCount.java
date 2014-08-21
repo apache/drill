@@ -17,14 +17,17 @@
  */
 package org.apache.drill.exec.planner.cost;
 
+import java.io.IOException;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.Aggregate;
-import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.core.Union;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
@@ -32,10 +35,14 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
-import org.apache.drill.exec.planner.common.DrillStatsTable;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 
-public class DrillRelMdRowCount extends RelMdRowCount {
+
+public class DrillRelMdRowCount extends RelMdRowCount{
   private static final DrillRelMdRowCount INSTANCE = new DrillRelMdRowCount();
 
   public static final RelMetadataProvider SOURCE = ReflectiveRelMetadataProvider.reflectiveSource(BuiltInMethod.ROW_COUNT.method, INSTANCE);
@@ -49,11 +56,6 @@ public class DrillRelMdRowCount extends RelMdRowCount {
     } else {
       return super.getRowCount(rel, mq);
     }
-  }
-
-  @Override
-  public Double getRowCount(Filter rel, RelMetadataQuery mq) {
-    return rel.estimateRowCount(mq);
   }
 
   public double getRowCount(DrillLimitRelBase rel, RelMetadataQuery mq) {
@@ -86,18 +88,45 @@ public class DrillRelMdRowCount extends RelMdRowCount {
   }
 
   public Double getRowCount(RelNode rel, RelMetadataQuery mq) {
-    if (rel instanceof DrillScanRel) {
-      return getRowCount((DrillScanRel)rel, mq);
+    if (rel instanceof TableScan) {
+      return getRowCountInternal((TableScan)rel, mq);
     }
     return super.getRowCount(rel, mq);
   }
 
-  private Double getRowCount(DrillScanRel scanRel, RelMetadataQuery mq) {
-    final DrillStatsTable md = scanRel.getDrillTable().getStatsTable();
-    if (md != null) {
-      return md.getRowCount();
-    }
+  @Override
+  public Double getRowCount(Filter rel, RelMetadataQuery mq) {
+    // Need capped selectivity estimates. See the Filter getRows() method
+    return rel.getRows();
+  }
 
-    return super.getRowCount(scanRel, mq);
+  private Double getRowCountInternal(TableScan rel, RelMetadataQuery mq) {
+    DrillTable table;
+    PlannerSettings settings = PrelUtil.getSettings(rel.getCluster());
+    // If guessing, return selectivity from RelMDRowCount
+    if (DrillRelOptUtil.guessRows(rel)) {
+      return super.getRowCount(rel, mq);
+    }
+    table = rel.getTable().unwrap(DrillTable.class);
+    if (table == null) {
+      table = rel.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+    }
+    // Return rowcount from statistics, if available. Otherwise, delegate to parent.
+    try {
+      if (table != null
+          && table.getStatsTable() != null
+          && table.getStatsTable().isMaterialized()
+          /* For GroupScan rely on accurate count from the scan, if available, instead of
+           * statistics since partition pruning/filter pushdown might have occurred.
+           * e.g. ParquetGroupScan returns accurate rowcount. The other way would be to
+           * iterate over the rowgroups present in the GroupScan to compute the rowcount.
+           */
+          && !(table.getGroupScan().getScanStats(settings).getGroupScanProperty().hasExactRowCount())) {
+        return table.getStatsTable().getRowCount();
+      }
+    } catch (IOException ex) {
+      return super.getRowCount(rel, mq);
+    }
+    return super.getRowCount(rel, mq);
   }
 }

@@ -46,9 +46,10 @@ public abstract class DrillTable implements Table {
   private final Object selection;
   private final StoragePlugin plugin;
   private final String userName;
-  private DrillStatsTable statsTable;
   private GroupScan scan;
   private SessionOptionManager options;
+  // Stores the statistics(rowcount, NDV etc.) associated with the table
+  private DrillStatsTable statsTable;
 
   /**
    * Creates a DrillTable instance for a @{code TableType#Table} table.

@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.store.log;
 
+import java.io.IOException;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -34,6 +36,8 @@ import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.List;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
 
@@ -80,5 +84,20 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
   @Override
   public int getWriterOperatorType() {
     throw new UnsupportedOperationException("unimplemented");
+  }
+
+  @Override
+  public boolean supportsStatistics() {
+    return false;
+  }
+
+  @Override
+  public DrillStatsTable.TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+    return null;
+  }
+
+  @Override
+  public void writeStatistics(DrillStatsTable.TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+
   }
 }

@@ -40,7 +40,6 @@ public class EasyWriter extends AbstractWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyWriter.class);
 
   private final String location;
-  private final boolean append;
   private final List<String> partitionColumns;
   private final EasyFormatPlugin<?> formatPlugin;
 
@@ -48,7 +47,6 @@ public class EasyWriter extends AbstractWriter {
   public EasyWriter(
       @JsonProperty("child") PhysicalOperator child,
       @JsonProperty("location") String location,
-      @JsonProperty("append") boolean append,
       @JsonProperty("partitionColumns") List<String> partitionColumns,
       @JsonProperty("storageStrategy") StorageStrategy storageStrategy,
       @JsonProperty("storage") StoragePluginConfig storageConfig,
@@ -59,32 +57,24 @@ public class EasyWriter extends AbstractWriter {
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
-    this.append = append;
     this.partitionColumns = partitionColumns;
     setStorageStrategy(storageStrategy);
   }
 
   public EasyWriter(PhysicalOperator child,
                          String location,
-                         boolean append,
                          List<String> partitionColumns,
                          EasyFormatPlugin<?> formatPlugin) {
 
     super(child);
     this.formatPlugin = formatPlugin;
     this.location = location;
-    this.append = append;
     this.partitionColumns = partitionColumns;
   }
 
   @JsonProperty("location")
   public String getLocation() {
     return location;
-  }
-
-  @JsonProperty("append")
-  public boolean getAppend() {
-    return append;
   }
 
   @JsonProperty("storage")
@@ -104,7 +94,7 @@ public class EasyWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    EasyWriter writer = new EasyWriter(child, location, append, partitionColumns, formatPlugin);
+    EasyWriter writer = new EasyWriter(child, location, partitionColumns, formatPlugin);
     writer.setStorageStrategy(getStorageStrategy());
     return writer;
   }

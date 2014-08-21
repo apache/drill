@@ -20,10 +20,16 @@ package org.apache.drill.exec.physical.base;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.common.expression.ErrorCollector;
+import org.apache.drill.common.expression.ErrorCollectorImpl;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class PhysicalOperatorUtil {
@@ -55,5 +61,23 @@ public class PhysicalOperatorUtil {
     }
 
     return destinations;
+  }
+
+  /**
+   * Helper method tp materialize the given logical expression using the ExpressionTreeMaterializer
+   * @param expr Logical expression to materialize
+   * @param incoming Incoming record batch
+   * @param context Fragment context
+   */
+  public static LogicalExpression materializeExpression(LogicalExpression expr,
+      VectorAccessible incoming, FragmentContext context) throws SchemaChangeException {
+    ErrorCollector collector = new ErrorCollectorImpl();
+    LogicalExpression mle = ExpressionTreeMaterializer.materialize(expr, incoming, collector,
+            context.getFunctionRegistry());
+    if (collector.hasErrors()) {
+      throw new SchemaChangeException("Failure while materializing expression. "
+          + collector.toErrorString());
+    }
+    return mle;
   }
 }

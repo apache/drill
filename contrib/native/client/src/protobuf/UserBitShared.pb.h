@@ -262,11 +262,14 @@ enum CoreOperatorType {
   PCAPNG_SUB_SCAN = 55,
   RUNTIME_FILTER = 56,
   ROWKEY_JOIN = 57,
-  SYSLOG_SUB_SCAN = 58
+  SYSLOG_SUB_SCAN = 58,
+  STATISTICS_AGGREGATE = 59,
+  UNPIVOT_MAPS = 60,
+  STATISTICS_MERGE = 61
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = SYSLOG_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = STATISTICS_MERGE;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();

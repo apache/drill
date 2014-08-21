@@ -30,6 +30,25 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 
 public class TypeValidators {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
+  public static class NonNegativeLongValidator extends LongValidator {
+    private final long max;
+
+    public NonNegativeLongValidator(String name, long max, OptionDescription description) {
+      super(name, description);
+      this.max = max;
+    }
+
+    @Override
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
+      if (v.num_val > max || v.num_val < 0) {
+        throw UserException.validationError()
+            .message(String.format("Option %s must be between %d and %d.", getOptionName(), 0, max))
+            .build(logger);
+      }
+    }
+  }
+
   public static class PositiveLongValidator extends LongValidator {
     protected final long max;
 

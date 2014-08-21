@@ -36,6 +36,12 @@ public class SchemalessScan extends AbstractFileGroupScan implements SubScan {
 
   @JsonCreator
   public SchemalessScan(@JsonProperty("userName") String userName,
+                        @JsonProperty("selectionRoot") String selectionRoot,
+                        @JsonProperty("columns") List<SchemaPath> columns) {
+    this(userName, selectionRoot);
+  }
+
+  public SchemalessScan(@JsonProperty("userName") String userName,
                         @JsonProperty("selectionRoot") String selectionRoot) {
     super(userName);
     this.selectionRoot = selectionRoot;

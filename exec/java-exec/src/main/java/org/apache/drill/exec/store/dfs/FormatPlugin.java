@@ -27,10 +27,13 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Similar to a storage engine but built specifically to work within a FileSystem context.
@@ -49,7 +52,7 @@ public interface FormatPlugin {
 
   FormatMatcher getMatcher();
 
-  public AbstractWriter getWriter(PhysicalOperator child, String location, boolean append, List<String> partitionColumns) throws IOException;
+  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException;
 
   Set<StoragePluginOptimizerRule> getOptimizerRules();
 
@@ -58,6 +61,12 @@ public interface FormatPlugin {
   default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, OptionManager options) throws IOException {
     return getGroupScan(userName, selection, columns);
   }
+
+  public boolean supportsStatistics();
+
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException;
+
+  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException;
 
   FormatPluginConfig getConfig();
   StoragePluginConfig getStorageConfig();

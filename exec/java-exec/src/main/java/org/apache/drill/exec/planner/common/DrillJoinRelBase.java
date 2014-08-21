@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.CorrelationId;
@@ -108,7 +107,9 @@ public abstract class DrillJoinRelBase extends Join implements DrillJoin {
     LogicalJoin jr = LogicalJoin.create(this.getLeft(), this.getRight(), this.getCondition(),
             this.getVariablesSet(), this.getJoinType());
 
-    if (RelOptUtil.analyzeSimpleEquiJoin(jr, joinFields)) {
+    if (!DrillRelOptUtil.guessRows(this)         //Statistics present for left and right side of the join
+        && jr.getJoinType() == JoinRelType.INNER
+        && DrillRelOptUtil.analyzeSimpleEquiJoin((Join)jr, joinFields)) {
       ImmutableBitSet leq = ImmutableBitSet.of(joinFields[0]);
       ImmutableBitSet req = ImmutableBitSet.of(joinFields[1]);
 
@@ -119,13 +120,14 @@ public abstract class DrillJoinRelBase extends Join implements DrillJoin {
       Double rrc = mq.getRowCount(this.getRight());
 
       if (ldrc != null && rdrc != null && lrc != null && rrc != null) {
-        return (lrc * rrc) / Math.max(ldrc, rdrc);
+        // Join cardinality = (lrc * rrc) / Math.max(ldrc, rdrc). Avoid overflow by dividing earlier
+        return (lrc / Math.max(ldrc, rdrc)) * rrc;
       }
     }
 
     return joinRowFactor * Math.max(
-        mq.getRowCount(left),
-        mq.getRowCount(right));
+        mq.getRowCount(this.getLeft()),
+        mq.getRowCount(this.getRight()));
   }
 
   /**

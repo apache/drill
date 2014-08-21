@@ -27,16 +27,20 @@ import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeSchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
+import org.apache.drill.exec.planner.sql.handlers.RefreshMetadataHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
+import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -142,18 +146,22 @@ public class DrillSqlWorker {
     switch(sqlNode.getKind()) {
       case EXPLAIN:
         handler = new ExplainHandler(config, textPlan);
+        context.setSQLStatementType(SqlStatementType.EXPLAIN);
         break;
       case SET_OPTION:
         handler = new SetOptionHandler(context);
+        context.setSQLStatementType(SqlStatementType.SETOPTION);
         break;
       case DESCRIBE_TABLE:
         if (sqlNode instanceof DrillSqlDescribeTable) {
           handler = new DescribeTableHandler(config);
+          context.setSQLStatementType(SqlStatementType.DESCRIBE_TABLE);
           break;
         }
       case DESCRIBE_SCHEMA:
         if (sqlNode instanceof SqlDescribeSchema) {
           handler = new DescribeSchemaHandler(config);
+          context.setSQLStatementType(SqlStatementType.DESCRIBE_SCHEMA);
           break;
         }
       case CREATE_TABLE:
@@ -164,13 +172,25 @@ public class DrillSqlWorker {
       case DROP_VIEW:
       case OTHER_DDL:
       case OTHER:
+        if(sqlNode instanceof SqlCreateTable) {
+          handler = ((DrillSqlCall)sqlNode).getSqlHandler(config, textPlan);
+          context.setSQLStatementType(SqlStatementType.CTAS);
+          break;
+        }
+
         if (sqlNode instanceof DrillSqlCall) {
           handler = ((DrillSqlCall) sqlNode).getSqlHandler(config);
+          if (handler instanceof AnalyzeTableHandler) {
+            context.setSQLStatementType(SqlStatementType.ANALYZE);
+          } else if (handler instanceof RefreshMetadataHandler) {
+            context.setSQLStatementType(SqlStatementType.REFRESH);
+          }
           break;
         }
         // fallthrough
       default:
         handler = new DefaultSqlHandler(config, textPlan);
+        context.setSQLStatementType(SqlStatementType.OTHER);
     }
 
     // Determines whether result set should be returned for the query based on return result set option and sql node kind.

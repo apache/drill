@@ -88,4 +88,13 @@ public abstract class DrillAggregateRelBase extends Aggregate implements DrillRe
     return computeHashAggCost(planner, mq);
   }
 
+  @Override
+  public double estimateRowCount(RelMetadataQuery mq) {
+    // Get the number of distinct group-by key values present in the input
+    if (!DrillRelOptUtil.guessRows(this)) {
+      return mq.getRowCount(this);
+    } else {
+      return super.estimateRowCount(mq);
+    }
+  }
 }

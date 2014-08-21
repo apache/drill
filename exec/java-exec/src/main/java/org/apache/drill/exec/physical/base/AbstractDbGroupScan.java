@@ -46,8 +46,6 @@ public abstract class AbstractDbGroupScan extends AbstractGroupScan implements D
 
   public abstract StoragePluginConfig getStorageConfig();
 
-  public abstract List<SchemaPath> getColumns();
-
   @Override
   public boolean supportsSecondaryIndex() {
     return false;

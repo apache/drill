@@ -37,9 +37,6 @@ public class DirectScanPrule extends Prule {
     final RelTraitSet traits = scan.getTraitSet().plus(Prel.DRILL_PHYSICAL);
 
     final DirectScanPrel newScan = new DirectScanPrel(scan.getCluster(), traits, scan.getGroupScan(), scan.getRowType());
-
-    call.transformTo(newScan);
-
     call.transformTo(newScan);
   }
 }

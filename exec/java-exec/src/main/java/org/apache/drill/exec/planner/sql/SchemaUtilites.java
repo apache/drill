@@ -201,6 +201,25 @@ public class SchemaUtilites {
    * @return mutable schema, exception otherwise
    */
   public static AbstractSchema resolveToMutableDrillSchema(final SchemaPlus defaultSchema, List<String> schemaPath) {
+    return resolveToDrillSchemaInternal(defaultSchema, schemaPath, true);
+  }
+
+  /**
+   * Given reference to default schema in schema tree, search for schema with given <i>schemaPath</i>. Once a schema is
+   * found resolve it into a mutable <i>AbstractDrillSchema</i> instance. A {@link UserException} is throws when:
+   *   <li>No schema for given <i>schemaPath</i> is found.</li>
+   *   <li>Schema found for given <i>schemaPath</i> is a root schema.</li>
+   *
+   * @param defaultSchema
+   * @param schemaPath
+   * @return schema, if found. Otherwise, throws an {@link UserException}
+   */
+  public static AbstractSchema resolveToDrillSchema(final SchemaPlus defaultSchema, List<String> schemaPath) {
+    return resolveToDrillSchemaInternal(defaultSchema, schemaPath, false);
+  }
+
+  private static AbstractSchema resolveToDrillSchemaInternal (SchemaPlus defaultSchema, List<String> schemaPath,
+                                                              boolean checkMutable) {
     final SchemaPlus schema = findSchema(defaultSchema, schemaPath);
 
     if (schema == null) {

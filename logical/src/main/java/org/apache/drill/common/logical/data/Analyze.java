@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,11 +25,22 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("analyze")
 public class Analyze extends SingleInputOperator {
 
+  double samplePercent = 100.0;
+
   @JsonCreator
   public Analyze() { }
+
+  @JsonCreator
+  public Analyze(double samplePercent) {
+    this.samplePercent = samplePercent;
+  }
 
   @Override
   public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
     return logicalVisitor.visitAnalyze(this, value);
+  }
+
+  public double getSamplePercent() {
+    return samplePercent;
   }
 }

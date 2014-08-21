@@ -63,6 +63,7 @@ public class TestBuilder {
   // should the validation enforce ordering
   private Boolean ordered;
   private boolean approximateEquality;
+  private double tolerance;
   private TestServices services;
   // Used to pass the type information associated with particular column names rather than relying on the
   // ordering of the columns in the CSV file, or the default type inferences when reading JSON, this is used for the
@@ -122,6 +123,7 @@ public class TestBuilder {
     query = "";
     ordered = null;
     approximateEquality = false;
+    tolerance = 0.1;
     highPerformanceComparison = false;
     testOptionSettingQueries = "";
     baselineOptionSettingQueries = "";
@@ -131,7 +133,8 @@ public class TestBuilder {
 
   public DrillTestWrapper build() {
     return new DrillTestWrapper(this, services, query, queryType, baselineOptionSettingQueries, testOptionSettingQueries,
-        getValidationQueryType(), ordered, highPerformanceComparison, baselineColumns, baselineRecords, expectedNumBatches, expectedNumRecords);
+        getValidationQueryType(), ordered, approximateEquality, tolerance, highPerformanceComparison, baselineColumns,
+            baselineRecords, expectedNumBatches, expectedNumRecords);
   }
 
   public List<Pair<SchemaPath, TypeProtos.MajorType>> getExpectedSchema() {
@@ -218,7 +221,12 @@ public class TestBuilder {
   }
 
   public TestBuilder approximateEquality() {
+    return approximateEquality(0.1);
+  }
+
+  public TestBuilder approximateEquality(double tolerance) {
     approximateEquality = true;
+    this.tolerance = tolerance;
     return this;
   }
 

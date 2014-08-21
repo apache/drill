@@ -561,6 +561,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     return Lists.newArrayList(affinityMap.values());
   }
 
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;

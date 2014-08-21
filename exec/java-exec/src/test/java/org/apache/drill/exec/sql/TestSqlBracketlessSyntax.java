@@ -67,7 +67,7 @@ public class TestSqlBracketlessSyntax {
         "ORDER BY `x`.`a`['a']['a']['a']['a']";
 
 
-    SqlNode rewritten = node.accept(new CompoundIdentifierConverter());
+    SqlNode rewritten = node.accept(new CompoundIdentifierConverter(false));
     String rewrittenQuery = rewritten.toString();
 
     DrillAssert.assertMultiLineStringEquals(expected, rewrittenQuery);

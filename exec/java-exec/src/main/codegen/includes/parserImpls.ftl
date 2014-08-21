@@ -550,9 +550,9 @@ Pair<SqlNodeList, SqlNodeList> ParenthesizedCompoundIdentifierList() :
     SqlIdentifier id;
 }
 {
-    id = SimpleIdentifier() {list.add(id);}
+    id = CompoundIdentifier() {list.add(id);}
     (
-   <COMMA> id = SimpleIdentifier() {list.add(id);}) *
+   <COMMA> id = CompoundIdentifier() {list.add(id);}) *
     {
        return Pair.of(new SqlNodeList(list, getPos()), null);
     }
@@ -560,8 +560,8 @@ Pair<SqlNodeList, SqlNodeList> ParenthesizedCompoundIdentifierList() :
 </#if>
 /**
  * Parses a analyze statement.
- * ANALYZE TABLE tblname {COMPUTE | ESTIMATE} | STATISTICS FOR
- *      {ALL COLUMNS | COLUMNS (field1, field2, ...)} [ SAMPLE numeric PERCENT ]
+ * ANALYZE TABLE tblname {COMPUTE | ESTIMATE} | STATISTICS
+ *      [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
  */
 SqlNode SqlAnalyzeTable() :
 {
@@ -580,12 +580,10 @@ SqlNode SqlAnalyzeTable() :
         |
         <ESTIMATE> { estimate = SqlLiteral.createBoolean(true, pos); }
     )
-    <STATISTICS> <FOR>
-    (
-        ( <ALL> <COLUMNS> )
-        |
-        ( <COLUMNS> fieldList = ParseRequiredFieldList("Table") )
-    )
+    <STATISTICS>
+    [
+        (fieldList = ParseRequiredFieldList("Table"))
+    ]
     [
         <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
         {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,15 +56,15 @@ public class SqlAnalyzeTable extends DrillSqlCall {
   private final SqlIdentifier tblName;
   private final SqlLiteral estimate;
   private final SqlNodeList fieldList;
-  private final SqlNumericLiteral percent;
+  private final SqlNumericLiteral samplePercent;
 
   public SqlAnalyzeTable(SqlParserPos pos, SqlIdentifier tblName, SqlLiteral estimate,
-      SqlNodeList fieldList, SqlNumericLiteral percent) {
+      SqlNodeList fieldList, SqlNumericLiteral samplePercent) {
     super(pos);
     this.tblName = tblName;
     this.estimate = estimate;
     this.fieldList = fieldList;
-    this.percent = percent;
+    this.samplePercent = samplePercent;
   }
 
   @Override
@@ -78,7 +78,7 @@ public class SqlAnalyzeTable extends DrillSqlCall {
     operands.add(tblName);
     operands.add(estimate);
     operands.add(fieldList);
-    operands.add(percent);
+    operands.add(samplePercent);
     return operands;
   }
 
@@ -89,10 +89,8 @@ public class SqlAnalyzeTable extends DrillSqlCall {
     tblName.unparse(writer, leftPrec, rightPrec);
     writer.keyword(estimate.booleanValue() ? "ESTIMATE" : "COMPUTE");
     writer.keyword("STATISTICS");
-    writer.keyword("FOR");
 
     if (fieldList != null && fieldList.size() > 0) {
-      writer.keyword("COLUMNS");
       writer.keyword("(");
       fieldList.get(0).unparse(writer, leftPrec, rightPrec);
       for (int i = 1; i < fieldList.size(); i++) {
@@ -100,12 +98,9 @@ public class SqlAnalyzeTable extends DrillSqlCall {
         fieldList.get(i).unparse(writer, leftPrec, rightPrec);
       }
       writer.keyword(")");
-    } else {
-      writer.keyword("ALL");
-      writer.keyword("COLUMNS");
     }
     writer.keyword("SAMPLE");
-    percent.unparse(writer, leftPrec, rightPrec);
+    samplePercent.unparse(writer, leftPrec, rightPrec);
     writer.keyword("PERCENT");
   }
 
@@ -147,11 +142,15 @@ public class SqlAnalyzeTable extends DrillSqlCall {
     return columnNames;
   }
 
+  public SqlNodeList getFieldList() {
+    return fieldList;
+  }
+
   public boolean getEstimate() {
     return estimate.booleanValue();
   }
 
-  public int getPercent() {
-    return percent.intValue(true);
+  public int getSamplePercent() {
+    return samplePercent.intValue(true);
   }
 }

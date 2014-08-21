@@ -19,12 +19,23 @@ package org.apache.drill.exec.store;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.planner.sql.handlers.FindLimit0Visitor;
+import org.apache.drill.exec.store.pojo.PojoRecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = PojoRecordReader.class, name = "PojoRecordReader"),
+    @JsonSubTypes.Type(value = FindLimit0Visitor.RelDataTypeReader.class, name = "RelDataTypeRecordReader") })
 public interface RecordReader extends AutoCloseable {
   long ALLOCATOR_INITIAL_RESERVATION = 1 * 1024 * 1024;
   long ALLOCATOR_MAX_RESERVATION = 20L * 1000 * 1000 * 1000;

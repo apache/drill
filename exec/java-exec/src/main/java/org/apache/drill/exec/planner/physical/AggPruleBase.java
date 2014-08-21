@@ -46,7 +46,7 @@ public abstract class AggPruleBase extends Prule {
       groupByFields.add(field);
 
       if (!allFields && groupByFields.size() == 1) {
-        // if we are only interested in 1 grouping field, pick the first one for now..
+        // TODO: if we are only interested in 1 grouping field, pick the first one for now..
         // but once we have num distinct values (NDV) statistics, we should pick the one
         // with highest NDV.
         break;

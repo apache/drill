@@ -38,6 +38,7 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.physical.impl.WriterRecordBatch;
+import org.apache.drill.exec.physical.impl.StatisticsWriterRecordBatch;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -45,6 +46,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.StatisticsRecordWriter;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -171,12 +173,25 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     return new ScanBatch(context, oContext, readers, implicitColumns);
   }
 
+  public boolean isStatisticsRecordWriter(FragmentContext context, EasyWriter writer) {
+    return false;
+  }
+
   public abstract RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException;
+
+  public StatisticsRecordWriter getStatisticsRecordWriter(FragmentContext context, EasyWriter writer) throws IOException
+  {
+    return null;
+  }
 
   public CloseableRecordBatch getWriterBatch(FragmentContext context, RecordBatch incoming, EasyWriter writer)
       throws ExecutionSetupException {
     try {
-      return new WriterRecordBatch(writer, incoming, context, getRecordWriter(context, writer));
+      if (isStatisticsRecordWriter(context, writer)) {
+        return new StatisticsWriterRecordBatch(writer, incoming, context, getStatisticsRecordWriter(context, writer));
+      } else {
+        return new WriterRecordBatch(writer, incoming, context, getRecordWriter(context, writer));
+      }
     } catch(IOException e) {
       throw new ExecutionSetupException(String.format("Failed to create the WriterRecordBatch. %s", e.getMessage()), e);
     }
@@ -193,8 +208,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
-  public AbstractWriter getWriter(PhysicalOperator child, String location, boolean append, List<String> partitionColumns) throws IOException {
-    return new EasyWriter(child, location, append, partitionColumns, this);
+  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException {
+    return new EasyWriter(child, location, partitionColumns, this);
   }
 
   @Override

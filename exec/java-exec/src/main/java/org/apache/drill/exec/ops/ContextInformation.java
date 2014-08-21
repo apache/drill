@@ -72,4 +72,5 @@ public class ContextInformation {
   public String getSessionId() {
     return sessionId;
   }
+
 }

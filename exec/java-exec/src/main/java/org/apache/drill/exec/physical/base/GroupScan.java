@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collection;
 import java.util.List;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -28,10 +28,8 @@ import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 /**
  * A GroupScan operator represents all data which will be scanned by a given physical
@@ -108,6 +106,12 @@ public interface GroupScan extends Scan, HasAffinity{
    * Whether or not this GroupScan supports pushdown of partition filters (directories for filesystems)
    */
   boolean supportsPartitionFilterPushdown();
+
+  /**
+   * Returns a list of columns scanned by this group scan
+   *
+   */
+  List<SchemaPath> getColumns();
 
   /**
    * Returns a list of columns that can be used for partition pruning
