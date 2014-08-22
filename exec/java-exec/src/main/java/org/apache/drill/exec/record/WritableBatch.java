@@ -132,8 +132,10 @@ public class WritableBatch {
       metadata.add(vv.getMetadata());
 
       // don't try to get the buffers if we don't have any records. It is possible the buffers are dead buffers.
-      if (recordCount == 0)
+      if (recordCount == 0) {
+        vv.clear();
         continue;
+      }
 
       for (ByteBuf b : vv.getBuffers()) {
         buffers.add(b);
