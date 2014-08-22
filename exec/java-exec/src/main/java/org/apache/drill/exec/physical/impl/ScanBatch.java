@@ -224,9 +224,10 @@ public class ScanBatch implements RecordBatch {
   }
 
   private void populatePartitionVectors() {
-    for (int i : selectedPartitionColumns) {
+    for (int index = 0; index < selectedPartitionColumns.size(); index++) {
+      int i = selectedPartitionColumns.get(index);
+      NullableVarCharVector v = (NullableVarCharVector) partitionVectors.get(index);
       if (partitionValues.length > i) {
-        NullableVarCharVector v = (NullableVarCharVector) partitionVectors.get(i);
         String val = partitionValues[i];
         AllocationHelper.allocate(v, recordCount, val.length());
         NullableVarCharHolder h = new NullableVarCharHolder();
@@ -241,7 +242,6 @@ public class ScanBatch implements RecordBatch {
         }
         v.getMutator().setValueCount(recordCount);
       } else {
-        NullableVarCharVector v = (NullableVarCharVector) partitionVectors.get(i);
         AllocationHelper.allocate(v, recordCount, 0);
         v.getMutator().setValueCount(recordCount);
       }
