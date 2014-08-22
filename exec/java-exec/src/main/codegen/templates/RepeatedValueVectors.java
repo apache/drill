@@ -112,6 +112,9 @@ package org.apache.drill.exec.vector;
       normalizedPos = offsets.getAccessor().get(startIndex+i) - startPos;
       target.offsets.getMutator().set(i, normalizedPos);
     }
+    target.parentValueCount = length;
+    target.childValueCount  = offsets.getAccessor().get(startIndex+length) - startPos;
+    target.offsets.getMutator().setValueCount(length);
   }
   
   private class TransferImpl implements TransferPair{

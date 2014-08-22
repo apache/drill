@@ -258,6 +258,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public void splitAndTransferTo(int startIndex, int length, Nullable${minor.class}Vector target) {
     bits.splitAndTransferTo(startIndex, length, target.bits);
     values.splitAndTransferTo(startIndex, length, target.values);
+    target.valueCount = length;
     <#if type.major == "VarLen">
     target.mutator.lastSet = length - 1;
     </#if>

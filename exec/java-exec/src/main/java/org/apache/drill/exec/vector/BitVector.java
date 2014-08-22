@@ -206,6 +206,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
             (((this.data.getByte(firstByte + byteSize - 1) & 0xFF) >>> offset) + (this.data.getByte(firstByte + byteSize) <<  (8 - offset))));
       }
     }
+    target.getMutator().setValueCount(length);
   }
 
   private class TransferImpl implements TransferPair {

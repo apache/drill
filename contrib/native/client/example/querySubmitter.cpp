@@ -66,7 +66,7 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
         if(bTestCancel){
             return Drill::QRY_FAILURE;
         }else{
-            return Drill::QRY_SUCCESS ;
+        return Drill::QRY_SUCCESS ;
         }
     }else{
         std::cerr<< "ERROR: " << err->msg << std::endl;
@@ -334,7 +334,7 @@ int main(int argc, char* argv[]) {
                     if(bTestCancel && row%100==1){
                         pRecIter->cancel();
                         printf("Application canceled the query.\n");
-                    }
+                }
                 }
                 if(ret!=Drill::QRY_NO_MORE_DATA && ret!=Drill::QRY_CANCEL){
                     std::cerr<< pRecIter->getError() << std::endl;
