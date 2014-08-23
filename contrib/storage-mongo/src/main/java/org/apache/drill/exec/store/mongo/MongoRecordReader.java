@@ -22,6 +22,8 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -38,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -45,28 +48,33 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 
 public class MongoRecordReader implements RecordReader {
   static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
-  
+
   private static final int TARGET_RECORD_COUNT = 4000;
-  
+
   private LinkedHashSet<SchemaPath> columns;
-  
+
   private DBCollection collection;
   private DBCursor cursor;
-  
+
   private JsonReaderWithState jsonReader;
   private VectorContainerWriter writer;
-  
+
   private DBObject filters;
   private DBObject fields;
-  
-  private MongoClient client;
 
-  public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context) {
+  private MongoClient client;
+  private MongoClientOptions clientOptions;
+
+  public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
+      FragmentContext context, MongoClientOptions clientOptions) {
     this.columns = Sets.newLinkedHashSet();
+    this.clientOptions = clientOptions;
     this.fields = new BasicDBObject();
     if (projectedColumns != null && projectedColumns.size() != 0) {
       Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
@@ -79,21 +87,55 @@ public class MongoRecordReader implements RecordReader {
         this.fields.put(fieldName, Integer.valueOf(1));
       }
     }
-    this.filters = subScanSpec.getFilter();
+    this.filters = new BasicDBObject();
+    createChunkScan(filters, subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
+    this.filters.putAll(subScanSpec.getFilter());
     // exclude _id field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
     init(subScanSpec);
   }
   
+  //Exclude Min and include Max.
+  private void createChunkScan(DBObject filters, Map<String, Object> minFilters, Map<String, Object> maxFilters) {
+    for(Entry<String, Object> entry : minFilters.entrySet()) {
+      Object value = entry.getValue();
+      if(value instanceof String || value instanceof Number) {
+        if (filters.get(entry.getKey()) == null) {
+          filters.put(entry.getKey(), new BasicDBObject("$gt", entry.getValue()));
+        } else {
+          BasicDBObject dbObj = (BasicDBObject) filters.get(entry.getKey());
+          dbObj.append("$gt", entry.getValue());
+        }
+      }
+    }
+    
+    for(Entry<String, Object> entry : maxFilters.entrySet()) {
+      Object value = entry.getValue();
+      if(value instanceof String || value instanceof Number) {
+        if (filters.get(entry.getKey()) == null) {
+          filters.put(entry.getKey(), new BasicDBObject("$lte", entry.getValue()));
+        } else {
+          BasicDBObject dbObj = (BasicDBObject) filters.get(entry.getKey());
+          dbObj.append("$lte", entry.getValue());
+        }
+      }
+    }
+  }
+
   private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {
-	try {
-	  MongoClientURI clientURI = new MongoClientURI(subScanSpec.getConnection());
-	  client = new MongoClient(clientURI);
-	  DB db = client.getDB(subScanSpec.getDbName());
-	  collection = db.getCollection(subScanSpec.getCollectionName());
-	} catch (UnknownHostException e) {
-	  throw new DrillRuntimeException(e.getMessage(), e);
-	}
+    try {
+      List<String> hosts = subScanSpec.getHosts();
+      List<ServerAddress> addresses = Lists.newArrayList();
+      for (String host : hosts) {
+        addresses.add(new ServerAddress(host));
+      }
+      client = new MongoClient(addresses, this.clientOptions);
+      DB db = client.getDB(subScanSpec.getDbName());
+      db.setReadPreference(ReadPreference.nearest());
+      collection = db.getCollection(subScanSpec.getCollectionName());
+    } catch (UnknownHostException e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
   
   @Override
@@ -120,8 +162,7 @@ public class MongoRecordReader implements RecordReader {
     int rowCount = 0;
 
     try {
-      done: 
-      for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext() ; rowCount++) {
+      done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         writer.setPosition(docCount);
         DBObject record = cursor.next();
         if (record == null) {

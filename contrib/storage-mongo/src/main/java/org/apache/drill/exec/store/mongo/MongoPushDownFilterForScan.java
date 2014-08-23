@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.io.IOException;
+
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
@@ -27,10 +30,13 @@ import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.rex.RexNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
+  private static final Logger logger = LoggerFactory.getLogger(MongoPushDownFilterForScan.class);
   public static final StoragePluginOptimizerRule INSTANCE = new MongoPushDownFilterForScan();
 
   private MongoPushDownFilterForScan() {
@@ -59,8 +65,14 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
       return; // no filter pushdown so nothing to apply.
     }
 
-    final MongoGroupScan newGroupsScan = new MongoGroupScan(
-        groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
+    MongoGroupScan newGroupsScan = null;
+    try {
+      newGroupsScan = new MongoGroupScan(
+          groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
+    } catch (IOException e) {
+      logger.error(e.getMessage(), e);
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
     newGroupsScan.setFilterPushedDown(true);
 
     final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(),

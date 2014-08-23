@@ -50,12 +50,6 @@
           type: "parquet"
         }
       }
-    },
-
-    mongo : {
-      type:"mongo",
-      enabled: false,
-      connection: "mongodb://localhost:27017/?connectTimeoutMS=60000&maxPoolSize=1000&safe=true"
     }
   }
 }

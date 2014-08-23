@@ -22,4 +22,24 @@ public interface DrillMongoConstants {
   public static final String SYS_STORE_PROVIDER_MONGO_URL = "drill.exec.sys.store.provider.mongo.url";
   
   public static final String ID = "_id";
+  
+  public static final String SHARDS = "shards";
+
+  public static final String NS = "ns";
+
+  public static final String SHARD = "shard";
+
+  public static final String HOST = "host";
+
+  public static final String CHUNKS = "chunks";
+  
+  public static final String SIZE = "size";
+
+  public static final String COUNT = "count";
+
+  public static final String CONFIG = "config";
+  
+  public static final String MIN = "min";
+
+  public static final String MAX = "max";
 }

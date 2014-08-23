@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.store.mongo.config;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Map.Entry;
+import static org.apache.drill.exec.store.mongo.config.MongoPStoreProvider.pKey;
 
-import org.apache.commons.lang.SerializationUtils;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
 import org.apache.drill.exec.store.sys.PStore;
@@ -45,45 +45,75 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
   private final DBCollection collection;
 
-  public MongoPStore(PStoreConfig<V> config, DBCollection collection)
-      throws IOException {
+  public MongoPStore(PStoreConfig<V> config, DBCollection collection) throws IOException {
     this.config = config;
     this.collection = collection;
   }
 
   @Override
   public V get(String key) {
-    DBObject get = new BasicDBObject().append(ID, key);
-    DBCursor cursor = collection.find(get);
-    return value(cursor.next().get(MongoPStoreProvider.pKey));
+    try {
+      DBObject get = new BasicDBObject().append(ID, key);
+      DBCursor cursor = collection.find(get);
+      if (cursor != null && cursor.hasNext()) {
+        return value((byte[]) cursor.next().get(pKey));
+      } else {
+        return null;
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void put(String key, V value) {
-    DBObject putObj = new BasicDBObject(2);
-    putObj.put(ID, key);
-    putObj.put(MongoPStoreProvider.pKey, value);
-    collection.insert(putObj);
+    try {
+      DBObject putObj = new BasicDBObject(2);
+      putObj.put(ID, key);
+      putObj.put(pKey, bytes(value));
+      collection.insert(putObj);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
   @Override
   public boolean putIfAbsent(String key, V value) {
-    DBObject check = new BasicDBObject(1).append(ID, key);
-    DBObject putObj = new BasicDBObject(2);
-    putObj.put(MongoPStoreProvider.pKey, value);
-    WriteResult wr = collection.update(check, putObj, true, false);
-    return wr.getN() == 1 ? true : false;
+    try {
+      DBObject check = new BasicDBObject(1).append(ID, key);
+      DBObject putObj = new BasicDBObject(2);
+      putObj.put(pKey, bytes(value));
+      WriteResult wr = collection.update(check, putObj, true, false);
+      return wr.getN() == 1 ? true : false;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void delete(String key) {
-    DBObject delete = new BasicDBObject(1).append(ID, key);
-    collection.remove(delete);
+    try {
+      DBObject delete = new BasicDBObject(1).append(ID, key);
+      collection.remove(delete);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
-  private V value(Object obj) {
+  private byte[] bytes(V value) {
     try {
-      byte[] serialize = SerializationUtils.serialize((Serializable) obj);
+      return config.getSerializer().serialize(value);
+    } catch (IOException e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
+  }
+
+  private V value(byte[] serialize) {
+    try {
       return config.getSerializer().deserialize(serialize);
     } catch (IOException e) {
       throw new DrillRuntimeException(e.getMessage(), e);
@@ -120,7 +150,6 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
     public void remove() {
       cursor.remove();
     }
-
   }
 
   private class DeferredEntry implements Entry<String, V> {
@@ -145,7 +174,5 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
     public V setValue(V value) {
       throw new UnsupportedOperationException();
     }
-
   }
-
 }

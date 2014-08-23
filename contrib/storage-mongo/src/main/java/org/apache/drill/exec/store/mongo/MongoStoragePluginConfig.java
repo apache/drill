@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.annotations.VisibleForTesting;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 
@@ -33,8 +32,7 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
   
   public static final String NAME = "mongo";
   
-  @JsonProperty
-  public String connection;
+  private String connection;
   
   @JsonIgnore
   private MongoClientURI clientURI; 
@@ -68,14 +66,7 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
     return clientURI.getOptions();
   }
   
-  @JsonProperty
   public String getConnection() {
     return connection;
-  }
-
-  @VisibleForTesting
-  @JsonIgnore
-  public void setConnection(String connection) {
-    this.connection = connection;
   }
 }

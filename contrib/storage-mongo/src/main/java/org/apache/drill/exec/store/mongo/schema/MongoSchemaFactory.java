@@ -45,10 +45,10 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.ReadPreference;
 
 public class MongoSchemaFactory implements SchemaFactory {
 
@@ -64,7 +64,7 @@ public class MongoSchemaFactory implements SchemaFactory {
   private LoadingCache<String, LoadingCache<String, String>> tableLoaders;
   private final String schemaName;
   private final MongoStoragePlugin plugin;
-
+  
   public MongoSchemaFactory(MongoStoragePlugin schema, String schemaName)
       throws ExecutionSetupException {
     String connection = schema.getConfig().getConnection();
@@ -112,6 +112,7 @@ public class MongoSchemaFactory implements SchemaFactory {
     @Override
     public List<String> load(String dbName) throws Exception {
       DB db = client.getDB(dbName);
+      db.setReadPreference(ReadPreference.nearest());
       Set<String> collectionNames = db.getCollectionNames();
       return new ArrayList<>(collectionNames);
     }
@@ -141,6 +142,7 @@ public class MongoSchemaFactory implements SchemaFactory {
     @Override
     public String load(String key) throws Exception {
       DB db = client.getDB(dbName);
+      db.setReadPreference(ReadPreference.nearest());
       return db.getCollection(key).getName();
     }
   }

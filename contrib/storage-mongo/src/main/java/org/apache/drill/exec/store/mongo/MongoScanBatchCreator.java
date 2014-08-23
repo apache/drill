@@ -30,18 +30,20 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.mongodb.MongoClientOptions;
 
 public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
   static final Logger logger = LoggerFactory.getLogger(MongoScanBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan,
-      List<RecordBatch> children) throws ExecutionSetupException {
+  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
     for (MongoSubScan.MongoSubScanSpec scanSpec : subScan.getChunkScanSpecList()) {
       try {
-        readers.add(new MongoRecordReader(scanSpec, subScan.getColumns(), context));
+        MongoClientOptions clientOptions = subScan.getMongoPluginConfig().getMongoOptions();
+        readers.add(new MongoRecordReader(scanSpec, subScan.getColumns(), context, clientOptions));
       } catch (Exception e) {
         logger.error("MongoRecordReader creation failed for subScan:  " + subScan + ".");
         logger.error(e.getMessage(), e);

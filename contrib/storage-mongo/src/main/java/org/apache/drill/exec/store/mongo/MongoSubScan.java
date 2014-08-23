@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mongo;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -40,6 +41,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 @JsonTypeName("mongo-shard-read")
 public class MongoSubScan extends AbstractBase implements SubScan {
@@ -55,19 +57,17 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
   @JsonCreator
   public MongoSubScan(@JacksonInject StoragePluginRegistry registry,
-                      @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
-                      @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
-                      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+      @JsonProperty("mongoPluginConfig") StoragePluginConfig mongoPluginConfig,
+      @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
+      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     this.columns = columns;
-    this.mongoPluginConfig = (MongoStoragePluginConfig) storagePluginConfig;
-    this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(storagePluginConfig);
+    this.mongoPluginConfig = (MongoStoragePluginConfig) mongoPluginConfig;
+    this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(mongoPluginConfig);
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
-  public MongoSubScan(MongoStoragePlugin storagePlugin,
-                      MongoStoragePluginConfig storagePluginConfig,
-                      List<MongoSubScanSpec> chunkScanSpecList,
-                      List<SchemaPath> columns) {
+  public MongoSubScan(MongoStoragePlugin storagePlugin, MongoStoragePluginConfig storagePluginConfig,
+      List<MongoSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
     this.mongoStoragePlugin = storagePlugin;
     this.mongoPluginConfig = storagePluginConfig;
     this.columns = columns;
@@ -117,40 +117,83 @@ public class MongoSubScan extends AbstractBase implements SubScan {
    
     protected String dbName;
     protected String collectionName;
-    protected String connection;
-    protected BasicDBObject filter;
+    protected List<String> hosts;
+    protected Map<String, Object> minFilters;
+    protected Map<String, Object> maxFilters;
     
+    protected DBObject filter;
+
     @parquet.org.codehaus.jackson.annotate.JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
-                            @JsonProperty("collectionName") String collectionName,
-                            @JsonProperty("connection") String connection, @JsonProperty("filters") BasicDBObject filters) {
+        @JsonProperty("collectionName") String collectionName, @JsonProperty("hosts") List<String> hosts,
+        @JsonProperty("minFilters") Map<String, Object> minFilters,
+        @JsonProperty("maxFilters") Map<String, Object> maxFilters,
+        @JsonProperty("filters") BasicDBObject filters) {
       this.dbName = dbName;
       this.collectionName = collectionName;
-      this.connection = connection;
+      this.hosts = hosts;
+      this.minFilters = minFilters;
+      this.maxFilters = maxFilters;
       this.filter = filters;
     }
 
-    public String getConnection() {
-      return connection;
+    MongoSubScanSpec() {
+
     }
-    
+
     public String getDbName() {
       return dbName;
+    }
+
+    public MongoSubScanSpec setDbName(String dbName) {
+      this.dbName = dbName;
+      return this;
     }
 
     public String getCollectionName() {
       return collectionName;
     }
+
+    public MongoSubScanSpec setCollectionName(String collectionName) {
+      this.collectionName = collectionName;
+      return this;
+    }
     
-    public BasicDBObject getFilter() {
+    public List<String> getHosts() {
+      return hosts;
+    }
+
+    public MongoSubScanSpec setHosts(List<String> hosts) {
+      this.hosts = hosts;
+      return this;
+    }
+    
+    public Map<String, Object> getMinFilters() {
+      return minFilters;
+    }
+
+    public MongoSubScanSpec setMinFilters(Map<String, Object> minFilters) {
+      this.minFilters = minFilters;
+      return this;
+    }
+
+    public Map<String, Object> getMaxFilters() {
+      return maxFilters;
+    }
+
+    public MongoSubScanSpec setMaxFilters(Map<String, Object> maxFilters) {
+      this.maxFilters = maxFilters;
+      return this;
+    }
+    
+    public DBObject getFilter() {
       return filter;
     }
 
     @Override
     public String toString() {
-      return "MongoSubScanSpec [tableName=" + collectionName
-          + ", dbName=" + dbName
-          + ", connection=" + connection + "]";
+      return "MongoSubScanSpec [tableName=" + collectionName + ", dbName=" + dbName + ", hosts=" + hosts
+          + ", minFilters=" + minFilters + ", maxFilters=" + maxFilters + "]";
     }
   }
 

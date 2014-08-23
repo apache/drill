@@ -31,7 +31,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 
 public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants {
@@ -54,10 +53,9 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
   public void start() throws IOException {
     MongoClientURI clientURI = new MongoClientURI(mongoURL);
     client = new MongoClient(clientURI);
-    client.setReadPreference(ReadPreference.secondaryPreferred());
     DB db = client.getDB(clientURI.getDatabase());
     collection = db.getCollection(clientURI.getCollection());
-    collection.setWriteConcern(WriteConcern.FSYNC_SAFE);
+    collection.setWriteConcern(WriteConcern.JOURNALED);
     DBObject index = new BasicDBObject(1).append(pKey, Integer.valueOf(1));
     collection.createIndex(index);
   }
