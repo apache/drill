@@ -371,7 +371,8 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   private MongoSubScanSpec buildSubScanSpecAndGet(ChunkInfo chunkInfo) {
     MongoSubScanSpec subScanSpec = new MongoSubScanSpec().setDbName(scanSpec.getDbName())
         .setCollectionName(scanSpec.getCollectionName()).setHosts(chunkInfo.getChunkLocList())
-        .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters());
+        .setMinFilters(chunkInfo.getMinFilters()).setMaxFilters(chunkInfo.getMaxFilters())
+        .setFilter(scanSpec.getFilters());
     return subScanSpec;
   }
 
@@ -465,6 +466,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     return storagePluginConfig;
   }
   
+  @JsonIgnore
   public MongoStoragePlugin getStoragePlugin() {
     return storagePlugin;
   }

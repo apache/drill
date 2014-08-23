@@ -89,7 +89,9 @@ public class MongoRecordReader implements RecordReader {
     }
     this.filters = new BasicDBObject();
     createChunkScan(filters, subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
-    this.filters.putAll(subScanSpec.getFilter());
+    if(subScanSpec.getFilter() != null) {
+      this.filters.putAll(subScanSpec.getFilter().toMap());
+    }
     // exclude _id field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
     init(subScanSpec);
