@@ -99,7 +99,7 @@ public class ScreenCreator implements RootCreator<Screen>{
 //      logger.debug("Screen Outcome {}", outcome);
       switch(outcome){
       case STOP: {
-          sendCount.waitForSendComplete();
+        this.internalStop();
         boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
         QueryResult header = QueryResult.newBuilder() //
               .setQueryId(context.getHandle().getQueryId()) //
@@ -122,8 +122,7 @@ public class ScreenCreator implements RootCreator<Screen>{
           return false;
       }
       case NONE: {
-        sendCount.waitForSendComplete();
-//        context.getStats().batchesCompleted.inc(1);
+        this.internalStop();
         QueryWritableBatch batch;
         if (!first) {
           QueryResult header = QueryResult.newBuilder() //
@@ -168,22 +167,30 @@ public class ScreenCreator implements RootCreator<Screen>{
         throw new UnsupportedOperationException();
       }
     }
-    
+
     public void updateStats(QueryWritableBatch queryBatch) {
       stats.addLongStat(Metric.BYTES_SENT, queryBatch.getByteCount());
     }
 
-    @Override
-    public void stop() {
+
+    private void internalStop(){
       sendCount.waitForSendComplete();
       oContext.close();
       incoming.cleanup();
     }
 
+    @Override
+    public void stop() {
+      if(!oContext.isClosed()){
+        internalStop();
+      }
+      sendCount.waitForSendComplete();
+    }
+
     private SendListener listener = new SendListener();
 
     private class SendListener extends BaseRpcOutcomeListener<Ack>{
-      volatile RpcException ex; 
+      volatile RpcException ex;
 
 
       @Override

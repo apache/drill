@@ -47,6 +47,19 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
+  public void testJoinMerge() throws Exception{
+    test("alter session set `planner.enable_hashjoin` = false");
+    test("select count(*) \n" +
+        "  from (select l.l_orderkey as x, c.c_custkey as y \n" +
+        "  from cp.`tpch/lineitem.parquet` l \n" +
+        "    left outer join cp.`tpch/customer.parquet` c \n" +
+        "      on l.l_orderkey = c.c_custkey) as foo\n" +
+        "  where x < 10000\n" +
+        "");
+    test("alter session set `planner.enable_hashjoin` = true");
+  }
+
+  @Test
   public void testSelStarOrderBy() throws Exception{
     test("select * from cp.`employee.json` order by last_name");
   }

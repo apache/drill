@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.work.fragment;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
@@ -31,8 +31,6 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.work.CancelableQuery;
 import org.apache.drill.exec.work.StatusProvider;
-
-import com.codahale.metrics.Timer;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 
 /**
@@ -49,6 +47,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   private final WorkerBee bee;
   private final StatusReporter listener;
   private Thread executionThread;
+  private AtomicBoolean closed = new AtomicBoolean(false);
 
   public FragmentExecutor(FragmentContext context, WorkerBee bee, FragmentRoot rootOperator, StatusReporter listener){
     this.context = context;
@@ -104,10 +103,14 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       while (state.get() == FragmentState.RUNNING_VALUE) {
         if (!root.next()) {
           if (context.isFailed()){
-            updateState(FragmentState.RUNNING, FragmentState.FAILED, false);
+            internalFail(context.getFailureCause());
+            closeOutResources(false);
           } else {
+            closeOutResources(true); // make sure to close out resources before we report success.
             updateState(FragmentState.RUNNING, FragmentState.FINISHED, false);
           }
+
+          break;
         }
       }
     } catch (AssertionError | Exception e) {
@@ -116,15 +119,30 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       internalFail(e);
     } finally {
       bee.removeFragment(context.getHandle());
-      if (context.isFailed()) {
-        internalFail(context.getFailureCause());
-      }
-      root.stop(); // stop root executor & clean-up resources
-      context.close();
 
       logger.debug("Fragment runner complete. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
       Thread.currentThread().setName(originalThread);
     }
+  }
+
+  private void closeOutResources(boolean throwFailure){
+    if(closed.get()) return;
+
+    try{
+      root.stop();
+    }catch(RuntimeException e){
+      if(throwFailure) throw e;
+      logger.warn("Failure while closing out resources.", e);
+    }
+
+    try{
+      context.close();
+    }catch(RuntimeException e){
+      if(throwFailure) throw e;
+      logger.warn("Failure while closing out resources.", e);
+    }
+
+    closed.set(true);
   }
 
   private void internalFail(Throwable excep){

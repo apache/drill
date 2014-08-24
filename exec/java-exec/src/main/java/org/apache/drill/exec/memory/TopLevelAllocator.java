@@ -98,7 +98,7 @@ public class TopLevelAllocator implements BufferAllocator {
       throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
     };
     logger.debug("New child allocator with initial reservation {}", initialReservation);
-    ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation);
+    ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation, childrenMap);
     if(ENABLE_ACCOUNTING) childrenMap.put(allocator, Thread.currentThread().getStackTrace());
 
     return allocator;
@@ -130,11 +130,13 @@ public class TopLevelAllocator implements BufferAllocator {
     private Map<ChildAllocator, StackTraceElement[]> children = new HashMap<>();
     private boolean closed = false;
     private FragmentHandle handle;
+    private Map<ChildAllocator, StackTraceElement[]> thisMap;
 
-    public ChildAllocator(FragmentHandle handle, Accountor parentAccountor, long max, long pre) throws OutOfMemoryException{
+    public ChildAllocator(FragmentHandle handle, Accountor parentAccountor, long max, long pre, Map<ChildAllocator, StackTraceElement[]> map) throws OutOfMemoryException{
       assert max >= pre;
       childAcct = new Accountor(errorOnLeak, handle, parentAccountor, max, pre);
       this.handle = handle;
+      thisMap = map;
     }
 
     @Override
@@ -171,7 +173,7 @@ public class TopLevelAllocator implements BufferAllocator {
         throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getAvailable()));
       };
       logger.debug("New child allocator with initial reservation {}", initialReservation);
-      ChildAllocator newChildAllocator = new ChildAllocator(handle, childAcct, maximumReservation, initialReservation);
+      ChildAllocator newChildAllocator = new ChildAllocator(handle, childAcct, maximumReservation, initialReservation, null);
       this.children.put(newChildAllocator, Thread.currentThread().getStackTrace());
       return newChildAllocator;
     }
@@ -183,6 +185,7 @@ public class TopLevelAllocator implements BufferAllocator {
     @Override
     public void close() {
       if (ENABLE_ACCOUNTING) {
+        if(thisMap != null) thisMap.remove(this);
         for (ChildAllocator child : children.keySet()) {
           if (!child.isClosed()) {
             StringBuilder sb = new StringBuilder();

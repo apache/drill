@@ -129,6 +129,10 @@ public class ScanBatch implements RecordBatch {
 
   @Override
   public void kill(boolean sendUpstream) {
+    if(currentReader != null){
+      currentReader.cleanup();
+    }
+
     if (sendUpstream) {
       done = true;
     } else {

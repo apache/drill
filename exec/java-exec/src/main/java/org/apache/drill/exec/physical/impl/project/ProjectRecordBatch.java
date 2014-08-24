@@ -111,6 +111,14 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     return recordCount;
   }
 
+
+  @Override
+  protected void killIncoming(boolean sendUpstream) {
+    super.killIncoming(sendUpstream);
+    hasRemainder = false;
+  }
+
+
   @Override
   public IterOutcome innerNext() {
     if (hasRemainder) {
