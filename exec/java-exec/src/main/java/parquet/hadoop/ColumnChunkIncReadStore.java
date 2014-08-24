@@ -147,7 +147,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               ByteBuffer buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
               CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
               return new Page(
-                      decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.compressed_page_size),
+                      decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
                       pageHeader.data_page_header.num_values,
                       pageHeader.uncompressed_page_size,
                       parquetMetadataConverter.fromParquetStatistics(pageHeader.data_page_header.statistics, columnDescriptor.getType()),
