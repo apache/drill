@@ -207,7 +207,6 @@
           <outputDirectory>${project.build.directory}</outputDirectory>
           <maxMemory>6g</maxMemory>
           <options>
-            <option>-verbose</option>
             <option>-dontobfuscate</option>
             <option>-dontoptimize</option>
             <option>-ignorewarnings</option>
