@@ -95,8 +95,7 @@ public class ParquetToDrillTypeConverter {
           case FIXED_LEN_BYTE_ARRAY:
             if (convertedType == null) {
               checkArgument(length > 0, "A length greater than zero must be provided for a FixedBinary type.");
-              return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY)
-                  .setWidth(length).setMode(mode).build();
+              return TypeProtos.MajorType.newBuilder().setMinorType(MinorType.VARBINARY).setMode(mode).build();
             } else if (convertedType == ConvertedType.DECIMAL) {
               return Types.withScaleAndPrecision(getDecimalType(schemaElement), DataMode.OPTIONAL, schemaElement.getScale(), schemaElement.getPrecision());
             }
@@ -159,8 +158,7 @@ public class ParquetToDrillTypeConverter {
           case FIXED_LEN_BYTE_ARRAY:
             if (convertedType == null) {
               checkArgument(length > 0, "A length greater than zero must be provided for a FixedBinary type.");
-              return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY)
-                  .setWidth(length).setMode(mode).build();
+              return TypeProtos.MajorType.newBuilder().setMinorType(MinorType.VARBINARY).setMode(mode).build();
             } else if (convertedType == ConvertedType.DECIMAL) {
               return Types.withScaleAndPrecision(getDecimalType(schemaElement), DataMode.REQUIRED, schemaElement.getScale(), schemaElement.getPrecision());
             }
@@ -223,8 +221,7 @@ public class ParquetToDrillTypeConverter {
           case FIXED_LEN_BYTE_ARRAY:
             if (convertedType == null) {
               checkArgument(length > 0, "A length greater than zero must be provided for a FixedBinary type.");
-              return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY)
-                  .setWidth(length).setMode(mode).build();
+              return TypeProtos.MajorType.newBuilder().setMinorType(MinorType.VARBINARY).setMode(mode).build();
             } else if (convertedType == ConvertedType.DECIMAL) {
               return Types.withScaleAndPrecision(getDecimalType(schemaElement), DataMode.REPEATED, schemaElement.getScale(), schemaElement.getPrecision());
             }

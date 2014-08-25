@@ -116,6 +116,8 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
 
   @Override
   protected void readField(long recordsToRead) {
+    // TODO - unlike most implementations of this method, the recordsReadInThisIteration field is not set here
+    // should verify that this is not breaking anything
     if (usingDictionary) {
       currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division

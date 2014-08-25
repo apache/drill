@@ -184,13 +184,13 @@ public class VarLengthColumnReaders {
       if(index >= varCharVector.getValueCapacity()) return false;
 
       if (usingDictionary) {
-        DrillBuf b = DrillBuf.wrapByteBuffer(currDictVal.toByteBuffer());
+        DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
         int st=0;
-        int len=currDictVal.length();
+        int len=currDictValToWrite.length();
         VarCharHolder holder = new VarCharHolder();
         holder.buffer=b;
         holder.start=0;
-        holder.end=currDictVal.length();
+        holder.end=currDictValToWrite.length();
         success = varCharVector.getMutator().setSafe(index, holder);
       }
       else {
@@ -230,8 +230,8 @@ public class VarLengthColumnReaders {
       if(index >= vector.getValueCapacity()) return false;
 
       if (usingDictionary) {
-        DrillBuf b = DrillBuf.wrapByteBuffer(currDictVal.toByteBuffer());
-        success = mutator.setSafe(index, 1, 0, currDictVal.length(), b);
+        DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
+        success = mutator.setSafe(index, 1, 0, currDictValToWrite.length(), b);
       }
       else {
         success = mutator.setSafe(index, 1, start, start+length, value);
@@ -263,13 +263,13 @@ public class VarLengthColumnReaders {
       if(index >= varBinaryVector.getValueCapacity()) return false;
 
       if (usingDictionary) {
-        DrillBuf b = DrillBuf.wrapByteBuffer(currDictVal.toByteBuffer());
+        DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
         int st=0;
-        int len=currDictVal.length();
+        int len=currDictValToWrite.length();
         VarBinaryHolder holder = new VarBinaryHolder();
         holder.buffer=b;
         holder.start=0;
-        holder.end=currDictVal.length();
+        holder.end=currDictValToWrite.length();
         success = varBinaryVector.getMutator().setSafe(index, holder);
       }
       else {
@@ -307,11 +307,11 @@ public class VarLengthColumnReaders {
       if(index >= nullableVarBinaryVector.getValueCapacity()) return false;
 
       if (usingDictionary) {
-        DrillBuf b = DrillBuf.wrapByteBuffer(currDictVal.toByteBuffer());
+        DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
         NullableVarBinaryHolder holder = new NullableVarBinaryHolder();
         holder.buffer=b;
         holder.start=0;
-        holder.end=currDictVal.length();
+        holder.end=currDictValToWrite.length();
         holder.isSet=1;
         success = nullableVarBinaryVector.getMutator().setSafe(index, holder);
       }

@@ -29,6 +29,7 @@ import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Decimal28SparseVector;
 import org.apache.drill.exec.vector.Decimal38SparseVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 import org.joda.time.DateTimeUtils;
 
 import parquet.column.ColumnDescriptor;
@@ -68,6 +69,29 @@ class FixedByteAlignedReader extends ColumnReader {
         (int) readStartInBytes, (int) readLength);
   }
 
+  public static class FixedBinaryReader extends FixedByteAlignedReader {
+    // TODO - replace this with fixed binary type in drill
+    VariableWidthVector castedVector;
+
+    FixedBinaryReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                    VariableWidthVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, true, v, schemaElement);
+      castedVector = v;
+    }
+
+    protected void readField(long recordsToReadInThisPass) {
+      // we can use the standard read method to transfer the data
+      super.readField(recordsToReadInThisPass);
+      // TODO - replace this with fixed binary type in drill
+      // now we need to write the lengths of each value
+      int byteLength = dataTypeLengthInBits / 8;
+      for (int i = 0; i < recordsToReadInThisPass; i++) {
+        castedVector.getMutator().setValueLengthSafe(i, byteLength);
+      }
+    }
+
+  }
+
   public static abstract class ConvertedReader extends FixedByteAlignedReader {
 
     protected int dataTypeLengthInBytes;
@@ -104,9 +128,19 @@ class FixedByteAlignedReader extends ColumnReader {
 
     @Override
     void addNext(int start, int index) {
-      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(
-          NullableFixedByteAlignedReaders.NullableDateReader.readIntLittleEndian(bytebuf, start)
+//      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(
+//          NullableFixedByteAlignedReaders.NullableDateReader.readIntLittleEndian(bytebuf, start)
+      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(readIntLittleEndian(bytebuf, start)
               - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+    }
+
+    // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
+    public static int readIntLittleEndian(ByteBuf in, int offset) {
+      int ch4 = in.getByte(offset) & 0xff;
+      int ch3 = in.getByte(offset + 1) & 0xff;
+      int ch2 = in.getByte(offset + 2) & 0xff;
+      int ch1 = in.getByte(offset + 3) & 0xff;
+      return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
     }
   }
 

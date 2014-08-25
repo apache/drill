@@ -51,6 +51,7 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
     castedRepeatedVector = (RepeatedFixedWidthVector) valueVector;
     this.dataTypeLengthInBytes = dataTypeLengthInBytes;
     this.dataReader = dataReader;
+    this.dataReader.pageReader.clear();
     this.dataReader.pageReader = this.pageReader;
     // this is not in the reset method because it needs to be initialized only for the very first page read
     // in all other cases if a read ends at a page boundary we will need to keep track of this flag and not
@@ -208,6 +209,11 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
   @Override
   public int capacity() {
     return castedRepeatedVector.getMutator().getDataVector().getData().capacity();
+  }
+
+  public void clear() {
+    super.clear();
+    dataReader.clear();
   }
 }
 

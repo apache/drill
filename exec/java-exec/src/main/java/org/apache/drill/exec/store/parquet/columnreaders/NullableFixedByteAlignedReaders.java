@@ -82,6 +82,10 @@ public class NullableFixedByteAlignedReaders {
         for (int i = 0; i < recordsToReadInThisPass; i++){
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
         }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readInteger());
+        }
       }
     }
   }
@@ -97,8 +101,14 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      for (int i = 0; i < recordsToReadInThisPass; i++){
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
+        }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readLong());
+        }
       }
     }
   }
@@ -114,8 +124,14 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      for (int i = 0; i < recordsToReadInThisPass; i++){
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readFloat());
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readFloat());
+        }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readFloat());
+        }
       }
     }
   }
@@ -131,8 +147,14 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      for (int i = 0; i < recordsToReadInThisPass; i++){
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readDouble());
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readDouble());
+        }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readDouble());
+        }
       }
     }
   }

@@ -91,10 +91,14 @@ final class PageReader {
 
   List<ByteBuf> allocatedBuffers;
 
+  // These need to be held throughout reading of the entire column chunk
+  List<ByteBuf> allocatedDictionaryBuffers;
+
   PageReader(ColumnReader parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData)
     throws ExecutionSetupException{
     this.parentColumnReader = parentStatus;
     allocatedBuffers = new ArrayList<ByteBuf>();
+    allocatedDictionaryBuffers = new ArrayList<ByteBuf>();
 
     long totalByteLength = columnChunkMetaData.getTotalUncompressedSize();
     long start = columnChunkMetaData.getFirstDataPageOffset();
@@ -108,7 +112,7 @@ final class PageReader {
 
         BytesInput bytesIn;
         ByteBuf uncompressedData=allocateBuffer(pageHeader.getUncompressed_page_size());
-        allocatedBuffers.add(uncompressedData);
+        allocatedDictionaryBuffers.add(uncompressedData);
         if(parentColumnReader.columnChunkMetaData.getCodec()==CompressionCodecName.UNCOMPRESSED) {
           dataReader.getPageAsBytesBuf(uncompressedData, pageHeader.compressed_page_size);
           bytesIn=parentColumnReader.parentReader.getCodecFactoryExposer().getBytesInput(uncompressedData,
@@ -157,6 +161,7 @@ final class PageReader {
     if(!dataReader.hasRemainder() || parentColumnReader.totalValuesRead == parentColumnReader.columnChunkMetaData.getValueCount()) {
       return false;
     }
+    clearBuffers();
 
     // next, we need to decompress the bytes
     // TODO - figure out if we need multiple dictionary pages, I believe it may be limited to one
@@ -168,7 +173,7 @@ final class PageReader {
         //TODO: Handle buffer allocation exception
         BytesInput bytesIn;
         ByteBuf uncompressedData=allocateBuffer(pageHeader.getUncompressed_page_size());
-        allocatedBuffers.add(uncompressedData);
+        allocatedDictionaryBuffers.add(uncompressedData);
         if( parentColumnReader.columnChunkMetaData.getCodec()== CompressionCodecName.UNCOMPRESSED) {
           dataReader.getPageAsBytesBuf(uncompressedData, pageHeader.compressed_page_size);
           bytesIn=parentColumnReader.parentReader.getCodecFactoryExposer().getBytesInput(uncompressedData,
@@ -229,6 +234,7 @@ final class PageReader {
     }
 
     pageDataByteArray = DrillBuf.wrapByteBuffer(currentPage.getBytes().toByteBuffer());
+    allocatedBuffers.add(pageDataByteArray);
 
     readPosInBytes = 0;
     if (parentColumnReader.getColumnDescriptor().getMaxRepetitionLevel() > 0) {
@@ -244,28 +250,28 @@ final class PageReader {
     }
     if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0){
       parentColumnReader.currDefLevel = -1;
-      if (!currentPage.getValueEncoding().usesDictionary()) {
-        parentColumnReader.usingDictionary = false;
-        definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
-        readPosInBytes = definitionLevels.getNextOffset();
-        if (parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
-          valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
-          valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
-        }
-      } else {
-        parentColumnReader.usingDictionary = true;
-        definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
-        readPosInBytes = definitionLevels.getNextOffset();
-        // initialize two of the dictionary readers, one is for determining the lengths of each value, the second is for
-        // actually copying the values out into the vectors
-        dictionaryLengthDeterminingReader = new DictionaryValuesReader(dictionary);
-        dictionaryLengthDeterminingReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
-        dictionaryValueReader = new DictionaryValuesReader(dictionary);
-        dictionaryValueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
-        this.parentColumnReader.usingDictionary = true;
+      definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
+      definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
+      readPosInBytes = definitionLevels.getNextOffset();
+      if ( ! currentPage.getValueEncoding().usesDictionary()) {
+        valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
+        valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
       }
+    }
+    if (parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
+      valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
+      valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
+    }
+    if (currentPage.getValueEncoding().usesDictionary()) {
+      // initialize two of the dictionary readers, one is for determining the lengths of each value, the second is for
+      // actually copying the values out into the vectors
+      dictionaryLengthDeterminingReader = new DictionaryValuesReader(dictionary);
+      dictionaryLengthDeterminingReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
+      dictionaryValueReader = new DictionaryValuesReader(dictionary);
+      dictionaryValueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
+      parentColumnReader.usingDictionary = true;
+    } else {
+      parentColumnReader.usingDictionary = false;
     }
     // readPosInBytes is used for actually reading the values after we determine how many will fit in the vector
     // readyToReadPosInBytes serves a similar purpose for the vector types where we must count up the values that will
@@ -275,13 +281,26 @@ final class PageReader {
     return true;
   }
 
+  public void clearBuffers() {
+    for (ByteBuf b : allocatedBuffers) {
+      b.release();
+    }
+    allocatedBuffers.clear();
+  }
+
+  public void clearDictionaryBuffers() {
+    for (ByteBuf b : allocatedDictionaryBuffers) {
+      b.release();
+    }
+    allocatedDictionaryBuffers.clear();
+  }
+
   public void clear(){
     this.dataReader.clear();
     // Free all memory, including fixed length types. (Data is being copied for all types not just var length types)
     //if(!this.parentColumnReader.isFixedLength) {
-      for (ByteBuf b : allocatedBuffers) {
-        b.release();
-      }
+    clearBuffers();
+    clearDictionaryBuffers();
     //}
   }
 

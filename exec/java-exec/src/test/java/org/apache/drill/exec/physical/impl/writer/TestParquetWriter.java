@@ -224,6 +224,21 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate(selection, validateSelection, inputTable, "foodmart_employee_parquet");
   }
 
+  @Test
+  public void testParquetRead() throws Exception {
+    test("alter system set `store.parquet.use_new_reader` = true");
+    List<QueryResultBatch> expected = testSqlWithResults("select * from dfs.`/tmp/voter`");
+    test("alter system set `store.parquet.use_new_reader` = false");
+    List<QueryResultBatch> results = testSqlWithResults("select * from dfs.`/tmp/voter`");
+    compareResults(expected, results);
+    for (QueryResultBatch result : results) {
+      result.release();
+    }
+    for (QueryResultBatch result : expected) {
+      result.release();
+    }
+  }
+
   public void runTestAndValidate(String selection, String validationSelection, String inputTable, String outputFile) throws Exception {
 
     Path path = new Path("/tmp/" + outputFile);

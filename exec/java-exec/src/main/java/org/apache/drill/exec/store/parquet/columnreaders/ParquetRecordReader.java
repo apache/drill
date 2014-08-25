@@ -60,6 +60,7 @@ import parquet.format.SchemaElement;
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
+import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.PrimitiveType;
@@ -110,6 +111,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
   private final CodecFactoryExposer codecFactoryExposer;
   int rowGroupIndex;
+  long totalRecordsRead;
 
   public ParquetRecordReader(FragmentContext fragmentContext, //
                              String path, //
@@ -223,6 +225,10 @@ public class ParquetRecordReader extends AbstractRecordReader {
 //    ParquetMetadataConverter metaConverter = new ParquetMetadataConverter();
     FileMetaData fileMetaData;
 
+    logger.debug("Reading row group({}) with {} records in file {}.", rowGroupIndex, footer.getBlocks().get(rowGroupIndex).getRowCount(),
+        hadoopPath.toUri().getPath());
+    totalRecordsRead = 0;
+
     // TODO - figure out how to deal with this better once we add nested reading, note also look where this map is used below
     // store a map from column name to converted types if they are non-null
     HashMap<String, SchemaElement> schemaElements = new HashMap<>();
@@ -247,13 +253,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
         if (column.getMaxRepetitionLevel() > 0) {
           allFieldsFixedLength = false;
         }
-        // There is not support for the fixed binary type yet in parquet, leaving a task here as a reminder
-        // TODO - implement this when the feature is added upstream
-          if (column.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY){
-              bitWidthAllFixedFields += se.getType_length() * 8;
-          } else {
-            bitWidthAllFixedFields += getTypeLengthInBits(column.getType());
-          }
+        if (column.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY){
+            bitWidthAllFixedFields += se.getType_length() * 8;
+        } else {
+          bitWidthAllFixedFields += getTypeLengthInBits(column.getType());
+        }
       } else {
         allFieldsFixedLength = false;
       }
@@ -287,13 +291,15 @@ public class ParquetRecordReader extends AbstractRecordReader {
         v = output.addField(field, (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
         if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
           if (column.getMaxRepetitionLevel() > 0) {
-            ColumnReader dataReader = ColumnReaderFactory.createFixedColumnReader(this, fieldFixedLength, column, columnChunkMetaData, recordsPerBatch,
+            ColumnReader dataReader = ColumnReaderFactory.createFixedColumnReader(this, fieldFixedLength,
+                column, columnChunkMetaData, recordsPerBatch,
                 ((RepeatedFixedWidthVector) v).getMutator().getDataVector(), schemaElement);
             varLengthColumns.add(new FixedWidthRepeatedReader(this, dataReader,
                 getTypeLengthInBits(column.getType()), -1, column, columnChunkMetaData, false, v, schemaElement));
           }
           else {
-            columnStatuses.add(ColumnReaderFactory.createFixedColumnReader(this, fieldFixedLength, column, columnChunkMetaData, recordsPerBatch, v,
+            columnStatuses.add(ColumnReaderFactory.createFixedColumnReader(this, fieldFixedLength,
+                column, columnChunkMetaData, recordsPerBatch, v,
                 schemaElement));
           }
         } else {
@@ -393,6 +399,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
           vv.getMutator().setValueCount( (int) recordsToRead);
         }
         mockRecordsRead += recordsToRead;
+        totalRecordsRead += recordsToRead;
         return (int) recordsToRead;
       }
 
@@ -418,6 +425,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
         }
       }
 
+
+      totalRecordsRead += firstColumnStatus.getRecordsReadInCurrentPass();
       return firstColumnStatus.getRecordsReadInCurrentPass();
     } catch (IOException e) {
       throw new DrillRuntimeException(e);
@@ -426,6 +435,10 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
   @Override
   public void cleanup() {
+    logger.debug("Read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex, hadoopPath.toUri().getPath());
+    // enable this for debugging when it is know that a whole file will be read
+    // limit kills upstream operators once it has enough records, so this assert will fail
+//    assert totalRecordsRead == footer.getBlocks().get(rowGroupIndex).getRowCount();
     for (ColumnReader column : columnStatuses) {
       column.clear();
     }

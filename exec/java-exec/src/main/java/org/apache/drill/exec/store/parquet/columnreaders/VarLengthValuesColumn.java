@@ -82,10 +82,17 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
 
   protected boolean readAndStoreValueSizeInformation() throws IOException {
     // re-purposing this field here for length in BYTES to prevent repetitive multiplication/division
-    try {
+    if (usingDictionary) {
+      if (currLengthDeterminingDictVal == null) {
+        currLengthDeterminingDictVal = pageReader.dictionaryLengthDeterminingReader.readBytes();
+      }
+      currDictValToWrite = currLengthDeterminingDictVal;
+      // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
+      dataTypeLengthInBits = currLengthDeterminingDictVal.length();
+    }
+    else {
+      // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = pageReader.pageDataByteArray.getInt((int) pageReader.readyToReadPosInBytes);
-    } catch (Throwable t) {
-      throw t;
     }
 
     // this should not fail

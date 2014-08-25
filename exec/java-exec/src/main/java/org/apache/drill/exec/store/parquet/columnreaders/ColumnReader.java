@@ -118,7 +118,6 @@ public abstract class ColumnReader<V extends ValueVector> {
     readField(recordsToRead);
 
     valuesReadInCurrentPass += recordsReadInThisIteration;
-    totalValuesRead += recordsReadInThisIteration;
     pageReader.valuesRead += recordsReadInThisIteration;
     pageReader.readPosInBytes = readStartInBytes + readLength;
   }
