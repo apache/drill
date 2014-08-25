@@ -114,6 +114,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public boolean allocateNewSafe() {
     if(!values.allocateNewSafe()) return false;
     if(!bits.allocateNewSafe()) return false;
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
     return true;
@@ -123,6 +124,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public void allocateNew(int totalBytes, int valueCount) {
     values.allocateNew(totalBytes, valueCount);
     bits.allocateNew(valueCount);
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
   }
@@ -171,6 +173,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public void allocateNew() {
     values.allocateNew();
     bits.allocateNew();
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
   }
@@ -180,6 +183,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public boolean allocateNewSafe() {
     if(!values.allocateNewSafe()) return false;
     if(!bits.allocateNewSafe()) return false;
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
     return true;
@@ -189,6 +193,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public void allocateNew(int valueCount) {
     values.allocateNew(valueCount);
     bits.allocateNew(valueCount);
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
   }
@@ -198,6 +203,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
    */
   public void zeroVector() {
     this.values.zeroVector();
+    this.bits.zeroVector();
   }
 
   @Override
