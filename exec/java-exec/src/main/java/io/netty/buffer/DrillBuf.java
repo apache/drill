@@ -161,7 +161,7 @@ public final class DrillBuf extends AbstractByteBuf {
 
   private void chk(int index, int width) {
     if (AssertionUtil.isAssertionsEnabled()) {
-      checkIndexD(offset+index, width);
+      checkIndexD(index, width);
     }
   }
 
