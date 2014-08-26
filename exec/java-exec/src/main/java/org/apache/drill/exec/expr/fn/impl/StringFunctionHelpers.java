@@ -32,8 +32,8 @@ public class StringFunctionHelpers {
   // white space is treated as everything else.
   public static void initCap(int start, int end, DrillBuf inBuf, DrillBuf outBuf) {
     boolean capNext = true;
-
-    for (int id = start; id < end; id++) {
+    int out = 0;
+    for (int id = start; id < end; id++; out++) {
       byte currentByte = inBuf.getByte(id);
 
       // 'A - Z' : 0x41 - 0x5A
@@ -61,7 +61,7 @@ public class StringFunctionHelpers {
         }
       }
 
-      outBuf.setByte(id, currentByte);
+      outBuf.setByte(out, currentByte);
     } // end of for_loop
   }
 
