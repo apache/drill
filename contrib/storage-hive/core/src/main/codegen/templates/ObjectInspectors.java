@@ -25,6 +25,7 @@
 package org.apache.drill.exec.expr.fn.impl.hive;
 
 import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
@@ -62,14 +63,18 @@ public abstract class Drill${entry.drillType}ObjectInspector extends AbstractDri
   public static class Required extends Drill${entry.drillType}ObjectInspector {
     @Override
     public HiveVarchar getPrimitiveJavaObject(Object o) {
-      return new HiveVarchar(((VarCharHolder)o).toString(), HiveVarchar.MAX_VARCHAR_LENGTH);
+      VarCharHolder h = (VarCharHolder)o;
+      String s = StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer);
+      return new HiveVarchar(s, HiveVarchar.MAX_VARCHAR_LENGTH);
     }
   }
 
   public static class Optional extends Drill${entry.drillType}ObjectInspector {
     @Override
     public HiveVarchar getPrimitiveJavaObject(Object o) {
-      return new HiveVarchar(((NullableVarCharHolder)o).toString(), HiveVarchar.MAX_VARCHAR_LENGTH);
+      NullableVarCharHolder h = (NullableVarCharHolder)o;
+      String s = h.isSet == 0 ? null : StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer);
+      return new HiveVarchar(s, HiveVarchar.MAX_VARCHAR_LENGTH);
     }
   }
 
@@ -82,14 +87,18 @@ public abstract class Drill${entry.drillType}ObjectInspector extends AbstractDri
   public static class Required extends Drill${entry.drillType}ObjectInspector {
     @Override
     public String getPrimitiveJavaObject(Object o){
-      return((Var16CharHolder)o).toString();
+      Var16CharHolder h = (Var16CharHolder)o;
+      String s = StringFunctionHelpers.toStringFromUTF16(h.start, h.end, h.buffer);
+      return s;
     }
   }
 
   public static class Optional extends Drill${entry.drillType}ObjectInspector {
     @Override
     public String getPrimitiveJavaObject(Object o){
-      return((NullableVar16CharHolder)o).toString();
+      NullableVar16CharHolder h = (NullableVar16CharHolder)o;
+      String s = h.isSet == 0 ? null : StringFunctionHelpers.toStringFromUTF16(h.start, h.end, h.buffer);
+      return s;
     }
   }
 <#elseif entry.drillType == "VarBinary">
