@@ -21,6 +21,7 @@ package org.apache.drill.exec.expr.fn.impl;
 import com.google.common.primitives.UnsignedLongs;
 
 import io.netty.util.internal.PlatformDependent;
+import org.apache.drill.exec.util.DecimalUtility;
 
 public class ByteFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteFunctionHelpers.class);
@@ -88,9 +89,73 @@ public class ByteFunctionHelpers {
 
     if (lLen == rLen) return 0;
 
-    return lLen > rLen ? 1 : 0;
+    return lLen > rLen ? 1 : -1;
 
   }
 
+  public static final int compare(final long laddr, int lStart, int lEnd, final byte[] right, int rStart, final int rEnd) {
+    int lLen = lEnd - lStart;
+    int rLen = rEnd - rStart;
+    int n = Math.min(rLen, lLen);
+    long lPos = laddr + lStart;
+    int rPos = rStart;
 
+
+
+    while (n-- != 0) {
+      byte leftByte = PlatformDependent.getByte(lPos);
+      byte rightByte = right[rPos];
+      if (leftByte != rightByte) {
+        return ((leftByte & 0xFF) - (rightByte & 0xFF)) > 0 ? 1 : -1;
+      }
+      lPos++;
+      rPos++;
+    }
+
+    if (lLen == rLen) return 0;
+
+    return lLen > rLen ? 1 : -1;
+
+  }
+  // Get the big endian integer
+  public static int getInteger(byte[] b, int index) {
+    int startIndex = index * DecimalUtility.integerSize;
+
+    if (index == 0) {
+      return (b[startIndex + 3] & 0xFF) |
+             (b[startIndex + 2] & 0xFF) << 8 |
+             (b[startIndex + 1] & 0xFF) << 16 |
+             (b[startIndex] & 0x7F) << 24;
+    }
+
+    return ((b[startIndex + 3] & 0xFF) |
+        (b[startIndex + 2] & 0xFF) << 8 |
+        (b[startIndex + 1] & 0xFF) << 16 |
+        (b[startIndex] & 0xFF) << 24);
+
+    }
+
+  // Set the big endian bytes for the input integer
+  public static void setInteger(byte[] b, int index, int value) {
+    int startIndex = index * DecimalUtility.integerSize;
+    b[startIndex] = (byte) ((value >> 24) & 0xFF);
+    b[startIndex + 1] = (byte) ((value >> 16) & 0xFF);
+    b[startIndex + 2] = (byte) ((value >> 8) & 0xFF);
+    b[startIndex + 3] = (byte) ((value) & 0xFF);
+  }
+
+  // Set the sign in a sparse decimal representation
+  public static void setSign(byte[] b, boolean sign) {
+    int value = getInteger(b, 0);
+    if (sign == true) {
+      setInteger(b, 0, value | 0x80000000);
+    } else {
+      setInteger(b, 0, value & 0x7FFFFFFF);
+    }
+  }
+
+  // Get the sign
+  public static boolean getSign(byte[] b) {
+    return ((b[0] & 0x80) > 0);
+  }
 }

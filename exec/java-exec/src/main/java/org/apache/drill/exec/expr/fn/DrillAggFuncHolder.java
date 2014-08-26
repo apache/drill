@@ -98,11 +98,15 @@ class DrillAggFuncHolder extends DrillFuncHolder{
         JVar sizeVar = setupBlock.decl(g.getModel().INT, "vectorSize", JExpr.lit(Integer.MAX_VALUE));
         JClass mathClass = g.getModel().ref(Math.class);
         for (int id = 0; id<workspaceVars.length; id ++) {
-          setupBlock.assign(sizeVar,mathClass.staticInvoke("min").arg(sizeVar).arg(g.getWorkspaceVectors().get(workspaceVars[id]).invoke("getValueCapacity")));
+          if (!workspaceVars[id].isInject()) {
+            setupBlock.assign(sizeVar,mathClass.staticInvoke("min").arg(sizeVar).arg(g.getWorkspaceVectors().get(workspaceVars[id]).invoke("getValueCapacity")));
+          }
         }
 
         for(int i =0 ; i < workspaceVars.length; i++) {
-          setupBlock.assign(workspaceJVars[i], JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
+          if (!workspaceVars[i].isInject()) {
+            setupBlock.assign(workspaceJVars[i], JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
+          }
         }
 
         //Use for loop to initialize entries in the workspace vectors.
@@ -148,18 +152,23 @@ class DrillAggFuncHolder extends DrillFuncHolder{
     JVar[] workspaceJVars = new JVar[workspaceVars.length];
 
     for(int i =0 ; i < workspaceVars.length; i++){
-      Preconditions.checkState(Types.isFixedWidthType(workspaceVars[i].majorType), String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have variable length type.", workspaceVars[i].name, registeredNames[0]));
-      Preconditions.checkState(workspaceVars[i].majorType.getMode()==DataMode.REQUIRED, String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have null or repeated type.", workspaceVars[i].name, registeredNames[0]));
+      if (workspaceVars[i].isInject() == true) {
+        workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type));
+        g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], g.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer"));
+      } else {
+        Preconditions.checkState(Types.isFixedWidthType(workspaceVars[i].majorType), String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have variable length type.", workspaceVars[i].name, registeredNames[0]));
+        Preconditions.checkState(workspaceVars[i].majorType.getMode()==DataMode.REQUIRED, String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have null or repeated type.", workspaceVars[i].name, registeredNames[0]));
 
-      //workspaceJVars[i] = g.declareClassField("work", g.getHolderType(workspaceVars[i].majorType), JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
-      workspaceJVars[i] = g.declareClassField("work", g.getHolderType(workspaceVars[i].majorType));
+        //workspaceJVars[i] = g.declareClassField("work", g.getHolderType(workspaceVars[i].majorType), JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
+        workspaceJVars[i] = g.declareClassField("work", g.getHolderType(workspaceVars[i].majorType));
 
-      //Declare a workspace vector for the workspace var.
-      TypedFieldId typedFieldId = new TypedFieldId(workspaceVars[i].majorType, g.getWorkspaceTypes().size());
-      JVar vv  = g.declareVectorValueSetupAndMember(g.getMappingSet().getWorkspace(), typedFieldId);
+        //Declare a workspace vector for the workspace var.
+        TypedFieldId typedFieldId = new TypedFieldId(workspaceVars[i].majorType, g.getWorkspaceTypes().size());
+        JVar vv  = g.declareVectorValueSetupAndMember(g.getMappingSet().getWorkspace(), typedFieldId);
 
-      g.getWorkspaceTypes().add(typedFieldId);
-      g.getWorkspaceVectors().put(workspaceVars[i], vv);
+        g.getWorkspaceTypes().add(typedFieldId);
+        g.getWorkspaceVectors().put(workspaceVars[i], vv);
+      }
     }
     return workspaceJVars;
   }
@@ -200,6 +209,11 @@ class DrillAggFuncHolder extends DrillFuncHolder{
 
     JVar[] internalVars = new JVar[workspaceJVars.length];
     for(int i =0; i < workspaceJVars.length; i++){
+
+      if (workspaceVars[i].isInject()) {
+        internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
+        continue;
+      }
       //sub.assign(workspaceJVars[i], JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
       //Access workspaceVar through workspace vector.
       JInvocation getValueAccessor = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getAccessor").invoke("get");
@@ -219,6 +233,10 @@ class DrillAggFuncHolder extends DrillFuncHolder{
     for(int i =0; i < workspaceJVars.length; i++){
       sub.assign(workspaceJVars[i], internalVars[i]);
 
+      // Injected buffers are not stored as vectors skip storing them in vectors
+      if (workspaceVars[i].isInject()) {
+        continue;
+      }
       //Change workspaceVar through workspace vector.
       JInvocation setMeth;
       if (Types.usesHolderForGet(workspaceVars[i].majorType)) {

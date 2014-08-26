@@ -66,6 +66,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace IntHolder outputScale;
   <#elseif type.outputType.endsWith("Sparse")>
   @Inject DrillBuf buffer;
+  @Workspace IntHolder scale;
+  @Workspace IntHolder precision;
   @Workspace ObjectHolder value;
   <#else>
   @Workspace ${type.runningType}Holder value;
@@ -78,24 +80,24 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = 0;
 	<#elseif aggrtype.funcName == "max" || aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Sparse")>
+    scale.value = 0;
+    precision.value = 0;
     value = new ObjectHolder();
-    ${type.runningType}Holder tmp = new ${type.runningType}Holder();
+    //${type.runningType}Holder tmp = new ${type.runningType}Holder();
+    byte[] byteArray = new byte[${type.runningType}Holder.WIDTH];
+    org.apache.hadoop.io.Text tmp = new org.apache.hadoop.io.Text(byteArray);
     value.obj = tmp;
-    buffer = buffer.reallocIfNeeded(tmp.WIDTH);
-    tmp.buffer = buffer;
-    tmp.start  = 0;
     <#if aggrtype.funcName == "max">
-    for (int i = 0; i < tmp.nDecimalDigits; i++) {
-      tmp.setInteger(i, 0xFFFFFFFF, tmp.start, tmp.buffer);
+    for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
+      org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setInteger(tmp.getBytes(), i, 0xFFFFFFFF);
     }
-    tmp.setSign(true, tmp.start, tmp.buffer);
+    org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setSign(tmp.getBytes(), true);
     <#elseif aggrtype.funcName == "min">
-    for (int i = 0; i < tmp.nDecimalDigits; i++) {
-      tmp.setInteger(i, 0x7FFFFFFF, tmp.start, tmp.buffer);
+    for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
+      org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setInteger(tmp.getBytes(), i, 0x7FFFFFFF);
     }
     // Set sign to be positive so initial value is maximum
-    tmp.setSign(false, tmp.start, tmp.buffer);
-    tmp.precision = ${type.runningType}Holder.maxPrecision;
+    org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setSign(tmp.getBytes(), false);
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value = new ${type.runningType}Holder();
@@ -124,32 +126,34 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value++;
     <#elseif aggrtype.funcName == "max">
     <#if type.outputType.endsWith("Sparse")>
-      ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-      int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(in.start, in.buffer),
-      in.scale, in.precision, tmp.buffer,
-      tmp.start, tmp.getSign(tmp.start, tmp.buffer), tmp.precision,
-      tmp.scale, in.WIDTH, in.nDecimalDigits, false);
+      //${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
+      org.apache.hadoop.io.Text tmp = (org.apache.hadoop.io.Text) value.obj;
+      int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseSamePrecScale(in.buffer, in.start, tmp.getBytes(), tmp.getLength());
     if (cmp == 1) {
-      in.buffer.getBytes(in.start, tmp.buffer, 0, tmp.WIDTH);
-      tmp.setSign(in.getSign(in.start, in.buffer), tmp.start, tmp.buffer);
-      tmp.scale = in.scale;
-      tmp.precision = in.precision;
+      //in.buffer.getBytes(in.start, tmp.getBytes(), 0, ${type.runningType}Holder.WIDTH);
+      for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
+        org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setInteger(tmp.getBytes(), i, ${type.runningType}Holder.getInteger(i, in.start, in.buffer));
+      }
+      org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setSign(tmp.getBytes(), in.getSign(in.start, in.buffer));
+      scale.value = in.scale;
+      precision.value = in.precision;
     }
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = Math.max(value.value, in.value);
     </#if>
     <#elseif aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Sparse")>
-    ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-    int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(in.start, in.buffer),
-      in.scale, in.precision, tmp.buffer,
-      tmp.start, tmp.getSign(tmp.start, tmp.buffer), tmp.precision,
-      tmp.scale, in.WIDTH, in.nDecimalDigits, false);
+    //${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
+    org.apache.hadoop.io.Text tmp = (org.apache.hadoop.io.Text) value.obj;
+    int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseSamePrecScale(in.buffer, in.start, tmp.getBytes(), tmp.getLength());
     if (cmp == -1) {
-      in.buffer.getBytes(in.start, tmp.buffer, 0, tmp.WIDTH);
-      tmp.setSign(in.getSign(in.start, in.buffer), tmp.start, tmp.buffer);
-      tmp.scale = in.scale;
-      tmp.precision = in.precision;
+      //in.buffer.getBytes(in.start, tmp.getBytes(), 0, ${type.runningType}Holder.WIDTH);
+      for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
+        org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setInteger(tmp.getBytes(), i, ${type.runningType}Holder.getInteger(i, in.start, in.buffer));
+      }
+      org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setSign(tmp.getBytes(), in.getSign(in.start, in.buffer));
+      scale.value = in.scale;
+      precision.value = in.precision;
     }
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = Math.min(value.value, in.value);
@@ -183,12 +187,17 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal((java.math.BigDecimal) value.obj, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
    <#else>
     <#if type.outputType.endsWith("Sparse")>
-    ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-    out.buffer = tmp.buffer;
-    out.start = tmp.start;
-    out.setSign(tmp.getSign(tmp.start, tmp.buffer), out.start, out.buffer);
-    out.scale = tmp.scale;
-    out.precision = tmp.precision;
+    org.apache.hadoop.io.Text tmp = (org.apache.hadoop.io.Text) value.obj;
+    buffer = buffer.reallocIfNeeded(tmp.getLength());
+    //buffer.setBytes(0, tmp.getBytes(), 0, tmp.getLength());
+    for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
+      ${type.runningType}Holder.setInteger(i, org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.getInteger(tmp.getBytes(), i), 0, buffer);
+    }
+    out.buffer = buffer;
+    out.start = 0;
+    out.setSign(org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.getSign(tmp.getBytes()), out.start, out.buffer);
+    out.scale = scale.value;
+    out.precision = precision.value;
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     out.value = value.value;
     out.scale = value.scale;
@@ -204,17 +213,17 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  value.value = 0;
 	<#elseif aggrtype.funcName == "max" || aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Sparse")>
-  	value = new ObjectHolder();
-    ${type.runningType}Holder tmp = new ${type.runningType}Holder();
-    value.obj = tmp;
-    for (int i = 0; i < tmp.nDecimalDigits; i++) {
-      tmp.setInteger(i, 0xFFFFFFFF, tmp.start, tmp.buffer);
+    org.apache.hadoop.io.Text tmp = (org.apache.hadoop.io.Text) value.obj;
+    for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
+      org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setInteger(tmp.getBytes(), i, 0xFFFFFFFF);
     }
+    scale.value = 0;
+    precision.value = 0;
     <#if aggrtype.funcName == "min">
     // Set sign to be positive so initial value is maximum
-    tmp.setSign(false, tmp.start, tmp.buffer);
+    org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setSign(tmp.getBytes(), false);
     <#elseif aggrtype.funcName == "max">
-    tmp.setSign(true, tmp.start, tmp.buffer);
+    org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setSign(tmp.getBytes(), true);
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value = new ${type.runningType}Holder();

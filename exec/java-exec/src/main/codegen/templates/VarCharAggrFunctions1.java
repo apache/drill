@@ -74,10 +74,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     init = new UInt1Holder();
     init.value = 0;
     value = new ObjectHolder();
-    ${type.runningType}Holder tmp = new ${type.runningType}Holder();
-    tmp.start = 0;
-    tmp.end = 0;
-    tmp.buffer = null;
+    org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = new org.apache.drill.exec.expr.fn.impl.DrillByteArray();
     value.obj = tmp;
 
     <#else>
@@ -96,7 +93,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       }
     </#if>
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
-    ${type.runningType}Holder tmp = (${type.runningType}Holder)value.obj;
+    org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
     int cmp = 0;
     boolean swap = false;
 
@@ -106,7 +103,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       swap = true;
     } else {
       // Compare the bytes
-      int compare = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(in.buffer.memoryAddress(), in.start, in.end, tmp.buffer.memoryAddress(), tmp.start, tmp.end);
+      cmp = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(in.buffer.memoryAddress(), in.start, in.end, tmp.getBytes(), 0, tmp.getLength());
+
 
       <#if aggrtype.className == "Min">
       swap = (cmp == -1);
@@ -115,11 +113,15 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       </#if>
     }
     if (swap) {
-      int length = in.end - in.start;
-      this.buf = tmp.buffer = buf.reallocIfNeeded(in.end - in.start);
-      in.buffer.getBytes(in.start, tmp.buffer, 0, length);
-      tmp.end = length;
-      
+      int inputLength = in.end - in.start;
+      if (tmp.getLength() >= inputLength) {
+        in.buffer.getBytes(in.start, tmp.getBytes(), 0, inputLength);
+        tmp.setLength(inputLength);
+      } else {
+        byte[] tempArray = new byte[in.end - in.start];
+        in.buffer.getBytes(in.start, tempArray, 0, in.end - in.start);
+        tmp.setBytes(tempArray);
+      }
     }
     <#else>
     value.value++;
@@ -132,10 +134,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Override
   public void output() {
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
-    ${type.runningType}Holder tmp = (${type.runningType}Holder)value.obj;
-    out.start  = tmp.start;
-    out.end    = tmp.end;
-    out.buffer = tmp.buffer;
+    org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
+    buf = buf.reallocIfNeeded(tmp.getLength());
+    buf.setBytes(0, tmp.getBytes(), 0, tmp.getLength());
+    out.start  = 0;
+    out.end    = tmp.getLength();
+    out.buffer = buf;
     <#else>
     out.value = value.value;
     </#if>

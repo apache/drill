@@ -25,6 +25,8 @@ import java.util.Arrays;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.CoreDecimalUtility;
+import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
+import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 
 public class DecimalUtility extends CoreDecimalUtility{
 
@@ -687,6 +689,35 @@ public class DecimalUtility extends CoreDecimalUtility{
 
     int index = nDecimalDigits - roundUp(scale);
     return (int) (adjustScaleDivide(data.getInt(start + (index * integerSize)), MAX_DIGITS - 1));
+  }
+
+  public static int compareSparseSamePrecScale(DrillBuf left, int lStart, byte[] right, int length) {
+    // check the sign first
+    boolean lSign = (left.getInt(lStart) & 0x80000000) != 0;
+    boolean rSign = ByteFunctionHelpers.getSign(right);
+    int cmp = 0;
+
+    if (lSign != rSign) {
+      return (lSign == false) ? 1 : -1;
+    }
+
+    // invert the comparison if we are comparing negative numbers
+    int invert = (lSign == true) ? -1 : 1;
+
+    // compare byte by byte
+    int n = 0;
+    int lPos = lStart;
+    int rPos = 0;
+    while (n < length/4) {
+      int leftInt = Decimal38SparseHolder.getInteger(n, lStart, left);
+      int rightInt = ByteFunctionHelpers.getInteger(right, n);
+      if (leftInt != rightInt) {
+        cmp =  (leftInt - rightInt ) > 0 ? 1 : -1;
+        break;
+      }
+      n++;
+    }
+    return cmp * invert;
   }
 }
 

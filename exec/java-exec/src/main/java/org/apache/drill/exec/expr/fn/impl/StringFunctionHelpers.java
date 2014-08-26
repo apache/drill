@@ -33,7 +33,7 @@ public class StringFunctionHelpers {
   public static void initCap(int start, int end, DrillBuf inBuf, DrillBuf outBuf) {
     boolean capNext = true;
     int out = 0;
-    for (int id = start; id < end; id++; out++) {
+    for (int id = start; id < end; id++, out++) {
       byte currentByte = inBuf.getByte(id);
 
       // 'A - Z' : 0x41 - 0x5A
