@@ -17,6 +17,7 @@
  */
 
 
+#include "drill/common.hpp"
 #include "drill/drillClient.hpp"
 #include "drill/recordBatch.hpp"
 #include "drillClientImpl.hpp"
@@ -43,7 +44,7 @@ DrillClientInitializer::~DrillClientInitializer(){
 }
 
 logLevel_t DrillClientConfig::s_logLevel=LOG_ERROR;
-uint64_t DrillClientConfig::s_bufferLimit=-1;
+uint64_t DrillClientConfig::s_bufferLimit=MAX_MEM_ALLOC_SIZE;
 int32_t DrillClientConfig::s_socketTimeout=180;
 boost::mutex DrillClientConfig::s_mutex;
 
@@ -157,10 +158,6 @@ FieldDefPtr RecordIterator::getColDefs(){
 
 status_t RecordIterator::next(){
     status_t ret=QRY_SUCCESS;
-    this->m_pQueryResult->waitForData();
-    if(m_pQueryResult->hasError()){
-        return m_pQueryResult->getErrorStatus();
-    }
     this->m_currentRecord++;
 
     if(!this->m_pQueryResult->isCancelled()){
@@ -169,8 +166,13 @@ status_t RecordIterator::next(){
             if(this->m_pCurrentRecordBatch !=NULL){
                 DRILL_LOG(LOG_TRACE) << "Deleted old Record batch " << (void*) m_pCurrentRecordBatch << std::endl;
                 delete this->m_pCurrentRecordBatch; //free the previous record batch
+                this->m_pCurrentRecordBatch=NULL;
             }
             this->m_currentRecord=0;
+            this->m_pQueryResult->waitForData();
+            if(m_pQueryResult->hasError()){
+                return m_pQueryResult->getErrorStatus();
+            }
             this->m_pCurrentRecordBatch=this->m_pQueryResult->getNext();
             if(this->m_pCurrentRecordBatch != NULL){
                 DRILL_LOG(LOG_TRACE) << "Fetched new Record batch " << std::endl;
@@ -274,15 +276,18 @@ void DrillClient::close() {
     this->m_pImpl->Close();
 }
 
-status_t DrillClient::submitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle){
-    DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(t, plan, listener, listenerCtx);
+status_t DrillClient::submitQuery(Drill::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle){
+
+    ::exec::shared::QueryType castedType = static_cast<::exec::shared::QueryType> (t);
+    DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(castedType, plan, listener, listenerCtx);
     *qHandle=(QueryHandle_t)pResult;
     return QRY_SUCCESS;
 }
 
-RecordIterator* DrillClient::submitQuery(::exec::shared::QueryType t, const std::string& plan, DrillClientError* err){
+RecordIterator* DrillClient::submitQuery(Drill::QueryType t, const std::string& plan, DrillClientError* err){
     RecordIterator* pIter=NULL;
-    DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(t, plan, NULL, NULL);
+    ::exec::shared::QueryType castedType = static_cast<::exec::shared::QueryType> (t);
+    DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(castedType, plan, NULL, NULL);
     if(pResult){
         pIter=new RecordIterator(pResult);
     }

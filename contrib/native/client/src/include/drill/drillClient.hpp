@@ -23,7 +23,7 @@
 #include <vector>
 #include <boost/thread.hpp>
 #include "drill/common.hpp"
-#include "drill/protobuf/User.pb.h"
+#include "drill/protobuf/types.pb.h"
 
 
 #if defined _WIN32 || defined __CYGWIN__
@@ -44,6 +44,15 @@
   #endif
 #endif
 
+namespace exec
+{
+    namespace shared
+    {
+        class DrillPBError;
+        enum QueryType;
+    };
+};
+
 namespace Drill {
 
 //struct UserServerEndPoint;
@@ -52,6 +61,12 @@ class  DrillClientQueryResult;
 class  FieldMetadata;
 class  RecordBatch;
 class  SchemaDef;
+
+    enum QueryType {
+        SQL = 1,
+        LOGICAL = 2,
+        PHYSICAL = 3
+    };
 
 class DECLSPEC_DRILL_CLIENT DrillClientError{
     public:
@@ -222,16 +237,16 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         void close() ;
 
         /*
-         * Submit a query asynchronously and wait for results to be returned thru a callback. A query context handle is passed
+         * Submit a query asynchronously and wait for results to be returned through a callback. A query context handle is passed
          * back. The listener callback will return the handle in the ctx parameter.
          */
-        status_t submitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle);
+        status_t submitQuery(Drill::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle);
 
         /*
-         * Submit a query asynchronously and wait for results to be returned thru an iterator that returns
+         * Submit a query asynchronously and wait for results to be returned through an iterator that returns
          * results synchronously. The client app needs to call delete on the iterator when done.
          */
-        RecordIterator* submitQuery(::exec::shared::QueryType t, const std::string& plan, DrillClientError* err);
+        RecordIterator* submitQuery(Drill::QueryType t, const std::string& plan, DrillClientError* err);
 
         /*
          * The client application should call this function to wait for results if it has registered a

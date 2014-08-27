@@ -20,6 +20,14 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#ifdef _WIN32
+// The order of inclusion is important. Including winsock2 before everything else
+// ensures that the correct typedefs are defined and that the older typedefs defined
+// in winsock and windows.h are not picked up.
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -32,6 +40,9 @@
 
 #define MAX_CONNECT_STR 4096
 #define MAX_SOCK_RD_BUFSIZE  1024
+
+#define MEM_CHUNK_SIZE 64*1024; // 64K
+#define MAX_MEM_ALLOC_SIZE 256*1024*1024; // 256 MB
 
 #ifdef _DEBUG
 #define EXTRA_DEBUGGING
@@ -47,6 +58,9 @@ typedef Byte_t * ByteBuf_t;
 
 class FieldMetadata;
 typedef boost::shared_ptr< std::vector<Drill::FieldMetadata*> > FieldDefPtr;
+
+class AllocatedBuffer;
+typedef AllocatedBuffer* AllocatedBufferPtr;
 
 typedef enum{
     QRY_SUCCESS=0,

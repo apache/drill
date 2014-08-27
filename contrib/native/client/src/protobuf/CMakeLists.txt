@@ -58,13 +58,13 @@ set (PROTO_CPPHDR_FILES
     ${PROTO_HDR_DIR}/BitData.pb.h
     ${PROTO_HDR_DIR}/ExecutionProtos.pb.h
     ${PROTO_HDR_DIR}/SchemaDef.pb.h
+	${PROTO_HDR_DIR}/User.pb.h
     )
 
 set (PROTO_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/drill/protobuf)
 
 set (PROTO_CPPINC_FILES
     ${PROTO_INC_DIR}/Types.pb.h
-    ${PROTO_INC_DIR}/User.pb.h
     )
 
 set(ProtoIncludes ${PROTO_CPPINC_FILES} )
@@ -102,6 +102,10 @@ add_custom_target(cpProtobufs
 #message("ProtoSources =  ${ProtoSources}" )
 #message("ProtoHeaders =  ${ProtoHeaders}" )
 #message("ProtoIncludes =  ${ProtoIncludes}" )
+
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "/EHsc")
+endif()
 
 add_library(protomsgs STATIC ${ProtoSources} ${ProtoHeaders} ${ProtoIncludes} )
 #set linker properties. The first time around, the protobufs generated files may not exist

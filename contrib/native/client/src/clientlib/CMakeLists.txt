@@ -27,6 +27,7 @@ set (CLIENTLIB_SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/rpcDecoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/errmsgs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
     )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include )
@@ -39,6 +40,11 @@ set_property(
     DIRECTORY
     PROPERTY COMPILE_DEFINITIONS_DEBUG DEBUG DEBUG=1 THREADED
     )
+
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "/EHsc")
+    add_definitions(-DDRILL_CLIENT_EXPORTS)
+endif()
 
 add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES} )
 target_link_libraries(drillClient ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${Zookeeper_LIBRARIES} protomsgs y2038)
