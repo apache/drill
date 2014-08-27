@@ -112,24 +112,112 @@
               <groupId>org.apache.hadoop</groupId>
               <artifactId>hadoop-core</artifactId>
             </exclusion>
-            <exclusion>
-              <groupId>org.apache.hbase</groupId>
-              <artifactId>hbase</artifactId>
-            </exclusion>
           </exclusions>
         </dependency>
         <dependency>
-          <groupId>org.apache.drill.contrib</groupId>
-          <artifactId>drill-hbase-shaded</artifactId>
-          <version>${project.version}</version>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase</artifactId>
+          <version>0.94.22-drill-r1</version>
           <exclusions>
             <exclusion>
-              <groupId>org.apache.hadoop</groupId>
-              <artifactId>hadoop-core</artifactId>
+              <groupId>org.mortbay.jetty</groupId>
+              <artifactId>servlet-api-2.5</artifactId>
             </exclusion>
             <exclusion>
-              <groupId>org.apache.hbase</groupId>
-              <artifactId>hbase</artifactId>
+              <artifactId>slf4j-log4j12</artifactId>
+              <groupId>org.slf4j</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>slf4j-log4j12</artifactId>
+              <groupId>org.slf4j</groupId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-core</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-server</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-json</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-client</artifactId>
+            </exclusion>
+            <exclusion>
+              <artifactId>asm</artifactId>
+              <groupId>asm</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>libthrift</artifactId>
+              <groupId>org.apache.thrift</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jruby-complete</artifactId>
+              <groupId>org.jruby</groupId>
+            </exclusion>
+            <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging-api</artifactId>
+            </exclusion>
+            <exclusion>
+              <artifactId>avro-ipc</artifactId>
+              <groupId>org.apache.avro</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>avro</artifactId>
+              <groupId>org.apache.avro</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>commons-codec</artifactId>
+              <groupId>commons-codec</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jasper-runtime</artifactId>
+              <groupId>tomcat</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jackson-core-asl</artifactId>
+              <groupId>org.codehaus.jackson</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jackson-mapper-asl</artifactId>
+              <groupId>org.codehaus.jackson</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jasper-compiler</artifactId>
+              <groupId>tomcat</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jamon-runtime</artifactId>
+              <groupId>org.jamon</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jaxb-api</artifactId>
+              <groupId>javax.xml.bind</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>zookeeper</artifactId>
+              <groupId>org.apache.zookeeper</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jsp-2.1</artifactId>
+              <groupId>org.mortbay.jetty</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>jsp-api-2.1</artifactId>
+              <groupId>org.mortbay.jetty</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>stax-api</artifactId>
+              <groupId>stax</groupId>
             </exclusion>
           </exclusions>
         </dependency>

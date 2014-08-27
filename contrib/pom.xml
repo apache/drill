@@ -32,7 +32,6 @@
   </dependencies>
 
   <modules>
-    <module>hbase-shaded</module>
     <module>storage-hbase</module>
     <module>storage-hive</module>
     <module>sqlline</module>
