@@ -68,7 +68,6 @@ public class MongoRecordReader implements RecordReader {
   private DBObject filters;
   private DBObject fields;
 
-  private MongoClient client;
   private MongoClientOptions clientOptions;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
@@ -131,7 +130,7 @@ public class MongoRecordReader implements RecordReader {
       for (String host : hosts) {
         addresses.add(new ServerAddress(host));
       }
-      client = new MongoClient(addresses, this.clientOptions);
+      MongoClient client = MongoCnxnManager.getClient(addresses, clientOptions);
       DB db = client.getDB(subScanSpec.getDbName());
       db.setReadPreference(ReadPreference.nearest());
       collection = db.getCollection(subScanSpec.getCollectionName());
@@ -196,6 +195,6 @@ public class MongoRecordReader implements RecordReader {
 
   @Override
   public void cleanup() {
-    client.close();
+    cursor.close();
   }
 }
