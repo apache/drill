@@ -23,24 +23,37 @@
 #include <ostream>
 #include <fstream>
 #include <string>
-#include <stdlib.h>
+#include <boost/thread.hpp>
 
 #include "drill/common.hpp"
+#include "drill/drillClient.hpp"
 
 namespace Drill{
 
+// Wrapper Class to keep track of allocated memory
+class AllocatedBuffer{
+    public:
+    AllocatedBuffer(size_t l);
+    ~AllocatedBuffer();
+
+    ByteBuf_t m_pBuffer;
+    size_t    m_bufSize;
+    
+    // keep track of allocated memory. The client lib blocks
+    // if we have allocated up to a limit (defined in drillClientConfig).
+    static boost::mutex s_memCVMutex;
+    static boost::condition_variable s_memCV;
+    static size_t s_allocatedMem;
+    static bool s_isBufferLimitReached;
+
+};
+
 class Utils{
     public:
-
         //allocate memory for Record Batches
-        static ByteBuf_t allocateBuffer(size_t len){
-            //http://stackoverflow.com/questions/2688466/why-mallocmemset-is-slower-than-calloc
-            ByteBuf_t b = (ByteBuf_t)calloc(len, sizeof(Byte_t)); return b;
-        }
-        static void freeBuffer(ByteBuf_t b){ free(b); }
-
+        static ByteBuf_t allocateBuffer(size_t len);
+        static void freeBuffer(ByteBuf_t b, size_t len);
 }; // Utils
-
 
 } // namespace Drill
 

@@ -43,7 +43,7 @@ DrillClientInitializer::~DrillClientInitializer(){
 }
 
 logLevel_t DrillClientConfig::s_logLevel=LOG_ERROR;
-uint64_t DrillClientConfig::s_bufferLimit=-1;
+uint64_t DrillClientConfig::s_bufferLimit=MAX_MEM_ALLOC_SIZE;
 int32_t DrillClientConfig::s_socketTimeout=180;
 boost::mutex DrillClientConfig::s_mutex;
 
@@ -157,10 +157,6 @@ FieldDefPtr RecordIterator::getColDefs(){
 
 status_t RecordIterator::next(){
     status_t ret=QRY_SUCCESS;
-    this->m_pQueryResult->waitForData();
-    if(m_pQueryResult->hasError()){
-        return m_pQueryResult->getErrorStatus();
-    }
     this->m_currentRecord++;
 
     if(!this->m_pQueryResult->isCancelled()){
@@ -169,8 +165,13 @@ status_t RecordIterator::next(){
             if(this->m_pCurrentRecordBatch !=NULL){
                 DRILL_LOG(LOG_TRACE) << "Deleted old Record batch " << (void*) m_pCurrentRecordBatch << std::endl;
                 delete this->m_pCurrentRecordBatch; //free the previous record batch
+                this->m_pCurrentRecordBatch=NULL;
             }
             this->m_currentRecord=0;
+            this->m_pQueryResult->waitForData();
+            if(m_pQueryResult->hasError()){
+                return m_pQueryResult->getErrorStatus();
+            }
             this->m_pCurrentRecordBatch=this->m_pQueryResult->getNext();
             if(this->m_pCurrentRecordBatch != NULL){
                 DRILL_LOG(LOG_TRACE) << "Fetched new Record batch " << std::endl;
