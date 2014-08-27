@@ -95,7 +95,11 @@ public final class ${className} implements ValueHolder{
     public int hashCode(){
       throw new UnsupportedOperationException();
     }
-    
+
+    /*
+     * Reason for deprecation is that ValueHolders are potential scalar replacements
+     * and hence we don't want any methods to be invoked on them.
+     */
     @Deprecated
     public String toString(){
       throw new UnsupportedOperationException();
