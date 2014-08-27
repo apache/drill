@@ -301,7 +301,7 @@ ret_t FieldBatch::load(){
     return RET_SUCCESS;
 }
 
-RecordBatch::RecordBatch(exec::shared::QueryResult* pResult, ByteBuf_t r, ByteBuf_t b)
+RecordBatch::RecordBatch(exec::shared::QueryResult* pResult, AllocatedBufferPtr r, ByteBuf_t b)
 	:m_fieldDefs(new(std::vector<Drill::FieldMetadata*>)){
 		m_pQueryResult=pResult;
 		m_pRecordBatchDef=&pResult->def();
