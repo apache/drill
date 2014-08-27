@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -89,7 +90,15 @@ public class MongoRecordReader implements RecordReader {
     this.filters = new BasicDBObject();
     createChunkScan(filters, subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
     if(subScanSpec.getFilter() != null) {
-      this.filters.putAll(subScanSpec.getFilter().toMap());
+      Set<Entry<String, Object>> filterSet = subScanSpec.getFilter().entrySet();
+      for(Entry<String, Object> filter : filterSet) {
+        if (filters.get(filter.getKey()) == null) {
+          filters.put(filter.getKey(), filter.getValue());
+        } else {
+          BasicDBObject dbObj = (BasicDBObject) filters.get(filter.getKey());
+          dbObj.append("$and", filter.getValue());
+        }
+      }
     }
     // exclude _id field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
