@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.ByteBuf;
-
+/**
+ * Thin wrapper around byte array. This class is used by aggregate functions which
+ * consume decimal, variable width vectors as inputs. 
+ */
 public class DrillByteArray {
   private byte[] bytes;
   private int length;

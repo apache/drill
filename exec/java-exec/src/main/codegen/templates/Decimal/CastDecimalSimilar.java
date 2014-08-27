@@ -83,7 +83,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         if (in.scale != out.scale) {
           org.apache.drill.exec.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
-        out.setSign(sign, in.start, in.buffer);
+        out.setSign(sign, out.start, out.buffer);
     }
 }
 </#if> <#-- type.major -->

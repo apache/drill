@@ -26,6 +26,17 @@ import org.apache.drill.exec.util.DecimalUtility;
 public class ByteFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteFunctionHelpers.class);
 
+  /**
+   * Helper function to check for equality of bytes in two DrillBuffers
+   *
+   * @param laddr start address of the DrillBuf
+   * @param lStart start offset in the buffer
+   * @param lEnd end offset in the buffer
+   * @param raddr start address of the DrillBuf
+   * @param rStart start offset in the buffer
+   * @param rEnd end offset in the buffer
+   * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
+   */
   public static final int equal(final long laddr, int lStart, int lEnd, final long raddr, int rStart,
       final int rEnd) {
 
@@ -59,6 +70,17 @@ public class ByteFunctionHelpers {
     }
   }
 
+  /**
+   * Helper function to compare a set of bytes in two DrillBuffers
+   *
+   * @param laddr start address of the DrillBuf
+   * @param lStart start offset in the buffer
+   * @param lEnd end offset in the buffer
+   * @param raddr start address of the DrillBuf
+   * @param rStart start offset in the buffer
+   * @param rEnd end offset in the buffer
+   * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
+   */
   public static final int compare(final long laddr, int lStart, int lEnd, final long raddr, int rStart, final int rEnd) {
     int lLen = lEnd - lStart;
     int rLen = rEnd - rStart;
@@ -93,6 +115,17 @@ public class ByteFunctionHelpers {
 
   }
 
+  /**
+   * Helper function to compare a set of bytes in DrillBuf to a ByteArray.
+   *
+   * @param laddr start address of the DrillBuf
+   * @param lStart start offset in the buffer
+   * @param lEnd end offset in the buffer
+   * @param right second input to be compared
+   * @param rStart start offset in the byte array
+   * @param rEnd end offset in the byte array
+   * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
+   */
   public static final int compare(final long laddr, int lStart, int lEnd, final byte[] right, int rStart, final int rEnd) {
     int lLen = lEnd - lStart;
     int rLen = rEnd - rStart;
@@ -117,11 +150,20 @@ public class ByteFunctionHelpers {
     return lLen > rLen ? 1 : -1;
 
   }
-  // Get the big endian integer
+
+  /*
+   * Following are helper functions to interact with sparse decimal represented in a byte array.
+   */
+
+  // Get the integer ignore the sign
   public static int getInteger(byte[] b, int index) {
+    return getInteger(b, index, true);
+  }
+  // Get the integer, ignore the sign
+  public static int getInteger(byte[] b, int index, boolean ignoreSign) {
     int startIndex = index * DecimalUtility.integerSize;
 
-    if (index == 0) {
+    if (index == 0 && ignoreSign == true) {
       return (b[startIndex + 3] & 0xFF) |
              (b[startIndex + 2] & 0xFF) << 8 |
              (b[startIndex + 1] & 0xFF) << 16 |
@@ -133,9 +175,9 @@ public class ByteFunctionHelpers {
         (b[startIndex + 1] & 0xFF) << 16 |
         (b[startIndex] & 0xFF) << 24);
 
-    }
+  }
 
-  // Set the big endian bytes for the input integer
+  // Set integer in the byte array
   public static void setInteger(byte[] b, int index, int value) {
     int startIndex = index * DecimalUtility.integerSize;
     b[startIndex] = (byte) ((value >> 24) & 0xFF);
@@ -156,6 +198,6 @@ public class ByteFunctionHelpers {
 
   // Get the sign
   public static boolean getSign(byte[] b) {
-    return ((b[0] & 0x80) > 0);
+    return ((getInteger(b, 0, false) & 0x80000000) != 0);
   }
 }
