@@ -46,11 +46,11 @@
 
 namespace exec
 {
-	namespace shared
-	{
-		class DrillPBError;
-		enum QueryType;
-	};
+    namespace shared
+    {
+        class DrillPBError;
+        enum QueryType;
+    };
 };
 
 namespace Drill {
@@ -62,11 +62,11 @@ class  FieldMetadata;
 class  RecordBatch;
 class  SchemaDef;
 
-	enum QueryType {
-		SQL = 1,
-		LOGICAL = 2,
-		PHYSICAL = 3
-	};
+    enum QueryType {
+        SQL = 1,
+        LOGICAL = 2,
+        PHYSICAL = 3
+    };
 
 class DECLSPEC_DRILL_CLIENT DrillClientError{
     public:

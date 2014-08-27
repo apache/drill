@@ -72,12 +72,11 @@ enum MinorType {
   DM_UNKNOWN = 37,
   INTERVALYEAR = 38,
   INTERVALDAY = 39,
-  LIST = 40,
-  GENERIC_OBJECT = 41
+  LIST = 40
 };
 bool MinorType_IsValid(int value);
 const MinorType MinorType_MIN = LATE;
-const MinorType MinorType_MAX = GENERIC_OBJECT;
+const MinorType MinorType_MAX = LIST;
 const int MinorType_ARRAYSIZE = MinorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* MinorType_descriptor();

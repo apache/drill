@@ -52,12 +52,12 @@
 #endif
 
 namespace exec{
-	namespace shared {
-		class SerializedField;
-		class RecordBatchDef;
-		class QueryResult;
-
-	};};
+    namespace shared {
+        class SerializedField;
+        class RecordBatchDef;
+        class QueryResult;
+    };
+};
 
 namespace Drill {
 
