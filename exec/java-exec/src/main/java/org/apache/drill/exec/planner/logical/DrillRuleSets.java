@@ -46,7 +46,6 @@ import org.eigenbase.rel.rules.PushFilterPastProjectRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
 import org.eigenbase.rel.rules.PushProjectPastFilterRule;
 import org.eigenbase.rel.rules.PushProjectPastJoinRule;
-import org.eigenbase.rel.rules.ReduceAggregatesRule;
 import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.RemoveDistinctRule;
 import org.eigenbase.rel.rules.RemoveSortRule;
@@ -87,7 +86,7 @@ public class DrillRuleSets {
       //MergeProjectRule.INSTANCE, //
       DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
       RemoveDistinctAggregateRule.INSTANCE, //
-      ReduceAggregatesRule.INSTANCE, //
+      // ReduceAggregatesRule.INSTANCE, // replaced by DrillReduceAggregatesRule
       PushProjectPastJoinRule.INSTANCE,
 //      PushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastFilterRule.INSTANCE,
@@ -108,6 +107,7 @@ public class DrillRuleSets {
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
       DrillUnionRule.INSTANCE
+      ,DrillReduceAggregatesRule.INSTANCE
       ));
     }
     return DRILL_BASIC_RULES;

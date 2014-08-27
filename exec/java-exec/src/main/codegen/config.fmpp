@@ -36,7 +36,8 @@ data: {
     intervalNumericTypes: tdd(../data/IntervalNumericTypes.tdd),
     extract: tdd(../data/ExtractTypes.tdd),
     sumzero: tdd(../data/SumZero.tdd),
-    numericTypes: tdd(../data/NumericTypes.tdd)
+    numericTypes: tdd(../data/NumericTypes.tdd),
+    casthigh: tdd(../data/CastHigh.tdd)
 }
 freemarkerLinks: {
     includes: includes/

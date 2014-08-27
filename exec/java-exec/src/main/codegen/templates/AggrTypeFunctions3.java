@@ -61,13 +61,17 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace ${type.movingAverageType}Holder avg;
   @Workspace ${type.movingDeviationType}Holder dev;
   @Workspace ${type.countRunningType}Holder count;
+  @Workspace BigIntHolder nonNullCount;
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
   	avg = new ${type.movingAverageType}Holder();
     dev = new ${type.movingDeviationType}Holder();
     count = new ${type.countRunningType}Holder();
-
+    <#if type.inputType?starts_with("Nullable") >
+  	  nonNullCount = new BigIntHolder();
+  	  nonNullCount.value = 0;
+  	</#if>
     // Initialize the workspace variables
     avg.value = 0;
     dev.value = 0;
@@ -82,6 +86,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	   // processing nullable input and the value is null, so don't do anything...
 	   break sout;
 	  }
+    else {
+      nonNullCount.value++;
+    }
 	</#if>
 
     // Welford's approach to compute standard deviation
@@ -97,6 +104,26 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
+   <#if type.inputType?starts_with("Nullable") >
+     if (nonNullCount.value > 0) {
+       out.isSet = 1;
+      <#if aggrtype.funcName == "stddev_pop">
+      if (count.value > 1)
+        out.value = Math.sqrt((dev.value / (count.value - 1)));
+      <#elseif aggrtype.funcName == "var_pop">
+      if (count.value  > 1)
+        out.value = (dev.value / (count.value - 1));
+      <#elseif aggrtype.funcName == "stddev_samp">
+      if (count.value  > 2)
+        out.value = Math.sqrt((dev.value / (count.value - 2)));
+      <#elseif aggrtype.funcName == "var_samp">
+      if (count.value > 2)
+        out.value = (dev.value / (count.value - 2));
+      </#if>
+     } else {
+       out.isSet = 0;
+     }
+   <#else> 
     <#if aggrtype.funcName == "stddev_pop">
     if (count.value > 1)
       out.value = Math.sqrt((dev.value / (count.value - 1)));
@@ -110,10 +137,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     if (count.value > 2)
       out.value = (dev.value / (count.value - 2));
     </#if>
+   </#if>
   }
 
   @Override
   public void reset() {
+    <#if type.inputType?starts_with("Nullable") >
+      nonNullCount.value = 0;
+    </#if>
     avg.value = 0;
     dev.value = 0;
     count.value = 1;

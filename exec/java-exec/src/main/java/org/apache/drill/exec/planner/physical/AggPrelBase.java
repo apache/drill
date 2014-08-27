@@ -73,7 +73,7 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
     private final RelDataType type;
 
     public SqlSumCountAggFunction(RelDataType type) {
-      super("SUM",
+      super("$SUM0",
           SqlKind.OTHER_FUNCTION,
           ReturnTypes.BIGINT, // use the inferred return type of SqlCountAggFunction
           null,
@@ -185,7 +185,7 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
     return logicalVisitor.visitPrel(this, value);
   }
-  
+
   @Override
   public boolean needsFinalColumnReordering() {
     return true;
