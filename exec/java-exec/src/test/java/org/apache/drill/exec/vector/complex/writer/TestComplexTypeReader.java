@@ -123,6 +123,12 @@ public class TestComplexTypeReader extends BaseTestQuery{
   }
 
   @Test
+  //repeated list. The repeated list is asked for twice, hence requires copying (evaluation in ProjectRecordBatch)
+  public void testZ4() throws Exception{
+    test("select rl, rl from cp.`jsoninput/input2.json`;");
+  }
+
+  @Test
   //repeated map  --> Json.  It will go beyond the buffer of size 256 allocated in setup.
   public void testA0() throws Exception{
     test("  select convert_to(types, 'JSON') from cp.`jsoninput/vvtypes.json`;");

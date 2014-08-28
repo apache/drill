@@ -324,8 +324,9 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
       for(int i = holder.start; i < holder.end; i++, newIndex++){
         if(!vectorTransfer.copyValueSafe(i, newIndex)) return false;
       }
-      if(!this.to.offsets.getMutator().setSafe(to, newIndex)) return false;
+      if(!this.to.offsets.getMutator().setSafe(to + 1, newIndex)) return false;
 
+      this.to.lastSet++;
       return true;
     }
 
