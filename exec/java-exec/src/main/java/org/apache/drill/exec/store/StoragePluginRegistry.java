@@ -80,7 +80,6 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   private final PStore<StoragePluginConfig> pluginSystemTable;
   private final Object updateLock = new Object();
   private volatile long lastUpdate = 0;
-  private RuleSet storagePluginsRuleSet;
   private static final long UPDATE_FREQUENCY = 2 * 60 * 1000;
 
   public StoragePluginRegistry(DrillbitContext context) {
@@ -130,15 +129,6 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     this.plugins = Maps.newConcurrentMap();
     this.plugins.putAll(createPlugins());
 
-    // query registered engines for optimizer rules and build the storage plugin RuleSet
-    Builder<RelOptRule> setBuilder = ImmutableSet.builder();
-    for (StoragePlugin plugin : this.plugins.values()) {
-      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
-      if (rules != null && rules.size() > 0) {
-        setBuilder.addAll(rules);
-      }
-    }
-    this.storagePluginsRuleSet = DrillRuleSets.create(setBuilder.build());
   }
 
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
@@ -279,7 +269,16 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   }
 
   public RuleSet getStoragePluginRuleSet() {
-    return storagePluginsRuleSet;
+    // query registered engines for optimizer rules and build the storage plugin RuleSet
+    Builder<RelOptRule> setBuilder = ImmutableSet.builder();
+    for (StoragePlugin plugin : this.plugins.values()) {
+      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
+      if (rules != null && rules.size() > 0) {
+        setBuilder.addAll(rules);
+      }
+    }
+
+    return DrillRuleSets.create(setBuilder.build());
   }
 
   public DrillSchemaFactory getSchemaFactory() {

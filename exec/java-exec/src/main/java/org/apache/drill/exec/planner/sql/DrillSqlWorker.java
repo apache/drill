@@ -57,7 +57,6 @@ public class DrillSqlWorker {
   public final static int PHYSICAL_MEM_RULES = 1;
   private final QueryContext context;
 
-  private static volatile RuleSet[] allRules;
 
   public DrillSqlWorker(QueryContext context) throws Exception {
     final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
@@ -83,18 +82,12 @@ public class DrillSqlWorker {
 
   }
 
-  private static RuleSet[] getRules(QueryContext context) {
+  private RuleSet[] getRules(QueryContext context) {
     StoragePluginRegistry storagePluginRegistry = context.getStorage();
-    if (allRules == null) {
-      synchronized (DrillSqlWorker.class) {
-        if (allRules == null) {
-          RuleSet drillPhysicalMem = DrillRuleSets.mergedRuleSets(
-              DrillRuleSets.getPhysicalRules(context),
-              storagePluginRegistry.getStoragePluginRuleSet());
-          allRules = new RuleSet[] {DrillRuleSets.getDrillBasicRules(context), drillPhysicalMem};
-        }
-      }
-    }
+    RuleSet drillPhysicalMem = DrillRuleSets.mergedRuleSets(
+        DrillRuleSets.getPhysicalRules(context),
+        storagePluginRegistry.getStoragePluginRuleSet());
+    RuleSet[] allRules = new RuleSet[] {DrillRuleSets.getDrillBasicRules(context), drillPhysicalMem};
     return allRules;
   }
 
