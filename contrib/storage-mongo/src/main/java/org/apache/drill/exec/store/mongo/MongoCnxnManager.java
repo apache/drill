@@ -17,23 +17,45 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.net.UnknownHostException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 
 public class MongoCnxnManager {
 
-  private volatile static MongoClient client;
+  private static Cache<ServerAddress, MongoClient> addressClientMap;
   
   private MongoCnxnManager() {
+    addressClientMap = CacheBuilder.newBuilder()
+                                   .maximumSize(10)
+                                   .expireAfterAccess(5, TimeUnit.MINUTES)
+                                   .removalListener(new AddressCloser())
+                                   .build();
   }
 
-  public synchronized static MongoClient getClient(List<ServerAddress> addresses, MongoClientOptions clientOptions) {
-    if (client == null) {
-      client = new MongoClient(addresses, clientOptions);
+  private class AddressCloser implements RemovalListener<ServerAddress, MongoClient> {
+    @Override
+    public void onRemoval(RemovalNotification<ServerAddress, MongoClient> notification) {
+      notification.getValue().close();
     }
-    return client;
+  }
+
+  public static MongoClient getClient(List<ServerAddress> addresses, MongoClientOptions clientOptions) throws UnknownHostException {
+    // Take the first replica from the replicated servers
+    ServerAddress serverAddress = addresses.get(0);
+    MongoClient mongoClient = addressClientMap.getIfPresent(serverAddress);
+    if (mongoClient == null) {
+      mongoClient = new MongoClient(addresses, clientOptions);
+      addressClientMap.put(serverAddress, mongoClient);
+    }
+    return mongoClient;
   }
 }

@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -76,6 +77,8 @@ public class MongoRecordReader implements RecordReader {
     this.columns = Sets.newLinkedHashSet();
     this.clientOptions = clientOptions;
     this.fields = new BasicDBObject();
+    // exclude _id field, if not mentioned by user.
+    this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
     if (projectedColumns != null && projectedColumns.size() != 0) {
       Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
       while (columnIterator.hasNext()) {
@@ -83,51 +86,68 @@ public class MongoRecordReader implements RecordReader {
         NameSegment root = column.getRootSegment();
         String fieldName = root.getPath();
         this.columns.add(SchemaPath.getSimplePath(fieldName));
-        logger.debug("Field selected : " + fieldName);
         this.fields.put(fieldName, Integer.valueOf(1));
       }
     }
     this.filters = new BasicDBObject();
-    createChunkScan(filters, subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
-    if(subScanSpec.getFilter() != null) {
-      Set<Entry<String, Object>> filterSet = subScanSpec.getFilter().entrySet();
-      for(Entry<String, Object> filter : filterSet) {
-        if (filters.get(filter.getKey()) == null) {
-          filters.put(filter.getKey(), filter.getValue());
-        } else {
-          BasicDBObject dbObj = (BasicDBObject) filters.get(filter.getKey());
-          dbObj.append("$and", filter.getValue());
-        }
-      }
-    }
-    // exclude _id field, if not mentioned by user.
-    this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
+    Map<String, List<BasicDBObject>> mergedFilters = mergeFilters(
+        subScanSpec.getMinFilters(), subScanSpec.getMaxFilters(),
+        subScanSpec.getFilter());
+    buildFilters(this.filters, mergedFilters);
     init(subScanSpec);
   }
   
-  //Exclude Min and include Max.
-  private void createChunkScan(DBObject filters, Map<String, Object> minFilters, Map<String, Object> maxFilters) {
+  private Map<String, List<BasicDBObject>> mergeFilters(
+      Map<String, Object> minFilters, Map<String, Object> maxFilters,
+      DBObject inputFilters) {
+    Map<String, List<BasicDBObject>> filters = Maps.newHashMap();
+    
     for(Entry<String, Object> entry : minFilters.entrySet()) {
-      Object value = entry.getValue();
-      if(value instanceof String || value instanceof Number) {
-        if (filters.get(entry.getKey()) == null) {
-          filters.put(entry.getKey(), new BasicDBObject("$gt", entry.getValue()));
-        } else {
-          BasicDBObject dbObj = (BasicDBObject) filters.get(entry.getKey());
-          dbObj.append("$gt", entry.getValue());
+      if (entry.getValue() instanceof String || entry.getValue() instanceof Number) {
+        List<BasicDBObject> list = filters.get(entry.getKey());
+        if(list == null) {
+          list = Lists.newArrayList();
+          filters.put(entry.getKey(), list);
         }
+        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$gt", entry.getValue())));
       }
     }
     
     for(Entry<String, Object> entry : maxFilters.entrySet()) {
-      Object value = entry.getValue();
-      if(value instanceof String || value instanceof Number) {
-        if (filters.get(entry.getKey()) == null) {
-          filters.put(entry.getKey(), new BasicDBObject("$lte", entry.getValue()));
-        } else {
-          BasicDBObject dbObj = (BasicDBObject) filters.get(entry.getKey());
-          dbObj.append("$lte", entry.getValue());
+      if (entry.getValue() instanceof String || entry.getValue() instanceof Number) {
+        List<BasicDBObject> list = filters.get(entry.getKey());
+        if(list == null) {
+          list = Lists.newArrayList();
+          filters.put(entry.getKey(), list);
         }
+        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$lte", entry.getValue())));
+      }
+    }
+
+    if (inputFilters != null) {
+      BasicDBObject pushdownFilters = (BasicDBObject) inputFilters;
+      Set<Entry<String, Object>> filterSet = pushdownFilters.entrySet();
+      for (Entry<String, Object> filter : filterSet) {
+        List<BasicDBObject> list = filters.get(filter.getKey());
+        if (list == null) {
+          list = Lists.newArrayList();
+          filters.put(filter.getKey(), list);
+        }
+        list.add(new BasicDBObject(filter.getKey(), filter.getValue()));
+      }
+    }
+    return filters;
+  }
+
+  private void buildFilters(DBObject filters, Map<String, List<BasicDBObject>> mergedFilters) {
+    for(Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {
+      List<BasicDBObject> list = entry.getValue();
+      if(list.size() == 1) {
+        filters.putAll(list.get(0).toMap());
+      } else {
+        BasicDBObject andQueryFilter = new BasicDBObject();
+        andQueryFilter.put("$and", list);
+        filters.putAll(andQueryFilter.toMap());
       }
     }
   }
