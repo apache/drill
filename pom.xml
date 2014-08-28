@@ -185,6 +185,7 @@
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
             <exclude>**/*.linux</exclude>
+            <exclude>**/client/build/**</exclude>
           </excludes>
         </configuration>
       </plugin>

@@ -386,7 +386,7 @@ template <typename VALUE_TYPE>
 {
     public:
         NullableValueVectorFixed(SlicedByteBuf *b, size_t rowCount):ValueVectorBase(b, rowCount){
-            size_t offsetEnd = (size_t)ceil(rowCount/8.0);
+            size_t offsetEnd = (size_t)rowCount;
             this->m_pBitmap= new SlicedByteBuf(*b, 0, offsetEnd);
             this->m_pData= new SlicedByteBuf(*b, offsetEnd, b->getLength());
             // TODO: testing boundary case(null columns)
@@ -399,7 +399,7 @@ template <typename VALUE_TYPE>
 
         // test whether the value is null in the position index
         bool isNull(size_t index) const {
-            return (m_pBitmap->getBit(index)==0);
+            return (m_pBitmap->getByte(index)==0);
         }
 
         VALUE_TYPE get(size_t index) const {
@@ -584,14 +584,14 @@ template <class VALUEHOLDER_CLASS_TYPE, class VALUE_VECTOR_TYPE>
         public:
 
             NullableValueVectorTyped(SlicedByteBuf *b, size_t rowCount):ValueVectorBase(b, rowCount){
-                size_t offsetEnd = (size_t)ceil(rowCount/8.0);
+                size_t offsetEnd = (size_t)rowCount;
                 this->m_pBitmap= new SlicedByteBuf(*b, 0, offsetEnd);
                 this->m_pData= new SlicedByteBuf(*b, offsetEnd, b->getLength()-offsetEnd);
                 this->m_pVector= new VALUE_VECTOR_TYPE(m_pData, rowCount);
             }
             // Specialized for Decimal Types
             NullableValueVectorTyped(SlicedByteBuf *b, size_t rowCount, int32_t scale):ValueVectorBase(b, rowCount){
-                size_t offsetEnd = (size_t)ceil(rowCount/8.0);
+                size_t offsetEnd = (size_t)rowCount;
                 this->m_pBitmap= new SlicedByteBuf(*b, 0, offsetEnd);
                 this->m_pData= new SlicedByteBuf(*b, offsetEnd, b->getLength()-offsetEnd);
                 this->m_pVector= new VALUE_VECTOR_TYPE(m_pData, rowCount, scale);
@@ -604,7 +604,7 @@ template <class VALUEHOLDER_CLASS_TYPE, class VALUE_VECTOR_TYPE>
             }
 
             bool isNull(size_t index) const{
-                return (m_pBitmap->getBit(index)==0);
+                return (m_pBitmap->getByte(index)==0);
             }
 
             VALUEHOLDER_CLASS_TYPE get(size_t index) const {
