@@ -132,6 +132,10 @@
               <groupId>org.slf4j</groupId>
             </exclusion>
             <exclusion>
+              <artifactId>log4j</artifactId>
+              <groupId>log4j</groupId>
+            </exclusion>            
+            <exclusion>
               <groupId>com.sun.jersey</groupId>
               <artifactId>jersey-core</artifactId>
             </exclusion>
@@ -265,7 +269,6 @@
           <groupId>com.mapr.hadoop</groupId>
           <artifactId>maprfs</artifactId>
         </dependency>
-        <!--
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase</artifactId>
@@ -283,6 +286,11 @@
               <artifactId>slf4j-log4j12</artifactId>
               <groupId>org.slf4j</groupId>
             </exclusion>
+            <exclusion>
+              <artifactId>log4j</artifactId>
+              <groupId>log4j</groupId>
+            </exclusion>
+            
             <exclusion>
               <groupId>com.sun.jersey</groupId>
               <artifactId>jersey-core</artifactId>
@@ -330,6 +338,10 @@
           <artifactId>mapr-hbase</artifactId>
           <exclusions>
             <exclusion>
+              <artifactId>slf4j-log4j12</artifactId>
+              <groupId>org.slf4j</groupId>
+            </exclusion>          
+            <exclusion>
               <groupId>commons-logging</groupId>
               <artifactId>commons-logging</artifactId>
             </exclusion>
@@ -339,7 +351,7 @@
             </exclusion>
           </exclusions>
         </dependency>
-        -->
+
       </dependencies>
       <build>
         <plugins>
