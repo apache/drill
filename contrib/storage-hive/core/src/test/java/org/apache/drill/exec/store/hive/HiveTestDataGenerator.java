@@ -79,13 +79,13 @@ public class HiveTestDataGenerator {
     cleanDir(DB_DIR);
     cleanDir(WH_DIR);
 
-    HiveConf conf = new HiveConf();
+    HiveConf conf = new HiveConf(SessionState.class);
 
     conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", DB_DIR));
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
     conf.set("hive.metastore.warehouse.dir", WH_DIR);
 
-    SessionState ss = new SessionState(new HiveConf(SessionState.class));
+    SessionState ss = new SessionState(conf);
     SessionState.start(ss);
     hiveDriver = new Driver(conf);
 
@@ -120,7 +120,7 @@ public class HiveTestDataGenerator {
         "  binary_field BINARY," +
         "  boolean_field BOOLEAN," +
         "  tinyint_field TINYINT," +
-        "  decimal_field DECIMAL," +
+        "  decimal_field DECIMAL(38, 3)," +
         "  double_field DOUBLE," +
         "  float_field FLOAT," +
         "  int_field INT," +
@@ -134,7 +134,7 @@ public class HiveTestDataGenerator {
         "  binary_part BINARY," +
         "  boolean_part BOOLEAN," +
         "  tinyint_part TINYINT," +
-        "  decimal_part DECIMAL," +
+        "  decimal_part DECIMAL(38, 3)," +
         "  double_part DOUBLE," +
         "  float_part FLOAT," +
         "  int_part INT," +
@@ -194,7 +194,7 @@ public class HiveTestDataGenerator {
         "dataType DATE, " +
         "timestampType TIMESTAMP, " +
         "binaryType BINARY, " +
-        "decimalType DECIMAL, " +
+        "decimalType DECIMAL(38, 2), " +
         "stringType STRING, " +
         "varCharType VARCHAR(20), " +
         "listType ARRAY<STRING>, " +

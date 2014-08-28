@@ -161,7 +161,7 @@ public class HiveFuncHolder extends AbstractFuncHolder {
       return JExpr._new(m.directClass(GenericUDFBridge.class.getCanonicalName()))
         .arg(JExpr.lit(udfName))
         .arg(JExpr.lit(false))
-        .arg(JExpr.dotclass(m.directClass(udfClazz.getCanonicalName())));
+        .arg(JExpr.lit(udfClazz.getCanonicalName().toString()));
     }
   }
 

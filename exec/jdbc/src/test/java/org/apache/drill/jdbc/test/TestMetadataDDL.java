@@ -269,16 +269,20 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   @Test
   public void testVarCharMaxLengthAndDecimalPrecisionInInfoSchema() throws Exception{
     JdbcAssert.withNoDefaultSchema()
-        .sql("SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION " +
+        .sql("SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE " +
             "FROM INFORMATION_SCHEMA.`COLUMNS` " +
             "WHERE TABLE_SCHEMA = 'hive_test.default' AND TABLE_NAME = 'infoschematest' AND " +
             "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR " +
             "COLUMN_NAME = 'inttype' OR COLUMN_NAME = 'decimaltype')")
         .returnsSet(ImmutableSet.of(
-            "COLUMN_NAME=inttype; DATA_TYPE=INTEGER; CHARACTER_MAXIMUM_LENGTH=-1; NUMERIC_PRECISION=-1",
-            "COLUMN_NAME=decimaltype; DATA_TYPE=DECIMAL; CHARACTER_MAXIMUM_LENGTH=-1; NUMERIC_PRECISION=38",
-            "COLUMN_NAME=stringtype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=65535; NUMERIC_PRECISION=-1",
-            "COLUMN_NAME=varchartype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=20; NUMERIC_PRECISION=-1"));
+            "COLUMN_NAME=inttype; DATA_TYPE=INTEGER; CHARACTER_MAXIMUM_LENGTH=-1; " +
+                "NUMERIC_PRECISION=-1; NUMERIC_SCALE=-1",
+            "COLUMN_NAME=decimaltype; DATA_TYPE=DECIMAL; CHARACTER_MAXIMUM_LENGTH=-1; " +
+                "NUMERIC_PRECISION=38; NUMERIC_SCALE=2",
+            "COLUMN_NAME=stringtype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=65535; " +
+                "NUMERIC_PRECISION=-1; NUMERIC_SCALE=-1",
+            "COLUMN_NAME=varchartype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=20; " +
+                "NUMERIC_PRECISION=-1; NUMERIC_SCALE=-1"));
   }
 
   @Test

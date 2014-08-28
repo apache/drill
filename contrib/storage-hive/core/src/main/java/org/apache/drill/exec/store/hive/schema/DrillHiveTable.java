@@ -26,6 +26,7 @@ import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
@@ -107,9 +108,10 @@ public class DrillHiveTable extends DrillTable{
       case BINARY:
         return typeFactory.createSqlType(SqlTypeName.BINARY);
 
-      case DECIMAL:
-        final int precision = 38; // Hive 0.12 has standard precision
-        return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision);
+      case DECIMAL: {
+        DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo)pTypeInfo;
+        return typeFactory.createSqlType(SqlTypeName.DECIMAL, decimalTypeInfo.precision(), decimalTypeInfo.scale());
+      }
 
       case STRING:
       case VARCHAR: {

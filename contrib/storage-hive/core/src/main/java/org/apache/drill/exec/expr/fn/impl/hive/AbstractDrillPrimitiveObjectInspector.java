@@ -18,12 +18,12 @@
 package org.apache.drill.exec.expr.fn.impl.hive;
 
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.AbstractPrimitiveObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils.PrimitiveTypeEntry;
+import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 
 
 public abstract class AbstractDrillPrimitiveObjectInspector extends AbstractPrimitiveObjectInspector {
 
-  public AbstractDrillPrimitiveObjectInspector(PrimitiveTypeEntry typeEntry) {
+  public AbstractDrillPrimitiveObjectInspector(PrimitiveTypeInfo typeEntry) {
     super(typeEntry);
   }
 

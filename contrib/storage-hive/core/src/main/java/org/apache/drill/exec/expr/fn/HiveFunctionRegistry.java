@@ -186,7 +186,7 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
                                                  MajorType[] argTypes,
                                                  ObjectInspector[] argOIs) {
     try {
-      GenericUDF udfInstance = new GenericUDFBridge(udfName, false/* is operator */, udfClazz);
+      GenericUDF udfInstance = new GenericUDFBridge(udfName, false/* is operator */, udfClazz.getName());
       ObjectInspector returnOI = udfInstance.initialize(argOIs);
 
       return new HiveFuncHolder(

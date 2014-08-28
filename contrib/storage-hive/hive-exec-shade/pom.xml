@@ -30,11 +30,15 @@
   <packaging>jar</packaging>
   <name>contrib/hive-storage-plugin/hive-exec-shaded</name>
 
+  <properties>
+    <hive.version>0.13.1</hive.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-exec</artifactId>
-      <version>0.12.0</version>
+      <version>${hive.version}</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -70,8 +74,12 @@
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-metastore</artifactId>
-      <version>0.12.0</version>
+      <version>${hive.version}</version>
       <exclusions>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-serde</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
@@ -93,7 +101,7 @@
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-hbase-handler</artifactId>
-      <version>0.12.0</version>
+      <version>${hive.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -102,6 +110,34 @@
         <exclusion>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-service</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-exec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-shims</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-serde</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-metastore</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-common</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -123,6 +159,14 @@
               <artifactSet>
                 <includes>
                   <include>org.apache.hive:hive-exec</include>
+                  <include>com.twitter:parquet-column</include>
+                  <include>com.twitter:parquet-hadoop</include>
+                  <include>commons-codec:commons-codec</include>
+                  <include>com.twitter:parquet-format</include>
+                  <include>com.twitter:parquet-common</include>
+                  <include>com.twitter:parquet-jackson</include>
+                  <include>com.twitter:parquet-encoding</include>
+                  <include>com.twitter:parquet-generator</include>
                 </includes>
               </artifactSet>
               <createDependencyReducedPom>false</createDependencyReducedPom>
@@ -130,7 +174,15 @@
               <relocations>
                 <relocation>
                   <pattern>com.google.</pattern>
-                  <shadedPattern>com.google.hive12.</shadedPattern>
+                  <shadedPattern>hive.com.google.</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>parquet.</pattern>
+                  <shadedPattern>hive.parquet.</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.commons.codec.</pattern>
+                  <shadedPattern>hive.org.apache.commons.codec.</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>

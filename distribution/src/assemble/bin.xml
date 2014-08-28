@@ -112,6 +112,15 @@
         <exclude>org.apache.drill.exec</exclude>
         <exclude>org.apache.drill.contrib</exclude>
         <exclude>org.apache.drill.contrib.storage-hive</exclude>
+        <!-- Below Hive jars are already included in drill-hive-exec-shaded.jar -->
+        <exclude>org.apache.hive:hive-common</exclude>
+        <exclude>org.apache.hive:hive-serde</exclude>
+        <exclude>org.apache.hive:hive-shims</exclude>
+        <exclude>org.apache.hive.shims:hive-shims-0.20</exclude>
+        <exclude>org.apache.hive.shims:hive-shims-0.20S</exclude>
+        <exclude>org.apache.hive.shims:hive-shims-0.23</exclude>
+        <exclude>org.apache.hive.shims:hive-shims-common</exclude>
+        <exclude>org.apache.hive.shims:hive-shims-common-secure</exclude>
         <exclude>org.hsqldb:hsqldb</exclude>
         <exclude>junit:junit:jar</exclude>
         <exclude>com.googlecode.jmockit:jmockit:jar</exclude>

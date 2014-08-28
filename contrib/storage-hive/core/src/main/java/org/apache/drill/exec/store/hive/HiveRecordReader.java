@@ -189,8 +189,7 @@ public class HiveRecordReader extends AbstractRecordReader {
             selectedColumnNames.add(columnName);
           }
         }
-        ColumnProjectionUtils.appendReadColumnIDs(job, columnIds);
-        ColumnProjectionUtils.appendReadColumnNames(job, selectedColumnNames);
+        ColumnProjectionUtils.appendReadColumns(job, columnIds, selectedColumnNames);
       }
 
       for (String columnName : selectedColumnNames) {
@@ -521,7 +520,7 @@ public class HiveRecordReader extends AbstractRecordReader {
       case BYTE:
         return Byte.parseByte(value);
       case DECIMAL:
-        return new HiveDecimal(value);
+        return HiveDecimal.create(value);
       case DOUBLE:
         return Double.parseDouble(value);
       case FLOAT:

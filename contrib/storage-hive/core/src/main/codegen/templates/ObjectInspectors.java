@@ -38,6 +38,7 @@ import org.apache.hadoop.hive.serde2.io.HiveVarcharWritable;
 import org.apache.hadoop.hive.serde2.io.ShortWritable;
 import org.apache.hadoop.hive.serde2.io.TimestampWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.FloatWritable;
@@ -49,7 +50,7 @@ public abstract class Drill${entry.drillType}ObjectInspector extends AbstractDri
   implements ${entry.hiveOI} {
 
   public Drill${entry.drillType}ObjectInspector() {
-    super(PrimitiveObjectInspectorUtils.${entry.hiveType?lower_case}TypeEntry);
+    super(TypeInfoFactory.${entry.hiveType?lower_case}TypeInfo);
   }
 
 <#if entry.drillType == "VarChar">
@@ -161,7 +162,7 @@ public abstract class Drill${entry.drillType}ObjectInspector extends AbstractDri
     @Override
     public HiveDecimal getPrimitiveJavaObject(Object o){
       Decimal38SparseHolder h = (Decimal38SparseHolder) o;
-      return new HiveDecimal(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale));
+      return HiveDecimal.create(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale));
     }
   }
 
@@ -169,7 +170,7 @@ public abstract class Drill${entry.drillType}ObjectInspector extends AbstractDri
     @Override
     public HiveDecimal getPrimitiveJavaObject(Object o){
       NullableDecimal38SparseHolder h = (NullableDecimal38SparseHolder) o;
-      return new HiveDecimal(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale));
+      return HiveDecimal.create(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale));
     }
   }
 
