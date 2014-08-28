@@ -33,15 +33,13 @@ public class MongoCnxnManager {
 
   private static Cache<ServerAddress, MongoClient> addressClientMap;
   
-  private MongoCnxnManager() {
-    addressClientMap = CacheBuilder.newBuilder()
-                                   .maximumSize(10)
-                                   .expireAfterAccess(5, TimeUnit.MINUTES)
-                                   .removalListener(new AddressCloser())
-                                   .build();
+  static {
+    addressClientMap = CacheBuilder.newBuilder().maximumSize(10)
+        .expireAfterAccess(5, TimeUnit.MINUTES)
+        .removalListener(new AddressCloser()).build();
   }
 
-  private class AddressCloser implements RemovalListener<ServerAddress, MongoClient> {
+  private static class AddressCloser implements RemovalListener<ServerAddress, MongoClient> {
     @Override
     public void onRemoval(RemovalNotification<ServerAddress, MongoClient> notification) {
       notification.getValue().close();
