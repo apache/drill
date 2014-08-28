@@ -25,6 +25,7 @@ import java.io.Reader;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -46,7 +47,7 @@ public class JsonReaderWithState {
   }
 
   public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException{
-    this(splitter, null, null, false);
+    this(splitter, null, GroupScan.ALL_COLUMNS, false);
   }
 
   public List<SchemaPath> getNullColumns() {

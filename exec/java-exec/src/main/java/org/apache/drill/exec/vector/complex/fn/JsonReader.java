@@ -18,6 +18,10 @@
 package org.apache.drill.exec.vector.complex.fn;
 
 import io.netty.buffer.DrillBuf;
+import com.google.common.base.Preconditions;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.UnpooledByteBufAllocator;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -31,7 +35,9 @@ import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -66,22 +72,22 @@ public class JsonReader {
   private boolean allTextMode;
 
   public JsonReader() throws IOException {
-    this(null, null, false);
+    this(null, false);
+  }
+
+  public JsonReader(DrillBuf managedBuf, boolean allTextMode) throws IOException {
+    this(managedBuf, GroupScan.ALL_COLUMNS, allTextMode);
   }
 
   public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean allTextMode) throws JsonParseException, IOException {
     factory.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     factory.configure(Feature.ALLOW_COMMENTS, true);
-    this.workBuf = managedBuf;
+    assert Preconditions.checkNotNull(columns).size() > 0 : "json record reader requires at least a column";
     this.columns = columns;
-    // TODO - remove this check once the optimizer is updated to push down * instead of a null list
-    if (this.columns == null) {
-      this.columns = new ArrayList();
-      this.columns.add(new SchemaPath(new PathSegment.NameSegment("*")));
-    this.allTextMode = allTextMode;
-    }
-    this.columnsFound = new boolean[this.columns.size()];
     this.starRequested = containsStar();
+    this.workBuf = managedBuf;
+    this.allTextMode = allTextMode;
+    this.columnsFound = new boolean[this.columns.size()];
   }
 
   private boolean containsStar() {
@@ -109,7 +115,7 @@ public class JsonReader {
   public List<SchemaPath> getNullColumns() {
     ArrayList<SchemaPath> nullColumns = new ArrayList<SchemaPath>();
     for (int i = 0; i < columnsFound.length; i++ ) {
-      if ( ! columnsFound[i] && ! columns.get(i).getRootSegment().getPath().equals("*") ) {
+      if ( ! columnsFound[i] && !columns.get(i).equals(AbstractRecordReader.STAR_COLUMN)) {
         nullColumns.add(columns.get(i));
       }
     }

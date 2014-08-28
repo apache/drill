@@ -18,6 +18,8 @@
 
 package org.apache.drill;
 
+import java.util.List;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -105,6 +107,32 @@ public class TestProjectPushDown extends PlanTestBase {
     testPhysicalPlanFromFile("queries/tpch/03.sql", expectedColNames1, expectedColNames2, expectedColNames3);
   }
 
+
+  private static final String pushDownSql = "select %s from cp.`%s` t";
+  private static final String pushDownSqlWithFilter = pushDownSql + " where %s";
+  private final String[] inputTypes = new String[] {
+      "project/pushdown/empty.json",
+      "project/pushdown/empty.csv",
+      "tpch/lineitem.parquet"
+  };
+
+  @Test
+  public void testProjectPushDown() throws Exception {
+    final String projection = "t.trans_id, t.user_info.cust_id, t.marketing_info.keywords[0]";
+    final String expected = "\"columns\" : [ \"`trans_id`\", \"`user_info`.`cust_id`\", \"`marketing_info`.`keywords`[0]\" ],";
+    final String filter = "t.another_field = 10 and t.columns[0] = 100 and t.columns[1] = t.other.columns[2]";
+    final String expectedWithFilter = "\"columns\" : [ \"`another_field`\", \"`trans_id`\", \"`user_info`.`cust_id`\", \"`marketing_info`.`keywords`[0]\", \"`columns`[0]\", \"`columns`[1]\", \"`other`.`columns`[2]\" ],";
+
+    for (String inputType:inputTypes) {
+      testPushDown(new PushDownTestInstance(pushDownSql, expected, projection, inputType));
+      testPushDown(new PushDownTestInstance(pushDownSqlWithFilter, expectedWithFilter, projection, inputType, filter));
+    }
+  }
+
+  protected void testPushDown(PushDownTestInstance test) throws Exception {
+    testPhysicalPlan(test.getSql(), test.getExpected());
+  }
+
   private void testPhysicalPlanFromFile(String fileName, String... expectedSubstrs)
       throws Exception {
     String query = getFile(fileName);
@@ -113,6 +141,26 @@ public class TestProjectPushDown extends PlanTestBase {
       if (q.trim().isEmpty())
         continue;
       testPhysicalPlan(q, expectedSubstrs);
+    }
+  }
+
+  protected static class PushDownTestInstance {
+    private final String sqlPattern;
+    private final String expected;
+    private final Object[] params;
+
+    public PushDownTestInstance(String sqlPattern, String expected, Object... params) {
+      this.sqlPattern = sqlPattern;
+      this.expected = expected;
+      this.params = params;
+    }
+
+    public String getExpected() {
+      return expected;
+    }
+
+    public String getSql() {
+      return String.format(sqlPattern, params);
     }
   }
 

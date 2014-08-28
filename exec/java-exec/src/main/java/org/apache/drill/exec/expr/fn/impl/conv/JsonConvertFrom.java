@@ -67,12 +67,14 @@ public class JsonConvertFrom {
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
 
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, null, false);
+        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false);
 
         jsonReader.write(new java.io.StringReader(input), writer);
 
       } catch (Exception e) {
-        System.out.println(" msg = " + e.getMessage() + " trace : " + e.getStackTrace());
+//        System.out.println("Error while converting from JSON. ");
+//        e.printStackTrace();
+        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
     }
   }
@@ -94,12 +96,14 @@ public class JsonConvertFrom {
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
 
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, null, false);
+        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false);
 
         jsonReader.write(new java.io.StringReader(input), writer);
 
       } catch (Exception e) {
-        System.out.println(" msg = " + e.getMessage() + " trace : " + e.getStackTrace());
+//        System.out.println("Error while converting from JSON. ");
+//        e.printStackTrace();
+        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
     }
   }

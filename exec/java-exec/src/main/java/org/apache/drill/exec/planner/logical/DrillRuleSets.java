@@ -89,7 +89,8 @@ public class DrillRuleSets {
       RemoveDistinctAggregateRule.INSTANCE, //
       ReduceAggregatesRule.INSTANCE, //
       PushProjectPastJoinRule.INSTANCE,
-      PushProjectPastFilterRule.INSTANCE,
+//      PushProjectPastFilterRule.INSTANCE,
+      DrillPushProjectPastFilterRule.INSTANCE,
 //      SwapJoinRule.INSTANCE, //
 //      PushJoinThroughJoinRule.RIGHT, //
 //      PushJoinThroughJoinRule.LEFT, //

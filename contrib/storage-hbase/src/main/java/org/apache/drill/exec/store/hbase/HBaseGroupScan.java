@@ -43,6 +43,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
 import org.apache.hadoop.conf.Configuration;
@@ -107,7 +109,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.hbaseScanSpec = scanSpec;
-    this.columns = columns;
+    this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
     init();
   }
 
@@ -162,12 +164,11 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   }
 
   private void verifyColumns() {
-    if (columns != null) {
-      for (SchemaPath column : columns) {
-        if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
-          DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
-              column.getRootSegment().getPath(), hTableDesc.getNameAsString());
-        }
+    if (AbstractRecordReader.isStarQuery(columns)) return;
+    for (SchemaPath column : columns) {
+      if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
+        DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
+            column.getRootSegment().getPath(), hTableDesc.getNameAsString());
       }
     }
   }

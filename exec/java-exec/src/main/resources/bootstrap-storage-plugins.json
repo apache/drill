@@ -43,6 +43,11 @@
       type: "file",
       connection: "classpath:///",
       formats: {
+        "csv" : {
+          type: "text",
+          extensions: [ "csv" ],
+          delimiter: ","
+        },
         "json" : {
           type: "json"
         },

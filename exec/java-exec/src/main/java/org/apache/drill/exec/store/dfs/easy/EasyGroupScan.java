@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -72,21 +71,15 @@ public class EasyGroupScan extends AbstractGroupScan{
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
+        this(new FileSelection(files, true),
+            (EasyFormatPlugin<?>)engineRegistry.getFormatPlugin(storageConfig, formatConfig),
+            columns,
+            selectionRoot);
+  }
 
-    this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
-    Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
-    this.selection = new FileSelection(files, true);
-    try{
-      BlockMapBuilder b = new BlockMapBuilder(formatPlugin.getFileSystem().getUnderlying(), formatPlugin.getContext().getBits());
-      this.chunks = b.generateFileWork(selection.getFileStatusList(formatPlugin.getFileSystem()), formatPlugin.isBlockSplittable());
-      this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
-    }catch(IOException e){
-      logger.warn("Failure determining endpoint affinity.", e);
-      this.endpointAffinities = Collections.emptyList();
-    }
-    maxWidth = chunks.size();
-    this.columns = columns;
-    this.selectionRoot = selectionRoot;
+  public EasyGroupScan(FileSelection selection, EasyFormatPlugin<?> formatPlugin, String selectionRoot)
+      throws IOException {
+    this(selection, formatPlugin, ALL_COLUMNS, selectionRoot);
   }
 
   public EasyGroupScan(
@@ -95,30 +88,26 @@ public class EasyGroupScan extends AbstractGroupScan{
       List<SchemaPath> columns,
       String selectionRoot
       ) throws IOException{
-    this.selection = selection;
-    this.formatPlugin = formatPlugin;
-    this.columns = columns;
-    try{
-      BlockMapBuilder b = new BlockMapBuilder(formatPlugin.getFileSystem().getUnderlying(), formatPlugin.getContext().getBits());
-      this.chunks = b.generateFileWork(selection.getFileStatusList(formatPlugin.getFileSystem()), formatPlugin.isBlockSplittable());
-      this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
-    }catch(IOException e){
-      logger.warn("Failure determining endpoint affinity.", e);
-      this.endpointAffinities = Collections.emptyList();
-    }
-    maxWidth = chunks.size();
+    this.selection = Preconditions.checkNotNull(selection);
+    this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
+    BlockMapBuilder b = new BlockMapBuilder(formatPlugin.getFileSystem().getUnderlying(), formatPlugin.getContext().getBits());
+    this.chunks = b.generateFileWork(selection.getFileStatusList(formatPlugin.getFileSystem()), formatPlugin.isBlockSplittable());
+    this.maxWidth = chunks.size();
+    this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
   }
 
   private EasyGroupScan(EasyGroupScan that) {
-    this.chunks = that.chunks;
-    this.columns = that.columns;
-    this.endpointAffinities = that.endpointAffinities;
-    this.formatPlugin = that.formatPlugin;
-    this.mappings = that.mappings;
-    this.maxWidth = that.maxWidth;
-    this.selection = that.selection;
-    this.selectionRoot = that.selectionRoot;
+    Preconditions.checkNotNull(that, "Unable to clone: source is null.");
+    selection = that.selection;
+    formatPlugin = that.formatPlugin;
+    columns = that.columns;
+    selectionRoot = that.selectionRoot;
+    chunks = that.chunks;
+    endpointAffinities = that.endpointAffinities;
+    maxWidth = that.maxWidth;
+    mappings = that.mappings;
   }
 
   public String getSelectionRoot() {
@@ -168,16 +157,16 @@ public class EasyGroupScan extends AbstractGroupScan{
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     assert chunks != null && chunks.size() > 0;
-    if (this.endpointAffinities == null) {
+    if (endpointAffinities == null) {
         logger.debug("chunks: {}", chunks.size());
-        this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
+        endpointAffinities = AffinityCreator.getAffinityMap(chunks);
     }
-    return this.endpointAffinities;
+    return endpointAffinities;
   }
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    this.mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
+    mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
   }
 
   @Override
@@ -232,7 +221,7 @@ public class EasyGroupScan extends AbstractGroupScan{
 
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
-    return this.formatPlugin.supportsPushDown();
+    return formatPlugin.supportsPushDown();
   }
 
 }

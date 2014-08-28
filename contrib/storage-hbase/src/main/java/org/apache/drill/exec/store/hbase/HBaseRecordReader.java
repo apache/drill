@@ -18,13 +18,14 @@
 package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
@@ -36,7 +37,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
@@ -53,12 +54,11 @@ import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 
-public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
+public class HBaseRecordReader extends AbstractRecordReader implements DrillHBaseConstants {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
 
   private static final int TARGET_RECORD_COUNT = 4000;
 
-  private LinkedHashSet<SchemaPath> columns;
   private OutputMutator outputMutator;
 
   private Map<String, MapVector> familyVectorMap;
@@ -67,7 +67,7 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   private HTable hTable;
   private ResultScanner resultScanner;
 
-  private String hbaseTable;
+  private String hbaseTableName;
   private Scan hbaseScan;
   private Configuration hbaseConf;
   private Result leftOver;
@@ -78,23 +78,29 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) throws OutOfMemoryException {
     hbaseConf = conf;
-    hbaseTable = subScanSpec.getTableName();
+    hbaseTableName = Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName();
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
-    fragmentContext=context;
-    boolean rowKeyOnly = true;
-    this.columns = Sets.newLinkedHashSet();
-    if (projectedColumns != null && projectedColumns.size() != 0) {
-      Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
-      while(columnIterator.hasNext()) {
-        SchemaPath column = columnIterator.next();
+    hbaseScan
+        .setFilter(subScanSpec.getScanFilter())
+        .setCaching(TARGET_RECORD_COUNT);
+
+    setColumns(projectedColumns);
+  }
+
+  @Override
+  protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
+    Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    if (!isStarQuery()) {
+      boolean rowKeyOnly = true;
+      for (SchemaPath column : columns) {
         if (column.getRootSegment().getPath().equalsIgnoreCase(ROW_KEY)) {
-          this.columns.add(ROW_KEY_PATH);
+          transformed.add(ROW_KEY_PATH);
           continue;
         }
         rowKeyOnly = false;
         NameSegment root = column.getRootSegment();
         byte[] family = root.getPath().getBytes();
-        this.columns.add(SchemaPath.getSimplePath(root.getPath()));
+        transformed.add(SchemaPath.getSimplePath(root.getPath()));
         PathSegment child = root.getChild();
         if (child != null && child.isNamed()) {
           byte[] qualifier = child.getNameSegment().getPath().getBytes();
@@ -103,23 +109,21 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
           hbaseScan.addFamily(family);
         }
       }
-    } else {
-      rowKeyOnly = false;
-      this.columns.add(ROW_KEY_PATH);
-    }
-
-    hbaseScan.setFilter(subScanSpec.getScanFilter());
-    if (rowKeyOnly) {
       /* if only the row key was requested, add a FirstKeyOnlyFilter to the scan
        * to fetch only one KV from each row. If a filter is already part of this
        * scan, add the FirstKeyOnlyFilter as the LAST filter of a MUST_PASS_ALL
        * FilterList.
        */
-      hbaseScan.setFilter(
-          HBaseUtils.andFilterAtIndex(hbaseScan.getFilter(), HBaseUtils.LAST_FILTER, new FirstKeyOnlyFilter())
-          );
+      if (rowKeyOnly) {
+        hbaseScan.setFilter(
+            HBaseUtils.andFilterAtIndex(hbaseScan.getFilter(), HBaseUtils.LAST_FILTER, new FirstKeyOnlyFilter()));
+      }
+    } else {
+      transformed.add(ROW_KEY_PATH);
     }
-    hbaseScan.setCaching(TARGET_RECORD_COUNT);
+
+
+    return transformed;
   }
 
   public OperatorContext getOperatorContext() {
@@ -138,7 +142,7 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
 
     try {
       // Add Vectors to output in the order specified when creating reader
-      for (SchemaPath column : columns) {
+      for (SchemaPath column : getColumns()) {
         if (column.equals(ROW_KEY_PATH)) {
           MaterializedField field = MaterializedField.create(column, ROW_KEY_TYPE);
           rowKeyVector = outputMutator.addField(field, VarBinaryVector.class);
@@ -147,9 +151,9 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
         }
       }
       logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
-          hbaseTable, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
+          hbaseTableName, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
           hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
-      hTable = new HTable(hbaseConf, hbaseTable);
+      hTable = new HTable(hbaseConf, hbaseTableName);
       resultScanner = hTable.getScanner(hbaseScan);
     } catch (SchemaChangeException | IOException e) {
       throw new ExecutionSetupException(e);
@@ -230,7 +234,7 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
         if (allocateOnCreate) {
           v.allocateNew();
         }
-        columns.add(column);
+        getColumns().add(column);
         familyVectorMap.put(familyName, v);
       }
       return v;
@@ -258,7 +262,7 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
         hTable.close();
       }
     } catch (IOException e) {
-      logger.warn("Failure while closing HBase table: " + hbaseTable, e);
+      logger.warn("Failure while closing HBase table: " + hbaseTableName, e);
     }
   }
 

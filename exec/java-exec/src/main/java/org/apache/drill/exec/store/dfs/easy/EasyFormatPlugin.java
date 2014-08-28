@@ -186,7 +186,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   @Override
   public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException {
-    return new EasyGroupScan(selection, this, null, selection.selectionRoot);
+    return new EasyGroupScan(selection, this, selection.selectionRoot);
   }
 
   @Override

@@ -72,7 +72,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
   @Override
   public AbstractGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException {
-    return new EasyGroupScan(selection, this, null, selection.selectionRoot); //TODO : textformat supports project?
+    return new EasyGroupScan(selection, this, columns, selection.selectionRoot); //TODO : textformat supports project?
   }
 
   @Override

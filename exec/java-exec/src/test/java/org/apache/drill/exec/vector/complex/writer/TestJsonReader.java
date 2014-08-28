@@ -34,6 +34,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -64,7 +65,7 @@ public class TestJsonReader extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
 
   private static BufferAllocator allocator;
-  private static final boolean VERBOSE_DEBUG = false;
+  private static final boolean VERBOSE_DEBUG = true;
 
   @BeforeClass
   public static void setupAllocator(){
@@ -168,6 +169,7 @@ public class TestJsonReader extends BaseTestQuery {
     String[] queries = {Files.toString(FileUtils.getResourceAsFile("/store/json/project_pushdown_json_physical_plan.json"), Charsets.UTF_8)};
     long[] rowCounts = {3};
     String filename = "/store/json/schema_change_int_to_string.json";
+    test("alter system set `store.json.all_text_mode` = false");
     runTestsOnFile(filename, UserBitShared.QueryType.PHYSICAL, queries, rowCounts);
 
     List<QueryResultBatch> results = testPhysicalWithResults(queries[0]);
@@ -271,7 +273,8 @@ public class TestJsonReader extends BaseTestQuery {
     writer.allocate();
 
     DrillBuf buffer = allocator.buffer(255);
-    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound), buffer, null, false);
+    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound), buffer,
+        GroupScan.ALL_COLUMNS, false);
     int i =0;
     List<Integer> batchSizes = Lists.newArrayList();
 

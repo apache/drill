@@ -50,7 +50,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
 
   @Override
   public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
-    return getPhysicalScan(selection, null);
+    return getPhysicalScan(selection, AbstractGroupScan.ALL_COLUMNS);
   }
   
   @Override

@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractBase;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
@@ -60,16 +61,9 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
       @JsonProperty("columns") List<SchemaPath> columns, //
       @JsonProperty("selectionRoot") String selectionRoot //
   ) throws ExecutionSetupException {
-
-    if(formatConfig == null) formatConfig = new ParquetFormatConfig();
-    Preconditions.checkNotNull(storageConfig);
-    Preconditions.checkNotNull(formatConfig);
-    this.formatPlugin = (ParquetFormatPlugin) registry.getFormatPlugin(storageConfig, formatConfig);
-    Preconditions.checkNotNull(formatPlugin);
-    this.rowGroupReadEntries = rowGroupReadEntries;
-    this.formatConfig = formatPlugin.getConfig();
-    this.columns = columns;
-    this.selectionRoot = selectionRoot;
+    this((ParquetFormatPlugin) registry.getFormatPlugin(Preconditions.checkNotNull(storageConfig),
+            formatConfig == null ? new ParquetFormatConfig() : formatConfig),
+        rowGroupReadEntries, columns, selectionRoot);
   }
 
   public ParquetRowGroupScan( //
@@ -77,10 +71,10 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
       List<RowGroupReadEntry> rowGroupReadEntries, //
       List<SchemaPath> columns,
       String selectionRoot) {
-    this.formatPlugin = formatPlugin;
+    this.formatPlugin = Preconditions.checkNotNull(formatPlugin);
     this.formatConfig = formatPlugin.getConfig();
     this.rowGroupReadEntries = rowGroupReadEntries;
-    this.columns = columns;
+    this.columns = columns == null || columns.size() == 0 ? GroupScan.ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
   }
 

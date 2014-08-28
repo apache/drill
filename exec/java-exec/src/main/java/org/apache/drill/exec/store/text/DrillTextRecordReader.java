@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
@@ -34,6 +36,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.RepeatedVarCharVector;
@@ -48,7 +51,7 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class DrillTextRecordReader implements RecordReader {
+public class DrillTextRecordReader extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordReader.class);
 
   static final String COL_NAME = "columns";
@@ -66,36 +69,31 @@ public class DrillTextRecordReader implements RecordReader {
   private Text value;
   private int numCols = 0;
   private boolean redoRecord = false;
-  private boolean first = true;
 
   public DrillTextRecordReader(FileSplit split, FragmentContext context, char delimiter, List<SchemaPath> columns) {
     this.fragmentContext = context;
     this.delimiter = (byte) delimiter;
-    boolean getEntireRow = false;
+    setColumns(columns);
 
-    if(columns != null) {
+    if (!isStarQuery()) {
+      String pathStr;
       for (SchemaPath path : columns) {
         assert path.getRootSegment().isNamed();
-        Preconditions.checkArgument(path.getRootSegment().getPath().equals(COL_NAME), "Selected column must have name 'columns'");
-        // FIXME: need re-work for text column push-down.
+        pathStr = path.getRootSegment().getPath();
+        Preconditions.checkArgument(pathStr.equals(COL_NAME) || (pathStr.equals("*") && path.getRootSegment().getChild() == null),
+            "Selected column(s) must have name 'columns' or must be plain '*'");
+
         if (path.getRootSegment().getChild() != null) {
-          Preconditions.checkArgument(path.getRootSegment().getChild().isArray(),"Selected column must be an array index");
+          Preconditions.checkArgument(path.getRootSegment().getChild().isArray(), "Selected column must be an array index");
           int index = path.getRootSegment().getChild().getArraySegment().getIndex();
           columnIds.add(index);
-        } else {
-          getEntireRow = true;
         }
       }
       Collections.sort(columnIds);
+      numCols = columnIds.size();
     }
     targetRecordCount = context.getConfig().getInt(ExecConstants.TEXT_LINE_READER_BATCH_SIZE);
 
-    /* If one of the columns requested is the entire row ('columns') then ignore the rest of the columns
-     * we are going copy all the values in the repeated varchar vector
-     */
-    if (!getEntireRow) {
-      numCols = columnIds.size();
-    }
     TextInputFormat inputFormat = new TextInputFormat();
     JobConf job = new JobConf();
     job.setInt("io.file.buffer.size", context.getConfig().getInt(ExecConstants.TEXT_LINE_READER_BUFFER_SIZE));

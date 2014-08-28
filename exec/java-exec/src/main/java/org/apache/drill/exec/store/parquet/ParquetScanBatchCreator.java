@@ -32,6 +32,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 
 import com.google.common.base.Preconditions;
@@ -65,11 +66,9 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
     List<String[]> partitionColumns = Lists.newArrayList();
     List<Integer> selectedPartitionColumns = Lists.newArrayList();
-    boolean selectAllColumns = false;
+    boolean selectAllColumns = AbstractRecordReader.isStarQuery(columns);
 
-    if (columns == null || columns.size() == 0) {
-      selectAllColumns = true;
-    } else {
+    if (!selectAllColumns) {
       List<SchemaPath> newColums = Lists.newArrayList();
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {

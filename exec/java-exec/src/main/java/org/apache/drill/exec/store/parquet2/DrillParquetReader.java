@@ -18,12 +18,15 @@
 package org.apache.drill.exec.store.parquet2;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
 import org.apache.drill.exec.vector.BaseValueVector;
@@ -48,11 +51,12 @@ import parquet.schema.Type;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DrillParquetReader implements RecordReader {
+public class DrillParquetReader extends AbstractRecordReader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
 
@@ -60,7 +64,6 @@ public class DrillParquetReader implements RecordReader {
   private MessageType schema;
   private Configuration conf;
   private RowGroupReadEntry entry;
-  private List<SchemaPath> columns;
   private VectorContainerWriter writer;
   private ColumnChunkIncReadStore pageReadStore;
   private parquet.io.RecordReader<Void> recordReader;
@@ -73,11 +76,11 @@ public class DrillParquetReader implements RecordReader {
   public DrillParquetReader(ParquetMetadata footer, RowGroupReadEntry entry, List<SchemaPath> columns, Configuration conf) {
     this.footer = footer;
     this.conf = conf;
-    this.columns = columns;
     this.entry = entry;
+    setColumns(columns);
   }
 
-  public static MessageType getProjection(MessageType schema, List<SchemaPath> columns) {
+  public static MessageType getProjection(MessageType schema, Collection<SchemaPath> columns) {
     MessageType projection = null;
     for (SchemaPath path : columns) {
       List<String> segments = Lists.newArrayList();
@@ -117,10 +120,10 @@ public class DrillParquetReader implements RecordReader {
       schema = footer.getFileMetaData().getSchema();
       MessageType projection = null;
 
-      if (columns == null || columns.size() == 0) {
+      if (isStarQuery()) {
         projection = schema;
       } else {
-        projection = getProjection(schema, columns);
+        projection = getProjection(schema, getColumns());
         if (projection == null) {
           projection = schema;
         }

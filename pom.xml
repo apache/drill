@@ -167,6 +167,7 @@
             <exclude>**/*.md</exclude>
             <exclude>sandbox/**</exclude>
             <exclude>**/*.json</exclude>
+            <exclude>**/*.parquet</exclude>
             <exclude>**/*.sql</exclude>
             <exclude>**/git.properties</exclude>
             <exclude>**/*.csv</exclude>

@@ -64,17 +64,25 @@ public class BlockMapBuilder {
     return codecFactory.getCodec(fileStatus.getPath()) != null;
   }
 
-  public List<CompleteFileWork> generateFileWork(List<FileStatus> files, boolean blockify) throws IOException{
+  public List<CompleteFileWork> generateFileWork(List<FileStatus> files, boolean blockify) throws IOException {
     List<CompleteFileWork> work = Lists.newArrayList();
-    for(FileStatus f : files){
-      ImmutableRangeMap<Long,BlockLocation> rangeMap = getBlockMap(f);
-      if(!blockify || compressed(f)){
-        work.add(new CompleteFileWork(this.getEndpointByteMap(new FileStatusWork(f)), 0, f.getLen(), f.getPath().toString()));
-        continue;
+    boolean error = false;
+    for(FileStatus f : files) {
+      error = false;
+      if (blockify && !compressed(f)) {
+        try {
+          ImmutableRangeMap<Long, BlockLocation> rangeMap = getBlockMap(f);
+          for (Entry<Range<Long>, BlockLocation> l : rangeMap.asMapOfRanges().entrySet()) {
+            work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(f)), l.getValue().getOffset(), l.getValue().getLength(), f.getPath().toString()));
+          }
+        } catch (IOException e) {
+          logger.warn("failure while generating file work.", e);
+          error = true;
+        }
       }
-      
-      for(Entry<Range<Long>, BlockLocation> l : rangeMap.asMapOfRanges().entrySet()){
-        work.add(new CompleteFileWork(this.getEndpointByteMap(new FileStatusWork(f)), l.getValue().getOffset(), l.getValue().getLength(), f.getPath().toString()));
+
+      if (!blockify || error || compressed(f)) {
+        work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(f)), 0, f.getLen(), f.getPath().toString()));
       }
     }
     return work;
@@ -135,7 +143,7 @@ public class BlockMapBuilder {
   
   private ImmutableRangeMap<Long,BlockLocation> getBlockMap(Path path) throws IOException{
     ImmutableRangeMap<Long,BlockLocation> blockMap  = blockMapMap.get(path);
-    if(blockMap == null){
+    if(blockMap == null) {
       blockMap = buildBlockMap(path);
     }
     return blockMap;
