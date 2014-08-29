@@ -62,68 +62,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
       //TODO: need capture format exception, and issue SQLERR code.
       out.value = ${type.javaType}.parse${type.parse}(new String(buf, com.google.common.base.Charsets.UTF_8));
       
-    <#elseif type.to=="Int" || type.to == "BigInt">
-
-      if ((in.end - in.start) ==0) {
-        //empty, not a valid number
-        byte[] buf = new byte[in.end - in.start];
-        in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-        throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
-      }
-
-      int readIndex = in.start;
-
-      boolean negative = in.buffer.getByte(readIndex) == '-';
-      
-      if (negative && ++readIndex == in.end) {
-        //only one single '-'
-        byte[] buf = new byte[in.end - in.start];
-        in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-        throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
-      }
-   
-      int radix = 10;
-      ${type.primeType} max = -${type.javaType}.MAX_VALUE / radix;
-      ${type.primeType} result = 0;
-      int digit;
-      
-      while (readIndex < in.end) {
-        digit = Character.digit(in.buffer.getByte(readIndex++),radix);
-        //not valid digit.
-        if (digit == -1) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
-        }
-        //overflow
-        if (max > result) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
-        }
-        
-        ${type.primeType} next = result * radix - digit;
-        
-        //overflow
-        if (next > result) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
-        }
-        result = next;
-      }
-      if (!negative) {
-        result = -result;
-        //overflow
-        if (result < 0) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
-        }
-      }
-   
-      out.value = result;
+    <#elseif type.to=="Int" >
+      out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.varCharToInt(in.start, in.end, in.buffer);
     
+    <#elseif type.to == "BigInt">
+      out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.varCharToLong(in.start, in.end, in.buffer);
     </#if>
   }
 }

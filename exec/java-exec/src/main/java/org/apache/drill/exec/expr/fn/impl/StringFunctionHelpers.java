@@ -28,6 +28,121 @@ import com.google.common.base.Charsets;
 public class StringFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctionHelpers.class);
 
+  static final int RADIX = 10;
+  static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
+  static final int MAX_INT = -Integer.MAX_VALUE / RADIX;
+
+  public static long varCharToLong(final int start, final int end, DrillBuf buffer){
+    if ((end - start) ==0) {
+      //empty, not a valid number
+      return nfeL(start, end, buffer);
+    }
+
+    int readIndex = start;
+
+    boolean negative = buffer.getByte(readIndex) == '-';
+
+    if (negative && ++readIndex == end) {
+      //only one single '-'
+      return nfeL(start, end, buffer);
+    }
+
+
+    long result = 0;
+    int digit;
+
+    while (readIndex < end) {
+      digit = Character.digit(buffer.getByte(readIndex++),RADIX);
+      //not valid digit.
+      if (digit == -1) {
+        return nfeL(start, end, buffer);
+      }
+      //overflow
+      if (MAX_LONG > result) {
+        return nfeL(start, end, buffer);
+      }
+
+      long next = result * RADIX - digit;
+
+      //overflow
+      if (next > result) {
+        return nfeL(start, end, buffer);
+      }
+      result = next;
+    }
+    if (!negative) {
+      result = -result;
+      //overflow
+      if (result < 0) {
+        return nfeL(start, end, buffer);
+      }
+    }
+
+    return result;
+  }
+
+  private static int nfeL(int start, int end, DrillBuf buffer){
+    byte[] buf = new byte[end - start];
+    buffer.getBytes(start, buf, 0, end - start);
+    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
+  }
+
+  private static int nfeI(int start, int end, DrillBuf buffer){
+    byte[] buf = new byte[end - start];
+    buffer.getBytes(start, buf, 0, end - start);
+    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
+  }
+
+  public static int varCharToInt(final int start, final int end, DrillBuf buffer){
+    if ((end - start) ==0) {
+      //empty, not a valid number
+      return nfeI(start, end, buffer);
+    }
+
+    int readIndex = start;
+
+    boolean negative = buffer.getByte(readIndex) == '-';
+
+    if (negative && ++readIndex == end) {
+      //only one single '-'
+      return nfeI(start, end, buffer);
+    }
+
+    int radix = 10;
+    int max = MAX_INT / radix;
+    int result = 0;
+    int digit;
+
+    while (readIndex < end) {
+      digit = Character.digit(buffer.getByte(readIndex++),radix);
+      //not valid digit.
+      if (digit == -1) {
+        return nfeI(start, end, buffer);
+      }
+      //overflow
+      if (max > result) {
+        return nfeI(start, end, buffer);
+      }
+
+      int next = result * radix - digit;
+
+      //overflow
+      if (next > result) {
+        return nfeI(start, end, buffer);
+      }
+      result = next;
+    }
+    if (!negative) {
+      result = -result;
+      //overflow
+      if (result < 0) {
+        return nfeI(start, end, buffer);
+      }
+    }
+
+    return result;
+  }
+
   // Assumes Alpha as [A-Za-z0-9]
   // white space is treated as everything else.
   public static void initCap(int start, int end, DrillBuf inBuf, DrillBuf outBuf) {
