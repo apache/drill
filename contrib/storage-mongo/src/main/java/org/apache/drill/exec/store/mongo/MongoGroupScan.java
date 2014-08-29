@@ -290,6 +290,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+    logger.debug("Incoming endpoints :" + endpoints);
     watch.reset();
     watch.start();
 
