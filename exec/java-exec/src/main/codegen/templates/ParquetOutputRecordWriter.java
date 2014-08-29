@@ -215,9 +215,9 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
   <#elseif minor.class == "VarChar" || minor.class == "Var16Char" || minor.class == "VarBinary">
     <#if mode.prefix == "Repeated">
       reader.read(i, holder);
-      consumer.startField(fieldName, fieldId);
+      //consumer.startField(fieldName, fieldId);
       consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
-      consumer.endField(fieldName, fieldId);
+      //consumer.endField(fieldName, fieldId);
     <#else>
     reader.read(holder);
     ByteBuf buf = holder.buffer;

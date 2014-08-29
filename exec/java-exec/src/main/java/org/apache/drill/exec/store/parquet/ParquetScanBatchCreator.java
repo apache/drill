@@ -44,6 +44,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import parquet.column.ColumnDescriptor;
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.MessageType;
@@ -153,11 +154,18 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
   private static boolean isComplex(ParquetMetadata footer) {
     MessageType schema = footer.getFileMetaData().getSchema();
+
     for (Type type : schema.getFields()) {
       if (!type.isPrimitive()) {
         return true;
       }
     }
+    for (ColumnDescriptor col : schema.getColumns()) {
+      if (col.getMaxRepetitionLevel() > 0) {
+        return true;
+      }
+    }
     return false;
   }
+
 }

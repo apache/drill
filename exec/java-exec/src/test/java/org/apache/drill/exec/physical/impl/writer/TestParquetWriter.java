@@ -72,6 +72,13 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
+  public void testComplexRepeated() throws Exception {
+    String selection = "*";
+    String inputTable = "cp.`testRepeatedWrite.json`";
+    runTestAndValidate(selection, selection, inputTable, "repeated_json");
+  }
+
+  @Test
   public void testCastProjectBug_Drill_929() throws Exception {
     String selection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
         "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as COMMITDATE, cast(L_RECEIPTDATE as DATE) AS RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
