@@ -342,6 +342,18 @@
               <groupId>org.slf4j</groupId>
             </exclusion>          
             <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-core</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-server</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-json</artifactId>
+            </exclusion>         
+            <exclusion>
               <groupId>commons-logging</groupId>
               <artifactId>commons-logging</artifactId>
             </exclusion>
