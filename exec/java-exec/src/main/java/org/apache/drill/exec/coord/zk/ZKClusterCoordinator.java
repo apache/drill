@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -59,6 +61,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private final String serviceName;
   private final CountDownLatch initialConnection = new CountDownLatch(1);
 
+  private static final Pattern ZK_COMPLEX_STRING = Pattern.compile("(^.*?)/(.*)/([^/]*)$");
 
   public ZKClusterCoordinator(DrillConfig config) throws IOException{
     this(config, null);
@@ -66,11 +69,25 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
   public ZKClusterCoordinator(DrillConfig config, String connect) throws IOException {
     connect = connect == null || connect.isEmpty() ? config.getString(ExecConstants.ZK_CONNECTION) : connect;
-    this.serviceName = config.getString(ExecConstants.SERVICE_NAME);
+    String clusterId = config.getString(ExecConstants.SERVICE_NAME);
+    String zkRoot = config.getString(ExecConstants.ZK_ROOT);
+
+
+    // check if this is a complex zk string.  If so, parse into components.
+    Matcher m = ZK_COMPLEX_STRING.matcher(connect);
+    if(m.matches()){
+      connect = m.group(1);
+      zkRoot = m.group(2);
+      clusterId = m.group(3);
+    }
+
+    logger.debug("Connect {}, zkRoot {}, clusterId: " + clusterId, connect, zkRoot);
+
+    this.serviceName = clusterId;
     RetryPolicy rp = new RetryNTimes(config.getInt(ExecConstants.ZK_RETRY_TIMES),
       config.getInt(ExecConstants.ZK_RETRY_DELAY));
     curator = CuratorFrameworkFactory.builder()
-      .namespace(config.getString(ExecConstants.ZK_ROOT))
+      .namespace(zkRoot)
       .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
       .retryPolicy(rp)
       .connectString(connect)
