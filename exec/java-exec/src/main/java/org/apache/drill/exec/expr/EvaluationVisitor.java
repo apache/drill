@@ -160,7 +160,12 @@ public class EvaluationVisitor {
         }
       }
 
+      generator.nestEvalBlock(jc._then());
+
       HoldingContainer thenExpr = c.expression.accept(this, generator);
+
+      generator.unNestEvalBlock();
+
       if (thenExpr.isOptional()) {
         JConditional newCond = jc._then()._if(thenExpr.getIsSet().ne(JExpr.lit(0)));
         JBlock b = newCond._then();
@@ -170,7 +175,12 @@ public class EvaluationVisitor {
         jc._then().assign(output.getHolder(), thenExpr.getHolder());
       }
 
+      generator.nestEvalBlock(jc._else());
+
       HoldingContainer elseExpr = ifExpr.elseExpression.accept(this, generator);
+
+      generator.unNestEvalBlock();
+
       if (elseExpr.isOptional()) {
         JConditional newCond = jc._else()._if(elseExpr.getIsSet().ne(JExpr.lit(0)));
         JBlock b = newCond._then();
