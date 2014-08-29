@@ -80,8 +80,10 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           newColums.add(column);
         }
       }
+      final int id = rowGroupScan.getOperatorId();
       // Create the new row group scan with the new columns
       rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getStorageEngine(), rowGroupScan.getRowGroupReadEntries(), newColums, rowGroupScan.getSelectionRoot());
+      rowGroupScan.setOperatorId(id);
     }
 
     FileSystem fs = rowGroupScan.getStorageEngine().getFileSystem().getUnderlying();
