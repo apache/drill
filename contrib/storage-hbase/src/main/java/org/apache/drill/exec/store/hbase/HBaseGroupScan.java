@@ -97,6 +97,10 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   private boolean filterPushedDown = false;
 
+  private TableStatsCalculator statsCalculator;
+
+  private long scanSizeInBytes = 0;
+
   @JsonCreator
   public HBaseGroupScan(@JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
                         @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
@@ -126,6 +130,8 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.storagePluginConfig = that.storagePluginConfig;
     this.hTableDesc = that.hTableDesc;
     this.filterPushedDown = that.filterPushedDown;
+    this.statsCalculator = that.statsCalculator;
+    this.scanSizeInBytes = that.scanSizeInBytes;
   }
 
   @Override
@@ -142,7 +148,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
       HTable table = new HTable(storagePluginConfig.getHBaseConf(), hbaseScanSpec.getTableName());
       this.hTableDesc = table.getTableDescriptor();
       NavigableMap<HRegionInfo, ServerName> regionsMap = table.getRegionLocations();
-      table.close();
+      statsCalculator = new TableStatsCalculator(table, hbaseScanSpec, storagePlugin.getContext().getConfig());
 
       boolean foundStartRegion = false;
       regionsToScan = new TreeMap<HRegionInfo, ServerName>();
@@ -153,10 +159,13 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
         }
         foundStartRegion = true;
         regionsToScan.put(regionInfo, mapEntry.getValue());
+        scanSizeInBytes += statsCalculator.getRegionSizeInBytes(regionInfo.getRegionName());
         if (hbaseScanSpec.getStopRow() != null && hbaseScanSpec.getStopRow().length != 0 && regionInfo.containsRow(hbaseScanSpec.getStopRow())) {
           break;
         }
       }
+
+      table.close();
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
     }
@@ -342,11 +351,10 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   @Override
   public ScanStats getScanStats() {
-    //TODO: look at stats for this.
-    int rowCount = (hbaseScanSpec.getFilter() != null ? 5 : 10) * regionsToScan.size();
-    int avgColumnSize = 10;
-    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
-    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, avgColumnSize * numColumns * rowCount);
+    int rowCount =  (int) ((scanSizeInBytes / statsCalculator.getAvgRowSizeInBytes()) * (hbaseScanSpec.getFilter() != null ? 0.5 : 1));
+    // the following calculation is not precise since 'columns' could specify CFs while getColsPerRow() returns the number of qualifier.
+    float diskCost = scanSizeInBytes * ((columns == null || columns.isEmpty()) ? 1 : columns.size()/statsCalculator.getColsPerRow());
+    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, diskCost);
   }
 
   @Override
