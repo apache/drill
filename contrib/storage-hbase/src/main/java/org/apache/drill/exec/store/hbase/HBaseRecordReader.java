@@ -215,7 +215,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         int valueLength = kv.getValueLength();
         if (!v.getMutator().setSafe(rowCount, bytes, valueOffset, valueLength)) {
           leftOver = result;
-          return rowCount;
+          break done;
         }
       }
     }
