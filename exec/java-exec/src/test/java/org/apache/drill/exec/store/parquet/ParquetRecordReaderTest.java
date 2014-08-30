@@ -152,6 +152,11 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   }
 
   @Test
+  public void testNullableVarCharMemory() throws Exception {
+    testFull(QueryType.SQL, "select s_comment,s_suppkey from dfs.`/tmp/sf100_supplier.parquet`", "", 1, 1, 1000, false);
+  }
+
+  @Test
   public void testReadVoter() throws Exception {
     testFull(QueryType.SQL, "select * from dfs.`/tmp/voter.parquet`", "", 1, 1, 1000, false);
   }

@@ -88,12 +88,10 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
       dataTypeLengthInBits = pageReader.pageDataByteArray.getInt((int) pageReader.readyToReadPosInBytes);
     }
     // I think this also needs to happen if it is null for the random access
-    if (! variableWidthVector.getMutator().setValueLengthSafe((int) valuesReadInCurrentPass + pageReader.valuesReadyToRead, dataTypeLengthInBits)) {
-      return true;
-    }
     boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageDataByteArray,
         (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-    assert success;
+    if ( ! success )
+      return true;
     return false;
   }
 
