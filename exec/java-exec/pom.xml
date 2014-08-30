@@ -21,16 +21,16 @@
   <name>exec/Java Execution Engine</name>
 
   <dependencies>
-<!--     <dependency> -->
-<!--       <groupId>org.ow2.asm</groupId> -->
-<!--       <artifactId>asm-util</artifactId> -->
-<!--       <version>4.1</version> -->
-<!--     </dependency> -->
+    <!-- <dependency> -->
+    <!-- <groupId>org.ow2.asm</groupId> -->
+    <!-- <artifactId>asm-util</artifactId> -->
+    <!-- <version>4.1</version> -->
+    <!-- </dependency> -->
     <dependency>
       <groupId>org.ow2.asm</groupId>
       <artifactId>asm-debug-all</artifactId>
       <version>4.1</version>
-<!--       <scope>test</scope> -->
+      <!-- <scope>test</scope> -->
     </dependency>
     <dependency>
       <groupId>pentaho</groupId>
@@ -44,20 +44,20 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-<!--     <dependency> -->
-<!--       <groupId>org.ow2.asm</groupId> -->
-<!--       <artifactId>asm-commons</artifactId> -->
-<!--       <version>4.1</version> -->
-<!--     </dependency> -->
+    <!-- <dependency> -->
+    <!-- <groupId>org.ow2.asm</groupId> -->
+    <!-- <artifactId>asm-commons</artifactId> -->
+    <!-- <version>4.1</version> -->
+    <!-- </dependency> -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-pool2</artifactId>
       <version>2.1</version>
     </dependency>
     <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-math</artifactId>
-        <version>2.2</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math</artifactId>
+      <version>2.2</version>
     </dependency>
     <dependency>
       <groupId>com.thoughtworks.paranamer</groupId>
@@ -96,18 +96,18 @@
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-multipart</artifactId>
       <version>2.8</version>
-    </dependency>    
+    </dependency>
     <dependency>
-        <groupId>com.fasterxml.jackson.jaxrs</groupId>
-        <artifactId>jackson-jaxrs-json-provider</artifactId>
-        <version>2.2.0</version>
+      <groupId>com.fasterxml.jackson.jaxrs</groupId>
+      <artifactId>jackson-jaxrs-json-provider</artifactId>
+      <version>2.2.0</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-epoll</artifactId>
       <classifier>linux-x86_64</classifier>
       <version>4.0.20.Final</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.ext</groupId>
       <artifactId>jersey-mvc-freemarker</artifactId>
@@ -161,7 +161,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-format</artifactId>
-      <version>2.1.1-SNAPSHOT</version>
+      <version>2.1.1-drill-r1</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -258,11 +258,11 @@
       <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
     </dependency>
-<!--     <dependency> -->
-<!--       <groupId>org.apache.drill.exec</groupId> -->
-<!--       <version>${project.version}</version> -->
-<!--       <artifactId>drill-buffers</artifactId> -->
-<!--     </dependency> -->
+    <!-- <dependency> -->
+    <!-- <groupId>org.apache.drill.exec</groupId> -->
+    <!-- <version>${project.version}</version> -->
+    <!-- <artifactId>drill-buffers</artifactId> -->
+    <!-- </dependency> -->
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
@@ -340,6 +340,19 @@
       <artifactId>joda-time</artifactId>
       <version>2.3</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+    </dependency>
   </dependencies>
 
   <profiles>
@@ -350,106 +363,18 @@
           <name>!alt-hadoop</name>
         </property>
       </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-client</artifactId>
-          <exclusions>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-core</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-json</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-client</artifactId>
-            </exclusion>
-          </exclusions>
-        </dependency>
-      </dependencies>
     </profile>
     <profile>
       <id>mapr</id>
       <dependencies>
         <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-client</artifactId>
-          <exclusions>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-client</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-core</artifactId>
-            </exclusion>
-          </exclusions>
-        </dependency>
-        <dependency>
           <groupId>com.mapr.hadoop</groupId>
-            <artifactId>maprfs</artifactId>
-            <version>2.4.1-mapr-4.0.0-SNAPSHOT</version>
-            <exclusions>
-             <exclusion>
-               <artifactId>commons-logging</artifactId>
-               <groupId>commons-logging</groupId>
-             </exclusion>
-            </exclusions>
+          <artifactId>maprfs</artifactId>
         </dependency>
         <dependency>
           <groupId>org.json</groupId>
           <artifactId>json</artifactId>
           <version>20090211</version>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase</artifactId>
-          <version>0.94.17-mapr-1405-4.0.0-FCS</version>
-          <exclusions>
-            <exclusion>
-              <groupId>org.slf4j</groupId>
-              <artifactId>slf4j-log4j12</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-client</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-core</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-json</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-server</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>jetty</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>jsp-2.1</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>jsp-api-2.1</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>servlet-api-2.5</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>org.apache.hadoop</groupId>
-              <artifactId>hadoop-core</artifactId>
-            </exclusion>
-          </exclusions>
         </dependency>
       </dependencies>
     </profile>
@@ -473,7 +398,9 @@
     </profile>
     <profile>
       <id>largeTests</id>
-      <activation><activeByDefault>false</activeByDefault></activation>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
       <build>
         <plugins>
           <plugin>
@@ -689,8 +616,9 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <executions>
           <execution>
-            <!-- we override the default test execution to exclude tests that would
-                take unusually long time to run (> 1 minute) and run such tests in a different profile -->
+            <!-- we override the default test execution to exclude tests 
+              that would take unusually long time to run (> 1 minute) and run such tests 
+              in a different profile -->
             <id>default-test</id>
             <phase>test</phase>
             <goals>

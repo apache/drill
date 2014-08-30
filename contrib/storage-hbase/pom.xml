@@ -39,9 +39,13 @@
       <version>${project.version}</version>
       <exclusions>
         <exclusion>
-          <artifactId>hadoop-client</artifactId>
+          <artifactId>hadoop-common</artifactId>
           <groupId>org.apache.hadoop</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>hadoop-client</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>        
       </exclusions>
     </dependency>
 
@@ -59,9 +63,13 @@
         -->
       <exclusions>
         <exclusion>
-          <artifactId>hadoop-client</artifactId>
+          <artifactId>hadoop-common</artifactId>
           <groupId>org.apache.hadoop</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>hadoop-client</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>        
       </exclusions>
     </dependency>
     <dependency>
