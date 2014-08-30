@@ -26,8 +26,6 @@ import java.util.Map;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -41,8 +39,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.UnsupportedEncodingException;
 
 public class TestParquetWriter extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetWriter.class);
@@ -225,6 +221,7 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
+  @Ignore
   public void testParquetRead() throws Exception {
     test("alter system set `store.parquet.use_new_reader` = true");
     List<QueryResultBatch> expected = testSqlWithResults("select * from dfs.`/tmp/voter`");
