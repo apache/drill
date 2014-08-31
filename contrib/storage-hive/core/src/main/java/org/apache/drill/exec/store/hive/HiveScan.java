@@ -39,6 +39,7 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
@@ -209,16 +210,17 @@ public class HiveScan extends AbstractGroupScan {
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
     try {
       List<InputSplit> splits = mappings.get(minorFragmentId);
-      List<Partition> parts = Lists.newArrayList();
+      List<HivePartition> parts = Lists.newArrayList();
       List<String> encodedInputSplits = Lists.newArrayList();
       List<String> splitTypes = Lists.newArrayList();
       for (InputSplit split : splits) {
-        parts.add(partitionMap.get(split));
+        parts.add(new HiveTable.HivePartition(partitionMap.get(split)));
         encodedInputSplits.add(serializeInputSplit(split));
         splitTypes.add(split.getClass().getCanonicalName());
       }
       if (parts.contains(null)) parts = null;
-      return new HiveSubScan(encodedInputSplits, hiveReadEntry, splitTypes, columns);
+      HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.table, parts, hiveReadEntry.hiveConfigOverride);
+      return new HiveSubScan(encodedInputSplits, subEntry, splitTypes, columns);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
