@@ -17,9 +17,7 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -132,7 +130,7 @@ public class MongoFilterBuilder extends
   }
 
   private MongoScanSpec createMongoScanSpec(String functionName,
-      SchemaPath field, byte[] fieldValue) throws ClassNotFoundException, IOException {
+      SchemaPath field, Object fieldValue) throws ClassNotFoundException, IOException {
     // extract the field name
     String fieldName = field.getAsUnescapedPath();
     MongoCompareOp compareOp = null;
@@ -171,31 +169,13 @@ public class MongoFilterBuilder extends
       BasicDBObject queryFilter = new BasicDBObject();
       if(compareOp == MongoCompareOp.IFNULL || compareOp == MongoCompareOp.IFNOTNULL){
         // need to verify whether "$eq" or "$ne" needs or not.
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), getObject(fieldValue)));
+        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
       }else{
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), getObject(fieldValue)));
+        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
       }
       return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan.getScanSpec().getCollectionName(), queryFilter);
     }
      return null;
   }
-  
-  
-  private Object getObject(byte[] fieldValue) throws IOException, ClassNotFoundException {
-    ByteArrayInputStream in = new ByteArrayInputStream(fieldValue);
-    ObjectInputStream inS = new ObjectInputStream(in);
-    return inS.readObject();
-  }
-
-  public static Object toObject(byte[] bytes){
-    Object obj = null;
-    try(ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
-        ObjectInputStream ois = new ObjectInputStream(bis);
-        obj = ois.readObject();
-    }catch(Exception e){
-      System.out.println(e.getMessage());
-    }
-    return obj;
-}
 
 }

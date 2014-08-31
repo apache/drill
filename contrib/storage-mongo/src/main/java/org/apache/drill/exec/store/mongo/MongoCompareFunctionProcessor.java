@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException>{
-  private byte[] value;
+  private Object value;
   private boolean success;
   private boolean isEqualityFn;
   private SchemaPath path;
@@ -81,7 +81,7 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
         && COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName).equals(functionName);
   }
 
-  public byte[] getValue() {
+  public Object getValue() {
     return value;
   }
 
@@ -108,7 +108,6 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
   @Override
   public Boolean visitConvertExpression(ConvertExpression e, LogicalExpression valueArg) throws RuntimeException {
     if (e.getConvertFunction() == ConvertExpression.CONVERT_FROM && e.getInput() instanceof SchemaPath) {
-      ByteBuf bb = null;
       String encodingType = e.getEncodingType();
       switch (encodingType) {
       case "INT_BE":
@@ -119,8 +118,7 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
       case "UINT4":
         if (valueArg instanceof IntExpression
             && (isEqualityFn || encodingType.startsWith("U"))) {
-          bb = Unpooled.wrappedBuffer(new byte[4]).order(encodingType.endsWith("_BE") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
-          bb.writeInt(((IntExpression)valueArg).getInt());
+          this.value = ((IntExpression)valueArg).getInt(); 
         }
         break;
       case "BIGINT_BE":
@@ -129,40 +127,34 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
       case "UINT8":
         if (valueArg instanceof LongExpression
             && (isEqualityFn || encodingType.startsWith("U"))) {
-          bb = Unpooled.wrappedBuffer(new byte[8]).order(encodingType.endsWith("_BE") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
-          bb.writeLong(((LongExpression)valueArg).getLong());
+          this.value = ((LongExpression)valueArg).getLong();
         }
         break;
       case "FLOAT":
         if (valueArg instanceof FloatExpression && isEqualityFn) {
-          bb = Unpooled.wrappedBuffer(new byte[4]).order(ByteOrder.BIG_ENDIAN);
-          bb.writeFloat(((FloatExpression)valueArg).getFloat());
+          this.value = ((FloatExpression)valueArg).getFloat();
         }
         break;
       case "DOUBLE":
         if (valueArg instanceof DoubleExpression && isEqualityFn) {
-          bb = Unpooled.wrappedBuffer(new byte[8]).order(ByteOrder.BIG_ENDIAN);;
-          bb.writeDouble(((DoubleExpression)valueArg).getDouble());
+          this.value = ((DoubleExpression)valueArg).getDouble();
         }
         break;
       case "TIME_EPOCH":
       case "TIME_EPOCH_BE":
         if (valueArg instanceof TimeExpression) {
-          bb = Unpooled.wrappedBuffer(new byte[8]).order(encodingType.endsWith("_BE") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
-          bb.writeLong(((TimeExpression)valueArg).getTime());
+          this.value = ((TimeExpression)valueArg).getTime();
         }
         break;
       case "DATE_EPOCH":
       case "DATE_EPOCH_BE":
         if (valueArg instanceof DateExpression) {
-          bb = Unpooled.wrappedBuffer(new byte[8]).order(encodingType.endsWith("_BE") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
-          bb.writeLong(((DateExpression)valueArg).getDate());
+          this.value = ((DateExpression)valueArg).getDate();
         }
         break;
       case "BOOLEAN_BYTE":
         if (valueArg instanceof BooleanExpression) {
-          bb = Unpooled.wrappedBuffer(new byte[1]);
-          bb.writeByte(((BooleanExpression)valueArg).getBoolean() ? 1 : 0);
+          this.value = ((BooleanExpression)valueArg).getBoolean();
         }
         break;
       case "UTF8":
@@ -170,8 +162,7 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
         return e.getInput().accept(this, valueArg);
       }
 
-      if (bb != null) {
-        this.value = bb.array();
+      if (value != null) {
         this.path = (SchemaPath)e.getInput();
         return true;
       }
@@ -187,15 +178,13 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
   @Override
   public Boolean visitSchemaPath(SchemaPath path, LogicalExpression valueArg) throws RuntimeException {
     if (valueArg instanceof QuotedString) {
-      this.value = ((QuotedString) valueArg).value.getBytes();
+      this.value = ((QuotedString) valueArg).value;
       this.path = path;
       return true;
     }
     
     if (valueArg instanceof IntExpression) {
-       ByteBuffer bb = ByteBuffer.allocate(4); 
-       bb.putInt(((IntExpression) valueArg).getInt()); 
-       this.value = bb.array();
+       this.value = ((IntExpression) valueArg).getInt(); 
        this.path = path;
        return true;
     }
