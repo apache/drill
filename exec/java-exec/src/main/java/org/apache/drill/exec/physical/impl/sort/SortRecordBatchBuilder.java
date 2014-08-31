@@ -30,6 +30,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -105,7 +106,14 @@ public class SortRecordBatchBuilder {
     }
 
 
-    if (rbd.getRecordCount() == 0 && batches.size() > 0) return true;
+    if (rbd.getRecordCount() == 0 && batches.size() > 0) {
+      rbd.getContainer().zeroVectors();
+      SelectionVector2 sv2 = rbd.getSv2();
+      if (sv2 != null) {
+        sv2.clear();
+      }
+      return true;
+    }
     runningBytes += batchBytes;
     batches.put(rbd.getContainer().getSchema(), rbd);
     recordCount += rbd.getRecordCount();

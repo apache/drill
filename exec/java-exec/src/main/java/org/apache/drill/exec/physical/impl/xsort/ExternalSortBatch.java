@@ -236,7 +236,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
-          first = false;
           if(!incoming.getSchema().equals(schema)){
             if (schema != null) throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
             this.schema = incoming.getSchema();
@@ -244,11 +243,15 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           }
           // fall through.
         case OK:
+          if (!first && incoming.getRecordCount() == 0) {
+            for (VectorWrapper w : incoming) {
+              w.clear();
+            }
+            break;
+          }
+          if (first) first = false;
           totalSizeInMemory += getBufferSize(incoming);
           SelectionVector2 sv2;
-//          if (incoming.getRecordCount() == 0) {
-//            break outer;
-//          }
           if (incoming.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) {
             sv2 = incoming.getSelectionVector2();
             if (sv2.getBuffer(false).isRootBuffer()) {

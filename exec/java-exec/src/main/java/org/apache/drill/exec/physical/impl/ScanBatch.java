@@ -349,6 +349,7 @@ public class ScanBatch implements RecordBatch {
       v.clear();
     }
     fieldVectorMap.clear();
+    currentReader.cleanup();
     oContext.close();
   }
 
