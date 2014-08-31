@@ -90,8 +90,8 @@ public interface ExecConstants {
 
 
   public static final String SLICE_TARGET = "planner.slice_target";
-  public static final OptionValidator SLICE_TARGET_OPTION = new PositiveLongValidator(SLICE_TARGET, Long.MAX_VALUE, 1000000);
-  
+  public static final OptionValidator SLICE_TARGET_OPTION = new PositiveLongValidator(SLICE_TARGET, Long.MAX_VALUE, 100000);
+
   /**
    * HashTable runtime settings
    */
