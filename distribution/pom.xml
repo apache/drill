@@ -112,6 +112,7 @@
             <exclude>**/control</exclude>
             <exclude>**/*.checkstyle</exclude>
             <exclude>**/*.json</exclude>
+            <exclude>**/README.md</exclude>
             <exclude>**/hadoop-excludes.txt</exclude>
           </excludes>
         </configuration>

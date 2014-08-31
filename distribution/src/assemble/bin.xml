@@ -114,6 +114,10 @@
       <outputDirectory/>
     </file>
     <file>
+      <source>src/resources/README.md</source>
+      <outputDirectory/>
+    </file>
+    <file>
       <source>../NOTICE</source>
       <outputDirectory/>
     </file>
