@@ -196,9 +196,11 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
     @Override
     public String toString() {
-      return "MongoSubScanSpec [tableName=" + collectionName + ", dbName=" + dbName + ", hosts=" + hosts
-          + ", minFilters=" + minFilters + ", maxFilters=" + maxFilters + "]";
+      return "MongoSubScanSpec [dbName=" + dbName + ", collectionName="
+          + collectionName + ", hosts=" + hosts + ", minFilters=" + minFilters
+          + ", maxFilters=" + maxFilters + ", filter=" + filter + "]";
     }
+    
   }
 
 }
