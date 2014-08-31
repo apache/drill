@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 
 import org.apache.drill.common.expression.FunctionCall;
@@ -25,6 +26,8 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.store.mongo.common.MongoCompareOp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.mongodb.BasicDBObject;
@@ -32,6 +35,7 @@ import com.mongodb.BasicDBObject;
 public class MongoFilterBuilder extends
     AbstractExprVisitor<MongoScanSpec, Void, RuntimeException> implements
     DrillMongoConstants {
+  static final Logger logger = LoggerFactory.getLogger(MongoFilterBuilder.class);
   final MongoGroupScan groupScan;
   final LogicalExpression le;
   private boolean allExpressionsConverted = true;
@@ -93,8 +97,13 @@ public class MongoFilterBuilder extends
       MongoCompareFunctionProcessor processor = MongoCompareFunctionProcessor
           .process(call, true);
       if (processor.isSuccess()) {
-        nodeScanSpec = createMongoScanSpec(processor.getFunctionName(),
-            processor.getPath(), processor.getValue());
+        try{
+          nodeScanSpec = createMongoScanSpec(processor.getFunctionName(),
+              processor.getPath(), processor.getValue());
+        }catch(Exception e){
+          logger.error(" Failed to creare Filter ", e);
+//          throw new RuntimeException(e.getMessage(), e);
+        }
       }
     } else {
       switch (functionName) {
@@ -123,7 +132,7 @@ public class MongoFilterBuilder extends
   }
 
   private MongoScanSpec createMongoScanSpec(String functionName,
-      SchemaPath field, byte[] fieldValue) {
+      SchemaPath field, byte[] fieldValue) throws ClassNotFoundException, IOException {
     // extract the field name
     String fieldName = field.getAsUnescapedPath();
     MongoCompareOp compareOp = null;
@@ -162,9 +171,9 @@ public class MongoFilterBuilder extends
       BasicDBObject queryFilter = new BasicDBObject();
       if(compareOp == MongoCompareOp.IFNULL || compareOp == MongoCompareOp.IFNOTNULL){
         // need to verify whether "$eq" or "$ne" needs or not.
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), new String(fieldValue)));
+        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), getObject(fieldValue)));
       }else{
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), new String(fieldValue)));
+        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), getObject(fieldValue)));
       }
       return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan.getScanSpec().getCollectionName(), queryFilter);
     }
@@ -172,6 +181,12 @@ public class MongoFilterBuilder extends
   }
   
   
+  private Object getObject(byte[] fieldValue) throws IOException, ClassNotFoundException {
+    ByteArrayInputStream in = new ByteArrayInputStream(fieldValue);
+    ObjectInputStream inS = new ObjectInputStream(in);
+    return inS.readObject();
+  }
+
   public static Object toObject(byte[] bytes){
     Object obj = null;
     try(ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {

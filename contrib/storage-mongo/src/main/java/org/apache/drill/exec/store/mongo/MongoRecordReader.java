@@ -218,6 +218,7 @@ public class MongoRecordReader implements RecordReader {
       logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
       return docCount;
     } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new DrillRuntimeException("Failure while reading Mongo Record.", e);
     }
   }
