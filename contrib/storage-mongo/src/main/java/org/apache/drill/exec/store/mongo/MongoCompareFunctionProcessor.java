@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mongo;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import org.apache.drill.common.expression.CastExpression;
@@ -190,6 +191,15 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
       this.path = path;
       return true;
     }
+    
+    if (valueArg instanceof IntExpression) {
+       ByteBuffer bb = ByteBuffer.allocate(4); 
+       bb.putInt(((IntExpression) valueArg).getInt()); 
+       this.value = bb.array();
+       this.path = path;
+       return true;
+    }
+    
     return false;
   }
 
