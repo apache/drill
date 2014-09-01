@@ -78,6 +78,13 @@
         <groupId>com.googlecode.fmpp-maven-plugin</groupId>
         <artifactId>fmpp-maven-plugin</artifactId>
         <version>1.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>2.3.19</version>
+          </dependency>
+        </dependencies>
         <configuration>
           <cfgFile>src/main/codegen/config.fmpp</cfgFile>
           <outputDirectory>target/generated-sources</outputDirectory>
