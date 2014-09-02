@@ -98,12 +98,12 @@ public class ${className} {
     <#elseif toUnit == "Day">
       out.value = in.days;
     <#elseif toUnit == "Hour">
-      out.value = in.milliSeconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      out.value = in.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
     <#elseif toUnit == "Minute">
-      int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      int millis = in.milliseconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
       out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
     <#elseif toUnit == "Second">
-      long millis = in.milliSeconds % org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis;
+      long millis = in.milliseconds % org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis;
       out.value = (double) millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
     </#if>
   <#elseif fromUnit == "IntervalDay">
@@ -112,12 +112,12 @@ public class ${className} {
     <#elseif toUnit == "Day">
       out.value = in.days;
     <#elseif toUnit == "Hour">
-      out.value = in.milliSeconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      out.value = in.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
     <#elseif toUnit == "Minute">
-      int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      int millis = in.milliseconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
       out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
     <#elseif toUnit == "Second">
-      long millis = in.milliSeconds % org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis;
+      long millis = in.milliseconds % org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis;
       out.value = (double) millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
     </#if>
   <#else> <#-- IntervalYear type -->

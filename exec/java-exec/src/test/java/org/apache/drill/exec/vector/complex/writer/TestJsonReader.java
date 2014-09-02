@@ -17,13 +17,33 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
+import static org.jgroups.util.Util.assertTrue;
 import static org.junit.Assert.assertEquals;
+import io.netty.buffer.DrillBuf;
+import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 
+import com.google.common.io.Files;
+import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.NullableBigIntVector;
+import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.RepeatedBigIntVector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
@@ -33,6 +53,7 @@ import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,10 +61,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 
-public class TestJsonReader {
+public class TestJsonReader extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
 
   private static BufferAllocator allocator;
+  private static final boolean VERBOSE_DEBUG = true;
 
   @BeforeClass
   public static void setupAllocator(){
@@ -53,6 +75,169 @@ public class TestJsonReader {
   @AfterClass
   public static void destroyAllocator(){
     allocator.close();
+  }
+
+  public void runTestsOnFile(String filename, UserBitShared.QueryType queryType, String[] queries, long[] rowCounts) throws Exception {
+    if (VERBOSE_DEBUG) {
+      System.out.println("===================");
+      System.out.println("source data in json");
+      System.out.println("===================");
+      System.out.println(Files.toString(FileUtils.getResourceAsFile(filename), Charsets.UTF_8));
+    }
+
+    int i = 0;
+    for (String query : queries) {
+      if (VERBOSE_DEBUG) {
+        System.out.println("=====");
+        System.out.println("query");
+        System.out.println("=====");
+        System.out.println(query);
+        System.out.println("======");
+        System.out.println("result");
+        System.out.println("======");
+      }
+      int rowCount = testRunAndPrint(queryType, query);
+      assertEquals(rowCounts[i], rowCount);
+      System.out.println();
+      i++;
+    }
+  }
+
+  @Test
+  public void testSingleColumnRead_vector_fill_bug() throws Exception {
+    String[] queries = {"select * from cp.`/store/json/single_column_long_file.json`"};
+    long[] rowCounts = {13512};
+    String filename = "/store/json/single_column_long_file.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+  }
+
+  @Test
+  public void testNonExistentColumnReadAlone() throws Exception {
+    String[] queries = {"select non_existent_column from cp.`/store/json/single_column_long_file.json`"};
+    long[] rowCounts = {13512};
+    String filename = "/store/json/single_column_long_file.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+  }
+
+  public void testAllTextMode() throws Exception {
+    test("alter system set `store.json.all_text_mode` = true");
+    String[] queries = {"select * from cp.`/store/json/schema_change_int_to_string.json`"};
+    long[] rowCounts = {3};
+    String filename = "/store/json/schema_change_int_to_string.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+  }
+
+  @Test
+  public void readComplexWithStar() throws Exception {
+    List<QueryResultBatch> results = testSqlWithResults("select * from cp.`/store/json/test_complex_read_with_star.json`");
+    assertEquals(2, results.size());
+
+    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
+    QueryResultBatch batch = results.get(0);
+
+    assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
+    assertEquals(3, batchLoader.getSchema().getFieldCount());
+    testExistentColumns(batchLoader, batch);
+
+    batch.release();
+    batchLoader.clear();
+  }
+
+  @Test
+  public void testNullWhereListExpected() throws Exception {
+    test("alter system set `store.json.all_text_mode` = true");
+    String[] queries = {"select * from cp.`/store/json/null_where_list_expected.json`"};
+    long[] rowCounts = {3};
+    String filename = "/store/json/null_where_list_expected.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+  }
+
+  @Test
+  public void testNullWhereMapExpected() throws Exception {
+    test("alter system set `store.json.all_text_mode` = true");
+    String[] queries = {"select * from cp.`/store/json/null_where_map_expected.json`"};
+    long[] rowCounts = {3};
+    String filename = "/store/json/null_where_map_expected.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+  }
+
+  // The project pushdown rule is correctly adding the projected columns to the scan, however it is not removing
+  // the redundant project operator after the scan, this tests runs a physical plan generated from one of the tests to
+  // ensure that the project is filtering out the correct data in the scan alone
+  @Test
+  public void testProjectPushdown() throws Exception {
+    String[] queries = {Files.toString(FileUtils.getResourceAsFile("/store/json/project_pushdown_json_physical_plan.json"), Charsets.UTF_8)};
+    long[] rowCounts = {3};
+    String filename = "/store/json/schema_change_int_to_string.json";
+    test("alter system set `store.json.all_text_mode` = false");
+    runTestsOnFile(filename, UserBitShared.QueryType.PHYSICAL, queries, rowCounts);
+
+    List<QueryResultBatch> results = testPhysicalWithResults(queries[0]);
+    assertEquals(2, results.size());
+    // "`field_1`", "`field_3`.`inner_1`", "`field_3`.`inner_2`", "`field_4`.`inner_1`"
+
+    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
+    QueryResultBatch batch = results.get(0);
+    assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
+    assertEquals(5, batchLoader.getSchema().getFieldCount());
+    testExistentColumns(batchLoader, batch);
+
+    VectorWrapper vw = batchLoader.getValueAccessorById(
+        NullableIntVector.class, //
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("non_existent_at_root")).getFieldIds() //
+    );
+    assertNull(vw.getValueVector().getAccessor().getObject(0));
+    assertNull(vw.getValueVector().getAccessor().getObject(1));
+    assertNull(vw.getValueVector().getAccessor().getObject(2));
+
+    vw = batchLoader.getValueAccessorById(
+        NullableIntVector.class, //
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("non_existent", "nested","field")).getFieldIds() //
+    );
+    assertNull(vw.getValueVector().getAccessor().getObject(0));
+    assertNull(vw.getValueVector().getAccessor().getObject(1));
+    assertNull(vw.getValueVector().getAccessor().getObject(2));
+
+    vw.getValueVector().clear();
+    batch.release();
+    batchLoader.clear();
+  }
+
+  private void testExistentColumns(RecordBatchLoader batchLoader, QueryResultBatch batch) throws SchemaChangeException {
+
+    assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
+
+    VectorWrapper<?> vw = batchLoader.getValueAccessorById(
+        RepeatedBigIntVector.class, //
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_1")).getFieldIds() //
+    );
+    assertEquals("[1]", vw.getValueVector().getAccessor().getObject(0).toString());
+    assertEquals("[5]", vw.getValueVector().getAccessor().getObject(1).toString());
+    assertEquals("[5,10,15]", vw.getValueVector().getAccessor().getObject(2).toString());
+
+    vw = batchLoader.getValueAccessorById(
+        IntVector.class, //
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_3", "inner_1")).getFieldIds() //
+    );
+    assertNull(vw.getValueVector().getAccessor().getObject(0));
+    assertEquals(2l, vw.getValueVector().getAccessor().getObject(1));
+    assertEquals(5l, vw.getValueVector().getAccessor().getObject(2));
+
+    vw = batchLoader.getValueAccessorById(
+        IntVector.class, //
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_3", "inner_2")).getFieldIds() //
+    );
+    assertNull(vw.getValueVector().getAccessor().getObject(0));
+    assertNull(vw.getValueVector().getAccessor().getObject(1));
+    assertEquals(3l, vw.getValueVector().getAccessor().getObject(2));
+
+    vw = batchLoader.getValueAccessorById(
+        RepeatedBigIntVector.class, //
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_4", "inner_1")).getFieldIds() //
+    );
+    assertEquals("[]", vw.getValueVector().getAccessor().getObject(0).toString());
+    assertEquals("[1,2,3]", vw.getValueVector().getAccessor().getObject(1).toString());
+    assertEquals("[4,5,6]", vw.getValueVector().getAccessor().getObject(2).toString());
   }
 
   @Test
@@ -87,8 +272,9 @@ public class TestJsonReader {
     ComplexWriterImpl writer = new ComplexWriterImpl("col", v);
     writer.allocate();
 
-
-    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound));
+    DrillBuf buffer = allocator.buffer(255);
+    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound), buffer,
+        GroupScan.ALL_COLUMNS, false);
     int i =0;
     List<Integer> batchSizes = Lists.newArrayList();
 
@@ -158,6 +344,6 @@ public class TestJsonReader {
     assertEquals((repeatSize+1) * 2, total);
 
     writer.clear();
-
+    buffer.release();
   }
 }

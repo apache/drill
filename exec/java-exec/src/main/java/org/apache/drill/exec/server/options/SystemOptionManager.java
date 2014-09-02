@@ -61,6 +61,8 @@ public class SystemOptionManager implements OptionManager{
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
       ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR,
+      ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR,
+//      ExecConstants.MONGO_READER_ALL_TEXT_MODE_VALIDATOR,
       ExecConstants.SLICE_TARGET_OPTION,
       ExecConstants.AFFINITY_FACTOR,
       ExecConstants.MAX_WIDTH_GLOBAL,
@@ -99,9 +101,10 @@ public class SystemOptionManager implements OptionManager{
         .build();
   }
 
-  public void init() throws IOException{
+  public SystemOptionManager init() throws IOException{
     this.options = provider.getPStore(config);
     this.admin = new SystemOptionAdmin();
+    return this;
   }
 
   private class Iter implements Iterator<OptionValue>{

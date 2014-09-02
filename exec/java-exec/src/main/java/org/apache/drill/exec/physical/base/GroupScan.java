@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -31,6 +32,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * plan.  It is the superset of all SubScans for the plan.
  */
 public interface GroupScan extends Scan, HasAffinity{
+
+  public static final List<SchemaPath> ALL_COLUMNS = Lists.<SchemaPath>newArrayList(SchemaPath.getSimplePath("*"));
 
   public abstract void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
 

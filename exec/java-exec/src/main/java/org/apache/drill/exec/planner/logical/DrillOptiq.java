@@ -36,6 +36,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.planner.StarColumnHelper;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexCall;
@@ -167,6 +168,15 @@ public class DrillOptiq {
 
         if (call.getOperator() == SqlStdOperatorTable.ITEM) {
           SchemaPath left = (SchemaPath) call.getOperands().get(0).accept(this);
+
+          // Convert expr of item[*, 'abc'] into column expression 'abc'
+          String rootSegName = left.getRootSegment().getPath();
+          if (StarColumnHelper.isStarColumn(rootSegName)) {
+            rootSegName = rootSegName.substring(0, rootSegName.indexOf("*"));
+            final RexLiteral literal = (RexLiteral) call.getOperands().get(1);
+            return SchemaPath.getSimplePath(rootSegName + literal.getValue2().toString());
+          }
+
           final RexLiteral literal = (RexLiteral) call.getOperands().get(1);
           switch(literal.getTypeName()){
           case DECIMAL:

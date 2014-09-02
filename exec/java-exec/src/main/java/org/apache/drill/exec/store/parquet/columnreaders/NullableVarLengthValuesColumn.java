@@ -17,8 +17,12 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
+
 import parquet.bytes.BytesUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
@@ -37,7 +41,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
-  public abstract boolean setSafe(int index, byte[] value, int start, int length);
+  public abstract boolean setSafe(int index, DrillBuf value, int start, int length);
 
   public abstract int capacity();
 
@@ -81,16 +85,13 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     }
     else {
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
-      dataTypeLengthInBits = BytesUtils.readIntLittleEndian(pageReader.pageDataByteArray,
-          (int) pageReader.readyToReadPosInBytes);
+      dataTypeLengthInBits = pageReader.pageDataByteArray.getInt((int) pageReader.readyToReadPosInBytes);
     }
     // I think this also needs to happen if it is null for the random access
-    if (! variableWidthVector.getMutator().setValueLengthSafe((int) valuesReadInCurrentPass + pageReader.valuesReadyToRead, dataTypeLengthInBits)) {
-      return true;
-    }
     boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageDataByteArray,
         (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-    assert success;
+    if ( ! success )
+      return true;
     return false;
   }
 
@@ -113,6 +114,8 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
 
   @Override
   protected void readField(long recordsToRead) {
+    // TODO - unlike most implementations of this method, the recordsReadInThisIteration field is not set here
+    // should verify that this is not breaking anything
     if (usingDictionary) {
       currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division

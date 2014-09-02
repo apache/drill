@@ -28,6 +28,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -35,7 +37,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
@@ -52,9 +54,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void eval() {
 
-        int carry = (org.apache.drill.common.util.DecimalUtility.getFirstFractionalDigit(in.value, in.scale) > 4) ? 1 : 0;
+        int carry = (org.apache.drill.exec.util.DecimalUtility.getFirstFractionalDigit(in.value, in.scale) > 4) ? 1 : 0;
         // Assign the integer part of the decimal to the output holder
-        out.value = java.lang.Math.abs((${type.javatype}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(in.value, (int) in.scale))) + carry;
+        out.value = java.lang.Math.abs((${type.javatype}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleDivide(in.value, (int) in.scale))) + carry;
         if (in.value < 0) {
           out.value *= -1;
         }
@@ -75,7 +77,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
@@ -92,19 +94,19 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void eval() {
 
-        int carry = (org.apache.drill.common.util.DecimalUtility.getFirstFractionalDigit(in.buffer, in.scale, in.start, in.nDecimalDigits) > 4) ? 1 : 0;
+        int carry = (org.apache.drill.exec.util.DecimalUtility.getFirstFractionalDigit(in.buffer, in.scale, in.start, in.nDecimalDigits) > 4) ? 1 : 0;
 
         // Get the index, where the integer part of the decimal ends
-        int integerEndIndex = in.nDecimalDigits - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
+        int integerEndIndex = in.nDecimalDigits - org.apache.drill.exec.util.DecimalUtility.roundUp(in.scale);
 
         for (int i = 0 ; i < integerEndIndex; i++) {
             // We store values as base 1 billion integers, use this to compute the output (we don't care about overflows)
-            out.value = (${type.javatype}) ((out.value * org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) + in.getInteger(i));
+            out.value = (${type.javatype}) ((out.value * org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) + in.getInteger(i, in.start, in.buffer));
         }
 
         out.value += carry;
 
-        if (in.getSign() == true) {
+        if (in.getSign(in.start, in.buffer) == true) {
             out.value *= -1;
         }
     }

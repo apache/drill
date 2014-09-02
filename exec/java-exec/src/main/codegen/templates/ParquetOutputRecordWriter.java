@@ -36,12 +36,12 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.parquet.ParquetTypeHelper;
 import org.apache.drill.exec.vector.*;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import parquet.io.api.RecordConsumer;
 import parquet.schema.MessageType;
 import parquet.io.api.Binary;
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -191,7 +191,7 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
       byte[] bytes = DecimalUtility.getBigDecimalFromSparse(
               holder.buffer, holder.start, ${minor.class}Holder.nDecimalDigits, holder.scale).unscaledValue().toByteArray();
       byte[] output = new byte[ParquetTypeHelper.getLengthForMinorType(MinorType.${minor.class?upper_case})];
-      if (holder.getSign()) {
+      if (holder.getSign(holder.start, holder.buffer)) {
         Arrays.fill(output, 0, output.length - bytes.length, (byte)0xFF);
       } else {
         Arrays.fill(output, 0, output.length - bytes.length, (byte)0x0);
@@ -215,12 +215,12 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
   <#elseif minor.class == "VarChar" || minor.class == "Var16Char" || minor.class == "VarBinary">
     <#if mode.prefix == "Repeated">
       reader.read(i, holder);
-      consumer.startField(fieldName, fieldId);
+      //consumer.startField(fieldName, fieldId);
       consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
-      consumer.endField(fieldName, fieldId);
+      //consumer.endField(fieldName, fieldId);
     <#else>
     reader.read(holder);
-    ByteBuf buf = holder.buffer;
+    DrillBuf buf = holder.buffer;
     consumer.startField(fieldName, fieldId);
     consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
     consumer.endField(fieldName, fieldId);

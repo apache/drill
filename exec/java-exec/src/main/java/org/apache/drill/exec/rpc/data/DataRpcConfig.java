@@ -30,13 +30,13 @@ import org.apache.drill.exec.rpc.RpcConfig;
 
 public class DataRpcConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataRpcConfig.class);
-  
+
   public static RpcConfig MAPPING = RpcConfig.newBuilder("BIT-DATA-RPC-MAPPING") //
       .add(RpcType.HANDSHAKE, BitClientHandshake.class, RpcType.HANDSHAKE, BitServerHandshake.class)
       .add(RpcType.REQ_RECORD_BATCH, FragmentRecordBatch.class, RpcType.ACK, Ack.class)
       .build();
-  
-  public static int RPC_VERSION = 1;
-  
+
+  public static int RPC_VERSION = 2;
+
   public static final Response OK = new Response(RpcType.ACK, Acks.OK);
 }

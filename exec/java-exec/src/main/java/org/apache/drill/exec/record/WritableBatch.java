@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.record;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.CompositeByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.List;
 
@@ -37,15 +36,15 @@ public class WritableBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WritableBatch.class);
 
   private final RecordBatchDef def;
-  private final ByteBuf[] buffers;
+  private final DrillBuf[] buffers;
   private boolean cleared = false;
 
-  private WritableBatch(RecordBatchDef def, List<ByteBuf> buffers) {
+  private WritableBatch(RecordBatchDef def, List<DrillBuf> buffers) {
     this.def = def;
-    this.buffers = buffers.toArray(new ByteBuf[buffers.size()]);
+    this.buffers = buffers.toArray(new DrillBuf[buffers.size()]);
   }
 
-  private WritableBatch(RecordBatchDef def, ByteBuf[] buffers) {
+  private WritableBatch(RecordBatchDef def, DrillBuf[] buffers) {
     super();
     this.def = def;
     this.buffers = buffers;
@@ -55,20 +54,27 @@ public class WritableBatch {
     return def;
   }
 
-  public ByteBuf[] getBuffers() {
+  public DrillBuf[] getBuffers() {
     return buffers;
   }
 
   public void reconstructContainer(VectorContainer container) {
     Preconditions.checkState(!cleared,
         "Attempted to reconstruct a container from a WritableBatch after it had been cleared");
-    if (buffers.length > 0) { /* If we have ByteBuf's associated with value vectors */
+    if (buffers.length > 0) { /* If we have DrillBuf's associated with value vectors */
+      int len = 0;
+      for(DrillBuf b : buffers){
+        len += b.capacity();
+      }
 
-      CompositeByteBuf cbb = new CompositeByteBuf(buffers[0].alloc(), true, buffers.length);
+      DrillBuf newBuf = buffers[0].getAllocator().buffer(len);
 
       /* Copy data from each buffer into the compound buffer */
-      for (ByteBuf buf : buffers) {
-        cbb.addComponent(buf);
+      int offset = 0;
+      for (DrillBuf buf : buffers) {
+        newBuf.setBytes(offset, buf);
+        offset += buf.capacity();
+        buf.release();
       }
 
       List<SerializedField> fields = def.getFieldList();
@@ -83,7 +89,7 @@ public class WritableBatch {
       for (VectorWrapper<?> vv : container) {
         SerializedField fmd = fields.get(vectorIndex);
         ValueVector v = vv.getValueVector();
-        ByteBuf bb = cbb.slice(bufferOffset, fmd.getBufferLength());
+        DrillBuf bb = newBuf.slice(bufferOffset, fmd.getBufferLength());
 //        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
         v.load(fmd, bb);
         bb.release();
@@ -109,7 +115,7 @@ public class WritableBatch {
 
   public void clear() {
     if(cleared) return;
-    for (ByteBuf buf : buffers) {
+    for (DrillBuf buf : buffers) {
       buf.release();
     }
     cleared = true;
@@ -125,17 +131,19 @@ public class WritableBatch {
   }
 
   public static WritableBatch getBatchNoHV(int recordCount, Iterable<ValueVector> vectors, boolean isSV2) {
-    List<ByteBuf> buffers = Lists.newArrayList();
+    List<DrillBuf> buffers = Lists.newArrayList();
     List<SerializedField> metadata = Lists.newArrayList();
 
     for (ValueVector vv : vectors) {
       metadata.add(vv.getMetadata());
 
       // don't try to get the buffers if we don't have any records. It is possible the buffers are dead buffers.
-      if (recordCount == 0)
+      if (recordCount == 0) {
+        vv.clear();
         continue;
+      }
 
-      for (ByteBuf b : vv.getBuffers()) {
+      for (DrillBuf b : vv.getBuffers(true)) {
         buffers.add(b);
       }
       // remove vv access to buffers.
@@ -157,13 +165,13 @@ public class WritableBatch {
   }
 
   public void retainBuffers() {
-    for (ByteBuf buf : buffers) {
+    for (DrillBuf buf : buffers) {
       buf.retain();
     }
   }
-  
+
   public void retainBuffers(int increment) {
-    for (ByteBuf buf : buffers) {
+    for (DrillBuf buf : buffers) {
       buf.retain(increment);
     }
   }

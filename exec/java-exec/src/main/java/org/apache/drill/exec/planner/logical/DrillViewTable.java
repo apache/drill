@@ -56,7 +56,8 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
     RelDataType rowType = relOptTable.getRowType();
     RelNode rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath());
 
-    if (view.isDynamic()){
+    if (view.isDynamic() || view.hasStar()){
+      // if View's field has "*", return rel directly.
       return rel;
     }else{
       // if the View's field list is not "*", try to create a cast.

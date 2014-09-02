@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.AccountingByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.ByteBuf;
 
 public class VectorTrimmer {
@@ -25,7 +25,7 @@ public class VectorTrimmer {
 
   public static void trim(ByteBuf data, int idx) {
     data.writerIndex(idx);
-    if (data instanceof AccountingByteBuf) {
+    if (data instanceof DrillBuf) {
       // data.capacity(idx);
       data.writerIndex(idx);
     }

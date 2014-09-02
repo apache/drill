@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 import java.util.List;
@@ -81,7 +81,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     offsets.allocateNew(parentValueCount+1);
     offsets.zeroVector();
     for(ValueVector v : vectors.values()){
-      AllocationHelper.allocate(v, parentValueCount, 50, childValueCount);
+      AllocationHelper.allocatePrecomputedChildCount(v, parentValueCount, 50, childValueCount);
     }
     mutator.reset();
     accessor.reset();
@@ -307,20 +307,20 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   @Override
-  public ByteBuf[] getBuffers() {
-    List<ByteBuf> bufs = Lists.newArrayList(offsets.getBuffers());
+  public DrillBuf[] getBuffers(boolean clear) {
+    List<DrillBuf> bufs = Lists.newArrayList(offsets.getBuffers(clear));
 
     for(ValueVector v : vectors.values()){
-      for(ByteBuf b : v.getBuffers()){
+      for(DrillBuf b : v.getBuffers(clear)){
         bufs.add(b);
       }
     }
-    return bufs.toArray(new ByteBuf[bufs.size()]);
+    return bufs.toArray(new DrillBuf[bufs.size()]);
   }
 
 
   @Override
-  public void load(SerializedField metadata, ByteBuf buf) {
+  public void load(SerializedField metadata, DrillBuf buf) {
     List<SerializedField> fields = metadata.getChildList();
 
     int bufOffset = offsets.load(metadata.getValueCount()+1, buf);
@@ -513,7 +513,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   @Override
-  public int load(int parentValueCount, int childValueCount, ByteBuf buf) {
+  public int load(int parentValueCount, int childValueCount, DrillBuf buf) {
     throw new UnsupportedOperationException();
   }
 

@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
@@ -30,8 +33,8 @@ import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.vector.NullableDateVector;
 import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
 import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
-
 import org.joda.time.DateTimeUtils;
+
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -41,7 +44,7 @@ import java.math.BigDecimal;
 public class NullableFixedByteAlignedReaders {
 
   static class NullableFixedByteAlignedReader extends NullableColumnReader {
-    protected byte[] bytes;
+    protected DrillBuf bytebuf;
 
     NullableFixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                       ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
@@ -57,16 +60,14 @@ public class NullableFixedByteAlignedReaders {
       this.readStartInBytes = pageReader.readPosInBytes;
       this.readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
       this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
-      this.bytes = pageReader.pageDataByteArray;
+      this.bytebuf = pageReader.pageDataByteArray;
 
       // fill in data.
-      vectorData.writeBytes(bytes, (int) readStartInBytes, (int) readLength);
+      vectorData.writeBytes(bytebuf, (int) readStartInBytes, (int) readLength);
     }
   }
 
   static class NullableDictionaryIntReader extends NullableColumnReader<NullableIntVector> {
-
-    private byte[] bytes;
 
     NullableDictionaryIntReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                 ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableIntVector v,
@@ -81,13 +82,15 @@ public class NullableFixedByteAlignedReaders {
         for (int i = 0; i < recordsToReadInThisPass; i++){
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
         }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readInteger());
+        }
       }
     }
   }
 
   static class NullableDictionaryBigIntReader extends NullableColumnReader<NullableBigIntVector> {
-
-    private byte[] bytes;
 
     NullableDictionaryBigIntReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableBigIntVector v,
@@ -98,15 +101,19 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      for (int i = 0; i < recordsToReadInThisPass; i++){
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
+        }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readLong());
+        }
       }
     }
   }
 
   static class NullableDictionaryFloat4Reader extends NullableColumnReader<NullableFloat4Vector> {
-
-    private byte[] bytes;
 
     NullableDictionaryFloat4Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableFloat4Vector v,
@@ -117,15 +124,19 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      for (int i = 0; i < recordsToReadInThisPass; i++){
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readFloat());
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readFloat());
+        }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readFloat());
+        }
       }
     }
   }
 
   static class NullableDictionaryFloat8Reader extends NullableColumnReader<NullableFloat8Vector> {
-
-    private byte[] bytes;
 
     NullableDictionaryFloat8Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableFloat8Vector v,
@@ -136,8 +147,14 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      for (int i = 0; i < recordsToReadInThisPass; i++){
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readDouble());
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readDouble());
+        }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readDouble());
+        }
       }
     }
   }
@@ -160,7 +177,7 @@ public class NullableFixedByteAlignedReaders {
       this.readStartInBytes = pageReader.readPosInBytes;
       this.readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
       this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
-      this.bytes = pageReader.pageDataByteArray;
+      this.bytebuf = pageReader.pageDataByteArray;
 
       dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
       for (int i = 0; i < recordsReadInThisIteration; i++) {
@@ -183,15 +200,15 @@ public class NullableFixedByteAlignedReaders {
 
     @Override
     void addNext(int start, int index) {
-      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(readIntLittleEndian(bytes, start) - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(readIntLittleEndian(bytebuf, start) - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
     }
 
     // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
-    public static int readIntLittleEndian(byte[] in, int offset) {
-      int ch4 = in[offset] & 0xff;
-      int ch3 = in[offset + 1] & 0xff;
-      int ch2 = in[offset + 2] & 0xff;
-      int ch1 = in[offset + 3] & 0xff;
+    public static int readIntLittleEndian(ByteBuf in, int offset) {
+      int ch4 = in.getByte(offset) & 0xff;
+      int ch3 = in.getByte(offset + 1) & 0xff;
+      int ch2 = in.getByte(offset + 2) & 0xff;
+      int ch1 = in.getByte(offset + 3) & 0xff;
       return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
     }
 
@@ -210,7 +227,7 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int width = NullableDecimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal28SparseHolder.nDecimalDigits);
     }
@@ -229,7 +246,7 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int width = NullableDecimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getData(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal38SparseHolder.nDecimalDigits);
     }

@@ -31,8 +31,8 @@ import com.google.common.io.Resources;
 
 class ByteCodeLoader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteCodeLoader.class);
-  
-  
+
+
   private final LoadingCache<String, byte[]> byteCode = CacheBuilder.newBuilder().maximumSize(10000)
       .expireAfterWrite(10, TimeUnit.MINUTES).build(new ClassBytesCacheLoader());
 

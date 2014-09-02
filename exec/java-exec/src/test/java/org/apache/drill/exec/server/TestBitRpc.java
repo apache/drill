@@ -19,6 +19,7 @@ package org.apache.drill.exec.server;
 
 import static org.junit.Assert.assertTrue;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -153,7 +154,7 @@ public class TestBitRpc extends ExecTest {
     int v = 0;
 
     @Override
-    public void handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, ByteBuf data, ResponseSender sender)
+    public void handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, DrillBuf data, ResponseSender sender)
         throws RpcException {
       // System.out.println("Received.");
       try {

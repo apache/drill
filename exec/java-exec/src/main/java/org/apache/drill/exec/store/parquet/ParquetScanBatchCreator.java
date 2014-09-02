@@ -32,6 +32,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 
 import com.google.common.base.Preconditions;
@@ -43,6 +44,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import parquet.column.ColumnDescriptor;
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.MessageType;
@@ -65,11 +67,9 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
     List<String[]> partitionColumns = Lists.newArrayList();
     List<Integer> selectedPartitionColumns = Lists.newArrayList();
-    boolean selectAllColumns = false;
+    boolean selectAllColumns = AbstractRecordReader.isStarQuery(columns);
 
-    if (columns == null || columns.size() == 0) {
-      selectAllColumns = true;
-    } else {
+    if (!selectAllColumns) {
       List<SchemaPath> newColums = Lists.newArrayList();
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {
@@ -80,8 +80,10 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           newColums.add(column);
         }
       }
+      final int id = rowGroupScan.getOperatorId();
       // Create the new row group scan with the new columns
       rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getStorageEngine(), rowGroupScan.getRowGroupReadEntries(), newColums, rowGroupScan.getSelectionRoot());
+      rowGroupScan.setOperatorId(id);
     }
 
     FileSystem fs = rowGroupScan.getStorageEngine().getFileSystem().getUnderlying();
@@ -143,16 +145,29 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       }
     }
 
-    return new ScanBatch(rowGroupScan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+    ScanBatch s = new ScanBatch(rowGroupScan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+
+    for(RecordReader r  : readers){
+      r.setOperatorContext(s.getOperatorContext());
+    }
+
+    return s;
   }
 
   private static boolean isComplex(ParquetMetadata footer) {
     MessageType schema = footer.getFileMetaData().getSchema();
+
     for (Type type : schema.getFields()) {
       if (!type.isPrimitive()) {
         return true;
       }
     }
+    for (ColumnDescriptor col : schema.getColumns()) {
+      if (col.getMaxRepetitionLevel() > 0) {
+        return true;
+      }
+    }
     return false;
   }
+
 }

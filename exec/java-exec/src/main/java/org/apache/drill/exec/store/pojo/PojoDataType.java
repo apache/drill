@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.pojo;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -38,6 +39,8 @@ public class PojoDataType {
     Field[] fields = pojoClass.getDeclaredFields();
     for(int i = 0; i < fields.length; i++){
       Field f = fields[i];
+
+      if(Modifier.isStatic(f.getModifiers())) continue;
 
       Class<?> type = f.getType();
       names.add(f.getName());

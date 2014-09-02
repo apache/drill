@@ -21,22 +21,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.fn.JsonRecordSplitter;
 import org.apache.drill.exec.vector.complex.fn.UTF8JsonRecordSplitter;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-public class JSONRecordReader2 implements RecordReader{
+import com.fasterxml.jackson.core.JsonParseException;
+
+public class JSONRecordReader2 extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader2.class);
 
   private OutputMutator mutator;
@@ -46,11 +51,18 @@ public class JSONRecordReader2 implements RecordReader{
   private InputStream stream;
   private JsonReaderWithState jsonReader;
   private int recordCount;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
+  private List<SchemaPath> columns;
+  private boolean enableAllTextMode;
 
   public JSONRecordReader2(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
                           List<SchemaPath> columns) throws OutOfMemoryException {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;
+    this.fragmentContext = fragmentContext;
+    this.columns = columns;
+    enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption("store.json.all_text_mode").bool_val;
   }
 
   @Override
@@ -60,7 +72,7 @@ public class JSONRecordReader2 implements RecordReader{
       JsonRecordSplitter splitter = new UTF8JsonRecordSplitter(stream);
       this.writer = new VectorContainerWriter(output);
       this.mutator = output;
-      jsonReader = new JsonReaderWithState(splitter);
+      jsonReader = new JsonReaderWithState(splitter, fragmentContext.getManagedBuffer(), columns, enableAllTextMode);
     }catch(Exception e){
       handleAndRaise("Failure reading JSON file.", e);
     }
@@ -76,6 +88,15 @@ public class JSONRecordReader2 implements RecordReader{
     throw new DrillRuntimeException(sb.toString(), e);
   }
 
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
+  }
+
   @Override
   public int next() {
     writer.allocate();
@@ -84,7 +105,7 @@ public class JSONRecordReader2 implements RecordReader{
     recordCount = 0;
 
     try{
-      outside: while(true){
+      outside: while(true && recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION){
         writer.setPosition(recordCount);
 
         switch(jsonReader.write(writer)){
@@ -102,12 +123,31 @@ public class JSONRecordReader2 implements RecordReader{
           break outside;
         };
       }
-    } catch(Exception e) {
-      handleAndRaise("Failure while parsing JSON file.", e);
-    }
+      for (SchemaPath sp :jsonReader.getNullColumns() ) {
+        PathSegment root = sp.getRootSegment();
+        BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+        if (root.getChild() != null && ! root.getChild().isArray()) {
+          fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
+          while ( root.getChild().getChild() != null && ! root.getChild().isArray() ) {
+            fieldWriter = fieldWriter.map(root.getChild().getNameSegment().getPath());
+            root = root.getChild();
+          }
+          fieldWriter.integer(root.getChild().getNameSegment().getPath());
+        } else  {
+          fieldWriter.integer(root.getNameSegment().getPath());
+        }
+      }
 
-    writer.setValueCount(recordCount);
-    return recordCount;
+      writer.setValueCount(recordCount);
+      return recordCount;
+
+    } catch (JsonParseException e) {
+      handleAndRaise("Error parsing JSON.", e);
+    } catch (IOException e) {
+      handleAndRaise("Error reading JSON.", e);
+    }
+    // this is never reached
+    return 0;
   }
 
   @Override

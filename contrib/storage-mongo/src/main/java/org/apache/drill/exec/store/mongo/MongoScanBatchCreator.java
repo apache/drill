@@ -20,7 +20,9 @@ package org.apache.drill.exec.store.mongo;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -40,10 +42,14 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
+    List<SchemaPath> columns = null;
     for (MongoSubScan.MongoSubScanSpec scanSpec : subScan.getChunkScanSpecList()) {
       try {
+    	if ((columns = subScan.getColumns())==null) {
+          columns = GroupScan.ALL_COLUMNS;
+        }
         MongoClientOptions clientOptions = subScan.getMongoPluginConfig().getMongoOptions();
-        readers.add(new MongoRecordReader(scanSpec, subScan.getColumns(), context, clientOptions));
+        readers.add(new MongoRecordReader(scanSpec, columns, context, clientOptions));
       } catch (Exception e) {
         logger.error("MongoRecordReader creation failed for subScan:  " + subScan + ".");
         logger.error(e.getMessage(), e);

@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.codehaus.commons.compiler.CompileException;
@@ -39,30 +39,12 @@ import com.google.common.collect.Sets;
 public class ClassTransformer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassTransformer.class);
 
-  private ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
-  private AtomicLong index = new AtomicLong(0);
+  private final ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
+  private final DistributedCache cache;
 
-
-//  public <T, I> T getImplementationClassByBody( QueryClassLoader classLoader, TemplateClassDefinition<T> templateDefinition, //
-//      String internalClassBody //
-//  ) throws ClassTransformationException {
-//    final String materializedClassName = "org.apache.drill.generated."
-//        + "Gen" + templateDefinition.getExternalInterface().getSimpleName() //
-//        + index.getAndIncrement();
-//    // Get Implementation Class
-//    try {
-//      String classBody = ClassBodyBuilder.newBuilder() //
-//          .setClassName(materializedClassName) //
-//          .setBody(internalClassBody) //
-//          .build();
-//      return getImplementationClass(classLoader, templateDefinition, classBody, materializedClassName);
-//    } catch (IOException | CompileException e) {
-//      throw new ClassTransformationException("Failure generating class body for runtime generated class.", e);
-//    }
-//
-//  }
-
-
+  public ClassTransformer(DistributedCache cache) {
+    this.cache = cache;
+  }
 
   public static class ClassSet{
     public final ClassSet parent;
@@ -175,65 +157,8 @@ public class ClassTransformer {
         return false;
       return true;
     }
-
-
-//
-//    public ClassNames getFixed(ClassNames precompiled, ClassNames generated){
-//      if(!dot.startsWith(precompiled.dot)) throw new IllegalStateException(String.format("Expected a class that starts with %s.  However the class %s does not start with this string.", precompiled.dot, dot));
-//      return new ClassNames(dot.replace(precompiled.dot, generated.dot));
-//    }
   }
 
-//
-//  private void mergeAndInjectClass(QueryClassLoader classLoader, byte[] implementationClass, ClassNames precompiled, ClassNames generated){
-//    // Get Template Class
-//    final byte[] templateClass = byteCodeLoader.getClassByteCodeFromPath(precompiled.clazz);
-//
-//    // get the runtime generated class's ClassNode from bytecode.
-//    ClassNode impl = getClassNodeFromByteCode(implementationClass);
-//
-//    // Setup adapters for merging, remapping class names and class writing. This is done in reverse order of how they
-//    // will be evaluated.
-//
-//    Stopwatch t3;
-//    {
-//
-//      //
-//      ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-//
-//      ClassVisitor remappingAdapter = new RemappingClassAdapter(cw, remapper);
-//      MergeAdapter mergingAdapter = new MergeAdapter(oldTemplateSlashName, materializedSlashName, remappingAdapter,
-//          impl);
-//      ClassReader tReader = new ClassReader(templateClass);
-//      tReader.accept(mergingAdapter, ClassReader.EXPAND_FRAMES);
-//      byte[] outputClass = cw.toByteArray();
-////      Files.write(outputClass, new File(String.format("/tmp/%d-output.class", fileNum)));
-//      outputClass = cw.toByteArray();
-//
-//      // Load the class
-//      classLoader.injectByteCode(materializedClassName, outputClass);
-//    }
-//    t3.stop();
-//    Stopwatch t4 = new Stopwatch().start();
-//    int i = 0;
-//    for (String s : remapper.getInnerClasses()) {
-//      logger.debug("Setting up sub class {}", s);
-//      // for each sub class, remap them into the new class.
-//      String subclassPath = FileUtils.separator + s + ".class";
-//      final byte[] bytecode = getClassByteCodeFromPath(subclassPath);
-//      RemapClasses localRemapper = new RemapClasses(oldTemplateSlashName, materializedSlashName);
-//      Preconditions.checkArgument(localRemapper.getInnerClasses().isEmpty(), "Class transformations are only supported for classes that have a single level of inner classes.");
-//      ClassWriter subcw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-//      ClassVisitor remap = new RemappingClassAdapter(subcw, localRemapper);
-//      ClassReader reader = new ClassReader(bytecode);
-//      reader.accept(remap, ClassReader.EXPAND_FRAMES);
-//      byte[] newByteCode = subcw.toByteArray();
-//      classLoader.injectByteCode(s.replace(oldTemplateSlashName, materializedSlashName).replace(FileUtils.separatorChar, '.'), newByteCode);
-////      Files.write(subcw.toByteArray(), new File(String.format("/tmp/%d-sub-%d.class", fileNum, i)));
-//      i++;
-//    }
-//  }
-//
   private static ClassNode getClassNodeFromByteCode(byte[] bytes) {
     ClassReader iReader = new ClassReader(bytes);
     ClassNode impl = new ClassNode();
@@ -241,10 +166,9 @@ public class ClassTransformer {
     return impl;
   }
 
-  @SuppressWarnings("unchecked")
-  public <T, I> T getImplementationClass( //
+  public Class<?> getImplementationClass( //
       QueryClassLoader classLoader, //
-      TemplateClassDefinition<T> templateDefinition, //
+      TemplateClassDefinition<?> templateDefinition, //
       String entireClass, //
       String materializedClassName) throws ClassTransformationException {
 
@@ -284,17 +208,16 @@ public class ClassTransformer {
 
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
-        T instance = (T) c.newInstance();
-        logger.debug("Done compiling (bytecode size={}, time:{} millis).",
-            DrillStringUtils.readable(totalBytecodeSize), (System.nanoTime() - t1) / 1000000);
-        return instance;
+        logger.debug("Done compiling (bytecode size={}, time:{} millis).", DrillStringUtils.readable(totalBytecodeSize), (System.nanoTime() - t1) / 1000000);
+        return c;
       } else {
         throw new ClassTransformationException("The requested class did not implement the expected interface.");
       }
-    } catch (CompileException | IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+    } catch (CompileException | IOException | ClassNotFoundException e) {
       throw new ClassTransformationException(String.format("Failure generating transformation classes for value: \n %s", entireClass), e);
     }
 
   }
 
 }
+

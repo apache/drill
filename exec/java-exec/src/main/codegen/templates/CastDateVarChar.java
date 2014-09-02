@@ -28,7 +28,10 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -51,11 +54,11 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Workspace ByteBuf buffer;
+  @Inject DrillBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferLength}]);
+    buffer = buffer.reallocIfNeeded((int) len.value);
   }
 
   public void eval() {

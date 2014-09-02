@@ -18,6 +18,7 @@
 package org.apache.drill.exec.work.batch;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,10 +37,6 @@ import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.rpc.RemoteConnection;
-import org.apache.drill.exec.rpc.ResponseSender;
-import org.apache.drill.exec.rpc.data.BitServerConnection;
-import org.apache.drill.exec.rpc.data.DataRpcConfig;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.hadoop.conf.Configuration;
@@ -272,7 +269,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
       Stopwatch watch = new Stopwatch();
       watch.start();
       BitData.FragmentRecordBatch header = BitData.FragmentRecordBatch.parseDelimitedFrom(stream);
-      ByteBuf buf = allocator.buffer(bodyLength);
+      DrillBuf buf = allocator.buffer(bodyLength);
       buf.writeBytes(stream, bodyLength);
       batch = new RawFragmentBatch(null, header, buf, null);
       buf.release();

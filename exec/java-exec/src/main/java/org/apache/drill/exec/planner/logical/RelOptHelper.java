@@ -32,6 +32,10 @@ public class RelOptHelper {
   public static RelOptRuleOperand any(Class<? extends RelNode> first){
     return RelOptRule.operand(first, RelOptRule.any());
   }
+
+  public static RelOptRuleOperand any(Class<? extends RelNode> first, Class<? extends RelNode> second) {
+    return RelOptRule.operand(first, RelOptRule.operand(second, RelOptRule.any()));
+  }
   
   public static RelOptRuleOperand some(Class<? extends RelNode> rel, RelOptRuleOperand first, RelOptRuleOperand... rest){
     return RelOptRule.operand(rel, RelOptRule.some(first, rest));

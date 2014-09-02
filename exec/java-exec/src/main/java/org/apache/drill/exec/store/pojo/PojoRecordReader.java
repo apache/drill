@@ -18,13 +18,19 @@
 package org.apache.drill.exec.store.pojo;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.sql.Timestamp;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.pojo.Writers.BitWriter;
 import org.apache.drill.exec.store.pojo.Writers.DoubleWriter;
 import org.apache.drill.exec.store.pojo.Writers.EnumWriter;
@@ -34,10 +40,14 @@ import org.apache.drill.exec.store.pojo.Writers.NBigIntWriter;
 import org.apache.drill.exec.store.pojo.Writers.NBooleanWriter;
 import org.apache.drill.exec.store.pojo.Writers.NDoubleWriter;
 import org.apache.drill.exec.store.pojo.Writers.NIntWriter;
-import org.apache.drill.exec.store.pojo.Writers.StringWriter;
 import org.apache.drill.exec.store.pojo.Writers.NTimeStampWriter;
+import org.apache.drill.exec.store.pojo.Writers.StringWriter;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.ValueVector;
 
-public class PojoRecordReader<T> implements RecordReader{
+import com.google.common.collect.Lists;
+
+public class PojoRecordReader<T> extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoRecordReader.class);
 
   public final int forJsonIgnore = 1;
@@ -47,52 +57,77 @@ public class PojoRecordReader<T> implements RecordReader{
   private PojoWriter[] writers;
   private boolean doCurrent;
   private T currentPojo;
+  private OperatorContext operatorContext;
 
   public PojoRecordReader(Class<T> pojoClass, Iterator<T> iterator){
     this.pojoClass = pojoClass;
     this.iterator = iterator;
   }
 
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
+  }
+
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try{
       Field[] fields = pojoClass.getDeclaredFields();
-      writers = new PojoWriter[fields.length];
-      for(int i = 0; i < writers.length; i++){
-        Field f = fields[i];
-        Class<?> type = f.getType();
+      List<PojoWriter> writers = Lists.newArrayList();
 
+      for(int i = 0; i < fields.length; i++){
+        Field f = fields[i];
+
+        if(Modifier.isStatic(f.getModifiers())) continue;
+
+        Class<?> type = f.getType();
+        PojoWriter w = null;
         if(type == int.class){
-          writers[i] = new IntWriter(f);
+          w = new IntWriter(f);
         }else if(type == Integer.class){
-          writers[i] = new NIntWriter(f);
+          w = new NIntWriter(f);
         }else if(type == Long.class){
-          writers[i] = new NBigIntWriter(f);
+          w = new NBigIntWriter(f);
         }else if(type == Boolean.class){
-          writers[i] = new NBooleanWriter(f);
+          w = new NBooleanWriter(f);
         }else if(type == double.class){
-          writers[i] = new DoubleWriter(f);
+          w = new DoubleWriter(f);
         }else if(type == Double.class){
-          writers[i] = new NDoubleWriter(f);
+          w = new NDoubleWriter(f);
         }else if(type.isEnum()){
-          writers[i] = new EnumWriter(f);
+          w = new EnumWriter(f, output.getManagedBuffer());
         }else if(type == boolean.class){
-          writers[i] = new BitWriter(f);
+          w = new BitWriter(f);
         }else if(type == long.class){
-          writers[i] = new LongWriter(f);
+          w = new LongWriter(f);
         }else if(type == String.class){
-          writers[i] = new StringWriter(f);
+          w = new StringWriter(f, output.getManagedBuffer());
         }else if (type == Timestamp.class) {
-          writers[i] = new NTimeStampWriter(f);
+          w = new NTimeStampWriter(f);
         }else{
           throw new ExecutionSetupException(String.format("PojoRecord reader doesn't yet support conversions from type [%s].", type));
         }
-        writers[i].init(output);
+        writers.add(w);
+        w.init(output);
       }
+
+      this.writers = writers.toArray(new PojoWriter[writers.size()]);
+
     }catch(SchemaChangeException e){
       throw new ExecutionSetupException("Failure while setting up schema for PojoRecordReader.", e);
     }
 
+
+  }
+
+  @Override
+  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+    for (ValueVector v : vectorMap.values()) {
+      AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
+    }
   }
 
   private void allocate(){

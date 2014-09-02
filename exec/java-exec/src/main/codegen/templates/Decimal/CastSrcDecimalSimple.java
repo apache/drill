@@ -28,6 +28,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -36,7 +38,10 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -45,16 +50,15 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
     <#if type.to.startsWith("Decimal28") || type.to.startsWith("Decimal38")>
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     </#if>
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+        buffer = buffer.reallocIfNeeded(size);
     }
 
     public void eval() {
@@ -64,7 +68,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
 
         out.scale = (int) scale.value;
@@ -72,7 +76,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         out.buffer = buffer;
         out.start = 0;
-        out.setSign((in.value < 0));
+        out.setSign((in.value < 0), out.start, out.buffer);
 
         /* Since we will be dividing the decimal value with base 1 billion
          * we don't want negative results if the decimal is negative.
@@ -84,8 +88,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         // store the decimal value as sequence of integers of base 1 billion.
         while (value > 0) {
 
-            out.setInteger(index, (int) (value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
-            value = value/org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), out.start, out.buffer);
+            value = value/org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
             index--;
         }
 
@@ -98,7 +102,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int shiftOrder = 2;
 
         // Start shifting bits just after the first integer
-        int byteIndex = in.WIDTH - (org.apache.drill.common.util.DecimalUtility.integerSize + 1);
+        int byteIndex = in.WIDTH - (org.apache.drill.exec.util.DecimalUtility.integerSize + 1);
 
         while (byteIndex >= 0) {
 
@@ -129,6 +133,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -137,7 +143,9 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -145,15 +153,14 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+        buffer = buffer.reallocIfNeeded(size);
     }
 
     public void eval() {
@@ -162,7 +169,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
@@ -182,18 +189,18 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         while(remainingScale > 0) {
 
-            int power = (remainingScale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
+            int power = (remainingScale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS);
             int padding = 1;
 
             if (power == 0) {
                 power = 9;
             } else {
-                padding = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - power)));
+                padding = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - power)));
             }
 
-            int mask = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen(power);
+            int mask = (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(power);
 
-            out.setInteger(index, (int) ((value % mask) * padding));
+            out.setInteger(index, (int) ((value % mask) * padding), out.start, out.buffer);
 
             value = value/mask;
 
@@ -203,17 +210,17 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         }
 
         while (value > 0) {
-            out.setInteger(index, (int) (value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
-            value = value/org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), out.start, out.buffer);
+            value = value/org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
             index--;
         }
 
         // Round up or down the scale
         if (in.scale != out.scale) {
-          org.apache.drill.common.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
+          org.apache.drill.exec.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
         // Set the sign
-        out.setSign((in.value < 0));
+        out.setSign((in.value < 0), out.start, out.buffer);
     }
 }
 
@@ -226,6 +233,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -234,7 +243,9 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -255,7 +266,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.value = in.value;
 
         // Truncate or pad additional zeroes if the output scale is different from input scale
-        out.value = (${type.javatype}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (out.scale - in.scale)));
+        out.value = (${type.javatype}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (out.scale - in.scale)));
     }
 }
 </#if>

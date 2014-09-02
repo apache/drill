@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.bytes.BytesInput;
+import parquet.bytes.DirectByteBufferAllocator;
 import parquet.column.ColumnDescriptor;
 import parquet.column.values.rle.RunLengthBitPackingHybridValuesWriter;
 import parquet.hadoop.ParquetFileWriter;
@@ -183,8 +184,14 @@ public class TestFileGenerator {
         w.startColumn(c1, props.recordsPerRowGroup, codec);
         int valsPerPage = (int) Math.ceil(props.recordsPerRowGroup / (float) fieldInfo.numberOfPages);
         byte[] bytes;
-        RunLengthBitPackingHybridValuesWriter defLevels = new RunLengthBitPackingHybridValuesWriter(MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS, valsPerPage);
-        RunLengthBitPackingHybridValuesWriter repLevels = new RunLengthBitPackingHybridValuesWriter(MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS, valsPerPage);
+        RunLengthBitPackingHybridValuesWriter defLevels = new RunLengthBitPackingHybridValuesWriter(
+          MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS,
+          valsPerPage,
+          new DirectByteBufferAllocator());
+        RunLengthBitPackingHybridValuesWriter repLevels = new RunLengthBitPackingHybridValuesWriter(
+          MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS,
+          valsPerPage,
+          new DirectByteBufferAllocator());
         // for variable length binary fields
         int bytesNeededToEncodeLength = 4;
         if ((int) fieldInfo.bitLength > 0) {

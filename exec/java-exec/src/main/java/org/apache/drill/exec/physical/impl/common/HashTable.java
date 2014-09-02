@@ -31,10 +31,10 @@ public interface HashTable {
   public static TemplateClassDefinition<HashTable> TEMPLATE_DEFINITION = new TemplateClassDefinition<HashTable>(HashTable.class, HashTableTemplate.class);
 
   /** The initial default capacity of the hash table (in terms of number of buckets). */
-  static final public int DEFAULT_INITIAL_CAPACITY = 1 << 16; 
+  static final public int DEFAULT_INITIAL_CAPACITY = 1 << 16;
 
   /** The maximum capacity of the hash table (in terms of number of buckets). */
-  static final public int MAXIMUM_CAPACITY = 1 << 30; 
+  static final public int MAXIMUM_CAPACITY = 1 << 30;
 
   /** The default load factor of a hash table. */
   static final public float DEFAULT_LOAD_FACTOR = 0.75f;
@@ -46,11 +46,11 @@ public interface HashTable {
   static final public int BATCH_MASK = 0x0000FFFF;
 
   public void setup(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
-                    RecordBatch incomingBuild, RecordBatch incomingProbe, 
+                    RecordBatch incomingBuild, RecordBatch incomingProbe,
                     RecordBatch outgoing, VectorContainer htContainerOrig);
 
-  public PutStatus put(int incomingRowIdx, IntHolder htIdxHolder, int retryCount);
-  
+  public PutStatus put(int incomingRowIdx, IndexPointer htIdxHolder, int retryCount);
+
   public int containsKey(int incomingRowIdx, boolean isProbe);
 
   public void getStats(HashTableStats stats);

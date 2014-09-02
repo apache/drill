@@ -24,6 +24,8 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
+import org.apache.drill.exec.cache.local.LocalCache;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -34,6 +36,8 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
@@ -69,12 +73,12 @@ public class TestStringFunctions extends ExecTest {
 
   public void runTest(@Injectable final DrillbitContext bitContext,
                       @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
-
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
     String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
@@ -91,7 +95,7 @@ public class TestStringFunctions extends ExecTest {
 
       for (int i = 0; i<res.length; i++) {
         assertEquals(String.format("column %s does not match", i), expectedResults[i],  res[i]);
-      }      
+      }
     }
 
     if(context.getFailureCause() != null){

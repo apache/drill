@@ -18,7 +18,9 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import javax.inject.Inject;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -59,7 +61,7 @@ public class DateTypeFunctions {
             out.months       =  (int) ((inputYears.value * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) +
                                        (inputMonths.value));
             out.days         =  (int) inputDays.value;
-            out.milliSeconds =  (int) ((inputHours.value * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
+            out.milliseconds =  (int) ((inputHours.value * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
                                        (inputMinutes.value * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
                                        (inputSeconds.value * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
                                        (inputMilliSeconds.value));
@@ -99,7 +101,7 @@ public class DateTypeFunctions {
         public void eval() {
 
             out.days  = (int) inputDays.value;
-            out.milliSeconds =  (int) ((inputHours.value * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
+            out.milliseconds =  (int) ((inputHours.value * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
                                        (inputMinutes.value * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
                                        (inputSeconds.value * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
                                  (inputMillis.value));
@@ -174,7 +176,7 @@ public class DateTypeFunctions {
 
         public void eval() {
 
-            String timeZone = (inputTimeZone.toString());
+            String timeZone = (org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputTimeZone.start, inputTimeZone.end, inputTimeZone.buffer));
             out.value = ((new org.joda.time.MutableDateTime((int)inputYears.value,
                                                             (int)inputMonths.value,
                                                             (int)inputDays.value,
@@ -268,11 +270,10 @@ public class DateTypeFunctions {
 
     @FunctionTemplate(name = "timeofday", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isRandom = true)
     public static class TimeOfDay implements DrillSimpleFunc {
-        @Workspace ByteBuf buffer;
+        @Inject DrillBuf buffer;
         @Output VarCharHolder out;
 
         public void setup(RecordBatch incoming) {
-            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[100]);
         }
 
         public void eval() {
@@ -388,7 +389,7 @@ public class DateTypeFunctions {
             long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
             out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
             out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+            out.milliseconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         }
     }
 
@@ -411,7 +412,7 @@ public class DateTypeFunctions {
             long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
             out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
             out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+            out.milliseconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         }
     }
 
@@ -430,7 +431,7 @@ public class DateTypeFunctions {
           long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
           out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
           out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-          out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+          out.milliseconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         }
     }
 
@@ -453,7 +454,7 @@ public class DateTypeFunctions {
             long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
             out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
             out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+            out.milliseconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         }
     }
 

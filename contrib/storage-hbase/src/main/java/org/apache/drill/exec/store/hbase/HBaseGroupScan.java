@@ -43,6 +43,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
 import org.apache.hadoop.conf.Configuration;
@@ -95,6 +97,10 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   private boolean filterPushedDown = false;
 
+  private TableStatsCalculator statsCalculator;
+
+  private long scanSizeInBytes = 0;
+
   @JsonCreator
   public HBaseGroupScan(@JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
                         @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
@@ -107,7 +113,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.hbaseScanSpec = scanSpec;
-    this.columns = columns;
+    this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
     init();
   }
 
@@ -124,6 +130,8 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.storagePluginConfig = that.storagePluginConfig;
     this.hTableDesc = that.hTableDesc;
     this.filterPushedDown = that.filterPushedDown;
+    this.statsCalculator = that.statsCalculator;
+    this.scanSizeInBytes = that.scanSizeInBytes;
   }
 
   @Override
@@ -140,7 +148,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
       HTable table = new HTable(storagePluginConfig.getHBaseConf(), hbaseScanSpec.getTableName());
       this.hTableDesc = table.getTableDescriptor();
       NavigableMap<HRegionInfo, ServerName> regionsMap = table.getRegionLocations();
-      table.close();
+      statsCalculator = new TableStatsCalculator(table, hbaseScanSpec, storagePlugin.getContext().getConfig());
 
       boolean foundStartRegion = false;
       regionsToScan = new TreeMap<HRegionInfo, ServerName>();
@@ -151,10 +159,13 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
         }
         foundStartRegion = true;
         regionsToScan.put(regionInfo, mapEntry.getValue());
+        scanSizeInBytes += statsCalculator.getRegionSizeInBytes(regionInfo.getRegionName());
         if (hbaseScanSpec.getStopRow() != null && hbaseScanSpec.getStopRow().length != 0 && regionInfo.containsRow(hbaseScanSpec.getStopRow())) {
           break;
         }
       }
+
+      table.close();
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
     }
@@ -162,12 +173,11 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   }
 
   private void verifyColumns() {
-    if (columns != null) {
-      for (SchemaPath column : columns) {
-        if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
-          DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
-              column.getRootSegment().getPath(), hTableDesc.getNameAsString());
-        }
+    if (AbstractRecordReader.isStarQuery(columns)) return;
+    for (SchemaPath column : columns) {
+      if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
+        DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
+            column.getRootSegment().getPath(), hTableDesc.getNameAsString());
       }
     }
   }
@@ -341,11 +351,10 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   @Override
   public ScanStats getScanStats() {
-    //TODO: look at stats for this.
-    int rowCount = (hbaseScanSpec.getFilter() != null ? 5 : 10) * regionsToScan.size();
-    int avgColumnSize = 10;
-    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
-    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, avgColumnSize * numColumns * rowCount);
+    int rowCount =  (int) ((scanSizeInBytes / statsCalculator.getAvgRowSizeInBytes()) * (hbaseScanSpec.getFilter() != null ? 0.5 : 1));
+    // the following calculation is not precise since 'columns' could specify CFs while getColsPerRow() returns the number of qualifier.
+    float diskCost = scanSizeInBytes * ((columns == null || columns.isEmpty()) ? 1 : columns.size()/statsCalculator.getColsPerRow());
+    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, diskCost);
   }
 
   @Override

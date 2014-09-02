@@ -17,12 +17,11 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
-import com.google.common.collect.Lists;
+import io.netty.buffer.DrillBuf;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import java.math.BigDecimal;
+import java.util.List;
 
-import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
@@ -37,8 +36,9 @@ import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
-import org.apache.drill.exec.store.parquet.columnreaders.NullableFixedByteAlignedReaders;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.BigIntWriter;
@@ -68,30 +68,31 @@ import parquet.schema.PrimitiveType;
 import parquet.schema.Type;
 import parquet.schema.Type.Repetition;
 
-import java.math.BigDecimal;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class DrillParquetGroupConverter extends GroupConverter {
 
   private List<Converter> converters;
   private MapWriter mapWriter;
+  private final OutputMutator mutator;
 
-  public DrillParquetGroupConverter(ComplexWriterImpl complexWriter, MessageType schema) {
-    this(complexWriter.rootAsMap(), schema);
+  public DrillParquetGroupConverter(OutputMutator mutator, ComplexWriterImpl complexWriter, MessageType schema) {
+    this(mutator, complexWriter.rootAsMap(), schema);
   }
 
-  public DrillParquetGroupConverter(MapWriter mapWriter, GroupType schema) {
+  public DrillParquetGroupConverter(OutputMutator mutator, MapWriter mapWriter, GroupType schema) {
     this.mapWriter = mapWriter;
+    this.mutator = mutator;
     converters = Lists.newArrayList();
     for (Type type : schema.getFields()) {
       Repetition rep = type.getRepetition();
       boolean isPrimitive = type.isPrimitive();
       if (!isPrimitive) {
         if (rep != Repetition.REPEATED) {
-          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mapWriter.map(type.getName()), type.asGroupType());
+          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.map(type.getName()), type.asGroupType());
           converters.add(converter);
         } else {
-          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mapWriter.list(type.getName()).map(), type.asGroupType());
+          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.list(type.getName()).map(), type.asGroupType());
           converters.add(converter);
         }
       } else {
@@ -162,21 +163,21 @@ public class DrillParquetGroupConverter extends GroupConverter {
       case BINARY: {
         if (type.getOriginalType() == null) {
           VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
-          return new DrillVarBinaryConverter(writer);
+          return new DrillVarBinaryConverter(writer, mutator.getManagedBuffer());
         }
         switch(type.getOriginalType()) {
           case UTF8: {
             VarCharWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varChar() : mapWriter.varChar(name);
-            return new DrillVarCharConverter(writer);
+            return new DrillVarCharConverter(writer, mutator.getManagedBuffer());
           }
           case DECIMAL: {
             DecimalMetadata metadata = type.getDecimalMetadata();
             if (metadata.getPrecision() <= 28) {
               Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal28Sparse() : mapWriter.decimal28Sparse(name);
-              return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale());
+              return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
             } else {
               Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal38Sparse() : mapWriter.decimal38Sparse(name);
-              return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale());
+              return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
             }
           }
           default: {
@@ -363,16 +364,18 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
   public static class DrillVarBinaryConverter extends PrimitiveConverter {
     private VarBinaryWriter writer;
+    private DrillBuf buf;
     private VarBinaryHolder holder = new VarBinaryHolder();
 
-    public DrillVarBinaryConverter(VarBinaryWriter writer) {
+    public DrillVarBinaryConverter(VarBinaryWriter writer, DrillBuf buf) {
       this.writer = writer;
+      this.buf = buf;
     }
 
     @Override
     public void addBinary(Binary value) {
-      ByteBuf buf = Unpooled.wrappedBuffer(value.toByteBuffer());
-      holder.buffer = buf;
+      holder.buffer = buf = buf.reallocIfNeeded(value.length());
+      buf.setBytes(0, value.toByteBuffer());
       holder.start = 0;
       holder.end = value.length();
       writer.write(holder);
@@ -382,15 +385,17 @@ public class DrillParquetGroupConverter extends GroupConverter {
   public static class DrillVarCharConverter extends PrimitiveConverter {
     private VarCharWriter writer;
     private VarCharHolder holder = new VarCharHolder();
+    private DrillBuf buf;
 
-    public DrillVarCharConverter(VarCharWriter writer) {
+    public DrillVarCharConverter(VarCharWriter writer,  DrillBuf buf) {
       this.writer = writer;
+      this.buf = buf;
     }
 
     @Override
     public void addBinary(Binary value) {
-      ByteBuf buf = Unpooled.wrappedBuffer(value.toByteBuffer());
-      holder.buffer = buf;
+      holder.buffer = buf = buf.reallocIfNeeded(value.length());
+      buf.setBytes(0, value.toByteBuffer());
       holder.start = 0;
       holder.end = value.length();
       writer.write(holder);
@@ -400,9 +405,11 @@ public class DrillParquetGroupConverter extends GroupConverter {
   public static class DrillBinaryToDecimal28Converter extends PrimitiveConverter {
     private Decimal28SparseWriter writer;
     private Decimal28SparseHolder holder = new Decimal28SparseHolder();
+    private DrillBuf buf;
 
-    public DrillBinaryToDecimal28Converter(Decimal28SparseWriter writer, int precision, int scale) {
+    public DrillBinaryToDecimal28Converter(Decimal28SparseWriter writer, int precision, int scale,  DrillBuf buf) {
       this.writer = writer;
+      this.buf = buf.reallocIfNeeded(28);
       holder.precision = precision;
       holder.scale = scale;
     }
@@ -410,7 +417,6 @@ public class DrillParquetGroupConverter extends GroupConverter {
     @Override
     public void addBinary(Binary value) {
       BigDecimal bigDecimal = DecimalUtility.getBigDecimalFromByteArray(value.getBytes(), 0, value.length(), holder.scale);
-      ByteBuf buf = Unpooled.wrappedBuffer(new byte[28]);
       DecimalUtility.getSparseFromBigDecimal(bigDecimal, buf, 0, holder.scale, holder.precision, Decimal28SparseHolder.nDecimalDigits);
       holder.buffer = buf;
       writer.write(holder);
@@ -420,9 +426,11 @@ public class DrillParquetGroupConverter extends GroupConverter {
   public static class DrillBinaryToDecimal38Converter extends PrimitiveConverter {
     private Decimal38SparseWriter writer;
     private Decimal38SparseHolder holder = new Decimal38SparseHolder();
+    private DrillBuf buf;
 
-    public DrillBinaryToDecimal38Converter(Decimal38SparseWriter writer, int precision, int scale) {
+    public DrillBinaryToDecimal38Converter(Decimal38SparseWriter writer, int precision, int scale,  DrillBuf buf) {
       this.writer = writer;
+      this.buf = buf.reallocIfNeeded(38);
       holder.precision = precision;
       holder.scale = scale;
     }
@@ -430,7 +438,6 @@ public class DrillParquetGroupConverter extends GroupConverter {
     @Override
     public void addBinary(Binary value) {
       BigDecimal bigDecimal = DecimalUtility.getBigDecimalFromByteArray(value.getBytes(), 0, value.length(), holder.scale);
-      ByteBuf buf = Unpooled.wrappedBuffer(new byte[38]);
       DecimalUtility.getSparseFromBigDecimal(bigDecimal, buf, 0, holder.scale, holder.precision, Decimal38SparseHolder.nDecimalDigits);
       holder.buffer = buf;
       writer.write(holder);

@@ -45,6 +45,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.planner.fragment.Fragment;
@@ -331,6 +332,24 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     } catch (FragmentSetupException e) {
       fail("Failure while fragmenting query.", e);
       return;
+    }
+
+    int sortCount = 0;
+    for (PhysicalOperator op : plan.getSortedOperators()) {
+      if (op instanceof ExternalSort) sortCount++;
+    }
+
+    if (sortCount > 0) {
+      long maxWidthPerNode = context.getOptions().getOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY).num_val;
+      long maxAllocPerNode = Math.min(DrillConfig.getMaxDirectMemory(), context.getConfig().getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC));
+      maxAllocPerNode = Math.min(maxAllocPerNode, context.getOptions().getOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY).num_val);
+      long maxSortAlloc = maxAllocPerNode / (sortCount * maxWidthPerNode);
+      logger.debug("Max sort alloc: {}", maxSortAlloc);
+      for (PhysicalOperator op : plan.getSortedOperators()) {
+        if (op instanceof  ExternalSort) {
+          ((ExternalSort)op).setMaxAllocation(maxSortAlloc);
+        }
+      }
     }
 
     PlanningSet planningSet = StatsCollector.collectStats(rootFragment);

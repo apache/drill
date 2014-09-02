@@ -26,7 +26,7 @@ import java.util.Map;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -39,8 +39,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.UnsupportedEncodingException;
 
 public class TestParquetWriter extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetWriter.class);
@@ -70,6 +68,13 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
+  public void testComplexRepeated() throws Exception {
+    String selection = "*";
+    String inputTable = "cp.`testRepeatedWrite.json`";
+    runTestAndValidate(selection, selection, inputTable, "repeated_json");
+  }
+
+  @Test
   public void testCastProjectBug_Drill_929() throws Exception {
     String selection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
         "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as COMMITDATE, cast(L_RECEIPTDATE as DATE) AS RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
@@ -91,7 +96,7 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testTPCHReadWrite1() throws Exception {
     String inputTable = "cp.`tpch/lineitem.parquet`";
-    runTestAndValidate("*", "*", inputTable, "lineitem_parquet");
+    runTestAndValidate("*", "*", inputTable, "lineitem_parquet_all");
   }
 
   @Test
@@ -101,7 +106,7 @@ public class TestParquetWriter extends BaseTestQuery {
     String validationSelection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
         "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE,L_COMMITDATE ,L_RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
     String inputTable = "cp.`tpch/lineitem.parquet`";
-    runTestAndValidate(selection, validationSelection, inputTable, "lineitem_parquet");
+    runTestAndValidate(selection, validationSelection, inputTable, "lineitem_parquet_converted");
   }
 
   @Test
@@ -171,6 +176,7 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
+  @Ignore
   public void testRepeatedBool() throws Exception {
     String inputTable = "cp.`parquet/repeated_bool_data.json`";
     runTestAndValidate("*", "*", inputTable, "repeated_bool_parquet");
@@ -197,6 +203,8 @@ public class TestParquetWriter extends BaseTestQuery {
       //test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 1*1024*1024));
       String selection = "mi";
       String inputTable = "cp.`customer.json`";
+      int count = testRunAndPrint(UserBitShared.QueryType.SQL, "select mi from cp.`customer.json`");
+      System.out.println(count);
       runTestAndValidate(selection, selection, inputTable, "foodmart_customer_parquet");
     } finally {
       test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 512*1024*1024));
@@ -212,14 +220,47 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate(selection, validateSelection, inputTable, "foodmart_employee_parquet");
   }
 
+  @Test
+  @Ignore
+  public void testParquetRead() throws Exception {
+    test("alter system set `store.parquet.use_new_reader` = true");
+    List<QueryResultBatch> expected = testSqlWithResults("select * from dfs.`/tmp/voter`");
+    test("alter system set `store.parquet.use_new_reader` = false");
+    List<QueryResultBatch> results = testSqlWithResults("select * from dfs.`/tmp/voter`");
+    compareResults(expected, results);
+    for (QueryResultBatch result : results) {
+      result.release();
+    }
+    for (QueryResultBatch result : expected) {
+      result.release();
+    }
+  }
+
+  @Ignore
+  @Test
+  public void testParquetRead2() throws Exception {
+    test("alter system set `store.parquet.use_new_reader` = true");
+    List<QueryResultBatch> expected = testSqlWithResults("select s_comment,s_suppkey from dfs.`/tmp/sf100_supplier.parquet`");
+    test("alter system set `store.parquet.use_new_reader` = false");
+    List<QueryResultBatch> results = testSqlWithResults("select s_comment,s_suppkey from dfs.`/tmp/sf100_supplier.parquet`");
+    compareResults(expected, results);
+    for (QueryResultBatch result : results) {
+      result.release();
+    }
+    for (QueryResultBatch result : expected) {
+      result.release();
+    }
+  }
+
   public void runTestAndValidate(String selection, String validationSelection, String inputTable, String outputFile) throws Exception {
 
-    Path path = new Path("/tmp/drilltest/" + outputFile);
+    Path path = new Path("/tmp/" + outputFile);
     if (fs.exists(path)) {
       fs.delete(path, true);
     }
 
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
+//    test("ALTER SESSION SET `planner.add_producer_consumer` = false");
     String query = String.format("SELECT %s FROM %s", selection, inputTable);
     String create = "CREATE TABLE " + outputFile + " AS " + query;
     String validateQuery = String.format("SELECT %s FROM " + outputFile, validationSelection);

@@ -38,8 +38,10 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -156,6 +158,7 @@ public class TestSimpleFunctions extends ExecTest {
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
@@ -174,7 +177,7 @@ public class TestSimpleFunctions extends ExecTest {
         if (!a1.isNull(i)) {
           NullableVarCharHolder holder = new NullableVarCharHolder();
           a1.get(i, holder);
-          assertEquals("aaaa", holder.toString());
+          assertEquals("aaaa", StringFunctionHelpers.toStringFromUTF8(holder.start,  holder.end,  holder.buffer));
           ++count;
         }
       }
@@ -197,6 +200,7 @@ public class TestSimpleFunctions extends ExecTest {
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
@@ -216,7 +220,7 @@ public class TestSimpleFunctions extends ExecTest {
           NullableVarCharHolder holder = new NullableVarCharHolder();
           a1.get(i, holder);
           //when offset is negative, substring return empty string.
-          assertEquals("", holder.toString());
+          assertEquals("", StringFunctionHelpers.toStringFromUTF8(holder.start,  holder.end,  holder.buffer));
           ++count;
         }
       }
@@ -239,6 +243,7 @@ public class TestSimpleFunctions extends ExecTest {
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
@@ -257,7 +262,7 @@ public class TestSimpleFunctions extends ExecTest {
         if (!a1.isNull(i)) {
           NullableVarBinaryHolder holder = new NullableVarBinaryHolder();
           a1.get(i, holder);
-          assertEquals("aa", holder.toString());
+          assertEquals("aa", StringFunctionHelpers.toStringFromUTF8(holder.start,  holder.end,  holder.buffer));
           ++count;
         }
       }

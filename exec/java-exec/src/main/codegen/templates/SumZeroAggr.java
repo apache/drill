@@ -51,42 +51,26 @@ public class SumZeroFunctions {
 
   @Param ${type.inputType}Holder in;
   @Workspace ${type.runningType}Holder value;
-  @Workspace BigIntHolder callCount;
   @Output ${type.outputType}Holder out;
   
   
   public void setup(RecordBatch b) {
     value.value = 0;
-    callCount.value = 0;
   }
   
   @Override
   public void add() {
-    callCount.value++;
-    <#if type.inputType?starts_with("Nullable") >
-    if(in.isSet == 1){
-      value.value += in.value;
-    }
-    <#else>
     value.value += in.value;
-    </#if>
   }
 
   @Override
   public void output() {
-    if(callCount.value > 0){
-      out.value = value.value;
-      out.isSet = 1;
-    }else{
-      out.isSet = 0;
-    }
-    
+    out.value = value.value;
   }
 
   @Override
   public void reset() {
 	  value.value = 0;
-	  callCount.value = 0;
   }
  
  }

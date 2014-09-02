@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hbase;
 
 
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -68,11 +69,11 @@ public class HBaseScanSpec {
   }
 
   public byte[] getStartRow() {
-    return startRow;
+    return startRow == null ? HConstants.EMPTY_START_ROW : startRow;
   }
 
   public byte[] getStopRow() {
-    return stopRow;
+    return stopRow == null ? HConstants.EMPTY_START_ROW : stopRow;
   }
 
   @JsonIgnore

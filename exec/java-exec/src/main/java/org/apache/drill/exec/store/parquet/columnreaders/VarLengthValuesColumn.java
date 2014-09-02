@@ -17,9 +17,13 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
+
 import parquet.bytes.BytesUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.Encoding;
@@ -48,7 +52,7 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
     }
   }
 
-  public abstract boolean setSafe(int index, byte[] bytes, int start, int length);
+  public abstract boolean setSafe(int index, DrillBuf bytes, int start, int length);
 
   @Override
   protected void readField(long recordToRead) {
@@ -78,11 +82,17 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
 
   protected boolean readAndStoreValueSizeInformation() throws IOException {
     // re-purposing this field here for length in BYTES to prevent repetitive multiplication/division
-    try {
-    dataTypeLengthInBits = BytesUtils.readIntLittleEndian(pageReader.pageDataByteArray,
-        (int) pageReader.readyToReadPosInBytes);
-    } catch (Throwable t) {
-      throw t;
+    if (usingDictionary) {
+      if (currLengthDeterminingDictVal == null) {
+        currLengthDeterminingDictVal = pageReader.dictionaryLengthDeterminingReader.readBytes();
+      }
+      currDictValToWrite = currLengthDeterminingDictVal;
+      // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
+      dataTypeLengthInBits = currLengthDeterminingDictVal.length();
+    }
+    else {
+      // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
+      dataTypeLengthInBits = pageReader.pageDataByteArray.getInt((int) pageReader.readyToReadPosInBytes);
     }
 
     // this should not fail

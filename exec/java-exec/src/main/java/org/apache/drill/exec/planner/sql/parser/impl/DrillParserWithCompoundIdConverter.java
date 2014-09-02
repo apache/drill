@@ -21,6 +21,7 @@ import org.apache.drill.exec.planner.sql.parser.CompoundIdentifierConverter;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlAbstractParserImpl;
 import org.eigenbase.sql.parser.SqlParserImplFactory;
+import org.eigenbase.sql.util.SqlVisitor;
 
 import java.io.Reader;
 
@@ -39,15 +40,19 @@ public class DrillParserWithCompoundIdConverter extends DrillParserImpl {
     super(stream);
   }
 
+  protected SqlVisitor<SqlNode> createConverter() {
+    return new CompoundIdentifierConverter();
+  }
+
   @Override
   public SqlNode parseSqlExpressionEof() throws Exception {
     SqlNode originalSqlNode = super.parseSqlExpressionEof();
-    return originalSqlNode.accept(new CompoundIdentifierConverter());
+    return originalSqlNode.accept(createConverter());
   }
 
   @Override
   public SqlNode parseSqlStmtEof() throws Exception {
     SqlNode originalSqlNode = super.parseSqlStmtEof();
-    return originalSqlNode.accept(new CompoundIdentifierConverter());
+    return originalSqlNode.accept(createConverter());
   }
 }

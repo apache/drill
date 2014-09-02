@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<assembly
+  xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+  <id>binary-release</id>
+  <formats>
+    <format>tar.gz</format>
+    <format>dir</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <moduleSets>
+
+  </moduleSets>
+  <dependencySets>
+<!--
+    <dependencySet>
+      <includes>
+        <include>org.apache.drill.exec:drill-jdbc-all:jar</include>
+      </includes>
+      <outputDirectory>jdbc-driver</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+-->
+    <dependencySet>
+      <!-- Now, select which projects to include in this module-set. -->
+      <includes>
+        <include>org.apache.drill.exec:drill-jdbc:jar</include>
+        <include>org.apache.drill:drill-protocol:jar:rebuffed</include>
+        <include>org.apache.drill:drill-common:jar:rebuffed</include>
+        <include>org.apache.drill.exec:drill-java-exec:jar:rebuffed</include>
+        <include>org.apache.drill.contrib.storage-hive:drill-storage-hive-core</include>
+        <include>org.apache.drill.contrib.storage-hive:drill-hive-exec-shaded</include>
+        <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
+        <include>org.apache.drill.contrib:drill-storage-hbase</include>
+      </includes>
+      <excludes>
+        <exclude>org.apache.drill.contrib.storage-hive:drill-storage-hive-core:jar:tests</exclude>
+      </excludes>
+      <outputDirectory>jars</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>  
+
+    <dependencySet>
+      <outputDirectory>lib</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <excludes>
+        <exclude>org.apache.zookeeper</exclude>
+        <exclude>org.apache.drill</exclude>
+        <exclude>org.apache.drill.exec</exclude>
+        <exclude>org.apache.drill.contrib</exclude>
+        <exclude>org.apache.drill.contrib.storage-hive</exclude>
+        <exclude>org.hsqldb:hsqldb</exclude>
+        <!-- exclude or sqlline has problems -->
+        <exclude>hsqldb:hsqldb</exclude>
+        <!-- exclude or sqlline has problems -->
+      </excludes>
+      <scope>test</scope>
+    </dependencySet>
+
+    <dependencySet>
+      <outputDirectory>extlib</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>org.apache.zookeeper:zookeeper</include>
+      </includes>
+      <scope>runtime</scope>
+    </dependencySet>
+
+    <dependencySet>
+      <outputDirectory>lib</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>com.google.protobuf:protobuf-java:jar:2.5</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+
+  </dependencySets>
+
+  <fileSets>
+    <fileSet>
+      <directory>../sample-data</directory>
+      <outputDirectory>sample-data</outputDirectory>
+    </fileSet>    
+  </fileSets>
+
+  <files>
+    <file>
+      <source>../KEYS</source>
+      <outputDirectory/>
+    </file>
+    <file>
+      <source>../LICENSE</source>
+      <outputDirectory/>
+    </file>
+    <file>
+      <source>../NOTICE</source>
+      <outputDirectory/>
+    </file>
+    <file>
+      <source>../git.properties</source>
+      <outputDirectory/>
+    </file>
+    <file>
+      <source>src/resources/runbit</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/hadoop-excludes.txt</source>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drillbit.sh</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drill-config.sh</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/sqlline</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/sqlline.bat</source>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/submit_plan</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drill_dumpcat</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drill-override.conf</source>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/logback.xml</source>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drill-env.sh</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drill-override-example.conf</source>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+  </files>   
+</assembly>

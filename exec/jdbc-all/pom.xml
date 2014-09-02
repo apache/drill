@@ -42,6 +42,10 @@
           <artifactId>log4j</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase</artifactId>
+        </exclusion>
+        <exclusion>
           <artifactId>jersey-container-jetty-servlet</artifactId>
           <groupId>org.glassfish.jersey.containers</groupId>
         </exclusion>
@@ -50,8 +54,12 @@
           <groupId>org.eclipse.jetty</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>hadoop-core</artifactId>
           <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-common</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client</artifactId>
         </exclusion>
         <exclusion>
           <artifactId>jersey-media-multipart</artifactId>
@@ -207,7 +215,6 @@
           <outputDirectory>${project.build.directory}</outputDirectory>
           <maxMemory>6g</maxMemory>
           <options>
-            <option>-verbose</option>
             <option>-dontobfuscate</option>
             <option>-dontoptimize</option>
             <option>-ignorewarnings</option>

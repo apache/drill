@@ -28,13 +28,21 @@ import com.thoughtworks.paranamer.Paranamer;
 
 public class CodeGeneratorMethod implements Iterable<CodeGeneratorArgument>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeGeneratorMethod.class);
-  
+
   private final String methodName;
   private final Class<?> returnType;
   private final CodeGeneratorArgument[] arguments;
   private final Class<?>[] exs;
   private final Method underlyingMethod;
-  
+
+  public CodeGeneratorMethod(String name, Class<?> returnType){
+    this.methodName = name;
+    this.returnType = returnType;
+    this.exs = new Class<?>[0];
+    this.underlyingMethod = null;
+    this.arguments = new CodeGeneratorArgument[0];
+  }
+
   public CodeGeneratorMethod(Method m){
     this.underlyingMethod = m;
     this.methodName = m.getName();
@@ -51,7 +59,7 @@ public class CodeGeneratorMethod implements Iterable<CodeGeneratorArgument>{
     }
     exs = m.getExceptionTypes();
   }
-  
+
   public String getMethodName() {
     return methodName;
   }
@@ -62,7 +70,7 @@ public class CodeGeneratorMethod implements Iterable<CodeGeneratorArgument>{
   public Iterable<Class<?>> getThrowsIterable(){
     return ImmutableList.copyOf(exs);
   }
-  
+
   @Override
   public Iterator<CodeGeneratorArgument> iterator() {
     return Iterators.forArray(arguments);
@@ -73,5 +81,5 @@ public class CodeGeneratorMethod implements Iterable<CodeGeneratorArgument>{
     return "CodeGeneratorMethod [" + underlyingMethod.toGenericString() + "]";
   }
 
-  
+
 }

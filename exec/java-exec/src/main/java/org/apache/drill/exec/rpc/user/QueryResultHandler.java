@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc.user;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -55,7 +56,7 @@ public class QueryResultHandler {
 
   public void batchArrived(ConnectionThrottle throttle, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     final QueryResult result = RpcBus.get(pBody, QueryResult.PARSER);
-    final QueryResultBatch batch = new QueryResultBatch(result, dBody);
+    final QueryResultBatch batch = new QueryResultBatch(result, (DrillBuf) dBody);
     final boolean failed = (batch.getHeader().getQueryState() == QueryState.FAILED);
 
     assert failed || batch.getHeader().getErrorCount() == 0 : "Error count for the query batch is non-zero but QueryState != FAILED";

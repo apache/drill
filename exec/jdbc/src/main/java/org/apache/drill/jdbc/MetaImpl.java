@@ -17,6 +17,7 @@
  */
 package org.apache.drill.jdbc;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.util.List;
 
@@ -25,10 +26,15 @@ import net.hydromatic.avatica.AvaticaResultSet;
 import net.hydromatic.avatica.AvaticaStatement;
 import net.hydromatic.avatica.Cursor;
 import net.hydromatic.avatica.Meta;
-import net.hydromatic.linq4j.Linq4j;
+
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+
 
 public class MetaImpl implements Meta {
-  
+
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetaImpl.class);
+
   static final Driver DRIVER = new Driver();
 
   final DrillConnectionImpl connection;
@@ -61,21 +67,138 @@ public class MetaImpl implements Meta {
     return null;
   }
 
+  private ResultSet s(String s){
+    try{
+      logger.debug("Running {}", s);
+      AvaticaStatement statement = connection.createStatement();
+      statement.execute(s);
+      return statement.getResultSet();
+
+    }catch(Exception e){
+      throw new DrillRuntimeException("Failure while attempting to get DatabaseMetadata.", e);
+    }
+
+  }
+
   public ResultSet getTables(String catalog, final Pat schemaPattern, final Pat tableNamePattern,
       final List<String> typeList) {
-    return getEmptyResultSet();
+    StringBuilder sb = new StringBuilder();
+    sb.append("select "
+        + "TABLE_CATALOG as TABLE_CAT, "
+        + "TABLE_SCHEMA as TABLE_SCHEM, "
+        + "TABLE_NAME, "
+        + "TABLE_TYPE, "
+        + "'' as REMARKS, "
+        + "'' as TYPE_CAT, "
+        + "'' as TYPE_SCHEM, "
+        + "'' as TYPE_NAME, "
+        + "'' as SELF_REFERENCING_COL_NAME, "
+        + "'' as REF_GENERATION "
+        + "FROM INFORMATION_SCHEMA.`TABLES` WHERE 1=1 ");
+
+    if(catalog != null){
+      sb.append(" AND TABLE_CATALOG = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
+    }
+
+    if(schemaPattern.s != null){
+      sb.append(" AND TABLE_SCHEMA like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
+    }
+
+    if(tableNamePattern.s != null){
+      sb.append(" AND TABLE_NAME like '" + StringEscapeUtils.escapeSql(tableNamePattern.s) + "'");
+    }
+
+    if(typeList != null && typeList.size() > 0){
+      sb.append("AND (");
+      for(int t = 0; t < typeList.size(); t++){
+        if(t != 0) sb.append(" OR ");
+        sb.append(" TABLE_TYPE LIKE '" + StringEscapeUtils.escapeSql(typeList.get(t)) + "' ");
+      }
+      sb.append(")");
+    }
+
+    sb.append(" ORDER BY TABLE_TYPE, TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME");
+
+    return s(sb.toString());
   }
 
   public ResultSet getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
-    return getEmptyResultSet();
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("select "
+        + "TABLE_CATALOG as TABLE_CAT, "
+        + "TABLE_SCHEMA as TABLE_SCHEM, "
+        + "TABLE_NAME, "
+        + "COLUMN_NAME, "
+        + "DATA_TYPE, "
+        + "CHARACTER_MAXIMUM_LENGTH as BUFFER_LENGTH, "
+        + "NUMERIC_PRECISION as DECIMAL_PRECISION, "
+        + "NUMERIC_PRECISION_RADIX as NUM_PREC_RADIX, "
+        + DatabaseMetaData.columnNullableUnknown
+        + " as NULLABLE, "
+        + "'' as REMARKS, "
+        + "'' as COLUMN_DEF, "
+        + "0 as SQL_DATA_TYPE, "
+        + "0 as SQL_DATETIME_SUB, "
+        + "4 as CHAR_OCTET_LENGTH, "
+        + "1 as ORDINAL_POSITION, "
+        + "'YES' as IS_NULLABLE, "
+        + "'' as SCOPE_CATALOG,"
+        + "'' as SCOPE_SCHEMA, "
+        + "'' as SCOPE_TABLE, "
+        + "'' as SOURCE_DATA_TYPE, "
+        + "'' as IS_AUTOINCREMENT, "
+        + "'' as IS_GENERATEDCOLUMN "
+        + "FROM INFORMATION_SCHEMA.COLUMNS "
+        + "WHERE 1=1 ");
+
+    if(catalog != null){
+      sb.append(" AND TABLE_CATALOG = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
+    }
+    if(schemaPattern.s != null){
+      sb.append(" AND TABLE_SCHEMA like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
+    }
+
+    if(tableNamePattern.s != null){
+      sb.append(" AND TABLE_NAME like '" + StringEscapeUtils.escapeSql(tableNamePattern.s) + "'");
+    }
+
+    if(columnNamePattern.s != null){
+      sb.append(" AND COLUMN_NAME like '" + StringEscapeUtils.escapeSql(columnNamePattern.s) + "'");
+    }
+
+    sb.append(" ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME");
+
+    return s(sb.toString());
   }
 
   public ResultSet getSchemas(String catalog, Pat schemaPattern) {
-    return getEmptyResultSet();
+    StringBuilder sb = new StringBuilder();
+    sb.append("select "
+        + "SCHEMA_NAME as TABLE_SCHEM, "
+        + "CATALOG_NAME as TABLE_CAT "
+        + " FROM INFORMATION_SCHEMA.SCHEMATA WHERE 1=1 ");
+
+    if(catalog != null){
+      sb.append(" AND CATALOG_NAME = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
+    }
+    if(schemaPattern.s != null){
+      sb.append(" AND SCHEMA_NAME like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
+    }
+    sb.append(" ORDER BY CATALOG_NAME, SCHEMA_NAME");
+
+    return s(sb.toString());
   }
 
   public ResultSet getCatalogs() {
-    return getEmptyResultSet();
+    StringBuilder sb = new StringBuilder();
+    sb.append("select "
+        + "CATALOG_NAME as TABLE_CAT "
+        + " FROM INFORMATION_SCHEMA.CATALOGS ");
+
+    sb.append(" ORDER BY CATALOG_NAME");
+
+    return s(sb.toString());
   }
 
   public ResultSet getTableTypes() {

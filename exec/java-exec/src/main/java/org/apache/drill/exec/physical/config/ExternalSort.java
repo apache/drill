@@ -32,6 +32,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class ExternalSort extends Sort {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSort.class);
 
+  private long initialAllocation = 20000000;
+
   @JsonCreator
   public ExternalSort(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("reverse") boolean reverse) {
     super(child, orderings, reverse);
@@ -52,7 +54,9 @@ public class ExternalSort extends Sort {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new ExternalSort(child, orderings, reverse);
+    ExternalSort newSort = new ExternalSort(child, orderings, reverse);
+    newSort.setMaxAllocation(getMaxAllocation());
+    return newSort;
   }
 
   @Override
@@ -60,5 +64,12 @@ public class ExternalSort extends Sort {
     return CoreOperatorType.EXTERNAL_SORT_VALUE;
   }
 
+  public void setMaxAllocation(long maxAllocation) {
+    this.maxAllocation = Math.max(initialAllocation, maxAllocation);
+  }
+
+  public long getInitialAllocation() {
+    return initialAllocation;
+  }
 
 }

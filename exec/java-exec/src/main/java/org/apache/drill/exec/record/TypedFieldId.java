@@ -231,5 +231,14 @@ public class TypedFieldId {
     return true;
   }
 
+  @Override
+  public String toString() {
+    final int maxLen = 10;
+    return "TypedFieldId [fieldIds="
+        + (fieldIds != null ? Arrays.toString(Arrays.copyOf(fieldIds, Math.min(fieldIds.length, maxLen))) : null)
+        + ", remainder=" + remainder + "]";
+  }
+
+
 
 }

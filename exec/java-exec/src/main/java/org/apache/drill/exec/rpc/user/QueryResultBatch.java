@@ -17,32 +17,33 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 
 public class QueryResultBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResultBatch.class);
-  
+
   private final QueryResult header;
-  private final ByteBuf data;
-  
-  public QueryResultBatch(QueryResult header, ByteBuf data) {
+  private final DrillBuf data;
+
+  public QueryResultBatch(QueryResult header, DrillBuf data) {
 //    logger.debug("New Result Batch with header {} and data {}", header, data);
     this.header = header;
     this.data = data;
     if(this.data != null) data.retain();
   }
 
+
   public QueryResult getHeader() {
     return header;
   }
 
-  public ByteBuf getData() {
+  public DrillBuf getData() {
     return data;
   }
-  
-  
+
+
   public boolean hasData(){
     return data != null;
   }
@@ -50,12 +51,12 @@ public class QueryResultBatch {
   public void release(){
     if(data != null) data.release();
   }
-  
+
   @Override
   public String toString() {
     return "QueryResultBatch [header=" + header + ", data=" + data + "]";
   }
-  
-  
-  
+
+
+
 }

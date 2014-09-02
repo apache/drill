@@ -312,7 +312,7 @@ RecordBatch::~RecordBatch(){
     }
     m_fieldDefs->clear();
     delete m_pQueryResult;
-    Utils::freeBuffer(m_allocatedBuffer);
+    delete m_allocatedBuffer;
 }
 
 ret_t RecordBatch::build(){

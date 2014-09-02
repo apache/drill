@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.xsort;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
@@ -41,36 +42,23 @@ import com.google.common.base.Stopwatch;
 public class BatchGroup implements VectorAccessible {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchGroup.class);
 
-  private final VectorContainer firstContainer;
-  private final VectorContainer secondContainer;
   private VectorContainer currentContainer;
   private SelectionVector2 sv2;
   private int pointer = 0;
-  private int batchPointer = 0;
-  private boolean hasSecond = false;
   private FSDataInputStream inputStream;
   private FSDataOutputStream outputStream;
   private Path path;
   private FileSystem fs;
   private BufferAllocator allocator;
   private int spilledBatches = 0;
-  private boolean done = false;
 
   public BatchGroup(VectorContainer container, SelectionVector2 sv2) {
-    this.firstContainer = container;
-    this.secondContainer = null;
     this.sv2 = sv2;
-    this.currentContainer = firstContainer;
+    this.currentContainer = container;
   }
 
-  public BatchGroup(VectorContainer firstContainer, VectorContainer secondContainer, FileSystem fs, String path, BufferAllocator allocator) {
-    assert firstContainer.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.NONE;
-    assert secondContainer.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.NONE;
-
-    this.firstContainer = firstContainer;
-    this.secondContainer = secondContainer;
-    currentContainer = firstContainer;
-    this.hasSecond = true;
+  public BatchGroup(VectorContainer container, FileSystem fs, String path, BufferAllocator allocator) {
+    currentContainer = container;
     this.fs = fs;
     this.path = new Path(path);
     this.allocator = allocator;
@@ -93,7 +81,7 @@ public class BatchGroup implements VectorAccessible {
     watch.start();
     outputBatch.writeToStream(outputStream);
     newContainer.zeroVectors();
-//    logger.debug("Took {} us to spill {} records", watch.elapsed(TimeUnit.MICROSECONDS), recordCount);
+    logger.debug("Took {} us to spill {} records", watch.elapsed(TimeUnit.MICROSECONDS), recordCount);
     spilledBatches++;
   }
 
@@ -107,132 +95,51 @@ public class BatchGroup implements VectorAccessible {
     Stopwatch watch = new Stopwatch();
     watch.start();
     vas.readFromStream(inputStream);
-    VectorContainer c = (VectorContainer) vas.get();
+    VectorContainer c =  vas.get();
 //    logger.debug("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
     spilledBatches--;
+    currentContainer.zeroVectors();
+    Iterator<VectorWrapper<?>> wrapperIterator = c.iterator();
+    for (VectorWrapper w : currentContainer) {
+      TransferPair pair = wrapperIterator.next().getValueVector().makeTransferPair(w.getValueVector());
+      pair.transfer();
+    }
+    currentContainer.setRecordCount(c.getRecordCount());
+    c.zeroVectors();
     return c;
   }
 
   public int getNextIndex() {
-    if (pointer == currentContainer.getRecordCount()) {
-      if (!hasSecond || (batchPointer == 1 && spilledBatches == 0)) {
+    int val;
+    if (pointer == getRecordCount()) {
+      if (spilledBatches == 0) {
         return -1;
-      } else if (batchPointer == 1 && spilledBatches > 0) {
-        return -2;
       }
-      batchPointer++;
-      currentContainer = secondContainer;
-      pointer = 0;
+      try {
+        currentContainer.zeroVectors();
+        getBatch();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+      pointer = 1;
+      return 0;
     }
     if (sv2 == null) {
-      int val = pointer;
+      val = pointer;
       pointer++;
       assert val < currentContainer.getRecordCount();
-      return val;
     } else {
-      int val = pointer;
+      val = pointer;
       pointer++;
       assert val < currentContainer.getRecordCount();
-      return sv2.getIndex(val);
+      val = sv2.getIndex(val);
     }
+
+    return val;
   }
 
-  public VectorContainer getFirstContainer() {
-    return firstContainer;
-  }
-
-  public VectorContainer getSecondContainer() {
-    return secondContainer;
-  }
-
-  public boolean hasSecond() {
-    return hasSecond;
-  }
-
-  public void rotate() {
-    if (batchPointer == 0) {
-      return;
-    }
-    if (pointer == secondContainer.getRecordCount()) {
-      try {
-        getTwoBatches();
-        return;
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    firstContainer.zeroVectors();
-    Iterator<VectorWrapper<?>> wrapperIterator = secondContainer.iterator();
-    for (VectorWrapper w : firstContainer) {
-      TransferPair pair = wrapperIterator.next().getValueVector().makeTransferPair(w.getValueVector());
-      pair.transfer();
-    }
-    firstContainer.setRecordCount(secondContainer.getRecordCount());
-
-    if (spilledBatches > 0) {
-      VectorContainer c = null;
-      try {
-        c = getBatch();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-      secondContainer.zeroVectors();
-      wrapperIterator = c.iterator();
-      for (VectorWrapper w : secondContainer) {
-        TransferPair pair = wrapperIterator.next().getValueVector().makeTransferPair(w.getValueVector());
-        pair.transfer();
-      }
-      secondContainer.setRecordCount(c.getRecordCount());
-      c.zeroVectors();
-    } else {
-      secondContainer.zeroVectors();
-      hasSecond = false;
-    }
-    batchPointer = 0;
-    currentContainer = firstContainer;
-  }
-
-  private void getTwoBatches() throws IOException {
-    firstContainer.zeroVectors();
-    if (spilledBatches > 0) {
-      VectorContainer c = getBatch();
-      Iterator<VectorWrapper<?>> wrapperIterator = c.iterator();
-      for (VectorWrapper w : firstContainer) {
-        TransferPair pair = wrapperIterator.next().getValueVector().makeTransferPair(w.getValueVector());
-        pair.transfer();
-      }
-      firstContainer.setRecordCount(c.getRecordCount());
-      c.zeroVectors();
-    } else {
-      batchPointer = -1;
-      pointer = -1;
-      firstContainer.zeroVectors();
-      secondContainer.zeroVectors();
-    }
-    if (spilledBatches > 0) {
-      VectorContainer c = getBatch();
-      Iterator<VectorWrapper<?>> wrapperIterator = c.iterator();
-      for (VectorWrapper w : secondContainer) {
-        TransferPair pair = wrapperIterator.next().getValueVector().makeTransferPair(w.getValueVector());
-        pair.transfer();
-      }
-      secondContainer.setRecordCount(c.getRecordCount());
-      c.zeroVectors();
-    } else {
-      secondContainer.zeroVectors();
-      hasSecond = false;
-    }
-    batchPointer = 0;
-    currentContainer = firstContainer;
-    pointer = 0;
-//    BatchPrinter.printBatch(firstContainer);
-//    BatchPrinter.printBatch(secondContainer);
-    return;
-  }
-
-  public int getBatchPointer() {
-    assert batchPointer < 2;
-    return batchPointer;
+  public VectorContainer getContainer() {
+    return currentContainer;
   }
 
   public void cleanup() throws IOException {
@@ -263,7 +170,11 @@ public class BatchGroup implements VectorAccessible {
 
   @Override
   public int getRecordCount() {
-    return currentContainer.getRecordCount();
+    if (sv2 != null) {
+      return sv2.getCount();
+    } else {
+      return currentContainer.getRecordCount();
+    }
   }
 
   @Override

@@ -103,6 +103,10 @@ add_custom_target(cpProtobufs
 #message("ProtoHeaders =  ${ProtoHeaders}" )
 #message("ProtoIncludes =  ${ProtoIncludes}" )
 
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "/EHsc")
+endif()
+
 add_library(protomsgs STATIC ${ProtoSources} ${ProtoHeaders} ${ProtoIncludes} )
 #set linker properties. The first time around, the protobufs generated files may not exist
 # and CMAKE will not be able to determine the linker type.

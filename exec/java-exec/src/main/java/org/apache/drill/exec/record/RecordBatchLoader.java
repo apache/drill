@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.record;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import io.netty.buffer.EmptyByteBuf;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -57,7 +56,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    * @return Whether or not the schema changed since the previous load.
    * @throws SchemaChangeException
    */
-  public boolean load(RecordBatchDef def, ByteBuf buf) throws SchemaChangeException {
+  public boolean load(RecordBatchDef def, DrillBuf buf) throws SchemaChangeException {
 //    logger.debug("Loading record batch with def {} and data {}", def, buf);
     container.zeroVectors();
     this.valueCount = def.getRecordCount();
@@ -85,7 +84,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       }
       if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
 //        v.clear();
-        v.load(fmd, new EmptyByteBuf(allocator.getUnderlyingAllocator()));
+        v.load(fmd, allocator.buffer(0));
       } else {
         v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
       }

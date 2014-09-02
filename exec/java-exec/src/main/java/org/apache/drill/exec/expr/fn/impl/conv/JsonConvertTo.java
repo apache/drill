@@ -18,24 +18,19 @@
 
 package org.apache.drill.exec.expr.fn.impl.conv;
 
-import java.io.ByteArrayOutputStream;
+import io.netty.buffer.DrillBuf;
 
-import io.netty.buffer.ByteBuf;
+import javax.inject.Inject;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.vector.complex.fn.JsonWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-
-import com.google.common.base.Charsets;
 
 public class JsonConvertTo {
 
@@ -48,14 +43,12 @@ public class JsonConvertTo {
 
     @Param FieldReader input;
     @Output VarBinaryHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch incoming){
-      buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(256);
     }
 
     public void eval(){
-      out.buffer = buffer;
       out.start = 0;
 
       java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
@@ -69,12 +62,8 @@ public class JsonConvertTo {
 
       byte [] bytea = stream.toByteArray();
 
-      if (bytea.length > buffer.capacity()) {
-        buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(bytea.length);
-        out.buffer = buffer;
-      }
-      
-      out.buffer.setBytes(out.start, bytea);
+      out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
+      out.buffer.setBytes(0, bytea);
       out.end = bytea.length;
     }
   }

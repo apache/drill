@@ -21,6 +21,7 @@ import static org.apache.drill.exec.store.parquet.TestFileGenerator.populateFiel
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import io.netty.buffer.DrillBuf;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +38,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -58,8 +60,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
+import org.junit.rules.TestRule;
 import parquet.bytes.BytesInput;
 import parquet.column.page.Page;
 import parquet.column.page.PageReadStore;
@@ -75,6 +79,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+@Ignore
 public class ParquetRecordReaderTest extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReaderTest.class);
 
@@ -121,7 +126,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   }
 
   @Test
-  @Ignore
+
   public void testDictionaryError() throws Exception {
     String readEntries;
     readEntries = "\"/tmp/lineitem_null_dict.parquet\"";
@@ -132,10 +137,62 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     testFull(QueryType.SQL, "select L_RECEIPTDATE from dfs.`/tmp/lineitem_null_dict.parquet`", "", 1, 1, 100000, false);
   }
 
-  @Ignore
+
+  @Test
+  public void testFixedBinary() throws Exception {
+    String readEntries = "\"/tmp/drilltest/fixed_binary.parquet\"";
+
+    String planText = Files.toString(FileUtils.getResourceAsFile("/parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
+    testParquetFullEngineLocalText(planText, fileName, 1, 1, 1000000, false);
+  }
+
+  @Test
+  public void testNonNullableDictionaries() throws Exception {
+    testFull(QueryType.SQL, "select * from dfs.`/tmp/drilltest/non_nullable_dictionary.parquet`", "", 1, 1, 30000000, false);
+  }
+
+  @Test
+  public void testNullableVarCharMemory() throws Exception {
+    testFull(QueryType.SQL, "select s_comment,s_suppkey from dfs.`/tmp/sf100_supplier.parquet`", "", 1, 1, 1000, false);
+  }
+
+  @Test
+  public void testReadVoter() throws Exception {
+    testFull(QueryType.SQL, "select * from dfs.`/tmp/voter.parquet`", "", 1, 1, 1000, false);
+  }
+
+  @Test
+  public void testDrill_1314() throws Exception {
+    testFull(QueryType.SQL, "select l_partkey " +
+        "from dfs.`/tmp/drill_1314.parquet`", "", 1,1, 10000, false);
+  }
+
   @Test
   public void testDictionaryError_419() throws Exception {
     testFull(QueryType.SQL, "select c_address from dfs.`/tmp/customer_snappyimpala_drill_419.parquet`", "", 1, 1, 150000, false);
+  }
+
+  @Test
+  public void testNonExistentColumn() throws Exception {
+    testFull(QueryType.SQL, "select non_existent_column from cp.`tpch/nation.parquet`", "", 1, 1, 150000, false);
+  }
+
+
+  @Test
+
+  public void testNonExistentColumnLargeFile() throws Exception {
+    testFull(QueryType.SQL, "select non_existent_column, non_existent_col_2 from dfs.`/tmp/customer.dict.parquet`", "", 1, 1, 150000, false);
+  }
+
+  @Test
+
+  public void testNonExistentColumnsSomePresentColumnsLargeFile() throws Exception {
+    testFull(QueryType.SQL, "select cust_key, address,  non_existent_column, non_existent_col_2 from dfs.`/tmp/customer.dict.parquet`", "", 1, 1, 150000, false);
+  }
+
+  @Test
+  public void testTPCHPerformace_SF1() throws Exception {
+    testFull(QueryType.SQL, "select * from dfs.`/tmp/orders_part-m-00001.parquet`", "", 1, 1, 150000, false);
   }
 
   @Test
@@ -242,6 +299,11 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     public boolean isNewSchema() {
       return false;
     }
+
+    @Override
+    public DrillBuf getManagedBuffer() {
+      return allocator.buffer(255);
+    }
   }
 
 
@@ -281,7 +343,6 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   // TODO - Test currently marked ignore to prevent breaking of the build process, requires a binary file that was
   // generated using pig. Will need to find a good place to keep files like this.
   // For now I will upload it to the JIRA as an attachment.
-  @Ignore
   @Test
   public void testNullableColumns() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
@@ -291,13 +352,13 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     testParquetFullEngineEventBased(false, "/parquet/parquet_nullable.json", "/tmp/nullable_test.parquet", 1, props);
   }
 
-  @Ignore
+
   @Test
   /**
    * Tests the reading of nullable var length columns, runs the tests twice, once on a file that has
    * a converted type of UTF-8 to make sure it can be read
    */
-public void testNullableColumnsVarLen() throws Exception {
+  public void testNullableColumnsVarLen() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
     ParquetTestProperties props = new ParquetTestProperties(1, 300000, DEFAULT_BYTES_PER_PAGE, fields);
     byte[] val = {'b'};
@@ -318,7 +379,7 @@ public void testNullableColumnsVarLen() throws Exception {
 
   }
 
-  @Ignore
+
   @Test
   public void testFileWithNulls() throws Exception {
     HashMap<String, FieldInfo> fields3 = new HashMap<>();
@@ -331,7 +392,7 @@ public void testNullableColumnsVarLen() throws Exception {
 
   }
 
-  @Ignore
+
   @Test
   public void testDictionaryEncoding() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
@@ -375,7 +436,7 @@ public void testNullableColumnsVarLen() throws Exception {
         "/tmp/test.parquet", i, props);
   }
 
-  @Ignore
+
   @Test
   public void testReadError_Drill_901() throws Exception {
     // select cast( L_COMMENT as varchar) from  dfs_test.`/tmp/drilltest/employee_parquet`
@@ -385,7 +446,7 @@ public void testNullableColumnsVarLen() throws Exception {
         "unused, no file is generated", 1, props, QueryType.PHYSICAL);
   }
 
-  @Ignore
+
   @Test
   public void testReadError_Drill_839() throws Exception {
     // select cast( L_COMMENT as varchar) from  dfs.`/tmp/drilltest/employee_parquet`
@@ -396,7 +457,7 @@ public void testNullableColumnsVarLen() throws Exception {
         "unused, no file is generated", 1, props, QueryType.LOGICAL);
   }
 
-  @Ignore
+
   @Test
   public void testReadBug_Drill_418() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
@@ -408,7 +469,7 @@ public void testNullableColumnsVarLen() throws Exception {
   }
 
   // requires binary file generated by pig from TPCH data, also have to disable assert where data is coming in
-  @Ignore
+
   @Test
   public void testMultipleRowGroupsAndReadsPigError() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
@@ -426,7 +487,12 @@ public void testNullableColumnsVarLen() throws Exception {
         "unused, no file is generated", 1, props, QueryType.LOGICAL);
   }
 
-  @Ignore
+  @Test
+  public void test958_sql() throws Exception {
+    testFull(QueryType.SQL, "select ss_ext_sales_price from dfs.`/tmp/store_sales`", "", 1, 1, 30000000, false);
+  }
+
+
   @Test
   public void drill_958bugTest() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();

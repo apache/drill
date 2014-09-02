@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -324,8 +324,9 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
       for(int i = holder.start; i < holder.end; i++, newIndex++){
         if(!vectorTransfer.copyValueSafe(i, newIndex)) return false;
       }
-      if(!this.to.offsets.getMutator().setSafe(to, newIndex)) return false;
+      if(!this.to.offsets.getMutator().setSafe(to + 1, newIndex)) return false;
 
+      this.to.lastSet++;
       return true;
     }
 
@@ -354,8 +355,8 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public ByteBuf[] getBuffers() {
-    return ArrayUtils.addAll(offsets.getBuffers(), vector.getBuffers());
+  public DrillBuf[] getBuffers(boolean clear) {
+    return ArrayUtils.addAll(offsets.getBuffers(clear), vector.getBuffers(clear));
   }
 
   private void setVector(ValueVector v){
@@ -364,7 +365,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public void load(SerializedField metadata, ByteBuf buf) {
+  public void load(SerializedField metadata, DrillBuf buf) {
     SerializedField childField = metadata.getChildList().get(0);
 
     int bufOffset = offsets.load(metadata.getValueCount()+1, buf);
@@ -429,7 +430,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public int load(int parentValueCount, int childValueCount, ByteBuf buf) {
+  public int load(int parentValueCount, int childValueCount, DrillBuf buf) {
     throw new UnsupportedOperationException();
   }
 

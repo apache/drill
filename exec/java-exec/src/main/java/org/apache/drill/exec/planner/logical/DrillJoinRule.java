@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.JoinRel;
+import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptRule;
@@ -73,8 +74,10 @@ public class DrillJoinRule extends RelOptRule {
 
     // If the join involves equijoins and non-equijoins, then we can process the non-equijoins through
     // a filter right after the join
+    // DRILL-1337: We can only pull up a non-equivjoin filter for INNER join.
+    // For OUTER join, pulling up a non-eqivjoin filter will lead to incorrectly discarding qualified rows.
     if (! remaining.isAlwaysTrue()) {
-      if (hasEquijoins) {
+      if (hasEquijoins && join.getJoinType()== JoinRelType.INNER) {
         addFilter = true;
         List<RexNode> equijoinList = Lists.newArrayList();
         List<RelDataTypeField> leftTypes = convertedLeft.getRowType().getFieldList();

@@ -26,6 +26,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -34,7 +36,10 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -42,15 +47,14 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+        buffer = buffer.reallocIfNeeded(size);
     }
 
     public void eval() {
@@ -60,7 +64,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
 
         out.scale = (int) scale.value;
@@ -78,9 +82,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         int index = in.nDecimalDigits - 1;
         int actualDigits;
 
-        if (in.scale > 0 && (actualDigits = (in.scale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)) > 0) {
+        if (in.scale > 0 && (actualDigits = (in.scale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS)) > 0) {
 
-            int paddedDigits = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - actualDigits;
+            int paddedDigits = org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - actualDigits;
 
             int paddedMask = (int) Math.pow(10, paddedDigits);
 
@@ -88,16 +92,16 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
              * digit, so we have padded zeroes to it for ease of arithmetic
              * Truncate the extra zeroes added and move the digits to the right
              */
-            int temp = (in.getInteger(index)/paddedMask);
+            int temp = (in.getInteger(index, in.start, in.buffer)/paddedMask);
             index--;
 
             while(index >= 0) {
 
-                int transferDigits = (in.getInteger(index) % (paddedMask));
+                int transferDigits = (in.getInteger(index, in.start, in.buffer) % (paddedMask));
 
                 intermediate[index] = (int) (temp + (Math.pow(10, actualDigits) * transferDigits));
 
-                temp = (in.getInteger(index)/(paddedMask));
+                temp = (in.getInteger(index, in.start, in.buffer)/(paddedMask));
 
                 index--;
             }
@@ -108,7 +112,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
              * need only 5 decimal digit to be stored, simply copy over the integers
              */
             for (int i = 1; i < in.nDecimalDigits; i++)
-                intermediate[i - 1] = in.getInteger(i);
+                intermediate[i - 1] = in.getInteger(i, in.start, in.buffer);
 
         }
 
@@ -120,14 +124,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
          */
 
           /* Allocate a byte array */
-          int size = (((intermediate.length - 1) * org.apache.drill.common.util.DecimalUtility.integerSize) + 1);
+          int size = (((intermediate.length - 1) * org.apache.drill.exec.util.DecimalUtility.integerSize) + 1);
           byte[] intermediateBytes = new byte[size];
           java.nio.ByteBuffer wrapper = java.nio.ByteBuffer.wrap(intermediateBytes);
 
           wrapper.put((byte) intermediate[0]);
 
           for (int i = 1; i < intermediate.length; i++) {
-            wrapper.put(java.nio.ByteBuffer.allocate(org.apache.drill.common.util.DecimalUtility.integerSize).putInt(intermediate[i]).array());
+            wrapper.put(java.nio.ByteBuffer.allocate(org.apache.drill.exec.util.DecimalUtility.integerSize).putInt(intermediate[i]).array());
           }
 
           final int[] mask = {0x03, 0x0F, 0x3F, 0xFF};
@@ -135,21 +139,21 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
           int shiftOrder = 2;
 
           // Start just after the last integer and shift bits to the right
-          index = size - (org.apache.drill.common.util.DecimalUtility.integerSize+ 1);
+          index = size - (org.apache.drill.exec.util.DecimalUtility.integerSize+ 1);
 
           while (index >= 0) {
 
               /* get the last bits that need to shifted to the next byte */
               byte shiftBits = (byte) ((intermediateBytes[index] & mask[maskIndex]) << (8 - shiftOrder));
 
-              int shiftOrder1 = ((index % org.apache.drill.common.util.DecimalUtility.integerSize) == 0) ? shiftOrder - 2 : shiftOrder;
+              int shiftOrder1 = ((index % org.apache.drill.exec.util.DecimalUtility.integerSize) == 0) ? shiftOrder - 2 : shiftOrder;
 
               /* transfer the bits from the left to the right */
               intermediateBytes[index + 1] = (byte) (((intermediateBytes[index + 1] & 0xFF) >>> (shiftOrder1)) | shiftBits);
 
               index--;
 
-              if ((index % org.apache.drill.common.util.DecimalUtility.integerSize) == 0) {
+              if ((index % org.apache.drill.exec.util.DecimalUtility.integerSize) == 0) {
                   /* We are on a border */
                   shiftOrder += 2;
                   maskIndex++;
@@ -167,7 +171,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
           // Set the bytes in the buffer
           out.buffer.setBytes(dstIndex, intermediateBytes, 1, (size - 1));
-          out.setSign(in.getSign());
+          out.setSign(in.getSign(in.start, in.buffer), out.start, out.buffer);
     }
 }
 </#if>

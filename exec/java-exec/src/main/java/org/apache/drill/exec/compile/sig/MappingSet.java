@@ -42,6 +42,10 @@ public class MappingSet {
     this("inIndex", "outIndex", new GeneratorMapping[] { mapping, mapping });
   }
 
+  public boolean hasEmbeddedConstant(){
+    return constant == current;
+  }
+
   public MappingSet(String readIndex, String writeIndex, String workspaceIndex, String incoming, String outgoing,
       String workspace, GeneratorMapping... mappings) {
     this(readIndex, writeIndex, incoming, outgoing, mappings);

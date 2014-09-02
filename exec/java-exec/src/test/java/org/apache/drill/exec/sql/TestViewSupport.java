@@ -26,8 +26,8 @@ public class TestViewSupport extends BaseTestQuery{
   @Test
   public void referToSchemaInsideAndOutsideView() throws Exception {
     String use = "use dfs_test.tmp;";
-    String selectInto = "create table monkey as select c_custkey, c_regionkey from cp.`tpch/customer.parquet`";
-    String createView = "create or replace view myMonkeyView as select c_custkey, c_regionkey from monkey";
+    String selectInto = "create table monkey as select c_custkey, c_nationkey from cp.`tpch/customer.parquet`";
+    String createView = "create or replace view myMonkeyView as select c_custkey, c_nationkey from monkey";
     String selectInside = "select * from myMonkeyView;";
     String use2 = "use cp;";
     String selectOutside = "select * from dfs_test.tmp.myMonkeyView;";

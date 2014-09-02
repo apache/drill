@@ -44,18 +44,20 @@ package org.apache.drill.exec.vector;
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 @SuppressWarnings("unused")
-public final class ${className} extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector{
+public final class ${className} extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector, NullableVector{
 
   private int valueCount;
-  final BitVector bits;
+  final UInt1Vector bits;
   final ${valuesName} values;
-  private final Accessor accessor = new Accessor();
-  private final Mutator mutator = new Mutator();
+  private final Accessor accessor;
+  private final Mutator mutator;
 
   public ${className}(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    this.bits = new BitVector(null, allocator);
+    this.bits = new UInt1Vector(null, allocator);
     this.values = new ${minor.class}Vector(field, allocator);
+    this.accessor = new Accessor();
+    this.mutator = new Mutator();
   }
   
   public int getValueCapacity(){
@@ -71,9 +73,11 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
 
   @Override
-  public ByteBuf[] getBuffers() {
-    ByteBuf[] buffers = ObjectArrays.concat(bits.getBuffers(), values.getBuffers(), ByteBuf.class);
-    clear();
+  public DrillBuf[] getBuffers(boolean clear) {
+    DrillBuf[] buffers = ObjectArrays.concat(bits.getBuffers(clear), values.getBuffers(clear), DrillBuf.class);
+    if (clear) {
+      clear();
+    }
     return buffers;
   }
   
@@ -88,8 +92,12 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     return values.getBufferSize() + bits.getBufferSize();
   }
 
-  public ByteBuf getData(){
+  public DrillBuf getData(){
     return values.getData();
+  }
+
+  public ${valuesName} getValuesVector() {
+    return values;
   }
 
   <#if type.major == "VarLen">
@@ -112,6 +120,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public boolean allocateNewSafe() {
     if(!values.allocateNewSafe()) return false;
     if(!bits.allocateNewSafe()) return false;
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
     return true;
@@ -121,12 +130,13 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public void allocateNew(int totalBytes, int valueCount) {
     values.allocateNew(totalBytes, valueCount);
     bits.allocateNew(valueCount);
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
   }
 
   @Override
-  public int load(int dataBytes, int valueCount, ByteBuf buf){
+  public int load(int dataBytes, int valueCount, DrillBuf buf){
     clear();
     this.valueCount = valueCount;
     int loaded = bits.load(valueCount, buf);
@@ -140,10 +150,10 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
   
   @Override
-  public void load(SerializedField metadata, ByteBuf buffer) {
-    assert this.field.matches(metadata);
+  public void load(SerializedField metadata, DrillBuf buffer) {
+    assert this.field.matches(metadata) : String.format("The field %s doesn't match the provided metadata %s.", this.field, metadata);
     int loaded = load(metadata.getBufferLength(), metadata.getValueCount(), buffer);
-    assert metadata.getBufferLength() == loaded;
+    assert metadata.getBufferLength() == loaded : String.format("Expected to load %d bytes but actually loaded %d bytes", metadata.getBufferLength(), loaded);
   }
   
   @Override
@@ -169,6 +179,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public void allocateNew() {
     values.allocateNew();
     bits.allocateNew();
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
   }
@@ -178,6 +189,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public boolean allocateNewSafe() {
     if(!values.allocateNewSafe()) return false;
     if(!bits.allocateNewSafe()) return false;
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
     return true;
@@ -187,6 +199,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public void allocateNew(int valueCount) {
     values.allocateNew(valueCount);
     bits.allocateNew(valueCount);
+    bits.zeroVector();
     mutator.reset();
     accessor.reset();
   }
@@ -196,10 +209,11 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
    */
   public void zeroVector() {
     this.values.zeroVector();
+    this.bits.zeroVector();
   }
 
   @Override
-  public int load(int valueCount, ByteBuf buf){
+  public int load(int valueCount, DrillBuf buf){
     clear();
     this.valueCount = valueCount;
     int loaded = bits.load(valueCount, buf);
@@ -211,7 +225,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
   
   @Override
-  public void load(SerializedField metadata, ByteBuf buffer) {
+  public void load(SerializedField metadata, DrillBuf buffer) {
     assert this.field.matches(metadata);
     int loaded = load(metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
@@ -321,14 +335,30 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     return b1 && b2;
   }
 
+  public long getDataAddr(){
+    return values.getDataAddr();
+  }
+  
+  public long getBitAddr(){
+    return bits.getDataAddr();
+  }
+  
+  <#if type.major == "VarLen">
+  public long getOffsetAddr(){
+    return values.getOffsetAddr();
+  }
+  </#if>
   
   public final class Accessor implements ValueVector.Accessor<#if type.major = "VarLen">, VariableWidthVector.VariableWidthAccessor</#if>{
 
     final FieldReader reader = new Nullable${minor.class}ReaderImpl(Nullable${minor.class}Vector.this);
+    final UInt1Vector.Accessor bAccessor = bits.getAccessor();
+    final ${valuesName}.Accessor vAccessor = values.getAccessor();
     
     public FieldReader getReader(){
       return reader;
     }
+    
     /**
      * Get the element at the specified position.
      *
@@ -338,7 +368,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
      */
     public <#if type.major == "VarLen">byte[]<#else>${minor.javaType!type.javaType}</#if> get(int index) {
       assert !isNull(index) : "Tried to get null value";
-      return values.getAccessor().get(index);
+      return vAccessor.get(index);
     }
 
     public boolean isNull(int index) {
@@ -346,8 +376,21 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     }
 
     public int isSet(int index){
-      return bits.getAccessor().get(index);
+      return bAccessor.get(index);
     }
+    
+    <#if type.major == "VarLen">
+    public long getStartEnd(int index){
+      return vAccessor.getStartEnd(index);
+    }
+    
+    public long getOffsetAddr(){
+      return values.getOffsetAddr();
+    }
+    </#if>
+    
+
+    
 
 
     <#if type.major == "VarLen">
@@ -357,8 +400,8 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     </#if>
 
     public void get(int index, Nullable${minor.class}Holder holder){
-      values.getAccessor().get(index, holder);
-      holder.isSet = bits.getAccessor().get(index);
+      vAccessor.get(index, holder);
+      holder.isSet = bAccessor.get(index);
 
       <#if minor.class.startsWith("Decimal")>
       holder.scale = getField().getScale();
@@ -371,7 +414,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       if (isNull(index)) {
           return null;
       }else{
-        return values.getAccessor().getObject(index);
+        return vAccessor.getObject(index);
       }
     }
 
@@ -380,7 +423,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       if (isNull(index)) {
           return null;
       }else{
-        return values.getAccessor().getAsStringBuilder(index);
+        return vAccessor.getAsStringBuilder(index);
       }
     }
     </#if>
@@ -467,6 +510,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       values.getMutator().set(index, holder);
     }
     
+    
     public void set(int index, Nullable${minor.class}Holder holder){
       <#if type.major == "VarLen">
       for (int i = lastSet + 1; i < index; i++) {
@@ -493,14 +537,44 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       return outIndex < Nullable${minor.class}Vector.this.getValueCapacity();
     }
 
-    //public boolean setSafe(int index, <#if type.major == "VarLen" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
+    //public boolean setSafe(int index, int isSet<#if type.major == "VarLen" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
+
+    <#assign fields = minor.fields!type.fields />
+    public void set(int index, int isSet<#list fields as field><#if field.include!true >, ${field.type} ${field.name}Field</#if></#list> ){
+      <#if type.major == "VarLen">
+      for (int i = lastSet + 1; i < index; i++) {
+        values.getMutator().set(i, new byte[]{});
+      }
+      </#if>
+      bits.getMutator().set(index, isSet);
+      values.getMutator().set(index<#list fields as field><#if field.include!true >, ${field.name}Field</#if></#list>);
+      <#if type.major == "VarLen">lastSet = index;</#if>
+    }
+    
+    public boolean setSafe(int index, int isSet<#list fields as field><#if field.include!true >, ${field.type} ${field.name}Field</#if></#list> ) {
+      <#if type.major == "VarLen">
+      if(!fillEmpties(index)) return false;
+      </#if>
+      
+      boolean b1 = bits.getMutator().setSafe(index, isSet);
+      boolean b2 = values.getMutator().setSafe(index<#list fields as field><#if field.include!true >, ${field.name}Field</#if></#list>);
+      if(b1 && b2){
+        setCount++;
+        <#if type.major == "VarLen">lastSet = index;</#if>
+        return true;
+      }else{
+        return false;
+      }
+
+    }
+
 
     public boolean setSafe(int index, Nullable${minor.class}Holder value) {
 
       <#if type.major == "VarLen">
       if(!fillEmpties(index)) return false;
       </#if>
-      boolean b1 = bits.getMutator().setSafe(index, 1);
+      boolean b1 = bits.getMutator().setSafe(index, value.isSet);
       boolean b2 = values.getMutator().setSafe(index, value);
       if(b1 && b2){
         setCount++;
@@ -561,7 +635,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     }
     
     public void generateTestData(int valueCount){
-      bits.getMutator().generateTestData(valueCount);
+      bits.getMutator().generateTestDataAlt(valueCount);
       values.getMutator().generateTestData(valueCount);
       <#if type.major = "VarLen">lastSet = valueCount;</#if>
       setValueCount(valueCount);

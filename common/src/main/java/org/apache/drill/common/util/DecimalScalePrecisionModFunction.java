@@ -18,6 +18,7 @@
 
 package org.apache.drill.common.util;
 
+
 public class DecimalScalePrecisionModFunction extends DrillBaseComputeScalePrecision {
 
   public DecimalScalePrecisionModFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
@@ -31,7 +32,7 @@ public class DecimalScalePrecisionModFunction extends DrillBaseComputeScalePreci
     outputScale = Math.max(leftScale, rightScale);
     int leftIntegerDigits = leftPrecision - leftScale;
 
-    outputPrecision = DecimalUtility.getPrecisionRange(outputScale + leftIntegerDigits);
+    outputPrecision = CoreDecimalUtility.getPrecisionRange(outputScale + leftIntegerDigits);
 
     if (outputScale + leftIntegerDigits > outputPrecision) {
       outputScale = outputPrecision - leftIntegerDigits;

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.cache;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ import java.util.List;
 
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -112,7 +114,10 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     for (SerializedField metaData : fieldList) {
       int dataLength = metaData.getBufferLength();
       MaterializedField field = MaterializedField.create(metaData);
-      ByteBuf buf = allocator.buffer(dataLength);
+      DrillBuf buf = allocator.buffer(dataLength);
+      if (buf == null) {
+        throw new IOException(new OutOfMemoryException());
+      }
       buf.writeBytes(input, dataLength);
       ValueVector vector = TypeHelper.getNewVector(field, allocator);
       vector.load(metaData, buf);
@@ -142,11 +147,11 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     Preconditions.checkNotNull(output);
     final Timer.Context timerContext = metrics.timer(WRITER_TIMER).time();
 
-    ByteBuf[] incomingBuffers = batch.getBuffers();
+    DrillBuf[] incomingBuffers = batch.getBuffers();
     UserBitShared.RecordBatchDef batchDef = batch.getDef();
 
-        /* ByteBuf associated with the selection vector */
-    ByteBuf svBuf = null;
+    /* DrillBuf associated with the selection vector */
+    DrillBuf svBuf = null;
     Integer svCount =  null;
 
     if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE)
@@ -170,7 +175,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       }
 
             /* Dump the array of ByteBuf's associated with the value vectors */
-      for (ByteBuf buf : incomingBuffers)
+      for (DrillBuf buf : incomingBuffers)
       {
                 /* dump the buffer into the OutputStream */
         int bufLength = buf.readableBytes();

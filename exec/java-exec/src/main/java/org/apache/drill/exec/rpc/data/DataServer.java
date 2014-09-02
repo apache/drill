@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import io.netty.buffer.AccountingByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -114,11 +114,11 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
       }
       BufferAllocator allocator = manager.getFragmentContext().getAllocator();
       if(body != null){
-        if(!allocator.takeOwnership((AccountingByteBuf) body.unwrap())){
+        if(!allocator.takeOwnership((DrillBuf) body.unwrap())){
           dataHandler.handle(connection, manager, OOM_FRAGMENT, null, null);
         }
       }
-      dataHandler.handle(connection, manager, fragmentBatch, body, sender);
+      dataHandler.handle(connection, manager, fragmentBatch, (DrillBuf) body, sender);
 
     } catch (FragmentSetupException e) {
       logger.error("Failure while getting fragment manager. {}", QueryIdHelper.getQueryIdentifier(handle),  e);

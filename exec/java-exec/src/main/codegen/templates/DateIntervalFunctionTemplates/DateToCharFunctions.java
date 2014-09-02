@@ -28,6 +28,8 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 package org.apache.drill.exec.expr.fn.impl;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -38,6 +40,7 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "to_char", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
@@ -45,14 +48,14 @@ public class G${type}ToChar implements DrillSimpleFunc {
 
     @Param  ${type}Holder left;
     @Param  VarCharHolder right;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Workspace org.joda.time.MutableDateTime temp;
     @Workspace org.joda.time.format.DateTimeFormatter format;
     @Output VarCharHolder out;
 
     public void setup(RecordBatch b) {
         temp = new org.joda.time.MutableDateTime(0, org.joda.time.DateTimeZone.UTC);
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[100]);
+        buffer = buffer.reallocIfNeeded(100);
 
         // Get the desired output format and create a DateTimeFormatter
         byte[] buf = new byte[right.end - right.start];

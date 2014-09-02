@@ -18,6 +18,7 @@
 package org.apache.drill.hbase;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -105,6 +106,50 @@ public class TestTableGenerator {
     table.put(p);
     table.flushCommits();
     table.close();
+  }
+
+  public static void generateHBaseDataset2(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor("f"));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    int rowCount = 0;
+    byte[] bytes = null;
+    final int numColumns = 5;
+    Random random = new Random();
+    int iteration = 0;
+    while (rowCount < 1000) {
+      char rowKeyChar = 'a';
+      for (int i = 0; i < numberRegions; i++) {
+        Put p = new Put((""+rowKeyChar+iteration).getBytes());
+        for (int j = 1; j <= numColumns; j++) {
+          bytes = new byte[5000]; random.nextBytes(bytes);
+          p.add("f".getBytes(), ("c"+j).getBytes(), bytes);
+        }
+        table.put(p);
+
+        ++rowKeyChar;
+        ++rowCount;
+      }
+      ++iteration;
+    }
+
+    table.flushCommits();
+    table.close();
+    
+    admin.flush(tableName);
   }
 
 }

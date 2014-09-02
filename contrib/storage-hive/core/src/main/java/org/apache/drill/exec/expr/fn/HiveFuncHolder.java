@@ -218,7 +218,7 @@ public class HiveFuncHolder extends AbstractFuncHolder {
       ._throw(JExpr._new(m.directClass(RuntimeException.class.getCanonicalName()))
         .arg(JExpr.lit(String.format("Failed to initialize GenericUDF"))).arg(exVar));
 
-    sub.add(ObjectInspectorHelper.initReturnValueHolder(m, workspaceJVars[4], returnOI, returnType.getMinorType()));
+    sub.add(ObjectInspectorHelper.initReturnValueHolder(g, m, workspaceJVars[4], returnOI, returnType.getMinorType()));
 
     // now add it to the doSetup block in Generated class
     JBlock setup = g.getBlock(ClassGenerator.BlockType.SETUP);

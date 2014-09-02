@@ -18,65 +18,77 @@
 
 package org.apache.drill.exec.vector.complex.fn;
 
+import io.netty.buffer.DrillBuf;
+
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.fasterxml.jackson.core.JsonParseException;
 
 public class JsonReaderWithState {
 
-	public static enum WriteState {
-		WRITE_SUCCEED, WRITE_FAILED, NO_MORE
-	}
+  public static enum WriteState {
+    WRITE_SUCCEED, WRITE_FAILED, NO_MORE
+  }
 
-	private Reader reader;
-	private JsonRecordSplitter splitter;
-	private JsonReader jsonReader;
+  private Reader reader;
+  private JsonRecordSplitter splitter;
+  private JsonReader jsonReader;
 
-	public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException {
-		this.splitter = splitter;
-		reader = splitter.getNextReader();
-		jsonReader = new JsonReader();
-	}
+  public JsonReaderWithState(JsonRecordSplitter splitter, DrillBuf workspace, List<SchemaPath> columns, boolean allTextMode) throws IOException{
+    this.splitter = splitter;
+    reader = splitter.getNextReader();
+    jsonReader = new JsonReader(workspace, columns, allTextMode);
+  }
 
-	public JsonReaderWithState() throws IOException {
-		jsonReader = new JsonReader();
-	}
+  public JsonReaderWithState(DrillBuf workspace, boolean allTextMode) throws IOException {
+    jsonReader = new JsonReader(workspace, GroupScan.ALL_COLUMNS, allTextMode);
+  }
 
-	public WriteState write(ComplexWriter writer) throws JsonParseException,
-			IOException {
-		if (reader == null) {
-			reader = splitter.getNextReader();
-			if (reader == null)
-				return WriteState.NO_MORE;
+  public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException{
+    this(splitter, null, GroupScan.ALL_COLUMNS, false);
+  }
 
-		}
+  public List<SchemaPath> getNullColumns() {
+    return jsonReader.getNullColumns();
+  }
 
-		jsonReader.write(reader, writer);
+  public WriteState write(ComplexWriter writer) throws JsonParseException, IOException {
+    if (reader == null) {
+      reader = splitter.getNextReader();
+      if (reader == null)
+        return WriteState.NO_MORE;
 
-		if (!writer.ok()) {
-			reader.reset();
-			return WriteState.WRITE_FAILED;
-		} else {
-			reader = null;
-			return WriteState.WRITE_SUCCEED;
-		}
-	}
+    }
 
-	public WriteState write(byte[] bytes, ComplexWriter writer)
-			throws JsonParseException, IOException {
-		if (bytes == null || bytes.length == 0) {
-			return WriteState.NO_MORE;
-		}
+    jsonReader.write(reader, writer);
 
-		jsonReader.write(bytes, writer);
+    if (!writer.ok()) {
+      reader.reset();
+      return WriteState.WRITE_FAILED;
+    } else {
+      reader = null;
+      return WriteState.WRITE_SUCCEED;
+    }
+  }
 
-		if (!writer.ok()) {
-			return WriteState.WRITE_FAILED;
-		} else {
-			return WriteState.WRITE_SUCCEED;
-		}
-	}
+  public WriteState write(byte[] bytes, ComplexWriter writer)
+      throws JsonParseException, IOException {
+    if (bytes == null || bytes.length == 0) {
+      return WriteState.NO_MORE;
+    }
+
+    jsonReader.write(bytes, writer);
+
+    if (!writer.ok()) {
+      return WriteState.WRITE_FAILED;
+    } else {
+      return WriteState.WRITE_SUCCEED;
+    }
+  }
 }

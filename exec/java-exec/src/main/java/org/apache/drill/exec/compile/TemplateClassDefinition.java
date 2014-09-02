@@ -22,14 +22,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.drill.exec.compile.sig.SignatureHolder;
 
 public class TemplateClassDefinition<T>{
-  
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TemplateClassDefinition.class);
-  
+
   private final Class<T> iface;
   private final Class<?> template;
   private final SignatureHolder signature;
   private static final AtomicLong classNumber = new AtomicLong(0);
-  
+
   public <X extends T> TemplateClassDefinition(Class<T> iface, Class<X> template) {
     super();
     this.iface = iface;
@@ -47,7 +47,7 @@ public class TemplateClassDefinition<T>{
   public long getNextClassNumber(){
     return classNumber.getAndIncrement();
   }
-  
+
   public Class<T> getExternalInterface() {
     return iface;
   }
@@ -66,6 +66,11 @@ public class TemplateClassDefinition<T>{
     return "TemplateClassDefinition [template=" + template + ", signature=" + signature + "]";
   }
 
-  
-  
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
+  }
+
+
+
 }

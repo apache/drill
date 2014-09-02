@@ -28,6 +28,7 @@ import com.sun.codemodel.*;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.DirectExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -73,7 +74,7 @@ public class ObjectInspectorHelper {
         String.format("Type %s[%s] not supported as arguement to Hive UDFs", minorType.toString(), mode.toString()));
   }
 
-  public static JBlock initReturnValueHolder(JCodeModel m, JVar returnValueHolder, ObjectInspector oi, MinorType returnType) {
+  public static JBlock initReturnValueHolder(ClassGenerator<?> g, JCodeModel m, JVar returnValueHolder, ObjectInspector oi, MinorType returnType) {
     JBlock block = new JBlock(false, false);
     switch(oi.getCategory()) {
       case PRIMITIVE: {
@@ -85,10 +86,16 @@ public class ObjectInspectorHelper {
             block.assign(returnValueHolder, JExpr._new(holderClass));
 
           <#if entry.hiveType == "VARCHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY">
-            block.assign(returnValueHolder.ref("buffer"),
-              m.directClass(io.netty.buffer.Unpooled.class.getCanonicalName())
-                .staticInvoke("wrappedBuffer")
-                .arg(JExpr.newArray(m._ref(byte.class), JExpr.lit(1000))));
+            block.assign( //
+                returnValueHolder.ref("buffer"), //
+                g
+                  .getMappingSet()
+                  .getIncoming()
+                  .invoke("getContext")
+                  .invoke("getManagedBuffer")
+                  .invoke("reallocIfNeeded")
+                    .arg(JExpr.lit(1024))
+            );
           </#if>
             return block;
           }

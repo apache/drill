@@ -30,7 +30,9 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
@@ -85,6 +87,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
@@ -132,6 +135,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
@@ -177,6 +181,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
@@ -223,6 +228,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
@@ -269,6 +275,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
@@ -287,7 +294,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           VarCharHolder holder0 = new VarCharHolder();
           a0.get(i, holder0);
-          assertEquals("123", holder0.toString());
+          assertEquals("123", StringFunctionHelpers.toStringFromUTF8(holder0.start, holder0.end, holder0.buffer));
           ++count;
 
       }
@@ -316,6 +323,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
@@ -334,7 +342,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           VarBinaryHolder holder0 = new VarBinaryHolder();
           a0.get(i, holder0);
-          assertEquals("123", holder0.toString());
+          assertEquals("123", StringFunctionHelpers.toStringFromUTF8(holder0.start, holder0.end, holder0.buffer));
           ++count;
 
       }
@@ -361,6 +369,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
@@ -408,6 +417,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
+      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 

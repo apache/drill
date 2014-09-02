@@ -32,6 +32,7 @@ import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -83,6 +84,7 @@ public class TestHashJoin extends PopUnitTestBase{
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
             bitContext.getConfig(); result = c;
             bitContext.getOptionManager(); result = opt;
+            bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
         }};
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
@@ -267,8 +269,8 @@ public class TestHashJoin extends PopUnitTestBase{
       assertEquals(272, count);
     }
   }
-  
-  
+
+
   @Test
   public void testHashJoinExprInCondition() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();

@@ -60,10 +60,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if type.runningType == "Interval">
     value.months = ${type.initialValue};
     value.days= ${type.initialValue};
-    value.milliSeconds = ${type.initialValue};
+    value.milliseconds = ${type.initialValue};
     <#elseif type.runningType == "IntervalDay">
     value.days= ${type.initialValue};
-    value.milliSeconds = ${type.initialValue};
+    value.milliseconds = ${type.initialValue};
     <#else>
     value.value = ${type.initialValue};
     </#if>
@@ -90,13 +90,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
     long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
                        in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
-                       in.milliSeconds;
+                       in.milliseconds;
 
     value.value = Math.min(value.value, inMS);
 
     <#elseif type.outputType == "IntervalDay">
     long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
-                       in.milliSeconds;
+                       in.milliseconds;
 
     value.value = Math.min(value.value, inMS);
 
@@ -113,12 +113,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif type.outputType == "Interval">
     long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
                        in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
-                       in.milliSeconds;
+                       in.milliseconds;
 
     value.value = Math.max(value.value, inMS);
     <#elseif type.outputType == "IntervalDay">
     long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
-                       in.milliSeconds;
+                       in.milliseconds;
 
     value.value = Math.max(value.value, inMS);
     <#else>
@@ -129,10 +129,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if type.outputType == "Interval">
     value.days += in.days;
     value.months += in.months;
-    value.milliSeconds += in.milliSeconds;
+    value.milliseconds += in.milliseconds;
     <#elseif type.outputType == "IntervalDay">
     value.days += in.days;
-    value.milliSeconds += in.milliSeconds;
+    value.milliseconds += in.milliseconds;
     <#else>
 	    value.value += in.value;
     </#if>
@@ -154,10 +154,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     out.months = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
     value.value = value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis;
     out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-    out.milliSeconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+    out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
     <#elseif type.outputType == "IntervalDay">
     out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-    out.milliSeconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+    out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
     <#else>
     out.value = value.value;
     </#if>
@@ -165,10 +165,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if type.outputType == "Interval">
     out.months = value.months;
     out.days = value.days;
-    out.milliSeconds = value.milliSeconds;
+    out.milliseconds = value.milliseconds;
     <#elseif type.outputType == "IntervalDay">
     out.days = value.days;
-    out.milliSeconds = value.milliSeconds;
+    out.milliseconds = value.milliseconds;
     <#else>
     out.value = value.value;
     </#if>
@@ -180,10 +180,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if type.runningType == "Interval">
     value.months = ${type.initialValue};
     value.days= ${type.initialValue};
-    value.milliSeconds = ${type.initialValue};
+    value.milliseconds = ${type.initialValue};
     <#elseif type.runningType == "IntervalDay">
     value.days= ${type.initialValue};
-    value.milliSeconds = ${type.initialValue};
+    value.milliseconds = ${type.initialValue};
     <#else>
     value.value = ${type.initialValue};
     </#if>

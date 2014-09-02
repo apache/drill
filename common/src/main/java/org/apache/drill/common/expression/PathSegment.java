@@ -239,4 +239,46 @@ public abstract class PathSegment{
     } else return child.equals(other.child);
   }
 
+  /**
+   * Check if another path is contained in this one. This is useful for 2 cases. The first
+   * is checking if the other is lower down in the tree, below this path. The other is if
+   * a path is actually contained above the current one.
+   *
+   * Examples:
+   * [a] . contains( [a.b.c] ) returns true
+   * [a.b.c] . contains( [a] ) returns true
+   *
+   * This behavior is used for cases like scanning json in an event based fashion, when we arrive at
+   * a node in a complex type, we will know the complete path back to the root. This method can
+   * be used to determine if we need the data below. This is true in both the cases where the
+   * column requested from the user is below the current node (in which case we may ignore other nodes
+   * further down the tree, while keeping others). This is also the case if the requested path is further
+   * up the tree, if we know we are at position a.b.c and a.b was a requested column, we need to scan
+   * all of the data at and below the current a.b.c node.
+   *
+   * @param otherSeg - path segment to check if it is contained below this one.
+   * @return - is this a match
+   */
+  public boolean contains(PathSegment otherSeg) {
+    if (this == otherSeg)
+      return true;
+    if (otherSeg == null)
+      return false;
+    // TODO - fix this in the future to match array segments are part of the path
+    // the current behavior to always return true when we hit an array may be useful in some cases,
+    // but we can get better performance in the JSON reader if we avoid reading unwanted elements in arrays
+    if (otherSeg.isArray() || this.isArray())
+      return true;
+    if (getClass() != otherSeg.getClass())
+      return false;
+
+    if (!segmentEquals(otherSeg)) {
+      return false;
+    }
+    else if (child == null || otherSeg.child == null) {
+      return true;
+    } else return child.contains(otherSeg.child);
+
+  }
+
 }

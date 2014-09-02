@@ -27,8 +27,11 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockColumn;
 import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
@@ -36,8 +39,9 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import java.util.List;
+import java.util.Map;
 
-public class MockRecordReader implements RecordReader {
+public class MockRecordReader extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
 
   private OutputMutator output;
@@ -47,10 +51,14 @@ public class MockRecordReader implements RecordReader {
   private ValueVector[] valueVectors;
   private int recordsRead;
   private int batchRecordCount;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
+
 
   public MockRecordReader(FragmentContext context, MockScanEntry config) throws OutOfMemoryException {
     this.context = context;
     this.config = config;
+    this.fragmentContext=context;
   }
 
   private int getEstimatedRecordSize(MockColumn[] types) {
@@ -67,6 +75,14 @@ public class MockRecordReader implements RecordReader {
 
     return f;
 
+  }
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
   }
 
   @Override
@@ -104,6 +120,17 @@ public class MockRecordReader implements RecordReader {
 
     }
     return recordSetSize;
+  }
+
+  @Override
+  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+    try {
+      for (ValueVector v : vectorMap.values()) {
+        AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
+      }
+    } catch (NullPointerException e) {
+      throw new OutOfMemoryException();
+    }
   }
 
   @Override

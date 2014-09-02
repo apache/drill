@@ -17,6 +17,8 @@
  */
 package parquet.hadoop;
 
+import io.netty.buffer.ByteBuf;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -35,8 +37,10 @@ import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactory.BytesDecompressor;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.FileMetaData;
+import parquet.hadoop.util.CompatibilityUtil;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,13 +52,15 @@ public class ColumnChunkIncReadStore implements PageReadStore {
   private static ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
 
   private CodecFactory codecFactory = new CodecFactory(new Configuration());
+  private BufferAllocator allocator;
   private FileSystem fs;
   private Path path;
   private long rowCount;
   private List<FSDataInputStream> streams = new ArrayList();
 
-  public ColumnChunkIncReadStore(long rowCount, CodecFactory codecFactory, FileSystem fs, Path path) {
+  public ColumnChunkIncReadStore(long rowCount, CodecFactory codecFactory, BufferAllocator allocator, FileSystem fs, Path path) {
     this.codecFactory = codecFactory;
+    this.allocator = allocator;
     this.fs = fs;
     this.path = path;
     this.rowCount = rowCount;
@@ -64,6 +70,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
   public class ColumnChunkIncPageReader implements PageReader {
 
     ColumnChunkMetaData metaData;
+    ColumnDescriptor columnDescriptor;
     long fileOffset;
     long size;
     private long valueReadSoFar = 0;
@@ -72,16 +79,11 @@ public class ColumnChunkIncReadStore implements PageReadStore {
     private FSDataInputStream in;
     private BytesDecompressor decompressor;
 
-    public ColumnChunkIncPageReader(ColumnChunkMetaData metaData, FSDataInputStream in) {
-      this.metaData = metaData;
-      this.size = metaData.getTotalSize();
-      this.fileOffset = metaData.getStartingPos();
-      this.in = in;
-      this.decompressor = codecFactory.getDecompressor(metaData.getCodec());
-    }
+    private ByteBuf lastPage;
 
-    public ColumnChunkIncPageReader(ColumnChunkMetaData metaData, FSDataInputStream in, CodecFactory codecFactory) {
+    public ColumnChunkIncPageReader(ColumnChunkMetaData metaData, ColumnDescriptor columnDescriptor, FSDataInputStream in) {
       this.metaData = metaData;
+      this.columnDescriptor = columnDescriptor;
       this.size = metaData.getTotalSize();
       this.fileOffset = metaData.getStartingPos();
       this.in = in;
@@ -104,13 +106,9 @@ public class ColumnChunkIncReadStore implements PageReadStore {
                           pageHeader.getDictionary_page_header().getNum_values(),
                           parquetMetadataConverter.getEncoding(pageHeader.dictionary_page_header.encoding)
                   );
-          System.out.println(dictionaryPage);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
-//        if (dictionaryPage == null) {
-//          throw new RuntimeException("Dictionary page null");
-//        }
       }
       return dictionaryPage;
     }
@@ -123,6 +121,10 @@ public class ColumnChunkIncReadStore implements PageReadStore {
     @Override
     public Page readPage() {
       try {
+        if (lastPage != null) {
+          lastPage.release();
+          lastPage = null;
+        }
         while(valueReadSoFar < metaData.getValueCount()) {
           PageHeader pageHeader = Util.readPageHeader(in);
           switch (pageHeader.type) {
@@ -140,10 +142,15 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               break;
             case DATA_PAGE:
               valueReadSoFar += pageHeader.data_page_header.getNum_values();
+              ByteBuf buf = allocator.buffer(pageHeader.compressed_page_size);
+              lastPage = buf;
+              ByteBuffer buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
+              CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
               return new Page(
-                      decompressor.decompress(BytesInput.from(in,pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
+                      decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
                       pageHeader.data_page_header.num_values,
                       pageHeader.uncompressed_page_size,
+                      parquetMetadataConverter.fromParquetStatistics(pageHeader.data_page_header.statistics, columnDescriptor.getType()),
                       parquetMetadataConverter.getEncoding(pageHeader.data_page_header.repetition_level_encoding),
                       parquetMetadataConverter.getEncoding(pageHeader.data_page_header.definition_level_encoding),
                       parquetMetadataConverter.getEncoding(pageHeader.data_page_header.encoding)
@@ -159,6 +166,13 @@ public class ColumnChunkIncReadStore implements PageReadStore {
         throw new RuntimeException(e);
       }
     }
+
+    void close() {
+      if (lastPage != null) {
+        lastPage.release();
+        lastPage = null;
+      }
+    }
   }
 
   private Map<ColumnDescriptor, ColumnChunkIncPageReader> columns = new HashMap();
@@ -167,7 +181,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
     FSDataInputStream in = fs.open(path);
     streams.add(in);
     in.seek(metaData.getStartingPos());
-    ColumnChunkIncPageReader reader = new ColumnChunkIncPageReader(metaData, in);
+    ColumnChunkIncPageReader reader = new ColumnChunkIncPageReader(metaData, descriptor, in);
 
     columns.put(descriptor, reader);
   }
@@ -175,6 +189,9 @@ public class ColumnChunkIncReadStore implements PageReadStore {
   public void close() throws IOException {
     for (FSDataInputStream stream : streams) {
       stream.close();
+    }
+    for (ColumnChunkIncPageReader reader : columns.values()) {
+      reader.close();
     }
   }
 

@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.store.pojo;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.DrillBuf;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
@@ -34,8 +33,8 @@ import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 
 import com.google.common.base.Charsets;
 
@@ -105,23 +104,20 @@ public class Writers {
   }
 
   private abstract static class AbstractStringWriter extends AbstractWriter<NullableVarCharVector>{
-    private ByteBuf data;
+    private DrillBuf data;
     private final NullableVarCharHolder h = new NullableVarCharHolder();
 
-    public AbstractStringWriter(Field field) {
+    public AbstractStringWriter(Field field, DrillBuf managedBuf) {
       super(field, Types.optional(MinorType.VARCHAR));
+      this.data = managedBuf;
       ensureLength(100);
     }
 
     void ensureLength(int len){
-      if(data == null || data.capacity() < len){
-        if(data != null) data.release();
-        data = UnpooledByteBufAllocator.DEFAULT.buffer(len);
-      }
+      data = data.reallocIfNeeded(len);
     }
 
     public void cleanup(){
-      data.release();
     }
 
     public boolean writeString(String s, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
@@ -145,8 +141,8 @@ public class Writers {
   }
 
   public static class EnumWriter extends AbstractStringWriter{
-    public EnumWriter(Field field) {
-      super(field);
+    public EnumWriter(Field field, DrillBuf managedBuf) {
+      super(field, managedBuf);
       if(!field.getType().isEnum()) throw new IllegalStateException();
     }
 
@@ -159,8 +155,8 @@ public class Writers {
   }
 
   public static class StringWriter extends AbstractStringWriter {
-    public StringWriter(Field field) {
-      super(field);
+    public StringWriter(Field field, DrillBuf managedBuf) {
+      super(field, managedBuf);
       if(field.getType() != String.class) throw new IllegalStateException();
     }
 

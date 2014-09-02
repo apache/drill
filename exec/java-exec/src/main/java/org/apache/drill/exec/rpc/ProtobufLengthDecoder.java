@@ -18,8 +18,6 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.SwappedByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
@@ -29,7 +27,6 @@ import java.util.List;
 import org.apache.drill.exec.memory.BufferAllocator;
 
 import com.google.protobuf.CodedInputStream;
-import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
 /**
  * Modified version of ProtobufVarint32FrameDecoder that avoids bytebuf copy.
@@ -39,7 +36,7 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
 
   private BufferAllocator allocator;
   private OutOfMemoryHandler outOfMemoryHandler;
-  
+
   public ProtobufLengthDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
     super();
     this.allocator = allocator;
@@ -90,14 +87,14 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
             return;
           }
           outBuf.writeBytes(in, in.readerIndex(), length);
-          
+
           in.skipBytes(length);
-          
+
           if (RpcConstants.EXTRA_DEBUGGING)
             logger.debug(String.format(
                 "ReaderIndex is %d after length header of %d bytes and frame body of length %d bytes.",
                 in.readerIndex(), i + 1, length));
-          
+
           out.add(outBuf);
           return;
         }

@@ -26,9 +26,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmakeModules/")
 
 
 # Find Boost
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
+if(MSVC)
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    set(Boost_USE_STATIC_RUNTIME OFF)
+else()
+    set(Boost_USE_STATIC_LIBS OFF)
+    set(Boost_USE_MULTITHREADED ON)
+    set(Boost_USE_STATIC_RUNTIME OFF)
+endif()
+
 find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread )
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -36,8 +43,18 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_EXE_LINKER_FLAGS "-lrt -lpthread")
     set(CMAKE_CXX_FLAGS "-fPIC")
 endif()
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "/EHsc")
+endif()
 
-add_definitions(-DBOOST_ALL_DYN_LINK)
+if(MSVC)
+    # ask boost to not to auto link any libraries
+    add_definitions(-DBOOST_ALL_NO_LIB)
+    # use static libs with zookeeper
+    add_definitions(-DUSE_STATIC_LIB)
+else()
+    add_definitions(-DBOOST_ALL_DYN_LINK)
+endif()
 
 # Find Protobufs
 find_package(Protobuf REQUIRED )

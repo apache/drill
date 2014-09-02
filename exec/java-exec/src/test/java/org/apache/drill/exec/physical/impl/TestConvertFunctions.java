@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,6 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.util.ByteBufUtil;
 import org.apache.drill.exec.util.ByteBufUtil.HadoopWritables;
 import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
@@ -323,7 +322,7 @@ public class TestConvertFunctions extends BaseTestQuery {
   public void testHadooopVInt() throws Exception {
     final int _0 = 0;
     final int _9 = 9;
-    final ByteBuf buffer = ByteBufUtil.createBuffer(_9);
+    final DrillBuf buffer = getAllocator().buffer(_9);
 
     long longVal = 0;
     buffer.clear();
@@ -356,6 +355,7 @@ public class TestConvertFunctions extends BaseTestQuery {
     HadoopWritables.writeVInt(buffer, _0, _9, Integer.MIN_VALUE);
     intVal = HadoopWritables.readVInt(buffer, _0, _9);
     assertEquals(intVal, Integer.MIN_VALUE);
+    buffer.release();
   }
 
   protected <T> void verifySQL(String sql, T expectedResults) throws Throwable {

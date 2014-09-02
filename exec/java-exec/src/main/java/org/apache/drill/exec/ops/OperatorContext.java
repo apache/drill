@@ -17,12 +17,16 @@
  */
 package org.apache.drill.exec.ops;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.Iterator;
 
 import org.apache.drill.common.util.Hook.Closeable;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+
+import com.carrotsearch.hppc.LongObjectOpenHashMap;
 
 public class OperatorContext implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContext.class);
@@ -31,6 +35,7 @@ public class OperatorContext implements Closeable {
   private boolean closed = false;
   private PhysicalOperator popConfig;
   private OperatorStats stats;
+  private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
 
   public OperatorContext(PhysicalOperator popConfig, FragmentContext context) throws OutOfMemoryException {
     this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation());
@@ -44,6 +49,23 @@ public class OperatorContext implements Closeable {
     this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation());
     this.popConfig = popConfig;
     this.stats     = stats;
+  }
+
+  public DrillBuf replace(DrillBuf old, int newSize){
+    if(managedBuffers.remove(old.memoryAddress()) == null) throw new IllegalStateException("Tried to remove unmanaged buffer.");
+    old.release();
+    return getManagedBuffer(newSize);
+  }
+
+  public DrillBuf getManagedBuffer(){
+    return getManagedBuffer(256);
+  }
+
+  public DrillBuf getManagedBuffer(int size){
+    DrillBuf newBuf = allocator.buffer(size);
+    managedBuffers.put(newBuf.memoryAddress(), newBuf);
+    newBuf.setOperatorContext(this);
+    return newBuf;
   }
 
   public static int getChildCount(PhysicalOperator popConfig){
@@ -76,6 +98,13 @@ public class OperatorContext implements Closeable {
       return;
     }
     logger.debug("Closing context for {}", popConfig != null ? popConfig.getClass().getName() : null);
+
+    // release managed buffers.
+    Object[] buffers = ((LongObjectOpenHashMap<Object>)(Object)managedBuffers).values;
+    for(int i =0; i < buffers.length; i++){
+      if(managedBuffers.allocated[i]) ((DrillBuf)buffers[i]).release();
+    }
+
     if (allocator != null) {
       allocator.close();
     }

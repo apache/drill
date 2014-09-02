@@ -538,6 +538,7 @@ public class TestFunctionsQuery {
             "SIGN_INT=1\n");
   }
 
+  @Ignore
   @Test
   public void testDateTrunc() throws Exception {
     String query = "select "

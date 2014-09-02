@@ -20,6 +20,7 @@ package org.apache.drill.exec.compile;
 import java.io.IOException;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.compile.ClassTransformer.ClassSet;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -72,7 +73,7 @@ public class TestClassTransformation extends BaseTestQuery {
   public void testCompilationNoDebug() throws CompileException, ClassNotFoundException, ClassTransformationException, IOException {
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
     ClassSet classSet = new ClassSet(null, cg.getDefinition().getTemplateClassName(), cg.getMaterializedClassName());
-    String sourceCode = cg.generate();
+    String sourceCode = cg.generateAndGet();
     sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_OPTION, QueryClassLoader.CompilerPolicy.JDK.name()));
 
     sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_DEBUG_OPTION, false));
@@ -104,9 +105,9 @@ public class TestClassTransformation extends BaseTestQuery {
   private void compilationInnerClass(QueryClassLoader loader) throws Exception{
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
 
-    ClassTransformer ct = new ClassTransformer();
-    ExampleInner t = ct.getImplementationClass(loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
-
+    ClassTransformer ct = new ClassTransformer(new LocalCache());
+    Class<? extends ExampleInner> c = (Class<? extends ExampleInner>) ct.getImplementationClass(loader, cg.getDefinition(), cg.generateAndGet(), cg.getMaterializedClassName());
+    ExampleInner t = (ExampleInner) c.newInstance();
     t.doOutside();
     t.doInsideOutside();
   }

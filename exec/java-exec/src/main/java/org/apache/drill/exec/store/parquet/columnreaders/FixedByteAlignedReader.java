@@ -17,16 +17,21 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Decimal28SparseVector;
 import org.apache.drill.exec.vector.Decimal38SparseVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 import org.joda.time.DateTimeUtils;
+
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -35,9 +40,9 @@ import java.math.BigDecimal;
 
 class FixedByteAlignedReader extends ColumnReader {
 
-  protected byte[] bytes;
+  protected DrillBuf bytebuf;
 
-  
+
   FixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                          boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
@@ -54,14 +59,37 @@ class FixedByteAlignedReader extends ColumnReader {
     readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
     readLength = (int) Math.ceil(readLengthInBits / 8.0);
 
-    bytes = pageReader.pageDataByteArray;
+    bytebuf = pageReader.pageDataByteArray;
     // vectorData is assigned by the superclass read loop method
     writeData();
   }
 
   protected void writeData() {
-    vectorData.writeBytes(bytes,
+    vectorData.writeBytes(bytebuf,
         (int) readStartInBytes, (int) readLength);
+  }
+
+  public static class FixedBinaryReader extends FixedByteAlignedReader {
+    // TODO - replace this with fixed binary type in drill
+    VariableWidthVector castedVector;
+
+    FixedBinaryReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                    VariableWidthVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, true, v, schemaElement);
+      castedVector = v;
+    }
+
+    protected void readField(long recordsToReadInThisPass) {
+      // we can use the standard read method to transfer the data
+      super.readField(recordsToReadInThisPass);
+      // TODO - replace this with fixed binary type in drill
+      // now we need to write the lengths of each value
+      int byteLength = dataTypeLengthInBits / 8;
+      for (int i = 0; i < recordsToReadInThisPass; i++) {
+        castedVector.getMutator().setValueLengthSafe(i, byteLength);
+      }
+    }
+
   }
 
   public static abstract class ConvertedReader extends FixedByteAlignedReader {
@@ -81,7 +109,7 @@ class FixedByteAlignedReader extends ColumnReader {
     }
 
     /**
-     * Reads from bytes, converts, and writes to buffer
+     * Reads from bytebuf, converts, and writes to buffer
      * @param start the index in bytes to start reading from
      * @param index the index of the ValueVector
      */
@@ -100,9 +128,19 @@ class FixedByteAlignedReader extends ColumnReader {
 
     @Override
     void addNext(int start, int index) {
-      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(
-          NullableFixedByteAlignedReaders.NullableDateReader.readIntLittleEndian(bytes, start)
+//      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(
+//          NullableFixedByteAlignedReaders.NullableDateReader.readIntLittleEndian(bytebuf, start)
+      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(readIntLittleEndian(bytebuf, start)
               - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+    }
+
+    // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
+    public static int readIntLittleEndian(ByteBuf in, int offset) {
+      int ch4 = in.getByte(offset) & 0xff;
+      int ch3 = in.getByte(offset + 1) & 0xff;
+      int ch2 = in.getByte(offset + 2) & 0xff;
+      int ch1 = in.getByte(offset + 3) & 0xff;
+      return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
     }
   }
 
@@ -119,7 +157,7 @@ class FixedByteAlignedReader extends ColumnReader {
     @Override
     void addNext(int start, int index) {
       int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
     }
@@ -138,7 +176,7 @@ class FixedByteAlignedReader extends ColumnReader {
     @Override
     void addNext(int start, int index) {
       int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getData(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
     }

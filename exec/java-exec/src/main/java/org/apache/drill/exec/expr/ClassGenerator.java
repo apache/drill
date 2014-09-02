@@ -275,7 +275,7 @@ public class ClassGenerator<T>{
 
     for(ClassGenerator<T> child : innerClasses.values()) {
       child.flushCode();
-    } 
+    }
   }
 
   public JCodeModel getModel() {
@@ -403,6 +403,10 @@ public class ClassGenerator<T>{
     public HoldingContainer setConstant(boolean isConstant) {
       this.isConstant = isConstant;
       return this;
+    }
+
+    public JFieldRef f(String name){
+      return holder.ref(name);
     }
 
     public boolean isConstant() {

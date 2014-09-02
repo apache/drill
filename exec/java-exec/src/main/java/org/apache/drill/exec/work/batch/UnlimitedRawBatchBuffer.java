@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.data.DataRpcConfig;
@@ -59,7 +60,9 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     }
     if (batch.getHeader().getIsOutOfMemory()) {
       logger.debug("Setting autoread false");
-      if (!outOfMemory.get() && !buffer.peekFirst().getHeader().getIsOutOfMemory()) {
+      RawFragmentBatch firstBatch = buffer.peekFirst();
+      FragmentRecordBatch header = firstBatch == null ? null :firstBatch.getHeader();
+      if (!outOfMemory.get() && !(header == null) && header.getIsOutOfMemory()) {
         buffer.addFirst(batch);
       }
       outOfMemory.set(true);

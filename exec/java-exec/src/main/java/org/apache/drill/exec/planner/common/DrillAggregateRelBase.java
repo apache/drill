@@ -20,12 +20,14 @@ package org.apache.drill.exec.planner.common;
 import java.util.BitSet;
 import java.util.List;
 
-
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
 
@@ -37,6 +39,21 @@ public abstract class DrillAggregateRelBase extends AggregateRelBase implements 
   public DrillAggregateRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
       List<AggregateCall> aggCalls) throws InvalidRelException {
     super(cluster, traits, child, groupSet, aggCalls);
+  }
+  
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    for (AggregateCall aggCall : getAggCallList()) {
+      String name = aggCall.getAggregation().getName();
+      // For avg, stddev_pop, stddev_samp, var_pop and var_samp, the ReduceAggregatesRule is supposed 
+      // to convert them to use sum and count. Here, we make the cost of the original functions high
+      // enough such that the planner does not choose them and instead chooses the rewritten functions. 
+      if (name.equals("AVG") || name.equals("STDDEV_POP") || name.equals("STDDEV_SAMP") 
+          || name.equals("VAR_POP") || name.equals("VAR_SAMP")) {
+        return ((DrillCostFactory)planner.getCostFactory()).makeHugeCost();
+      }
+    }
+    return ((DrillCostFactory)planner.getCostFactory()).makeTinyCost();
   }
 
 }

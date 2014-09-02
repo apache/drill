@@ -17,20 +17,18 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.SwappedByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
-import java.nio.ByteOrder;
 
-import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.expr.holders.IntervalDayHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.util.DecimalUtility;
 
 import com.google.common.base.Charsets;
 
@@ -38,13 +36,24 @@ import com.google.common.base.Charsets;
 public class ValueHolderHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderHelper.class);
 
-  public static VarCharHolder getVarCharHolder(String s){
+  public static VarCharHolder getVarCharHolder(DrillBuf buf, String s){
     VarCharHolder vch = new VarCharHolder();
 
     byte[] b = s.getBytes(Charsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
-    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(b.length).order(ByteOrder.LITTLE_ENDIAN); // use the length of input string to allocate buffer. 
+    vch.buffer = buf.reallocIfNeeded(b.length);
+    vch.buffer.setBytes(0, b);
+    return vch;
+  }
+
+  public static VarCharHolder getVarCharHolder(BufferAllocator a, String s){
+    VarCharHolder vch = new VarCharHolder();
+
+    byte[] b = s.getBytes(Charsets.UTF_8);
+    vch.start = 0;
+    vch.end = b.length;
+    vch.buffer = a.buffer(b.length); //
     vch.buffer.setBytes(0, b);
     return vch;
   }
@@ -53,7 +62,7 @@ public class ValueHolderHelper {
       IntervalDayHolder dch = new IntervalDayHolder();
 
       dch.days = days;
-      dch.milliSeconds = millis;
+      dch.milliseconds = millis;
       return dch;
   }
 
@@ -77,7 +86,7 @@ public class ValueHolderHelper {
     return dch;
   }
 
-  public static Decimal28SparseHolder getDecimal28Holder(String decimal) {
+  public static Decimal28SparseHolder getDecimal28Holder(DrillBuf buf, String decimal) {
 
     Decimal28SparseHolder dch = new Decimal28SparseHolder();
 
@@ -85,18 +94,15 @@ public class ValueHolderHelper {
 
     dch.scale = bigDecimal.scale();
     dch.precision = bigDecimal.precision();
-    dch.setSign(bigDecimal.signum() == -1);
+    Decimal28SparseHolder.setSign(bigDecimal.signum() == -1, dch.start, dch.buffer);
     dch.start = 0;
-
-    dch.buffer = Unpooled.wrappedBuffer(new byte[5 * DecimalUtility.integerSize]);
-    dch.buffer = new SwappedByteBuf(dch.buffer);
+    dch.buffer = buf.reallocIfNeeded(5 * DecimalUtility.integerSize);
     DecimalUtility.getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
 
     return dch;
   }
 
-  public static Decimal38SparseHolder getDecimal38Holder(String decimal) {
-
+  public static Decimal38SparseHolder getDecimal38Holder(DrillBuf buf, String decimal) {
 
       Decimal38SparseHolder dch = new Decimal38SparseHolder();
 
@@ -104,12 +110,9 @@ public class ValueHolderHelper {
 
       dch.scale = bigDecimal.scale();
       dch.precision = bigDecimal.precision();
-      dch.setSign(bigDecimal.signum() == -1);
+      Decimal38SparseHolder.setSign(bigDecimal.signum() == -1, dch.start, dch.buffer);
       dch.start = 0;
-
-
-      dch.buffer = Unpooled.wrappedBuffer(new byte[dch.maxPrecision * DecimalUtility.integerSize]);
-      dch.buffer = new SwappedByteBuf(dch.buffer);
+      dch.buffer = buf.reallocIfNeeded(dch.maxPrecision * DecimalUtility.integerSize);
       DecimalUtility.getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
 
       return dch;

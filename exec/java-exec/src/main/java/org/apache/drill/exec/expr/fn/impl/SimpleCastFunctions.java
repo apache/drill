@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import javax.inject.Inject;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -30,8 +32,9 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class SimpleCastFunctions {
-  public static final ByteBuf FALSE = org.apache.drill.exec.util.ByteBufUtil.createBuffer(new byte[] {'f', 'a', 'l', 's', 'e'});
-  public static final ByteBuf TRUE = org.apache.drill.exec.util.ByteBufUtil.createBuffer(new byte[] {'t', 'r', 'u', 'e'});
+  public static final byte[] TRUE = {'t','r','u','e'};
+  public static final byte[] FALSE = {'f','a','l','s','e'};
+
 
   @FunctionTemplate(names = {"castBIT", "castBOOLEAN"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
   public static class CastVarCharBoolean implements DrillSimpleFunc {
@@ -39,7 +42,9 @@ public class SimpleCastFunctions {
     @Param VarCharHolder in;
     @Output BitHolder out;
 
-    public void setup(RecordBatch b) {}
+    public void setup(RecordBatch b) {
+
+    }
 
     public void eval() {
       byte[] buf = new byte[in.end - in.start];
@@ -61,14 +66,16 @@ public class SimpleCastFunctions {
     @Param BitHolder in;
     @Param BigIntHolder len;
     @Output VarCharHolder out;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch b) {}
 
     public void eval() {
-      io.netty.buffer.ByteBuf buffer = in.value == 1 ? org.apache.drill.exec.expr.fn.impl.SimpleCastFunctions.TRUE : org.apache.drill.exec.expr.fn.impl.SimpleCastFunctions.FALSE;
+      byte[] outB = in.value == 1 ? org.apache.drill.exec.expr.fn.impl.SimpleCastFunctions.TRUE : org.apache.drill.exec.expr.fn.impl.SimpleCastFunctions.FALSE;
+      buffer.setBytes(0, outB);
       out.buffer = buffer;
       out.start = 0;
-      out.end = Math.min((int)len.value, buffer.capacity()); // truncate if target type has length smaller than that of input's string
+      out.end = Math.min((int)len.value, outB.length); // truncate if target type has length smaller than that of input's string
     }
   }
 

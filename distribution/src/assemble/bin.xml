@@ -91,7 +91,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>com.google.protobuf:protobuf-java:jar:2.4.1</include>
+        <include>com.google.protobuf:protobuf-java:jar:2.5</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -111,7 +111,11 @@
       <outputDirectory/>
     </file>
     <file>
-      <source>../LICENSE</source>
+      <source>src/resources/LICENSE</source>
+      <outputDirectory/>
+    </file>
+    <file>
+      <source>src/resources/README.md</source>
       <outputDirectory/>
     </file>
     <file>

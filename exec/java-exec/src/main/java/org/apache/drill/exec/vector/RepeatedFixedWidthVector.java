@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 public interface RepeatedFixedWidthVector extends ValueVector{
   /**
@@ -27,7 +27,7 @@ public interface RepeatedFixedWidthVector extends ValueVector{
    * @param childValueCount   Number of supported values in the vector.
    */
   public void allocateNew(int parentValueCount, int childValueCount);
-  
+
   /**
    * Load the records in the provided buffer based on the given number of values.
    * @param parentValueCount   Number of separate repeating groupings.
@@ -35,7 +35,7 @@ public interface RepeatedFixedWidthVector extends ValueVector{
    * @param buf Incoming buffer.
    * @return The number of bytes of the buffer that were consumed.
    */
-  public int load(int parentValueCount, int childValueCount, ByteBuf buf);
+  public int load(int parentValueCount, int childValueCount, DrillBuf buf);
 
   public abstract RepeatedAccessor getAccessor();
 

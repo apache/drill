@@ -19,8 +19,8 @@ package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,8 +32,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.slf4j.Logger;
@@ -54,48 +55,66 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 
-public class MongoRecordReader implements RecordReader {
+public class MongoRecordReader extends AbstractRecordReader {
   static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
 
   private static final int TARGET_RECORD_COUNT = 4000;
 
-  private LinkedHashSet<SchemaPath> columns;
-
   private DBCollection collection;
   private DBCursor cursor;
 
-  private JsonReaderWithState jsonReader;
+  private JsonReaderWithState jsonReaderWithState;
   private VectorContainerWriter writer;
 
   private DBObject filters;
   private DBObject fields;
 
   private MongoClientOptions clientOptions;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
+  
+  private Boolean enableAllTextMode;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
       FragmentContext context, MongoClientOptions clientOptions) {
-    this.columns = Sets.newLinkedHashSet();
     this.clientOptions = clientOptions;
     this.fields = new BasicDBObject();
     // exclude _id field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
-    if (projectedColumns != null && projectedColumns.size() != 0) {
-      Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
-      while (columnIterator.hasNext()) {
-        SchemaPath column = columnIterator.next();
-        NameSegment root = column.getRootSegment();
-        String fieldName = root.getPath();
-        this.columns.add(SchemaPath.getSimplePath(fieldName));
-        this.fields.put(fieldName, Integer.valueOf(1));
-      }
-    }
+    setColumns(projectedColumns);
+    transformColumns(projectedColumns);
+    this.fragmentContext = context;
     this.filters = new BasicDBObject();
     Map<String, List<BasicDBObject>> mergedFilters = mergeFilters(
         subScanSpec.getMinFilters(), subScanSpec.getMaxFilters(),
         subScanSpec.getFilter());
     buildFilters(this.filters, mergedFilters);
+    // by default this should be false.
+    // enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption("store.mongo.all_text_mode").bool_val;
+    enableAllTextMode = false;
     init(subScanSpec);
   }
+
+
+	@Override
+	protected Collection<SchemaPath> transformColumns(
+			Collection<SchemaPath> projectedColumns) {
+		Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+		if (!isStarQuery()) {
+			if (projectedColumns != null && projectedColumns.size() != 0) {
+				Iterator<SchemaPath> columnIterator = projectedColumns
+						.iterator();
+				while (columnIterator.hasNext()) {
+					SchemaPath column = columnIterator.next();
+					NameSegment root = column.getRootSegment();
+					String fieldName = root.getPath();
+					transformed.add(SchemaPath.getSimplePath(fieldName));
+					this.fields.put(fieldName, Integer.valueOf(1));
+				}
+			}
+		}
+		return transformed;
+	}
   
   private Map<String, List<BasicDBObject>> mergeFilters(
       Map<String, Object> minFilters, Map<String, Object> maxFilters,
@@ -172,7 +191,7 @@ public class MongoRecordReader implements RecordReader {
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try {
       this.writer = new VectorContainerWriter(output);
-      this.jsonReader = new JsonReaderWithState();
+      this.jsonReaderWithState = new JsonReaderWithState(fragmentContext.getManagedBuffer(), enableAllTextMode);
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure in Mongo JsonReader initialization.", e);
     }
@@ -199,7 +218,7 @@ public class MongoRecordReader implements RecordReader {
           break done;
         }
 
-        switch (jsonReader.write(record.toString().getBytes(Charsets.UTF_8), writer)) {
+        switch (jsonReaderWithState.write(record.toString().getBytes(Charsets.UTF_8), writer)) {
         case WRITE_SUCCEED:
           docCount++;
           break;
@@ -227,4 +246,14 @@ public class MongoRecordReader implements RecordReader {
   public void cleanup() {
     cursor.close();
   }
+
+  public OperatorContext getOperatorContext() {
+	return operatorContext;
+  }
+
+  @Override
+  public void setOperatorContext(OperatorContext operatorContext) {
+	this.operatorContext = operatorContext;
+  }
+
 }

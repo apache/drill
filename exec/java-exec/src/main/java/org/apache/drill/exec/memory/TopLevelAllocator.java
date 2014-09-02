@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.memory;
 
-import io.netty.buffer.AccountingByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocatorL;
+import io.netty.buffer.UnsafeDirectLittleEndian;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -38,9 +39,11 @@ public class TopLevelAllocator implements BufferAllocator {
 
   private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
   private final Map<ChildAllocator, StackTraceElement[]> childrenMap;
-  private final PooledByteBufAllocator innerAllocator = PooledByteBufAllocatorL.DEFAULT;
+  private final PooledByteBufAllocatorL innerAllocator = PooledByteBufAllocatorL.DEFAULT;
   private final Accountor acct;
   private final boolean errorOnLeak;
+  private final DrillBuf empty;
+
 
   @Deprecated
   public TopLevelAllocator() {
@@ -55,6 +58,7 @@ public class TopLevelAllocator implements BufferAllocator {
   private TopLevelAllocator(long maximumAllocation, boolean errorOnLeak){
     this.errorOnLeak = errorOnLeak;
     this.acct = new Accountor(errorOnLeak, null, null, maximumAllocation, 0);
+    this.empty = DrillBuf.getEmpty(this, acct);
     this.childrenMap = ENABLE_ACCOUNTING ? new IdentityHashMap<ChildAllocator, StackTraceElement[]>() : null;
   }
 
@@ -65,20 +69,21 @@ public class TopLevelAllocator implements BufferAllocator {
   }
 
   @Override
-  public boolean takeOwnership(AccountingByteBuf buf) {
+  public boolean takeOwnership(DrillBuf buf) {
     return buf.transferAccounting(acct);
   }
 
-  public AccountingByteBuf buffer(int min, int max) {
+  public DrillBuf buffer(int min, int max) {
+    if(min == 0) return empty;
     if(!acct.reserve(min)) return null;
-    ByteBuf buffer = innerAllocator.directBuffer(min, max);
-    AccountingByteBuf wrapped = new AccountingByteBuf(acct, buffer);
+    UnsafeDirectLittleEndian buffer = innerAllocator.directBuffer(min, max);
+    DrillBuf wrapped = new DrillBuf(this, acct, buffer);
     acct.reserved(min, wrapped);
     return wrapped;
   }
 
   @Override
-  public AccountingByteBuf buffer(int size) {
+  public DrillBuf buffer(int size) {
     return buffer(size, size);
   }
 
@@ -98,7 +103,7 @@ public class TopLevelAllocator implements BufferAllocator {
       throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
     };
     logger.debug("New child allocator with initial reservation {}", initialReservation);
-    ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation);
+    ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation, childrenMap);
     if(ENABLE_ACCOUNTING) childrenMap.put(allocator, Thread.currentThread().getStackTrace());
 
     return allocator;
@@ -124,38 +129,50 @@ public class TopLevelAllocator implements BufferAllocator {
   }
 
 
-  private class ChildAllocator implements BufferAllocator{
 
+  @Override
+  public DrillBuf getEmpty() {
+    return empty;
+  }
+
+
+
+  private class ChildAllocator implements BufferAllocator{
+    private final DrillBuf empty;
     private Accountor childAcct;
     private Map<ChildAllocator, StackTraceElement[]> children = new HashMap<>();
     private boolean closed = false;
     private FragmentHandle handle;
+    private Map<ChildAllocator, StackTraceElement[]> thisMap;
 
-    public ChildAllocator(FragmentHandle handle, Accountor parentAccountor, long max, long pre) throws OutOfMemoryException{
+    public ChildAllocator(FragmentHandle handle, Accountor parentAccountor, long max, long pre, Map<ChildAllocator, StackTraceElement[]> map) throws OutOfMemoryException{
       assert max >= pre;
       childAcct = new Accountor(errorOnLeak, handle, parentAccountor, max, pre);
       this.handle = handle;
+      thisMap = map;
+      this.empty = DrillBuf.getEmpty(this, childAcct);
     }
 
     @Override
-    public boolean takeOwnership(AccountingByteBuf buf) {
+    public boolean takeOwnership(DrillBuf buf) {
       return buf.transferAccounting(childAcct);
     }
 
     @Override
-    public AccountingByteBuf buffer(int size, int max) {
+    public DrillBuf buffer(int size, int max) {
+      if(size == 0) return empty;
       if(!childAcct.reserve(size)){
-        logger.warn("Unable to allocate buffer of size {} due to memory limit. Current allocation: {}", size, getAllocatedMemory());
+        logger.warn("Unable to allocate buffer of size {} due to memory limit. Current allocation: {}", size, getAllocatedMemory(), new Exception());
         return null;
       };
 
-      ByteBuf buffer = innerAllocator.directBuffer(size, max);
-      AccountingByteBuf wrapped = new AccountingByteBuf(childAcct, buffer);
+      UnsafeDirectLittleEndian buffer = innerAllocator.directBuffer(size, max);
+      DrillBuf wrapped = new DrillBuf(this, childAcct, buffer);
       childAcct.reserved(buffer.capacity(), wrapped);
       return wrapped;
     }
 
-    public AccountingByteBuf buffer(int size) {
+    public DrillBuf buffer(int size) {
       return buffer(size, size);
     }
 
@@ -171,18 +188,19 @@ public class TopLevelAllocator implements BufferAllocator {
         throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getAvailable()));
       };
       logger.debug("New child allocator with initial reservation {}", initialReservation);
-      ChildAllocator newChildAllocator = new ChildAllocator(handle, childAcct, maximumReservation, initialReservation);
+      ChildAllocator newChildAllocator = new ChildAllocator(handle, childAcct, maximumReservation, initialReservation, null);
       this.children.put(newChildAllocator, Thread.currentThread().getStackTrace());
       return newChildAllocator;
     }
 
     public PreAllocator getNewPreAllocator(){
-      return new PreAlloc(this.childAcct);
+      return new PreAlloc(this, this.childAcct);
     }
 
     @Override
     public void close() {
       if (ENABLE_ACCOUNTING) {
+        if(thisMap != null) thisMap.remove(this);
         for (ChildAllocator child : children.keySet()) {
           if (!child.isClosed()) {
             StringBuilder sb = new StringBuilder();
@@ -218,17 +236,25 @@ public class TopLevelAllocator implements BufferAllocator {
       return childAcct.getAllocation();
     }
 
+    @Override
+    public DrillBuf getEmpty() {
+      return empty;
+    }
+
+
   }
 
   public PreAllocator getNewPreAllocator(){
-    return new PreAlloc(this.acct);
+    return new PreAlloc(this, this.acct);
   }
 
   public class PreAlloc implements PreAllocator{
     int bytes = 0;
     final Accountor acct;
-    private PreAlloc(Accountor acct){
+    final BufferAllocator allocator;
+    private PreAlloc(BufferAllocator allocator, Accountor acct){
       this.acct = acct;
+      this.allocator = allocator;
     }
 
     /**
@@ -245,8 +271,8 @@ public class TopLevelAllocator implements BufferAllocator {
     }
 
 
-    public AccountingByteBuf getAllocation(){
-      AccountingByteBuf b = new AccountingByteBuf(acct, innerAllocator.buffer(bytes));
+    public DrillBuf getAllocation(){
+      DrillBuf b = new DrillBuf(allocator, acct, innerAllocator.directBuffer(bytes, bytes));
       acct.reserved(bytes, b);
       return b;
     }

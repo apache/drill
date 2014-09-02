@@ -28,6 +28,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -36,7 +38,10 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -44,15 +49,14 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+        buffer = buffer.reallocIfNeeded(size);
     }
 
     public void eval() {
@@ -61,25 +65,25 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         out.start = 0;
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
-        boolean sign = (in.getSign());
+        boolean sign = (in.getSign(in.start, in.buffer));
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
 
         int inputIdx = in.nDecimalDigits - 1;
         int outputIdx = out.nDecimalDigits - 1;
 
         for (; inputIdx >= 0; inputIdx--, outputIdx--) {
-            out.setInteger(outputIdx, in.getInteger(inputIdx));
+            out.setInteger(outputIdx, in.getInteger(inputIdx, in.start, in.buffer), out.start, out.buffer);
         }
 
         // round up or down the scale
         if (in.scale != out.scale) {
-          org.apache.drill.common.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
+          org.apache.drill.exec.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
-        out.setSign(sign);
+        out.setSign(sign, out.start, out.buffer);
     }
 }
 </#if> <#-- type.major -->

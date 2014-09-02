@@ -40,6 +40,8 @@ import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import javax.inject.Inject;
+import io.netty.buffer.DrillBuf;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"cast${type.to?upper_case}", "${type.alias}"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
@@ -48,19 +50,20 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Output ${type.to}Holder out;
-
+  
   public void setup(RecordBatch incoming) {
   }
 
   public void eval() {
 
+      <#if type.to != "Date">
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-
+      </#if>  
+      
       <#if type.to == "Date">
-      org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getDateTimeFormatter();
-      out.value = (org.joda.time.DateMidnight.parse(input, f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC)).getMillis();
+      out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getDate(in.buffer.memoryAddress(), in.start, in.end);
 
       <#elseif type.to == "TimeStamp">
       org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getDateTimeFormatter();

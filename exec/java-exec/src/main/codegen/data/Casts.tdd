@@ -78,7 +78,7 @@
     {from: "IntervalDay", to: "VarChar", major: "IntervalDayVarChar", bufferLength: "43"},
 
     {from: "IntervalYear", to: "Interval", major: "IntervalSimpleToComplex", months: "in.value", days: "0", millis: "0"},
-    {from: "IntervalDay", to: "Interval", major: "IntervalSimpleToComplex", months: "0", days: "in.days", millis: "in.milliSeconds"},
+    {from: "IntervalDay", to: "Interval", major: "IntervalSimpleToComplex", months: "0", days: "in.days", millis: "in.milliseconds"},
     {from: "Interval", to: "IntervalYear", major: "IntervalComplexToSimple"},
     {from: "Interval", to: "IntervalDay", major: "IntervalComplexToSimple"}
 

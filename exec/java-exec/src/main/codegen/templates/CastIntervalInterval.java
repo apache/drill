@@ -26,6 +26,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
@@ -54,7 +56,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   public void eval() {
         out.months       = ${type.months};
         out.days         = ${type.days};
-        out.milliSeconds = ${type.millis};
+        out.milliseconds = ${type.millis};
   }
 }
 
@@ -96,7 +98,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       out.value = in.months;
       <#elseif type.to == "IntervalDay">
       out.days = in.days;
-      out.milliSeconds = in.milliSeconds;
+      out.milliseconds = in.milliseconds;
       </#if>
   }
 }

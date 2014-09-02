@@ -21,14 +21,14 @@ import com.google.common.collect.Lists;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.expr.holders.ComplexHolder;
+import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.EventBasedRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -67,7 +67,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private static final int MINIMUM_RECORD_COUNT_FOR_CHECK = 100;
   private static final int MAXIMUM_RECORD_COUNT_FOR_CHECK = 10000;
 
-  private ParquetFileWriter w;
+  private ParquetFileWriter parquetFileWriter;
   private MessageType schema;
   private Map<String, String> extraMetaData = new HashMap();
   private int blockSize;
@@ -91,6 +91,13 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private String location;
   private String prefix;
   private int index = 0;
+  private OperatorContext oContext;
+  private ParquetDirectByteBufferAllocator allocator;
+
+  public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException{
+    super();
+    this.oContext=new OperatorContext(writer, context);
+  }
 
   @Override
   public void init(Map<String, String> writerOptions) throws IOException {
@@ -121,11 +128,15 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     schema = new MessageType("root", types);
 
     Path fileName = new Path(location, prefix + "_" + index + ".parquet");
-    w = new ParquetFileWriter(conf, schema, fileName);
-    w.start();
+    parquetFileWriter = new ParquetFileWriter(conf, schema, fileName);
+    parquetFileWriter.start();
 
     int initialBlockBufferSize = max(MINIMUM_BUFFER_SIZE, blockSize / this.schema.getColumns().size() / 5);
-    pageStore = ColumnChunkPageWriteStoreExposer.newColumnChunkPageWriteStore(codec, pageSize, this.schema, initialBlockBufferSize);
+    pageStore = ColumnChunkPageWriteStoreExposer.newColumnChunkPageWriteStore(this.oContext,
+      codec,
+      pageSize,
+      this.schema,
+      initialBlockBufferSize);
     int initialPageBufferSize = max(MINIMUM_BUFFER_SIZE, min(pageSize + pageSize / 10, initialBlockBufferSize));
     store = new ColumnWriteStoreImpl(pageStore, pageSize, initialPageBufferSize, dictionaryPageSize, enableDictionary, writerVersion);
     MessageColumnIO columnIO = new ColumnIOFactory(validating).getColumnIO(this.schema);
@@ -162,12 +173,14 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   private void flush() throws IOException {
-    w.startBlock(recordCount);
+    parquetFileWriter.startBlock(recordCount);
     store.flush();
-    ColumnChunkPageWriteStoreExposer.flushPageStore(pageStore, w);
+    ColumnChunkPageWriteStoreExposer.flushPageStore(pageStore, parquetFileWriter);
     recordCount = 0;
-    w.endBlock();
-    w.end(extraMetaData);
+    parquetFileWriter.endBlock();
+    parquetFileWriter.end(extraMetaData);
+    store.close();
+    ColumnChunkPageWriteStoreExposer.close(pageStore);
     store = null;
     pageStore = null;
     index++;
@@ -274,7 +287,17 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   @Override
   public void cleanup() throws IOException {
     if (recordCount > 0) {
-      flush();
+      parquetFileWriter.startBlock(recordCount);
+      store.flush();
+      ColumnChunkPageWriteStoreExposer.flushPageStore(pageStore, parquetFileWriter);
+      recordCount = 0;
+      parquetFileWriter.endBlock();
+      parquetFileWriter.end(extraMetaData);
+    }
+    store.close();
+    ColumnChunkPageWriteStoreExposer.close(pageStore);
+    if(oContext!=null){
+      oContext.close();
     }
   }
 }
