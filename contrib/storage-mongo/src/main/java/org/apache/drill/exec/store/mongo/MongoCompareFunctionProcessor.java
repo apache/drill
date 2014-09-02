@@ -189,6 +189,30 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
        return true;
     }
     
+    if (valueArg instanceof LongExpression) {
+      this.value = ((LongExpression)valueArg).getLong();
+      this.path = path;
+      return true;
+    }
+    
+    if (valueArg instanceof FloatExpression ) {
+      this.value = ((FloatExpression)valueArg).getFloat();
+      this.path = path;
+      return true;
+    }
+    
+    if (valueArg instanceof DoubleExpression ) {
+      this.value = ((DoubleExpression)valueArg).getDouble();
+      this.path = path;
+      return true;
+    }
+    
+    if (valueArg instanceof BooleanExpression) {
+      this.value = ((BooleanExpression)valueArg).getBoolean();
+      this.path = path;
+      return true;
+    }
+
     return false;
   }
 
