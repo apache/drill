@@ -100,7 +100,7 @@ fi
 CP=$CP:$DRILL_HOME/jars/*
 
 # Followed by Drill override dependency jars
-CP=$CP:$DRILL_HOME/extlib/*
+CP=$CP:$DRILL_HOME/jars/ext/*
 
 # Followed by Hadoop's jar
 if [ "${HADOOP_CLASSPATH}x" != "x" ]; then
@@ -113,8 +113,8 @@ if [ "${HBASE_CLASSPATH}x" != "x" ]; then
 fi
 
 # Followed by Drill other dependency jars
-CP=$CP:$DRILL_HOME/lib/*
-CP=$CP:$DRILL_HOME/contrib/*
+CP=$CP:$DRILL_HOME/jars/3rdparty/*
+CP=$CP:$DRILL_HOME/jars/classb/*
 
 # Finally any user specified 
 if [ "${DRILL_CLASSPATH}x" != "x" ]; then
