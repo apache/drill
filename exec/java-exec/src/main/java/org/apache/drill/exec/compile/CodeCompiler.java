@@ -45,7 +45,7 @@ public class CodeCompiler {
   public CodeCompiler(DrillConfig config, DistributedCache distributedCache, OptionManager systemOptionManager){
     this.transformer = new ClassTransformer(distributedCache);
     this.distributedCache = distributedCache;
-    this.cache = CacheBuilder.newBuilder().build(new Loader());
+    this.cache = CacheBuilder.newBuilder().maximumSize(1000).build(new Loader());
     this.systemOptionManager = systemOptionManager;
     this.config = config;
   }
