@@ -45,9 +45,13 @@ public class JsonReaderWithState {
     reader = splitter.getNextReader();
     jsonReader = new JsonReader(workspace, columns, allTextMode);
   }
-
+  
   public JsonReaderWithState(DrillBuf workspace, boolean allTextMode) throws IOException {
     jsonReader = new JsonReader(workspace, GroupScan.ALL_COLUMNS, allTextMode);
+  }
+
+  public JsonReaderWithState(DrillBuf workspace, List<SchemaPath> columns, boolean allTextMode) throws IOException {
+    jsonReader = new JsonReader(workspace, columns, allTextMode);
   }
 
   public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException{

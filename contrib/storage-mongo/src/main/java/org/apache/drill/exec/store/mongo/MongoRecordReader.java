@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -38,6 +39,8 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +69,7 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   private JsonReaderWithState jsonReaderWithState;
   private VectorContainerWriter writer;
+  private List<SchemaPath> columns;
 
   private DBObject filters;
   private DBObject fields;
@@ -75,6 +79,8 @@ public class MongoRecordReader extends AbstractRecordReader {
   private OperatorContext operatorContext;
   
   private Boolean enableAllTextMode;
+  
+  private boolean firstTime = true;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
       FragmentContext context, MongoClientOptions clientOptions) {
@@ -82,6 +88,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     this.fields = new BasicDBObject();
     // exclude _id field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
+    this.columns = projectedColumns;
     setColumns(projectedColumns);
     transformColumns(projectedColumns);
     this.fragmentContext = context;
@@ -190,13 +197,17 @@ public class MongoRecordReader extends AbstractRecordReader {
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try {
       this.writer = new VectorContainerWriter(output);
-      this.jsonReaderWithState = new JsonReaderWithState(fragmentContext.getManagedBuffer(), enableAllTextMode);
+      this.jsonReaderWithState = new JsonReaderWithState(fragmentContext.getManagedBuffer(), columns, enableAllTextMode);
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure in Mongo JsonReader initialization.", e);
     }
     logger.info("Filters Applied : " + filters);
     logger.info("Fields Selected :" + fields);
     cursor = collection.find(filters, fields);
+  }
+  
+  private boolean handleStarQueryWithEmptyResults() {
+    return fields.toMap().size() == 1 && fields.containsField(DrillMongoConstants.ID);
   }
 
   @Override
@@ -208,6 +219,15 @@ public class MongoRecordReader extends AbstractRecordReader {
     Stopwatch watch = new Stopwatch();
     watch.start();
     int rowCount = 0;
+    
+    if (firstTime && !cursor.hasNext() && handleStarQueryWithEmptyResults()) {
+      firstTime = false;
+      MapWriter mapVector = writer.rootAsMap();
+      mapVector.varChar("*");
+      writer.setValueCount(0);
+      return 0;
+    }
+     firstTime = false;
 
     try {
       done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
@@ -229,6 +249,22 @@ public class MongoRecordReader extends AbstractRecordReader {
           break done;
         }
       }
+      
+      for (SchemaPath sp :jsonReaderWithState.getNullColumns() ) {
+        PathSegment root = sp.getRootSegment();
+        BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+        if (root.getChild() != null && ! root.getChild().isArray()) {
+          fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
+          while ( root.getChild().getChild() != null && ! root.getChild().isArray() ) {
+            fieldWriter = fieldWriter.map(root.getChild().getNameSegment().getPath());
+            root = root.getChild();
+          }
+          fieldWriter.integer(root.getChild().getNameSegment().getPath());
+        } else  {
+          fieldWriter.integer(root.getNameSegment().getPath());
+        }
+      }
+      
       writer.setValueCount(docCount);
       logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
       return docCount;
