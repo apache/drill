@@ -93,7 +93,7 @@ public class MongoFilterBuilder extends
 
     if (MongoCompareFunctionProcessor.isCompareFunction(functionName)) {
       MongoCompareFunctionProcessor processor = MongoCompareFunctionProcessor
-          .process(call, true);
+          .process(call);
       if (processor.isSuccess()) {
         try{
           nodeScanSpec = createMongoScanSpec(processor.getFunctionName(),

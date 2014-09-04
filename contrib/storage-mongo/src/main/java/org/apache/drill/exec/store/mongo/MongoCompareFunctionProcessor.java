@@ -17,12 +17,6 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -52,7 +46,7 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
     return COMPARE_FUNCTIONS_TRANSPOSE_MAP.keySet().contains(functionName);
   }
 
-  public static MongoCompareFunctionProcessor process(FunctionCall call, boolean nullComparatorSupported) {
+  public static MongoCompareFunctionProcessor process(FunctionCall call) {
     String functionName = call.getName();
     LogicalExpression nameArg = call.args.get(0);
     LogicalExpression valueArg = call.args.size() == 2 ? call.args.get(1) : null;
@@ -66,7 +60,7 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
         evaluator.functionName = COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName);
       }
       evaluator.success = nameArg.accept(evaluator, valueArg);
-    } else if (nullComparatorSupported && call.args.get(0) instanceof SchemaPath) {
+    } else if (call.args.get(0) instanceof SchemaPath) {
       evaluator.success = true;
       evaluator.path = (SchemaPath) nameArg;
     }
