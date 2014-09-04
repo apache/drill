@@ -31,6 +31,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -58,7 +59,7 @@ import com.mongodb.ServerAddress;
 public class MongoRecordReader extends AbstractRecordReader {
   static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
 
-  private static final int TARGET_RECORD_COUNT = 4000;
+  private static final int TARGET_RECORD_COUNT = 3000;
 
   private DBCollection collection;
   private DBCursor cursor;
@@ -89,9 +90,7 @@ public class MongoRecordReader extends AbstractRecordReader {
         subScanSpec.getMinFilters(), subScanSpec.getMaxFilters(),
         subScanSpec.getFilter());
     buildFilters(this.filters, mergedFilters);
-    // by default this should be false.
-    // enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption("store.mongo.all_text_mode").bool_val;
-    enableAllTextMode = false;
+    enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
     init(subScanSpec);
   }
 
@@ -214,22 +213,19 @@ public class MongoRecordReader extends AbstractRecordReader {
       done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         writer.setPosition(docCount);
         DBObject record = cursor.next();
-        if (record == null) {
-          break done;
-        }
-
         switch (jsonReaderWithState.write(record.toString().getBytes(Charsets.UTF_8), writer)) {
         case WRITE_SUCCEED:
           docCount++;
           break;
 
-        case NO_MORE:
-          break done;
-
         case WRITE_FAILED:
           if (docCount == 0) {
             throw new DrillRuntimeException("Record is too big to fit into allocated ValueVector");
           }
+          logger.warn("Record {} is too big to fit into allocated ValueVector", record);
+          break done;
+
+        default:
           break done;
         }
       }
