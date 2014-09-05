@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
 
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -83,7 +84,31 @@ public class MongoFilterBuilder extends
     allExpressionsConverted = false;
     return null;
   }
-
+  
+  @Override
+  public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value)
+      throws RuntimeException {
+    String functionName = op.getName();
+    ImmutableList<LogicalExpression> args = op.args;
+    MongoScanSpec nodeScanSpec = null;
+    switch (functionName) {
+    case "booleanAnd":
+    case "booleanOr":
+      MongoScanSpec leftScanSpec = args.get(0).accept(this, null);
+      MongoScanSpec rightScanSpec = args.get(1).accept(this, null);
+      if (leftScanSpec != null && rightScanSpec != null) {
+        nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec, rightScanSpec);
+      } else {
+        allExpressionsConverted = false;
+        if ("booleanAnd".equals(functionName)) {
+          nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
+        }
+      }
+      break;
+    }
+    return nodeScanSpec;
+  }
+  
   @Override
   public MongoScanSpec visitFunctionCall(FunctionCall call, Void value)
       throws RuntimeException {
