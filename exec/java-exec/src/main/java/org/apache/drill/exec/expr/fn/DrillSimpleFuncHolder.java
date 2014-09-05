@@ -37,24 +37,27 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
+import org.apache.drill.exec.expr.fn.interpreter.DrillSimpleFuncInterpreter;
+import org.apache.drill.exec.expr.fn.interpreter.InterpreterGenerator;
 
-class DrillSimpleFuncHolder extends DrillFuncHolder{
+public class DrillSimpleFuncHolder extends DrillFuncHolder{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSimpleFuncHolder.class);
 
   private final String setupBody;
   private final String evalBody;
   private final String resetBody;
   private final String cleanupBody;
+  private final String interpreterClassName;
 
   public DrillSimpleFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
       String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
       Map<String, String> methods, List<String> imports) {
-    this(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, FunctionCostCategory.getDefault());
+    this(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, FunctionCostCategory.getDefault(), null);
   }
 
   public DrillSimpleFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
       String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
-      Map<String, String> methods, List<String> imports, FunctionCostCategory costCategory) {
+      Map<String, String> methods, List<String> imports, FunctionCostCategory costCategory, String interpreterClassName) {
     super(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, costCategory);
     setupBody = methods.get("setup");
     evalBody = methods.get("eval");
@@ -62,6 +65,7 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     cleanupBody = methods.get("cleanup");
     Preconditions.checkNotNull(evalBody);
 
+    this.interpreterClassName = interpreterClassName;
   }
 
   @Override
@@ -69,8 +73,14 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     return false;
   }
 
-  @Override
-  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
+  public DrillSimpleFuncInterpreter createInterpreter() throws Exception {
+    Preconditions.checkArgument(this.interpreterClassName != null, "interpreterClassName should not be null!");
+
+    String className = InterpreterGenerator.PACKAGE_NAME + "." + this.interpreterClassName;
+    return (DrillSimpleFuncInterpreter) Class.forName(className).newInstance();
+  }
+
+  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){
     //If the function's annotation specifies a parameter has to be constant expression, but the HoldingContainer
     //for the argument is not, then raise exception.
     for (int i =0; i < inputVariables.length; i++) {
@@ -141,4 +151,11 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     return out;
   }
 
+  public String getSetupBody() {
+    return setupBody;
+  }
+
+  public String getEvalBody() {
+    return evalBody;
+  }
 }

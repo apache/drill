@@ -277,6 +277,14 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
         + ", parameters=" + (parameters != null ? Arrays.asList(parameters).subList(0, Math.min(parameters.length, maxLen)) : null) + "]";
   }
 
+  public WorkspaceReference[] getWorkspaceVars() {
+    return this.workspaceVars;
+  }
+
+  public ValueReference[] getParameters() {
+    return this.parameters;
+  }
+
   public static class ValueReference {
     MajorType type;
     String name;
@@ -290,6 +298,14 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       Preconditions.checkNotNull(name);
       this.type = type;
       this.name = name;
+    }
+
+    public MajorType getType() {
+      return type;
+    }
+
+    public String getName() {
+      return name;
     }
 
     public void setConstant(boolean isConstant) {
@@ -344,6 +360,15 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     public boolean isInject() {
       return inject;
     }
+
+    public Class<?> getType() {
+      return type;
+    }
+
+    public String getName() {
+      return name;
+    }
+
   }
 
   public boolean checkPrecisionRange() {

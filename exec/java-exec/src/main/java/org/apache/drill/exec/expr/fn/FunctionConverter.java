@@ -31,6 +31,7 @@ import javax.inject.Inject;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -39,6 +40,7 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
+import org.apache.drill.exec.expr.fn.interpreter.InterpreterGenerator;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -257,7 +259,8 @@ public class FunctionConverter {
           return new DrillSimpleFuncHolder(template.scope(), template.nulls(),
                                            template.isBinaryCommutative(),
                                            template.isRandom(), registeredNames,
-                                           ps, outputField, works, methods, imports, template.costCategory());
+                                           ps, outputField, works, methods, imports, template.costCategory(),
+                                           clazz.getSimpleName() + InterpreterGenerator.INTERPRETER_CLASSNAME_POSTFIX);
         }
       case SC_BOOLEAN_OPERATOR:
         return new DrillBooleanOPHolder(template.scope(), template.nulls(),

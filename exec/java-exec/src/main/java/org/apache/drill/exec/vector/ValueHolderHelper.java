@@ -21,11 +21,17 @@ import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
 
+import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal9Holder;
+import org.apache.drill.exec.expr.holders.Float4Holder;
+import org.apache.drill.exec.expr.holders.Float8Holder;
+import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.IntervalDayHolder;
+import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.util.DecimalUtility;
@@ -35,6 +41,52 @@ import com.google.common.base.Charsets;
 
 public class ValueHolderHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderHelper.class);
+
+  public static IntHolder getIntHolder(int value) {
+    IntHolder holder = new IntHolder();
+    holder.value = value;
+
+    return holder;
+  }
+
+  public static BigIntHolder getBigIntHolder(long value) {
+    BigIntHolder holder = new BigIntHolder();
+    holder.value = value;
+
+    return holder;
+  }
+
+  public static Float4Holder getFloat4Holder(float value) {
+    Float4Holder holder = new Float4Holder();
+    holder.value = value;
+
+    return holder;
+  }
+
+  public static Float8Holder getFloat8Holder(double value) {
+    Float8Holder holder = new Float8Holder();
+    holder.value = value;
+
+    return holder;
+  }
+
+
+  public static BitHolder getBitHolder(int value) {
+    BitHolder holder = new BitHolder();
+    holder.value = value;
+
+    return holder;
+  }
+
+  public static NullableBitHolder getNullableBitHolder(boolean isNull, int value) {
+    NullableBitHolder holder = new NullableBitHolder();
+    holder.isSet = isNull? 0 : 1;
+    if (! isNull) {
+      holder.value = value;
+    }
+
+    return holder;
+  }
 
   public static VarCharHolder getVarCharHolder(DrillBuf buf, String s){
     VarCharHolder vch = new VarCharHolder();

@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import org.apache.drill.common.types.MajorType;
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/TypeHelper.java" />
 
@@ -305,11 +307,33 @@ public class TypeHelper {
     case ${minor.class?upper_case} :
       <#if minor.class?starts_with("Var") || minor.class == "TimeStampTZ" || minor.class == "IntervalDay" || minor.class == "Interval" ||
         minor.class?starts_with("Decimal28") ||  minor.class?starts_with("Decimal38")>
-         throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
+        switch (type.getMode()) {
+          case REQUIRED:
+            holder = new ${minor.class}Holder();
+            ((${minor.class}Vector) vector).getAccessor().get(index, (${minor.class}Holder)holder);
+            return holder;
+          case OPTIONAL:
+            holder = new Nullable${minor.class}Holder();
+            ((Nullable${minor.class}Holder)holder).isSet = ((Nullable${minor.class}Vector) vector).getAccessor().isSet(index);
+            if (((Nullable${minor.class}Holder)holder).isSet == 1) {
+              ((Nullable${minor.class}Vector) vector).getAccessor().get(index, (Nullable${minor.class}Holder)holder);
+            }
+            return holder;
+        }
       <#else>
-      holder = new ${minor.class}Holder(); 
-      ((${minor.class}Holder)holder).value = ((${minor.class}Vector) vector).getAccessor().get(index);
-      break;
+      switch (type.getMode()) {
+        case REQUIRED:
+          holder = new ${minor.class}Holder();
+          ((${minor.class}Holder)holder).value = ((${minor.class}Vector) vector).getAccessor().get(index);
+          return holder;
+        case OPTIONAL:
+          holder = new Nullable${minor.class}Holder();
+          ((Nullable${minor.class}Holder)holder).isSet = ((Nullable${minor.class}Vector) vector).getAccessor().isSet(index);
+          if (((Nullable${minor.class}Holder)holder).isSet == 1) {
+            ((Nullable${minor.class}Holder)holder).value = ((Nullable${minor.class}Vector) vector).getAccessor().get(index);
+          }
+          return holder;
+      }
       </#if>
   </#list>
 </#list>
@@ -318,9 +342,10 @@ public class TypeHelper {
       ((ObjectHolder)holder).obj = ((ObjectVector) vector).getAccessor().getObject(index)         ;
       break;
     default:
-      throw new UnsupportedOperationException(type.getMinorType() + " type is not supported."); 
+      throw new UnsupportedOperationException(type + " type is not supported.");
     }
-    return holder;
+
+    throw new UnsupportedOperationException(type + " type is not supported.");
   }
 
   public static void setValue(ValueVector vector, int index, ValueHolder holder) {
@@ -330,15 +355,54 @@ public class TypeHelper {
 <#list vv.types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case} :
-      ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
-      break;
+      switch (type.getMode()) {
+        case REQUIRED:
+          ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
+          return;
+        case OPTIONAL:
+          if (((Nullable${minor.class}Holder) holder).isSet == 1) {
+            ((Nullable${minor.class}Vector) vector).getMutator().setSafe(index, (Nullable${minor.class}Holder) holder);
+          }
+          return;
+      }
   </#list>
 </#list>
     case GENERIC_OBJECT:
       ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
-      break          ;
+      return;
     default:
-      throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");    
+      throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
+    }
+  }
+
+  public static boolean setValueSafe(ValueVector vector, int index, ValueHolder holder) {
+    MajorType type = vector.getField().getType();
+
+    switch(type.getMinorType()) {
+      <#list vv.types as type>
+      <#list type.minor as minor>
+      case ${minor.class?upper_case} :
+      switch (type.getMode()) {
+        case REQUIRED:
+          return ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
+        case OPTIONAL:
+          if (((Nullable${minor.class}Holder) holder).isSet == 1) {
+            if (! ((Nullable${minor.class}Vector) vector).getMutator().setSafe(index, (Nullable${minor.class}Holder) holder) ) {
+              return false;
+            }
+          } else {
+            if (!((Nullable${minor.class}Vector) vector).getMutator().isSafe(index)) {
+              return false;
+            }
+          }
+          return true;
+      }
+      </#list>
+      </#list>
+      case GENERIC_OBJECT:
+        return ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
+      default:
+        throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
     }
   }
 
@@ -364,6 +428,139 @@ public class TypeHelper {
       break;
     }
     return false;
+  }
+
+  /**
+   *  Create a ValueHolder of MajorType.
+   * @param type
+   * @return
+   */
+  public static ValueHolder createValueHolder(MajorType type) {
+    ValueHolder holder;
+    switch(type.getMinorType()) {
+      <#list vv.types as type>
+      <#list type.minor as minor>
+      case ${minor.class?upper_case} :
+
+        switch (type.getMode()) {
+          case REQUIRED:
+            return new ${minor.class}Holder();
+          case OPTIONAL:
+            return new Nullable${minor.class}Holder();
+          case REPEATED:
+            return new Repeated${minor.class}Holder();
+        }
+      </#list>
+      </#list>
+      case GENERIC_OBJECT:
+        return new ObjectHolder();
+      default:
+        throw new UnsupportedOperationException(type + " type is not supported for 'createValueHolder' method.");
+    }
+  }
+
+  public static boolean isNull(ValueHolder holder) {
+    MajorType type = TypeHelper.getValueHolderType(holder);
+
+    switch(type.getMinorType()) {
+      <#list vv.types as type>
+      <#list type.minor as minor>
+      case ${minor.class?upper_case} :
+
+      switch (type.getMode()) {
+        case REQUIRED:
+          return true;
+        case OPTIONAL:
+          return ((Nullable${minor.class}Holder) holder).isSet == 0;
+        case REPEATED:
+          return true;
+      }
+      </#list>
+      </#list>
+      default:
+        throw new UnsupportedOperationException(type + " type is not supported for 'isNull' method.");
+    }
+  }
+
+  public static ValueHolder deNullify(ValueHolder holder) {
+    MajorType type = TypeHelper.getValueHolderType(holder);
+
+    switch(type.getMinorType()) {
+      <#list vv.types as type>
+      <#list type.minor as minor>
+      case ${minor.class?upper_case} :
+
+        switch (type.getMode()) {
+          case REQUIRED:
+            return holder;
+          case OPTIONAL:
+            if( ((Nullable${minor.class}Holder) holder).isSet == 1) {
+              ${minor.class}Holder newHolder = new ${minor.class}Holder();
+
+              <#assign fields = minor.fields!type.fields />
+              <#list fields as field>
+              newHolder.${field.name} = ((Nullable${minor.class}Holder) holder).${field.name};
+              </#list>
+
+              return newHolder;
+            } else {
+              throw new UnsupportedOperationException("You can not convert a null value into a non-null value!");
+            }
+          case REPEATED:
+            return holder;
+        }
+      </#list>
+      </#list>
+      default:
+        throw new UnsupportedOperationException(type + " type is not supported for 'deNullify' method.");
+    }
+  }
+
+  public static ValueHolder nullify(ValueHolder holder) {
+    MajorType type = TypeHelper.getValueHolderType(holder);
+
+    switch(type.getMinorType()) {
+      <#list vv.types as type>
+      <#list type.minor as minor>
+      case ${minor.class?upper_case} :
+        switch (type.getMode()) {
+          case REQUIRED:
+            Nullable${minor.class}Holder newHolder = new Nullable${minor.class}Holder();
+            newHolder.isSet = 1;
+            <#assign fields = minor.fields!type.fields />
+            <#list fields as field>
+            newHolder.${field.name} = ((${minor.class}Holder) holder).${field.name};
+            </#list>
+            return newHolder;
+          case OPTIONAL:
+            return holder;
+          case REPEATED:
+            throw new UnsupportedOperationException("You can not convert repeated type " + type + " to nullable type!");
+        }
+      </#list>
+      </#list>
+      default:
+        throw new UnsupportedOperationException(type + " type is not supported for 'nullify' method.");
+    }
+  }
+
+  public static MajorType getValueHolderType(ValueHolder holder) {
+
+    if (0 == 1) {
+      return null;
+    }
+    <#list vv.types as type>
+    <#list type.minor as minor>
+      else if (holder instanceof ${minor.class}Holder) {
+        return ((${minor.class}Holder) holder).TYPE;
+      } else if (holder instanceof Nullable${minor.class}Holder) {
+      return ((Nullable${minor.class}Holder) holder).TYPE;
+      }
+    </#list>
+    </#list>
+
+    throw new UnsupportedOperationException("ValueHolder is not supported for 'getValueHolderType' method.");
+
   }
 
 }
