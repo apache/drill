@@ -107,16 +107,13 @@ public class MongoRecordReader extends AbstractRecordReader {
 			Collection<SchemaPath> projectedColumns) {
 		Set<SchemaPath> transformed = Sets.newLinkedHashSet();
 		if (!isStarQuery()) {
-			if (projectedColumns != null && projectedColumns.size() != 0) {
-				Iterator<SchemaPath> columnIterator = projectedColumns
-						.iterator();
-				while (columnIterator.hasNext()) {
-					SchemaPath column = columnIterator.next();
-					NameSegment root = column.getRootSegment();
-					String fieldName = root.getPath();
-					transformed.add(SchemaPath.getSimplePath(fieldName));
-					this.fields.put(fieldName, Integer.valueOf(1));
-				}
+			Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
+			while (columnIterator.hasNext()) {
+				SchemaPath column = columnIterator.next();
+				NameSegment root = column.getRootSegment();
+				String fieldName = root.getPath();
+				transformed.add(SchemaPath.getSimplePath(fieldName));
+				this.fields.put(fieldName, Integer.valueOf(1));
 			}
 		}
 		return transformed;

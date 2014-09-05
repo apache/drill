@@ -83,7 +83,7 @@ public class JsonReaderWithState {
 
   public WriteState write(byte[] bytes, ComplexWriter writer)
       throws JsonParseException, IOException {
-    if (bytes == null || bytes.length == 0) {
+    if (bytes.length == 0) {
       return WriteState.NO_MORE;
     }
 
