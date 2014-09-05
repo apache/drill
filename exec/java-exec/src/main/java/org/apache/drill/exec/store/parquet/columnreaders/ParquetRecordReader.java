@@ -425,7 +425,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
         }
       }
 
-
+//      logger.debug("So far read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex, hadoopPath.toUri().getPath());
       totalRecordsRead += firstColumnStatus.getRecordsReadInCurrentPass();
       return firstColumnStatus.getRecordsReadInCurrentPass();
     } catch (IOException e) {

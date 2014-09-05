@@ -54,12 +54,6 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      this.recordsReadInThisIteration = recordsToReadInThisPass;
-
-      // set up metadata
-      this.readStartInBytes = pageReader.readPosInBytes;
-      this.readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-      this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
       this.bytebuf = pageReader.pageDataByteArray;
 
       // fill in data.
@@ -171,16 +165,10 @@ public class NullableFixedByteAlignedReaders {
     @Override
     protected void readField(long recordsToReadInThisPass) {
 
-      this.recordsReadInThisIteration = recordsToReadInThisPass;
-
-      // set up metadata
-      this.readStartInBytes = pageReader.readPosInBytes;
-      this.readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-      this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
       this.bytebuf = pageReader.pageDataByteArray;
 
       dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
-      for (int i = 0; i < recordsReadInThisIteration; i++) {
+      for (int i = 0; i < recordsToReadInThisPass; i++) {
         addNext((int) readStartInBytes + i * dataTypeLengthInBytes, i + valuesReadInCurrentPass);
       }
     }

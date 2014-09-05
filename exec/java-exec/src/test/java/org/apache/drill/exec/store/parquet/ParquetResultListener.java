@@ -112,81 +112,119 @@ public class ParquetResultListener implements UserResultsListener {
     }
 
     // used to make sure each vector in the batch has the same number of records
-    int valueCount = -1;
+    int valueCount = batchLoader.getRecordCount();
 
-    int recordCount = 0;
     // print headers.
     if (schemaChanged) {
     } // do not believe any change is needed for when the schema changes, with the current mock scan use case
 
     for (VectorWrapper vw : batchLoader) {
       ValueVector vv = vw.getValueVector();
-      currentField = props.fields.get(vv.getField().getAsSchemaPath().getRootSegment().getPath());
-      if (ParquetRecordReaderTest.VERBOSE_DEBUG){
-        System.out.println("\n" + vv.getField().getAsSchemaPath().getRootSegment().getPath());
-      }
-      if ( ! valuesChecked.containsKey(vv.getField().getAsSchemaPath().getRootSegment().getPath())){
-        valuesChecked.put(vv.getField().getAsSchemaPath().getRootSegment().getPath(), 0);
+      currentField = props.fields.get(vv.getField().getPath().getRootSegment().getPath());
+      if ( ! valuesChecked.containsKey(vv.getField().getPath().getRootSegment().getPath())){
+        valuesChecked.put(vv.getField().getPath().getRootSegment().getPath(), 0);
         columnValCounter = 0;
       } else {
-        columnValCounter = valuesChecked.get(vv.getField().getAsSchemaPath().getRootSegment().getPath());
+        columnValCounter = valuesChecked.get(vv.getField().getPath().getRootSegment().getPath());
       }
-      for (int j = 0; j < vv.getAccessor().getValueCount(); j++) {
-        if (ParquetRecordReaderTest.VERBOSE_DEBUG){
-          Object o = vv.getAccessor().getObject(j);
-          if (o instanceof byte[]) {
-            try {
-              o = new String((byte[])o, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-              throw new RuntimeException(e);
-            }
-          }
-          System.out.print(Strings.padStart(o + "", 20, ' ') + " ");
-          System.out.print(", " + (j % 25 == 0 ? "\n batch:" + batchCounter + " v:" + j + " - " : ""));
-        }
-        if (testValues){
+      printColumnMajor(vv);
+
+      if (testValues){
+        for (int j = 0; j < vv.getAccessor().getValueCount(); j++) {
           assertField(vv, j, currentField.type,
               currentField.values[columnValCounter % 3], currentField.name + "/");
+          columnValCounter++;
         }
-        columnValCounter++;
+      } else {
+        columnValCounter += vv.getAccessor().getValueCount();
       }
-      if (ParquetRecordReaderTest.VERBOSE_DEBUG){
-        System.out.println("\n" + vv.getAccessor().getValueCount());
-      }
-      valuesChecked.remove(vv.getField().getAsSchemaPath().getRootSegment().getPath());
-      if (valueCount == -1) {
-        valueCount = columnValCounter;
-      }
-      else {
-        assertEquals("Mismatched value count for vectors in the same batch.", valueCount, columnValCounter);
-      }
-      valuesChecked.put(vv.getField().getAsSchemaPath().getRootSegment().getPath(), columnValCounter);
+
+      valuesChecked.remove(vv.getField().getPath().getRootSegment().getPath());
+      assertEquals("Mismatched value count for vectors in the same batch.", valueCount, vv.getAccessor().getValueCount());
+      valuesChecked.put(vv.getField().getPath().getRootSegment().getPath(), columnValCounter);
     }
 
     if (ParquetRecordReaderTest.VERBOSE_DEBUG){
-      for (int i = 0; i < batchLoader.getRecordCount(); i++) {
-        recordCount++;
-        if (i % 50 == 0){
-          System.out.println();
-          for (VectorWrapper vw : batchLoader) {
-            ValueVector v = vw.getValueVector();
-            System.out.print(Strings.padStart(v.getField().getAsSchemaPath().getRootSegment().getPath(), 20, ' ') + " ");
+      printRowMajor(batchLoader);
+    }
+    batchCounter++;
+    if(result.getHeader().getIsLastChunk()){
+      checkLastChunk(batchLoader, result);
+    }
+    
+    batchLoader.clear();
+    result.release();
+  }
 
-          }
-          System.out.println();
-          System.out.println();
+  public void checkLastChunk(RecordBatchLoader batchLoader, QueryResultBatch result) {
+    int recordsInBatch = -1;
+    // ensure the right number of columns was returned, especially important to ensure selective column read is working
+    if (testValues) {
+      assertEquals( "Unexpected number of output columns from parquet scan.", props.fields.keySet().size(), valuesChecked.keySet().size() );
+    }
+    for (String s : valuesChecked.keySet()) {
+      try {
+        if (recordsInBatch == -1 ){
+          recordsInBatch = valuesChecked.get(s);
+        } else {
+          assertEquals("Mismatched record counts in vectors.", recordsInBatch, valuesChecked.get(s).intValue());
         }
+        assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
+      } catch (AssertionError e) { submissionFailed(new RpcException(e)); }
+    }
 
+    assert valuesChecked.keySet().size() > 0;
+    batchLoader.clear();
+    result.release();
+    future.set(null);
+  }
+
+  public void printColumnMajor(ValueVector vv) {
+    if (ParquetRecordReaderTest.VERBOSE_DEBUG){
+      System.out.println("\n" + vv.getField().getAsSchemaPath().getRootSegment().getPath());
+    }
+    for (int j = 0; j < vv.getAccessor().getValueCount(); j++) {
+      if (ParquetRecordReaderTest.VERBOSE_DEBUG){
+        Object o = vv.getAccessor().getObject(j);
+        if (o instanceof byte[]) {
+          try {
+            o = new String((byte[])o, "UTF-8");
+          } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        System.out.print(Strings.padStart(o + "", 20, ' ') + " ");
+        System.out.print(", " + (j % 25 == 0 ? "\n batch:" + batchCounter + " v:" + j + " - " : ""));
+      }
+    }
+    if (ParquetRecordReaderTest.VERBOSE_DEBUG){
+      System.out.println("\n" + vv.getAccessor().getValueCount());
+    }
+  }
+
+  public void printRowMajor(RecordBatchLoader batchLoader) {
+    for (int i = 0; i < batchLoader.getRecordCount(); i++) {
+      if (i % 50 == 0){
+        System.out.println();
         for (VectorWrapper vw : batchLoader) {
           ValueVector v = vw.getValueVector();
-          Object o = v.getAccessor().getObject(i);
-          if (o instanceof byte[]) {
-            try {
-              // TODO - in the dictionary read error test there is some data that does not look correct
-              // the output of our reader matches the values of the parquet-mr cat/head tools (no full comparison was made,
-              // but from a quick check of a few values it looked consistent
-              // this might have gotten corrupted by pig somehow, or maybe this is just how the data is supposed ot look
-              // TODO - check this!!
+          System.out.print(Strings.padStart(v.getField().getAsSchemaPath().getRootSegment().getPath(), 20, ' ') + " ");
+
+        }
+        System.out.println();
+        System.out.println();
+      }
+
+      for (VectorWrapper vw : batchLoader) {
+        ValueVector v = vw.getValueVector();
+        Object o = v.getAccessor().getObject(i);
+        if (o instanceof byte[]) {
+          try {
+            // TODO - in the dictionary read error test there is some data that does not look correct
+            // the output of our reader matches the values of the parquet-mr cat/head tools (no full comparison was made,
+            // but from a quick check of a few values it looked consistent
+            // this might have gotten corrupted by pig somehow, or maybe this is just how the data is supposed ot look
+            // TODO - check this!!
 //              for (int k = 0; k < ((byte[])o).length; k++ ) {
 //                // check that the value at each position is a valid single character ascii value.
 //
@@ -194,42 +232,15 @@ public class ParquetResultListener implements UserResultsListener {
 //                  System.out.println("batch: " + batchCounter + " record: " + recordCount);
 //                }
 //              }
-              o = new String((byte[])o, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-              throw new RuntimeException(e);
-            }
+            o = new String((byte[])o, "UTF-8");
+          } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
           }
-          System.out.print(Strings.padStart(o + "", 20, ' ') + " ");
         }
-        System.out.println();
+        System.out.print(Strings.padStart(o + "", 20, ' ') + " ");
       }
+      System.out.println();
     }
-    batchCounter++;
-    int recordsInBatch = -1;
-    if(result.getHeader().getIsLastChunk()){
-      // ensure the right number of columns was returned, especially important to ensure selective column read is working
-      if (testValues) {
-        assertEquals( "Unexpected number of output columns from parquet scan.", props.fields.keySet().size(), valuesChecked.keySet().size() );
-      }
-      for (String s : valuesChecked.keySet()) {
-        try {
-          if (recordsInBatch == -1 ){
-            recordsInBatch = valuesChecked.get(s);
-          } else {
-            assertEquals("Mismatched record counts in vectors.", recordsInBatch, valuesChecked.get(s).intValue());
-          }
-          assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
-        } catch (AssertionError e) { submissionFailed(new RpcException(e)); }
-      }
-
-      assert valuesChecked.keySet().size() > 0;
-      batchLoader.clear();
-      result.release();
-      future.set(null);
-    }
-    
-    batchLoader.clear();
-    result.release();
   }
 
   public void getResults() throws RpcException{

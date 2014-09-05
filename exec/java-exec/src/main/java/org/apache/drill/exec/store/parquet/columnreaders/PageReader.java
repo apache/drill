@@ -104,7 +104,7 @@ final class PageReader {
     long start = columnChunkMetaData.getFirstDataPageOffset();
     try {
       FSDataInputStream f = fs.open(path);
-      this.dataReader = new ColumnDataReader(f, start, totalByteLength);
+      this.dataReader = new ColumnDataReader(f, start, columnChunkMetaData.getTotalSize());
       if (columnChunkMetaData.getDictionaryPageOffset() > 0) {
         f.seek(columnChunkMetaData.getDictionaryPageOffset());
         PageHeader pageHeader = Util.readPageHeader(f);
