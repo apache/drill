@@ -395,9 +395,13 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   @Override
   public ScanStats getScanStats() {
     MongoClientURI clientURI = new MongoClientURI(this.storagePluginConfig.getConnection());
-    MongoClient client = null;
     try {
-      client = new MongoClient(clientURI);
+      List<String> hosts = clientURI.getHosts();
+      List<ServerAddress> addresses = Lists.newArrayList();
+      for (String host : hosts) {
+        addresses.add(new ServerAddress(host));
+      }
+      MongoClient client = MongoCnxnManager.getClient(addresses, clientURI.getOptions());
       DB db = client.getDB(scanSpec.getDbName());
       db.setReadPreference(ReadPreference.nearest());
       DBCollection collection = db.getCollectionFromString(scanSpec.getCollectionName());
@@ -405,11 +409,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
       return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, stats.getLong(COUNT), 1, (float) stats.getDouble(SIZE));
     } catch (Exception e) {
       throw new DrillRuntimeException(e.getMessage(), e);
-    } finally {
-      if (client != null) {
-        client.close();
-      }
-    }
+    } 
   }
 
   @Override

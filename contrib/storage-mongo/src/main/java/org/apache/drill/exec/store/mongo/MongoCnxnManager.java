@@ -21,6 +21,9 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
@@ -31,6 +34,7 @@ import com.mongodb.ServerAddress;
 
 public class MongoCnxnManager {
 
+  private static final Logger logger = LoggerFactory.getLogger(MongoCnxnManager.class);
   private static Cache<ServerAddress, MongoClient> addressClientMap;
   
   static {
@@ -42,6 +46,7 @@ public class MongoCnxnManager {
   private static class AddressCloser implements RemovalListener<ServerAddress, MongoClient> {
     @Override
     public void onRemoval(RemovalNotification<ServerAddress, MongoClient> notification) {
+      logger.debug("Closing the Mongo Client : " + notification.getValue());
       notification.getValue().close();
     }
   }

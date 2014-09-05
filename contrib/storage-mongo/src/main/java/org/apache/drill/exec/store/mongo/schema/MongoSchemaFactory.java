@@ -34,6 +34,7 @@ import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.mongo.MongoCnxnManager;
 import org.apache.drill.exec.store.mongo.MongoScanSpec;
 import org.apache.drill.exec.store.mongo.MongoStoragePlugin;
 import org.apache.drill.exec.store.mongo.MongoStoragePluginConfig;
@@ -44,11 +45,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 
 public class MongoSchemaFactory implements SchemaFactory {
 
@@ -57,7 +60,7 @@ public class MongoSchemaFactory implements SchemaFactory {
 
   private static final String DATABASES = "databases";
 
-  private final MongoClient client;
+  private MongoClient client;
   private LoadingCache<String, List<String>> databases;
   private LoadingCache<String, List<String>> tableNameLoader;
   @SuppressWarnings("unused")
@@ -66,18 +69,19 @@ public class MongoSchemaFactory implements SchemaFactory {
   private final MongoStoragePlugin plugin;
   
   public MongoSchemaFactory(MongoStoragePlugin schema, String schemaName)
-      throws ExecutionSetupException {
+      throws ExecutionSetupException, UnknownHostException {
     String connection = schema.getConfig().getConnection();
 
     this.plugin = schema;
     this.schemaName = schemaName;
 
     MongoClientURI clientURI = new MongoClientURI(connection);
-    try {
-      client = new MongoClient(clientURI);
-    } catch (UnknownHostException e) {
-      throw new ExecutionSetupException(e.getMessage(), e);
+    List<String> hosts = clientURI.getHosts();
+    List<ServerAddress> addresses = Lists.newArrayList();
+    for (String host : hosts) {
+      addresses.add(new ServerAddress(host));
     }
+    client = MongoCnxnManager.getClient(addresses, clientURI.getOptions());
 
     databases = CacheBuilder //
         .newBuilder() //
