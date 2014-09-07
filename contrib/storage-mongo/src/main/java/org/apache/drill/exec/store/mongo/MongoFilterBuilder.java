@@ -25,13 +25,11 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.store.mongo.common.MongoCompareOp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
 
 public class MongoFilterBuilder extends
@@ -117,7 +115,7 @@ public class MongoFilterBuilder extends
 		List<LogicalExpression> args = op.args;
 		MongoScanSpec nodeScanSpec = null;
 		String functionName = op.getName();
-		for (int i = 0; i < args.size()-1; ++i) {
+		for (int i = 0; i < args.size() - 1; ++i) {
 			switch (functionName) {
 			case "booleanAnd":
 			case "booleanOr":
@@ -125,8 +123,14 @@ public class MongoFilterBuilder extends
 				MongoScanSpec rightScanSpec = args.get(i + 1)
 						.accept(this, null);
 				if (leftScanSpec != null && rightScanSpec != null) {
-					nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec,
-							rightScanSpec);
+					MongoScanSpec tempnodeScanSpec = mergeScanSpecs(
+							functionName, leftScanSpec, rightScanSpec);
+					if (nodeScanSpec == null) {
+						nodeScanSpec = tempnodeScanSpec;
+					} else {
+						nodeScanSpec = mergeScanSpecs(functionName,
+								nodeScanSpec, tempnodeScanSpec);
+					}
 				} else {
 					allExpressionsConverted = false;
 					if ("booleanAnd".equals(functionName)) {
