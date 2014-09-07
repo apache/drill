@@ -18,17 +18,20 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.store.mongo.common.MongoCompareOp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
 
 public class MongoFilterBuilder extends
@@ -85,29 +88,57 @@ public class MongoFilterBuilder extends
     return null;
   }
   
-  @Override
-  public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value)
-      throws RuntimeException {
-    String functionName = op.getName();
-    ImmutableList<LogicalExpression> args = op.args;
-    MongoScanSpec nodeScanSpec = null;
-    switch (functionName) {
-    case "booleanAnd":
-    case "booleanOr":
-      MongoScanSpec leftScanSpec = args.get(0).accept(this, null);
-      MongoScanSpec rightScanSpec = args.get(1).accept(this, null);
-      if (leftScanSpec != null && rightScanSpec != null) {
-        nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec, rightScanSpec);
-      } else {
-        allExpressionsConverted = false;
-        if ("booleanAnd".equals(functionName)) {
-          nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
-        }
-      }
-      break;
-    }
-    return nodeScanSpec;
-  }
+//  @Override
+//  public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value)
+//      throws RuntimeException {
+//    String functionName = op.getName();
+//    ImmutableList<LogicalExpression> args = op.args;
+//    MongoScanSpec nodeScanSpec = null;
+//    switch (functionName) {
+//    case "booleanAnd":
+//    case "booleanOr":
+//      MongoScanSpec leftScanSpec = args.get(0).accept(this, null);
+//      MongoScanSpec rightScanSpec = args.get(1).accept(this, null);
+//      if (leftScanSpec != null && rightScanSpec != null) {
+//        nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec, rightScanSpec);
+//      } else {
+//        allExpressionsConverted = false;
+//        if ("booleanAnd".equals(functionName)) {
+//          nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
+//        }
+//      }
+//      break;
+//    }
+//    return nodeScanSpec;
+//  }
+  
+	@Override
+	public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value) {
+		List<LogicalExpression> args = op.args;
+		MongoScanSpec nodeScanSpec = null;
+		String functionName = op.getName();
+		for (int i = 0; i < args.size()-1; ++i) {
+			switch (functionName) {
+			case "booleanAnd":
+			case "booleanOr":
+				MongoScanSpec leftScanSpec = args.get(i).accept(this, null);
+				MongoScanSpec rightScanSpec = args.get(i + 1)
+						.accept(this, null);
+				if (leftScanSpec != null && rightScanSpec != null) {
+					nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec,
+							rightScanSpec);
+				} else {
+					allExpressionsConverted = false;
+					if ("booleanAnd".equals(functionName)) {
+						nodeScanSpec = leftScanSpec == null ? rightScanSpec
+								: leftScanSpec;
+					}
+				}
+				break;
+			}
+		}
+		return nodeScanSpec;
+	}
   
   @Override
   public MongoScanSpec visitFunctionCall(FunctionCall call, Void value)

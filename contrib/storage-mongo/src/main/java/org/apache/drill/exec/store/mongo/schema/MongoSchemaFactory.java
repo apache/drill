@@ -76,12 +76,13 @@ public class MongoSchemaFactory implements SchemaFactory {
     this.schemaName = schemaName;
 
     MongoClientURI clientURI = new MongoClientURI(connection);
-    List<String> hosts = clientURI.getHosts();
-    List<ServerAddress> addresses = Lists.newArrayList();
-    for (String host : hosts) {
-      addresses.add(new ServerAddress(host));
-    }
-    client = MongoCnxnManager.getClient(addresses, clientURI.getOptions());
+//    List<String> hosts = clientURI.getHosts();
+//    List<ServerAddress> addresses = Lists.newArrayList();
+//    for (String host : hosts) {
+//      addresses.add(new ServerAddress(host));
+//    }
+//    client = MongoCnxnManager.getClient(addresses, clientURI.getOptions());
+    client = new MongoClient(clientURI);
 
     databases = CacheBuilder //
         .newBuilder() //
@@ -164,7 +165,6 @@ public class MongoSchemaFactory implements SchemaFactory {
 
     public MongoSchema(String name) {
       super(ImmutableList.<String> of(), name);
-      getSubSchema("default");
     }
 
     @Override
@@ -173,9 +173,6 @@ public class MongoSchemaFactory implements SchemaFactory {
       try {
         tables = tableNameLoader.get(name);
         MongoDatabaseSchema schema = new MongoDatabaseSchema(tables, this, name);
-        if (name.equals("default")) {
-          this.defaultSchema = schema;
-        }
         return schema;
       } catch (ExecutionException e) {
         logger.warn("Failure while attempting to access MongoDataBase '{}'.",
