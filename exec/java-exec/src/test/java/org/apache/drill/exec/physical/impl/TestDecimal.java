@@ -276,4 +276,39 @@ public class TestDecimal extends PopUnitTestBase{
             }
         }
     }
+
+  @Test
+  public void testSimpleDecimalMathFunc() throws Exception {
+
+    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+         Drillbit bit = new Drillbit(CONFIG, serviceSet);
+         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+
+      // run query.
+      bit.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+          Files.toString(FileUtils.getResourceAsFile("/decimal/simple_decimal_math.json"), Charsets.UTF_8)
+              .replace("#{TEST_FILE}", "/input_simple_decimal.json")
+      );
+
+      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
+
+      QueryResultBatch batch = results.get(0);
+      assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
+
+      Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
+
+      // Check the output of decimal18
+      ValueVector.Accessor dec18Accessor = itr.next().getValueVector().getAccessor();
+
+      assertEquals(6, dec18Accessor.getValueCount());
+
+      batchLoader.clear();
+      for (QueryResultBatch result : results) {
+        result.release();
+      }
+    }
+  }
+
 }
