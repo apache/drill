@@ -39,6 +39,7 @@ import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
@@ -124,7 +125,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     List<Integer> selectedPartitionColumns = Lists.newArrayList();
     boolean selectAllColumns = false;
 
-    if (columns == null || columns.size() == 0) {
+    if (AbstractRecordReader.isStarQuery(columns) || columns == null || columns.size() == 0) {
       selectAllColumns = true;
     } else {
       List<SchemaPath> newColumns = Lists.newArrayList();
