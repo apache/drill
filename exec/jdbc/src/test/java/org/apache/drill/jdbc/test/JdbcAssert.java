@@ -29,21 +29,17 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import net.hydromatic.linq4j.Ord;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.util.Hook;
-import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Assert;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 /**
  * Fluent interface for writing JDBC and query-planning tests.

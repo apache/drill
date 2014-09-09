@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.ExecConstants;
@@ -40,8 +42,7 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Pair;
 
-import java.io.IOException;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class HashJoinPrel  extends JoinPrel {
 

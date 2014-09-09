@@ -21,7 +21,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * A record batch contains a set of field values for a particular range of records. In the case of a record batch
@@ -85,9 +84,9 @@ public interface RecordBatch extends VectorAccessible {
 
   public abstract SelectionVector4 getSelectionVector4();
 
-  
+
   public VectorContainer getOutgoingContainer();
-  
+
   /**
    * Get the value vector type and id for the given schema path. The TypedFieldId should store a fieldId which is the
    * same as the ordinal position of the field within the Iterator provided this classes implementation of

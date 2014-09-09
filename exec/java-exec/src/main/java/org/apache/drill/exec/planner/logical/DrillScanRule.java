@@ -19,8 +19,6 @@ package org.apache.drill.exec.planner.logical;
 
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableTableAccessRel;
 
-import org.apache.drill.exec.planner.common.DrillScanRelBase;
-import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;

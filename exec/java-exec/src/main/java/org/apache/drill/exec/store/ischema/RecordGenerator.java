@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.jdbc.JavaTypeFactoryImpl;
+
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.RecordReader;
@@ -30,7 +31,8 @@ import org.apache.drill.exec.store.pojo.PojoRecordReader;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /** Generates records for POJO RecordReader by scanning the given schema */
 public abstract class RecordGenerator {

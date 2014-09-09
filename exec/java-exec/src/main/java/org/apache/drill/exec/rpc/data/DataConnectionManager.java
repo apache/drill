@@ -30,7 +30,7 @@ public class DataConnectionManager extends ReconnectingConnection<DataClientConn
 
   private final DrillbitEndpoint endpoint;
   private final BootStrapContext context;
-  
+
   public DataConnectionManager(FragmentHandle handle, DrillbitEndpoint endpoint, BootStrapContext context) {
     super(hs(handle), endpoint.getAddress(), endpoint.getDataPort());
     this.endpoint = endpoint;
@@ -41,7 +41,7 @@ public class DataConnectionManager extends ReconnectingConnection<DataClientConn
   protected DataClient getNewClient() {
     return new DataClient(endpoint, context, new CloseHandlerCreator());
   }
-  
+
   private static BitClientHandshake hs(FragmentHandle handle){
     return BitClientHandshake //
         .newBuilder() //

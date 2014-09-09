@@ -39,20 +39,20 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 @JsonDeserialize(using = DataType.De.class)
 abstract class DataType {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataType.class);
-  
+
   public static enum Comparability{
     UNKNOWN, NONE, EQUAL, ORDERED;
   }
-  
+
   public abstract String getName();
   public abstract boolean isLateBind();
   public abstract boolean hasChildType();
   public abstract DataType getChildType();
   public abstract Comparability getComparability();
   public abstract boolean isNumericType();
-  
-  
-  
+
+
+
   public static final DataType LATEBIND = new LateBindType();
   public static final DataType BOOLEAN = new AtomType("BOOLEAN", Comparability.EQUAL, false);
   public static final DataType BYTES = new AtomType("BYTES", Comparability.ORDERED, false);
@@ -73,7 +73,7 @@ abstract class DataType {
   public static final DataType MAP = new AtomType("MAP", Comparability.NONE, false);
   public static final DataType ARRAY = new AtomType("ARRAY", Comparability.NONE, false);
   public static final DataType NULL = new AtomType("NULL", Comparability.NONE, false);
-  
+
   //TODO: Hack to get some size data, needs to be fixed so that each type reveals it's size.
   public int size(){
     if(this == BOOLEAN){
@@ -85,7 +85,7 @@ abstract class DataType {
     }
     return 2;
   }
-  
+
   static final Map<String, DataType> TYPES;
   static {
     Field[] fields = DataType.class.getFields();
@@ -96,7 +96,7 @@ abstract class DataType {
         try {
           Object o = f.get(null);
           //logger.debug("Object {}", o);
-          
+
           if(o instanceof DataType) types.put(((DataType) o).getName(), (DataType) o);
         } catch (IllegalArgumentException | IllegalAccessException e) {
           logger.warn("Failure while reading DataType.", e);
@@ -104,9 +104,9 @@ abstract class DataType {
       }
     }
     TYPES = Collections.unmodifiableMap(types);
-    
+
   }
-  
+
   public static DataType getDataType(String name){
     if(TYPES.containsKey(name)){
       return TYPES.get(name);

@@ -18,8 +18,6 @@
 
 package org.apache.drill;
 
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
 

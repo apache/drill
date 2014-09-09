@@ -47,7 +47,7 @@ public class DrillFilterRel extends DrillFilterRelBase implements DrillRel {
     f.setInput(input);
     return f;
   }
-  
+
   public static DrillFilterRel convert(Filter filter, ConversionContext context) throws InvalidRelException{
     RelNode input = context.toRel(filter.getInput());
     return new DrillFilterRel(context.getCluster(), context.getLogicalTraits(), input, context.toRex(filter.getExpr()));

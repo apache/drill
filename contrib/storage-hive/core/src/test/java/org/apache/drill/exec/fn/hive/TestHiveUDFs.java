@@ -20,6 +20,8 @@ package org.apache.drill.exec.fn.hive;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
@@ -29,13 +31,10 @@ import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableVar16CharVector;
 import org.apache.drill.exec.vector.Var16CharVector;
-import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-
-import java.util.List;
 
 public class TestHiveUDFs extends BaseTestQuery {
 

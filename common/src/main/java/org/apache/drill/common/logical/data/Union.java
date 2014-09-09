@@ -37,7 +37,7 @@ public class Union extends LogicalOperatorBase {
 //  public Union(@JsonProperty("inputs") LogicalOperator[] inputs){
 //    this(inputs, false);
 //  }
-  
+
   @JsonCreator
   public Union(@JsonProperty("inputs") LogicalOperator[] inputs, @JsonProperty("distinct") Boolean distinct){
     this.inputs = inputs;
@@ -69,26 +69,26 @@ public class Union extends LogicalOperatorBase {
     public static Builder builder(){
       return new Builder();
     }
-    
+
     public static class Builder extends AbstractBuilder<Union>{
       private List<LogicalOperator> inputs = Lists.newArrayList();
       private boolean distinct;
-      
+
       public Builder addInput(LogicalOperator o){
         inputs.add(o);
         return this;
       }
-      
+
       public Builder setDistinct(boolean distinct){
         this.distinct = distinct;
         return this;
       }
-      
+
       @Override
       public Union build() {
         return new Union(inputs.toArray(new LogicalOperator[inputs.size()]), distinct);
       }
-      
+
     }
 
 }

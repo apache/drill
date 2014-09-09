@@ -39,8 +39,8 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 public class MajorTypeSerDe {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MajorTypeSerDe.class);
-  
-  
+
+
   public static class De extends StdDeserializer<MajorType> {
 
     public De() {
@@ -52,11 +52,11 @@ public class MajorTypeSerDe {
         JsonProcessingException {
       return jp.readValueAs(MajorTypeHolder.class).getMajorType();
     }
-    
-    
+
+
   }
-  
-  
+
+
   public static class Se extends StdSerializer<MajorType> {
 
     public Se() {
@@ -69,9 +69,9 @@ public class MajorTypeSerDe {
       MajorTypeHolder holder = MajorTypeHolder.get(value);
       jgen.writeObject(holder);
     }
-    
+
   }
-  
+
   @JsonInclude(Include.NON_NULL)
   public static class MajorTypeHolder{
     @JsonProperty("type") public MinorType minorType;
@@ -79,7 +79,7 @@ public class MajorTypeSerDe {
     public Integer width;
     public Integer precision;
     public Integer scale;
-    
+
     @JsonCreator
     public MajorTypeHolder(@JsonProperty("type") MinorType minorType, @JsonProperty("mode") DataMode mode, @JsonProperty("width") Integer width, @JsonProperty("precision") Integer precision, @JsonProperty("scale") Integer scale) {
       super();
@@ -91,7 +91,7 @@ public class MajorTypeSerDe {
     }
 
     private MajorTypeHolder(){}
-    
+
     @JsonIgnore
     public MajorType getMajorType(){
       MajorType.Builder b = MajorType.newBuilder();
@@ -102,7 +102,7 @@ public class MajorTypeSerDe {
       if(scale != null) b.setScale(scale);
       return b.build();
     }
-    
+
     public static MajorTypeHolder get(MajorType mt){
       MajorTypeHolder h = new MajorTypeHolder();
       h.minorType = mt.getMinorType();

@@ -30,7 +30,6 @@ import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.physical.config.OrderedPartitionSender;
 import org.apache.drill.exec.physical.config.ProducerConsumer;
 import org.apache.drill.exec.physical.config.Project;
-import org.apache.drill.exec.physical.config.UnorderedReceiver;
 import org.apache.drill.exec.physical.config.RangeSender;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SingleSender;
@@ -39,6 +38,7 @@ import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.config.Trace;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.physical.config.UnionExchange;
+import org.apache.drill.exec.physical.config.UnorderedReceiver;
 
 public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> implements PhysicalVisitor<T, X, E> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractPhysicalVisitor.class);
@@ -90,9 +90,9 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
 
   @Override
   public T visitHashAggregate(HashAggregate agg, X value) throws E {
-	return visitOp(agg, value);  
+	return visitOp(agg, value);
   }
-  
+
   @Override
   public T visitSender(Sender sender, X value) throws E {
     return visitOp(sender, value);
@@ -118,14 +118,14 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
     return visitOp(store, value);
   }
 
-  
+
   public T visitChildren(PhysicalOperator op, X value) throws E{
     for(PhysicalOperator child : op){
       child.accept(this, value);
     }
     return null;
   }
-  
+
   @Override
   public T visitMergeJoin(MergeJoinPOP join, X value) throws E {
     return visitOp(join, value);

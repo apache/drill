@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Collection;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
@@ -34,7 +33,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public interface HashAggregator {
 
@@ -43,13 +41,13 @@ public interface HashAggregator {
   public static enum AggOutcome {
     RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR
 	  }
-  
-  public abstract void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, 
+
+  public abstract void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context,
                              OperatorStats stats, BufferAllocator allocator, RecordBatch incoming,
-                             HashAggBatch outgoing, LogicalExpression[] valueExprs, 
+                             HashAggBatch outgoing, LogicalExpression[] valueExprs,
                              List<TypedFieldId> valueFieldIds,
                              TypedFieldId[] keyFieldIds,
-                             VectorContainer outContainer) 
+                             VectorContainer outContainer)
     throws SchemaChangeException, IOException, ClassTransformationException;
 
   public abstract IterOutcome getOutcome();
@@ -61,9 +59,9 @@ public interface HashAggregator {
   public abstract void cleanup();
 
   public abstract boolean allFlushed();
-  
+
   public abstract boolean buildComplete();
-  
+
   public abstract IterOutcome outputCurrentBatch();
-  
+
 }

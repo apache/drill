@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import io.netty.buffer.DrillBuf;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.GenericFutureListener;

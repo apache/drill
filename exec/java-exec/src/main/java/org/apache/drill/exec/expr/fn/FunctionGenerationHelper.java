@@ -23,16 +23,11 @@ import java.util.List;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
-import org.apache.drill.exec.expr.DrillFunc;
-import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
-
-import com.google.common.collect.ImmutableList;
 
 public class FunctionGenerationHelper {
   public static final String COMPARE_TO = "compare_to";
@@ -49,9 +44,9 @@ public class FunctionGenerationHelper {
     FunctionImplementationRegistry registry) {
     return getFunctionExpression(COMPARE_TO, Types.required(MinorType.INT), registry, left, right);
   }
-  
+
   public static FunctionHolderExpression getFunctionExpression(String name, MajorType returnType, FunctionImplementationRegistry registry, HoldingContainer... args){
-    
+
     List<MajorType> argTypes = new ArrayList<MajorType>(args.length);
     List<LogicalExpression> argExpressions = new ArrayList<LogicalExpression>(args.length);
     for(HoldingContainer c : args){
@@ -77,7 +72,7 @@ public class FunctionGenerationHelper {
     appendType(returnType, sb);
     throw new UnsupportedOperationException(sb.toString());
   }
-  
+
   private static final void appendType(MajorType mt, StringBuilder sb){
     sb.append(mt.getMinorType().name());
     sb.append(":");

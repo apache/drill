@@ -20,7 +20,6 @@ package org.apache.drill.exec.coord;
 import java.io.Closeable;
 import java.util.Collection;
 
-import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreV2;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 /**

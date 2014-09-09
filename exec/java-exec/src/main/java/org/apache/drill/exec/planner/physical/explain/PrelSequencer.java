@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Queue;
 
 import org.apache.drill.exec.planner.physical.ExchangePrel;
-import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.BasePrelVisitor;
 import org.eigenbase.rel.RelWriter;

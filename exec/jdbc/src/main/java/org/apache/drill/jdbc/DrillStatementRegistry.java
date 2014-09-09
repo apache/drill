@@ -19,10 +19,10 @@ package org.apache.drill.jdbc;
 
 class DrillStatementRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillStatementRegistry.class);
-  
-  
+
+
   public void addStatement(DrillRemoteStatement statement){}
   public void removeStatement(DrillRemoteStatement statement){}
-  
+
   public void close(){}
 }

@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.planner.types;
 
-import com.google.common.collect.Lists;
+import java.util.Collections;
+import java.util.List;
+
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.reltype.RelDataTypeFieldImpl;
@@ -26,8 +28,7 @@ import org.eigenbase.reltype.RelDataTypePrecedenceList;
 import org.eigenbase.sql.type.SqlTypeExplicitPrecedenceList;
 import org.eigenbase.sql.type.SqlTypeName;
 
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Implements RowType for fixed field list with ANY type.

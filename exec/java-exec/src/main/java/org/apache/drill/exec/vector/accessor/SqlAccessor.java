@@ -45,7 +45,7 @@ public interface SqlAccessor {
   public abstract float getFloat(int index) throws InvalidAccessException;
 
   public abstract char getChar(int index) throws InvalidAccessException;
-    
+
   public abstract int getInt(int index) throws InvalidAccessException;
 
   public abstract long getLong(int index) throws InvalidAccessException;
@@ -55,13 +55,13 @@ public interface SqlAccessor {
   public abstract InputStream getStream(int index) throws InvalidAccessException;
 
   public abstract Reader getReader(int index) throws InvalidAccessException;
-  
+
   public abstract String getString(int index) throws InvalidAccessException;
 
   public abstract Time getTime(int index) throws InvalidAccessException;
 
   public abstract Timestamp getTimestamp(int index) throws InvalidAccessException;
-  
+
   public abstract Object getObject(int index) throws InvalidAccessException;
 
 }

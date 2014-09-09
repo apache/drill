@@ -19,13 +19,15 @@
 package org.apache.drill.exec.store.parquet;
 
 import io.netty.buffer.ByteBuf;
-import org.apache.drill.exec.ops.OperatorContext;
-import parquet.bytes.ByteBufferAllocator;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.drill.exec.ops.OperatorContext;
+
+import parquet.bytes.ByteBufferAllocator;
 
 public class ParquetDirectByteBufferAllocator implements ByteBufferAllocator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetDirectByteBufferAllocator.class);

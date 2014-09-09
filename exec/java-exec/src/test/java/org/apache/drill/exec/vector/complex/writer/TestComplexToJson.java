@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
@@ -27,9 +30,6 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 public class TestComplexToJson extends BaseTestQuery {
 
   @Test
@@ -38,7 +38,7 @@ public class TestComplexToJson extends BaseTestQuery {
 
     List<QueryResultBatch> results;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    
+
     client = new DrillClient(config, serviceSet.getCoordinator());
     client.setSupportComplexTypes(false);
     client.connect();

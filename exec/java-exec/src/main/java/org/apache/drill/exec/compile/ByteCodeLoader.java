@@ -37,6 +37,7 @@ class ByteCodeLoader {
       .expireAfterWrite(10, TimeUnit.MINUTES).build(new ClassBytesCacheLoader());
 
   private class ClassBytesCacheLoader extends CacheLoader<String, byte[]> {
+    @Override
     public byte[] load(String path) throws ClassTransformationException, IOException {
       URL u = this.getClass().getResource(path);
       if (u == null)

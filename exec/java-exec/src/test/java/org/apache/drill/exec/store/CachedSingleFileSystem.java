@@ -42,7 +42,7 @@ public class CachedSingleFileSystem extends FileSystem{
 
   private ByteBuf file;
   private String path;
-  
+
   public CachedSingleFileSystem(String path) throws IOException{
     this.path = path;
     File f = new File(path);
@@ -59,11 +59,12 @@ public class CachedSingleFileSystem extends FileSystem{
     }
   }
 
+  @Override
   public void close() throws IOException{
     file.release();
     super.close();
   }
-  
+
   @Override
   public FSDataOutputStream append(Path arg0, int arg1, Progressable arg2) throws IOException {
     throw new UnsupportedOperationException();
@@ -125,14 +126,14 @@ public class CachedSingleFileSystem extends FileSystem{
   public void setWorkingDirectory(Path arg0) {
     throw new UnsupportedOperationException();
   }
-  
-  
+
+
   private class CachedFSDataInputStream extends ByteBufInputStream implements Seekable, PositionedReadable{
     private ByteBuf buf;
     public CachedFSDataInputStream(ByteBuf buffer) {
       super(buffer);
       this.buf = buffer;
-      
+
     }
 
     @Override

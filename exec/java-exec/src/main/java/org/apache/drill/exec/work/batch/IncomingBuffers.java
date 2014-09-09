@@ -28,7 +28,6 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.rpc.ResponseSender;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

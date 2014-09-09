@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
-
-import java.util.List;
 
 public class ParquetWriterBatchCreator implements BatchCreator<ParquetWriter>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetWriterBatchCreator.class);

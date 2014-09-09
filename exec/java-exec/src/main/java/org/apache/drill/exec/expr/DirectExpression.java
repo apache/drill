@@ -22,18 +22,18 @@ import com.sun.codemodel.JFormatter;
 
 public class DirectExpression extends JExpressionImpl{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectExpression.class);
-  
+
   final String source;
-  
+
   private DirectExpression(final String source) {
     super();
     this.source = source;
   }
-  
+
   public void generate( JFormatter f ) {
     f.p('(').p(source).p(')');
   }
-  
+
   public static DirectExpression direct( final String source ) {
     return new DirectExpression(source);
   }
@@ -62,6 +62,6 @@ public class DirectExpression extends JExpressionImpl{
       return false;
     return true;
   }
-  
-  
+
+
 }

@@ -25,7 +25,7 @@ public abstract class EndpointListener<RET, V> extends BaseRpcOutcomeListener<RE
 
   protected final DrillbitEndpoint endpoint;
   protected final V value;
-  
+
   public EndpointListener(DrillbitEndpoint endpoint, V value) {
     super();
     this.endpoint = endpoint;
@@ -40,5 +40,5 @@ public abstract class EndpointListener<RET, V> extends BaseRpcOutcomeListener<RE
     return value;
   }
 
-  
+
 }

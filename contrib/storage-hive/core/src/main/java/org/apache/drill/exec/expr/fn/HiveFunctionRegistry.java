@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr.fn;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -38,6 +37,7 @@ import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBridge;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Sets;
 
 public class HiveFunctionRegistry implements PluggableFunctionRegistry{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveFunctionRegistry.class);
@@ -78,7 +78,7 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     }else{
       names = new String[]{clazz.getName().replace('.', '_')};
     }
-    
+
     UDFType type = clazz.getAnnotation(UDFType.class);
     if (type != null && type.deterministic()) nonDeterministicUDFs.add(clazz);
 

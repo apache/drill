@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import java.text.DecimalFormat;
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -25,50 +27,44 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-
 public class MathFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathFunctions.class);
-  
+
   private MathFunctions(){}
-  
+
   @FunctionTemplate(names = {"negative", "u-", "-"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Negative implements DrillSimpleFunc{
-    
+
     @Param BigIntHolder input;
     @Output BigIntHolder out;
 
     public void setup(RecordBatch b){}
-    
+
     public void eval(){
       out.value = -input.value;
       return;
     }
 
-  }  
+  }
 
   @FunctionTemplate(name = "power", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Power implements DrillSimpleFunc{
-    
+
     @Param Float8Holder a;
     @Param Float8Holder b;
     @Output  Float8Holder out;
 
     public void setup(RecordBatch b){}
-    
+
     public void eval(){
       out.value = java.lang.Math.pow(a.value, b.value);
     }
 
-  }  
+  }
 
   @FunctionTemplate(name = "random", isRandom = true,
     scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
@@ -76,7 +72,7 @@ public class MathFunctions{
     @Output  Float8Holder out;
 
     public void setup(RecordBatch b){}
-    
+
     public void eval(){
       out.value = java.lang.Math.random();
     }

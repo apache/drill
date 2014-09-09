@@ -22,24 +22,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableList;
-
 import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
-import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 
 /**

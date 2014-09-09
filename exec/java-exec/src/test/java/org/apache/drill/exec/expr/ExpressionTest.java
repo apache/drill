@@ -46,7 +46,6 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.junit.AfterClass;
 import org.junit.Test;
 
 public class ExpressionTest extends ExecTest {

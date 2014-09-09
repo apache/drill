@@ -219,6 +219,7 @@ public class EasyGroupScan extends AbstractGroupScan{
     return newScan;
   }
 
+  @Override
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return formatPlugin.supportsPushDown();

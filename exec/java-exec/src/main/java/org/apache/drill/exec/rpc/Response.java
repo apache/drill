@@ -24,19 +24,19 @@ import com.google.protobuf.MessageLite;
 
 public class Response {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Response.class);
-  
+
   public EnumLite rpcType;
   public MessageLite pBody;
   public ByteBuf[] dBodies;
-  
+
   public Response(EnumLite rpcType, MessageLite pBody, ByteBuf... dBodies) {
     super();
     this.rpcType = rpcType;
     this.pBody = pBody;
     this.dBodies = dBodies;
   }
-  
-  
-  
-  
+
+
+
+
 }

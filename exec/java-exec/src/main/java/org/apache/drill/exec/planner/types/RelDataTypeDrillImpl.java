@@ -37,19 +37,19 @@ public class RelDataTypeDrillImpl extends RelDataTypeImpl {
 
     private final RelDataTypeFactory typeFactory;
     private final RelDataTypeHolder holder;
-    
+
     public RelDataTypeDrillImpl(RelDataTypeHolder holder, RelDataTypeFactory typeFactory) {
         this.typeFactory = typeFactory;
         this.holder = holder;
         this.holder.setRelDataTypeFactory(typeFactory);
         computeDigest();
     }
-    
+
     @Override
     public List<RelDataTypeField> getFieldList() {
       return holder.getFieldList(typeFactory);
     }
-    
+
     @Override
     public int getFieldCount() {
       return holder.getFieldCount();

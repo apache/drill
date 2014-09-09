@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +51,7 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
       Map<String, String> methods, List<String> imports) {
     this(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, FunctionCostCategory.getDefault());
   }
-  
+
   public DrillSimpleFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
       String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
       Map<String, String> methods, List<String> imports, FunctionCostCategory costCategory) {
@@ -65,10 +64,12 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
 
   }
 
+  @Override
   public boolean isNested(){
     return false;
   }
 
+  @Override
   public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){
     //If the function's annotation specifies a parameter has to be constant expression, but the HoldingContainer
     //for the argument is not, then raise exception.

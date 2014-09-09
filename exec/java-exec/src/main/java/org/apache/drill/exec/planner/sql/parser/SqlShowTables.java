@@ -48,6 +48,7 @@ public class SqlShowTables extends DrillSqlCall {
 
   public static final SqlSpecialOperator OPERATOR =
     new SqlSpecialOperator("SHOW_TABLES", SqlKind.OTHER){
+    @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlShowTables(pos, (SqlIdentifier) operands[0], operands[1], operands[2]);
     }

@@ -51,7 +51,7 @@ public class DrillUnionRule extends RelOptRule {
       final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
       convertedInputs.add(convertedInput);
     }
-    try { 
+    try {
       call.transformTo(new DrillUnionRel(union.getCluster(), traits, convertedInputs, union.all));
     } catch (InvalidRelException e) {
       tracer.warning(e.toString()) ;

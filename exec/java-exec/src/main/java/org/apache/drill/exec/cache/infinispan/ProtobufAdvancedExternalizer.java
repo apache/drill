@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.exec.cache.SerializationDefinition;
-import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 
 import com.google.protobuf.Message;

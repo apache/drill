@@ -22,14 +22,14 @@ import io.netty.channel.ChannelHandlerContext;
 
 public class RpcExceptionHandler implements ChannelHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcExceptionHandler.class);
-  
+
   public RpcExceptionHandler(){
   }
 
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-    
+
     if(!ctx.channel().isOpen() || cause.getMessage().equals("Connection reset by peer")){
       logger.warn("Exception with closed channel", cause);
       return;
@@ -48,5 +48,5 @@ public class RpcExceptionHandler implements ChannelHandler{
   @Override
   public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
   }
-  
+
 }

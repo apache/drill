@@ -17,18 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
+
+import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
 
-import parquet.bytes.BytesUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
-
-import java.io.IOException;
 
 public abstract class NullableVarLengthValuesColumn<V extends ValueVector> extends VarLengthValuesColumn<V> {
 
@@ -41,10 +39,13 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
+  @Override
   public abstract boolean setSafe(int index, DrillBuf value, int start, int length);
 
+  @Override
   public abstract int capacity();
 
+  @Override
   public void reset() {
     bytesReadInCurrentPass = 0;
     valuesReadInCurrentPass = 0;
@@ -52,11 +53,13 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     pageReader.valuesReadyToRead = 0;
   }
 
+  @Override
   protected void postPageRead() {
     currLengthDeterminingDictVal = null;
     pageReader.valuesReadyToRead = 0;
   }
 
+  @Override
   protected boolean readAndStoreValueSizeInformation() throws IOException {
     // we need to read all of the lengths to determine if this value will fit in the current vector,
     // as we can only read each definition level once, we have to store the last one as we will need it
@@ -95,6 +98,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     return false;
   }
 
+  @Override
   public void updateReadyToReadPosition() {
     if (! currentValNull){
       pageReader.readyToReadPosInBytes += dataTypeLengthInBits + 4;
@@ -103,6 +107,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     currLengthDeterminingDictVal = null;
   }
 
+  @Override
   public void updatePosition() {
     if (! currentValNull){
       pageReader.readPosInBytes += dataTypeLengthInBits + 4;

@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * Describes a physical operator that has affinity to particular nodes. Used for assignment decisions.
  */
 public interface HasAffinity extends PhysicalOperator {
-  
+
   /**
    * Get the list of Endpoints with associated affinities that this operator has preference for.
    * @return List of EndpointAffinity objects.

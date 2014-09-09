@@ -48,6 +48,7 @@ public class SqlDescribeTable extends DrillSqlCall {
 
   public static final SqlSpecialOperator OPERATOR =
     new SqlSpecialOperator("DESCRIBE_TABLE", SqlKind.OTHER){
+    @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlDescribeTable(pos, (SqlIdentifier) operands[0], (SqlIdentifier) operands[1], operands[2]);
     }

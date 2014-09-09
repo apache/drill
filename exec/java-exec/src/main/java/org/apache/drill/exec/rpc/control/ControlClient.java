@@ -48,7 +48,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   private final ControlConnectionManager.CloseHandlerCreator closeHandlerFactory;
   private final DrillbitEndpoint localIdentity;
   private final BufferAllocator allocator;
-  
+
   public ControlClient(DrillbitEndpoint remoteEndpoint, DrillbitEndpoint localEndpoint, ControlMessageHandler handler, BootStrapContext context, ControlConnectionManager.CloseHandlerCreator closeHandlerFactory) {
     super(ControlRpcConfig.MAPPING, context.getAllocator().getUnderlyingAllocator(), context.getBitLoopGroup(), RpcType.HANDSHAKE, BitControlHandshake.class, BitControlHandshake.PARSER);
     this.localIdentity = localEndpoint;
@@ -57,7 +57,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
     this.closeHandlerFactory = closeHandlerFactory;
     this.allocator = context.getAllocator();
   }
-  
+
   public void connect(RpcConnectionHandler<ControlConnection> connectionHandler) {
     connectAsClient(connectionHandler, BitControlHandshake.newBuilder().setRpcVersion(ControlRpcConfig.RPC_VERSION).setEndpoint(localIdentity).build(), remoteEndpoint.getAddress(), remoteEndpoint.getControlPort());
   }
@@ -102,5 +102,5 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
     return new ControlProtobufLengthDecoder(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
   }
-  
+
 }

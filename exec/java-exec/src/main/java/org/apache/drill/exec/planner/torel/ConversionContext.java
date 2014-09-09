@@ -57,7 +57,7 @@ public class ConversionContext implements ToRelContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConversionContext.class);
 
   private static final ConverterVisitor VISITOR = new ConverterVisitor();
-  
+
   private final Map<Scan, FieldList> scanFieldLists;
   private final RelOptCluster cluster;
   private final Prepare prepare;
@@ -79,41 +79,41 @@ public class ConversionContext implements ToRelContext {
     assert scanFieldLists.containsKey(scan);
     return scanFieldLists.get(scan);
   }
-  
-  
+
+
   public RexBuilder getRexBuilder(){
     return cluster.getRexBuilder();
   }
-  
+
   public RelTraitSet getLogicalTraits(){
     RelTraitSet set = RelTraitSet.createEmpty();
     set.add(DrillRel.DRILL_LOGICAL);
     return set;
   }
-  
+
   public RelNode toRel(LogicalOperator operator) throws InvalidRelException{
     return operator.accept(VISITOR, this);
   }
-  
+
   public RexNode toRex(LogicalExpression e){
     return null;
   }
-  
+
   public RelDataTypeFactory getTypeFactory(){
     return cluster.getTypeFactory();
   }
-  
+
   public RelOptTable getTable(Scan scan){
     FieldList list = getFieldList(scan);
-    
+
     return null;
   }
-  
+
   @Override
   public RelNode expandView(RelDataType rowType, String queryString, List<String> schemaPath) {
     throw new UnsupportedOperationException();
   }
-  
+
   private static class ConverterVisitor extends AbstractLogicalVisitor<RelNode, ConversionContext, InvalidRelException>{
 
     @Override
@@ -138,7 +138,7 @@ public class ConversionContext implements ToRelContext {
     public RelNode visitOrder(Order order, ConversionContext context) throws InvalidRelException{
       return DrillSortRel.convert(order, context);
     }
-    
+
     @Override
     public RelNode visitJoin(Join join, ConversionContext context) throws InvalidRelException{
       return DrillJoinRel.convert(join, context);
@@ -159,7 +159,7 @@ public class ConversionContext implements ToRelContext {
         throws InvalidRelException {
       return DrillAggregateRel.convert(groupBy, context);
     }
-    
+
   }
 
 

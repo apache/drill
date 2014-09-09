@@ -25,5 +25,5 @@ public abstract class DrillOutputStream implements AutoCloseable{
 
   public abstract OutputStream getOuputStream();
 //  public abstract CheckedFuture<Long, IOException> writeFuture(AccountingByteBuf b);
-  
+
 }

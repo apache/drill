@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.drill.exec.compile.ClassTransformer.ClassSet;
-import org.apache.drill.exec.compile.bytecode.ValueHolderReplacementVisitor;
 import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
@@ -89,12 +88,14 @@ class MergeAdapter extends ClassVisitor {
     }
   }
 
+  @Override
   public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
     System.out.println("Annotation");
     return super.visitAnnotation(desc, visible);
   }
 
   // visit the class
+  @Override
   public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
     // use the access and names of the impl class.
     this.name = name;
@@ -136,6 +137,7 @@ class MergeAdapter extends ClassVisitor {
     return mv;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public void visitEnd() {
 

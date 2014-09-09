@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.record;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -25,7 +24,6 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  * A reusable builder that supports the creation of BatchSchemas. Can have a supporting expected object. If the expected Schema object is defined, the
@@ -72,7 +70,7 @@ public class SchemaBuilder {
     }
     return this;
   }
-  
+
 //  private void setTypedField(short fieldId, DataType type, boolean nullable, ValueMode mode, Class<?> valueClass)
 //      throws SchemaChangeException {
 //    MaterializedField f = new MaterializedField(fieldId, type, nullable, mode, valueClass);
@@ -87,7 +85,7 @@ public class SchemaBuilder {
 //    }
 //    fields.put(f.getFieldId(), f);
 //  }
-  
+
   public SchemaBuilder addField(MaterializedField f){
     fields.add(f);
     return this;
@@ -109,7 +107,7 @@ public class SchemaBuilder {
 //          		"not currently contain that field id.  The offending fieldId was %d", fieldId));
 //    setTypedField(fieldId, type, nullable, mode, valueClass);
 //  }
-  
+
   public SchemaBuilder removeField(MaterializedField f) throws SchemaChangeException{
     if(!fields.remove(f)) throw new SchemaChangeException("You attempted to remove an nonexistent field.");
     return this;

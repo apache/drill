@@ -45,14 +45,14 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   private final BufferAllocator allocator;
   private final DataConnectionManager.CloseHandlerCreator closeHandlerFactory;
 
-  
+
   public DataClient(DrillbitEndpoint remoteEndpoint, BootStrapContext context, DataConnectionManager.CloseHandlerCreator closeHandlerFactory) {
     super(DataRpcConfig.MAPPING, context.getAllocator().getUnderlyingAllocator(), context.getBitClientLoopGroup(), RpcType.HANDSHAKE, BitServerHandshake.class, BitServerHandshake.PARSER);
     this.remoteEndpoint = remoteEndpoint;
     this.closeHandlerFactory = closeHandlerFactory;
     this.allocator = context.getAllocator();
   }
-  
+
   @Override
   public DataClientConnection initRemoteConnection(Channel channel) {
     this.connection = new DataClientConnection(channel, this);
@@ -77,7 +77,7 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   BufferAllocator getAllocator(){
     return allocator;
   }
-  
+
   @Override
   protected void validateHandshake(BitServerHandshake handshake) throws RpcException {
     if(handshake.getRpcVersion() != DataRpcConfig.RPC_VERSION) throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", handshake.getRpcVersion(), DataRpcConfig.RPC_VERSION));
@@ -90,7 +90,7 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   public DataClientConnection getConnection(){
     return this.connection;
   }
-  
+
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
     return new DataProtobufLengthDecoder(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);

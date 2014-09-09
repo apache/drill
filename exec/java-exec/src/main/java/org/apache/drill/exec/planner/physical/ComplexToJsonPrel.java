@@ -35,7 +35,7 @@ public class ComplexToJsonPrel extends SingleRel implements Prel {
     super(phyRelNode.getCluster(), phyRelNode.getTraitSet(), phyRelNode);
   }
 
-  @Override 
+  @Override
   public final RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new ComplexToJsonPrel((Prel) sole(inputs));
   }
@@ -70,5 +70,5 @@ public class ComplexToJsonPrel extends SingleRel implements Prel {
   public boolean needsFinalColumnReordering() {
     return true;
   }
-  
+
 }

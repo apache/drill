@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +33,6 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.CachedVectorContainer;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
 import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
 import org.apache.drill.exec.coord.DistributedSemaphore;
@@ -70,7 +68,6 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.util.AtomicState;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.ErrorHelper;
@@ -130,6 +127,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     this.bee = bee;
 
     this.state = new AtomicState<QueryState>(QueryState.PENDING) {
+      @Override
       protected QueryState getStateFromNumber(int i) {
         return QueryState.valueOf(i);
       }

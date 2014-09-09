@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;

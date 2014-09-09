@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.server.options;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 
-import java.util.Iterator;
-import java.util.Map;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 public class SessionOptionManager implements OptionManager{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);

@@ -36,12 +36,12 @@ public interface OutputTypeDeterminer {
   public static OutputTypeDeterminer FIXED_VAR16CHAR = new FixedType(Types.required(MinorType.VAR16CHAR));
 
   public MajorType getOutputType(List<LogicalExpression> expressions);
-  
-  
+
+
   public static class FixedType implements OutputTypeDeterminer{
     public MajorType outputType;
-    
-    
+
+
     public FixedType(MajorType outputType) {
       super();
       this.outputType = outputType;
@@ -52,16 +52,16 @@ public interface OutputTypeDeterminer {
     public MajorType getOutputType(List<LogicalExpression> expressions) {
       return outputType;
     }
-    
+
   }
-  
+
   public static class SameAsFirstInput implements OutputTypeDeterminer{
     @Override
     public MajorType getOutputType(List<LogicalExpression> expressions) {
       return expressions.get(0).getMajorType();
     }
   }
-  
+
   public static class SameAsAnySoft implements OutputTypeDeterminer{
     @Override
     public MajorType getOutputType(List<LogicalExpression> expressions) {
@@ -73,11 +73,11 @@ public interface OutputTypeDeterminer {
       return expressions.get(0).getMajorType();
     }
   }
-  
+
   public static class NullIfNullType implements OutputTypeDeterminer{
     public MinorType outputMinorType;
-    
-    
+
+
     public NullIfNullType(MinorType outputType) {
       super();
       this.outputMinorType = outputType;

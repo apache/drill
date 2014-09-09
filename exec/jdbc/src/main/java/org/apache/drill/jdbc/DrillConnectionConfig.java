@@ -20,26 +20,25 @@ package org.apache.drill.jdbc;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import net.hydromatic.avatica.ConnectionConfig;
 import net.hydromatic.avatica.ConnectionConfigImpl;
 
 public class DrillConnectionConfig extends ConnectionConfigImpl {
   private final Properties props;
-  
+
   public DrillConnectionConfig(Properties p){
     super(p);
     this.props = p;
   }
-  
+
   public boolean isLocal(){
     return "local".equals(props.getProperty("zk"));
   }
   public String getZookeeperConnectionString(){
     return props.getProperty("zk");
   }
-  
+
   public TimeZone getTimeZone(){
-    return TimeZone.getDefault(); 
+    return TimeZone.getDefault();
   }
-  
+
 }

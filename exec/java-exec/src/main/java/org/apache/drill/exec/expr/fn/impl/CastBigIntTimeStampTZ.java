@@ -26,7 +26,6 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
 import org.apache.drill.exec.record.RecordBatch;
-import org.joda.time.DateTime;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"castTIMESTAMPTZ", "to_timestamptz"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)

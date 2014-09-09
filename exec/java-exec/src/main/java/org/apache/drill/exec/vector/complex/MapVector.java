@@ -41,12 +41,11 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class MapVector extends AbstractContainerVector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);
@@ -72,6 +71,7 @@ public class MapVector extends AbstractContainerVector {
     this.allocator = allocator;
   }
 
+  @Override
   public int size(){
     return vectors.size();
   }
@@ -405,6 +405,7 @@ public class MapVector extends AbstractContainerVector {
     }
   }
 
+  @Override
   public VectorWithOrdinal getVectorWithOrdinal(String name){
     return vectorIds.get(name);
   }

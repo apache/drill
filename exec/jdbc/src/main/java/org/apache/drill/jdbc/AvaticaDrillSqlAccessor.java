@@ -45,7 +45,7 @@ public class AvaticaDrillSqlAccessor implements Accessor{
 
   private SqlAccessor a;
   private DrillCursor cursor;
-  
+
   public AvaticaDrillSqlAccessor(SqlAccessor drillSqlAccessor, DrillCursor cursor) {
     super();
     this.a = drillSqlAccessor;
@@ -55,7 +55,7 @@ public class AvaticaDrillSqlAccessor implements Accessor{
   private int row(){
     return cursor.currentRecord;
   }
-  
+
   @Override
   public boolean wasNull() {
     return a.isNull(row());

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.config;
 
-import java.beans.Transient;
 import java.util.List;
 
 import org.apache.drill.common.expression.LogicalExpression;
@@ -35,13 +34,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class HashToRandomExchange extends AbstractExchange{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashToRandomExchange.class);
 
-  
+
   private final LogicalExpression expr;
 
   //ephemeral for setup tasks.
   private List<DrillbitEndpoint> senderLocations;
   private List<DrillbitEndpoint> receiverLocations;
-  
+
   @JsonCreator
   public HashToRandomExchange(@JsonProperty("child") PhysicalOperator child, @JsonProperty("expr") LogicalExpression expr) {
     super(child);
@@ -84,6 +83,6 @@ public class HashToRandomExchange extends AbstractExchange{
     return expr;
   }
 
-  
-  
+
+
 }

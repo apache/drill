@@ -44,7 +44,7 @@ public abstract class LogicalExpressionBase implements LogicalExpression{
 			sb.append("  ");
 		}
 	}
-	
+
 	@Override
 	public MajorType getMajorType() {
 		throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getDataType().", this.getClass().getCanonicalName()));
@@ -54,15 +54,15 @@ public abstract class LogicalExpressionBase implements LogicalExpression{
 	public String getDescription(){
 		return this.getClass().getSimpleName();
 	}
-	
+
   @JsonIgnore
-  public int getSelfCost() { 
-    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName())); 
+  public int getSelfCost() {
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName()));
   }
-  
+
   @JsonIgnore
-  public int getCumulativeCost() { 
-    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName())); 
+  public int getCumulativeCost() {
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName()));
   }
-  	
+
 }

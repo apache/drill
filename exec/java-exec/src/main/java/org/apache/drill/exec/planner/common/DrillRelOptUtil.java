@@ -25,7 +25,7 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Pair;
 
 /**
- * Utility class that is a subset of the RelOptUtil class and is a placeholder for Drill specific 
+ * Utility class that is a subset of the RelOptUtil class and is a placeholder for Drill specific
  * static methods that are needed during either logical or physical planning.
  */
 public abstract class DrillRelOptUtil {
@@ -34,7 +34,7 @@ public abstract class DrillRelOptUtil {
   public static boolean areRowTypesEqual(
       RelDataType rowType1,
       RelDataType rowType2,
-      boolean compareNames, 
+      boolean compareNames,
       boolean allowSubstring) {
     if (rowType1 == rowType2) {
       return true;
@@ -58,11 +58,11 @@ public abstract class DrillRelOptUtil {
         continue;
       }
       if (!type1.equals(type2)) {
-        if (allowSubstring 
-            && (type1.getSqlTypeName() == SqlTypeName.CHAR && type2.getSqlTypeName() == SqlTypeName.CHAR) 
+        if (allowSubstring
+            && (type1.getSqlTypeName() == SqlTypeName.CHAR && type2.getSqlTypeName() == SqlTypeName.CHAR)
             && (type1.getPrecision() <= type2.getPrecision())) {
           return true;
-        }           
+        }
         return false;
       }
     }

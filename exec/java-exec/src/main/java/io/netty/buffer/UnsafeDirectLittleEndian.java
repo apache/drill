@@ -22,8 +22,6 @@ import io.netty.util.internal.PlatformDependent;
 
 import java.nio.ByteOrder;
 
-import org.apache.drill.exec.memory.BufferAllocator;
-
 public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
     private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
     private final PooledUnsafeDirectByteBuf wrapped;

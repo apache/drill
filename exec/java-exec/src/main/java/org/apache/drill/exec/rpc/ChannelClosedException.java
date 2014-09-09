@@ -35,5 +35,5 @@ public class ChannelClosedException extends RpcException{
   public ChannelClosedException(Throwable cause) {
     super(cause);
   }
-  
+
 }

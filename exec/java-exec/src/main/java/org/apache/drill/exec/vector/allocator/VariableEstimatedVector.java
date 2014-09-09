@@ -29,6 +29,7 @@ public class VariableEstimatedVector extends VectorAllocator{
     this.avgWidth = avgWidth;
   }
 
+  @Override
   public void alloc(int recordCount){
     out.allocateNew(avgWidth * recordCount, recordCount);
   }

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.schema;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 

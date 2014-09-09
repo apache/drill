@@ -23,8 +23,6 @@ import java.util.List;
 import org.apache.drill.common.logical.data.Limit;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
-import org.apache.drill.exec.planner.logical.DrillImplementor;
-import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
@@ -48,7 +46,7 @@ public class DrillLimitRel extends DrillLimitRelBase implements DrillRel {
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
     LogicalOperator inputOp = implementor.visitChild(this, 0, getChild());
-    
+
     // First offset to include into results (inclusive). Null implies it is starting from offset 0
     int first = offset != null ? Math.max(0, RexLiteral.intValue(offset)) : 0;
 
@@ -59,7 +57,7 @@ public class DrillLimitRel extends DrillLimitRelBase implements DrillRel {
     limit.setInput(inputOp);
     return limit;
   }
-  
+
   public static DrillLimitRel convert(Limit limit, ConversionContext context) throws InvalidRelException{
     RelNode input = context.toRel(limit.getInput());
     RexNode first = context.getRexBuilder().makeExactLiteral(BigDecimal.valueOf(limit.getFirst()), context.getTypeFactory().createSqlType(SqlTypeName.INTEGER));

@@ -62,19 +62,19 @@ public class DrillSortRel extends SortRel implements DrillRel {
   public LogicalOperator implement(DrillImplementor implementor) {
     final Order.Builder builder = Order.builder();
     builder.setInput(implementor.visitChild(this, 0, getChild()));
-    
+
     final List<String> childFields = getChild().getRowType().getFieldNames();
     for(RelFieldCollation fieldCollation : this.collation.getFieldCollations()){
-      builder.addOrdering(fieldCollation.getDirection(), 
+      builder.addOrdering(fieldCollation.getDirection(),
           new FieldReference(childFields.get(fieldCollation.getFieldIndex())),
           fieldCollation.nullDirection);
     }
     return builder.build();
   }
 
-  
+
   public static RelNode convert(Order order, ConversionContext context) throws InvalidRelException{
-    
+
     // if there are compound expressions in the order by, we need to convert into projects on either side.
     RelNode input = context.toRel(order.getInput());
     List<String> fields = input.getRowType().getFieldNames();
@@ -86,9 +86,9 @@ public class DrillSortRel extends SortRel implements DrillRel {
       fieldMap.put(field, i);
       i++;
     }
-    
+
     List<RelFieldCollation> collations = Lists.newArrayList();
-    
+
     for(Ordering o : order.getOrderings()){
       String fieldName = ExprHelper.getFieldName(o.getExpr());
       int fieldId = fieldMap.get(fieldName);
@@ -96,5 +96,5 @@ public class DrillSortRel extends SortRel implements DrillRel {
     }
     return new DrillSortRel(context.getCluster(), context.getLogicalTraits(), input, RelCollationImpl.of(collations));
   }
-  
+
 }

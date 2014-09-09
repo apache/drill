@@ -18,28 +18,11 @@
 package org.apache.drill.jdbc.test;
 
 import java.nio.file.Paths;
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
 import org.joda.time.chrono.ISOChronology;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-
-import com.google.common.base.Function;
-import com.google.common.base.Stopwatch;
 
 
 public class TestAggregateFunctionsQuery {

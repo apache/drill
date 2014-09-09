@@ -44,7 +44,6 @@ import org.eigenbase.rel.RelFactories;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
 import org.eigenbase.rel.rules.PushFilterPastProjectRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
-import org.eigenbase.rel.rules.PushProjectPastFilterRule;
 import org.eigenbase.rel.rules.PushProjectPastJoinRule;
 import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.RemoveDistinctRule;
@@ -113,7 +112,7 @@ public class DrillRuleSets {
     return DRILL_BASIC_RULES;
   }
 
-  /* 
+  /*
   public static final RuleSet DRILL_PHYSICAL_MEM = new DrillRuleSet(ImmutableSet.of( //
 //      DrillScanRule.INSTANCE,
 //      DrillFilterRule.INSTANCE,
@@ -169,9 +168,9 @@ public class DrillRuleSets {
     ));
 
   public static final RuleSet getPhysicalRules(QueryContext qcontext) {
-    List<RelOptRule> ruleList = new ArrayList<RelOptRule>(); 
+    List<RelOptRule> ruleList = new ArrayList<RelOptRule>();
 
-    
+
     ruleList.add(ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN);
     ruleList.add(ConvertCountToDirectScan.AGG_ON_SCAN);
     ruleList.add(SortConvertPrule.INSTANCE);
@@ -186,26 +185,26 @@ public class DrillRuleSets {
     ruleList.add(PushLimitToTopN.INSTANCE);
     ruleList.add(UnionAllPrule.INSTANCE);
     // ruleList.add(UnionDistinctPrule.INSTANCE);
-    
+
     PlannerSettings ps = qcontext.getPlannerSettings();
-    
+
     if (ps.isHashAggEnabled()) {
-      ruleList.add(HashAggPrule.INSTANCE);        
+      ruleList.add(HashAggPrule.INSTANCE);
     }
-    
+
     if (ps.isStreamAggEnabled()) {
-      ruleList.add(StreamAggPrule.INSTANCE);        
+      ruleList.add(StreamAggPrule.INSTANCE);
     }
-    
+
     if (ps.isHashJoinEnabled()) {
-      ruleList.add(HashJoinPrule.INSTANCE);        
+      ruleList.add(HashJoinPrule.INSTANCE);
     }
-    
+
     if (ps.isMergeJoinEnabled()) {
-      ruleList.add(MergeJoinPrule.INSTANCE);        
+      ruleList.add(MergeJoinPrule.INSTANCE);
     }
-  
-    return new DrillRuleSet(ImmutableSet.copyOf(ruleList)); 
+
+    return new DrillRuleSet(ImmutableSet.copyOf(ruleList));
   }
 
   public static RuleSet create(ImmutableSet<RelOptRule> rules) {

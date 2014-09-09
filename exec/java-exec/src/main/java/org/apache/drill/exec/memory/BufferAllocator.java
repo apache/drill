@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.memory;
 
-import io.netty.buffer.DrillBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.DrillBuf;
 
 import java.io.Closeable;
 

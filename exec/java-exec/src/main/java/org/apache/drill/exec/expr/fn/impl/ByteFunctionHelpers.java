@@ -18,10 +18,11 @@
  ******************************************************************************/
 package org.apache.drill.exec.expr.fn.impl;
 
-import com.google.common.primitives.UnsignedLongs;
-
 import io.netty.util.internal.PlatformDependent;
+
 import org.apache.drill.exec.util.DecimalUtility;
+
+import com.google.common.primitives.UnsignedLongs;
 
 public class ByteFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteFunctionHelpers.class);

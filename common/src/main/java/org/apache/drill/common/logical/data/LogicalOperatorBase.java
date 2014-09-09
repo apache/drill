@@ -19,7 +19,6 @@ package org.apache.drill.common.logical.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.config.CommonConstants;
@@ -37,11 +36,12 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
 
     private List<LogicalOperator> children = new ArrayList<LogicalOperator>();
 	private String memo;
-	
-	public final int hashCode(){
+
+	@Override
+  public final int hashCode(){
 	  return super.hashCode();
 	}
-	
+
 	@Override
 	public void setupAndValidate(List<LogicalOperator> operators, Collection<ValidationError> errors) {
 	  // TODO: remove this and implement individually.
@@ -69,7 +69,7 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
     return this.getClass().getSimpleName() + " [memo=" + memo + "]";
   }
 
-  @JsonInclude(Include.NON_EMPTY) 
+  @JsonInclude(Include.NON_EMPTY)
   @JsonProperty("memo")
   public String getMemo(){
     return memo;
@@ -78,14 +78,14 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
   public void setMemo(String memo) {
     this.memo = memo;
   }
- 
+
   public synchronized static Class<?>[] getSubTypes(DrillConfig config){
     Class<?>[] ops = PathScanner.scanForImplementationsArr(LogicalOperator.class, config.getStringList(CommonConstants.LOGICAL_OPERATOR_SCAN_PACKAGES));
     logger.debug("Adding Logical Operator sub types: {}", ((Object) ops) );
     return ops;
   }
-  
-  
-  
+
+
+
 
 }

@@ -29,10 +29,10 @@ import org.apache.drill.exec.physical.base.SubScan;
 public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Fragment, FragmentSetupException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MakeFragmentsVisitor.class);
 
-  
+
   public MakeFragmentsVisitor(){
   }
-  
+
   @Override
   public Fragment visitExchange(Exchange exchange, Fragment value) throws FragmentSetupException {
 //    logger.debug("Visiting Exchange {}", exchange);
@@ -60,7 +60,7 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
     }
     return value;
   }
-  
+
   private Fragment ensureBuilder(Fragment value) throws FragmentSetupException{
     if(value != null){
       return value;
@@ -68,7 +68,7 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
       return getNextBuilder();
     }
   }
-  
+
   public Fragment getNextBuilder(){
     return new Fragment();
   }

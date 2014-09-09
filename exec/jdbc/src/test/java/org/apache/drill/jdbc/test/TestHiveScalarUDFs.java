@@ -20,11 +20,9 @@ package org.apache.drill.jdbc.test;
 
 
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
-import org.apache.hadoop.hive.ql.exec.UDF;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 
 public class TestHiveScalarUDFs {
 

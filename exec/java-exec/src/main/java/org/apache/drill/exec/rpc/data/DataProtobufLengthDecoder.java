@@ -30,9 +30,10 @@ public class DataProtobufLengthDecoder extends ProtobufLengthDecoder{
 
   public DataProtobufLengthDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
     super(allocator, outOfMemoryHandler);
-    
+
   }
-  
+
+  @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
     super.decode(ctx, in, out);
   }

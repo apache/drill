@@ -24,6 +24,7 @@ public abstract class PathSegment{
   int hash;
 
   public abstract PathSegment cloneWithNewChild(PathSegment segment);
+  @Override
   public abstract PathSegment clone();
 
   public static final class ArraySegment extends PathSegment {
@@ -57,10 +58,12 @@ public abstract class PathSegment{
       return index;
     }
 
+    @Override
     public boolean isArray(){
       return true;
     }
 
+    @Override
     public boolean isNamed(){
       return false;
     }
@@ -98,6 +101,7 @@ public abstract class PathSegment{
       return seg;
     }
 
+    @Override
     public ArraySegment cloneWithNewChild(PathSegment newChild){
       ArraySegment seg = new ArraySegment(index);
       if(child != null){
@@ -126,10 +130,12 @@ public abstract class PathSegment{
       return path;
     }
 
+    @Override
     public boolean isArray(){
       return false;
     }
 
+    @Override
     public boolean isNamed(){
       return true;
     }

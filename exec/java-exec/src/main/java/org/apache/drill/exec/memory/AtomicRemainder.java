@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.memory;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-
 import java.util.concurrent.atomic.AtomicLong;
 
 /**

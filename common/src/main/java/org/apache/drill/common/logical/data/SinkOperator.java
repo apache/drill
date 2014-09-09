@@ -22,7 +22,7 @@ package org.apache.drill.common.logical.data;
  * An operator that cannot be subscribed to.
  */
 public abstract class SinkOperator extends SingleInputOperator{
-  
+
   @Override
   public void registerAsSubscriber(LogicalOperator operator) {
     throw new UnsupportedOperationException("You can not subscribe to a sink operator such as " + this.getClass().getSimpleName());

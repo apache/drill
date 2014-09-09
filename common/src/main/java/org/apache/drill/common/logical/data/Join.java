@@ -47,14 +47,14 @@ public class Join extends LogicalOperatorBase {
     }
     throw new ExpressionParsingException(String.format("Unable to determine join type for value '%s'.", val));
   }
-  
+
   @JsonCreator
   public Join(@JsonProperty("left") LogicalOperator left, @JsonProperty("right") LogicalOperator right,
       @JsonProperty("conditions") JoinCondition[] conditions, @JsonProperty("type") String type) {
     this(left, right, conditions, resolve(type));
   }
 
-  
+
   public Join(LogicalOperator left, @JsonProperty("right") LogicalOperator right, JoinCondition[] conditions, JoinRelType type) {
     super();
     this.conditions = conditions;
@@ -65,7 +65,7 @@ public class Join extends LogicalOperatorBase {
     this.type = type;
 
   }
-  
+
   public LogicalOperator getLeft() {
     return left;
   }
@@ -96,22 +96,22 @@ public class Join extends LogicalOperatorBase {
   public Iterator<LogicalOperator> iterator() {
     return Iterators.forArray(getLeft(), getRight());
   }
-  
+
   public static Builder builder(){
     return new Builder();
   }
-  
+
   public static class Builder extends AbstractBuilder<Join>{
     private LogicalOperator left;
     private LogicalOperator right;
     private JoinRelType type;
     private List<JoinCondition> conditions = Lists.newArrayList();
-    
+
     public Builder type(JoinRelType type){
       this.type = type;
       return this;
     }
-    
+
     public Builder left(LogicalOperator left){
       this.left = left;
       return this;
@@ -120,13 +120,13 @@ public class Join extends LogicalOperatorBase {
       this.right = right;
       return this;
     }
-    
+
     public Builder addCondition(String relationship, LogicalExpression left, LogicalExpression right){
       conditions.add(new JoinCondition(relationship, left, right));
       return this;
     }
-    
-    
+
+
     @Override
     public Join build() {
       Preconditions.checkNotNull(left);
@@ -134,6 +134,6 @@ public class Join extends LogicalOperatorBase {
       Preconditions.checkNotNull(type);
       return new Join(left, right, conditions.toArray(new JoinCondition[conditions.size()]), type);
     }
-    
+
   }
 }

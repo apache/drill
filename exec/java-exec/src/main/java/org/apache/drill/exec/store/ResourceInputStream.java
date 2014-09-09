@@ -32,8 +32,8 @@ public class ResourceInputStream extends ByteArrayInputStream implements Seekabl
     super(bytes);
   }
 
-  
-  
+
+
 
   @Override
   public void readFully(long position, byte[] buffer) throws IOException {
@@ -65,7 +65,7 @@ public class ResourceInputStream extends ByteArrayInputStream implements Seekabl
     System.arraycopy(buf, start, b, off, len);
     return len;
 }
-  
+
   @Override
   public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
     int l = read(position, buffer, offset, length);
@@ -77,7 +77,7 @@ public class ResourceInputStream extends ByteArrayInputStream implements Seekabl
     return pos;
   }
 
-  
+
   @Override
   public int read(byte[] b) throws IOException {
     int l = read(pos, b, 0, b.length);

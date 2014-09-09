@@ -43,7 +43,6 @@ import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.IntVector;
-import org.junit.AfterClass;
 import org.junit.Test;
 
 import com.codahale.metrics.MetricRegistry;

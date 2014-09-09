@@ -30,7 +30,7 @@ import com.google.common.collect.Iterators;
 public abstract class SingleInputOperator extends LogicalOperatorBase {
 
   private LogicalOperator input;
-  
+
   @JsonProperty("input")
   public LogicalOperator getInput() {
     return input;
@@ -43,10 +43,10 @@ public abstract class SingleInputOperator extends LogicalOperatorBase {
     input.registerAsSubscriber(this);
   }
 
-  
+
   @Override
   public Iterator<LogicalOperator> iterator() {
     return Iterators.singletonIterator(input);
   }
-  
+
 }

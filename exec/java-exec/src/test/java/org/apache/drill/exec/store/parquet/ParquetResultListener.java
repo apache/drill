@@ -33,7 +33,6 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
-import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Strings;
@@ -151,7 +150,7 @@ public class ParquetResultListener implements UserResultsListener {
     if(result.getHeader().getIsLastChunk()){
       checkLastChunk(batchLoader, result);
     }
-    
+
     batchLoader.clear();
     result.release();
   }

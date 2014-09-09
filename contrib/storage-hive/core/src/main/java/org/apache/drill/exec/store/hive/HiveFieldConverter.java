@@ -101,6 +101,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Binary extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final byte[] value = ((BinaryObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       return ((NullableVarBinaryVector) outputVV).getMutator().setSafe(outputIndex, value, 0, value.length);
@@ -108,6 +109,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Boolean extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final boolean value = (boolean) ((BooleanObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       return ((NullableBitVector) outputVV).getMutator().setSafe(outputIndex, value ? 1 : 0);
@@ -115,6 +117,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Byte extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final byte value = (byte) ((ByteObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       return ((NullableTinyIntVector) outputVV).getMutator().setSafe(outputIndex, value);
@@ -122,6 +125,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Decimal extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final HiveDecimal value = ((HiveDecimalObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       final byte[] strBytes = value.toString().getBytes();
@@ -130,6 +134,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Double extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final double value = (double) ((DoubleObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       return ((NullableFloat8Vector) outputVV).getMutator().setSafe(outputIndex, value);
@@ -137,6 +142,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Float extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final float value = (float) ((FloatObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       return ((NullableFloat4Vector) outputVV).getMutator().setSafe(outputIndex, value);
@@ -144,6 +150,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Int extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final int value = (int) ((IntObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       return ((NullableIntVector) outputVV).getMutator().setSafe(outputIndex, value);
@@ -151,6 +158,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Long extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final long value = (long) ((LongObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       return ((NullableBigIntVector) outputVV).getMutator().setSafe(outputIndex, value);
@@ -158,6 +166,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Short extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final short value = (short) ((ShortObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       return ((NullableSmallIntVector) outputVV).getMutator().setSafe(outputIndex, value);
@@ -165,6 +174,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class String extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final Text value = ((StringObjectInspector)oi).getPrimitiveWritableObject(hiveFieldValue);
       final byte[] valueBytes = value.getBytes();
@@ -174,6 +184,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class VarChar extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final Text value = ((HiveVarcharObjectInspector)oi).getPrimitiveWritableObject(hiveFieldValue).getTextValue();
       final byte[] valueBytes = value.getBytes();
@@ -183,6 +194,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Timestamp extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final java.sql.Timestamp value = ((TimestampObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       final DateTime ts = new DateTime(value.getTime()).withZoneRetainFields(DateTimeZone.UTC);
@@ -191,6 +203,7 @@ public abstract class HiveFieldConverter {
   }
 
   public static class Date extends HiveFieldConverter {
+    @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
       final java.sql.Date value = ((DateObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       final DateTime date = new DateTime(value.getTime()).withZoneRetainFields(DateTimeZone.UTC);

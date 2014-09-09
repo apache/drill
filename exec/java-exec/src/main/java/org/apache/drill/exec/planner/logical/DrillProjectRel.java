@@ -48,6 +48,7 @@ public class DrillProjectRel extends DrillProjectRelBase implements DrillRel {
   }
 
 
+  @Override
   public ProjectRelBase copy(RelTraitSet traitSet, RelNode input, List<RexNode> exps, RelDataType rowType) {
     return new DrillProjectRel(getCluster(), traitSet, input, exps, rowType);
   }

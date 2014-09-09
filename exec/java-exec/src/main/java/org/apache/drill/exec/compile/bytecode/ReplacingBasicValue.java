@@ -50,6 +50,7 @@ public class ReplacingBasicValue extends BasicValue{
     return index;
   }
 
+  @Override
   public Type getType(){
     return type;
   }

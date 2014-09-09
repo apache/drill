@@ -37,9 +37,9 @@ public class ClassPathFileSystem extends FileSystem{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassPathFileSystem.class);
 
   static final String ERROR_MSG = "ClassPathFileSystem is read only.";
-  
+
   private Path working;
-  
+
   @Override
   public FSDataOutputStream append(Path arg0, int arg1, Progressable arg2) throws IOException {
     throw new IOException(ERROR_MSG);
@@ -68,18 +68,18 @@ public class ClassPathFileSystem extends FileSystem{
     }
     return file;
   }
-  
+
   @Override
   public FileStatus getFileStatus(Path arg0) throws IOException {
     String file = getFileName(arg0);
-    
-    try{      
+
+    try{
     URL url = Resources.getResource(file);
     if(url == null){
       throw new IOException(String.format("Unable to find path %s.", arg0.toString()));
     }
-    
-    
+
+
     return new FileStatus(Resources.asByteSource(url).size(), false, 1, 8096, System.currentTimeMillis(), arg0);
     }catch(RuntimeException e){
       throw new IOException(String.format("Failure trying to load file %s", arg0), e);
@@ -130,7 +130,7 @@ public class ClassPathFileSystem extends FileSystem{
   public void setWorkingDirectory(Path arg0) {
     this.working = arg0;
   }
-  
+
   public static void main(String[] args) throws Exception{
     URI uri = new URI("classpath:///");
   }

@@ -33,18 +33,18 @@ import org.eigenbase.relopt.RelOptTable;
 
 
 public abstract class DrillTable implements Table{
-  
-  private final String storageEngineName;  
+
+  private final String storageEngineName;
   public final StoragePluginConfig storageEngineConfig;
   private Object selection;
   private StoragePlugin plugin;
-  private GroupScan scan; 
-  
+  private GroupScan scan;
+
   /** Creates a DrillTable. */
   public DrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
     this.selection = selection;
     this.plugin = plugin;
-    
+
     this.storageEngineConfig = plugin.getConfig();
     this.storageEngineName = storageEngineName;
   }
@@ -55,19 +55,19 @@ public abstract class DrillTable implements Table{
     }
     return scan;
   }
-  
+
   public StoragePluginConfig getStorageEngineConfig(){
     return storageEngineConfig;
   }
-  
+
   public StoragePlugin getPlugin(){
     return plugin;
   }
-    
+
   public Object getSelection() {
     return selection;
   }
-  
+
   public String getStorageEngineName() {
     return storageEngineName;
   }
@@ -125,6 +125,6 @@ public abstract class DrillTable implements Table{
     return true;
   }
 
-  
-  
+
+
 }

@@ -39,7 +39,7 @@ public class DrillScreenRel extends DrillScreenRelBase implements DrillRel {
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new DrillScreenRel(getCluster(), traitSet, sole(inputs));
   }
-  
+
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
     LogicalOperator childOp = implementor.visitChild(this, 0, getChild());

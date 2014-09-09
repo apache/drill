@@ -18,12 +18,10 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
+import java.sql.Timestamp;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.MutableDateTime;
-
-import java.sql.Timestamp;
-import java.util.Date;
 
 public class ShowFilesCommandResult {
 

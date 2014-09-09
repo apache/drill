@@ -21,7 +21,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.UUID;
 
-import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.planner.sql.parser.impl.ParseException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
@@ -73,7 +72,7 @@ public class ErrorHelper {
     String finalMsg = rootCause.getMessage() == null ? original.getMessage() : rootCause.getMessage();
     builder.setMessage(String.format(sb.toString(), finalMsg));
     builder.setErrorType(0);
-    
+
     // record the error to the log for later reference.
     logger.error("Error {}: {}", id, message, t);
 

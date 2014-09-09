@@ -34,6 +34,7 @@ public abstract class StoragePluginConfig{
     this.enabled = enabled;
   }
 
+  @Override
   public abstract boolean equals(Object o);
 
 }

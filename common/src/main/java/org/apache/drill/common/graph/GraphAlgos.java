@@ -65,7 +65,7 @@ public class GraphAlgos {
 
     /**
      * Execute a depth-first sort on the reversed DAG.
-     * 
+     *
      * @param graph
      *          The adjacency list for the DAG.
      * @param sourceNodes

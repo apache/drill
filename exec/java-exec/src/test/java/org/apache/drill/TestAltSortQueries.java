@@ -17,12 +17,7 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.client.QuerySubmitter;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.Ignore;
 
 public class TestAltSortQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAltSortQueries.class);

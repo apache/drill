@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.CoreDecimalUtility;
 import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;

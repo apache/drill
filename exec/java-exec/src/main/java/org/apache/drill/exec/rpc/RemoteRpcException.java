@@ -21,7 +21,7 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.RpcFailure;
 
 public class RemoteRpcException extends RpcException{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteRpcException.class);
-  
+
   private final RpcFailure failure;
 
   public RemoteRpcException(RpcFailure failure) {
@@ -32,7 +32,7 @@ public class RemoteRpcException extends RpcException{
   public RpcFailure getFailure() {
     return failure;
   }
-  
-  
-  
+
+
+
 }

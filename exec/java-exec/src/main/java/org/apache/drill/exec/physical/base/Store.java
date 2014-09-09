@@ -35,7 +35,7 @@ public interface Store extends HasAffinity {
    * Inform the Store node about the actual decided DrillbitEndpoint assignments desired for storage purposes. This is a
    * precursor to the execution planner running a set of getSpecificStore() method calls for full Store node
    * materialization.
-   * 
+   *
    * @param endpoints
    *          The list of endpoints that this Store node are going to be executed on.
    * @throws PhysicalOperatorSetupException
@@ -44,7 +44,7 @@ public interface Store extends HasAffinity {
 
   /**
    * Provides full materialized Store operators for execution purposes.
-   * 
+   *
    * @param child
    *          The child operator that this operator will consume from.
    * @param minorFragmentId
@@ -60,7 +60,7 @@ public interface Store extends HasAffinity {
    * parallelizations that it can support. For example, a Screen return cannot be parallelized at all. In this case, a
    * maxWidth value of 1 will be returned. In the case that there is no limit for parallelization, this method should
    * return Integer.MAX_VALUE.
-   * 
+   *
    * @return
    */
   @JsonIgnore

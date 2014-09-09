@@ -22,7 +22,7 @@ public class AtomType extends DataType {
   private String name;
   private Comparability comparability;
   private boolean isNumericType;
-  
+
   public AtomType(String name, Comparability comparability, boolean isNumericType) {
     super();
     this.name = name;
@@ -30,7 +30,8 @@ public class AtomType extends DataType {
     this.isNumericType = isNumericType;
   }
 
-  
+
+  @Override
   public boolean isNumericType() {
     return isNumericType;
   }
@@ -60,8 +61,8 @@ public class AtomType extends DataType {
   public Comparability getComparability() {
     return comparability;
   }
-  
-  
-  
-  
+
+
+
+
 }

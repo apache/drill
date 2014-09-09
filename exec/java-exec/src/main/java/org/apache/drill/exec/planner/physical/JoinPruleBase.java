@@ -28,12 +28,10 @@ import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.rex.RexNode;
 
 import com.google.common.collect.ImmutableList;
@@ -189,6 +187,7 @@ public abstract class JoinPruleBase extends Prule {
 
     new SubsetTransformer<DrillJoinRel, InvalidRelException>(call){
 
+      @Override
       public RelNode convertChild(final DrillJoinRel join, final RelNode rel) throws InvalidRelException {
         DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
         RelTraitSet newTraitsLeft;

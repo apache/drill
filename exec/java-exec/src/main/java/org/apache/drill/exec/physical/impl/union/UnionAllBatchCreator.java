@@ -35,6 +35,6 @@ public class UnionAllBatchCreator implements BatchCreator<UnionAll>{
     Preconditions.checkArgument(children.size() >= 1);
     return new UnionAllRecordBatch(config, children, context);
   }
-  
-  
+
+
 }

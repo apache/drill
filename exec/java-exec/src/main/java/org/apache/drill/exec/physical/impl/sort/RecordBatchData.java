@@ -35,11 +35,11 @@ import com.google.common.collect.Lists;
  */
 public class RecordBatchData {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchData.class);
-  
+
   private SelectionVector2 sv2;
   private int recordCount;
   VectorContainer container = new VectorContainer();
-  
+
   public RecordBatchData(VectorAccessible batch){
     List<ValueVector> vectors = Lists.newArrayList();
     if (batch instanceof RecordBatch && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) {
@@ -47,7 +47,7 @@ public class RecordBatchData {
     } else {
       this.sv2 = null;
     }
-    
+
     for(VectorWrapper<?> v : batch){
       if(v.isHyper()) throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
       TransferPair tp = v.getValueVector().getTransferPair();
@@ -66,7 +66,7 @@ public class RecordBatchData {
     container = VectorContainer.canonicalize(container);
     container.buildSchema(mode);
   }
-  
+
   public int getRecordCount(){
     return recordCount;
   }

@@ -34,19 +34,19 @@ public enum SelectedTable{
   VIEWS(new Views()),
   COLUMNS(new Columns()),
   TABLES(new Tables());
-  
+
   private final InfoSchemaTable tableDef;
-  
+
   private SelectedTable(InfoSchemaTable tableDef) {
     this.tableDef = tableDef;
   }
-  
+
   public RecordReader getRecordReader(SchemaPlus rootSchema) {
     RecordGenerator recordGenerator = tableDef.getRecordGenerator();
     recordGenerator.scanSchema(rootSchema);
     return recordGenerator.getRecordReader();
   }
-  
+
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     return tableDef.getRowType(typeFactory);
   }

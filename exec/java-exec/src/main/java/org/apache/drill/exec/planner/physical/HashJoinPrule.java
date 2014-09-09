@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.logging.Logger;
+
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.eigenbase.rel.InvalidRelException;
@@ -24,8 +26,6 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.trace.EigenbaseTrace;
-
-import java.util.logging.Logger;
 
 public class HashJoinPrule extends JoinPruleBase {
   public static final RelOptRule INSTANCE = new HashJoinPrule();
@@ -41,7 +41,7 @@ public class HashJoinPrule extends JoinPruleBase {
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     return settings.isMemoryEstimationEnabled() || settings.isHashJoinEnabled();
   }
-  
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashJoinEnabled()) return;
@@ -49,23 +49,23 @@ public class HashJoinPrule extends JoinPruleBase {
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
-    
+
     if (!checkPreconditions(join, left, right)) {
       return;
     }
-    
+
     boolean hashSingleKey = PrelUtil.getPlannerSettings(call.getPlanner()).isHashSingleKey();
-    
+
     try {
 
       createDistBothPlan(call, join, PhysicalJoinType.HASH_JOIN, left, right, null /* left collation */, null /* right collation */, hashSingleKey);
-      
+
       if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
         createBroadcastPlan(call, join, PhysicalJoinType.HASH_JOIN, left, right, null /* left collation */, null /* right collation */);
 
         // createBroadcastPlan1(call, join, PhysicalJoinType.HASH_JOIN, left, right, null, null);
       }
-      
+
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }

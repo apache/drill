@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import com.sun.codemodel.JVar;
+import java.util.List;
+
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -26,7 +27,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 
-import java.util.List;
+import com.sun.codemodel.JVar;
 
 public abstract class AbstractFuncHolder implements FuncHolder {
 

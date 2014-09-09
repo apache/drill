@@ -54,7 +54,7 @@ public class PStoreRegistry {
       Class<? extends PStoreProvider> storeProviderClass = (Class<? extends PStoreProvider>) Class.forName(storeProviderClassName);
       Constructor<? extends PStoreProvider> c = storeProviderClass.getConstructor(PStoreRegistry.class);
       return c.newInstance(this);
-    } catch (ConfigException.Missing | ClassNotFoundException | NoSuchMethodException | SecurityException 
+    } catch (ConfigException.Missing | ClassNotFoundException | NoSuchMethodException | SecurityException
         | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       logger.error(e.getMessage(), e);
       throw new ExecutionSetupException("A System Table provider was either not specified or could not be found or instantiated", e);

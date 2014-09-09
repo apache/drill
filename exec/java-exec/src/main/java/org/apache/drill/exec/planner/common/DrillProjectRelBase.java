@@ -74,24 +74,24 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
   // By default, the project will not allow duplicate columns, caused by expanding from * column.
   // For example, if we have T1_*, T1_Col1, T1_Col2, Col1 and Col2 will have two copies if we expand
   // * into a list of regular columns.  For the intermediate project, the duplicate columns are not
-  // necessary; it will impact performance. 
+  // necessary; it will impact performance.
   protected List<NamedExpression> getProjectExpressions(DrillParseContext context) {
     List<NamedExpression> expressions = Lists.newArrayList();
-    
+
     HashSet<String> starColPrefixes = new HashSet<String>();
-    
+
     // To remove duplicate columns caused by expanding from * column, we'll keep track of
     // all the prefix in the project expressions. If a regular column C1 have the same prefix, that
-    // regular column is not included in the project expression, since at execution time, * will be 
-    // expanded into a list of column, including column C1. 
+    // regular column is not included in the project expression, since at execution time, * will be
+    // expanded into a list of column, including column C1.
     for (String fieldName : getRowType().getFieldNames()) {
       if (StarColumnHelper.isPrefixedStarColumn(fieldName)) {
         starColPrefixes.add(StarColumnHelper.extractStarColumnPrefix(fieldName));
       }
     }
-    
+
     for (Pair<RexNode, String> pair : projects()) {
-      if (! StarColumnHelper.subsumeRegColumn(starColPrefixes, pair.right)) { 
+      if (! StarColumnHelper.subsumeRegColumn(starColPrefixes, pair.right)) {
         LogicalExpression expr = DrillOptiq.toDrill(context, getChild(), pair.left);
         expressions.add(new NamedExpression(expr, FieldReference.getWithQuotedRef(pair.right)));
       }

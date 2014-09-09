@@ -17,20 +17,19 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.sort.Sorter;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
-import javax.inject.Named;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 
 public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, IndexedSortable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleBatchSorterTemplate.class);
@@ -42,7 +41,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
     this.vector2 = vector2;
     doSetup(context, incoming, null);
   }
-  
+
   @Override
   public void sort(SelectionVector2 vector2){
     QuickSort qs = new QuickSort();
@@ -60,7 +59,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
     vector2.setIndex(sv0, vector2.getIndex(sv1));
     vector2.setIndex(sv1, tmp);
   }
-  
+
   @Override
   public int compare(int leftIndex, int rightIndex) {
     char sv1 = vector2.getIndex(leftIndex);

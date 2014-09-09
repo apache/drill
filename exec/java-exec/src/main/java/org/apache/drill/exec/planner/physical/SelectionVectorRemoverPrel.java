@@ -26,8 +26,6 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexNode;
 
 public class SelectionVectorRemoverPrel extends SinglePrel{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVectorRemoverPrel.class);
@@ -40,6 +38,7 @@ public class SelectionVectorRemoverPrel extends SinglePrel{
     super(cluster, traits, child);
   }
 
+  @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new SelectionVectorRemoverPrel(this.getCluster(), traitSet, inputs.get(0));
   }

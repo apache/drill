@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.StringOutputRecordWriter;

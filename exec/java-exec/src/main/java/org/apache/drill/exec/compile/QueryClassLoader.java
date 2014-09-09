@@ -17,7 +17,13 @@
  */
 package org.apache.drill.exec.compile;
 
-import com.google.common.collect.MapMaker;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
@@ -30,12 +36,7 @@ import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.codehaus.commons.compiler.CompileException;
 
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
+import com.google.common.collect.MapMaker;
 
 public class QueryClassLoader extends URLClassLoader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryClassLoader.class);
@@ -59,7 +60,7 @@ public class QueryClassLoader extends URLClassLoader {
 
   public static final String JAVA_COMPILER_JANINO_MAXSIZE_OPTION = "exec.java_compiler_janino_maxsize";
   public static final OptionValidator JAVA_COMPILER_JANINO_MAXSIZE = new LongValidator(JAVA_COMPILER_JANINO_MAXSIZE_OPTION, 256*1024);
-  
+
   public static final String JAVA_COMPILER_CONFIG = "drill.exec.compile.compiler";
   public static final String JAVA_COMPILER_DEBUG_CONFIG = "drill.exec.compile.debug";
   public static final String JAVA_COMPILER_JANINO_MAXSIZE_CONFIG = "drill.exec.compile.janino_maxsize";
@@ -67,7 +68,7 @@ public class QueryClassLoader extends URLClassLoader {
   private ClassCompilerSelector compilerSelector;
 
   private AtomicLong index = new AtomicLong(0);
-  
+
   private ConcurrentMap<String, byte[]> customClasses = new MapMaker().concurrencyLevel(4).makeMap();
 
   public QueryClassLoader(DrillConfig config, OptionManager sessionOptions) {

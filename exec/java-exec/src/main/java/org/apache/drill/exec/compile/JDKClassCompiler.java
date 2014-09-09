@@ -81,6 +81,7 @@ class JDKClassCompiler extends AbstractClassCompiler {
     }
   }
 
+  @Override
   protected org.slf4j.Logger getLogger() { return logger; }
 
 }

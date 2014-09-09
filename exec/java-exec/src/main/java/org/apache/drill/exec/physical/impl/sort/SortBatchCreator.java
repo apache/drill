@@ -35,6 +35,6 @@ public class SortBatchCreator implements BatchCreator<Sort>{
     Preconditions.checkArgument(children.size() == 1);
     return new SortBatch(config, context, children.iterator().next());
   }
-  
-  
+
+
 }

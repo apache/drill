@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
@@ -29,6 +28,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -52,7 +52,7 @@ public class FileSelection {
     this.files = files;
     this.selectionRoot = selectionRoot;
   }
-  
+
   public FileSelection(List<String> files, boolean dummy){
     this.files = files;
   }
@@ -108,7 +108,7 @@ public class FileSelection {
     }
     return files;
   }
-  
+
   private void init(DrillFileSystem fs) throws IOException {
     if (files != null && statuses == null) {
       statuses = Lists.newArrayList();

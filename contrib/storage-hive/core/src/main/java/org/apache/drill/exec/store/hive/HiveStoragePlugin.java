@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.hive;
 import java.io.IOException;
 import java.util.List;
 
-import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.SchemaPlus;
 
@@ -31,7 +30,6 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory;
-import org.apache.hadoop.hive.conf.HiveConf;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

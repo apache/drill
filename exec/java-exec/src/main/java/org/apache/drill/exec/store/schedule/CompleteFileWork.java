@@ -29,7 +29,7 @@ public class CompleteFileWork implements FileWork, CompleteWork{
   private long length;
   private String path;
   private EndpointByteMap byteMap;
-  
+
   public CompleteFileWork(EndpointByteMap byteMap, long start, long length, String path) {
     super();
     this.start = start;
@@ -67,11 +67,11 @@ public class CompleteFileWork implements FileWork, CompleteWork{
   public long getLength() {
     return length;
   }
-  
+
   public FileWorkImpl getAsFileWork(){
     return new FileWorkImpl(start, length, path);
   }
-  
+
   public static class FileWorkImpl implements FileWork{
 
     @JsonCreator
@@ -85,7 +85,7 @@ public class CompleteFileWork implements FileWork, CompleteWork{
     public long start;
     public long length;
     public String path;
-    
+
     @Override
     public String getPath() {
       return path;
@@ -100,7 +100,7 @@ public class CompleteFileWork implements FileWork, CompleteWork{
     public long getLength() {
       return length;
     }
-    
+
   }
 
   @Override

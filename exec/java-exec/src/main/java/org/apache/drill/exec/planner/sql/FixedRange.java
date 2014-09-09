@@ -22,7 +22,7 @@ import org.eigenbase.sql.SqlOperandCountRange;
 class FixedRange implements SqlOperandCountRange{
 
   private final int size;
-  
+
   public FixedRange(int size) {
     super();
     this.size = size;
@@ -42,5 +42,5 @@ class FixedRange implements SqlOperandCountRange{
   public int getMax() {
     return size;
   }
-  
+
 }

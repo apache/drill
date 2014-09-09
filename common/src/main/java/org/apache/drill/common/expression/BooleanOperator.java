@@ -20,18 +20,17 @@ package org.apache.drill.common.expression;
 
 import java.util.List;
 
-import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
 
 public class BooleanOperator extends FunctionCall{
 
   public BooleanOperator(String name, List<LogicalExpression> args, ExpressionPosition pos) {
     super(name, args, pos);
   }
-  
+
   @Override
   public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E{
     return visitor.visitBooleanOperator(this, value);
@@ -39,8 +38,8 @@ public class BooleanOperator extends FunctionCall{
 
   @Override
   public MajorType getMajorType() {
-    // If any of argumgnet of a boolean "and"/"or" is nullable, the result is nullable bit. 
-    // Otherwise, it's non-nullable bit. 
+    // If any of argumgnet of a boolean "and"/"or" is nullable, the result is nullable bit.
+    // Otherwise, it's non-nullable bit.
     for (LogicalExpression e : args) {
       if (e.getMajorType().getMode() == DataMode.OPTIONAL) {
         return Types.OPTIONAL_BIT;
@@ -49,12 +48,12 @@ public class BooleanOperator extends FunctionCall{
     return Types.REQUIRED_BIT;
 
   }
-  
+
   @Override
-  public int getSelfCost() { 
-    return 0;  // TODO 
+  public int getSelfCost() {
+    return 0;  // TODO
   }
-  
+
   @Override
   public int getCumulativeCost() {
     // return the average cost of operands for a boolean "and" | "or"
@@ -65,8 +64,8 @@ public class BooleanOperator extends FunctionCall{
       cost += e.getCumulativeCost();
       i++;
     }
-  
+
     return (int) (cost / i) ;
   }
-  
+
 }

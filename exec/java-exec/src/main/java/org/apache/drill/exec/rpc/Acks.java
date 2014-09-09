@@ -21,7 +21,7 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 
 public class Acks {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Acks.class);
-  
+
   public static final Ack OK = Ack.newBuilder().setOk(true).build();
   public static final Ack FAIL = Ack.newBuilder().setOk(false).build();
 }

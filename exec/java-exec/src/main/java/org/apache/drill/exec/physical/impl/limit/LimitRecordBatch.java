@@ -23,13 +23,11 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Limit;
-import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
 import com.google.common.collect.Lists;
@@ -37,7 +35,7 @@ import com.google.common.collect.Lists;
 public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
-  
+
   private SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
   private int recordsToSkip;
@@ -96,7 +94,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       if (first) {
         return produceEmptyFirstBatch();
       }
-      
+
       incoming.kill(true);
 
       IterOutcome upStream = incoming.next();
@@ -159,7 +157,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     incoming.kill(true);
     return IterOutcome.OK_NEW_SCHEMA;
   }
-  
+
   private void limitWithNoSV(int recordCount) {
     int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
     recordsToSkip -= offset;
@@ -211,5 +209,5 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     outgoingSv.clear();
     super.cleanup();
   }
-  
+
 }

@@ -148,7 +148,7 @@ public class TestTableGenerator {
 
     table.flushCommits();
     table.close();
-    
+
     admin.flush(tableName);
   }
 

@@ -21,7 +21,7 @@ package org.apache.drill.exec.resolver;
 import org.apache.drill.common.expression.FunctionCall;
 
 public class FunctionResolverFactory {
-	
+
 	public static FunctionResolver getResolver(FunctionCall call){
 	  return new DefaultFunctionResolver();
 	}

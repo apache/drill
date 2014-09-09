@@ -95,6 +95,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
   }
 
 
+  @Override
   public DrillConnectionConfig config(){
     return config;
   }

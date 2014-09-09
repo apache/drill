@@ -69,7 +69,7 @@ public class DrillDecimalDivScaleFuncHolder extends DrillSimpleFuncHolder{
     return (TypeProtos.MajorType.newBuilder().setMinorType(DecimalUtility.getDecimalDataType(outputScalePrec.getOutputPrecision()))
         .setScale(outputScalePrec.getOutputScale()).setPrecision(outputScalePrec.getOutputPrecision()).setMode(mode).build());
   }
-  
+
   @Override
   public boolean checkPrecisionRange() {
     return true;

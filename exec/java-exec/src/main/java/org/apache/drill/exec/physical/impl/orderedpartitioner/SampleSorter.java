@@ -27,7 +27,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 public interface SampleSorter {
   public void setup(FragmentContext context, RecordBatch hyperBatch) throws SchemaChangeException;
   public void sort(SelectionVector2 vector2, VectorContainer container);
-  
+
   public static TemplateClassDefinition<SampleSorter> TEMPLATE_DEFINITION = new TemplateClassDefinition<SampleSorter>(SampleSorter.class, SampleSortTemplate.class);
 
 }

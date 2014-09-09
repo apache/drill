@@ -50,7 +50,7 @@ class AdjacencyList<V extends GraphValue<V>> {
   Node getNewNode(V value){
     return new Node(value);
   }
-  
+
   public List<Edge<Node>> getAdjacent(AdjacencyList<V>.Node source) {
     return adjacencies.get(source);
   }
@@ -88,10 +88,10 @@ class AdjacencyList<V extends GraphValue<V>> {
     }
     return nodes;
   }
-  
+
   /**
    * Get a list of nodes that have no outbound edges.
-   * 
+   *
    * @return
    */
   public Collection<V> getLeafNodes(){
@@ -109,13 +109,13 @@ class AdjacencyList<V extends GraphValue<V>> {
 
   /**
    * Get a list of all nodes that have no incoming edges.
-   * 
+   *
    * @return
    */
   public List<V> getRootNodes(){
     return convert(getInternalRootNodes());
   }
-  
+
   public Collection<Edge<Node>> getAllEdges() {
     return adjacencies.values();
   }
@@ -173,12 +173,12 @@ class AdjacencyList<V extends GraphValue<V>> {
     }
 
   }
-  
+
   public static <V extends GraphValue<V>> AdjacencyList<V> newInstance(Collection<V> nodes){
     AdjacencyList<V> list = new AdjacencyList<V>();
     AdjacencyListBuilder<V> builder = new AdjacencyListBuilder<V>(list);
     for(V v : nodes){
-      v.accept(builder); 
+      v.accept(builder);
     }
     return builder.getAdjacencyList();
   }

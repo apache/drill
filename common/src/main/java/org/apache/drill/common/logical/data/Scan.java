@@ -18,7 +18,6 @@
 package org.apache.drill.common.logical.data;
 
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -30,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class Scan extends SourceOperator{
 	private final String storageEngine;
 	private final JSONOptions selection;
-	
+
 	@JsonCreator
   public Scan(@JsonProperty("storageengine") String storageEngine, @JsonProperty("selection") JSONOptions selection) {
     super();
@@ -55,8 +54,8 @@ public class Scan extends SourceOperator{
   public static Builder builder() {
     return new Builder();
   }
-  
-  
+
+
   public static class Builder extends AbstractBuilder<Scan>{
     private String storageEngine;
     private JSONOptions selection;
@@ -71,6 +70,7 @@ public class Scan extends SourceOperator{
       return this;
     }
 
+    @Override
     public Scan build() {
       return new Scan(storageEngine, selection);
     }

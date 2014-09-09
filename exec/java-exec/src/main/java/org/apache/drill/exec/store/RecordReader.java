@@ -17,15 +17,14 @@
  */
 package org.apache.drill.exec.store;
 
+import java.util.Map;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.vector.ValueVector;
-
-import java.util.Map;
 
 public interface RecordReader {
 
@@ -34,7 +33,7 @@ public interface RecordReader {
 
   /**
    * Configure the RecordReader with the provided schema and the record batch that should be written to.
-   * 
+   *
    * @param output
    *          The place where output for a particular scan should be written. The record reader is responsible for
    *          mutating the set of schema values for that particular record.
@@ -53,8 +52,8 @@ public interface RecordReader {
 
 
   /**
-   * Increment record reader forward, writing into the provided output batch.  
-   * 
+   * Increment record reader forward, writing into the provided output batch.
+   *
    * @return The number of additional records added to the output.
    */
   public abstract int next();

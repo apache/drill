@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.record;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;

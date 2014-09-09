@@ -31,7 +31,7 @@ import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
-  
+
   private SelectionVector4 vector4;
   private List<BatchGroup> batchGroups;
   private VectorAccessible hyperBatch;
@@ -165,7 +165,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     vector4.set(sv0, vector4.get(sv1));
     vector4.set(sv1, tmp);
   }
-  
+
   public int compare(int leftIndex, int rightIndex) {
     int sv1 = vector4.get(leftIndex);
     int sv2 = vector4.get(rightIndex);

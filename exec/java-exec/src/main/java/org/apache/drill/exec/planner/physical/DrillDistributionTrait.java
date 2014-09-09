@@ -35,7 +35,7 @@ public class DrillDistributionTrait implements RelTrait {
 
   private DistributionType type;
   private final ImmutableList<DistributionField> fields;
-  
+
   public DrillDistributionTrait(DistributionType type) {
     assert (type == DistributionType.SINGLETON || type == DistributionType.RANDOM_DISTRIBUTED || type == DistributionType.ANY
             || type == DistributionType.ROUND_ROBIN_DISTRIBUTED || type == DistributionType.BROADCAST_DISTRIBUTED);
@@ -68,7 +68,7 @@ public class DrillDistributionTrait implements RelTrait {
           // Following can satisfy the requirements: {a}, {b}, {c}, {a, b}, {b, c}, {a, c} or {a, b, c}
 
           // New: Use equals for subsumes check of hash distribution. If we uses subsumes,
-          // a join may end up with hash-distributions using different keys. This would 
+          // a join may end up with hash-distributions using different keys. This would
           // cause incorrect query result.
           return this.equals(trait);
         }
@@ -93,10 +93,12 @@ public class DrillDistributionTrait implements RelTrait {
     return fields;
   }
 
+  @Override
   public int hashCode() {
     return  fields == null ? type.hashCode() : type.hashCode() | fields.hashCode() << 4 ;
   }
 
+  @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
@@ -124,6 +126,7 @@ public class DrillDistributionTrait implements RelTrait {
       this.fieldId = fieldId;
     }
 
+    @Override
     public boolean equals(Object obj) {
       if (!(obj instanceof DistributionField)) {
         return false;
@@ -132,6 +135,7 @@ public class DrillDistributionTrait implements RelTrait {
       return this.fieldId == other.fieldId;
     }
 
+    @Override
     public int hashCode() {
       return this.fieldId;
     }
@@ -140,6 +144,7 @@ public class DrillDistributionTrait implements RelTrait {
       return this.fieldId;
     }
 
+    @Override
     public String toString() {
       return String.format("[$%s]", this.fieldId);
     }

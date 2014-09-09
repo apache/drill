@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
@@ -31,6 +30,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.util.AssertionUtil;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
 /**
@@ -79,7 +79,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   public static RootExec getExec(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
     ImplCreator i = new ImplCreator();
     if(AssertionUtil.isAssertionsEnabled()){
-      root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root); 
+      root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
 
     Stopwatch watch = new Stopwatch();

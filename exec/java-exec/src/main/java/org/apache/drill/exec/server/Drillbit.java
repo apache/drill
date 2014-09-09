@@ -19,8 +19,6 @@ package org.apache.drill.exec.server;
 
 import java.io.Closeable;
 
-import javax.servlet.Servlet;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;

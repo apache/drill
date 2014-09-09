@@ -17,6 +17,8 @@
  */
 package parquet.hadoop;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -25,15 +27,13 @@ import java.nio.channels.WritableByteChannel;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.conf.Configuration;
-
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.DirectDecompressionCodec;
 import org.apache.hadoop.util.ReflectionUtils;
+
 import parquet.bytes.BytesInput;
-import parquet.hadoop.CodecFactory.BytesDecompressor;
 import parquet.hadoop.metadata.CompressionCodecName;
 
 public class CodecFactoryExposer{
@@ -115,6 +115,7 @@ public class CodecFactoryExposer{
       this.length = length;
     }
 
+    @Override
     public void writeAllTo(OutputStream out) throws IOException {
       final WritableByteChannel outputChannel = Channels.newChannel(out);
       byteBuf.position(offset);
@@ -123,6 +124,7 @@ public class CodecFactoryExposer{
       outputChannel.write(tempBuf);
     }
 
+    @Override
     public ByteBuffer toByteBuffer() throws IOException {
       byteBuf.position(offset);
       ByteBuffer buf = byteBuf.slice();
@@ -130,6 +132,7 @@ public class CodecFactoryExposer{
       return buf;
     }
 
+    @Override
     public long size() {
       return length;
     }

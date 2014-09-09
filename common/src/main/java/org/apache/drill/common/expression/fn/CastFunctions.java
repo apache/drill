@@ -17,10 +17,10 @@
  */
 package org.apache.drill.common.expression.fn;
 
-import org.apache.drill.common.types.TypeProtos.MinorType;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public class CastFunctions {
 

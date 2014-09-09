@@ -25,7 +25,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
-import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 public class RootFragmentManager implements FragmentManager{

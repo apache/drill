@@ -23,12 +23,10 @@ import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.PathScanner;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public abstract class FormatPluginConfigBase implements FormatPluginConfig{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatPluginConfigBase.class);
-  
-  
+
+
   public synchronized static Class<?>[] getSubTypes(DrillConfig config){
     List<String> packages = config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
     Class<?>[] sec = PathScanner.scanForImplementationsArr(FormatPluginConfig.class, packages);
@@ -36,6 +34,7 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
     return sec;
   }
 
+  @Override
   public abstract boolean equals(Object o);
-  
+
 }

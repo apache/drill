@@ -25,7 +25,6 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.fs.FileSystem;
@@ -35,6 +34,8 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import com.google.common.collect.Maps;
+
 public class HiveTestDataGenerator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveTestDataGenerator.class);
 
@@ -42,7 +43,7 @@ public class HiveTestDataGenerator {
   private Driver hiveDriver = null;
   private static final String DB_DIR = "/tmp/drill_hive_db";
   private static final String WH_DIR = "/tmp/drill_hive_wh";
-  
+
   public static void main(String[] args) throws Exception {
     HiveTestDataGenerator htd = new HiveTestDataGenerator();
     htd.generateTestData();
@@ -73,11 +74,11 @@ public class HiveTestDataGenerator {
   }
 
   public void generateTestData() throws Exception {
-    
+
     // remove data from previous runs.
     cleanDir(DB_DIR);
     cleanDir(WH_DIR);
-    
+
     HiveConf conf = new HiveConf();
 
     conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", DB_DIR));

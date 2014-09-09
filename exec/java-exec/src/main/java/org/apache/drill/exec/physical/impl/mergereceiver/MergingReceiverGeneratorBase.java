@@ -17,18 +17,16 @@
  */
 package org.apache.drill.exec.physical.impl.mergereceiver;
 
+import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
+
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorAccessible;
 
-import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
-
 public interface MergingReceiverGeneratorBase {
-  
+
   public abstract void doSetup(FragmentContext context,
                                VectorAccessible incoming,
                                VectorAccessible outgoing) throws SchemaChangeException;

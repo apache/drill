@@ -44,7 +44,7 @@ public class CoordinationQueue {
       if(ex instanceof RpcException){
         e = (RpcException) ex;
       }else{
-        e = new RpcException(ex);  
+        e = new RpcException(ex);
       }
       for (RpcOutcome<?> f : map.values()) {
         f.setException(e);
@@ -61,13 +61,13 @@ public class CoordinationQueue {
           "You attempted to reuse a coordination id when the previous coordination id has not been removed.  This is likely rpc future callback memory leak.");
     return future;
   }
-  
+
   private class RpcListener<T> implements ChannelListenerWithCoordinationId, RpcOutcome<T>{
     final RpcOutcomeListener<T> handler;
     final Class<T> clazz;
     final int coordinationId;
     final RemoteConnection connection;
-    
+
     public RpcListener(RpcOutcomeListener<T> handler, Class<T> clazz, int coordinationId, RemoteConnection connection) {
       super();
       this.handler = handler;
@@ -110,8 +110,8 @@ public class CoordinationQueue {
     public int getCoordinationId() {
       return coordinationId;
     }
-    
-    
+
+
   }
 
   private RpcOutcome<?> removeFromMap(int coordinationId) {

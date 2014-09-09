@@ -20,13 +20,14 @@ package org.apache.drill.exec.store;
 import java.util.Collection;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.vector.ValueVector;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public abstract class AbstractRecordReader implements RecordReader {
   private static final String COL_NULL_ERROR = "Columns cannot be null. Use star column to select all fields.";

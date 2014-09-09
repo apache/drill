@@ -28,18 +28,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class FormatSelection {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatSelection.class);
-  
+
   private FormatPluginConfig format;
   private FileSelection selection;
 
   public FormatSelection(){}
-  
+
   @JsonCreator
   public FormatSelection(@JsonProperty("format") FormatPluginConfig format, @JsonProperty("files") List<String> files){
     this.format = format;
     this.selection = new FileSelection(files, true);
   }
-  
+
   public FormatSelection(FormatPluginConfig format, FileSelection selection) {
     super();
     this.format = format;
@@ -50,15 +50,15 @@ public class FormatSelection {
   public FormatPluginConfig getFormat(){
     return format;
   }
-  
+
   @JsonProperty("files")
   public List<String> getAsFiles(){
     return selection.getAsFiles();
   }
-  
+
   @JsonIgnore
   public FileSelection getSelection(){
     return selection;
   }
-  
+
 }

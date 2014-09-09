@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.cache;
 
-import java.util.Map;
-
 import org.apache.drill.exec.exception.DrillbitStartupException;
 
 import com.google.protobuf.Message;

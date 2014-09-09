@@ -23,7 +23,7 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public interface Spool {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Spool.class);
-  
+
   public void write(RecordBatch batch) throws IOException;
   public void read(RecordBatch batch) throws IOException;
 }

@@ -30,7 +30,7 @@ import com.google.common.collect.Iterators;
 @JsonTypeName("store")
 public class Store extends SinkOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Store.class);
-  
+
   private final String storageEngine;
   private final JSONOptions target;
 
@@ -62,7 +62,7 @@ public class Store extends SinkOperator{
   public static Builder builder() {
     return new Builder();
   }
-  
+
   public static class Builder extends AbstractSingleBuilder<Store, Builder>{
     private String storageEngine;
     private JSONOptions target;
@@ -77,8 +77,9 @@ public class Store extends SinkOperator{
       return this;
     }
 
+    @Override
     public Store internalBuild() {
       return new Store(storageEngine, target);
-    }    
+    }
   }
 }

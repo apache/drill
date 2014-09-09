@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.partitionsender;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -25,9 +28,6 @@ import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.record.RecordBatch;
-
-import java.io.IOException;
-import java.util.List;
 
 public interface Partitioner {
 

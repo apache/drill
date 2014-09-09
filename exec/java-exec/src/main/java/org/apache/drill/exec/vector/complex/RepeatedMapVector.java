@@ -91,6 +91,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     return vectors.keySet().iterator();
   }
 
+  @Override
   public int size(){
     return vectors.size();
   }

@@ -21,11 +21,11 @@ import java.lang.reflect.Constructor;
 
 public class ConstructorChecker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConstructorChecker.class);
-  
+
   private final String requirementString;
   private final Class<?>[] classes;
- 
-  
+
+
   public ConstructorChecker(Class<?>... classes) {
     super();
     this.classes = classes;
@@ -35,7 +35,7 @@ public class ConstructorChecker {
       if(i != 0) sb.append(", ");
       sb.append(classes[i].getName());
     }
-     
+
     this.requirementString = sb.toString();
   }
 
@@ -45,10 +45,10 @@ public class ConstructorChecker {
     for(int i =0; i < classes.length; i++){
       if( !classes[i].isAssignableFrom(params[i])) return false;
     }
-    
+
     return true;
   }
-  
+
   public String getRequirementString(){
     return requirementString;
   }

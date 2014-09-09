@@ -17,12 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.google.common.collect.Lists;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.work.WorkManager;
-import org.glassfish.jersey.server.mvc.Viewable;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -30,7 +25,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.List;
+
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.work.WorkManager;
+import org.glassfish.jersey.server.mvc.Viewable;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.google.common.collect.Lists;
 
 @Path("/")
 public class DrillRoot {

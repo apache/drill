@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Screen;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.common.DrillScreenRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -74,7 +73,7 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-  
+
   @Override
   public boolean needsFinalColumnReordering() {
     return false;

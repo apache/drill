@@ -24,13 +24,12 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-
 import com.google.common.collect.Iterators;
 
 public class TypedNullConstant extends LogicalExpressionBase {
 
     private final MajorType type;
-    
+
     public TypedNullConstant(MajorType type) {
       super(null);
       this.type = TypeProtos.MajorType.newBuilder().mergeFrom(type).setMode(DataMode.OPTIONAL).build();
@@ -40,25 +39,25 @@ public class TypedNullConstant extends LogicalExpressionBase {
     public MajorType getMajorType() {
       return this.type;
     }
-   
+
 
     @Override
     public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
       return visitor.visitNullConstant(this, value);
     }
-    
+
     @Override
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-  
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
 

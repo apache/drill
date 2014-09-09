@@ -17,8 +17,6 @@
  */
 package org.apache.drill.jdbc;
 
-import org.apache.drill.common.config.DrillConfig;
-
 import net.hydromatic.avatica.DriverVersion;
 import net.hydromatic.avatica.Handler;
 import net.hydromatic.avatica.HandlerImpl;
@@ -59,6 +57,7 @@ public class Driver extends UnregisteredDriver {
     }
   }
 
+  @Override
   protected DriverVersion createDriverVersion() {
     return DriverVersion.load(
         Driver.class,

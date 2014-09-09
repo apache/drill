@@ -18,10 +18,14 @@
 
 package org.apache.drill.exec;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import org.apache.drill.common.util.FileUtils;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.List;
+
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.vector.BigIntVector;
@@ -29,11 +33,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 public class TestQueriesOnLargeFile extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestQueriesOnLargeFile.class);

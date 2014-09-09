@@ -34,18 +34,18 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
-import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
-import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
 import com.google.common.collect.Lists;
@@ -54,7 +54,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConstantExpressionIdentifier.class);
 
   private ConstantExpressionIdentifier(){}
-  
+
   /**
    * Get a list of expressions that mark boundaries into a constant space.
    * @param e
@@ -63,7 +63,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   public static Set<LogicalExpression> getConstantExpressionSet(LogicalExpression e){
     IdentityHashMap<LogicalExpression, Object> map = new IdentityHashMap<>();
     ConstantExpressionIdentifier visitor = new ConstantExpressionIdentifier();
-    
+
 
     if(e.accept(visitor, map) && map.isEmpty()){
       // if we receive a constant value here but the map is empty, this means the entire tree is a constant.
@@ -74,7 +74,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
       // so we don't continue to carry around a map, we let it go here and simply return an empty set.
       return Collections.emptySet();
     }else{
-      return map.keySet();  
+      return map.keySet();
     }
   }
 
@@ -89,7 +89,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
         constant = false;
       }
     }
-    
+
     // if one or more clauses isn't constant, this isn't constant.  this also isn't a constant if it operates on a set.
     if(!constant || !transmitsConstant){
       for(LogicalExpression c: constants){
@@ -98,7 +98,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
     }
     return constant && transmitsConstant;
   }
-  
+
   @Override
   public Boolean visitFunctionCall(FunctionCall call, IdentityHashMap<LogicalExpression, Object> value){
     throw new UnsupportedOperationException("FunctionCall is not expected here. "+

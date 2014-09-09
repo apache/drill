@@ -39,7 +39,7 @@ class LateBindType extends DataType {
     throw new UnsupportedOperationException();
   }
 
-  
+
   @Override
   public boolean isNumericType() {
     throw new UnsupportedOperationException();

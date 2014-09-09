@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.materialize;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Arrays;
 import java.util.List;
-
-import com.google.common.collect.Lists;
-import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
@@ -29,15 +28,16 @@ import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.WritableBatch;
+
+import com.google.common.collect.Lists;
 
 public class QueryWritableBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWritableBatch.class);
-  
+
   private final QueryResult header;
   private final ByteBuf[] buffers;
-  
-  
+
+
   public QueryWritableBatch(QueryResult header, ByteBuf... buffers) {
     super();
     this.header = header;
@@ -55,7 +55,7 @@ public class QueryWritableBatch {
     }
     return n;
   }
-  
+
   public QueryResult getHeader() {
     return header;
   }
@@ -79,5 +79,5 @@ public class QueryWritableBatch {
             .build();
     return new QueryWritableBatch(header);
   }
-  
+
 }

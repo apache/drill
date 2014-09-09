@@ -39,7 +39,6 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.SqlAggFunction;
@@ -86,6 +85,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     return containsAvgStddevVarCall(oldAggRel.getAggCallList());
   }
 
+  @Override
   public void onMatch(RelOptRuleCall ruleCall) {
     AggregateRelBase oldAggRel = (AggregateRelBase) ruleCall.rels[0];
     reduceAggs(ruleCall, oldAggRel);

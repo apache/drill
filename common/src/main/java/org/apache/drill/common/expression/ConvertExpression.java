@@ -30,7 +30,7 @@ public class ConvertExpression extends LogicalExpressionBase implements Iterable
 
   public static final String CONVERT_FROM = "convert_from";
   public static final String CONVERT_TO = "convert_to";
-  
+
   private final LogicalExpression input;
   private final MajorType type;
   private final String convertFunction;

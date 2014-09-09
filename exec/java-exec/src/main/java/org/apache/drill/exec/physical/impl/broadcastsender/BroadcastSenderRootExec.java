@@ -25,17 +25,14 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
-import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.BroadcastSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
-import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.GeneralRPCProtos;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.WritableBatch;
@@ -57,7 +54,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
   private final ExecProtos.FragmentHandle handle;
   private volatile boolean ok;
   private final RecordBatch incoming;
-  
+
   public enum Metric implements MetricDef {
     N_RECEIVERS,
     BYTES_SENT;
@@ -113,7 +110,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
       case OK:
         WritableBatch writableBatch = incoming.getWritableBatch();
         if (tunnels.length > 1) {
-          writableBatch.retainBuffers(tunnels.length - 1);  
+          writableBatch.retainBuffers(tunnels.length - 1);
         }
         for (int i = 0; i < tunnels.length; ++i) {
           FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), i, writableBatch);
@@ -134,10 +131,10 @@ public class BroadcastSenderRootExec extends BaseRootExec {
         throw new IllegalStateException();
     }
   }
-  
+
   public void updateStats(FragmentWritableBatch writableBatch) {
     stats.setLongStat(Metric.N_RECEIVERS, tunnels.length);
-    stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount()); 
+    stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount());
   }
 
   /*
@@ -162,7 +159,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
     return true;
   }
 */
-  
+
   @Override
   public void stop() {
       ok = false;
@@ -170,12 +167,12 @@ public class BroadcastSenderRootExec extends BaseRootExec {
       oContext.close();
       incoming.cleanup();
   }
-  
+
   private StatusHandler statusHandler = new StatusHandler();
   private class StatusHandler extends BaseRpcOutcomeListener<GeneralRPCProtos.Ack> {
     volatile RpcException ex;
     private final SendingAccountor sendCount = new SendingAccountor();
-    
+
     @Override
     public void success(Ack value, ByteBuf buffer) {
       sendCount.decrement();

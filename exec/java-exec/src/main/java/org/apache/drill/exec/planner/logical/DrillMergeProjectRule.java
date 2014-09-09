@@ -18,16 +18,13 @@
 package org.apache.drill.exec.planner.logical;
 
 
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.eigenbase.rel.ProjectRelBase;
 import org.eigenbase.rel.RelFactories.ProjectFactory;
-
 import org.eigenbase.rel.rules.MergeProjectRule;
 import org.eigenbase.relopt.RelOptRuleCall;
-
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexNode;
-
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 
 public class DrillMergeProjectRule extends MergeProjectRule {
 

@@ -28,11 +28,11 @@ public class LogicalPlanParsingException extends DrillRuntimeException{
 
   private Set<ConstraintViolation<LogicalOperatorBase>> violations;
   private LogicalOperator operator;
-  
+
   public LogicalPlanParsingException() {
     super();
   }
-  
+
   public LogicalPlanParsingException(LogicalOperator operator, Set<ConstraintViolation<LogicalOperatorBase>> violations){
     super(getErrorMessage(operator, violations));
     this.operator = operator;
@@ -55,13 +55,13 @@ public class LogicalPlanParsingException extends DrillRuntimeException{
   public LogicalPlanParsingException(Throwable cause) {
     super(cause);
   }
-  
-  
+
+
   private static String getErrorMessage(LogicalOperator operator, Set<ConstraintViolation<LogicalOperatorBase>> violations){
     StringBuffer sb = new StringBuffer();
     sb.append("Failure while attempting to set up operator of type ");
     sb.append(operator.getClass().getCanonicalName());
-    sb.append(".  Constraints violated:\n");  
+    sb.append(".  Constraints violated:\n");
     for(ConstraintViolation<LogicalOperatorBase> v : violations){
       sb.append("\t");
       sb.append(v.getMessage());
@@ -71,5 +71,5 @@ public class LogicalPlanParsingException extends DrillRuntimeException{
     }
     return sb.toString();
   }
-  
+
 }

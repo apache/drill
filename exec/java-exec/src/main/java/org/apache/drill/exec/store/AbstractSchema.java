@@ -22,18 +22,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import net.hydromatic.linq4j.expressions.DefaultExpression;
 import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
-
 import net.hydromatic.optiq.Table;
+
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
-import org.apache.drill.exec.planner.logical.DrillTable;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 public abstract class AbstractSchema implements Schema{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);

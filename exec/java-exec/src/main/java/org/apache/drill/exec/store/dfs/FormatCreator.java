@@ -35,24 +35,24 @@ import com.google.common.collect.Maps;
 
 public class FormatCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatCreator.class);
-  
-  
+
+
   static final ConstructorChecker FORMAT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class, FormatPluginConfig.class);
   static final ConstructorChecker DEFAULT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class);
-  
+
   static Map<String, FormatPlugin> getFormatPlugins(DrillbitContext context, DrillFileSystem fileSystem, FileSystemConfig storageConfig){
-    final DrillConfig config = context.getConfig(); 
+    final DrillConfig config = context.getConfig();
     Map<String, FormatPlugin> plugins = Maps.newHashMap();
 
     Collection<Class<? extends FormatPlugin>> pluginClasses = PathScanner.scanForImplementations(FormatPlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
 
-    
+
     if(storageConfig.formats == null || storageConfig.formats.isEmpty()){
-      
+
       for(Class<? extends FormatPlugin> pluginClass: pluginClasses){
         for(Constructor<?> c : pluginClass.getConstructors()){
           try{
-            
+
             if(!DEFAULT_BASED.check(c)) continue;
             FormatPlugin plugin = (FormatPlugin) c.newInstance(null, context, fileSystem, storageConfig);
             plugins.put(plugin.getName(), plugin);
@@ -61,9 +61,9 @@ public class FormatCreator {
           }
         }
       }
-      
+
     }else{
-      
+
       Map<Class<?>, Constructor<?>> constructors = Maps.newHashMap();
       for(Class<? extends FormatPlugin> pluginClass: pluginClasses){
         for(Constructor<?> c : pluginClass.getConstructors()){
@@ -76,7 +76,7 @@ public class FormatCreator {
           }
         }
       }
-      
+
       for(Map.Entry<String, FormatPluginConfig> e : storageConfig.formats.entrySet()){
         Constructor<?> c = constructors.get(e.getValue().getClass());
         if(c == null){
@@ -89,13 +89,13 @@ public class FormatCreator {
           logger.warn("Failure initializing storage config named '{}' of type '{}'.", e.getKey(), e.getValue().getClass().getName(), e1);
         }
       }
-      
-      
+
+
     }
-    
+
     return plugins;
   }
-  
-  
+
+
 
 }

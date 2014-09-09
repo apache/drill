@@ -40,6 +40,6 @@ public class PhysicalOperatorSetupException extends ExecutionSetupException{
   public PhysicalOperatorSetupException(Throwable cause) {
     super(cause);
   }
-  
-  
+
+
 }

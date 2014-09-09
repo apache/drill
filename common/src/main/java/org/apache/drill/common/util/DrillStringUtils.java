@@ -17,9 +17,9 @@
  */
 package org.apache.drill.common.util;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-
 import io.netty.buffer.ByteBuf;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class DrillStringUtils {
 

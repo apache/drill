@@ -17,22 +17,20 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.common.HashTable;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.AbstractRecordBatch;
-
+import org.apache.drill.exec.record.VectorWrapper;
 import org.eigenbase.rel.JoinRelType;
-
-import java.io.IOException;
-import java.util.List;
 
 public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 

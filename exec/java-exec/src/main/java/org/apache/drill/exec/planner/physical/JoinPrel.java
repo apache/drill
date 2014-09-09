@@ -99,6 +99,6 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
   @Override
   public boolean needsFinalColumnReordering() {
     return true;
-  }  
-  
+  }
+
 }

@@ -95,7 +95,7 @@ public class ErrorCollectorImpl implements ErrorCollector {
         return !errors.isEmpty();
     }
 
-    
+
     @Override
     public int getErrorCount() {
       return errors.size();
@@ -110,6 +110,6 @@ public class ErrorCollectorImpl implements ErrorCollector {
     public String toString() {
       return toErrorString();
     }
-    
-    
+
+
 }

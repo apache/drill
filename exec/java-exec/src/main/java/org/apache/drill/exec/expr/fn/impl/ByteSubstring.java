@@ -71,7 +71,7 @@ public class ByteSubstring implements DrillSimpleFunc {
         out.start = string.end + (int)offset.value;
       else
         out.start = (int)offset.value - 1;
-  
+
       // calculate end position from length and truncate to upper value bounds
       if (out.start + length.value > string.end)
         out.end = string.end;

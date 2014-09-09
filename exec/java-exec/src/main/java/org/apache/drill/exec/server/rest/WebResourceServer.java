@@ -49,7 +49,7 @@ public class WebResourceServer {
       String s = "rest/www/" + path;
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
       InputStream is = new BufferedInputStream(cl.getResource(s).openStream());
-      
+
       String mime = "text/plain";
       if (s.endsWith(".js")) {
         mime = "text/javascript";
@@ -58,14 +58,14 @@ public class WebResourceServer {
       } else {
         mime = URLConnection.guessContentTypeFromStream(is);
       }
-      
+
       byte[] d = IOUtils.toByteArray(is);
-      return Response.ok(d).type(mime).build(); 
+      return Response.ok(d).type(mime).build();
     } catch (Exception e) {
       e.printStackTrace();
       e.printStackTrace(System.out);
     }
-    
+
     return Response.noContent().status(Status.NOT_FOUND).build();
   }
 }

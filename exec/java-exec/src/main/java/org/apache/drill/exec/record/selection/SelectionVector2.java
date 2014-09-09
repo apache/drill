@@ -99,6 +99,7 @@ public class SelectionVector2 implements Closeable{
     return true;
   }
 
+  @Override
   public SelectionVector2 clone(){
     SelectionVector2 newSV = new SelectionVector2(allocator);
     newSV.recordCount = recordCount;

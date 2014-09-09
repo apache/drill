@@ -18,7 +18,6 @@
 package org.apache.drill.exec.vector.allocator;
 
 import org.apache.drill.exec.vector.RepeatedVariableWidthVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
 
 class RepeatedVectorAllocator extends VectorAllocator{
   RepeatedVariableWidthVector in;
@@ -30,6 +29,7 @@ class RepeatedVectorAllocator extends VectorAllocator{
     this.out = out;
   }
 
+  @Override
   public void alloc(int recordCount){
     out.allocateNew(in.getByteCapacity(), in.getAccessor().getValueCount(), in.getAccessor().getValueCount());
   }

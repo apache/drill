@@ -40,6 +40,6 @@ public class ExpressionParsingException extends LogicalPlanParsingException {
   public ExpressionParsingException(Throwable cause) {
     super(cause);
   }
-  
-  
+
+
 }

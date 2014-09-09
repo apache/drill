@@ -18,17 +18,17 @@
 
 package org.apache.drill.exec.physical.impl.join;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-import io.netty.buffer.ByteBuf;
-
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.physical.impl.common.HashTable;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 
 
 /*
@@ -71,7 +71,7 @@ public class HashJoinHelper {
 
   public static final int LEFT_INPUT = 0;
   public static final int RIGHT_INPUT = 1;
-  
+
   public HashJoinHelper(FragmentContext context, BufferAllocator allocator) {
     this.context = context;
     this.allocator = allocator;

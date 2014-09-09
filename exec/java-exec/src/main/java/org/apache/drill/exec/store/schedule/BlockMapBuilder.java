@@ -33,14 +33,14 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
-import com.google.common.collect.Lists;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableRangeMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 public class BlockMapBuilder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BlockMapBuilder.class);
@@ -87,7 +87,7 @@ public class BlockMapBuilder {
     }
     return work;
   }
-  
+
   private class FileStatusWork implements FileWork{
     private FileStatus status;
 
@@ -110,16 +110,16 @@ public class BlockMapBuilder {
     public long getLength() {
       return status.getLen();
     }
-    
-    
-    
+
+
+
   }
-  
+
   private ImmutableRangeMap<Long,BlockLocation> buildBlockMap(Path path) throws IOException {
     FileStatus status = fs.getFileStatus(path);
     return buildBlockMap(status);
   }
-  
+
   /**
    * Builds a mapping of block locations to file byte range
    */
@@ -140,7 +140,7 @@ public class BlockMapBuilder {
     context.stop();
     return blockMap;
   }
-  
+
   private ImmutableRangeMap<Long,BlockLocation> getBlockMap(Path path) throws IOException{
     ImmutableRangeMap<Long,BlockLocation> blockMap  = blockMapMap.get(path);
     if(blockMap == null) {
@@ -148,7 +148,7 @@ public class BlockMapBuilder {
     }
     return blockMap;
   }
-  
+
   private ImmutableRangeMap<Long,BlockLocation> getBlockMap(FileStatus status) throws IOException{
     ImmutableRangeMap<Long,BlockLocation> blockMap  = blockMapMap.get(status.getPath());
     if(blockMap == null){
@@ -157,19 +157,19 @@ public class BlockMapBuilder {
     return blockMap;
   }
 
-  
+
   /**
    * For a given FileWork, calculate how many bytes are available on each on drillbit endpoint
    *
    * @param work the FileWork to calculate endpoint bytes for
-   * @throws IOException 
+   * @throws IOException
    */
   public EndpointByteMap getEndpointByteMap(FileWork work) throws IOException {
     Stopwatch watch = new Stopwatch();
     watch.start();
     Path fileName = new Path(work.getPath());
-    
-    
+
+
     ImmutableRangeMap<Long,BlockLocation> blockMap = getBlockMap(fileName);
     EndpointByteMapImpl endpointByteMap = new EndpointByteMapImpl();
     long start = work.getStart();
@@ -203,7 +203,7 @@ public class BlockMapBuilder {
     }
 
     logger.debug("FileWork group ({},{}) max bytes {}", work.getPath(), work.getStart(), endpointByteMap.getMaxBytes());
-    
+
     logger.debug("Took {} ms to set endpoint bytes", watch.stop().elapsed(TimeUnit.MILLISECONDS));
     return endpointByteMap;
   }

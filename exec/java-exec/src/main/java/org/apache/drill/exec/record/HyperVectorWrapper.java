@@ -17,15 +17,13 @@
  */
 package org.apache.drill.exec.record;
 
-import java.lang.reflect.Array;
-
-import com.google.common.base.Preconditions;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+
+import com.google.common.base.Preconditions;
 
 
 public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{

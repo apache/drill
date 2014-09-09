@@ -29,7 +29,7 @@ public class DrillPrepareResult implements AvaticaPrepareResult{
 
   final String sql;
   final DrillColumnMetaDataList columns = new DrillColumnMetaDataList();
-  
+
   public DrillPrepareResult(String sql) {
     super();
     this.sql = sql;

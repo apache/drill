@@ -19,29 +19,20 @@
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.StringReader;
+import io.netty.buffer.DrillBuf;
 
 import javax.inject.Inject;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
-
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.vector.complex.fn.JsonWriter;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-
-import com.google.common.base.Charsets;
 
 public class JsonConvertFrom {
 

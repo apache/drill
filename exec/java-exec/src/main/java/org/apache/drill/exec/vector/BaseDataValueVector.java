@@ -18,7 +18,6 @@
 package org.apache.drill.exec.vector;
 
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 
@@ -55,10 +54,12 @@ public abstract class BaseDataValueVector extends BaseValueVector{
     }
   }
 
+  @Override
   public void setCurrentValueCount(int count) {
     currentValueCount = count;
   }
 
+  @Override
   public int getCurrentValueCount() {
     return currentValueCount;
   }
@@ -90,6 +91,7 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   @Override
   public abstract SerializedField getMetadata();
 
+  @Override
   public DrillBuf getData(){
     return data;
   }

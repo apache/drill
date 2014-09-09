@@ -28,7 +28,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 
 public abstract class FilterTemplate2 implements Filterer{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterTemplate2.class);
-  
+
   private SelectionVector2 outgoingSelectionVector;
   private SelectionVector2 incomingSelectionVector;
   private SelectionVectorMode svMode;
@@ -39,7 +39,7 @@ public abstract class FilterTemplate2 implements Filterer{
     this.transfers = transfers;
     this.outgoingSelectionVector = outgoing.getSelectionVector2();
     this.svMode = incoming.getSchema().getSelectionVectorMode();
-    
+
     switch(svMode){
     case NONE:
       break;
@@ -58,7 +58,7 @@ public abstract class FilterTemplate2 implements Filterer{
       t.transfer();
     }
   }
-  
+
   public void filterBatch(int recordCount){
     if (! outgoingSelectionVector.allocateNew(recordCount)) {
       throw new UnsupportedOperationException("Unable to allocate filter batch");
@@ -75,7 +75,7 @@ public abstract class FilterTemplate2 implements Filterer{
     }
     doTransfers();
   }
-  
+
   private void filterBatchSV2(int recordCount){
     int svIndex = 0;
     final int count = recordCount;
@@ -99,7 +99,7 @@ public abstract class FilterTemplate2 implements Filterer{
     }
     outgoingSelectionVector.setRecordCount(svIndex);
   }
-  
+
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 

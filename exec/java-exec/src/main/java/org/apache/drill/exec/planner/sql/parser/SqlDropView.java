@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 
 public class SqlDropView extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("DROP_VIEW", SqlKind.OTHER){
+    @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlDropView(pos, (SqlIdentifier) operands[0]);
     }

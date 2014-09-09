@@ -27,7 +27,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
 
   @Override
   public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods,FunctionCall call) {
-    
+
     int bestcost = Integer.MAX_VALUE;
     int currcost = Integer.MAX_VALUE;
     DrillFuncHolder bestmatch = null;
@@ -35,7 +35,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
     for (DrillFuncHolder h : methods) {
 
       currcost = TypeCastRules.getCost(call, h);
-      
+
       // if cost is lower than 0, func implementation is not matched, either w/ or w/o implicit casts
       if (currcost  < 0 ){
         continue;
@@ -46,7 +46,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
         bestmatch = h;
       }
     }
-    
+
     if (bestcost < 0) {
       //did not find a matched func implementation, either w/ or w/o implicit casts
       //TODO: raise exception here?
@@ -54,5 +54,5 @@ public class DefaultFunctionResolver implements FunctionResolver {
     } else
       return bestmatch;
   }
-  
+
 }

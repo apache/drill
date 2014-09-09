@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Queues;
+import java.util.Queue;
+
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -28,8 +29,9 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.hadoop.util.IndexedSortable;
 
-import javax.inject.Named;
-import java.util.Queue;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Queues;
 
 public abstract class MSortTemplate implements MSorter, IndexedSortable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MSortTemplate.class);
@@ -93,7 +95,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
   public SelectionVector4 getSV4() {
     return vector4;
   }
-  
+
   @Override
   public void sort(VectorContainer container){
     Stopwatch watch = new Stopwatch();
@@ -137,7 +139,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
     vector4.set(sv0, vector4.get(sv1));
     vector4.set(sv1, tmp);
   }
-  
+
   @Override
   public int compare(int leftIndex, int rightIndex) {
     int sv1 = vector4.get(leftIndex);

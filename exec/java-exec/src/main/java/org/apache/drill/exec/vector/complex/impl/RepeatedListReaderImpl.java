@@ -43,16 +43,19 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
     this.container = container;
   }
 
+  @Override
   public MajorType getType(){
     return TYPE;
   }
 
+  @Override
   public void copyAsValue(ListWriter writer){
     if(currentOffset == NO_VALUES) return;
     RepeatedListWriter impl = (RepeatedListWriter) writer;
     impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), container));
   }
 
+  @Override
   public void copyAsField(String name, MapWriter writer){
     if(currentOffset == NO_VALUES) return;
     RepeatedListWriter impl = (RepeatedListWriter) writer.list(name);
@@ -62,10 +65,12 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   private int currentOffset;
   private int maxOffset;
 
+  @Override
   public int size(){
     return maxOffset - currentOffset;
   }
 
+  @Override
   public void setPosition(int index){
     super.setPosition(index);
     RepeatedListHolder h = new RepeatedListHolder();
@@ -79,6 +84,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
     }
   }
 
+  @Override
   public boolean next(){
     if(currentOffset +1 < maxOffset){
       currentOffset++;
@@ -95,6 +101,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
     return container.getAccessor().getObject(idx());
   }
 
+  @Override
   public FieldReader reader(){
     if(reader == null){
       reader = container.get(name, ValueVector.class).getAccessor().getReader();

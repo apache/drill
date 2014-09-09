@@ -20,7 +20,7 @@ package org.apache.drill.common.config;
 public interface CommonConstants {
   public static final String CONFIG_DEFAULT = "drill-default.conf";
   public static final String CONFIG_OVERRIDE = "drill-override.conf";
-  
+
   public static final String LOGICAL_OPERATOR_SCAN_PACKAGES = "drill.logical.operator.packages";
   public static final String PHYSICAL_OPERATOR_SCAN_PACKAGES = "drill.physical.operator.packages";
   public static final String STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES = "drill.logical.storage.packages";

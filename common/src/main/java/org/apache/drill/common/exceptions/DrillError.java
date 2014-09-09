@@ -39,6 +39,6 @@ public class DrillError extends Error {
   public DrillError(Throwable cause) {
     super(cause);
   }
-  
-  
+
+
 }

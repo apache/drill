@@ -28,7 +28,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
-import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
@@ -55,6 +54,7 @@ public class ProjectAllowDupPrel extends ProjectPrel {
     return creator.addMetadata(this, p);
   }
 
+  @Override
   protected List<NamedExpression> getProjectExpressions(DrillParseContext context) {
     List<NamedExpression> expressions = Lists.newArrayList();
     for (Pair<RexNode, String> pair : Pair.zip(exps, getRowType().getFieldNames())) {

@@ -84,6 +84,7 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     throw new RpcException(String.format("Unable to deal with RpcType of %d", rpcType));
   }
 
+  @Override
   protected Response handleReponse(ConnectionThrottle throttle, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     switch (rpcType) {
     case RpcType.QUERY_RESULT_VALUE:

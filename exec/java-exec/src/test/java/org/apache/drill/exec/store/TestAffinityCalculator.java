@@ -17,35 +17,16 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.ImmutableRangeMap;
-import com.google.common.collect.Range;
-
-import junit.framework.Assert;
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
+import java.util.LinkedList;
 
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
-import org.apache.drill.exec.store.parquet.ParquetRowGroupScan;
-import org.apache.drill.exec.store.parquet.ParquetFormatPlugin;
-import org.apache.drill.exec.store.schedule.BlockMapBuilder;
 import org.apache.hadoop.fs.BlockLocation;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.junit.Before;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import com.google.common.collect.ImmutableRangeMap;
+import com.google.common.collect.Range;
 
 public class TestAffinityCalculator extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAffinityCalculator.class);

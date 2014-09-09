@@ -31,18 +31,18 @@ import com.google.common.io.Closeables;
 import com.google.protobuf.MessageLite;
 
 public class DataClientConnection extends RemoteConnection{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClientConnection.class); 
-  
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClientConnection.class);
+
   private final DataClient client;
   private final UUID id;
-  
+
   public DataClientConnection(Channel channel, DataClient client){
     super(channel);
     this.client = client;
     // we use a local listener pool unless a global one is provided.
     this.id = UUID.randomUUID();
   }
-  
+
   @Override
   public BufferAllocator getAllocator() {
     return client.getAllocator();
@@ -50,10 +50,10 @@ public class DataClientConnection extends RemoteConnection{
 
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> outcomeListener, RpcType rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies){
-    client.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);  
-    
+    client.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);
+
   }
-  
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -75,6 +75,6 @@ public class DataClientConnection extends RemoteConnection{
   }
 
   public void shutdownIfClient(){
-    Closeables.closeQuietly(client);    
+    Closeables.closeQuietly(client);
   }
 }

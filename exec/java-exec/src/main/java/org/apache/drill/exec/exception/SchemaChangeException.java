@@ -41,7 +41,7 @@ public class SchemaChangeException extends DrillException{
   public SchemaChangeException(Throwable cause) {
     super(cause);
   }
-  
+
   public SchemaChangeException(String message, Object...objects){
     super(String.format(message, objects));
   }

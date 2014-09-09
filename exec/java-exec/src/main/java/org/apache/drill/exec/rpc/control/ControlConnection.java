@@ -72,6 +72,7 @@ public class ControlConnection extends RemoteConnection {
     active = false;
   }
 
+  @Override
   public boolean isActive() {
     return active;
   }

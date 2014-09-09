@@ -36,7 +36,7 @@ public abstract class DrillStoreRelBase extends TableModificationRelBase impleme
   protected DrillStoreRelBase(RelOptCluster cluster, RelTraitSet traits, RelOptTable table, CatalogReader catalogReader,
       RelNode child, Operation operation, List<String> updateColumnList, boolean flattened) {
     super(cluster, traits, table, catalogReader, child, operation, updateColumnList, flattened);
-    
+
   }
 
 }

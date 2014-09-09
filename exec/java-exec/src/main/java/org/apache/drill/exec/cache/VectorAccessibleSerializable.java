@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.cache;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;

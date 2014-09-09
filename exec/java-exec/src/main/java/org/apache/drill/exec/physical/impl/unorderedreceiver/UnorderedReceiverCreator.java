@@ -36,12 +36,12 @@ public class UnorderedReceiverCreator implements BatchCreator<UnorderedReceiver>
     assert children == null || children.isEmpty();
     IncomingBuffers bufHolder = context.getBuffers();
     assert bufHolder != null : "IncomingBuffers must be defined for any place a receiver is declared.";
-    
+
     RawBatchBuffer[] buffers = bufHolder.getBuffers(receiver.getOppositeMajorFragmentId());
     assert buffers.length == 1;
     RawBatchBuffer buffer = buffers[0];
     return new UnorderedReceiverBatch(context, buffer, receiver);
   }
-  
-  
+
+
 }

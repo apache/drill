@@ -35,7 +35,7 @@ public interface StoragePlugin extends SchemaFactory {
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
-   * 
+   *
    * @param selection
    *          The configured storage engine specific selection.
    * @return
@@ -46,7 +46,7 @@ public interface StoragePlugin extends SchemaFactory {
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
-   * 
+   *
    * @param selection
    *          The configured storage engine specific selection.
    * @param columns

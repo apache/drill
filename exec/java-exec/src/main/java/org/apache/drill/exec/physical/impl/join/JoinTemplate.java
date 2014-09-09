@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl.join;
 
 import javax.inject.Named;
 
-import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;

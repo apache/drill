@@ -46,8 +46,8 @@ import org.apache.drill.exec.vector.complex.impl.NullReader;
 import org.apache.drill.exec.vector.complex.impl.RepeatedListReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import com.google.common.collect.Lists;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 
 public class RepeatedListVector extends AbstractContainerVector implements RepeatedFixedWidthVector{
@@ -74,6 +74,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     this.field = field;
   }
 
+  @Override
   public int size(){
     return vector != null ? 1 : 0;
   }

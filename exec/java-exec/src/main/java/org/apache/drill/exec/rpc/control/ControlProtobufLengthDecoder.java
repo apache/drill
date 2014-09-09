@@ -32,8 +32,9 @@ import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 public class ControlProtobufLengthDecoder extends ProtobufLengthDecoder{
   public ControlProtobufLengthDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
     super(allocator, outOfMemoryHandler);
-    
+
   }
+  @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
     super.decode(ctx, in, out);
   }

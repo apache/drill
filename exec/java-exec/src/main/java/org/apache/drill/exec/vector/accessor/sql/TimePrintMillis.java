@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.vector.accessor.sql;
 
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-
 import java.sql.Time;
+
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
 
 public class TimePrintMillis extends Time {

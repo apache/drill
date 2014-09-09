@@ -29,8 +29,8 @@ import org.eigenbase.rel.convert.ConverterRule;
 public class EnumerableDrillRule extends ConverterRule {
 
   public static EnumerableDrillRule INSTANCE = new EnumerableDrillRule();
-  
-  
+
+
   private EnumerableDrillRule() {
     super(RelNode.class, DrillRel.DRILL_LOGICAL, EnumerableConvention.INSTANCE, "EnumerableDrillRule.");
   }

@@ -21,7 +21,6 @@ import io.netty.channel.Channel;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.RemoteConnection;
-import org.apache.drill.exec.work.fragment.FragmentManager;
 
 public class BitServerConnection extends RemoteConnection{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitServerConnection.class);

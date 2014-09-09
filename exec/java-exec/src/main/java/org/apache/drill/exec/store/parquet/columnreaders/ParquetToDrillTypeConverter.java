@@ -17,12 +17,13 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import org.apache.drill.common.types.TypeProtos;
-import static org.apache.drill.common.types.TypeProtos.MinorType;
-import static org.apache.drill.common.types.TypeProtos.DataMode;
 import static parquet.Preconditions.checkArgument;
 
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+
 import parquet.format.ConvertedType;
 import parquet.format.SchemaElement;
 import parquet.schema.PrimitiveType;

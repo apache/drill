@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.base.Joiner;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
@@ -28,6 +27,8 @@ import net.hydromatic.optiq.tools.ValidationException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.eigenbase.sql.SqlNode;
+
+import com.google.common.base.Joiner;
 
 public abstract class AbstractSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSqlHandler.class);

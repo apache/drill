@@ -17,16 +17,12 @@
  */
 package org.apache.drill.exec.rpc.control;
 
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
-import org.apache.drill.exec.work.fragment.FragmentManager;
 
-import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 
 /**

@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
-import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
-import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.SchemaUserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
@@ -31,17 +29,12 @@ import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
-import org.apache.drill.exec.work.foreman.Foreman.ForemanManagerListener;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.carrotsearch.hppc.IntObjectOpenHashMap;
+import com.google.common.collect.Lists;
 
 public class QueryStatus {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryStatus.class);
@@ -133,6 +126,7 @@ public class QueryStatus {
     profileCache.put(queryId, getAsProfile(fullStatus));
   }
 
+  @Override
   public String toString(){
     return fragmentDataMap.toString();
   }
@@ -182,6 +176,7 @@ public class QueryStatus {
       return true;
     }
 
+    @Override
     public String toString(){
       return major + ":" + minor;
     }

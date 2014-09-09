@@ -24,21 +24,17 @@ import net.hydromatic.linq4j.Ord;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashToRandomExchange;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
-import org.eigenbase.rel.SingleRel;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexNode;
 
 
 public class HashToRandomExchangePrel extends ExchangePrel {
@@ -57,8 +53,8 @@ public class HashToRandomExchangePrel extends ExchangePrel {
    * If there are N nodes (endpoints), we can assume for costing purposes
    * on average each sender will send M/N rows to 1 destination endpoint.
    * (See DrillCostBase for symbol notations)
-   * Include impact of skewness of distribution : the more keys used, the less likely the distribution will be skewed. 
-   * The hash cpu cost will be proportional to 1 / #_keys. 
+   * Include impact of skewness of distribution : the more keys used, the less likely the distribution will be skewed.
+   * The hash cpu cost will be proportional to 1 / #_keys.
    * C =  CPU cost of hashing k fields of M/N rows
    *      + CPU cost of SV remover for M/N rows
    *      + Network cost of sending M/N rows to 1 destination.

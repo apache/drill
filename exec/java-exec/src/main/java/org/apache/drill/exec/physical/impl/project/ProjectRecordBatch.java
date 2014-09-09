@@ -54,7 +54,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -82,8 +81,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   private int recordCount;
 
   private static final String EMPTY_STRING = "";
-  
-  private class ClassifierResult { 
+
+  private class ClassifierResult {
     public boolean isStar = false;
     public List<String> outputNames;
     public String prefix = "";
@@ -91,13 +90,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     public CaseInsensitiveMap outputMap = new CaseInsensitiveMap();
     private CaseInsensitiveMap sequenceMap = new CaseInsensitiveMap();
 
-    private void clear() { 
+    private void clear() {
       isStar = false;
       prefix = "";
-      if (outputNames != null) { 
+      if (outputNames != null) {
         outputNames.clear();
       }
-      
+
       // note:  don't clear the internal maps since they have cumulative data..
     }
   }
@@ -128,6 +127,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     return super.innerNext();
   }
 
+  @Override
   public VectorContainer getOutgoingContainer() {
     return this.container;
   }
@@ -262,17 +262,17 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     IntOpenHashSet transferFieldIds = new IntOpenHashSet();
 
     boolean isAnyWildcard = false;
-   
-    ClassifierResult result = new ClassifierResult();  
+
+    ClassifierResult result = new ClassifierResult();
     boolean classify = isClassificationNeeded(exprs);
-    
+
     for(int i = 0; i < exprs.size(); i++){
       final NamedExpression namedExpression = exprs.get(i);
       result.clear();
-      
+
       if (classify && namedExpression.getExpr() instanceof SchemaPath) {
         classifyExpr(namedExpression, incoming, result);
-     
+
         if (result.isStar) {
           isAnyWildcard = true;
           Integer value = result.prefixMap.get(result.prefix);
@@ -284,12 +284,12 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
               if (k > result.outputNames.size()-1) {
                 assert false;
               }
-              String name = result.outputNames.get(k++);  // get the renamed column names 
+              String name = result.outputNames.get(k++);  // get the renamed column names
               if (name == EMPTY_STRING) continue;
               FieldReference ref = new FieldReference(name);
               TransferPair tp = wrapper.getValueVector().getTransferPair(ref);
               transfers.add(tp);
-              container.add(tp.getTo());        
+              container.add(tp.getTo());
             }
           } else if (value != null && value.intValue() > 1) { // subsequent wildcards should do a copy of incoming valuevectors
             int k = 0;
@@ -305,7 +305,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
               final LogicalExpression expr = ExpressionTreeMaterializer.materialize(originalPath, incoming, collector, context.getFunctionRegistry() );
               if(collector.hasErrors()){
                 throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-              }              
+              }
 
               MaterializedField outputField = MaterializedField.create(name, expr.getMajorType());
               ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
@@ -330,7 +330,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           }
         }
       }
-      
+
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
       final MaterializedField outputField = MaterializedField.create(outputName, expr.getMajorType());
       if(collector.hasErrors()){
@@ -426,7 +426,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       NameSegment ref = ex.getRef().getRootSegment();
       boolean refHasPrefix = ref.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
       boolean exprContainsStar = expr.getPath().contains(StarColumnHelper.STAR_COLUMN);
-      
+
       if (refHasPrefix || exprContainsStar) {
         needed = true;
         break;
@@ -434,19 +434,19 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }
     return needed;
   }
-  
+
   private String getUniqueName(String name, ClassifierResult result) {
     Integer currentSeq = (Integer) result.sequenceMap.get(name);
     if (currentSeq == null) { // name is unique, so return the original name
       Integer n = -1;
       result.sequenceMap.put(name, n);
-      return name; 
+      return name;
     }
     // create a new name
     Integer newSeq = currentSeq + 1;
-    result.sequenceMap.put(name, newSeq); 
-    
-    String newName = name + newSeq;    
+    result.sequenceMap.put(name, newSeq);
+
+    String newName = name + newSeq;
     return newName;
   }
 
@@ -462,8 +462,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       result.outputNames.add(EMPTY_STRING);
     }
   }
-    
-  private void classifyExpr(NamedExpression ex, RecordBatch incoming, ClassifierResult result)  {    
+
+  private void classifyExpr(NamedExpression ex, RecordBatch incoming, ClassifierResult result)  {
     NameSegment expr = ((SchemaPath)ex.getExpr()).getRootSegment();
     NameSegment ref = ex.getRef().getRootSegment();
     boolean exprHasPrefix = expr.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
@@ -475,11 +475,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
     String exprPrefix = EMPTY_STRING;
     String exprSuffix = expr.getPath();
-    
+
     if (exprHasPrefix) {
       // get the prefix of the expr
       String[] exprComponents = expr.getPath().split(StarColumnHelper.PREFIX_DELIMITER, 2);
-      assert(exprComponents.length == 2); 
+      assert(exprComponents.length == 2);
       exprPrefix = exprComponents[0];
       exprSuffix = exprComponents[1];
       result.prefix = exprPrefix;
@@ -496,18 +496,18 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         result.prefixMap.put(exprPrefix, n);
       }
     }
-    
+
     int incomingSchemaSize = incoming.getSchema().getFieldCount();
 
-    // for debugging.. 
+    // for debugging..
     // if (incomingSchemaSize > 9) {
     // assert false;
     // }
-    
+
     // input is '*' and output is 'prefix_*'
-    if (exprIsStar && refHasPrefix && refEndsWithStar) { 
+    if (exprIsStar && refHasPrefix && refEndsWithStar) {
       String[] components = ref.getPath().split(StarColumnHelper.PREFIX_DELIMITER, 2);
-      assert(components.length == 2); 
+      assert(components.length == 2);
       String prefix = components[0];
       result.outputNames = Lists.newArrayList();
       for(VectorWrapper<?> wrapper : incoming) {
@@ -518,7 +518,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         String newName = prefix + StarColumnHelper.PREFIX_DELIMITER + name;
         addToResultMaps(newName, result, false);
       }
-    } 
+    }
     // input and output are the same
     else if (expr.getPath().equals(ref.getPath())) {
       if (exprContainsStar && exprHasPrefix) {
@@ -533,16 +533,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         for(VectorWrapper<?> wrapper : incoming) {
           ValueVector vvIn = wrapper.getValueVector();
           String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
-          // get the prefix of the name 
+          // get the prefix of the name
           String[] nameComponents = incomingName.split(StarColumnHelper.PREFIX_DELIMITER, 2);
           // if incoming valuevector does not have a prefix, ignore it since this expression is not referencing it
           if (nameComponents.length <= 1) {
             k++;
             continue;
-          }  
+          }
           String namePrefix = nameComponents[0];
           if (exprPrefix.equals(namePrefix)) {
-            String newName = incomingName; 
+            String newName = incomingName;
             if (!result.outputMap.containsKey(newName)) {
               result.outputNames.set(k, newName);
               result.outputMap.put(newName,  newName);
@@ -593,13 +593,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         if (components.length <= 1)  {
           k++;
           continue;
-        }  
+        }
         String namePrefix = components[0];
         String nameSuffix = components[1];
         if (exprPrefix.equals(namePrefix)) {
           if (refContainsStar) {
-            // remove the prefix from the incoming column names      
-            String newName = getUniqueName(nameSuffix, result);  // for top level we need to make names unique        
+            // remove the prefix from the incoming column names
+            String newName = getUniqueName(nameSuffix, result);  // for top level we need to make names unique
             result.outputNames.set(k, newName);
           } else if (exprSuffix.equals(nameSuffix)) {
             // example: ref: $f1, expr: T0<PREFIX><column_name>
@@ -611,15 +611,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         }
         k++;
       }
-    } 
+    }
     // input and output have prefixes although they could be different...
     else if (exprHasPrefix && refHasPrefix) {
       String[] input = expr.getPath().split(StarColumnHelper.PREFIX_DELIMITER, 2);
-      assert(input.length == 2); 
-      assert false : "Unexpected project expression or reference";  // not handled yet   
-    } 
+      assert(input.length == 2);
+      assert false : "Unexpected project expression or reference";  // not handled yet
+    }
     else {
-      // if the incoming schema's column name matches the expression name of the Project, 
+      // if the incoming schema's column name matches the expression name of the Project,
       // then we just want to pick the ref name as the output column name
       result.outputNames = Lists.newArrayListWithCapacity(incomingSchemaSize);
       for (int j=0; j < incomingSchemaSize; j++) {
@@ -629,10 +629,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       int k = 0;
       for(VectorWrapper<?> wrapper : incoming) {
         ValueVector vvIn = wrapper.getValueVector();
-        String incomingName = vvIn.getField().getPath().getRootSegment().getPath(); 
+        String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
 
         if (expr.getPath().equals(incomingName)) {
-          String newName = ref.getPath(); 
+          String newName = ref.getPath();
           if (!result.outputMap.containsKey(newName)) {
             result.outputNames.set(k, newName);
             result.outputMap.put(newName,  newName);
@@ -640,7 +640,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         }
         k++;
       }
-    }              
+    }
   }
 
 }

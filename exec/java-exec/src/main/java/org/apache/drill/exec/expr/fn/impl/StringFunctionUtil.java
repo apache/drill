@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-
 import io.netty.buffer.ByteBuf;
+
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 
 public class StringFunctionUtil {
 

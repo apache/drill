@@ -31,13 +31,13 @@ public class SingleClassStringWriter extends CodeWriter{
 
   private boolean used;
   private StringWriter writer = new StringWriter();
-  
+
   @Override
   public OutputStream openBinary(JPackage pkg, String fileName) throws IOException {
     throw new UnsupportedOperationException();
   }
 
-  
+
   @Override
   public Writer openSource(JPackage pkg, String fileName) throws IOException {
     Preconditions.checkArgument(!used, "The SingleClassStringWriter can only output once src file.");
@@ -52,6 +52,6 @@ public class SingleClassStringWriter extends CodeWriter{
   public StringBuffer getCode(){
     return writer.getBuffer();
   }
-  
-  
+
+
 }

@@ -37,8 +37,8 @@ public class MergeJoinCreator implements BatchCreator<MergeJoinPOP> {
     if(config.getJoinType() == JoinRelType.RIGHT){
       return new MergeJoinBatch(config.flipIfRight(), context, children.get(1), children.get(0));
     }else{
-      return new MergeJoinBatch(config, context, children.get(0), children.get(1));  
+      return new MergeJoinBatch(config, context, children.get(0), children.get(1));
     }
-    
+
   }
 }

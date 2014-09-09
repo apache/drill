@@ -23,25 +23,24 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public class ResolverTypePrecedence {
-	
+
 
   public static final Map<MinorType, Integer> precedenceMap;
   public static final Map<MinorType, Set<MinorType>> secondaryImplicitCastRules;
   public static int MAX_IMPLICIT_CAST_COST;
 
-  static {    
-    /* The precedenceMap is used to decide whether it's allowed to implicitly "promote" 
-     * one type to another type. 
-     * 
-     * The order that each type is inserted into HASHMAP decides its precedence. 
-     * First in ==> lowest precedence. 
+  static {
+    /* The precedenceMap is used to decide whether it's allowed to implicitly "promote"
+     * one type to another type.
+     *
+     * The order that each type is inserted into HASHMAP decides its precedence.
+     * First in ==> lowest precedence.
      * A type of lower precedence can be implicitly "promoted" to type of higher precedence.
-     * For instance, NULL could be promoted to any other type; 
-     * tinyint could be promoted into int; but int could NOT be promoted into tinyint (due to possible precision loss).  
+     * For instance, NULL could be promoted to any other type;
+     * tinyint could be promoted into int; but int could NOT be promoted into tinyint (due to possible precision loss).
      */
     int i = 0;
     precedenceMap = new HashMap<MinorType, Integer>();

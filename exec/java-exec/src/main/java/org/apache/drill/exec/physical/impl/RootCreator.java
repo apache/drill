@@ -26,6 +26,6 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public interface RootCreator<T extends PhysicalOperator> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootCreator.class);
-  
+
   public RootExec getRoot(FragmentContext context, T config, List<RecordBatch> children) throws ExecutionSetupException;
 }

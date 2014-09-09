@@ -22,7 +22,7 @@ import java.util.concurrent.Semaphore;
 /**
  * Account for whether all messages sent have been completed. Necessary before finishing a task so we don't think
  * buffers are hanging when they will be released.
- * 
+ *
  * TODO: Need to update to use long for number of pending messages.
  */
 public class SendingAccountor {

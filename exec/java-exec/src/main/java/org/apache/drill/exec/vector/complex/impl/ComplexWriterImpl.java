@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector.complex.impl;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
@@ -87,6 +86,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
     }
   }
 
+  @Override
   public void setPosition(int index){
     super.setPosition(index);
     switch(mode){
@@ -176,7 +176,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
   private static class VectorAccessibleFacade extends MapVector {
 
     private final VectorContainer vc;
-    
+
     public VectorAccessibleFacade(VectorContainer vc) {
       super("", null);
       this.vc = vc;

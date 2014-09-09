@@ -18,7 +18,6 @@
 package org.apache.drill.exec.vector.allocator;
 
 import org.apache.drill.exec.vector.RepeatedVariableWidthVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
 
 public class RepeatedVariableEstimatedAllocator extends VectorAllocator{
   RepeatedVariableWidthVector out;
@@ -29,7 +28,8 @@ public class RepeatedVariableEstimatedAllocator extends VectorAllocator{
     this.out = out;
     this.avgWidth = avgWidth;
   }
-  
+
+  @Override
   public void alloc(int recordCount){
     out.allocateNew(avgWidth * recordCount, recordCount, recordCount);
   }

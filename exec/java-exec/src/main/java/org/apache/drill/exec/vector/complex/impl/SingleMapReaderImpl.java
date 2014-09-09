@@ -47,6 +47,7 @@ public class SingleMapReaderImpl extends AbstractFieldReader{
     }
   }
 
+  @Override
   public FieldReader reader(String name){
     FieldReader reader = fields.get(name);
     if(reader == null){
@@ -62,6 +63,7 @@ public class SingleMapReaderImpl extends AbstractFieldReader{
     return reader;
   }
 
+  @Override
   public void setPosition(int index){
     super.setPosition(index);
     for(FieldReader r : fields.values()){
@@ -79,19 +81,23 @@ public class SingleMapReaderImpl extends AbstractFieldReader{
     return true;
   }
 
+  @Override
   public MajorType getType(){
     return vector.getField().getType();
   }
 
+  @Override
   public java.util.Iterator<String> iterator(){
     return vector.fieldNameIterator();
   }
 
+  @Override
   public void copyAsValue(MapWriter writer){
     SingleMapWriter impl = (SingleMapWriter) writer;
     impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), vector));
   }
 
+  @Override
   public void copyAsField(String name, MapWriter writer){
     SingleMapWriter impl = (SingleMapWriter) writer.map(name);
     impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), vector));

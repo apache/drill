@@ -20,7 +20,6 @@ package org.apache.drill.common.logical.data;
 import java.io.IOException;
 import java.util.Iterator;
 
-import com.google.common.collect.Iterators;
 import org.apache.drill.common.logical.data.Sequence.De;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 import org.slf4j.Logger;
@@ -41,11 +40,12 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.google.common.collect.Iterators;
 
 /**
  * Describes a list of operators where each operator only has one input and that
  * input is the operator that came before.
- * 
+ *
  */
 @JsonDeserialize(using = De.class)
 @JsonTypeName("sequence")
@@ -53,7 +53,7 @@ public class Sequence extends LogicalOperatorBase {
   static final Logger logger = LoggerFactory.getLogger(Sequence.class);
 
   private Sequence(){}
-  
+
   public boolean openTop;
   public LogicalOperator input;
   @JsonProperty("do")

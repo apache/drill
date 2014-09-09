@@ -269,6 +269,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       return new Boolean(get(index) != 0);
     }
 
+    @Override
     public final int getValueCount() {
       return valueCount;
     }

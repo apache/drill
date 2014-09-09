@@ -17,15 +17,17 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
+
 import net.hydromatic.optiq.SchemaPlus;
+
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 public class UserSession {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);

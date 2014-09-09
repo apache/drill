@@ -23,7 +23,6 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 public class VectorContainerWriter extends AbstractFieldWriter implements ComplexWriter {
@@ -69,6 +68,7 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
     mapRoot.setValueCount(count);
   }
 
+  @Override
   public void setPosition(int index) {
     super.setPosition(index);
     mapRoot.setPosition(index);

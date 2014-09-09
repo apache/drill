@@ -19,13 +19,13 @@ package org.apache.drill.exec.util;
 
 import java.util.List;
 
-import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 public class VectorUtil {

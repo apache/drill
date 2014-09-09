@@ -37,7 +37,7 @@ public class FileUtils {
     if (u == null) throw new FileNotFoundException(String.format("Unable to find file on path %s", fileName));
     return new File(u.getPath());
   }
-  
+
   public static String getResourceAsString(String fileName) throws IOException {
     return Files.toString(getResourceAsFile(fileName), Charsets.UTF_8);
   }

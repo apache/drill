@@ -25,7 +25,7 @@ import java.util.Map;
 
   private Map<V, AdjacencyList<V>.Node> ops = new HashMap<V, AdjacencyList<V>.Node>();
   private final AdjacencyList<V> parent;
-  
+
   public AdjacencyListBuilder(AdjacencyList<V> parent) {
     this.parent = parent;
   }

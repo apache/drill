@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive.schema;
 
 import net.hydromatic.optiq.Schema.TableType;
+
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;

@@ -40,6 +40,7 @@ public class NamedField extends Field {
         this.keyType = keyType;
     }
 
+    @Override
     public String getFieldName() {
         return fieldName;
     }

@@ -17,14 +17,16 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import java.util.Set;
+
 import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.Table;
+
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
-import java.util.Collection;
-import java.util.Set;
+import com.google.common.collect.ImmutableList;
 
 public class SubSchemaWrapper extends AbstractSchema {
 

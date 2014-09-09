@@ -30,13 +30,13 @@ public class RpcConfig {
   private final String name;
   private final Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap;
   private final Map<Integer, RpcMessageType<?, ?, ?>> receiveMap;
-  
+
   private RpcConfig(String name, Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap, Map<Integer, RpcMessageType<?, ?, ?>> receiveMap){
     this.name = name;
     this.sendMap = ImmutableMap.copyOf(sendMap);
     this.receiveMap = ImmutableMap.copyOf(receiveMap);
   }
-  
+
   public String getName() {
     return name;
   }
@@ -51,7 +51,7 @@ public class RpcConfig {
     }
     return true;
   }
-  
+
   public boolean checkSend(EnumLite send, Class<?> sendClass, Class<?> receiveClass){
     if(RpcConstants.EXTRA_DEBUGGING) logger.debug(String.format("Checking send classes for send RpcType %s.  Send Class is %s and Receive class is %s.", send, sendClass, receiveClass));
     RpcMessageType<?,?,?> type = sendMap.get(send);
@@ -62,16 +62,16 @@ public class RpcConfig {
 
     return true;
   }
-  
+
   public boolean checkResponseSend(EnumLite responseType, Class<?> responseClass){
     if(RpcConstants.EXTRA_DEBUGGING) logger.debug(String.format("Checking responce send of type %s with response class of %s.",  responseType, responseClass));
     RpcMessageType<?,?,?> type = receiveMap.get(responseType.getNumber());
     if(type == null) throw new IllegalStateException(String.format("%s: There is no defined RpcMessage type for a Rpc response of type %s.", name, responseType));
     if(type.getRet() != responseClass) throw new IllegalStateException(String.format("%s: The definition for the response doesn't match implementation code.  The definition is %s however the current response is trying to response with an object of type %s.", name, type, responseClass.getCanonicalName()));
-    
+
     return true;
   }
-  
+
   public static class RpcMessageType<SEND extends MessageLite, RECEIVE extends MessageLite, T extends EnumLite>{
     private T sendEnum;
     private Class<SEND> send;
@@ -113,37 +113,37 @@ public class RpcConfig {
       return "RpcMessageType [sendEnum=" + sendEnum + ", send=" + send + ", receiveEnum=" + receiveEnum + ", ret="
           + ret + "]";
     }
-    
-    
+
+
   }
 
   public static RpcConfigBuilder newBuilder(String name){
     return new RpcConfigBuilder(name);
   }
-  
+
   public static class RpcConfigBuilder {
     private final String name;
     private Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap = Maps.newHashMap();
-    private Map<Integer, RpcMessageType<?, ?, ?>> receiveMap = Maps.newHashMap();  
-    
+    private Map<Integer, RpcMessageType<?, ?, ?>> receiveMap = Maps.newHashMap();
+
     private RpcConfigBuilder(String name){
       this.name = name;
     }
-    
+
     public <SEND extends MessageLite, RECEIVE extends MessageLite, T extends EnumLite>  RpcConfigBuilder add(T sendEnum, Class<SEND> send, T receiveEnum, Class<RECEIVE> rec){
       RpcMessageType<SEND, RECEIVE, T> type = new RpcMessageType<SEND, RECEIVE, T>(sendEnum, send, receiveEnum, rec);
       this.sendMap.put(sendEnum, type);
       this.receiveMap.put(receiveEnum.getNumber(), type);
       return this;
     }
-    
+
     public RpcConfig build(){
       return new RpcConfig(name, sendMap, receiveMap);
 
     }
   }
-  
-  
+
+
 
 }
 

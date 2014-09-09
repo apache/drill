@@ -17,12 +17,13 @@
  */
 package org.apache.drill.common.expression;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public final ImmutableList<LogicalExpression> args;
@@ -68,7 +69,7 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
    * is the function output non-deterministic?
    */
   public abstract boolean isRandom();
-  
+
   /**
    * @ return a copy of FunctionHolderExpression, with passed in argument list.
    */

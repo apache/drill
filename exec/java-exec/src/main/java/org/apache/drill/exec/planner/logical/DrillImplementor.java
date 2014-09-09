@@ -33,21 +33,21 @@ import com.google.common.collect.Sets;
  * Context for converting a tree of {@link DrillRel} nodes into a Drill logical plan.
  */
 public class DrillImplementor {
-  
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillImplementor.class);
-  
+
   private Set<DrillTable> tables = Sets.newHashSet();
   private Set<String> storageEngineNames = Sets.newHashSet();
   private LogicalPlanBuilder planBuilder = new LogicalPlanBuilder();
   private LogicalPlan plan;
   private final DrillParseContext context;
-  
-  
+
+
   public DrillImplementor(DrillParseContext context, ResultMode mode) {
     planBuilder.planProperties(PlanType.APACHE_DRILL_LOGICAL, 1, DrillImplementor.class.getName(), "", mode);
     this.context = context;
   }
-  
+
   public DrillParseContext getContext(){
     return context;
   }
@@ -62,7 +62,7 @@ public class DrillImplementor {
     LogicalOperator rootLOP = root.implement(this);
     rootLOP.accept(new AddOpsVisitor(), null);
   }
-  
+
   public LogicalPlan getPlan(){
     if(plan == null){
       plan = planBuilder.build();
@@ -74,7 +74,7 @@ public class DrillImplementor {
   public LogicalOperator visitChild(DrillRel parent, int ordinal, RelNode child) {
     return ((DrillRel) child).implement(this);
   }
-  
+
   private class AddOpsVisitor extends AbstractLogicalVisitor<Void, Void, RuntimeException> {
     @Override
     public Void visitOp(LogicalOperator op, Void value) throws RuntimeException {

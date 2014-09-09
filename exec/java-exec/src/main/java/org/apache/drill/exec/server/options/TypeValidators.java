@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.server.options;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.util.NlsString;
-
-import java.math.BigDecimal;
 
 public class TypeValidators {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);

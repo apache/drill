@@ -137,6 +137,7 @@ public class DumpCat {
       this.dataSize += info2.dataSize;
     }
 
+    @Override
     public String toString() {
       String avgRecSizeStr = null;
       if (this.rows>0)

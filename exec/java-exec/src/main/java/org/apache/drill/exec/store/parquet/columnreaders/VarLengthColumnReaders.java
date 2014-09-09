@@ -17,9 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.Unpooled;
 
 import java.math.BigDecimal;
 
@@ -27,7 +25,6 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.util.DecimalUtility;
@@ -225,6 +222,7 @@ public class VarLengthColumnReaders {
       this.mutator = vector.getMutator();
     }
 
+    @Override
     public boolean setSafe(int index, DrillBuf value, int start, int length) {
       boolean success;
       if(index >= vector.getValueCapacity()) return false;
@@ -302,6 +300,7 @@ public class VarLengthColumnReaders {
       nullableVarBinaryVector = v;
     }
 
+    @Override
     public boolean setSafe(int index, DrillBuf value, int start, int length) {
       boolean success;
       if(index >= nullableVarBinaryVector.getValueCapacity()) return false;

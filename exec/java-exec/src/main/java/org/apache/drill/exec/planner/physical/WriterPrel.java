@@ -29,11 +29,6 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.SqlTypeName;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class WriterPrel extends DrillWriterRelBase implements Prel {
 
@@ -77,10 +72,10 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-  
+
   @Override
   public boolean needsFinalColumnReordering() {
     return true;
   }
-  
+
 }

@@ -36,12 +36,12 @@ public class LogicalPlanBuilder {
     this.planProperties = planProperties;
     return this;
   }
-  
+
   public LogicalPlanBuilder planProperties(PlanType type, int version, String generatorType, String generatorInfo, ResultMode mode){
     this.planProperties = PlanProperties.builder().generator(generatorType, generatorInfo).type(type).version(version).resultMode(mode).build();
     return this;
   }
-  
+
   public LogicalPlanBuilder addStorageEngine(String name, StoragePluginConfig config) {
     this.storageEngines.put(name, config);
     return this;

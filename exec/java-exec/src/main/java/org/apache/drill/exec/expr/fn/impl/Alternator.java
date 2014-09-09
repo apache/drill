@@ -17,25 +17,21 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.exec.expr.DrillAggFunc;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class Alternator {
-  
+
   @FunctionTemplate(name = "alternate", isRandom = true, scope = FunctionScope.SIMPLE)
   public static class Alternate2 implements DrillSimpleFunc{
     @Workspace int val;
     @Output BigIntHolder out;
-    
+
     public void setup(RecordBatch incoming) {
       val = 0;
     }
@@ -55,7 +51,7 @@ public class Alternator {
   public static class Alternate3 implements DrillSimpleFunc{
     @Workspace int val;
     @Output BigIntHolder out;
-    
+
     public void setup(RecordBatch incoming) {
       val = 0;
     }

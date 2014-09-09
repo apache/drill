@@ -21,9 +21,9 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.RpcException;
 
 public interface UserResultsListener {
-  
+
   public abstract void queryIdArrived(QueryId queryId);
-  public abstract void submissionFailed(RpcException ex); 
+  public abstract void submissionFailed(RpcException ex);
   public abstract void resultArrived(QueryResultBatch result, ConnectionThrottle throttle);
 
 }

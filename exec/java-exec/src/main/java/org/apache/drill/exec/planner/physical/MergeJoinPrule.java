@@ -27,14 +27,10 @@ import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelCollationImpl;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.trace.EigenbaseTrace;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class MergeJoinPrule extends JoinPruleBase {
@@ -51,7 +47,7 @@ public class MergeJoinPrule extends JoinPruleBase {
   public boolean matches(RelOptRuleCall call) {
     return PrelUtil.getPlannerSettings(call.getPlanner()).isMergeJoinEnabled();
   }
-  
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
@@ -61,10 +57,10 @@ public class MergeJoinPrule extends JoinPruleBase {
     if (!checkPreconditions(join, left, right)) {
       return;
     }
-    
+
     boolean hashSingleKey = PrelUtil.getPlannerSettings(call.getPlanner()).isHashSingleKey();
-    
-    try {            
+
+    try {
       RelCollation collationLeft = getCollation(join.getLeftKeys());
       RelCollation collationRight = getCollation(join.getRightKeys());
 
@@ -78,8 +74,8 @@ public class MergeJoinPrule extends JoinPruleBase {
       tracer.warning(e.toString());
     }
   }
-  
-  private RelCollation getCollation(List<Integer> keys){    
+
+  private RelCollation getCollation(List<Integer> keys){
     List<RelFieldCollation> fields = Lists.newArrayList();
     for (int key : keys) {
       fields.add(new RelFieldCollation(key));

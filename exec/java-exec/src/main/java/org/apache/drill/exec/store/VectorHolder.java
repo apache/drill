@@ -31,7 +31,7 @@ public class VectorHolder {
   private int currentLength;
   private boolean repeated;
 
-  
+
   public VectorHolder(int length, ValueVector vector) {
     this.length = length;
     this.vector = vector;
@@ -39,7 +39,7 @@ public class VectorHolder {
       repeated = true;
     }
   }
-  
+
   public VectorHolder(ValueVector vector) {
     this.length = vector.getValueCapacity();
     this.vector = vector;

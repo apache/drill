@@ -17,16 +17,16 @@
  */
 package org.apache.drill.exec.fn.hive;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
 
 public class TestSampleHiveUDFs extends BaseTestQuery {
 

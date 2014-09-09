@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import java.util.HashMap;
+
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql2rel.SqlRexConvertlet;
 import org.eigenbase.sql2rel.SqlRexConvertletTable;
 import org.eigenbase.sql2rel.StandardConvertletTable;
-
-import java.util.HashMap;
 
 public class DrillConvertletTable implements SqlRexConvertletTable{
 

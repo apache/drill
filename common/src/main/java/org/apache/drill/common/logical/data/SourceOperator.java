@@ -31,5 +31,5 @@ public abstract class SourceOperator extends LogicalOperatorBase{
   public Iterator<LogicalOperator> iterator() {
       return Iterators.emptyIterator();
   }
-  
+
 }

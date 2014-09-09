@@ -127,6 +127,7 @@ public class TestFileGenerator {
       position.reset();
     }
 
+    @Override
     public Object getValue() {
       Object ret = values[position.val];
       position.increment();

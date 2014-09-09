@@ -17,19 +17,20 @@
  */
 package org.apache.drill.common.logical.data;
 
+import java.util.Iterator;
+
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Iterators;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-
-import java.util.Iterator;
 
 @JsonTypeName("transform")
 public class Transform extends SingleInputOperator{
-  
+
 	private final NamedExpression[] transforms;
-	
+
 	@JsonCreator
 	public Transform(@JsonProperty("transforms") NamedExpression[] transforms) {
     super();

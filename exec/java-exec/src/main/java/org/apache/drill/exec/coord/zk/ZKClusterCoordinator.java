@@ -105,6 +105,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     return curator;
   }
 
+  @Override
   public void start(long millisToWait) throws Exception {
     logger.debug("Starting ZKClusterCoordination.");
     discovery.start();

@@ -25,8 +25,8 @@ public abstract class DrillInputStream implements AutoCloseable{
 //  public abstract AccountingByteBuf readNow(long start, long length) throws IOException;
 //  public abstract void readNow(AccountingByteBuf b, long start, long length) throws IOException;
 //  public abstract AccountingByteBuf readNow() throws IOException;
-  
+
   public abstract FSDataInputStream getInputStream();
 //  public abstract CheckedFuture<Long, IOException> readFuture(AccountingByteBuf b, long start, long length) throws IOException;
-  
+
 }

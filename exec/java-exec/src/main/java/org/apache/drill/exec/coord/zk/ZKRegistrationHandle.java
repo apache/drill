@@ -17,17 +17,16 @@
  */
 package org.apache.drill.exec.coord.zk;
 
-import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
 
 public class ZKRegistrationHandle implements RegistrationHandle {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZKRegistrationHandle.class);
-  
+
   public final String id;
 
   public ZKRegistrationHandle(String id) {
     super();
     this.id = id;
   }
-  
+
 }

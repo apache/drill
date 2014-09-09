@@ -20,9 +20,9 @@ package org.apache.drill.exec.planner.sql;
 import org.eigenbase.sql.type.ExplicitReturnTypeInference;
 
 class DynamicReturnType extends ExplicitReturnTypeInference {
-  
+
   public static final DynamicReturnType INSTANCE = new DynamicReturnType();
-  
+
   public DynamicReturnType() {
     super(new DynamicType());
   }

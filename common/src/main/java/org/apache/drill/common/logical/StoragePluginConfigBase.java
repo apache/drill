@@ -33,6 +33,7 @@ public abstract class StoragePluginConfigBase extends StoragePluginConfig {
     return sec;
   }
 
+  @Override
   public abstract boolean equals(Object o);
 
 }

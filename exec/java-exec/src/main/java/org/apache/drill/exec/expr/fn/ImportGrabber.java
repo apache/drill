@@ -31,13 +31,13 @@ import com.google.common.collect.Lists;
 
 public class ImportGrabber{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImportGrabber.class);
-  
+
   private List<String> imports = Lists.newArrayList();
   private final ImportFinder finder = new ImportFinder();
 
   private ImportGrabber() {
   }
-  
+
   public class ImportFinder extends Traverser{
 
     @Override
@@ -60,9 +60,9 @@ public class ImportGrabber{
       imports.add(siodd.toString());
     }
 
-    
+
   }
-  
+
   public static List<String> getMethods(Java.CompilationUnit cu){
     ImportGrabber visitor = new ImportGrabber();
     cu.getPackageMemberTypeDeclarations()[0].accept(visitor.finder.comprehensiveVisitor());

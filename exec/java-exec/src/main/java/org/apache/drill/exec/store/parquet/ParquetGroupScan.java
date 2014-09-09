@@ -390,6 +390,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return newScan;
   }
 
+  @Override
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;

@@ -17,19 +17,16 @@
  */
 package org.apache.drill.common.logical.data;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 @JsonTypeName("project")

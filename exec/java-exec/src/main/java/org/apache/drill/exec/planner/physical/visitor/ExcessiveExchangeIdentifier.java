@@ -25,7 +25,6 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCost;
 
 import com.google.common.collect.Lists;
 

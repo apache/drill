@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.junit.Test;
 
 

@@ -18,22 +18,24 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import io.netty.buffer.ByteBuf;
+
+import java.io.IOException;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
+
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.schema.PrimitiveType;
 import parquet.schema.PrimitiveType.PrimitiveTypeName;
 
-import java.io.IOException;
-
 public abstract class ColumnReader<V extends ValueVector> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnReader.class);
 
   final ParquetRecordReader parentReader;
-  
+
   // Value Vector for this column
   final V valueVec;
 
@@ -57,10 +59,10 @@ public abstract class ColumnReader<V extends ValueVector> {
   // counter for the total number of values read from one or more pages
   // when a batch is filled all of these values should be the same for all of the columns
   int totalValuesRead;
-  
+
   // counter for the values that have been read in this pass (a single call to the next() method)
   int valuesReadInCurrentPass;
-  
+
   // length of single data value in bits, if the length is fixed
   int dataTypeLengthInBits;
   int bytesReadInCurrentPass;

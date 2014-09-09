@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.planner.sql.parser.impl;
 
+import java.io.Reader;
+
 import org.apache.drill.exec.planner.sql.parser.CompoundIdentifierConverter;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlAbstractParserImpl;
 import org.eigenbase.sql.parser.SqlParserImplFactory;
 import org.eigenbase.sql.util.SqlVisitor;
-
-import java.io.Reader;
 
 public class DrillParserWithCompoundIdConverter extends DrillParserImpl {
 

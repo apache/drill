@@ -47,22 +47,22 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 @JsonSerialize(using = Se.class)
 @JsonDeserialize(using = De.class)
 public class JSONOptions {
-  
+
   final static Logger logger = LoggerFactory.getLogger(JSONOptions.class);
-  
+
   private JsonNode root;
   private JsonLocation location;
   private Object opaque;
-  
+
   public JSONOptions(Object opaque){
     this.opaque = opaque;
   }
-  
+
   public JSONOptions(JsonNode n, JsonLocation location){
     this.root = n;
     this.location = location;
   }
-  
+
   @SuppressWarnings("unchecked")
   public <T> T getWith(DrillConfig config, Class<T> c){
     try {
@@ -73,7 +73,7 @@ public class JSONOptions {
           throw new IllegalArgumentException(String.format("Attmpted to retrieve a option with type of %s.  However, the JSON options carried an opaque value of type %s.", c.getName(), opaque.getClass().getName()));
         }
       }
-      
+
       //logger.debug("Read tree {}", root);
       return config.getMapper().treeToValue(root, c);
     } catch (JsonProcessingException e) {
@@ -99,7 +99,7 @@ public class JSONOptions {
     if(root == null) return null;
     return mapper.treeAsTokens(root).readValueAs(t);
   }
-  
+
   public JsonNode path(String name){
     return root.path(name);
   }
@@ -107,9 +107,9 @@ public class JSONOptions {
   public JsonNode getRoot(){
       return root;
   }
-  
+
   public static class De extends StdDeserializer<JSONOptions> {
-    
+
     public De() {
       super(JSONOptions.class);
       logger.debug("Creating Deserializer.");
@@ -123,7 +123,7 @@ public class JSONOptions {
       TreeNode n = jp.readValueAsTree();
 //      logger.debug("Tree {}", n);
       if(n instanceof JsonNode){
-        return new JSONOptions( (JsonNode) n, l); 
+        return new JSONOptions( (JsonNode) n, l);
       }else{
         throw new IllegalArgumentException(String.format("Received something other than a JsonNode %s", n));
       }
@@ -143,9 +143,9 @@ public class JSONOptions {
       if(value.opaque != null){
         jgen.writeObject(value.opaque);
       }else{
-        jgen.writeTree(value.root);  
+        jgen.writeTree(value.root);
       }
-      
+
     }
 
   }

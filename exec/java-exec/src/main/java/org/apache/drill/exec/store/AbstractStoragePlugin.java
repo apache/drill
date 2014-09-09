@@ -32,7 +32,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
 
   protected AbstractStoragePlugin(){
   }
-  
+
   @Override
   public boolean supportsRead() {
     return false;
@@ -52,7 +52,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
     return getPhysicalScan(selection, AbstractGroupScan.ALL_COLUMNS);
   }
-  
+
   @Override
   public AbstractGroupScan getPhysicalScan(JSONOptions selection, List<SchemaPath> columns) throws IOException {
     throw new UnsupportedOperationException();

@@ -24,7 +24,7 @@ public abstract class ExampleTemplate implements ExampleExternalInterface{
   public final String getData() {
     return this.getInternalData();
   }
-  
+
   abstract String getInternalData();
-  
+
 }

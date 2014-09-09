@@ -28,7 +28,7 @@ import com.google.protobuf.MessageLite;
 
 public class DataDefaultInstanceHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataDefaultInstanceHandler.class);
-  
+
 
   public static MessageLite getResponseDefaultInstanceClient(int rpcType) throws RpcException {
     switch (rpcType) {
@@ -36,12 +36,12 @@ public class DataDefaultInstanceHandler {
       return Ack.getDefaultInstance();
     case RpcType.HANDSHAKE_VALUE:
       return BitServerHandshake.getDefaultInstance();
-    
+
     default:
       throw new UnsupportedOperationException();
     }
   }
-  
+
   public static MessageLite getResponseDefaultInstanceServer(int rpcType) throws RpcException {
     switch (rpcType) {
     case RpcType.ACK_VALUE:
@@ -50,7 +50,7 @@ public class DataDefaultInstanceHandler {
       return BitClientHandshake.getDefaultInstance();
     case RpcType.REQ_RECORD_BATCH_VALUE:
       return FragmentRecordBatch.getDefaultInstance();
-      
+
     default:
       throw new UnsupportedOperationException();
     }

@@ -17,13 +17,13 @@
  */
 package org.apache.drill.common.types;
 
+import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
+
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
 import com.google.protobuf.TextFormat;
-
-import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
 
 public class Types {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);

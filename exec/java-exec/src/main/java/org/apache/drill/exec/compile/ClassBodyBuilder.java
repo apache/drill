@@ -58,14 +58,14 @@ public class ClassBodyBuilder {
   private String[] imports = {};
   private String body;
   private boolean used = false;
-  
+
   public static ClassBodyBuilder newBuilder(){
     return new ClassBodyBuilder();
   }
-  
+
   private ClassBodyBuilder(){
   }
-  
+
   public ClassBodyBuilder setClassName(String className) {
     assertNotCooked();
     this.className = className;
@@ -93,7 +93,7 @@ public class ClassBodyBuilder {
   private void assertNotCooked() {
     assert !used;
   }
-  
+
   public ClassBodyBuilder setImports(String[] imports) {
     assertNotCooked();
     this.imports = imports;
@@ -190,7 +190,7 @@ public class ClassBodyBuilder {
 //   * <p>
 //   * This method does not handle comments and string literals correctly, i.e. if a pattern that looks like an IMPORT
 //   * declaration appears within a comment or a string literal, it will be taken as an IMPORT declaration.
-//   * 
+//   *
 //   * @param r
 //   *          A {@link Reader} that supports MARK, e.g. a {@link BufferedReader}
 //   * @return The parsed imports, e.g. {@code "java.util.*", "static java.util.Map.Entry" }

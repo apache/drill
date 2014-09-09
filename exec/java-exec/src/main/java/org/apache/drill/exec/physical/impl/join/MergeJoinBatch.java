@@ -505,7 +505,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       HoldingContainer out = cg.addExpr(fh, false);
 
       // If not 0, it means not equal. We return this out value.
-      // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal. 
+      // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.
       if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()) {
         JConditional jc = cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)).
                                     cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))));

@@ -17,15 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import java.io.IOException;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
+
 import parquet.column.ColumnDescriptor;
 import parquet.format.Encoding;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.io.api.Binary;
-
-import java.io.IOException;
 
 public abstract class VarLengthColumn<V extends ValueVector> extends ColumnReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLengthColumn.class);
@@ -44,10 +45,12 @@ public abstract class VarLengthColumn<V extends ValueVector> extends ColumnReade
       }
   }
 
+  @Override
   protected boolean processPageData(int recordsToReadInThisPass) throws IOException {
     return readAndStoreValueSizeInformation();
   }
 
+  @Override
   public void reset() {
     super.reset();
     pageReader.valuesReadyToRead = 0;

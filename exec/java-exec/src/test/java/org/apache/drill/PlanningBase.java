@@ -17,15 +17,14 @@
  */
 package org.apache.drill;
 
-import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
+import java.io.IOException;
+import java.net.URL;
+
 import mockit.Mocked;
 import mockit.NonStrictExpectations;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
-import net.hydromatic.optiq.tools.Frameworks;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
@@ -49,8 +48,10 @@ import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 
-import java.io.IOException;
-import java.net.URL;
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 
 public class PlanningBase extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningBase.class);

@@ -72,7 +72,7 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
       connection = connectionHolder.get();
       if (connection != null) {
         cmd.connectionAvailable(connection);
-        
+
       } else {
 //        logger.debug("No connection active, opening client connection.");
         BasicClient<?, CONNECTION_TYPE, OUTBOUND_HANDSHAKE, ?> client = getNewClient();
@@ -145,7 +145,7 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
         incoming.getChannel().close();
       }
       set(connection);
-      
+
     }
 
   }

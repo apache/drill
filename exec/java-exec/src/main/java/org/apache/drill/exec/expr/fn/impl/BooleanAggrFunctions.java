@@ -26,29 +26,11 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.exec.expr.DrillAggFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.NullableIntHolder;
-import org.apache.drill.exec.expr.holders.SmallIntHolder;
-import org.apache.drill.exec.expr.holders.NullableSmallIntHolder;
-import org.apache.drill.exec.expr.holders.TinyIntHolder;
-import org.apache.drill.exec.expr.holders.NullableTinyIntHolder;
-import org.apache.drill.exec.expr.holders.UInt1Holder;
-import org.apache.drill.exec.expr.holders.NullableUInt1Holder;
-import org.apache.drill.exec.expr.holders.UInt2Holder;
-import org.apache.drill.exec.expr.holders.NullableUInt2Holder;
-import org.apache.drill.exec.expr.holders.UInt4Holder;
-import org.apache.drill.exec.expr.holders.NullableUInt4Holder;
-import org.apache.drill.exec.expr.holders.UInt8Holder;
-import org.apache.drill.exec.expr.holders.NullableUInt8Holder;
 import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
