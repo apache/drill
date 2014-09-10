@@ -76,13 +76,12 @@ public class MongoSchemaFactory implements SchemaFactory {
     this.schemaName = schemaName;
 
     MongoClientURI clientURI = new MongoClientURI(connection);
-//    List<String> hosts = clientURI.getHosts();
-//    List<ServerAddress> addresses = Lists.newArrayList();
-//    for (String host : hosts) {
-//      addresses.add(new ServerAddress(host));
-//    }
-//    client = MongoCnxnManager.getClient(addresses, clientURI.getOptions());
-    client = new MongoClient(clientURI);
+    List<String> hosts = clientURI.getHosts();
+    List<ServerAddress> addresses = Lists.newArrayList();
+    for (String host : hosts) {
+      addresses.add(new ServerAddress(host));
+    }
+    client = MongoCnxnManager.getClient(addresses, clientURI.getOptions());
 
     databases = CacheBuilder //
         .newBuilder() //
@@ -161,8 +160,6 @@ public class MongoSchemaFactory implements SchemaFactory {
 
   class MongoSchema extends AbstractSchema {
 
-    private MongoDatabaseSchema defaultSchema;
-
     public MongoSchema(String name) {
       super(ImmutableList.<String> of(), name);
     }
@@ -204,22 +201,6 @@ public class MongoSchemaFactory implements SchemaFactory {
       return super.getSubSchemaNames();
     }
 
-    @Override
-    public net.hydromatic.optiq.Table getTable(String name) {
-      if (defaultSchema == null) {
-        return super.getTable(name);
-      }
-      return defaultSchema.getTable(name);
-    }
-
-    @Override
-    public Set<String> getTableNames() {
-      if (defaultSchema == null) {
-        return super.getTableNames();
-      }
-      return defaultSchema.getTableNames();
-    }
-
     List<String> getTableNames(String dbName) {
       try {
         return tableNameLoader.get(dbName);
@@ -233,11 +214,6 @@ public class MongoSchemaFactory implements SchemaFactory {
     DrillTable getDrillTable(String dbName, String collectionName) {
       MongoScanSpec mongoScanSpec = new MongoScanSpec(dbName, collectionName);
       return new DynamicDrillTable(plugin, schemaName, mongoScanSpec);
-    }
-
-    @Override
-    public AbstractSchema getDefaultSchema() {
-      return defaultSchema;
     }
 
     @Override
