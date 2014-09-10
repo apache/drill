@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,10 +30,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -108,12 +107,12 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   }
 
   public static InputSplit deserializeInputSplit(String base64, String className) throws IOException, ReflectiveOperationException{
-    InputSplit split;
-    if (Class.forName(className) == FileSplit.class) {
-      split = new FileSplit((Path) null, 0, 0, (String[])null);
-    } else {
-      split = (InputSplit) Class.forName(className).getConstructor().newInstance();
+    Constructor<?> constructor = Class.forName(className).getDeclaredConstructor();
+    if (constructor == null) {
+      throw new ReflectiveOperationException("Class " + className + " does not implement a default constructor.");
     }
+    constructor.setAccessible(true);
+    InputSplit split = (InputSplit) constructor.newInstance();
     ByteArrayDataInput byteArrayDataInput = ByteStreams.newDataInput(Base64.decodeBase64(base64));
     split.readFields(byteArrayDataInput);
     return split;
