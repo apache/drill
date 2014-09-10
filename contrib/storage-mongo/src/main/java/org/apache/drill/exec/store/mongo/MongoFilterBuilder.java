@@ -227,10 +227,11 @@ public class MongoFilterBuilder extends
 
     if(compareOp != null){
       BasicDBObject queryFilter = new BasicDBObject();
-      if(compareOp == MongoCompareOp.IFNULL || compareOp == MongoCompareOp.IFNOTNULL){
-        // need to verify whether "$eq" or "$ne" needs or not.
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
-      }else{
+      if(compareOp == MongoCompareOp.IFNULL){
+        queryFilter.put(fieldName, new BasicDBObject(MongoCompareOp.EQUAL.getCompareOp(), null));
+      } else if(compareOp == MongoCompareOp.IFNOTNULL){
+    	  queryFilter.put(fieldName, new BasicDBObject(MongoCompareOp.NOT_EQUAL.getCompareOp(), null));
+      } else{
         queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
       }
       return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan.getScanSpec().getCollectionName(), queryFilter);
