@@ -214,7 +214,11 @@ public class HiveScan extends AbstractGroupScan {
       List<String> encodedInputSplits = Lists.newArrayList();
       List<String> splitTypes = Lists.newArrayList();
       for (InputSplit split : splits) {
-        parts.add(new HiveTable.HivePartition(partitionMap.get(split)));
+        HivePartition partition = null;
+        if (partitionMap.get(split) != null) {
+          partition = new HivePartition(partitionMap.get(split));
+        }
+        parts.add(partition);
         encodedInputSplits.add(serializeInputSplit(split));
         splitTypes.add(split.getClass().getName());
       }
