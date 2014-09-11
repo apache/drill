@@ -61,8 +61,15 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
     return 0;
   }
 
+  @Override
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return false;
+  }
+
+  @Override
+  @JsonIgnore
+  public boolean supportsPartitionFilterPushdown() {
     return false;
   }
 

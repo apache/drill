@@ -38,4 +38,14 @@ public abstract class DrillScanRelBase extends TableAccessRelBase implements Dri
     assert drillTable != null;
   }
 
+  public DrillScanRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table,
+      DrillTable drillTable) {
+    super(cluster, traits, table);
+    this.drillTable = drillTable;
+  }
+
+  public DrillTable getDrillTable() {
+    return drillTable;
+  }
+
 }

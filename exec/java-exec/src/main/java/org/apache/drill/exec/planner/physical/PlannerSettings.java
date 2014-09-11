@@ -121,6 +121,10 @@ public class PlannerSettings implements Context{
     return options.getOption(ExecConstants.ENABLE_MEMORY_ESTIMATION_KEY).bool_val;
   }
 
+  public String getFsPartitionColumnLabel() {
+    return options.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+  }
+
   @Override
   public <T> T unwrap(Class<T> clazz) {
     if(clazz == PlannerSettings.class){

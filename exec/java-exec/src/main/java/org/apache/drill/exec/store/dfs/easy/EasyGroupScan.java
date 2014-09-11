@@ -25,7 +25,8 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.AbstractFileGroupScan;
+import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
@@ -49,12 +50,12 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
 @JsonTypeName("fs-scan")
-public class EasyGroupScan extends AbstractGroupScan{
+public class EasyGroupScan extends AbstractFileGroupScan{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyGroupScan.class);
 
-  private final FileSelection selection;
+  private FileSelection selection;
   private final EasyFormatPlugin<?> formatPlugin;
-  private final int maxWidth;
+  private int maxWidth;
   private List<SchemaPath> columns;
 
   private ListMultimap<Integer, CompleteFileWork> mappings;
@@ -92,10 +93,7 @@ public class EasyGroupScan extends AbstractGroupScan{
     this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
-    BlockMapBuilder b = new BlockMapBuilder(formatPlugin.getFileSystem().getUnderlying(), formatPlugin.getContext().getBits());
-    this.chunks = b.generateFileWork(selection.getFileStatusList(formatPlugin.getFileSystem()), formatPlugin.isBlockSplittable());
-    this.maxWidth = chunks.size();
-    this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
+    initFromSelection(selection, formatPlugin);
   }
 
   private EasyGroupScan(EasyGroupScan that) {
@@ -108,6 +106,14 @@ public class EasyGroupScan extends AbstractGroupScan{
     endpointAffinities = that.endpointAffinities;
     maxWidth = that.maxWidth;
     mappings = that.mappings;
+  }
+
+  private void initFromSelection(FileSelection selection, EasyFormatPlugin<?> formatPlugin) throws IOException {
+    this.selection = selection;
+    BlockMapBuilder b = new BlockMapBuilder(formatPlugin.getFileSystem().getUnderlying(), formatPlugin.getContext().getBits());
+    this.chunks = b.generateFileWork(selection.getFileStatusList(formatPlugin.getFileSystem()), formatPlugin.isBlockSplittable());
+    this.maxWidth = chunks.size();
+    this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
   }
 
   public String getSelectionRoot() {
@@ -145,6 +151,11 @@ public class EasyGroupScan extends AbstractGroupScan{
   @JsonIgnore
   public FileSelection getFileSelection() {
     return selection;
+  }
+
+  @Override
+  public void modifyFileSelection(FileSelection selection) {
+    this.selection = selection;
   }
 
   @Override
@@ -218,6 +229,13 @@ public class EasyGroupScan extends AbstractGroupScan{
     }
     EasyGroupScan newScan = new EasyGroupScan(this);
     newScan.columns = columns;
+    return newScan;
+  }
+
+  @Override
+  public FileGroupScan clone(FileSelection selection) throws IOException {
+    EasyGroupScan newScan = new EasyGroupScan(this);
+    newScan.initFromSelection(selection, formatPlugin);
     return newScan;
   }
 

@@ -474,4 +474,5 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testCase() throws Exception {
     test("select case when n_nationkey > 0 and n_nationkey < 2 then concat(n_name, '_abc') when n_nationkey >=2 and n_nationkey < 4 then '_EFG' else concat(n_name,'_XYZ') end from cp.`tpch/nation.parquet` ;");
   }
+
 }

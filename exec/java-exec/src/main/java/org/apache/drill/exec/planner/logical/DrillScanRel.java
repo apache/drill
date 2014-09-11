@@ -52,6 +52,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   final private RelDataType rowType;
   private GroupScan groupScan;
+  private List<SchemaPath> columns;
 
   /** Creates a DrillScan. */
   public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
@@ -66,13 +67,23 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
       RelOptTable table, RelDataType rowType, List<SchemaPath> columns) {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.rowType = rowType;
-    columns = columns == null || columns.size() == 0 ? GroupScan.ALL_COLUMNS : columns;
+    this.columns = columns == null || columns.size() == 0 ? GroupScan.ALL_COLUMNS : columns;
     try {
-      this.groupScan = drillTable.getGroupScan().clone(columns);
+      this.groupScan = drillTable.getGroupScan().clone(this.columns);
     } catch (IOException e) {
       throw new DrillRuntimeException("Failure creating scan.", e);
     }
   }
+
+  /** Creates a DrillScanRel for a particular GroupScan */
+  public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
+      RelOptTable table, GroupScan groupScan, RelDataType rowType, List<SchemaPath> columns) {
+    super(DRILL_LOGICAL, cluster, traits, table);
+    this.rowType = rowType;
+    this.columns = columns;
+    this.groupScan = groupScan;
+  }
+
 //
 //  private static GroupScan getCopy(GroupScan scan){
 //    try {
@@ -82,6 +93,9 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 //    }
 //  }
 
+  public List<SchemaPath> getColumns() {
+    return this.columns;
+  }
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {

@@ -68,4 +68,9 @@ public interface GroupScan extends Scan, HasAffinity{
    */
   public long getColumnValueCount(SchemaPath column);
 
+  /**
+   * Whether or not this GroupScan supports pushdown of partition filters (directories for filesystems)
+   */
+  public boolean supportsPartitionFilterPushdown();
+
 }

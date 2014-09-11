@@ -31,13 +31,15 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.AbstractFileGroupScan;
+import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -70,7 +72,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
 @JsonTypeName("parquet-scan")
-public class ParquetGroupScan extends AbstractGroupScan {
+public class ParquetGroupScan extends AbstractFileGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetGroupScan.class);
   static final MetricRegistry metrics = DrillMetrics.getInstance();
   static final String READ_FOOTER_TIMER = MetricRegistry.name(ParquetGroupScan.class, "readFooter");
@@ -249,6 +251,14 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return this.fs;
   }
 
+  @Override
+  public void modifyFileSelection(FileSelection selection) {
+    entries.clear();
+    for (String fileName : selection.getAsFiles()) {
+      entries.add(new ReadEntryWithPath(fileName));
+    }
+  }
+
   public static class RowGroupInfo extends ReadEntryFromHDFS implements CompleteWork, FileWork {
 
     private EndpointByteMap byteMap;
@@ -384,6 +394,14 @@ public class ParquetGroupScan extends AbstractGroupScan {
   public GroupScan clone(List<SchemaPath> columns) {
     ParquetGroupScan newScan = new ParquetGroupScan(this);
     newScan.columns = columns;
+    return newScan;
+  }
+
+  @Override
+  public FileGroupScan clone(FileSelection selection) throws IOException {
+    ParquetGroupScan newScan = new ParquetGroupScan(this);
+    newScan.modifyFileSelection(selection);
+    newScan.readFooterFromEntries();
     return newScan;
   }
 

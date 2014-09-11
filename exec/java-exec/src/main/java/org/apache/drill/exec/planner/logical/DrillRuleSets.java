@@ -97,6 +97,7 @@ public class DrillRuleSets {
 //      PushSortPastProjectRule.INSTANCE, //
 
       DrillPushProjIntoScan.INSTANCE,
+      DrillPushPartitionFilterIntoScan.INSTANCE,
 
       ////////////////////////////////
       DrillScanRule.INSTANCE,

@@ -66,7 +66,6 @@ public interface ExecConstants {
   public static final String EXTERNAL_SORT_SPILL_FILESYSTEM = "drill.exec.sort.external.spill.fs";
   public static final String TEXT_LINE_READER_BATCH_SIZE = "drill.exec.storage.file.text.batch.size";
   public static final String TEXT_LINE_READER_BUFFER_SIZE = "drill.exec.storage.file.text.buffer.size";
-  public static final String FILESYSTEM_PARTITION_COLUMN_LABEL = "drill.exec.storage.file.partition.column.label";
   public static final String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";
   public static final String TOP_LEVEL_MAX_ALLOC = "drill.exec.memory.top.max";
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
@@ -88,6 +87,8 @@ public interface ExecConstants {
   public static String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static OptionValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE, false);
 
+  public static final String FILESYSTEM_PARTITION_COLUMN_LABEL = "drill.exec.storage.file.partition.column.label";
+  public static final OptionValidator FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR = new StringValidator(FILESYSTEM_PARTITION_COLUMN_LABEL, "dir");
 
   public static final String SLICE_TARGET = "planner.slice_target";
   public static final OptionValidator SLICE_TARGET_OPTION = new PositiveLongValidator(SLICE_TARGET, Long.MAX_VALUE, 100000);
