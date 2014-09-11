@@ -51,8 +51,9 @@ public class TestSpoolingBuffer extends ExecTest {
                       Charsets.UTF_8));
       int count = 0;
       for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       assertEquals(500024, count);

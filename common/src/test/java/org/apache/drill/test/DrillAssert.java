@@ -46,9 +46,15 @@ public class DrillAssert {
         }
       }
       // skip newlines at the end
-      while(idx1 < expected.length() && isNewLineChar(expected.charAt(idx1))) idx1++;
-      while(idx2 < actual.length() && isNewLineChar(actual.charAt(idx2))) idx2++;
-      if (idx1 == expected.length() && idx2 == actual.length()) return;
+      while(idx1 < expected.length() && isNewLineChar(expected.charAt(idx1))) {
+        idx1++;
+      }
+      while(idx2 < actual.length() && isNewLineChar(actual.charAt(idx2))) {
+        idx2++;
+      }
+      if (idx1 == expected.length() && idx2 == actual.length()) {
+        return;
+      }
     }
 
     fail(message != null ? message : "Expected: " + expected + ", but was: " + actual);
@@ -57,4 +63,5 @@ public class DrillAssert {
   private static boolean isNewLineChar(char ch) {
     return (ch == '\r' || ch == '\n');
   }
+
 }

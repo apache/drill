@@ -52,7 +52,7 @@ public class UnionExchangePrel extends ExchangePrel {
    */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
 
@@ -75,7 +75,9 @@ public class UnionExchangePrel extends ExchangePrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
+    if (PrelUtil.getSettings(getCluster()).isSingleMode()) {
+      return childPOP;
+    }
 
     UnionExchange g = new UnionExchange(childPOP);
     return creator.addMetadata(this, g);
@@ -85,6 +87,5 @@ public class UnionExchangePrel extends ExchangePrel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-
 
 }

@@ -93,7 +93,7 @@ public class CodeGenerator<T> {
     return generatedCode;
   }
 
-  public String getGeneratedCode(){
+  public String getGeneratedCode() {
     return generatedCode;
   }
 
@@ -111,12 +111,12 @@ public class CodeGenerator<T> {
   }
 
   public static <T> ClassGenerator<T> getRoot(TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry){
+      FunctionImplementationRegistry funcRegistry) {
     return get(definition, funcRegistry).getRoot();
   }
 
   public static <T> ClassGenerator<T> getRoot(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry){
+      FunctionImplementationRegistry funcRegistry) {
     return get(mappingSet, definition, funcRegistry).getRoot();
   }
 
@@ -136,27 +136,31 @@ public class CodeGenerator<T> {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     CodeGenerator other = (CodeGenerator) obj;
     if (definition == null) {
-      if (other.definition != null)
+      if (other.definition != null) {
         return false;
-    } else if (!definition.equals(other.definition))
+      }
+    } else if (!definition.equals(other.definition)) {
       return false;
+    }
     if (generatedCode == null) {
-      if (other.generatedCode != null)
+      if (other.generatedCode != null) {
         return false;
-    } else if (!generatedCode.equals(other.generatedCode))
+      }
+    } else if (!generatedCode.equals(other.generatedCode)) {
       return false;
+    }
     return true;
   }
-
-
-
 
 }

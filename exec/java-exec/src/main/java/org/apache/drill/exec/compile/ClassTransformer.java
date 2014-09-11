@@ -61,11 +61,11 @@ public class ClassTransformer {
           String.format("The new name of a class cannot start with the old name of a class, otherwise class renaming will cause problems.  Precompiled class name %s.  Generated class name %s", precompiled, generated));
     }
 
-    public ClassSet getChild(String precompiled, String generated){
+    public ClassSet getChild(String precompiled, String generated) {
       return new ClassSet(this, precompiled, generated);
     }
 
-    public ClassSet getChild(String precompiled){
+    public ClassSet getChild(String precompiled) {
       return new ClassSet(this, precompiled, precompiled.replace(this.precompiled.dot, this.generated.dot));
     }
 
@@ -81,41 +81,49 @@ public class ClassTransformer {
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       ClassSet other = (ClassSet) obj;
       if (generated == null) {
-        if (other.generated != null)
+        if (other.generated != null) {
           return false;
-      } else if (!generated.equals(other.generated))
+        }
+      } else if (!generated.equals(other.generated)) {
         return false;
+      }
       if (parent == null) {
-        if (other.parent != null)
+        if (other.parent != null) {
           return false;
-      } else if (!parent.equals(other.parent))
+        }
+      } else if (!parent.equals(other.parent)) {
         return false;
+      }
       if (precompiled == null) {
-        if (other.precompiled != null)
+        if (other.precompiled != null) {
           return false;
-      } else if (!precompiled.equals(other.precompiled))
+        }
+      } else if (!precompiled.equals(other.precompiled)) {
         return false;
+      }
       return true;
     }
 
-
   }
 
-  public static class ClassNames{
+  public static class ClassNames {
 
     public final String dot;
     public final String slash;
     public final String clazz;
 
-    public ClassNames(String className){
+    public ClassNames(String className) {
       dot = className;
       slash = className.replace('.', FileUtils.separatorChar);
       clazz = FileUtils.separatorChar + slash + ".class";
@@ -133,28 +141,37 @@ public class ClassTransformer {
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       ClassNames other = (ClassNames) obj;
       if (clazz == null) {
-        if (other.clazz != null)
+        if (other.clazz != null) {
           return false;
-      } else if (!clazz.equals(other.clazz))
+        }
+      } else if (!clazz.equals(other.clazz)) {
         return false;
+      }
       if (dot == null) {
-        if (other.dot != null)
+        if (other.dot != null) {
           return false;
-      } else if (!dot.equals(other.dot))
+        }
+      } else if (!dot.equals(other.dot)) {
         return false;
+      }
       if (slash == null) {
-        if (other.slash != null)
+        if (other.slash != null) {
           return false;
-      } else if (!slash.equals(other.slash))
+        }
+      } else if (!slash.equals(other.slash)) {
         return false;
+      }
       return true;
     }
   }
@@ -179,7 +196,7 @@ public class ClassTransformer {
 
       long totalBytecodeSize = 0;
       Map<String, ClassNode> classesToMerge = Maps.newHashMap();
-      for(byte[] clazz : implementationClasses) {
+      for (byte[] clazz : implementationClasses) {
         totalBytecodeSize += clazz.length;
         ClassNode node = getClassNodeFromByteCode(clazz);
         classesToMerge.put(node.name, node);
@@ -191,14 +208,16 @@ public class ClassTransformer {
 
       while ( !names.isEmpty() ) {
         final ClassSet nextSet = names.removeFirst();
-        if (namesCompleted.contains(nextSet)) continue;
+        if (namesCompleted.contains(nextSet)) {
+          continue;
+        }
         final ClassNames nextPrecompiled = nextSet.precompiled;
         final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
         ClassNames nextGenerated = nextSet.generated;
         ClassNode generatedNode = classesToMerge.get(nextGenerated.slash);
         MergedClassResult result = MergeAdapter.getMergedClass(nextSet, precompiledBytes, generatedNode);
 
-        for(String s : result.innerClasses) {
+        for (String s : result.innerClasses) {
           s = s.replace(FileUtils.separatorChar, '.');
           names.add(nextSet.getChild(s));
         }

@@ -88,10 +88,11 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
 
   @Override
   public int getRecordCount() {
-    if (sv == null)
+    if (sv == null) {
       return incoming.getRecordCount();
-    else
+    } else {
       return sv.getCount();
+    }
   }
 
   /**
@@ -125,8 +126,9 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
   @Override
   protected void setupNewSchema() throws SchemaChangeException {
     /* Trace operator does not deal with hyper vectors yet */
-    if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE)
+    if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) {
       throw new SchemaChangeException("Trace operator does not work with hyper vectors");
+    }
 
     /*
      * we have a new schema, clear our existing container to load the new value vectors
@@ -152,8 +154,9 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
   @Override
   public void cleanup() {
     /* Release the selection vector */
-    if (sv != null)
+    if (sv != null) {
       sv.clear();
+    }
 
     /* Close the file descriptors */
     try {

@@ -136,7 +136,9 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
           break;
         }
         connection = connectionHolder.get();
-        if (connection != null) break;
+        if (connection != null) {
+          break;
+        }
       }
 
       if (connection != incoming) {
@@ -218,8 +220,9 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
           break;
         }
         connection = connectionHolder.get();
-        if (connection != null)
+        if (connection != null) {
           break;
+        }
       }
 
       if (connection == incoming) {

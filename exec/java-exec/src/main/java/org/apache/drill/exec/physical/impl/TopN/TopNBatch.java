@@ -132,10 +132,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
   @Override
   public IterOutcome innerNext() {
-    if(schema != null){
-      if(getSelectionVector4().next()){
+    if (schema != null) {
+      if (getSelectionVector4().next()) {
         return IterOutcome.OK;
-      }else{
+      } else {
         return IterOutcome.NONE;
       }
     }
@@ -156,8 +156,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
-          if(!incoming.getSchema().equals(schema)){
-            if (schema != null) throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
+          if (!incoming.getSchema().equals(schema)) {
+            if (schema != null) {
+              throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
+            }
             this.schema = incoming.getSchema();
           }
           // fall through.
@@ -181,7 +183,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         }
       }
 
-      if (schema == null){
+      if (schema == null) {
         // builder may be null at this point if the first incoming batch is empty
         return IterOutcome.NONE;
       }
@@ -196,7 +198,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
       return IterOutcome.OK_NEW_SCHEMA;
 
-    }catch(SchemaChangeException | ClassTransformationException | IOException ex){
+    } catch(SchemaChangeException | ClassTransformationException | IOException ex) {
       kill(false);
       logger.error("Failure during query", ex);
       context.fail(ex);
@@ -215,7 +217,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     if (copier == null) {
       copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch);
     } else {
-      for(VectorWrapper<?> i : batch){
+      for (VectorWrapper<?> i : batch) {
 
         ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
         newContainer.add(v);
@@ -227,7 +229,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       int count = selectionVector4.getCount();
       int copiedRecords = copier.copyRecords(0, count);
       assert copiedRecords == count;
-      for(VectorWrapper<?> v : newContainer){
+      for (VectorWrapper<?> v : newContainer) {
         ValueVector.Mutator m = v.getValueVector().getMutator();
         m.setValueCount(count);
       }
@@ -253,11 +255,13 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     ClassGenerator<PriorityQueue> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 
-    for(Ordering od : orderings){
+    for (Ordering od : orderings) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
-      if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      if (collector.hasErrors()) {
+        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
       g.setMappingSet(leftMapping);
       HoldingContainer left = g.addExpr(expr, false);
       g.setMappingSet(rightMapping);
@@ -269,9 +273,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
-      if(od.getDirection() == Direction.ASCENDING){
+      if (od.getDirection() == Direction.ASCENDING) {
         jc._then()._return(out.getValue());
-      }else{
+      } else {
         jc._then()._return(out.getValue().minus());
       }
       g.rotateBlock();
@@ -376,6 +380,5 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     }
 
   }
-
 
 }

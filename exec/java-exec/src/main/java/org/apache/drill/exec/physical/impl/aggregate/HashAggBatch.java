@@ -82,7 +82,9 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   @Override
   public int getRecordCount() {
-    if(done) return 0;
+    if (done) {
+      return 0;
+    }
     return aggregator.getOutputCount();
   }
 
@@ -102,7 +104,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       case STOP:
         return outcome;
       case OK_NEW_SCHEMA:
-        if (!createAggregator()){
+        if (!createAggregator()) {
           done = true;
           return IterOutcome.STOP;
         }
@@ -131,10 +133,10 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());
 
-    while(true){
+    while (true) {
       AggOutcome out = aggregator.doWork();
       logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
-      switch(out){
+      switch (out) {
       case CLEANUP_AND_RETURN:
         container.zeroVectors();
         aggregator.cleanup();
@@ -150,7 +152,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         return aggregator.getOutcome();
       case UPDATE_AGGREGATOR:
         aggregator = null;
-        if(!createAggregator()){
+        if (!createAggregator()) {
           return IterOutcome.STOP;
         }
         continue;
@@ -168,23 +170,23 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
    */
   private boolean createAggregator() {
     logger.debug("Creating new aggregator.");
-    try{
+    try {
       stats.startSetup();
       this.aggregator = createAggregatorInternal();
       return true;
-    }catch(SchemaChangeException | ClassTransformationException | IOException ex){
+    } catch (SchemaChangeException | ClassTransformationException | IOException ex) {
       context.fail(ex);
       container.clear();
       incoming.kill(false);
       return false;
-    }finally{
+    } finally {
       stats.stopSetup();
     }
   }
 
   private HashAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
-  	CodeGenerator<HashAggregator> top = CodeGenerator.get(HashAggregator.TEMPLATE_DEFINITION, context.getFunctionRegistry());
-  	ClassGenerator<HashAggregator> cg = top.getRoot();
+    CodeGenerator<HashAggregator> top = CodeGenerator.get(HashAggregator.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    ClassGenerator<HashAggregator> cg = top.getRoot();
     ClassGenerator<HashAggregator> cgInner = cg.getInnerGenerator("BatchHolder");
 
     container.clear();
@@ -199,10 +201,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     int i;
 
-    for(i = 0; i < numGroupByExprs; i++) {
+    for (i = 0; i < numGroupByExprs; i++) {
       NamedExpression ne = popConfig.getGroupByExprs()[i];
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry() );
-      if(expr == null) continue;
+      if (expr == null) {
+        continue;
+      }
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
       ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
@@ -211,13 +215,17 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       groupByOutFieldIds[i] = container.add(vv);
     }
 
-    for(i = 0; i < numAggrExprs; i++){
+    for (i = 0; i < numAggrExprs; i++) {
       NamedExpression ne = popConfig.getAggrExprs()[i];
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry() );
 
-      if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      if (collector.hasErrors()) {
+        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
 
-      if(expr == null) continue;
+      if (expr == null) {
+        continue;
+      }
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
       ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
@@ -248,7 +256,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     return agg;
   }
 
-
   private void setupUpdateAggrValues(ClassGenerator<HashAggregator> cg) {
     cg.setMappingSet(UpdateAggrValuesMapping);
 
@@ -260,8 +267,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
 
-  private void setupGetIndex(ClassGenerator<HashAggregator> cg){
-    switch(incoming.getSchema().getSelectionVectorMode()){
+  private void setupGetIndex(ClassGenerator<HashAggregator> cg) {
+    switch (incoming.getSchema().getSelectionVectorMode()) {
     case FOUR_BYTE: {
       JVar var = cg.declareClassField("sv4_", cg.getModel()._ref(SelectionVector4.class));
       cg.getBlock("doSetup").assign(var, JExpr.direct("incoming").invoke("getSelectionVector4"));

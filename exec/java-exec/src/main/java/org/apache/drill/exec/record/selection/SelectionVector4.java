@@ -31,18 +31,20 @@ public class SelectionVector4 {
   private int length;
 
   public SelectionVector4(ByteBuf vector, int recordCount, int batchRecordCount) throws SchemaChangeException {
-    if(recordCount > Integer.MAX_VALUE /4) throw new SchemaChangeException(String.format("Currently, Drill can only support allocations up to 2gb in size.  You requested an allocation of %d bytes.", recordCount * 4));
+    if (recordCount > Integer.MAX_VALUE /4) {
+      throw new SchemaChangeException(String.format("Currently, Drill can only support allocations up to 2gb in size.  You requested an allocation of %d bytes.", recordCount * 4));
+    }
     this.recordCount = recordCount;
     this.start = 0;
     this.length = Math.min(batchRecordCount, recordCount);
     this.data = vector;
   }
 
-  public int getTotalCount(){
+  public int getTotalCount() {
     return recordCount;
   }
 
-  public int getCount(){
+  public int getCount() {
     return length;
   }
 
@@ -51,14 +53,15 @@ public class SelectionVector4 {
     this.recordCount = length;
   }
 
-  public void set(int index, int compound){
+  public void set(int index, int compound) {
     data.setInt(index*4, compound);
   }
-  public void set(int index, int recordBatch, int recordIndex){
+
+  public void set(int index, int recordBatch, int recordIndex) {
     data.setInt(index*4, (recordBatch << 16) | (recordIndex & 65535));
   }
 
-  public int get(int index){
+  public int get(int index) {
     return data.getInt( (start+index)*4);
   }
 
@@ -67,7 +70,7 @@ public class SelectionVector4 {
    * @return Newly created single batch SelectionVector4.
    * @throws SchemaChangeException
    */
-  public SelectionVector4 createNewWrapperCurrent(){
+  public SelectionVector4 createNewWrapperCurrent() {
     try {
       data.retain();
       SelectionVector4 sv4 = new SelectionVector4(data, recordCount, length);
@@ -78,10 +81,10 @@ public class SelectionVector4 {
     }
   }
 
-  public boolean next(){
+  public boolean next() {
 //    logger.debug("Next called. Start: {}, Length: {}, recordCount: " + recordCount, start, length);
 
-    if(start + length >= recordCount){
+    if (start + length >= recordCount) {
 
       start = recordCount;
       length = 0;
@@ -96,7 +99,7 @@ public class SelectionVector4 {
     return true;
   }
 
-  public void clear(){
+  public void clear() {
     start = 0;
     length = 0;
     if (data != DeadBuf.DEAD_BUFFER) {
@@ -104,6 +107,5 @@ public class SelectionVector4 {
       data = DeadBuf.DEAD_BUFFER;
     }
   }
-
 
 }

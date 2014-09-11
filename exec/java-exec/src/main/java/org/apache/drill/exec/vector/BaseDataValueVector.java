@@ -66,11 +66,11 @@ public abstract class BaseDataValueVector extends BaseValueVector{
 
 
   @Override
-  public DrillBuf[] getBuffers(boolean clear){
+  public DrillBuf[] getBuffers(boolean clear) {
     DrillBuf[] out;
-    if(valueCount == 0){
+    if (valueCount == 0) {
       out = new DrillBuf[0];
-    }else{
+    } else {
       out = new DrillBuf[]{data};
       if (clear) {
         data.readerIndex(0);
@@ -84,7 +84,9 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   }
 
   public int getBufferSize() {
-    if(valueCount == 0) return 0;
+    if (valueCount == 0) {
+      return 0;
+    }
     return data.writerIndex();
   }
 
@@ -92,11 +94,11 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   public abstract SerializedField getMetadata();
 
   @Override
-  public DrillBuf getData(){
+  public DrillBuf getData() {
     return data;
   }
 
-  public long getDataAddr(){
+  public long getDataAddr() {
     return data.memoryAddress();
   }
 
@@ -104,7 +106,5 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   public Iterator<ValueVector> iterator() {
     return Iterators.emptyIterator();
   }
-
-
 
 }

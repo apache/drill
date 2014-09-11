@@ -24,13 +24,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-
 @JsonTypeName("scan")
-public class Scan extends SourceOperator{
-	private final String storageEngine;
-	private final JSONOptions selection;
+public class Scan extends SourceOperator {
+  private final String storageEngine;
+  private final JSONOptions selection;
 
-	@JsonCreator
+  @JsonCreator
   public Scan(@JsonProperty("storageengine") String storageEngine, @JsonProperty("selection") JSONOptions selection) {
     super();
     this.storageEngine = storageEngine;
@@ -55,7 +54,6 @@ public class Scan extends SourceOperator{
     return new Builder();
   }
 
-
   public static class Builder extends AbstractBuilder<Scan>{
     private String storageEngine;
     private JSONOptions selection;
@@ -74,6 +72,7 @@ public class Scan extends SourceOperator{
     public Scan build() {
       return new Scan(storageEngine, selection);
     }
+
   }
 
 }

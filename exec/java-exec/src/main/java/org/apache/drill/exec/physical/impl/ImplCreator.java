@@ -41,9 +41,9 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
 
   private RootExec root = null;
 
-  private ImplCreator(){}
+  private ImplCreator() {}
 
-  private RootExec getRoot(){
+  private RootExec getRoot() {
     return root;
   }
 
@@ -78,7 +78,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
 
   public static RootExec getExec(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
     ImplCreator i = new ImplCreator();
-    if(AssertionUtil.isAssertionsEnabled()){
+    if (AssertionUtil.isAssertionsEnabled()) {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
 
@@ -86,9 +86,11 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
     watch.start();
     root.accept(i, context);
     logger.debug("Took {} ms to accept", watch.elapsed(TimeUnit.MILLISECONDS));
-    if (i.root == null)
+    if (i.root == null) {
       throw new ExecutionSetupException(
           "The provided fragment did not have a root node that correctly created a RootExec value.");
+    }
     return i.getRoot();
   }
+
 }

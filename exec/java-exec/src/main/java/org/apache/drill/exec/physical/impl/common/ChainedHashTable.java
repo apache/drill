@@ -53,23 +53,23 @@ public class ChainedHashTable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ChainedHashTable.class);
 
   private static final GeneratorMapping KEY_MATCH_BUILD =
-	  GeneratorMapping.create("setupInterior" /* setup method */, "isKeyMatchInternalBuild" /* eval method */,
+    GeneratorMapping.create("setupInterior" /* setup method */, "isKeyMatchInternalBuild" /* eval method */,
                             null /* reset */, null /* cleanup */);
 
   private static final GeneratorMapping KEY_MATCH_PROBE =
-	  GeneratorMapping.create("setupInterior" /* setup method */, "isKeyMatchInternalProbe" /* eval method */,
+    GeneratorMapping.create("setupInterior" /* setup method */, "isKeyMatchInternalProbe" /* eval method */,
                             null /* reset */, null /* cleanup */);
 
   private static final GeneratorMapping GET_HASH_BUILD =
-	  GeneratorMapping.create("doSetup" /* setup method */, "getHashBuild" /* eval method */,
+    GeneratorMapping.create("doSetup" /* setup method */, "getHashBuild" /* eval method */,
                             null /* reset */, null /* cleanup */);
 
   private static final GeneratorMapping GET_HASH_PROBE =
-	  GeneratorMapping.create("doSetup" /* setup method */, "getHashProbe" /* eval method */,
+    GeneratorMapping.create("doSetup" /* setup method */, "getHashProbe" /* eval method */,
                             null /* reset */, null /* cleanup */);
 
   private static final GeneratorMapping SET_VALUE =
-	  GeneratorMapping.create("setupInterior" /* setup method */, "setValue" /* eval method */,
+    GeneratorMapping.create("setupInterior" /* setup method */, "setValue" /* eval method */,
                             null /* reset */, null /* cleanup */);
 
   private static final GeneratorMapping OUTPUT_KEYS =
@@ -138,8 +138,12 @@ public class ChainedHashTable {
     int i = 0;
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incomingBuild, collector, context.getFunctionRegistry());
-      if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-      if (expr == null) continue;
+      if (collector.hasErrors()) {
+        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
+      if (expr == null) {
+        continue;
+      }
       keyExprsBuild[i] = expr;
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
@@ -155,8 +159,12 @@ public class ChainedHashTable {
       i = 0;
       for (NamedExpression ne : htConfig.getKeyExprsProbe()) {
         final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incomingProbe, collector, context.getFunctionRegistry());
-        if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-        if (expr == null) continue;
+        if (collector.hasErrors()) {
+          throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+        }
+        if (expr == null) {
+          continue;
+        }
         keyExprsProbe[i] = expr;
         i++;
       }
@@ -293,4 +301,3 @@ public class ChainedHashTable {
     }
   }
 }
-

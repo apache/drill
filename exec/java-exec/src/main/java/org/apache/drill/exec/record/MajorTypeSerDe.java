@@ -53,9 +53,7 @@ public class MajorTypeSerDe {
       return jp.readValueAs(MajorTypeHolder.class).getMajorType();
     }
 
-
   }
-
 
   public static class Se extends StdSerializer<MajorType> {
 
@@ -90,27 +88,40 @@ public class MajorTypeSerDe {
       this.scale = scale;
     }
 
-    private MajorTypeHolder(){}
+    private MajorTypeHolder() {}
 
     @JsonIgnore
-    public MajorType getMajorType(){
+    public MajorType getMajorType() {
       MajorType.Builder b = MajorType.newBuilder();
       b.setMode(mode);
       b.setMinorType(minorType);
-      if(precision != null) b.setPrecision(precision);
-      if(width != null) b.setWidth(width);
-      if(scale != null) b.setScale(scale);
+      if (precision != null) {
+        b.setPrecision(precision);
+      }
+      if (width != null) {
+        b.setWidth(width);
+      }
+      if (scale != null) {
+        b.setScale(scale);
+      }
       return b.build();
     }
 
-    public static MajorTypeHolder get(MajorType mt){
+    public static MajorTypeHolder get(MajorType mt) {
       MajorTypeHolder h = new MajorTypeHolder();
       h.minorType = mt.getMinorType();
       h.mode = mt.getMode();
-      if(mt.hasPrecision()) h.precision = mt.getPrecision();
-      if(mt.hasScale()) h.scale = mt.getScale();
-      if(mt.hasWidth()) h.width = mt.getWidth();
+      if (mt.hasPrecision()) {
+        h.precision = mt.getPrecision();
+      }
+      if (mt.hasScale()) {
+        h.scale = mt.getScale();
+      }
+      if (mt.hasWidth()) {
+        h.width = mt.getWidth();
+      }
       return h;
     }
   }
+
 }

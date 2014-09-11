@@ -156,7 +156,9 @@ public abstract class HashAggTemplate implements HashAggregator {
       boolean status = true;
       for (int i = batchOutputCount; i <= maxOccupiedIdx; i++) {
         if (outputRecordValues(i, batchOutputCount) ) {
-          if (EXTRA_DEBUG_2) logger.debug("Outputting values to output index: {}", batchOutputCount) ;
+          if (EXTRA_DEBUG_2) {
+            logger.debug("Outputting values to output index: {}", batchOutputCount) ;
+          }
           batchOutputCount++;
           outNumRecordsHolder.value++;
         } else {
@@ -270,31 +272,41 @@ public abstract class HashAggTemplate implements HashAggregator {
 
       outside: while(true) {
         // loop through existing records, aggregating the values as necessary.
-        if (EXTRA_DEBUG_1) logger.debug ("Starting outer loop of doWork()...");
+        if (EXTRA_DEBUG_1) {
+          logger.debug ("Starting outer loop of doWork()...");
+        }
         for (; underlyingIndex < incoming.getRecordCount(); incIndex()) {
-          if(EXTRA_DEBUG_2) logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
+          if(EXTRA_DEBUG_2) {
+            logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
+          }
           boolean success = checkGroupAndAggrValues(currentIndex);
           assert success : "HashAgg couldn't copy values.";
         }
 
-        if (EXTRA_DEBUG_1) logger.debug("Processed {} records", underlyingIndex);
+        if (EXTRA_DEBUG_1) {
+          logger.debug("Processed {} records", underlyingIndex);
+        }
 
-        try{
+        try {
 
-          while(true){
+          while (true) {
             // Cleanup the previous batch since we are done processing it.
             for (VectorWrapper<?> v : incoming) {
               v.getValueVector().clear();
             }
             IterOutcome out = outgoing.next(0, incoming);
-            if(EXTRA_DEBUG_1) logger.debug("Received IterOutcome of {}", out);
-            switch(out){
+            if (EXTRA_DEBUG_1) {
+              logger.debug("Received IterOutcome of {}", out);
+            }
+            switch (out) {
             case NOT_YET:
               this.outcome = out;
               return AggOutcome.RETURN_OUTCOME;
 
             case OK_NEW_SCHEMA:
-              if(EXTRA_DEBUG_1) logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
+              if (EXTRA_DEBUG_1) {
+                logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
+              }
               newSchema = true;
               this.cleanup();
               // TODO: new schema case needs to be handled appropriately
@@ -302,14 +314,16 @@ public abstract class HashAggTemplate implements HashAggregator {
 
             case OK:
               resetIndex();
-              if(incoming.getRecordCount() == 0){
+              if (incoming.getRecordCount() == 0) {
                 continue;
               } else {
                 boolean success = checkGroupAndAggrValues(currentIndex);
                 assert success : "HashAgg couldn't copy values.";
                 incIndex();
 
-                if(EXTRA_DEBUG_1) logger.debug("Continuing outside loop");
+                if (EXTRA_DEBUG_1) {
+                  logger.debug("Continuing outside loop");
+                }
                 continue outside;
               }
 
@@ -343,8 +357,10 @@ public abstract class HashAggTemplate implements HashAggregator {
           // placeholder...
         }
       }
-    } finally{
-      if(first) first = !first;
+    } finally {
+      if (first) {
+        first = !first;
+      }
     }
   }
 
@@ -373,7 +389,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   @Override
-  public void cleanup(){
+  public void cleanup() {
     if (htable != null) {
       htable.clear();
       htable = null;
@@ -392,28 +408,28 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
   }
 
-  private final AggOutcome setOkAndReturn(){
-    if(first){
+  private final AggOutcome setOkAndReturn() {
+    if (first) {
       this.outcome = IterOutcome.OK_NEW_SCHEMA;
-    }else{
+    } else {
       this.outcome = IterOutcome.OK;
     }
-    for(VectorWrapper<?> v : outgoing){
+    for (VectorWrapper<?> v : outgoing) {
       v.getValueVector().getMutator().setValueCount(outputCount);
     }
     return AggOutcome.RETURN_OUTCOME;
   }
 
-  private final void incIndex(){
+  private final void incIndex() {
     underlyingIndex++;
-    if(underlyingIndex >= incoming.getRecordCount()){
+    if (underlyingIndex >= incoming.getRecordCount()) {
       currentIndex = Integer.MAX_VALUE;
       return;
     }
     currentIndex = getVectorIndex(underlyingIndex);
   }
 
-  private final void resetIndex(){
+  private final void resetIndex() {
     underlyingIndex = -1;
     incIndex();
   }
@@ -422,7 +438,9 @@ public abstract class HashAggTemplate implements HashAggregator {
     BatchHolder bh = new BatchHolder();
     batchHolders.add(bh);
 
-    if (EXTRA_DEBUG_1) logger.debug("HashAggregate: Added new batch; num batches = {}.", batchHolders.size());
+    if (EXTRA_DEBUG_1) {
+      logger.debug("HashAggregate: Added new batch; num batches = {}.", batchHolders.size());
+    }
 
     bh.setup();
   }
@@ -465,9 +483,9 @@ public abstract class HashAggTemplate implements HashAggregator {
 
       outputCount += numOutputRecords;
 
-      if(first){
+      if (first) {
         this.outcome = IterOutcome.OK_NEW_SCHEMA;
-      }else{
+      } else {
         this.outcome = IterOutcome.OK;
       }
 
@@ -486,14 +504,14 @@ public abstract class HashAggTemplate implements HashAggregator {
     } else {
       if (!outputKeysStatus) {
         logger.debug("Failed to output keys for current batch index: {} ", outBatchIndex);
-        for(VectorWrapper<?> v : outContainer) {
+        for (VectorWrapper<?> v : outContainer) {
           logger.debug("At the time of failure, size of valuevector in outContainer = {}.", v.getValueVector().getValueCapacity());
         }
         context.fail(new Exception("Failed to output keys for current batch !"));
       }
       if (!outputValuesStatus) {
         logger.debug("Failed to output values for current batch index: {} ", outBatchIndex);
-        for(VectorWrapper<?> v : outContainer) {
+        for (VectorWrapper<?> v : outContainer) {
           logger.debug("At the time of failure, size of valuevector in outContainer = {}.", v.getValueVector().getValueCapacity());
         }
         context.fail(new Exception("Failed to output values for current batch !"));
@@ -557,7 +575,9 @@ public abstract class HashAggTemplate implements HashAggregator {
 
 
       if (putStatus == HashTable.PutStatus.KEY_PRESENT) {
-        if (EXTRA_DEBUG_2) logger.debug("Group-by key already present in hash table, updating the aggregate values");
+        if (EXTRA_DEBUG_2) {
+          logger.debug("Group-by key already present in hash table, updating the aggregate values");
+        }
 
         // debugging
         //if (holder.value == 100018 || holder.value == 100021) {
@@ -566,7 +586,9 @@ public abstract class HashAggTemplate implements HashAggregator {
 
       }
       else if (putStatus == HashTable.PutStatus.KEY_ADDED) {
-        if (EXTRA_DEBUG_2) logger.debug("Group-by key was added to hash table, inserting new aggregate values") ;
+        if (EXTRA_DEBUG_2) {
+          logger.debug("Group-by key was added to hash table, inserting new aggregate values") ;
+        }
 
         // debugging
         // if (holder.value == 100018 || holder.value == 100021) {

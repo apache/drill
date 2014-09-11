@@ -64,7 +64,9 @@ public class MaterializedField {
 
   public String getLastName(){
     PathSegment seg = key.path.getRootSegment();
-    while(seg.getChild() != null) seg = seg.getChild();
+    while (seg.getChild() != null) {
+      seg = seg.getChild();
+    }
     return seg.getNameSegment().getPath();
   }
 
@@ -143,7 +145,7 @@ public class MaterializedField {
   public MaterializedField getOtherNullableVersion(){
     MajorType mt = key.type;
     DataMode newDataMode = null;
-    switch(mt.getMode()){
+    switch (mt.getMode()){
     case OPTIONAL:
       newDataMode = DataMode.REQUIRED;
       break;
@@ -161,7 +163,9 @@ public class MaterializedField {
   }
 
   public boolean matches(SchemaPath path) {
-    if(!path.isSimplePath()) return false;
+    if (!path.isSimplePath()) {
+      return false;
+    }
 
     return key.path.equals(path);
   }
@@ -178,23 +182,30 @@ public class MaterializedField {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     MaterializedField other = (MaterializedField) obj;
     if (children == null) {
-      if (other.children != null)
+      if (other.children != null) {
         return false;
-    } else if (!children.equals(other.children))
+      }
+    } else if (!children.equals(other.children)) {
       return false;
+    }
     if (key == null) {
-      if (other.key != null)
+      if (other.key != null) {
         return false;
-    } else if (!key.equals(other.key))
+      }
+    } else if (!key.equals(other.key)) {
       return false;
+    }
     return true;
   }
 
@@ -237,23 +248,30 @@ public class MaterializedField {
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       Key other = (Key) obj;
       if (path == null) {
-        if (other.path != null)
+        if (other.path != null) {
           return false;
-      } else if (!path.equals(other.path))
+        }
+      } else if (!path.equals(other.path)) {
         return false;
+      }
       if (type == null) {
-        if (other.type != null)
+        if (other.type != null) {
           return false;
-      } else if (!type.equals(other.type))
+        }
+      } else if (!type.equals(other.type)) {
         return false;
+      }
       return true;
     }
 

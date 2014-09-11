@@ -139,8 +139,9 @@ public class View {
   @JsonIgnore
   public boolean hasStar() {
     for (FieldType field : fields) {
-      if (StarColumnHelper.isNonPrefixedStarColumn(field.name))
+      if (StarColumnHelper.isNonPrefixedStarColumn(field.name)) {
         return true;
+      }
     }
     return false;
   }
@@ -164,7 +165,5 @@ public class View {
   public List<String> getWorkspaceSchemaPath() {
     return workspaceSchemaPath;
   }
-
-
 
 }

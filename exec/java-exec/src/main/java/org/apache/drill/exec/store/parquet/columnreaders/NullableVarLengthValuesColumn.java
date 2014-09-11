@@ -69,7 +69,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     if ( currDefLevel == -1 ) {
       currDefLevel = pageReader.definitionLevels.readInteger();
     }
-    if ( columnDescriptor.getMaxDefinitionLevel() > currDefLevel){
+    if ( columnDescriptor.getMaxDefinitionLevel() > currDefLevel) {
       nullsRead++;
       // set length of zero, each index in the vector defaults to null so no need to set the nullability
       variableWidthVector.getMutator().setValueLengthSafe(
@@ -93,14 +93,15 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     // I think this also needs to happen if it is null for the random access
     boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageDataByteArray,
         (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-    if ( ! success )
+    if ( ! success ) {
       return true;
+    }
     return false;
   }
 
   @Override
   public void updateReadyToReadPosition() {
-    if (! currentValNull){
+    if (! currentValNull) {
       pageReader.readyToReadPosInBytes += dataTypeLengthInBits + 4;
     }
     pageReader.valuesReadyToRead++;
@@ -109,7 +110,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
 
   @Override
   public void updatePosition() {
-    if (! currentValNull){
+    if (! currentValNull) {
       pageReader.readPosInBytes += dataTypeLengthInBits + 4;
       bytesReadInCurrentPass += dataTypeLengthInBits;
     }
@@ -128,11 +129,12 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);
     currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
-    if (! currentValNull){
+    if (! currentValNull) {
       boolean success = setSafe(valuesReadInCurrentPass, pageReader.pageDataByteArray,
           (int) pageReader.readPosInBytes + 4, dataTypeLengthInBits);
       assert success;
     }
     updatePosition();
   }
+
 }

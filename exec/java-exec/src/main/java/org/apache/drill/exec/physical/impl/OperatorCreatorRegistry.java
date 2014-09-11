@@ -42,7 +42,9 @@ public class OperatorCreatorRegistry {
 
   public synchronized Object getOperatorCreator(Class<?> operator) throws ExecutionSetupException {
     Object opCreator = instanceRegistry.get(operator);
-    if (opCreator != null) return opCreator;
+    if (opCreator != null) {
+      return opCreator;
+    }
 
     Constructor<?> c = constructorRegistry.get(operator);
     if(c == null) {
@@ -75,9 +77,9 @@ public class OperatorCreatorRegistry {
           Type[] args = ((ParameterizedType)iface).getActualTypeArguments();
           interfaceFound = true;
           boolean constructorFound = false;
-          for(Constructor<?> constructor : operatorClass.getConstructors()){
+          for (Constructor<?> constructor : operatorClass.getConstructors()) {
             Class<?>[] params = constructor.getParameterTypes();
-            if(params.length == 0){
+            if (params.length == 0) {
               Constructor<?> old = constructorRegistry.put((Class<?>) args[0], constructor);
               if (old != null) {
                 throw new RuntimeException(
@@ -88,7 +90,7 @@ public class OperatorCreatorRegistry {
               constructorFound = true;
             }
           }
-          if(!constructorFound){
+          if (!constructorFound) {
             logger.debug("Skipping registration of OperatorCreator {} as it doesn't have a default constructor",
                 operatorClass.getCanonicalName());
           }
@@ -97,4 +99,5 @@ public class OperatorCreatorRegistry {
       }
     }
   }
+
 }

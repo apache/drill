@@ -192,12 +192,12 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   @Override
   public IterOutcome innerNext() {
-    if(schema != null){
+    if (schema != null) {
       if (spillCount == 0) {
-        if(schema != null){
-          if(getSelectionVector4().next()){
+        if (schema != null) {
+          if (getSelectionVector4().next()) {
             return IterOutcome.OK;
-          }else{
+          } else {
             return IterOutcome.NONE;
           }
         }
@@ -206,12 +206,12 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         w.start();
 //        int count = selector.next();
         int count = copier.next(targetRecordCount);
-        if(count > 0){
+        if (count > 0) {
           long t = w.elapsed(TimeUnit.MICROSECONDS);
           logger.debug("Took {} us to merge {} records", t, count);
           container.setRecordCount(count);
           return IterOutcome.OK;
-        }else{
+        } else {
           logger.debug("copier returned 0 records");
           return IterOutcome.NONE;
         }
@@ -236,8 +236,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
-          if(!incoming.getSchema().equals(schema)){
-            if (schema != null) throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
+          if (!incoming.getSchema().equals(schema)) {
+            if (schema != null) {
+              throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
+            }
             this.schema = incoming.getSchema();
             this.sorter = createNewSorter(context, incoming);
           }
@@ -249,7 +251,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             }
             break;
           }
-          if (first) first = false;
+          if (first) {
+            first = false;
+          }
           totalSizeInMemory += getBufferSize(incoming);
           SelectionVector2 sv2;
           if (incoming.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) {
@@ -291,7 +295,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           break;
         case OUT_OF_MEMORY:
           highWaterMark = totalSizeInMemory;
-          if (batchesSinceLastSpill > 2) mergeAndSpill();
+          if (batchesSinceLastSpill > 2) {
+            mergeAndSpill();
+          }
           batchesSinceLastSpill = 0;
           break;
         default:
@@ -348,7 +354,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
       return IterOutcome.OK_NEW_SCHEMA;
 
-    }catch(SchemaChangeException | ClassTransformationException | IOException ex){
+    } catch(SchemaChangeException | ClassTransformationException | IOException ex) {
       kill(false);
       logger.error("Failure during query", ex);
       context.fail(ex);
@@ -502,11 +508,13 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     ClassGenerator<MSorter> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 
-    for(Ordering od : orderings){
+    for (Ordering od : orderings) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
-      if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      if (collector.hasErrors()) {
+        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
       g.setMappingSet(leftMapping);
       HoldingContainer left = g.addExpr(expr, false);
       g.setMappingSet(rightMapping);
@@ -518,7 +526,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
-      if(od.getDirection() == Direction.ASCENDING){
+      if (od.getDirection() == Direction.ASCENDING) {
         jc._then()._return(out.getValue());
       }else{
         jc._then()._return(out.getValue().minus());
@@ -547,11 +555,13 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private void generateComparisons(ClassGenerator g, VectorAccessible batch) throws SchemaChangeException {
     g.setMappingSet(MAIN_MAPPING);
 
-    for(Ordering od : popConfig.getOrderings()){
+    for (Ordering od : popConfig.getOrderings()) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector,context.getFunctionRegistry());
-      if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      if (collector.hasErrors()) {
+        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
       g.setMappingSet(LEFT_MAPPING);
       HoldingContainer left = g.addExpr(expr, false);
       g.setMappingSet(RIGHT_MAPPING);
@@ -563,7 +573,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
-      if(od.getDirection() == Direction.ASCENDING){
+      if (od.getDirection() == Direction.ASCENDING) {
         jc._then()._return(out.getValue());
       }else{
         jc._then()._return(out.getValue().minus());
@@ -590,7 +600,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }
 
       List<VectorAllocator> allocators = Lists.newArrayList();
-      for(VectorWrapper<?> i : batch){
+      for (VectorWrapper<?> i : batch) {
         ValueVector v = TypeHelper.getNewVector(i.getField(), copierAllocator);
         outputContainer.add(v);
         allocators.add(VectorAllocator.getAllocator(v, 110));

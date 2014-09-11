@@ -48,7 +48,7 @@ public class NonRootFragmentManager implements FragmentManager {
   private List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
 
   public NonRootFragmentManager(PlanFragment fragment, WorkerBee bee) throws FragmentSetupException{
-    try{
+    try {
       this.fragment = fragment;
       DrillbitContext context = bee.getContext();
       this.bee = bee;
@@ -58,7 +58,7 @@ public class NonRootFragmentManager implements FragmentManager {
       this.context.setBuffers(buffers);
       this.runnerListener = new NonRootStatusReporter(this.context, context.getController().getTunnel(fragment.getForeman()));
 
-    }catch(ExecutionSetupException | IOException e){
+    } catch (ExecutionSetupException | IOException e) {
       throw new FragmentSetupException("Failure while decoding fragment.", e);
     }
   }
@@ -75,10 +75,14 @@ public class NonRootFragmentManager implements FragmentManager {
    * @see org.apache.drill.exec.work.fragment.FragmentHandler#getRunnable()
    */
   @Override
-  public FragmentExecutor getRunnable(){
-    synchronized(this){
-      if(runner != null) throw new IllegalStateException("Get Runnable can only be run once.");
-      if(cancel) return null;
+  public FragmentExecutor getRunnable() {
+    synchronized(this) {
+      if (runner != null) {
+        throw new IllegalStateException("Get Runnable can only be run once.");
+      }
+      if (cancel) {
+        return null;
+      }
       runner = new FragmentExecutor(context, bee, root, runnerListener);
       return this.runner;
     }
@@ -89,10 +93,10 @@ public class NonRootFragmentManager implements FragmentManager {
    * @see org.apache.drill.exec.work.fragment.FragmentHandler#cancel()
    */
   @Override
-  public void cancel(){
-    synchronized(this){
+  public void cancel() {
+    synchronized(this) {
       cancel = true;
-      if(runner != null){
+      if (runner != null) {
         runner.cancel();
       }
     }

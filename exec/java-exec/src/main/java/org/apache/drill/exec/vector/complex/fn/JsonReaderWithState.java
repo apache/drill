@@ -57,9 +57,9 @@ public class JsonReaderWithState {
   public WriteState write(ComplexWriter writer) throws JsonParseException, IOException {
     if (reader == null) {
       reader = splitter.getNextReader();
-      if (reader == null)
+      if (reader == null) {
         return WriteState.NO_MORE;
-
+      }
     }
 
     jsonReader.write(reader, writer);
@@ -72,4 +72,5 @@ public class JsonReaderWithState {
       return WriteState.WRITE_SUCCEED;
     }
   }
+
 }

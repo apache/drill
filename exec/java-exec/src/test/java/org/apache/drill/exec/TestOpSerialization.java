@@ -55,7 +55,7 @@ public class TestOpSerialization {
     screen.setOperatorId(0);
 
     boolean reversed = false;
-    while(true){
+    while (true) {
 
       List<PhysicalOperator> pops = Lists.newArrayList();
       pops.add(s);
@@ -63,7 +63,9 @@ public class TestOpSerialization {
       pops.add(f);
       pops.add(screen);
 
-      if(reversed) pops = Lists.reverse(pops);
+      if (reversed) {
+        pops = Lists.reverse(pops);
+      }
       PhysicalPlan plan1 = new PhysicalPlan(PlanProperties.builder().build(), pops);
       String json = plan1.unparse(c.getMapper().writer());
       System.out.println(json);
@@ -78,12 +80,12 @@ public class TestOpSerialization {
       assertEquals(1, o1.getOperatorId());
       PhysicalOperator o2 = o1.iterator().next();
       assertEquals(2, o2.getOperatorId());
-      if(reversed) break;
+      if(reversed) {
+        break;
+      }
       reversed = !reversed;
     }
 
-
-
-
   }
+
 }

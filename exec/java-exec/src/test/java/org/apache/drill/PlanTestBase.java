@@ -101,7 +101,6 @@ public class PlanTestBase extends BaseTestQuery {
     for (String substr : expectedSubstrs) {
       assertTrue(planStr.contains(substr));
     }
-
   }
 
   /**
@@ -119,7 +118,6 @@ public class PlanTestBase extends BaseTestQuery {
       assertTrue(planStr.contains(substr));
     }
   }
-
 
   /**
    * This method will take a SQL string statement, get the PHYSICAL plan in
@@ -148,7 +146,6 @@ public class PlanTestBase extends BaseTestQuery {
       assertTrue(planStr.contains(substr));
     }
   }
-
 
   /*
    * This will get the plan (either logical or physical) in Optiq RelNode
@@ -205,8 +202,9 @@ public class PlanTestBase extends BaseTestQuery {
     StringBuilder builder = new StringBuilder();
 
     for (QueryResultBatch b : results) {
-      if (!b.hasData())
+      if (!b.hasData()) {
         continue;
+      }
 
       loader.load(b.getHeader().getDef(), b.getData());
 
@@ -247,8 +245,9 @@ public class PlanTestBase extends BaseTestQuery {
     Stack<Integer> s = new Stack<Integer>();
 
     for (String line : planLines) {
-      if (line.trim().isEmpty())
+      if (line.trim().isEmpty()) {
         continue;
+      }
       if (line.contains(joinKeyWord)) {
         builder.append(Strings.repeat(" ", 2 * s.size()));
         builder.append(joinKeyWord + "\n");

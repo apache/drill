@@ -97,7 +97,9 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     File f = new File(fileName);
     ParquetTestProperties props = new ParquetTestProperties(numberRowGroups, recordsPerRowGroup, DEFAULT_BYTES_PER_PAGE, new HashMap<String, FieldInfo>());
     populateFieldInfoMap(props);
-    if(!f.exists()) TestFileGenerator.generateParquetFile(fileName, props);
+    if (!f.exists()) {
+      TestFileGenerator.generateParquetFile(fileName, props);
+    }
   }
 
 
@@ -118,10 +120,11 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     readEntries = "";
     // number of times to read the file
     int i = 3;
-    for (int j = 0; j < i; j++){
+    for (int j = 0; j < i; j++) {
       readEntries += "\""+fileName+"\"";
-      if (j < i - 1)
+      if (j < i - 1) {
         readEntries += ",";
+      }
     }
     String planText = Files.toString(FileUtils.getResourceAsFile("/parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
     testParquetFullEngineLocalText(planText, fileName, i, numberRowGroups, recordsPerRowGroup, true);
@@ -475,10 +478,11 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     String readEntries = "";
     // number of times to read the file
     int i = 3;
-    for (int j = 0; j < i; j++){
+    for (int j = 0; j < i; j++) {
       readEntries += "\"/tmp/test.parquet\"";
-      if (j < i - 1)
+      if (j < i - 1) {
         readEntries += ",";
+      }
     }
     testParquetFullEngineEventBased(true, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
         "/tmp/test.parquet", i, props);
@@ -626,7 +630,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
 
     FileSystem fs = new CachedSingleFileSystem(fileName);
     BufferAllocator allocator = new TopLevelAllocator();
-    for(int i = 0; i < 25; i++){
+    for(int i = 0; i < 25; i++) {
       ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
           new CodecFactoryExposer(dfsConfig), f.getParquetMetadata(), columns);
       TestOutputMutator mutator = new TestOutputMutator(allocator);
@@ -663,7 +667,9 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   public void testParquetFullEngineEventBased(boolean testValues, boolean generateNew, String plan, String readEntries, String filename,
                                               int numberOfTimesRead /* specified in json plan */, ParquetTestProperties props,
                                               QueryType queryType) throws Exception{
-    if (generateNew) TestFileGenerator.generateParquetFile(filename, props);
+    if (generateNew) {
+      TestFileGenerator.generateParquetFile(filename, props);
+    }
 
     ParquetResultListener resultListener = new ParquetResultListener(getAllocator(), props, numberOfTimesRead, testValues);
     long C = System.nanoTime();

@@ -162,7 +162,6 @@ public class VarLengthColumnReaders {
     }
   }
 
-
   public static class VarCharColumn extends VarLengthValuesColumn<VarCharVector> {
 
     // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
@@ -178,7 +177,9 @@ public class VarLengthColumnReaders {
     @Override
     public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
       boolean success;
-      if(index >= varCharVector.getValueCapacity()) return false;
+      if (index >= varCharVector.getValueCapacity()) {
+        return false;
+      }
 
       if (usingDictionary) {
         DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
@@ -225,7 +226,9 @@ public class VarLengthColumnReaders {
     @Override
     public boolean setSafe(int index, DrillBuf value, int start, int length) {
       boolean success;
-      if(index >= vector.getValueCapacity()) return false;
+      if (index >= vector.getValueCapacity()) {
+        return false;
+      }
 
       if (usingDictionary) {
         DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
@@ -258,7 +261,9 @@ public class VarLengthColumnReaders {
     @Override
     public boolean setSafe(int index, DrillBuf value, int start, int length) {
       boolean success;
-      if(index >= varBinaryVector.getValueCapacity()) return false;
+      if (index >= varBinaryVector.getValueCapacity()) {
+        return false;
+      }
 
       if (usingDictionary) {
         DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
@@ -303,7 +308,9 @@ public class VarLengthColumnReaders {
     @Override
     public boolean setSafe(int index, DrillBuf value, int start, int length) {
       boolean success;
-      if(index >= nullableVarBinaryVector.getValueCapacity()) return false;
+      if (index >= nullableVarBinaryVector.getValueCapacity()) {
+        return false;
+      }
 
       if (usingDictionary) {
         DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
@@ -331,4 +338,5 @@ public class VarLengthColumnReaders {
     }
 
   }
+
 }

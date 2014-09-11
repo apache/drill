@@ -95,8 +95,9 @@ public class JdbcTestActionBase extends JdbcTest {
 
     System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
 
-    if (rowcount != -1)
+    if (rowcount != -1) {
       Assert.assertEquals((long) rowcount, (long) rows);
+    }
 
     System.out.println("\n\n\n");
 
@@ -133,4 +134,5 @@ public class JdbcTestActionBase extends JdbcTest {
       }
     }
   };
+
 }

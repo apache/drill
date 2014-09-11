@@ -10,13 +10,13 @@
   storage:{
     logs: {
       type:"text",
-	  file: "local://logs/*.log",
-	  compress:"gzip",
-	  line-delimiter:"\n",
-	  record-maker:{
-	    type:"first-row",
-	    delimiter:","
-	  }
+      file: "local://logs/*.log",
+      compress:"gzip",
+      line-delimiter:"\n",
+      record-maker:{
+        type:"first-row",
+        delimiter:","
+      }
     },
     {
       type:"mongo",
@@ -125,9 +125,6 @@
       target: {
         file: "console:///stdout"
       }
-      
     }
-
-    
   ]
 }

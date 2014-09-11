@@ -83,8 +83,9 @@ public abstract class HiveFieldConverter {
       case PRIMITIVE:
         final PrimitiveCategory pCat = ((PrimitiveTypeInfo) typeInfo).getPrimitiveCategory();
         Class< ? extends HiveFieldConverter> clazz = primMap.get(pCat);
-        if (clazz != null)
+        if (clazz != null) {
           return clazz.newInstance();
+        }
 
         HiveRecordReader.throwUnsupportedHiveDataTypeError(pCat.toString());
         break;
@@ -210,4 +211,5 @@ public abstract class HiveFieldConverter {
       return ((NullableDateVector) outputVV).getMutator().setSafe(outputIndex, date.getMillis());
     }
   }
+
 }

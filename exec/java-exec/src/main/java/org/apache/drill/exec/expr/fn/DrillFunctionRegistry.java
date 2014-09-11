@@ -39,16 +39,18 @@ public class DrillFunctionRegistry {
 
   private ArrayListMultimap<String, DrillFuncHolder> methods = ArrayListMultimap.create();
 
-  public DrillFunctionRegistry(DrillConfig config){
+  public DrillFunctionRegistry(DrillConfig config) {
     FunctionConverter converter = new FunctionConverter();
     Set<Class<? extends DrillFunc>> providerClasses = PathScanner.scanForImplementations(DrillFunc.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
     for (Class<? extends DrillFunc> clazz : providerClasses) {
       DrillFuncHolder holder = converter.getHolder(clazz);
-      if(holder != null){
+      if (holder != null) {
         // register handle for each name the function can be referred to
         String[] names = holder.getRegisteredNames();
-        for(String name : names) methods.put(name.toLowerCase(), holder);
-      }else{
+        for (String name : names) {
+          methods.put(name.toLowerCase(), holder);
+        }
+      } else {
         logger.warn("Unable to initialize function for class {}", clazz.getName());
       }
     }
@@ -83,4 +85,5 @@ public class DrillFunctionRegistry {
       }
     }
   }
+
 }

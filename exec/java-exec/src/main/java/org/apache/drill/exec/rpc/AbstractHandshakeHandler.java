@@ -42,17 +42,22 @@ public abstract class AbstractHandshakeHandler<T extends MessageLite> extends Me
 
   @Override
   protected void decode(ChannelHandlerContext ctx, InboundRpcMessage inbound, List<Object> outputs) throws Exception {
-    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Received handshake {}", inbound);
+    if (RpcConstants.EXTRA_DEBUGGING) {
+      logger.debug("Received handshake {}", inbound);
+    }
     this.coordinationId = inbound.coordinationId;
     ctx.channel().pipeline().remove(this);
-    if (inbound.rpcType != handshakeType.getNumber())
+    if (inbound.rpcType != handshakeType.getNumber()) {
       throw new RpcException(String.format("Handshake failure.  Expected %s[%d] but received number [%d]",
           handshakeType, handshakeType.getNumber(), inbound.rpcType));
+    }
 
     T msg = parser.parseFrom(inbound.getProtobufBodyAsIS());
     consumeHandshake(ctx, msg);
     inbound.pBody.release();
-    if(inbound.dBody != null) inbound.dBody.release();
+    if (inbound.dBody != null) {
+      inbound.dBody.release();
+    }
 
   }
 

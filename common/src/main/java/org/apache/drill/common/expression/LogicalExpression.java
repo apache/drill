@@ -68,8 +68,9 @@ public interface LogicalExpression extends Iterable<LogicalExpression>{
         JsonProcessingException {
       String expr = jp.getText();
 
-      if (expr == null || expr.isEmpty())
+      if (expr == null || expr.isEmpty()) {
         return null;
+      }
       try {
         // logger.debug("Parsing expression string '{}'", expr);
         ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
@@ -105,7 +106,5 @@ public interface LogicalExpression extends Iterable<LogicalExpression>{
     }
 
   }
-
-
 
 }

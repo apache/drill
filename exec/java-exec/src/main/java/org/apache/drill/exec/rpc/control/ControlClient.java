@@ -86,7 +86,9 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
 
   @Override
   protected void validateHandshake(BitControlHandshake handshake) throws RpcException {
-    if(handshake.getRpcVersion() != ControlRpcConfig.RPC_VERSION) throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", handshake.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
+    if (handshake.getRpcVersion() != ControlRpcConfig.RPC_VERSION) {
+      throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", handshake.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
+    }
   }
 
   @Override
@@ -94,7 +96,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
     connection.setEndpoint(handshake.getEndpoint());
   }
 
-  public ControlConnection getConnection(){
+  public ControlConnection getConnection() {
     return this.connection;
   }
 

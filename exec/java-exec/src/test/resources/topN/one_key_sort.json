@@ -6,16 +6,16 @@
             type:"manual"
         }
     },
-	graph:[
+    graph:[
         {
             @id:1,
             pop:"mock-scan",
             url: "http://apache.org",
             entries:[
-            	{records: 10000000, types: [
-            	  {name: "blue", type: "INT", mode: "REQUIRED"},
-            	  {name: "green", type: "INT", mode: "REQUIRED"}
-            	]},
+                {records: 10000000, types: [
+                  {name: "blue", type: "INT", mode: "REQUIRED"},
+                  {name: "green", type: "INT", mode: "REQUIRED"}
+                ]},
               {records: 10000000, types: [
                 {name: "blue", type: "INT", mode: "REQUIRED"},
                 {name: "green", type: "INT", mode: "REQUIRED"}

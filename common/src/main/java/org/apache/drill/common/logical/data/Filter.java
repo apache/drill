@@ -28,10 +28,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Iterators;
 
 @JsonTypeName("filter")
-public class Filter extends SingleInputOperator{
-	private final LogicalExpression expr;
+public class Filter extends SingleInputOperator {
+  private final LogicalExpression expr;
 
-	@JsonCreator
+  @JsonCreator
   public Filter(@JsonProperty("expr") LogicalExpression expr) {
     this.expr = expr;
   }
@@ -49,7 +49,5 @@ public class Filter extends SingleInputOperator{
     public Iterator<LogicalOperator> iterator() {
         return Iterators.singletonIterator(getInput());
     }
-
-
 
 }

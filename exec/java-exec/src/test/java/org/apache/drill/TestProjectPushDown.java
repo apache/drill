@@ -136,8 +136,9 @@ public class TestProjectPushDown extends PlanTestBase {
     String query = getFile(fileName);
     String[] queries = query.split(";");
     for (String q : queries) {
-      if (q.trim().isEmpty())
+      if (q.trim().isEmpty()) {
         continue;
+      }
       testPhysicalPlan(q, expectedSubstrs);
     }
   }

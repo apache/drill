@@ -36,7 +36,7 @@ public class DataClientConnection extends RemoteConnection{
   private final DataClient client;
   private final UUID id;
 
-  public DataClientConnection(Channel channel, DataClient client){
+  public DataClientConnection(Channel channel, DataClient client) {
     super(channel);
     this.client = client;
     // we use a local listener pool unless a global one is provided.
@@ -49,7 +49,7 @@ public class DataClientConnection extends RemoteConnection{
   }
 
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> outcomeListener, RpcType rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies){
+      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
     client.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);
 
   }
@@ -64,17 +64,28 @@ public class DataClientConnection extends RemoteConnection{
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
     DataClientConnection other = (DataClientConnection) obj;
     if (id == null) {
-      if (other.id != null) return false;
-    } else if (!id.equals(other.id)) return false;
+      if (other.id != null) {
+        return false;
+      }
+    } else if (!id.equals(other.id)) {
+      return false;
+    }
     return true;
   }
 
-  public void shutdownIfClient(){
+  public void shutdownIfClient() {
     Closeables.closeQuietly(client);
   }
+
 }

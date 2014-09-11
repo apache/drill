@@ -95,7 +95,7 @@ public class UserSession {
     return sessionOptions;
   }
 
-  public DrillUser getUser(){
+  public DrillUser getUser() {
     return user;
   }
 
@@ -105,9 +105,11 @@ public class UserSession {
    * @param schema The root schema to find this path within.
    * @return true if the path was set successfully.  false if this path was unavailable.
    */
-  public boolean setDefaultSchemaPath(String fullPath, SchemaPlus schema){
+  public boolean setDefaultSchemaPath(String fullPath, SchemaPlus schema) {
     SchemaPlus newDefault = findSchema(schema, fullPath);
-    if(newDefault == null) return false;
+    if (newDefault == null) {
+      return false;
+    }
     setProp(SCHEMA, fullPath);
     return true;
   }
@@ -117,11 +119,11 @@ public class UserSession {
    * @param rootSchema
    * @return A {@link net.hydromatic.optiq.SchemaPlus} object.
    */
-  public SchemaPlus getDefaultSchema(SchemaPlus rootSchema){
+  public SchemaPlus getDefaultSchema(SchemaPlus rootSchema) {
     return findSchema(rootSchema, getProp(SCHEMA));
   }
 
-  public boolean setSessionOption(String name, String value){
+  public boolean setSessionOption(String name, String value) {
     return true;
   }
 
@@ -136,9 +138,11 @@ public class UserSession {
   private SchemaPlus findSchema(SchemaPlus rootSchema, String schemaPath) {
     String[] paths = schemaPath.split("\\.");
     SchemaPlus schema = rootSchema;
-    for(String p : paths){
+    for (String p : paths) {
       schema = schema.getSubSchema(p);
-      if(schema == null) break;
+      if (schema == null) {
+        break;
+      }
     }
     return schema;
   }

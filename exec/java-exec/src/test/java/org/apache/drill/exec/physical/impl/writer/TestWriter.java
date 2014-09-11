@@ -85,7 +85,7 @@ public class TestWriter extends BaseTestQuery {
     FileStatus[] fileStatuses = fs.globStatus(new Path(path.toString(), "*.csv"));
     assertTrue(2 == fileStatuses.length);
 
-    for(QueryResultBatch b : results){
+    for (QueryResultBatch b : results) {
       b.release();
     }
     batchLoader.clear();
@@ -137,7 +137,7 @@ public class TestWriter extends BaseTestQuery {
 
   private void ctasHelper(String tableDir, String testQuery, int expectedOutputCount) throws Exception {
     Path tableLocation = new Path(tableDir);
-    if (fs.exists(tableLocation)){
+    if (fs.exists(tableLocation)) {
       fs.delete(tableLocation, true);
     }
 
@@ -146,11 +146,12 @@ public class TestWriter extends BaseTestQuery {
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
 
     int recordsWritten = 0;
-    for(QueryResultBatch batch : results) {
+    for (QueryResultBatch batch : results) {
       batchLoader.load(batch.getHeader().getDef(), batch.getData());
 
-      if (batchLoader.getRecordCount() <= 0)
+      if (batchLoader.getRecordCount() <= 0) {
         continue;
+      }
 
       BigIntVector recordWrittenV = (BigIntVector) batchLoader.getValueAccessorById(BigIntVector.class, 1).getValueVector();
 

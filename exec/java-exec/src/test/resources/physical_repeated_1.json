@@ -6,7 +6,7 @@
             type:"manual"
         }
     },
-  graph:[
+    graph:[
         {
             @id:1,
             pop:"mock-sub-scan",
@@ -26,7 +26,7 @@
             exprs: [
               { ref: "cnt", expr:"repeated_count(blue)" },
               { ref: "has_min", expr:"repeated_contains(red, 9223372036854775807)" }
-            ]            
+            ]
         },
         {
             @id: 3,

@@ -69,7 +69,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void simpleEqualityJoin(@Injectable final DrillbitContext bitContext,
                                  @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
@@ -86,8 +86,9 @@ public class TestMergeJoin extends PopUnitTestBase {
     int totalRecordCount = 0;
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
-      for (ValueVector v : exec)
+      for (ValueVector v : exec) {
         System.out.print("[" + v.getField().toExpr() + "]        ");
+      }
       System.out.println("\n");
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         List<Object> row = new ArrayList();
@@ -101,8 +102,9 @@ public class TestMergeJoin extends PopUnitTestBase {
           }
           int len = cell.toString().length();
           System.out.print(cell);
-          for (int i = 0; i < (14 - len); ++i)
+          for (int i = 0; i < (14 - len); ++i) {
             System.out.print(" ");
+          }
         }
         System.out.println();
       }
@@ -110,8 +112,9 @@ public class TestMergeJoin extends PopUnitTestBase {
     }
     assertEquals(100, totalRecordCount);
     System.out.println("Total Record Count: " + totalRecordCount);
-    if (context.getFailureCause() != null)
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
+    }
     assertTrue(!context.isFailed());
 
   }
@@ -121,7 +124,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void orderedEqualityLeftJoin(@Injectable final DrillbitContext bitContext,
                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getConfig(); result = c;
@@ -147,8 +150,9 @@ public class TestMergeJoin extends PopUnitTestBase {
 
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         List<Object> row = Lists.newArrayList();
-        for (ValueVector v : exec)
+        for (ValueVector v : exec) {
           row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+        }
         for (Object cell : row) {
           if (cell == null) {
             System.out.print("<null>    ");
@@ -156,8 +160,9 @@ public class TestMergeJoin extends PopUnitTestBase {
           }
           int len = cell.toString().length();
           System.out.print(cell + " ");
-          for (int i = 0; i < (10 - len); ++i)
+          for (int i = 0; i < (10 - len); ++i) {
             System.out.print(" ");
+          }
         }
         System.out.println();
       }
@@ -165,8 +170,9 @@ public class TestMergeJoin extends PopUnitTestBase {
     System.out.println("Total Record Count: " + totalRecordCount);
     assertEquals(25, totalRecordCount);
 
-    if (context.getFailureCause() != null)
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
+    }
     assertTrue(!context.isFailed());
 
   }
@@ -176,7 +182,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void orderedEqualityInnerJoin(@Injectable final DrillbitContext bitContext,
                                        @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getConfig(); result = c;
@@ -202,8 +208,9 @@ public class TestMergeJoin extends PopUnitTestBase {
 
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         List<Object> row = Lists.newArrayList();
-        for (ValueVector v : exec)
+        for (ValueVector v : exec) {
           row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+        }
         for (Object cell : row) {
           if (cell == null) {
             System.out.print("<null>    ");
@@ -211,8 +218,9 @@ public class TestMergeJoin extends PopUnitTestBase {
           }
           int len = cell.toString().length();
           System.out.print(cell + " ");
-          for (int i = 0; i < (10 - len); ++i)
+          for (int i = 0; i < (10 - len); ++i) {
             System.out.print(" ");
+          }
         }
         System.out.println();
       }
@@ -220,8 +228,9 @@ public class TestMergeJoin extends PopUnitTestBase {
     System.out.println("Total Record Count: " + totalRecordCount);
     assertEquals(23, totalRecordCount);
 
-    if (context.getFailureCause() != null)
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
+    }
     assertTrue(!context.isFailed());
 
   }
@@ -231,7 +240,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void orderedEqualityMultiBatchJoin(@Injectable final DrillbitContext bitContext,
                                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getConfig(); result = c;
@@ -256,8 +265,9 @@ public class TestMergeJoin extends PopUnitTestBase {
 
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         List<Object> row = Lists.newArrayList();
-        for (ValueVector v : exec)
+        for (ValueVector v : exec) {
           row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+        }
         for (Object cell : row) {
           if (cell == null) {
             System.out.print("<null>    ");
@@ -265,8 +275,9 @@ public class TestMergeJoin extends PopUnitTestBase {
           }
           int len = cell.toString().length();
           System.out.print(cell + " ");
-          for (int i = 0; i < (10 - len); ++i)
+          for (int i = 0; i < (10 - len); ++i) {
             System.out.print(" ");
+          }
         }
         System.out.println();
       }
@@ -274,15 +285,16 @@ public class TestMergeJoin extends PopUnitTestBase {
     System.out.println("Total Record Count: " + totalRecordCount);
     assertEquals(25, totalRecordCount);
 
-    if (context.getFailureCause() != null)
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
+    }
     assertTrue(!context.isFailed());
 
   }
 
   @Test
   public void testJoinBatchSize(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();;
       bitContext.getConfig(); result = c;
@@ -295,11 +307,11 @@ public class TestMergeJoin extends PopUnitTestBase {
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    while(exec.next()){
+    while (exec.next()) {
       assertEquals(100, exec.getRecordCount());
     }
 
-    if(context.getFailureCause() != null){
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
     }
     assertTrue(!context.isFailed());
@@ -310,7 +322,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void testMergeJoinInnerEmptyBatch() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
@@ -320,9 +332,10 @@ public class TestMergeJoin extends PopUnitTestBase {
                       Charsets.UTF_8)
                       .replace("${JOIN_TYPE}", "INNER"));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       assertEquals(0, count);
@@ -333,7 +346,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void testMergeJoinLeftEmptyBatch() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
@@ -343,9 +356,10 @@ public class TestMergeJoin extends PopUnitTestBase {
               Charsets.UTF_8)
               .replace("${JOIN_TYPE}", "LEFT"));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       assertEquals(50, count);
@@ -356,7 +370,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void testMergeJoinRightEmptyBatch() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
@@ -366,9 +380,10 @@ public class TestMergeJoin extends PopUnitTestBase {
                       Charsets.UTF_8)
                       .replace("${JOIN_TYPE}", "RIGHT"));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       assertEquals(0, count);
@@ -379,7 +394,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void testMergeJoinExprInCondition() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
@@ -387,9 +402,10 @@ public class TestMergeJoin extends PopUnitTestBase {
       List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/join/mergeJoinExpr.json"), Charsets.UTF_8));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       assertEquals(10, count);

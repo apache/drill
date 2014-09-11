@@ -41,8 +41,9 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
     this.typeFactory = typeFactory;
 
     // Add the initial list of columns.
-    for (String column : columnNames)
+    for (String column : columnNames) {
       addField(column);
+    }
     computeDigest();
   }
 
@@ -76,7 +77,7 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
   @Override
   public List<String> getFieldNames() {
     List<String> fieldNames = Lists.newArrayList();
-    for(RelDataTypeField f : fields){
+    for (RelDataTypeField f : fields) {
       fieldNames.add(f.getName());
     }
 
@@ -102,4 +103,5 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
   public boolean isStruct() {
     return true;
   }
+
 }

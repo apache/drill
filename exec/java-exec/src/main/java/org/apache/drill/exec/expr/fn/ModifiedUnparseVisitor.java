@@ -100,7 +100,9 @@ public class ModifiedUnparseVisitor extends UnparseVisitor {
           bs instanceof Java.SynchronizedStatement             ? 4 :
           99
       );
-      if (state != -1 && state != x) this.pw.println(AutoIndentWriter.CLEAR_TABULATORS);
+      if (state != -1 && state != x) {
+        this.pw.println(AutoIndentWriter.CLEAR_TABULATORS);
+      }
       state = x;
 
       this.unparseBlockStatement(bs);

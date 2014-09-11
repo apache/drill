@@ -53,7 +53,7 @@ public class TestComparisonFunctions extends ExecTest {
   public void runTest(@Injectable final DrillbitContext bitContext,
                       @Injectable UserServer.UserClientConnection connection, String expression, int expectedResults) throws Throwable {
 
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
@@ -62,13 +62,19 @@ public class TestComparisonFunctions extends ExecTest {
     }};
 
     String planString = Resources.toString(Resources.getResource(COMPARISON_TEST_PHYSICAL_PLAN), Charsets.UTF_8).replaceAll("EXPRESSION", expression);
-    if(reader == null) reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    if(registry == null) registry = new FunctionImplementationRegistry(c);
-    if(context == null) context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    if (reader == null) {
+      reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    }
+    if (registry == null) {
+      registry = new FunctionImplementationRegistry(c);
+    }
+    if(context == null) {
+      context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    }
     PhysicalPlan plan = reader.readPhysicalPlan(planString);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-    while(exec.next()){
+    while(exec.next()) {
       assertEquals(String.format("Expression: %s;", expression), expectedResults, exec.getSelectionVector2().getCount());
 //      for (ValueVector vv: exec) {
 //        vv.close();
@@ -79,8 +85,7 @@ public class TestComparisonFunctions extends ExecTest {
 
     context.close();
 
-
-    if(context.getFailureCause() != null){
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
     }
 

@@ -139,7 +139,7 @@ public class HiveScan extends AbstractGroupScan {
         for (Object obj : properties.keySet()) {
           job.set((String) obj, (String) properties.get(obj));
         }
-        for(Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
+        for (Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
           job.set(entry.getKey(), entry.getValue());
         }
         InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
@@ -218,7 +218,9 @@ public class HiveScan extends AbstractGroupScan {
         encodedInputSplits.add(serializeInputSplit(split));
         splitTypes.add(split.getClass().getName());
       }
-      if (parts.contains(null)) parts = null;
+      if (parts.contains(null)) {
+        parts = null;
+      }
       HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.table, parts, hiveReadEntry.hiveConfigOverride);
       return new HiveSubScan(encodedInputSplits, subEntry, splitTypes, columns);
     } catch (IOException | ReflectiveOperationException e) {
@@ -274,7 +276,7 @@ public class HiveScan extends AbstractGroupScan {
   public ScanStats getScanStats() {
     try {
       long data =0;
-      for(InputSplit split : inputSplits){
+      for (InputSplit split : inputSplits) {
           data += split.getLength();
       }
 
@@ -313,4 +315,5 @@ public class HiveScan extends AbstractGroupScan {
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
   }
+
 }

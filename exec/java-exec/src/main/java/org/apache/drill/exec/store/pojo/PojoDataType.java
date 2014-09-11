@@ -34,45 +34,45 @@ public class PojoDataType {
   public List<SqlTypeName> types = Lists.newArrayList();
   public List<String> names = Lists.newArrayList();
 
-  public PojoDataType(Class<?> pojoClass){
+  public PojoDataType(Class<?> pojoClass) {
     logger.debug(pojoClass.getName());
     Field[] fields = pojoClass.getDeclaredFields();
-    for(int i = 0; i < fields.length; i++){
+    for (int i = 0; i < fields.length; i++) {
       Field f = fields[i];
 
-      if(Modifier.isStatic(f.getModifiers())) continue;
+      if (Modifier.isStatic(f.getModifiers())) {
+        continue;
+      }
 
       Class<?> type = f.getType();
       names.add(f.getName());
 
-      if(type == int.class || type == Integer.class){
+      if (type == int.class || type == Integer.class) {
         types.add(SqlTypeName.INTEGER);
-      }else if(type == boolean.class || type == Boolean.class){
+      } else if(type == boolean.class || type == Boolean.class) {
         types.add(SqlTypeName.BOOLEAN);
-      }else if(type == long.class || type == Long.class){
+      } else if(type == long.class || type == Long.class) {
         types.add(SqlTypeName.BIGINT);
-      }else if(type == double.class || type == Double.class){
+      } else if(type == double.class || type == Double.class) {
         types.add(SqlTypeName.DOUBLE);
-      }else if(type == String.class){
+      } else if(type == String.class) {
         types.add(SqlTypeName.VARCHAR);
-      }else if(type.isEnum()){
+      } else if(type.isEnum()) {
         types.add(SqlTypeName.VARCHAR);
-      }else if (type == Timestamp.class) {
+      } else if (type == Timestamp.class) {
         types.add(SqlTypeName.TIMESTAMP);
-      }else{
+      } else {
         throw new RuntimeException(String.format("PojoRecord reader doesn't yet support conversions from type [%s].", type));
       }
     }
   }
 
-
-  public RelDataType getRowType(RelDataTypeFactory f){
+  public RelDataType getRowType(RelDataTypeFactory f) {
     List<RelDataType> fields = Lists.newArrayList();
-    for(SqlTypeName n : types){
+    for (SqlTypeName n : types) {
       fields.add(f.createSqlType(n));
     }
     return f.createStructType(fields, names);
   }
-
 
 }

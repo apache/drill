@@ -12,7 +12,7 @@
       "type" : "mock"
   }
 },
-  
+
   query:[
     {
       @id:"1",
@@ -42,8 +42,6 @@
       target: {
         file: "console:///stdout"
       }
-      
     }
-    
   ]
 }

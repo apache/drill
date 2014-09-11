@@ -49,7 +49,7 @@ public class QueryResultHandler {
   private ConcurrentMap<QueryId, UserResultsListener> resultsListener = Maps.newConcurrentMap();
 
 
-  public RpcOutcomeListener<QueryId> getWrappedListener(UserResultsListener listener){
+  public RpcOutcomeListener<QueryId> getWrappedListener(UserResultsListener listener) {
     return new SubmissionListener(listener);
   }
 
@@ -66,7 +66,9 @@ public class QueryResultHandler {
       BufferingListener bl = new BufferingListener();
       l = resultsListener.putIfAbsent(result.getQueryId(), bl);
       // if we had a succesful insert, use that reference.  Otherwise, just throw away the new bufering listener.
-      if (l == null) l = bl;
+      if (l == null) {
+        l = bl;
+      }
       if (result.getQueryId().toString().equals("")) {
         failAll();
       }
@@ -125,7 +127,7 @@ public class QueryResultHandler {
           l.resultArrived(r, throttle);
           last = r.getHeader().getIsLastChunk();
         }
-        if(ex != null){
+        if (ex != null) {
           l.submissionFailed(ex);
           return true;
         }
@@ -136,7 +138,9 @@ public class QueryResultHandler {
     @Override
     public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
       this.throttle = throttle;
-      if(result.getHeader().getIsLastChunk()) finished = true;
+      if (result.getHeader().getIsLastChunk()) {
+        finished = true;
+      }
 
       synchronized (this) {
         if (output == null) {
@@ -151,7 +155,7 @@ public class QueryResultHandler {
     public void submissionFailed(RpcException ex) {
       finished = true;
       synchronized (this) {
-        if (output == null){
+        if (output == null) {
           this.ex = ex;
         } else{
           output.submissionFailed(ex);
@@ -159,7 +163,7 @@ public class QueryResultHandler {
       }
     }
 
-    public boolean isFinished(){
+    public boolean isFinished() {
       return finished;
     }
 
@@ -201,7 +205,9 @@ public class QueryResultHandler {
             resultsListener.remove(oldListener);
           } else {
             boolean replaced = resultsListener.replace(queryId, oldListener, listener);
-            if (!replaced) throw new IllegalStateException();
+            if (!replaced) {
+              throw new IllegalStateException();
+            }
           }
         } else {
           throw new IllegalStateException("Trying to replace a non-buffering User Results listener.");

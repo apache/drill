@@ -48,7 +48,9 @@ public class HashAggPrule extends AggPruleBase {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashAggEnabled()) return;
+    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashAggEnabled()) {
+      return;
+    }
 
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
     final RelNode input = call.rel(1);
@@ -96,7 +98,6 @@ public class HashAggPrule extends AggPruleBase {
     }
   }
 
-
   private class TwoPhaseSubset extends SubsetTransformer<DrillAggregateRel, InvalidRelException> {
     final RelTrait distOnAllKeys;
 
@@ -124,7 +125,6 @@ public class HashAggPrule extends AggPruleBase {
                                                aggregate.getGroupSet(),
                                                phase1Agg.getPhase2AggCalls(),
                                                OperatorPhase.PHASE_2of2);
-
       return phase2Agg;
     }
 
@@ -140,4 +140,5 @@ public class HashAggPrule extends AggPruleBase {
 
     call.transformTo(newAgg);
   }
+
 }

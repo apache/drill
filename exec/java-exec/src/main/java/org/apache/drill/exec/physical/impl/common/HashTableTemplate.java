@@ -164,10 +164,11 @@ public abstract class HashTableTemplate implements HashTable {
       assert (currentIdxWithinBatch < HashTable.BATCH_SIZE);
       assert (incomingRowIdx < HashTable.BATCH_SIZE);
 
-      if (isProbe)
+      if (isProbe) {
         match = isKeyMatchInternalProbe(incomingRowIdx, currentIdxWithinBatch);
-      else
+      } else {
         match = isKeyMatchInternalBuild(incomingRowIdx, currentIdxWithinBatch);
+      }
 
       if (! match) {
         currentIdxHolder.value = links.getAccessor().get(currentIdxWithinBatch);
@@ -196,7 +197,9 @@ public abstract class HashTableTemplate implements HashTable {
 
       maxOccupiedIdx = Math.max(maxOccupiedIdx, currentIdxWithinBatch);
 
-      if (EXTRA_DEBUG) logger.debug("BatchHolder: inserted key at incomingRowIdx = {}, currentIdx = {}, hash value = {}.", incomingRowIdx, currentIdx, hashValue);
+      if (EXTRA_DEBUG) {
+        logger.debug("BatchHolder: inserted key at incomingRowIdx = {}, currentIdx = {}, hash value = {}.", incomingRowIdx, currentIdx, hashValue);
+      }
 
       return true;
     }
@@ -225,7 +228,9 @@ public abstract class HashTableTemplate implements HashTable {
           newLinks.getMutator().setSafe(entryIdxWithinBatch, EMPTY_SLOT);
           newHashValues.getMutator().setSafe(entryIdxWithinBatch, hash);
 
-          if (EXTRA_DEBUG) logger.debug("New bucket was empty. bucketIdx = {}, newStartIndices[ {} ] = {}, newLinks[ {} ] = {}, hash value = {}.", bucketIdx, bucketIdx, newStartIndices.getAccessor().get(bucketIdx), entryIdxWithinBatch, newLinks.getAccessor().get(entryIdxWithinBatch), newHashValues.getAccessor().get(entryIdxWithinBatch));
+          if (EXTRA_DEBUG) {
+            logger.debug("New bucket was empty. bucketIdx = {}, newStartIndices[ {} ] = {}, newLinks[ {} ] = {}, hash value = {}.", bucketIdx, bucketIdx, newStartIndices.getAccessor().get(bucketIdx), entryIdxWithinBatch, newLinks.getAccessor().get(entryIdxWithinBatch), newHashValues.getAccessor().get(entryIdxWithinBatch));
+          }
 
         } else {
           // follow the new table's hash chain until we encounter empty slot. Note that the hash chain could
@@ -245,7 +250,9 @@ public abstract class HashTableTemplate implements HashTable {
               newLinks.getMutator().setSafe(entryIdxWithinBatch, EMPTY_SLOT);
               newHashValues.getMutator().setSafe(entryIdxWithinBatch, hash);
 
-              if (EXTRA_DEBUG) logger.debug("Followed hash chain in new bucket. bucketIdx = {}, newLinks[ {} ] = {}, newLinks[ {} ] = {}, hash value = {}.", bucketIdx, idxWithinBatch, newLinks.getAccessor().get(idxWithinBatch), entryIdxWithinBatch, newLinks.getAccessor().get(entryIdxWithinBatch), newHashValues.getAccessor().get(entryIdxWithinBatch));
+              if (EXTRA_DEBUG) {
+                logger.debug("Followed hash chain in new bucket. bucketIdx = {}, newLinks[ {} ] = {}, newLinks[ {} ] = {}, hash value = {}.", bucketIdx, idxWithinBatch, newLinks.getAccessor().get(idxWithinBatch), entryIdxWithinBatch, newLinks.getAccessor().get(entryIdxWithinBatch), newHashValues.getAccessor().get(entryIdxWithinBatch));
+              }
 
               break;
             } else if (bh != this && bh.links.getAccessor().get(idxWithinBatch) == EMPTY_SLOT) {
@@ -253,7 +260,9 @@ public abstract class HashTableTemplate implements HashTable {
               newLinks.getMutator().setSafe(entryIdxWithinBatch, EMPTY_SLOT); // update the newLink entry in this batch to mark end of the hash chain
               newHashValues.getMutator().setSafe(entryIdxWithinBatch,  hash);
 
-              if (EXTRA_DEBUG) logger.debug("Followed hash chain in new bucket. bucketIdx = {}, newLinks[ {} ] = {}, newLinks[ {} ] = {}, hash value = {}.", bucketIdx, idxWithinBatch, newLinks.getAccessor().get(idxWithinBatch), entryIdxWithinBatch, newLinks.getAccessor().get(entryIdxWithinBatch), newHashValues.getAccessor().get(entryIdxWithinBatch));
+              if (EXTRA_DEBUG) {
+                logger.debug("Followed hash chain in new bucket. bucketIdx = {}, newLinks[ {} ] = {}, newLinks[ {} ] = {}, hash value = {}.", bucketIdx, idxWithinBatch, newLinks.getAccessor().get(idxWithinBatch), entryIdxWithinBatch, newLinks.getAccessor().get(entryIdxWithinBatch), newHashValues.getAccessor().get(entryIdxWithinBatch));
+              }
 
               break;
             }
@@ -381,11 +390,19 @@ public abstract class HashTableTemplate implements HashTable {
     float loadf = htConfig.getLoadFactor();
     int initialCap = htConfig.getInitialCapacity();
 
-    if (loadf <= 0 || Float.isNaN(loadf)) throw new IllegalArgumentException("Load factor must be a valid number greater than 0");
-    if (initialCap <= 0) throw new IllegalArgumentException("The initial capacity must be greater than 0");
-    if (initialCap > MAXIMUM_CAPACITY) throw new IllegalArgumentException("The initial capacity must be less than maximum capacity allowed");
+    if (loadf <= 0 || Float.isNaN(loadf)) {
+      throw new IllegalArgumentException("Load factor must be a valid number greater than 0");
+    }
+    if (initialCap <= 0) {
+      throw new IllegalArgumentException("The initial capacity must be greater than 0");
+    }
+    if (initialCap > MAXIMUM_CAPACITY) {
+      throw new IllegalArgumentException("The initial capacity must be less than maximum capacity allowed");
+    }
 
-    if (htConfig.getKeyExprsBuild() == null || htConfig.getKeyExprsBuild().length == 0) throw new IllegalArgumentException("Hash table must have at least 1 key expression");
+    if (htConfig.getKeyExprsBuild() == null || htConfig.getKeyExprsBuild().length == 0) {
+      throw new IllegalArgumentException("Hash table must have at least 1 key expression");
+    }
 
     this.htConfig = htConfig;
     this.context = context;
@@ -397,8 +414,9 @@ public abstract class HashTableTemplate implements HashTable {
 
     // round up the initial capacity to nearest highest power of 2
     tableSize = roundUpToPowerOf2(initialCap);
-    if (tableSize > MAXIMUM_CAPACITY)
+    if (tableSize > MAXIMUM_CAPACITY) {
       tableSize = MAXIMUM_CAPACITY;
+    }
 
     threshold = (int) Math.ceil(tableSize * loadf);
 
@@ -500,7 +518,9 @@ public abstract class HashTableTemplate implements HashTable {
       currentIdx = freeIndex++;
       addBatchIfNeeded(currentIdx);
 
-      if (EXTRA_DEBUG) logger.debug("Empty bucket index = {}. incomingRowIdx = {}; inserting new entry at currentIdx = {}.", i, incomingRowIdx, currentIdx);
+      if (EXTRA_DEBUG) {
+        logger.debug("Empty bucket index = {}. incomingRowIdx = {}; inserting new entry at currentIdx = {}.", i, incomingRowIdx, currentIdx);
+      }
 
       if (insertEntry(incomingRowIdx, currentIdx, hash, lastEntryBatch, lastEntryIdxWithinBatch)) {
         // update the start index array
@@ -543,14 +563,16 @@ public abstract class HashTableTemplate implements HashTable {
       currentIdx = freeIndex++;
       addBatchIfNeeded(currentIdx);
 
-      if (EXTRA_DEBUG) logger.debug("No match was found for incomingRowIdx = {}; inserting new entry at currentIdx = {}.", incomingRowIdx, currentIdx);
+      if (EXTRA_DEBUG) {
+        logger.debug("No match was found for incomingRowIdx = {}; inserting new entry at currentIdx = {}.", incomingRowIdx, currentIdx);
+      }
 
       if (insertEntry(incomingRowIdx, currentIdx, hash, lastEntryBatch, lastEntryIdxWithinBatch)) {
         htIdxHolder.value = currentIdx;
         return PutStatus.KEY_ADDED;
-      }
-      else
+      } else {
         return PutStatus.PUT_FAILED;
+      }
     }
 
     return found ? PutStatus.KEY_PRESENT : PutStatus.KEY_ADDED ;
@@ -618,7 +640,9 @@ public abstract class HashTableTemplate implements HashTable {
 
     if (currentIdx >= totalBatchSize) {
       BatchHolder bh = addBatchHolder();
-      if (EXTRA_DEBUG) logger.debug("HashTable: Added new batch. Num batches = {}.", batchHolders.size());
+      if (EXTRA_DEBUG) {
+        logger.debug("HashTable: Added new batch. Num batches = {}.", batchHolders.size());
+      }
       return bh;
     }
     else {
@@ -638,12 +662,15 @@ public abstract class HashTableTemplate implements HashTable {
   // in the new table.. the metadata consists of the startIndices, links and hashValues.
   // Note that the keys stored in the BatchHolders are not moved around.
   private void resizeAndRehashIfNeeded() {
-    if (numEntries < threshold)
+    if (numEntries < threshold) {
       return;
+    }
 
     long t0 = System.currentTimeMillis();
 
-    if (EXTRA_DEBUG) logger.debug("Hash table numEntries = {}, threshold = {}; resizing the table...", numEntries, threshold);
+    if (EXTRA_DEBUG) {
+      logger.debug("Hash table numEntries = {}, threshold = {}; resizing the table...", numEntries, threshold);
+    }
 
     // If the table size is already MAXIMUM_CAPACITY, don't resize
     // the table, but set the threshold to Integer.MAX_VALUE such that
@@ -656,8 +683,9 @@ public abstract class HashTableTemplate implements HashTable {
     int newSize = 2 * tableSize;
 
     tableSize = roundUpToPowerOf2(newSize);
-    if (tableSize > MAXIMUM_CAPACITY)
+    if (tableSize > MAXIMUM_CAPACITY) {
       tableSize = MAXIMUM_CAPACITY;
+    }
 
     // set the new threshold based on the new table size and load factor
     threshold = (int) Math.ceil(tableSize * htConfig.getLoadFactor());
@@ -717,5 +745,3 @@ public abstract class HashTableTemplate implements HashTable {
   protected abstract int getHashProbe(@Named("incomingRowIdx") int incomingRowIdx) ;
 
 }
-
-

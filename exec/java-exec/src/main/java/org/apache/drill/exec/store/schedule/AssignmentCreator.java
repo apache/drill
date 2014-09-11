@@ -101,8 +101,9 @@ public class AssignmentCreator<T extends CompleteWork> {
     final boolean requireAffinity = requiredPercentage > 0;
     int maxAssignments = (int) (workunits.size() / endpoints.size());
 
-    if (maxAssignments < 1)
+    if (maxAssignments < 1) {
       maxAssignments = 1;
+    }
 
     for (Iterator<T> iter = workunits.iterator(); iter.hasNext();) {
       T unit = iter.next();

@@ -37,7 +37,7 @@ public class Project extends SingleInputOperator {
   @JsonCreator
   public Project(@JsonProperty("projections") NamedExpression[] selections) {
     this.selections = selections;
-    if (selections == null || selections.length == 0)
+    if (selections == null || selections.length == 0) {
       throw new ExpressionParsingException(
           "Project did not provide any projection selections.  At least one projection must be provided.");
 //    for (int i = 0; i < selections.length; i++) {
@@ -51,6 +51,7 @@ public class Project extends SingleInputOperator {
 //                    path, segment.isNamed()));
 //
 //    }
+    }
   }
 
   @JsonProperty("projections")
@@ -87,4 +88,5 @@ public class Project extends SingleInputOperator {
     }
 
   }
+
 }

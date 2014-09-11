@@ -64,11 +64,13 @@ public class AtomicRemainder {
    * @param size
    */
   public boolean forceGet(long size) {
-    if(get(size)){
+    if (get(size)) {
       return true;
-    }else{
+    } else {
       availableShared.addAndGet(size);
-      if (parent != null) parent.forceGet(size);
+      if (parent != null) {
+        parent.forceGet(size);
+      }
       return false;
     }
   }
@@ -160,17 +162,19 @@ public class AtomicRemainder {
       logger.warn("Tried to close remainder, but it has already been closed", new Exception());
       return;
     }
-    if (availablePrivate.get() != initPrivate || availableShared.get() != initShared){
+    if (availablePrivate.get() != initPrivate || availableShared.get() != initShared) {
       IllegalStateException e = new IllegalStateException(
           String
               .format(ERROR, initPrivate, availablePrivate.get(), initPrivate - availablePrivate.get(), initShared, availableShared.get(), initShared - availableShared.get()));
-      if(errorOnLeak){
+      if (errorOnLeak) {
         throw e;
-      }else{
+      } else {
         logger.warn("Memory leaked during query.", e);
       }
     }
-    if(parent != null) parent.returnAllocation(initPrivate);
+    if (parent != null) {
+      parent.returnAllocation(initPrivate);
+    }
     closed = true;
   }
 

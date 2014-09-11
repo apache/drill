@@ -105,15 +105,18 @@ public class TestLoad extends ExecTest {
         ValueVector.Accessor accessor = v.getValueVector().getAccessor();
         if (v.getField().getType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
           Object obj = accessor.getObject(r);
-          if (obj != null)
+          if (obj != null) {
             System.out.print(accessor.getObject(r));
-          else
+          } else {
             System.out.print("NULL");
+          }
         } else {
           System.out.print(accessor.getObject(r));
         }
       }
-      if (!first) System.out.println();
+      if (!first) {
+        System.out.println();
+      }
     }
     assertEquals(100, recordCount);
     batchLoader.clear();

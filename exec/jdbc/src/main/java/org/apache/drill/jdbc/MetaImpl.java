@@ -67,14 +67,14 @@ public class MetaImpl implements Meta {
     return null;
   }
 
-  private ResultSet s(String s){
-    try{
+  private ResultSet s(String s) {
+    try {
       logger.debug("Running {}", s);
       AvaticaStatement statement = connection.createStatement();
       statement.execute(s);
       return statement.getResultSet();
 
-    }catch(Exception e){
+    } catch (Exception e) {
       throw new DrillRuntimeException("Failure while attempting to get DatabaseMetadata.", e);
     }
 
@@ -96,22 +96,24 @@ public class MetaImpl implements Meta {
         + "'' as REF_GENERATION "
         + "FROM INFORMATION_SCHEMA.`TABLES` WHERE 1=1 ");
 
-    if(catalog != null){
+    if (catalog != null) {
       sb.append(" AND TABLE_CATALOG = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
     }
 
-    if(schemaPattern.s != null){
+    if (schemaPattern.s != null) {
       sb.append(" AND TABLE_SCHEMA like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
     }
 
-    if(tableNamePattern.s != null){
+    if (tableNamePattern.s != null) {
       sb.append(" AND TABLE_NAME like '" + StringEscapeUtils.escapeSql(tableNamePattern.s) + "'");
     }
 
-    if(typeList != null && typeList.size() > 0){
+    if (typeList != null && typeList.size() > 0) {
       sb.append("AND (");
-      for(int t = 0; t < typeList.size(); t++){
-        if(t != 0) sb.append(" OR ");
+      for (int t = 0; t < typeList.size(); t++) {
+        if (t != 0) {
+          sb.append(" OR ");
+        }
         sb.append(" TABLE_TYPE LIKE '" + StringEscapeUtils.escapeSql(typeList.get(t)) + "' ");
       }
       sb.append(")");
@@ -152,18 +154,18 @@ public class MetaImpl implements Meta {
         + "FROM INFORMATION_SCHEMA.COLUMNS "
         + "WHERE 1=1 ");
 
-    if(catalog != null){
+    if (catalog != null) {
       sb.append(" AND TABLE_CATALOG = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
     }
-    if(schemaPattern.s != null){
+    if (schemaPattern.s != null) {
       sb.append(" AND TABLE_SCHEMA like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
     }
 
-    if(tableNamePattern.s != null){
+    if (tableNamePattern.s != null) {
       sb.append(" AND TABLE_NAME like '" + StringEscapeUtils.escapeSql(tableNamePattern.s) + "'");
     }
 
-    if(columnNamePattern.s != null){
+    if (columnNamePattern.s != null) {
       sb.append(" AND COLUMN_NAME like '" + StringEscapeUtils.escapeSql(columnNamePattern.s) + "'");
     }
 
@@ -179,10 +181,10 @@ public class MetaImpl implements Meta {
         + "CATALOG_NAME as TABLE_CAT "
         + " FROM INFORMATION_SCHEMA.SCHEMATA WHERE 1=1 ");
 
-    if(catalog != null){
+    if (catalog != null) {
       sb.append(" AND CATALOG_NAME = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
     }
-    if(schemaPattern.s != null){
+    if (schemaPattern.s != null) {
       sb.append(" AND SCHEMA_NAME like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
     }
     sb.append(" ORDER BY CATALOG_NAME, SCHEMA_NAME");

@@ -144,19 +144,21 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     status.ensureInitial();
 
     // loop so we can start over again if we find a new batch was created.
-    while(true){
+    while (true) {
 
       JoinOutcome outcome = status.getOutcome();
       // if the previous outcome was a change in schema or we sent a batch, we have to set up a new batch.
       if (outcome == JoinOutcome.BATCH_RETURNED ||
-          outcome == JoinOutcome.SCHEMA_CHANGED)
+          outcome == JoinOutcome.SCHEMA_CHANGED) {
         allocateBatch();
+      }
 
       // reset the output position to zero after our parent iterates this RecordBatch
       if (outcome == JoinOutcome.BATCH_RETURNED ||
           outcome == JoinOutcome.SCHEMA_CHANGED ||
-          outcome == JoinOutcome.NO_MORE_DATA)
+          outcome == JoinOutcome.NO_MORE_DATA) {
         status.resetOutputPos();
+      }
 
       if (outcome == JoinOutcome.NO_MORE_DATA) {
         logger.debug("NO MORE DATA; returning {}  NONE");
@@ -164,7 +166,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       }
 
       boolean first = false;
-      if(worker == null){
+      if (worker == null) {
         try {
           logger.debug("Creating New Worker");
           stats.startSetup();
@@ -180,11 +182,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       }
 
       // join until we have a complete outgoing batch
-      if (!worker.doJoin(status))
+      if (!worker.doJoin(status)) {
         worker = null;
+      }
 
       // get the outcome of the join.
-      switch(status.getOutcome()){
+      switch (status.getOutcome()) {
       case BATCH_RETURNED:
         // only return new schema if new worker has been setup.
         logger.debug("BATCH RETURNED; returning {}", (first ? "OK_NEW_SCHEMA" : "OK"));
@@ -200,7 +203,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.NONE);
       case SCHEMA_CHANGED:
         worker = null;
-        if(status.getOutPosition() > 0){
+        if (status.getOutPosition() > 0) {
           // if we have current data, let's return that.
           logger.debug("SCHEMA CHANGED; returning {} ", (first ? "OK_NEW_SCHEMA" : "OK"));
           setRecordCountInContainer();
@@ -218,7 +221,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   private void setRecordCountInContainer() {
-    for(VectorWrapper vw : container){
+    for (VectorWrapper vw : container) {
       Preconditions.checkArgument(!vw.isHyper());
       vw.getValueVector().getMutator().setValueCount(getRecordCount());
     }
@@ -257,9 +260,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
       // materialize value vector readers from join expression
       final LogicalExpression materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector, context.getFunctionRegistry());
-      if (collector.hasErrors())
+      if (collector.hasErrors()) {
         throw new ClassTransformationException(String.format(
             "Failure while trying to materialize incoming left field.  Errors:\n %s.", collector.toErrorString()));
+      }
 
       // generate compareNextLeftKey()
       ////////////////////////////////
@@ -475,9 +479,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       } else {
         materializedLeftExpr = new TypedNullConstant(Types.optional(MinorType.INT));
       }
-      if (collector.hasErrors())
+      if (collector.hasErrors()) {
         throw new ClassTransformationException(String.format(
             "Failure while trying to materialize incoming left field.  Errors:\n %s.", collector.toErrorString()));
+      }
 
       LogicalExpression materializedRightExpr;
       if (worker == null || status.isRightPositionAllowed()) {
@@ -485,9 +490,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       } else {
         materializedRightExpr = new TypedNullConstant(Types.optional(MinorType.INT));
       }
-      if (collector.hasErrors())
+      if (collector.hasErrors()) {
         throw new ClassTransformationException(String.format(
             "Failure while trying to materialize incoming right field.  Errors:\n %s.", collector.toErrorString()));
+      }
 
       // generate compare()
       ////////////////////////
@@ -519,4 +525,5 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     //Pass the equality check for all the join conditions. Finally, return 0.
     cg.getEvalBlock()._return(JExpr.lit(0));
   }
+
 }

@@ -76,10 +76,10 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
     return buffer;
   }
 
-  public void release(){
-    if(buffer != null) buffer.release();
+  public void release() {
+    if (buffer != null) {
+      buffer.release();
+    }
   }
-
-
 
 }

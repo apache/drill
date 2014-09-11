@@ -47,7 +47,7 @@ public class SqlDescribeTable extends DrillSqlCall {
   private final SqlNode columnQualifier;
 
   public static final SqlSpecialOperator OPERATOR =
-    new SqlSpecialOperator("DESCRIBE_TABLE", SqlKind.OTHER){
+    new SqlSpecialOperator("DESCRIBE_TABLE", SqlKind.OTHER) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlDescribeTable(pos, (SqlIdentifier) operands[0], (SqlIdentifier) operands[1], operands[2]);
@@ -80,8 +80,12 @@ public class SqlDescribeTable extends DrillSqlCall {
     writer.keyword("DESCRIBE");
     writer.keyword("TABLE");
     table.unparse(writer, leftPrec, rightPrec);
-    if (column != null) column.unparse(writer, leftPrec, rightPrec);
-    if (columnQualifier != null) columnQualifier.unparse(writer, leftPrec, rightPrec);
+    if (column != null) {
+      column.unparse(writer, leftPrec, rightPrec);
+    }
+    if (columnQualifier != null) {
+      columnQualifier.unparse(writer, leftPrec, rightPrec);
+    }
   }
 
   @Override
@@ -92,4 +96,5 @@ public class SqlDescribeTable extends DrillSqlCall {
   public SqlIdentifier getTable() { return table; }
   public SqlIdentifier getColumn() { return column; }
   public SqlNode getColumnQualifier() { return columnQualifier; }
+
 }

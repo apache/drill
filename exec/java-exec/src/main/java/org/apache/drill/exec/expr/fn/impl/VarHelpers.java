@@ -67,8 +67,9 @@ public class VarHelpers {
 
   public static final int compare(NullableVarBinaryHolder left, NullableVarBinaryHolder right) {
     if (left.isSet == 0) {
-      if (right.isSet == 0)
+      if (right.isSet == 0) {
         return 0;
+      }
       return -1;
     } else if (right.isSet == 0) {
       return 1;
@@ -95,8 +96,9 @@ public class VarHelpers {
 
   public static final int compare(NullableVarBinaryHolder left, NullableVarCharHolder right) {
     if (left.isSet == 0) {
-      if (right.isSet == 0)
+      if (right.isSet == 0) {
         return 0;
+      }
       return -1;
     } else if (right.isSet == 0) {
       return 1;
@@ -123,8 +125,9 @@ public class VarHelpers {
 
   public static final int compare(NullableVarCharHolder left, NullableVarCharHolder right) {
     if (left.isSet == 0) {
-      if (right.isSet == 0)
+      if (right.isSet == 0) {
         return 0;
+      }
       return -1;
     } else if (right.isSet == 0) {
       return 1;

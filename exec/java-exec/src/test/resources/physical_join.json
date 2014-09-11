@@ -57,7 +57,7 @@
     entries : [ {
       path : "/tmp/nation.parquet"
     } ],
-    storageengine: {type: "parquet", dfsName: "file:///" },    
+    storageengine: {type: "parquet", dfsName: "file:///" },
     ref : "_MAP",
     fragmentPointer : 0
   }, {

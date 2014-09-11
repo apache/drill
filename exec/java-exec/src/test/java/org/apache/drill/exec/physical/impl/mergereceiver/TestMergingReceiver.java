@@ -37,7 +37,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-
 public class TestMergingReceiver extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergingReceiver.class);
 
@@ -45,10 +44,9 @@ public class TestMergingReceiver extends PopUnitTestBase {
   public void twoBitTwoExchange() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
-
       bit1.run();
       bit2.run();
       client.connect();
@@ -58,13 +56,14 @@ public class TestMergingReceiver extends PopUnitTestBase {
       int count = 0;
       RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       // print the results
-      for(QueryResultBatch b : results) {
+      for (QueryResultBatch b : results) {
         count += b.getHeader().getRowCount();
         for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
           List<Object> row = Lists.newArrayList();
           batchLoader.load(b.getHeader().getDef(), b.getData());
-          for (VectorWrapper<?> vw : batchLoader)
+          for (VectorWrapper<?> vw : batchLoader) {
             row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
+          }
           for (Object cell : row) {
             if (cell == null) {
               System.out.print("<null>    ");
@@ -72,8 +71,9 @@ public class TestMergingReceiver extends PopUnitTestBase {
             }
             int len = cell.toString().length();
             System.out.print(cell + " ");
-            for (int i = 0; i < (30 - len); ++i)
+            for (int i = 0; i < (30 - len); ++i) {
               System.out.print(" ");
+            }
           }
           System.out.println();
         }
@@ -88,7 +88,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
   public void testMultipleProvidersMixedSizes() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
@@ -102,7 +102,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
       RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       // print the results
       Long lastBlueValue = null;
-      for(QueryResultBatch b : results) {
+      for (QueryResultBatch b : results) {
         count += b.getHeader().getRowCount();
         for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
           List<Object> row = Lists.newArrayList();
@@ -111,17 +111,21 @@ public class TestMergingReceiver extends PopUnitTestBase {
             row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
             if (vw.getValueVector().getField().getAsSchemaPath().getRootSegment().getPath().equals("blue")) {
               // assert order is ascending
-              if (((Long)vw.getValueVector().getAccessor().getObject(valueIdx)).longValue() == 0) continue; // ignore initial 0's from sort
-              if (lastBlueValue != null)
+              if (((Long)vw.getValueVector().getAccessor().getObject(valueIdx)).longValue() == 0) {
+                continue; // ignore initial 0's from sort
+              }
+              if (lastBlueValue != null) {
                 assertTrue(((Long)vw.getValueVector().getAccessor().getObject(valueIdx)).longValue() >= ((Long)lastBlueValue).longValue());
+              }
               lastBlueValue = (Long)vw.getValueVector().getAccessor().getObject(valueIdx);
             }
           }
           for (Object cell : row) {
             int len = cell.toString().length();
             System.out.print(cell + " ");
-            for (int i = 0; i < (30 - len); ++i)
+            for (int i = 0; i < (30 - len); ++i) {
               System.out.print(" ");
+            }
           }
           System.out.println();
         }
@@ -136,7 +140,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
   public void handleEmptyBatch() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
@@ -149,13 +153,14 @@ public class TestMergingReceiver extends PopUnitTestBase {
       int count = 0;
       RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       // print the results
-      for(QueryResultBatch b : results) {
+      for (QueryResultBatch b : results) {
         count += b.getHeader().getRowCount();
         for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
           List<Object> row = Lists.newArrayList();
           batchLoader.load(b.getHeader().getDef(), b.getData());
-          for (VectorWrapper vw : batchLoader)
+          for (VectorWrapper vw : batchLoader) {
             row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
+          }
           for (Object cell : row) {
             if (cell == null) {
               System.out.print("<null>    ");
@@ -163,8 +168,9 @@ public class TestMergingReceiver extends PopUnitTestBase {
             }
             int len = cell.toString().length();
             System.out.print(cell + " ");
-            for (int i = 0; i < (30 - len); ++i)
+            for (int i = 0; i < (30 - len); ++i) {
               System.out.print(" ");
+            }
           }
           System.out.println();
         }
@@ -174,4 +180,5 @@ public class TestMergingReceiver extends PopUnitTestBase {
       assertEquals(100, count);
     }
   }
+
 }

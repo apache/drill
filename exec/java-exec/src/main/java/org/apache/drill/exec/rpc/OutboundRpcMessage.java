@@ -40,10 +40,10 @@ public class OutboundRpcMessage extends RpcMessage {
 
     // Netty doesn't traditionally release the reference on an unreadable buffer.  However, we need to so that if we send a empty or unwritable buffer, we still release.  otherwise we get weird memory leaks when sending empty vectors.
     List<ByteBuf> bufs = Lists.newArrayList();
-    for(ByteBuf d : dBodies){
-      if(d.readableBytes() == 0){
+    for (ByteBuf d : dBodies) {
+      if (d.readableBytes() == 0) {
         d.release();
-      }else{
+      } else {
         bufs.add(d);
       }
     }
@@ -58,12 +58,16 @@ public class OutboundRpcMessage extends RpcMessage {
     return len;
   }
 
-  public int getRawBodySize(){
-    if(dBodies == null) return 0;
+  public int getRawBodySize() {
+    if (dBodies == null) {
+      return 0;
+    }
     int len = 0;
 
     for (int i = 0; i < dBodies.length; i++) {
-      if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Reader Index {}, Writer Index {}", dBodies[i].readerIndex(), dBodies[i].writerIndex());
+      if (RpcConstants.EXTRA_DEBUGGING) {
+        logger.debug("Reader Index {}, Writer Index {}", dBodies[i].readerIndex(), dBodies[i].writerIndex());
+      }
       len += dBodies[i].readableBytes();
     }
     return len;
@@ -76,13 +80,12 @@ public class OutboundRpcMessage extends RpcMessage {
   }
 
   @Override
-  void release(){
-    if(dBodies != null){
-      for(ByteBuf b : dBodies){
+  void release() {
+    if (dBodies != null) {
+      for (ByteBuf b : dBodies) {
         b.release();
       }
     }
   }
-
 
 }

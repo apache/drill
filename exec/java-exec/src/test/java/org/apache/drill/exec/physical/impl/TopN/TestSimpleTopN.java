@@ -42,12 +42,11 @@ public class TestSimpleTopN extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleTopN.class);
   DrillConfig c = DrillConfig.create();
 
-
   @Test
   public void sortOneKeyAscending() throws Throwable{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
@@ -58,9 +57,10 @@ public class TestSimpleTopN extends PopUnitTestBase {
               Files.toString(FileUtils.getResourceAsFile("/topN/one_key_sort.json"),
                       Charsets.UTF_8));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
       }
       assertEquals(100, count);
 
@@ -70,7 +70,9 @@ public class TestSimpleTopN extends PopUnitTestBase {
       int batchCount = 0;
 
       for (QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() == 0) break;
+        if (b.getHeader().getRowCount() == 0) {
+          break;
+        }
         batchCount++;
         RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
         loader.load(b.getHeader().getDef(),b.getData());
@@ -80,7 +82,7 @@ public class TestSimpleTopN extends PopUnitTestBase {
         BigIntVector.Accessor a1 = c1.getAccessor();
 //        IntVector.Accessor a2 = c2.getAccessor();
 
-        for(int i =0; i < c1.getAccessor().getValueCount(); i++){
+        for (int i =0; i < c1.getAccessor().getValueCount(); i++) {
           recordCount++;
           assertTrue(previousBigInt <= a1.get(i));
           previousBigInt = a1.get(i);
@@ -88,13 +90,10 @@ public class TestSimpleTopN extends PopUnitTestBase {
         loader.clear();
         b.release();
       }
-
       System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
 
     }
 
-
   }
-
 
 }

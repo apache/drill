@@ -99,9 +99,10 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   @Override
   protected void validateHandshake(BitToUserHandshake inbound) throws RpcException {
 //    logger.debug("Handling handshake from bit to user. {}", inbound);
-    if (inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION)
+    if (inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) {
       throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(),
           UserRpcConfig.RPC_VERSION));
+    }
 
   }
 

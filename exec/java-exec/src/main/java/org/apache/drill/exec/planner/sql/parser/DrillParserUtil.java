@@ -37,8 +37,9 @@ public class DrillParserUtil {
   public static SqlNode createCondition(SqlNode left, SqlOperator op, SqlNode right) {
 
     // if one of the operands is null, return the other
-    if (left == null || right == null)
+    if (left == null || right == null) {
       return left != null ? left : right;
+    }
 
     List<Object> listCondition = Lists.newArrayList();
     listCondition.add(left);
@@ -47,4 +48,5 @@ public class DrillParserUtil {
 
     return SqlParserUtil.toTree(listCondition);
   }
+
 }

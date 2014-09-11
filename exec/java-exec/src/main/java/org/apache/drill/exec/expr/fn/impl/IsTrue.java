@@ -37,10 +37,11 @@ public class IsTrue {
     public void setup(RecordBatch incoming) { }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = in.value;
+      }
     }
   }
 
@@ -56,4 +57,5 @@ public class IsTrue {
       out.value = in.value;
     }
   }
+
 }

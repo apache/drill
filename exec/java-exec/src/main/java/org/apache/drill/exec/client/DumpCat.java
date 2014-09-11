@@ -87,7 +87,7 @@ public class DumpCat {
     public void validate(String name, String value) throws ParameterException {
       try {
         int batch = Integer.parseInt(value);
-        if(batch < 0) {
+        if (batch < 0) {
           throw new ParameterException("Parameter " + name + " should be non-negative number.");
         }
       } catch (NumberFormatException e) {
@@ -140,10 +140,11 @@ public class DumpCat {
     @Override
     public String toString() {
       String avgRecSizeStr = null;
-      if (this.rows>0)
+      if (this.rows>0) {
         avgRecSizeStr = String.format("Average Record Size : %d ", this.dataSize/this.rows);
-      else
+      } else {
         avgRecSizeStr = "Average Record Size : 0";
+      }
 
       return String.format("Records : %d / %d \n", this.selectedRows, this.rows) +
              avgRecSizeStr +
@@ -175,28 +176,29 @@ public class DumpCat {
     while (input.available() > 0) {
       VectorAccessibleSerializable vcSerializable = new VectorAccessibleSerializable(DumpCat.allocator);
       vcSerializable.readFromStream(input);
-       VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
+      VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
 
-       aggBatchMetaInfo.add(getBatchMetaInfo(vcSerializable));
+      aggBatchMetaInfo.add(getBatchMetaInfo(vcSerializable));
 
-       if (vectorContainer.getRecordCount() == 0) {
-         emptyBatchNum ++;
-       }
+      if (vectorContainer.getRecordCount() == 0) {
+        emptyBatchNum ++;
+      }
 
-       if (prevSchema != null && !vectorContainer.getSchema().equals(prevSchema))
-         schemaChangeIdx.add(batchNum);
+      if (prevSchema != null && !vectorContainer.getSchema().equals(prevSchema)) {
+        schemaChangeIdx.add(batchNum);
+      }
 
-       prevSchema = vectorContainer.getSchema();
-       batchNum ++;
+      prevSchema = vectorContainer.getSchema();
+      batchNum ++;
 
-       vectorContainer.zeroVectors();
+      vectorContainer.zeroVectors();
     }
 
-     /* output the summary stat */
-     System.out.println(String.format("Total # of batches: %d", batchNum));
-     //output: rows, selectedRows, avg rec size, total data size.
-     System.out.println(aggBatchMetaInfo.toString());
-     System.out.println(String.format("Empty batch : %d", emptyBatchNum));
+    /* output the summary stat */
+    System.out.println(String.format("Total # of batches: %d", batchNum));
+    //output: rows, selectedRows, avg rec size, total data size.
+    System.out.println(aggBatchMetaInfo.toString());
+    System.out.println(String.format("Empty batch : %d", emptyBatchNum));
     System.out.println(String.format("Schema changes : %d", schemaChangeIdx.size()));
     System.out.println(String.format("Schema change batch index : %s", schemaChangeIdx.toString()));
   }

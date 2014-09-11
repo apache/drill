@@ -770,7 +770,9 @@ public class TypeCastRules {
   }
 
   public static boolean isCastableWithNullHandling(MajorType from, MajorType to, NullHandling nullHandling) {
-    if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) return false;
+    if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) {
+      return false;
+    }
     return isCastable(from.getMinorType(), to.getMinorType());
   }
 

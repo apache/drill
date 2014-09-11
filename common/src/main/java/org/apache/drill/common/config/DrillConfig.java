@@ -61,7 +61,7 @@ public final class DrillConfig extends NestedConfig{
 
     mapper = new ObjectMapper();
 
-    if(enableServer){
+    if (enableServer) {
       SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule")
         .addDeserializer(LogicalExpression.class, new LogicalExpression.De(this))
         .addDeserializer(SchemaPath.class, new SchemaPath.De(this));
@@ -83,7 +83,7 @@ public final class DrillConfig extends NestedConfig{
 
   };
 
-  public List<String> getStartupArguments(){
+  public List<String> getStartupArguments() {
     return startupArguments;
   }
 
@@ -95,7 +95,7 @@ public final class DrillConfig extends NestedConfig{
     return create(null, true);
   }
 
-  public static DrillConfig createClient(){
+  public static DrillConfig createClient() {
     return create(null, false);
   }
 
@@ -164,17 +164,21 @@ public final class DrillConfig extends NestedConfig{
 
   public <T> Class<T> getClassAt(String location, Class<T> clazz) throws DrillConfigurationException{
     String className = this.getString(location);
-    if(className == null) throw new DrillConfigurationException(String.format("No class defined at location '%s'.  Expected a definition of the class []", location, clazz.getCanonicalName()));
+    if (className == null) {
+      throw new DrillConfigurationException(String.format("No class defined at location '%s'.  Expected a definition of the class []", location, clazz.getCanonicalName()));
+    }
     try{
       Class<?> c = Class.forName(className);
-      if(clazz.isAssignableFrom(c)){
+      if (clazz.isAssignableFrom(c)) {
         @SuppressWarnings("unchecked") Class<T> t = (Class<T>) c;
         return t;
-      }else{
+      } else {
         throw new DrillConfigurationException(String.format("The class [%s] listed at location '%s' should be of type [%s].  It isn't.", className, location, clazz.getCanonicalName()));
       }
-    }catch(Exception ex){
-      if(ex instanceof DrillConfigurationException) throw (DrillConfigurationException) ex;
+    } catch (Exception ex) {
+      if (ex instanceof DrillConfigurationException) {
+        throw (DrillConfigurationException) ex;
+      }
       throw new DrillConfigurationException(String.format("Failure while initializing class [%s] described at configuration value '%s'.", className, location), ex);
     }
 
@@ -182,29 +186,31 @@ public final class DrillConfig extends NestedConfig{
 
   public <T> T getInstanceOf(String location, Class<T> clazz) throws DrillConfigurationException{
     Class<T> c = getClassAt(location, clazz);
-    try{
+    try {
       T t = c.newInstance();
       return t;
-    }catch(Exception ex){
+    } catch (Exception ex) {
       throw new DrillConfigurationException(String.format("Failure while instantiating class [%s] located at '%s.", clazz.getCanonicalName(), location), ex);
     }
   }
 
-  public void setSinkQueues(int number, Queue<Object> queue){
+  public void setSinkQueues(int number, Queue<Object> queue) {
     sinkQueues.set(number, queue);
   }
 
-  public Queue<Object> getQueue(int number){
-    if(sinkQueues.size() <= number || number < 0 || sinkQueues == null) throw new IllegalArgumentException(String.format("Queue %d is not available.", number));
+  public Queue<Object> getQueue(int number) {
+    if (sinkQueues.size() <= number || number < 0 || sinkQueues == null) {
+      throw new IllegalArgumentException(String.format("Queue %d is not available.", number));
+    }
     return sinkQueues.get(number);
   }
 
-  public ObjectMapper getMapper(){
+  public ObjectMapper getMapper() {
     return mapper;
   }
 
   @Override
-  public String toString(){
+  public String toString() {
     return this.root().render();
   }
 
@@ -214,7 +220,7 @@ public final class DrillConfig extends NestedConfig{
 
   }
 
-  public static long getMaxDirectMemory(){
+  public static long getMaxDirectMemory() {
     return MAX_DIRECT_MEMORY;
   }
 

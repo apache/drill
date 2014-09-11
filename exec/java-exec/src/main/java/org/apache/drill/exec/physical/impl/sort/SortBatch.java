@@ -82,8 +82,6 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     return builder.getSv4();
   }
 
-
-
   @Override
   public void cleanup() {
     builder.clear();
@@ -93,14 +91,13 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
 
   @Override
   public IterOutcome innerNext() {
-    if(schema != null){
-      if(getSelectionVector4().next()){
+    if (schema != null) {
+      if (getSelectionVector4().next()) {
         return IterOutcome.OK;
-      }else{
+      } else {
         return IterOutcome.NONE;
       }
     }
-
 
     try{
       outer: while (true) {
@@ -114,13 +111,15 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
-          if(!incoming.getSchema().equals(schema)){
-            if (schema != null) throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
+          if (!incoming.getSchema().equals(schema)) {
+            if (schema != null) {
+              throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
+            }
             this.schema = incoming.getSchema();
           }
           // fall through.
         case OK:
-          if(!builder.add(incoming)){
+          if (!builder.add(incoming)) {
             throw new UnsupportedOperationException("Sort doesn't currently support doing an external sort.");
           };
           break;
@@ -129,7 +128,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
         }
       }
 
-      if (schema == null || builder.isEmpty()){
+      if (schema == null || builder.isEmpty()) {
         // builder may be null at this point if the first incoming batch is empty
         return IterOutcome.NONE;
       }
@@ -141,7 +140,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
 
       return IterOutcome.OK_NEW_SCHEMA;
 
-    }catch(SchemaChangeException | ClassTransformationException | IOException ex){
+    } catch(SchemaChangeException | ClassTransformationException | IOException ex) {
       kill(false);
       logger.error("Failure during query", ex);
       context.fail(ex);
@@ -167,11 +166,13 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     ClassGenerator<Sorter> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 
-    for(Ordering od : orderings){
+    for(Ordering od : orderings) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector,context.getFunctionRegistry());
-      if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      if (collector.hasErrors()) {
+        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
       g.setMappingSet(leftMapping);
       HoldingContainer left = g.addExpr(expr, false);
       g.setMappingSet(rightMapping);
@@ -183,7 +184,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
-      if(od.getDirection() == Direction.ASCENDING){
+      if (od.getDirection() == Direction.ASCENDING) {
         jc._then()._return(out.getValue());
       }else{
         jc._then()._return(out.getValue().minus());
@@ -193,8 +194,6 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     g.getEvalBlock()._return(JExpr.lit(0));
 
     return context.getImplementationClass(cg);
-
-
   }
 
   @Override
@@ -206,8 +205,5 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
   }
-
-
-
 
 }

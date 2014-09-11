@@ -29,13 +29,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
-
-
-
-
-
-
-
 @SuppressWarnings("unused")
 public class SingleListReaderImpl extends AbstractFieldReader{
 
@@ -44,22 +37,24 @@ public class SingleListReaderImpl extends AbstractFieldReader{
   private final AbstractContainerVector container;
   private FieldReader reader;
 
-  public SingleListReaderImpl(String name, AbstractContainerVector container){
+  public SingleListReaderImpl(String name, AbstractContainerVector container) {
     super();
     this.name = name;
     this.container = container;
   }
 
   @Override
-  public MajorType getType(){
+  public MajorType getType() {
     return TYPE;
   }
 
 
   @Override
-  public void setPosition(int index){
+  public void setPosition(int index) {
     super.setPosition(index);
-    if(reader != null) reader.setPosition(index);
+    if (reader != null) {
+      reader.setPosition(index);
+    }
   }
 
   @Override
@@ -68,8 +63,8 @@ public class SingleListReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public FieldReader reader(){
-    if(reader == null){
+  public FieldReader reader() {
+    if (reader == null) {
       reader = container.get(name, ValueVector.class).getAccessor().getReader();
       setPosition(idx());
     }
@@ -82,16 +77,13 @@ public class SingleListReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public void copyAsValue(ListWriter writer){
+  public void copyAsValue(ListWriter writer) {
     throw new UnsupportedOperationException("Generic list copying not yet supported.  Please resolve to typed list.");
   }
 
   @Override
-  public void copyAsField(String name, MapWriter writer){
+  public void copyAsField(String name, MapWriter writer) {
     throw new UnsupportedOperationException("Generic list copying not yet supported.  Please resolve to typed list.");
   }
 
-
-
 }
-

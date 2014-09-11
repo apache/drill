@@ -35,7 +35,7 @@ public class ErrorHelper {
 //  }
 
   public static DrillPBError logAndConvertError(DrillbitEndpoint endpoint, String message, Throwable t, Logger logger,
-                                                boolean verbose){
+                                                boolean verbose) {
     String id = UUID.randomUUID().toString();
     DrillPBError.Builder builder = DrillPBError.newBuilder();
     builder.setEndpoint(endpoint);
@@ -65,7 +65,9 @@ public class ErrorHelper {
     while (true) {
       rootCause = t;
       if (t.getCause() == null || t.getCause() == t
-        || (t instanceof SqlParseException && t.getCause() instanceof ParseException)) break;
+        || (t instanceof SqlParseException && t.getCause() instanceof ParseException)) {
+        break;
+      }
       t = t.getCause();
     }
 
@@ -78,4 +80,5 @@ public class ErrorHelper {
 
     return builder.build();
   }
+
 }

@@ -51,7 +51,7 @@ public class HiveTestDataGenerator {
 
   private void cleanDir(String dir) throws IOException{
     File f = new File(dir);
-    if(f.exists()){
+    if (f.exists()) {
       FileUtils.cleanDirectory(f);
       FileUtils.forceDelete(f);
     }
@@ -236,8 +236,9 @@ public class HiveTestDataGenerator {
     File file = getTempFile();
 
     PrintWriter printWriter = new PrintWriter(file);
-    for (int i=1; i<=5; i++)
+    for (int i=1; i<=5; i++) {
       printWriter.println (String.format("%d, key_%d", i, i));
+    }
     printWriter.close();
 
     return file.getPath();
@@ -276,12 +277,15 @@ public class HiveTestDataGenerator {
     try {
       response = hiveDriver.run(query);
     } catch(CommandNeedRetryException ex) {
-      if (--retryCount == 0)
+      if (--retryCount == 0) {
         failed = true;
+      }
     }
 
-    if (failed || response.getResponseCode() != 0 )
+    if (failed || response.getResponseCode() != 0 ) {
       throw new RuntimeException(String.format("Failed to execute command '%s', errorMsg = '%s'",
         query, (response != null ? response.getErrorMessage() : "")));
+    }
   }
+
 }

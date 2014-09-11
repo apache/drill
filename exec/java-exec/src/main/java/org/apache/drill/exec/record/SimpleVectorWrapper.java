@@ -29,7 +29,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
   private T v;
 
-  public SimpleVectorWrapper(T v){
+  public SimpleVectorWrapper(T v) {
     this.v = v;
   }
 
@@ -72,18 +72,19 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
     v.clear();
   }
 
-  public static <T extends ValueVector> SimpleVectorWrapper<T> create(T v){
+  public static <T extends ValueVector> SimpleVectorWrapper<T> create(T v) {
     return new SimpleVectorWrapper<T>(v);
   }
 
 
   @Override
   public VectorWrapper<?> getChildWrapper(int[] ids) {
-    if(ids.length == 1) return this;
+    if (ids.length == 1) {
+      return this;
+    }
 
     ValueVector vector = v;
-
-    for(int i = 1; i < ids.length; i++){
+    for (int i = 1; i < ids.length; i++) {
       MapVector map = (MapVector) vector;
       vector = map.getVectorById(ids[i]);
     }
@@ -93,10 +94,12 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
   @Override
   public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath) {
-    if(!expectedPath.getRootSegment().segmentEquals(v.getField().getPath().getRootSegment())) return null;
+    if (!expectedPath.getRootSegment().segmentEquals(v.getField().getPath().getRootSegment())) {
+      return null;
+    }
     PathSegment seg = expectedPath.getRootSegment();
 
-    if(v instanceof AbstractContainerVector){
+    if (v instanceof AbstractContainerVector) {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) v;
       TypedFieldId.Builder builder = TypedFieldId.newBuilder();
@@ -104,28 +107,26 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
       builder.addId(id);
       return c.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
 
-    }else{
+    } else {
       TypedFieldId.Builder builder = TypedFieldId.newBuilder();
       builder.intermediateType(v.getField().getType());
       builder.addId(id);
       builder.finalType(v.getField().getType());
-      if(seg.isLastPath()){
+      if (seg.isLastPath()) {
         return builder.build();
-      }else{
+      } else {
         PathSegment child = seg.getChild();
-        if(child.isArray() && child.isLastPath()){
+        if (child.isArray() && child.isLastPath()) {
           builder.remainder(child);
           builder.withIndex();
           builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
           return builder.build();
-        }else{
+        } else {
           return null;
         }
 
       }
-
     }
   }
-
 
 }

@@ -35,7 +35,9 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     super(pos);
     this.name = name;
 
-    if(args == null) args = Lists.newArrayList();
+    if (args == null) {
+      args = Lists.newArrayList();
+    }
 
     if (!(args instanceof ImmutableList)) {
       args = ImmutableList.copyOf(args);
@@ -75,4 +77,5 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     return "FunctionCall [func=" + name + ", args="
         + (args != null ? args.subList(0, Math.min(args.size(), maxLen)) : null) + ", pos=" + pos + "]";
   }
+
 }

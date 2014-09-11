@@ -180,7 +180,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     }
   }
 
-  private boolean fieldSelected(MaterializedField field){
+  private boolean fieldSelected(MaterializedField field) {
     // TODO - not sure if this is how we want to represent this
     // for now it makes the existing tests pass, simply selecting
     // all available data if no columns are provided
@@ -189,8 +189,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
     }
 
     int i = 0;
-    for (SchemaPath expr : getColumns()){
-      if ( field.matches(expr)){
+    for (SchemaPath expr : getColumns()) {
+      if ( field.matches(expr)) {
         columnsFound[i] = true;
         return true;
       }
@@ -237,7 +237,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       SchemaElement se = schemaElements.get(column.getPath()[0]);
       MajorType mt = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(), getDataMode(column), se);
       field = MaterializedField.create(toFieldName(column.getPath()),mt);
-      if ( ! fieldSelected(field)){
+      if ( ! fieldSelected(field)) {
         continue;
       }
       columnsToScan++;
@@ -246,7 +246,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
         if (column.getMaxRepetitionLevel() > 0) {
           allFieldsFixedLength = false;
         }
-        if (column.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY){
+        if (column.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
             bitWidthAllFixedFields += se.getType_length() * 8;
         } else {
           bitWidthAllFixedFields += getTypeLengthInBits(column.getType());
@@ -278,7 +278,9 @@ public class ParquetRecordReader extends AbstractRecordReader {
         MajorType type = ParquetToDrillTypeConverter.toMajorType(column.getType(), schemaElement.getType_length(), getDataMode(column), schemaElement);
         field = MaterializedField.create(toFieldName(column.getPath()), type);
         // the field was not requested to be read
-        if ( ! fieldSelected(field)) continue;
+        if ( ! fieldSelected(field)) {
+          continue;
+        }
 
         fieldFixedLength = column.getType() != PrimitiveType.PrimitiveTypeName.BINARY;
         v = output.addField(field, (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
@@ -353,14 +355,14 @@ public class ParquetRecordReader extends AbstractRecordReader {
     for (ColumnReader column : columnStatuses) {
       column.valuesReadInCurrentPass = 0;
     }
-    for (VarLengthColumn r : varLengthReader.columns){
+    for (VarLengthColumn r : varLengthReader.columns) {
       r.valuesReadInCurrentPass = 0;
     }
   }
 
  public void readAllFixedFields(long recordsToRead) throws IOException {
 
-   for (ColumnReader crs : columnStatuses){
+   for (ColumnReader crs : columnStatuses) {
      crs.processPages(recordsToRead);
    }
  }
@@ -371,11 +373,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
     long recordsToRead = 0;
     try {
       ColumnReader firstColumnStatus;
-      if (columnStatuses.size() > 0){
+      if (columnStatuses.size() > 0) {
         firstColumnStatus = columnStatuses.iterator().next();
       }
       else{
-        if (varLengthReader.columns.size() > 0){
+        if (varLengthReader.columns.size() > 0) {
           firstColumnStatus = varLengthReader.columns.iterator().next();
         }
         else{
@@ -437,9 +439,10 @@ public class ParquetRecordReader extends AbstractRecordReader {
     }
     columnStatuses.clear();
 
-    for (VarLengthColumn r : varLengthReader.columns){
+    for (VarLengthColumn r : varLengthReader.columns) {
       r.clear();
     }
     varLengthReader.columns.clear();
   }
+
 }

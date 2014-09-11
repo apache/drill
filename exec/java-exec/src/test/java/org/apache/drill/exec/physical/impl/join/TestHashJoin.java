@@ -62,181 +62,181 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 
-public class TestHashJoin extends PopUnitTestBase{
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
+public class TestHashJoin extends PopUnitTestBase {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
 
-    @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100000);
 
-    DrillConfig c = DrillConfig.create();
+  DrillConfig c = DrillConfig.create();
 
-    private void testHJMockScanCommon(final DrillbitContext bitContext, UserServer.UserClientConnection connection, String physicalPlan, int expectedRows) throws Throwable {
-      final LocalPStoreProvider provider = new LocalPStoreProvider(c);
-      provider.start();
-      final SystemOptionManager opt = new SystemOptionManager(c, provider);
-      opt.init();
-        new NonStrictExpectations(){{
-            bitContext.getMetrics(); result = new MetricRegistry();
-            bitContext.getAllocator(); result = new TopLevelAllocator();
-            bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
-            bitContext.getConfig(); result = c;
-            bitContext.getOptionManager(); result = opt;
-            bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
-        }};
+  private void testHJMockScanCommon(final DrillbitContext bitContext, UserServer.UserClientConnection connection, String physicalPlan, int expectedRows) throws Throwable {
+    final LocalPStoreProvider provider = new LocalPStoreProvider(c);
+    provider.start();
+    final SystemOptionManager opt = new SystemOptionManager(c, provider);
+    opt.init();
+    new NonStrictExpectations() {{
+        bitContext.getMetrics(); result = new MetricRegistry();
+        bitContext.getAllocator(); result = new TopLevelAllocator();
+        bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+        bitContext.getConfig(); result = c;
+        bitContext.getOptionManager(); result = opt;
+        bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
+    }};
 
-        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8));
-        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-        FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-        int totalRecordCount = 0;
-        while (exec.next()) {
-            totalRecordCount += exec.getRecordCount();
-        }
-        exec.stop();
-        assertEquals(expectedRows, totalRecordCount);
-        System.out.println("Total Record Count: " + totalRecordCount);
-        if (context.getFailureCause() != null)
-            throw context.getFailureCause();
-        assertTrue(!context.isFailed());
+    int totalRecordCount = 0;
+    while (exec.next()) {
+      totalRecordCount += exec.getRecordCount();
     }
-
-    @Test
-    public void multiBatchEqualityJoin(@Injectable final DrillbitContext bitContext,
-                                   @Injectable UserServer.UserClientConnection connection) throws Throwable {
-
-        testHJMockScanCommon(bitContext, connection, "/join/hash_join_multi_batch.json", 200000);
+    exec.stop();
+    assertEquals(expectedRows, totalRecordCount);
+    System.out.println("Total Record Count: " + totalRecordCount);
+    if (context.getFailureCause() != null) {
+      throw context.getFailureCause();
     }
+    assertTrue(!context.isFailed());
+  }
 
-    @Test
-    public void multiBatchRightOuterJoin(@Injectable final DrillbitContext bitContext,
-                                         @Injectable UserServer.UserClientConnection connection) throws Throwable {
+  @Test
+  public void multiBatchEqualityJoin(@Injectable final DrillbitContext bitContext,
+                                 @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-        testHJMockScanCommon(bitContext, connection, "/join/hj_right_outer_multi_batch.json", 100000);
-    }
+    testHJMockScanCommon(bitContext, connection, "/join/hash_join_multi_batch.json", 200000);
+  }
 
-    @Test
-    public void multiBatchLeftOuterJoin(@Injectable final DrillbitContext bitContext,
-                                        @Injectable UserServer.UserClientConnection connection) throws Throwable {
+  @Test
+  public void multiBatchRightOuterJoin(@Injectable final DrillbitContext bitContext,
+                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
+    testHJMockScanCommon(bitContext, connection, "/join/hj_right_outer_multi_batch.json", 100000);
+  }
 
-        testHJMockScanCommon(bitContext, connection, "/join/hj_left_outer_multi_batch.json", 100000);
-    }
-
-    @Test
-    public void simpleEqualityJoin() throws Throwable {
-
-        // Function checks hash join with single equality condition
-        try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-             Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
-
-            // run query.
-            bit.run();
-            client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/join/hash_join.json"), Charsets.UTF_8)
-                            .replace("#{TEST_FILE_1}", FileUtils.getResourceAsFile("/build_side_input.json").toURI().toString())
-                            .replace("#{TEST_FILE_2}", FileUtils.getResourceAsFile("/probe_side_input.json").toURI().toString()));
-
-            RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
-
-            QueryResultBatch batch = results.get(0);
-            assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-
-            Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
-
-            // Just test the join key
-            long colA[] = {1, 1, 2, 2, 1, 1};
-
-            // Check the output of decimal9
-            ValueVector.Accessor intAccessor1 = itr.next().getValueVector().getAccessor();
-
-
-            for (int i = 0; i < intAccessor1.getValueCount(); i++) {
-                assertEquals(intAccessor1.getObject(i), colA[i]);
-            }
-            assertEquals(6, intAccessor1.getValueCount());
-
-            batchLoader.clear();
-            for (QueryResultBatch result : results) {
-              result.release();
-            }
-        }
-    }
-
-    @Test
-    public void hjWithExchange(@Injectable final DrillbitContext bitContext,
-                               @Injectable UserServer.UserClientConnection connection) throws Throwable {
-
-        // Function tests with hash join with exchanges
-        try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-             Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
-
-            // run query.
-            bit.run();
-            client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/join/hj_exchanges.json"), Charsets.UTF_8));
-
-            int count = 0;
-            for(QueryResultBatch b : results) {
-                if (b.getHeader().getRowCount() != 0)
-                    count += b.getHeader().getRowCount();
-                b.release();
-            }
-
-            System.out.println("Total records: " + count);
-            assertEquals(25, count);
-        }
-    }
-
-    @Test
-    public void multipleConditionJoin(@Injectable final DrillbitContext bitContext,
+  @Test
+  public void multiBatchLeftOuterJoin(@Injectable final DrillbitContext bitContext,
                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-        // Function tests hash join with multiple join conditions
-        try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-             Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+    testHJMockScanCommon(bitContext, connection, "/join/hj_left_outer_multi_batch.json", 100000);
+  }
 
-            // run query.
-            bit.run();
-            client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/join/hj_multi_condition_join.json"), Charsets.UTF_8)
-                            .replace("#{TEST_FILE_1}", FileUtils.getResourceAsFile("/build_side_input.json").toURI().toString())
-                            .replace("#{TEST_FILE_2}", FileUtils.getResourceAsFile("/probe_side_input.json").toURI().toString()));
+  @Test
+  public void simpleEqualityJoin() throws Throwable {
+    // Function checks hash join with single equality condition
+    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+       Drillbit bit = new Drillbit(CONFIG, serviceSet);
+       DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
-            RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
+      // run query.
+      bit.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+              Files.toString(FileUtils.getResourceAsFile("/join/hash_join.json"), Charsets.UTF_8)
+                      .replace("#{TEST_FILE_1}", FileUtils.getResourceAsFile("/build_side_input.json").toURI().toString())
+                      .replace("#{TEST_FILE_2}", FileUtils.getResourceAsFile("/probe_side_input.json").toURI().toString()));
 
-            QueryResultBatch batch = results.get(0);
-            assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
+      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
+      QueryResultBatch batch = results.get(0);
+      assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-            // Just test the join key
-            long colA[] = {1, 2, 1};
-            long colC[] = {100, 200, 500};
+      Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
 
-            // Check the output of decimal9
-            ValueVector.Accessor intAccessor1 = itr.next().getValueVector().getAccessor();
-            ValueVector.Accessor intAccessor2 = itr.next().getValueVector().getAccessor();
+      // Just test the join key
+      long colA[] = {1, 1, 2, 2, 1, 1};
+
+      // Check the output of decimal9
+      ValueVector.Accessor intAccessor1 = itr.next().getValueVector().getAccessor();
 
 
-            for (int i = 0; i < intAccessor1.getValueCount(); i++) {
-                assertEquals(intAccessor1.getObject(i), colA[i]);
-                assertEquals(intAccessor2.getObject(i), colC[i]);
-            }
-            assertEquals(3, intAccessor1.getValueCount());
+      for (int i = 0; i < intAccessor1.getValueCount(); i++) {
+        assertEquals(intAccessor1.getObject(i), colA[i]);
+      }
+      assertEquals(6, intAccessor1.getValueCount());
 
-            batchLoader.clear();
-            for (QueryResultBatch result : results) {
-              result.release();
-            }
-        }
+      batchLoader.clear();
+      for (QueryResultBatch result : results) {
+        result.release();
+      }
     }
+  }
+
+  @Test
+  public void hjWithExchange(@Injectable final DrillbitContext bitContext,
+                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
+
+    // Function tests with hash join with exchanges
+    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+      Drillbit bit = new Drillbit(CONFIG, serviceSet);
+      DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+
+      // run query.
+      bit.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+              Files.toString(FileUtils.getResourceAsFile("/join/hj_exchanges.json"), Charsets.UTF_8));
+
+      int count = 0;
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
+          count += b.getHeader().getRowCount();
+        }
+        b.release();
+      }
+
+      System.out.println("Total records: " + count);
+      assertEquals(25, count);
+    }
+  }
+
+  @Test
+  public void multipleConditionJoin(@Injectable final DrillbitContext bitContext,
+                                    @Injectable UserServer.UserClientConnection connection) throws Throwable {
+
+    // Function tests hash join with multiple join conditions
+    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+      Drillbit bit = new Drillbit(CONFIG, serviceSet);
+      DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+
+      // run query.
+      bit.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+              Files.toString(FileUtils.getResourceAsFile("/join/hj_multi_condition_join.json"), Charsets.UTF_8)
+                      .replace("#{TEST_FILE_1}", FileUtils.getResourceAsFile("/build_side_input.json").toURI().toString())
+                      .replace("#{TEST_FILE_2}", FileUtils.getResourceAsFile("/probe_side_input.json").toURI().toString()));
+
+      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
+
+      QueryResultBatch batch = results.get(0);
+      assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
+
+      Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
+
+      // Just test the join key
+      long colA[] = {1, 2, 1};
+      long colC[] = {100, 200, 500};
+
+      // Check the output of decimal9
+      ValueVector.Accessor intAccessor1 = itr.next().getValueVector().getAccessor();
+      ValueVector.Accessor intAccessor2 = itr.next().getValueVector().getAccessor();
+
+
+      for (int i = 0; i < intAccessor1.getValueCount(); i++) {
+        assertEquals(intAccessor1.getObject(i), colA[i]);
+        assertEquals(intAccessor2.getObject(i), colC[i]);
+      }
+      assertEquals(3, intAccessor1.getValueCount());
+
+      batchLoader.clear();
+      for (QueryResultBatch result : results) {
+        result.release();
+      }
+    }
+  }
 
 
   @Test
@@ -255,9 +255,10 @@ public class TestHashJoin extends PopUnitTestBase{
           Files.toString(FileUtils.getResourceAsFile("/join/hj_exchanges1.json"), Charsets.UTF_8));
 
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
         b.release();
       }
 
@@ -271,7 +272,7 @@ public class TestHashJoin extends PopUnitTestBase{
   public void testHashJoinExprInCondition() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
@@ -279,9 +280,10 @@ public class TestHashJoin extends PopUnitTestBase{
       List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/join/hashJoinExpr.json"), Charsets.UTF_8));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       assertEquals(10, count);

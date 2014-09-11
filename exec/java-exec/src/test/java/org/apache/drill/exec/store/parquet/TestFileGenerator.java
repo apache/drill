@@ -61,7 +61,7 @@ public class TestFileGenerator {
   // TODO - figure out what this should be set at, it should be based on the max nesting level
   public static final int MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS = 16;
 
-  static void populateDrill_418_fields(ParquetTestProperties props){
+  static void populateDrill_418_fields(ParquetTestProperties props) {
 
     props.fields.put("cust_key", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
     props.fields.put("nation_key", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
@@ -73,7 +73,7 @@ public class TestFileGenerator {
     props.fields.put("comment_col", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
   }
 
-  static void populateFieldInfoMap(ParquetTestProperties props){
+  static void populateFieldInfoMap(ParquetTestProperties props) {
     props.fields.put("integer", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
     props.fields.put("bigInt", new FieldInfo("int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT, props));
     props.fields.put("f", new FieldInfo("float", "f", 32, floatVals, TypeProtos.MinorType.FLOAT4, props));
@@ -83,7 +83,7 @@ public class TestFileGenerator {
     props.fields.put("bin2", new FieldInfo("binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY, props));
   }
 
-  static void populatePigTPCHCustomerFields(ParquetTestProperties props){
+  static void populatePigTPCHCustomerFields(ParquetTestProperties props) {
     // all of the data in the fieldInfo constructors doesn't matter because the file is generated outside the test
     props.fields.put("C_CUSTKEY", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
     props.fields.put("C_NATIONKEY", new FieldInfo("int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT, props));
@@ -95,7 +95,7 @@ public class TestFileGenerator {
     props.fields.put("C_COMMENT", new FieldInfo("binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY, props));
   }
 
-  static void populatePigTPCHSupplierFields(ParquetTestProperties props){
+  static void populatePigTPCHSupplierFields(ParquetTestProperties props) {
     // all of the data in the fieldInfo constructors doesn't matter because the file is generated outside the test
     props.fields.put("S_SUPPKEY", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
     props.fields.put("S_NATIONKEY", new FieldInfo("int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT, props));
@@ -146,7 +146,9 @@ public class TestFileGenerator {
 
     FileSystem fs = FileSystem.get(configuration);
     Path path = new Path(filename);
-    if (fs.exists(path)) fs.delete(path, false);
+    if (fs.exists(path)) {
+      fs.delete(path, false);
+    }
 
 
     String messageSchema = "message m {";
@@ -165,14 +167,14 @@ public class TestFileGenerator {
     w.start();
     HashMap<String, Integer> columnValuesWritten = new HashMap();
     int valsWritten;
-    for (int k = 0; k < props.numberRowGroups; k++){
+    for (int k = 0; k < props.numberRowGroups; k++) {
       w.startBlock(props.recordsPerRowGroup);
       currentBooleanByte = 0;
       booleanBitCounter.reset();
 
       for (FieldInfo fieldInfo : props.fields.values()) {
 
-        if ( ! columnValuesWritten.containsKey(fieldInfo.name)){
+        if ( ! columnValuesWritten.containsKey(fieldInfo.name)) {
           columnValuesWritten.put((String) fieldInfo.name, 0);
           valsWritten = 0;
         } else {
@@ -202,8 +204,12 @@ public class TestFileGenerator {
           int totalValLength = ((byte[]) fieldInfo.values[0]).length + ((byte[]) fieldInfo.values[1]).length + ((byte[]) fieldInfo.values[2]).length + 3 * bytesNeededToEncodeLength;
           // used for the case where there is a number of values in this row group that is not divisible by 3
           int leftOverBytes = 0;
-          if ( valsPerPage % 3 > 0 ) leftOverBytes += ((byte[])fieldInfo.values[1]).length + bytesNeededToEncodeLength;
-          if ( valsPerPage % 3 > 1 ) leftOverBytes += ((byte[])fieldInfo.values[2]).length + bytesNeededToEncodeLength;
+          if ( valsPerPage % 3 > 0 ) {
+            leftOverBytes += ((byte[])fieldInfo.values[1]).length + bytesNeededToEncodeLength;
+          }
+          if ( valsPerPage % 3 > 1 ) {
+            leftOverBytes += ((byte[])fieldInfo.values[2]).length + bytesNeededToEncodeLength;
+          }
           bytes = new byte[valsPerPage / 3 * totalValLength + leftOverBytes];
         }
         int bytesPerPage = (int) (valsPerPage * ((int) fieldInfo.bitLength / 8.0));
@@ -222,9 +228,11 @@ public class TestFileGenerator {
                 currentBooleanByte++;
               }
               valsWritten++;
-              if (currentBooleanByte > bytesPerPage) break;
+              if (currentBooleanByte > bytesPerPage) {
+                break;
+              }
             } else {
-              if (fieldInfo.values[valsWritten % 3] instanceof byte[]){
+              if (fieldInfo.values[valsWritten % 3] instanceof byte[]) {
                 System.arraycopy(ByteArrayUtil.toByta(((byte[])fieldInfo.values[valsWritten % 3]).length),
                     0, bytes, bytesWritten, bytesNeededToEncodeLength);
                 System.arraycopy(fieldInfo.values[valsWritten % 3],

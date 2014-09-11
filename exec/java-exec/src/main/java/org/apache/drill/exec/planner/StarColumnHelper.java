@@ -35,8 +35,9 @@ public class StarColumnHelper {
     List<String> fieldNames = type.getFieldNames();
 
     for (String s : fieldNames) {
-      if (s.startsWith(STAR_COLUMN))
+      if (s.startsWith(STAR_COLUMN)) {
         return true;
+      }
     }
 
     return false;
@@ -71,8 +72,9 @@ public class StarColumnHelper {
 
   // Given a set of prefixes, check if a regular column is subsumed by any of the prefixed star column in the set.
   public static boolean subsumeRegColumn(Set<String> prefixes, String fieldName) {
-    if (isPrefixedStarColumn(fieldName))
+    if (isPrefixedStarColumn(fieldName)) {
       return false;  // only applies to regular column.
+    }
 
     return prefixes.contains(extractColumnPrefix(fieldName));
   }

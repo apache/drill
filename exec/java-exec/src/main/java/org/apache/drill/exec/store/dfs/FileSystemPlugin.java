@@ -60,7 +60,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   private final DrillFileSystem fs;
 
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException{
-    try{
+    try {
       this.config = config;
       this.context = context;
 
@@ -72,18 +72,18 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       this.formatsByName = FormatCreator.getFormatPlugins(context, fs, config);
       List<FormatMatcher> matchers = Lists.newArrayList();
       formatPluginsByConfig = Maps.newHashMap();
-      for(FormatPlugin p : formatsByName.values()){
+      for (FormatPlugin p : formatsByName.values()) {
         matchers.add(p.getMatcher());
         formatPluginsByConfig.put(p.getConfig(), p);
       }
 
       List<WorkspaceSchemaFactory> factories;
-      if(config.workspaces == null || config.workspaces.isEmpty()){
+      if (config.workspaces == null || config.workspaces.isEmpty()) {
         factories = Collections.singletonList(
             new WorkspaceSchemaFactory(context.getConfig(), context.getPersistentStoreProvider(), this, "default", name, fs, WorkspaceConfig.DEFAULT, matchers));
-      }else{
+      } else {
         factories = Lists.newArrayList();
-        for(Map.Entry<String, WorkspaceConfig> space : config.workspaces.entrySet()){
+        for (Map.Entry<String, WorkspaceConfig> space : config.workspaces.entrySet()) {
           factories.add(new WorkspaceSchemaFactory(context.getConfig(), context.getPersistentStoreProvider(), this, space.getKey(), name, fs, space.getValue(), matchers));
         }
 
@@ -93,7 +93,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
         }
       }
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
-    }catch(IOException e){
+    } catch (IOException e) {
       throw new ExecutionSetupException("Failure setting up file system plugin.", e);
     }
   }
@@ -112,12 +112,14 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   public AbstractGroupScan getPhysicalScan(JSONOptions selection, List<SchemaPath> columns) throws IOException {
     FormatSelection formatSelection = selection.getWith(context.getConfig(), FormatSelection.class);
     FormatPlugin plugin;
-    if(formatSelection.getFormat() instanceof NamedFormatPluginConfig){
+    if (formatSelection.getFormat() instanceof NamedFormatPluginConfig) {
       plugin = formatsByName.get( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
-    }else{
+    } else {
       plugin = formatPluginsByConfig.get(formatSelection.getFormat());
     }
-    if(plugin == null) throw new IOException(String.format("Failure getting requested format plugin named '%s'.  It was not one of the format plugins registered.", formatSelection.getFormat()));
+    if (plugin == null) {
+      throw new IOException(String.format("Failure getting requested format plugin named '%s'.  It was not one of the format plugins registered.", formatSelection.getFormat()));
+    }
     return plugin.getGroupScan(formatSelection.getSelection(), columns);
   }
 
@@ -126,15 +128,16 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
     schemaFactory.registerSchemas(session, parent);
   }
 
-  public FormatPlugin getFormatPlugin(String name){
+  public FormatPlugin getFormatPlugin(String name) {
     return formatsByName.get(name);
   }
 
-  public FormatPlugin getFormatPlugin(FormatPluginConfig config){
-    if(config instanceof NamedFormatPluginConfig){
+  public FormatPlugin getFormatPlugin(FormatPluginConfig config) {
+    if (config instanceof NamedFormatPluginConfig) {
       return formatsByName.get(((NamedFormatPluginConfig) config).name);
-    }else{
+    } else {
       return formatPluginsByConfig.get(config);
     }
   }
+
 }

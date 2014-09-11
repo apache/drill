@@ -25,7 +25,7 @@ public class VarLenBinaryReader {
   ParquetRecordReader parentReader;
   final List<VarLengthColumn> columns;
 
-  public VarLenBinaryReader(ParquetRecordReader parentReader, List<VarLengthColumn> columns){
+  public VarLenBinaryReader(ParquetRecordReader parentReader, List<VarLengthColumn> columns) {
     this.parentReader = parentReader;
     this.columns = columns;
   }
@@ -52,14 +52,15 @@ public class VarLenBinaryReader {
     do {
       lengthVarFieldsInCurrentRecord = 0;
       for (VarLengthColumn columnReader : columns) {
-        if ( ! exitLengthDeterminingLoop )
+        if ( !exitLengthDeterminingLoop ) {
           exitLengthDeterminingLoop = columnReader.determineSize(recordsReadInCurrentPass, lengthVarFieldsInCurrentRecord);
-        else
+        } else {
           break;
+        }
       }
       // check that the next record will fit in the batch
       if (exitLengthDeterminingLoop || (recordsReadInCurrentPass + 1) * parentReader.getBitWidthAllFixedFields() + totalVariableLengthData
-          + lengthVarFieldsInCurrentRecord > parentReader.getBatchSize()){
+          + lengthVarFieldsInCurrentRecord > parentReader.getBatchSize()) {
         break;
       }
       for (VarLengthColumn columnReader : columns ) {
@@ -78,4 +79,5 @@ public class VarLenBinaryReader {
     }
     return recordsReadInCurrentPass;
   }
+
 }

@@ -195,55 +195,64 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
   private boolean doAlloc() {
     //Allocate vv in the allocationVectors.
-    for(ValueVector v : this.allocationVectors){
+    for (ValueVector v : this.allocationVectors) {
       //AllocationHelper.allocate(v, remainingRecordCount, 250);
-      if (!v.allocateNewSafe())
+      if (!v.allocateNewSafe()) {
         return false;
+      }
     }
 
     //Allocate vv for complexWriters.
-    if (complexWriters == null)
+    if (complexWriters == null) {
       return true;
+    }
 
-    for (ComplexWriter writer : complexWriters)
+    for (ComplexWriter writer : complexWriters) {
       writer.allocate();
+    }
 
     return true;
   }
 
   private void setValueCount(int count) {
-    for(ValueVector v : allocationVectors){
+    for (ValueVector v : allocationVectors) {
       ValueVector.Mutator m = v.getMutator();
       m.setValueCount(count);
     }
 
-    if (complexWriters == null)
+    if (complexWriters == null) {
       return;
+    }
 
-    for (ComplexWriter writer : complexWriters)
+    for (ComplexWriter writer : complexWriters) {
       writer.setValueCount(count);
+    }
   }
 
   /** hack to make ref and full work together... need to figure out if this is still necessary. **/
-  private FieldReference getRef(NamedExpression e){
+  private FieldReference getRef(NamedExpression e) {
     FieldReference ref = e.getRef();
     PathSegment seg = ref.getRootSegment();
 
-//    if(seg.isNamed() && "output".contentEquals(seg.getNameSegment().getPath())){
+//    if (seg.isNamed() && "output".contentEquals(seg.getNameSegment().getPath())) {
 //      return new FieldReference(ref.getPath().toString().subSequence(7, ref.getPath().length()), ref.getPosition());
 //    }
     return ref;
   }
 
-  private boolean isAnyWildcard(List<NamedExpression> exprs){
-    for(NamedExpression e : exprs){
-      if(isWildcard(e)) return true;
+  private boolean isAnyWildcard(List<NamedExpression> exprs) {
+    for (NamedExpression e : exprs) {
+      if (isWildcard(e)) {
+        return true;
+      }
     }
     return false;
   }
 
-  private boolean isWildcard(NamedExpression ex){
-    if( !(ex.getExpr() instanceof SchemaPath)) return false;
+  private boolean isWildcard(NamedExpression ex) {
+    if ( !(ex.getExpr() instanceof SchemaPath)) {
+      return false;
+    }
     NameSegment expr = ((SchemaPath)ex.getExpr()).getRootSegment();
     NameSegment ref = ex.getRef().getRootSegment();
     return ref.getPath().equals("*") && expr.getPath().equals("*");
@@ -266,7 +275,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     ClassifierResult result = new ClassifierResult();
     boolean classify = isClassificationNeeded(exprs);
 
-    for(int i = 0; i < exprs.size(); i++){
+    for (int i = 0; i < exprs.size(); i++) {
       final NamedExpression namedExpression = exprs.get(i);
       result.clear();
 
@@ -278,14 +287,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           Integer value = result.prefixMap.get(result.prefix);
           if (value != null && value.intValue() == 1) {
             int k = 0;
-            for(VectorWrapper<?> wrapper : incoming) {
+            for (VectorWrapper<?> wrapper : incoming) {
               ValueVector vvIn = wrapper.getValueVector();
               SchemaPath originalPath = vvIn.getField().getPath();
               if (k > result.outputNames.size()-1) {
                 assert false;
               }
               String name = result.outputNames.get(k++);  // get the renamed column names
-              if (name == EMPTY_STRING) continue;
+              if (name == EMPTY_STRING) {
+                continue;
+              }
               FieldReference ref = new FieldReference(name);
               TransferPair tp = wrapper.getValueVector().getTransferPair(ref);
               transfers.add(tp);
@@ -293,17 +304,19 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
             }
           } else if (value != null && value.intValue() > 1) { // subsequent wildcards should do a copy of incoming valuevectors
             int k = 0;
-            for(VectorWrapper<?> wrapper : incoming) {
+            for (VectorWrapper<?> wrapper : incoming) {
               ValueVector vvIn = wrapper.getValueVector();
               SchemaPath originalPath = vvIn.getField().getPath();
               if (k > result.outputNames.size()-1) {
                 assert false;
               }
               String name = result.outputNames.get(k++);  // get the renamed column names
-              if (name == EMPTY_STRING) continue;
+              if (name == EMPTY_STRING) {
+                continue;
+              }
 
               final LogicalExpression expr = ExpressionTreeMaterializer.materialize(originalPath, incoming, collector, context.getFunctionRegistry() );
-              if(collector.hasErrors()){
+              if (collector.hasErrors()) {
                 throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
               }
 
@@ -333,16 +346,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
       final MaterializedField outputField = MaterializedField.create(outputName, expr.getMajorType());
-      if(collector.hasErrors()){
+      if (collector.hasErrors()) {
         throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
 
       // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
-      if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE
+      if (expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE
           && !((ValueVectorReadExpression) expr).hasReadPath()
           && !isAnyWildcard
-          && !transferFieldIds.contains(((ValueVectorReadExpression) expr).getFieldId().getFieldIds()[0])
-        ) {
+          && !transferFieldIds.contains(((ValueVectorReadExpression) expr).getFieldId().getFieldIds()[0])) {
 
         ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
         TypedFieldId id = vectorRead.getFieldId();
@@ -358,8 +370,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           ((DrillFuncHolderExpr) expr).isComplexWriterFuncHolder())  {
         // Need to process ComplexWriter function evaluation.
         // Lazy initialization of the list of complex writers, if not done yet.
-        if (complexWriters == null)
+        if (complexWriters == null) {
           complexWriters = Lists.newArrayList();
+        }
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
         ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
@@ -419,9 +432,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
   private boolean isClassificationNeeded(List<NamedExpression> exprs) {
     boolean needed = false;
-    for(int i = 0; i < exprs.size(); i++){
+    for (int i = 0; i < exprs.size(); i++) {
       final NamedExpression ex = exprs.get(i);
-      if (!(ex.getExpr() instanceof SchemaPath)) continue;
+      if (!(ex.getExpr() instanceof SchemaPath)) {
+        continue;
+      }
       NameSegment expr = ((SchemaPath) ex.getExpr()).getRootSegment();
       NameSegment ref = ex.getRef().getRootSegment();
       boolean refHasPrefix = ref.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
@@ -530,7 +545,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           result.outputNames.add(EMPTY_STRING);  // initialize
         }
 
-        for(VectorWrapper<?> wrapper : incoming) {
+        for (VectorWrapper<?> wrapper : incoming) {
           ValueVector vvIn = wrapper.getValueVector();
           String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
           // get the prefix of the name
@@ -586,7 +601,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         result.outputNames.add(EMPTY_STRING);  // initialize
       }
 
-      for(VectorWrapper<?> wrapper : incoming) {
+      for (VectorWrapper<?> wrapper : incoming) {
         ValueVector vvIn = wrapper.getValueVector();
         String name = vvIn.getField().getPath().getRootSegment().getPath();
         String[] components = name.split(StarColumnHelper.PREFIX_DELIMITER, 2);
@@ -627,7 +642,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       }
 
       int k = 0;
-      for(VectorWrapper<?> wrapper : incoming) {
+      for (VectorWrapper<?> wrapper : incoming) {
         ValueVector vvIn = wrapper.getValueVector();
         String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
 

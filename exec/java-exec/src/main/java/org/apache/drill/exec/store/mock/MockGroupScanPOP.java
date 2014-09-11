@@ -58,7 +58,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     this.url = url;
   }
 
-  public ScanStats getScanStats(){
+  public ScanStats getScanStats() {
     return ScanStats.TRIVIAL_TABLE;
   }
 
@@ -83,7 +83,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       this.records = records;
       this.types = types;
       int size = 0;
-      for(MockColumn dt : types){
+      for (MockColumn dt : types) {
         size += TypeHelper.getSize(dt.getMajorType());
       }
       this.recordSize = size;
@@ -144,13 +144,19 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     }
 
     @JsonIgnore
-    public MajorType getMajorType(){
+    public MajorType getMajorType() {
       MajorType.Builder b = MajorType.newBuilder();
       b.setMode(mode);
       b.setMinorType(minorType);
-      if(precision != null) b.setPrecision(precision);
-      if(width != null) b.setWidth(width);
-      if(scale != null) b.setScale(scale);
+      if (precision != null) {
+        b.setPrecision(precision);
+      }
+      if (width != null) {
+        b.setWidth(width);
+      }
+      if (scale != null) {
+        b.setScale(scale);
+      }
       return b.build();
     }
 
@@ -174,10 +180,12 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     mappings = new LinkedList[endpoints.size()];
 
     int i =0;
-    for(MockScanEntry e : this.getReadEntries()){
-      if(i == endpoints.size()) i -= endpoints.size();
+    for (MockScanEntry e : this.getReadEntries()) {
+      if (i == endpoints.size()) {
+        i -= endpoints.size();
+      }
       LinkedList<MockScanEntry> entries = mappings[i];
-      if(entries == null){
+      if (entries == null) {
         entries = new LinkedList<MockScanEntry>();
         mappings[i] = entries;
       }

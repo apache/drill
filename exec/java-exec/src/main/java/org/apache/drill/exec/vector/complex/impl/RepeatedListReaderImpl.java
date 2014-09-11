@@ -1,4 +1,3 @@
-
 /*******************************************************************************
 
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -37,27 +36,31 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   private final RepeatedListVector container;
   private FieldReader reader;
 
-  public RepeatedListReaderImpl(String name, RepeatedListVector container){
+  public RepeatedListReaderImpl(String name, RepeatedListVector container) {
     super();
     this.name = name;
     this.container = container;
   }
 
   @Override
-  public MajorType getType(){
+  public MajorType getType() {
     return TYPE;
   }
 
   @Override
-  public void copyAsValue(ListWriter writer){
-    if(currentOffset == NO_VALUES) return;
+  public void copyAsValue(ListWriter writer) {
+    if (currentOffset == NO_VALUES) {
+      return;
+    }
     RepeatedListWriter impl = (RepeatedListWriter) writer;
     impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), container));
   }
 
   @Override
-  public void copyAsField(String name, MapWriter writer){
-    if(currentOffset == NO_VALUES) return;
+  public void copyAsField(String name, MapWriter writer) {
+    if (currentOffset == NO_VALUES) {
+      return;
+    }
     RepeatedListWriter impl = (RepeatedListWriter) writer.list(name);
     impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), container));
   }
@@ -66,31 +69,35 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   private int maxOffset;
 
   @Override
-  public int size(){
+  public int size() {
     return maxOffset - currentOffset;
   }
 
   @Override
-  public void setPosition(int index){
+  public void setPosition(int index) {
     super.setPosition(index);
     RepeatedListHolder h = new RepeatedListHolder();
     container.getAccessor().get(index, h);
-    if(h.start == h.end){
+    if (h.start == h.end) {
       currentOffset = NO_VALUES;
-    }else{
+    } else {
       currentOffset = h.start-1;
       maxOffset = h.end;
-      if(reader != null) reader.setPosition(currentOffset);
+      if(reader != null) {
+        reader.setPosition(currentOffset);
+      }
     }
   }
 
   @Override
-  public boolean next(){
-    if(currentOffset +1 < maxOffset){
+  public boolean next() {
+    if (currentOffset +1 < maxOffset) {
       currentOffset++;
-      if(reader != null) reader.setPosition(currentOffset);
+      if (reader != null) {
+        reader.setPosition(currentOffset);
+      }
       return true;
-    }else{
+    } else {
       currentOffset = NO_VALUES;
       return false;
     }
@@ -102,22 +109,20 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public FieldReader reader(){
-    if(reader == null){
+  public FieldReader reader() {
+    if (reader == null) {
       reader = container.get(name, ValueVector.class).getAccessor().getReader();
-      if (currentOffset == NO_VALUES)
+      if (currentOffset == NO_VALUES) {
         reader = NullReader.INSTANCE;
-      else
+      } else {
         reader.setPosition(currentOffset);
+      }
     }
     return reader;
   }
 
-  public boolean isSet(){
+  public boolean isSet() {
     return true;
   }
 
-
 }
-
-

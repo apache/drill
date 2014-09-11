@@ -46,13 +46,13 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   static final ExpressionStringBuilder INSTANCE = new ExpressionStringBuilder();
 
-  public static String toString(LogicalExpression expr){
+  public static String toString(LogicalExpression expr) {
     StringBuilder sb = new StringBuilder();
     expr.accept(INSTANCE, sb);
     return sb.toString();
   }
 
-  public static void toString(LogicalExpression expr, StringBuilder sb){
+  public static void toString(LogicalExpression expr, StringBuilder sb) {
     expr.accept(INSTANCE, sb);
   }
 
@@ -63,7 +63,9 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append(call.getName());
     sb.append("(");
     for (int i = 0; i < args.size(); i++) {
-      if (i != 0) sb.append(", ");
+      if (i != 0) {
+        sb.append(", ");
+      }
       args.get(i).accept(this, sb);
     }
     sb.append(") ");
@@ -103,25 +105,25 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   @Override
   public Void visitSchemaPath(SchemaPath path, StringBuilder sb) throws RuntimeException {
     PathSegment seg = path.getRootSegment();
-    if(seg.isArray()) throw new IllegalStateException("Drill doesn't currently support top level arrays");
+    if (seg.isArray()) {
+      throw new IllegalStateException("Drill doesn't currently support top level arrays");
+    }
     sb.append('`');
     sb.append(seg.getNameSegment().getPath());
     sb.append('`');
 
-    while( (seg = seg.getChild()) != null){
-      if(seg.isNamed()){
+    while ( (seg = seg.getChild()) != null) {
+      if (seg.isNamed()) {
         sb.append('.');
         sb.append('`');
         sb.append(seg.getNameSegment().getPath());
         sb.append('`');
-      }else{
+      } else {
         sb.append('[');
         sb.append(seg.getArraySegment().getIndex());
         sb.append(']');
       }
     }
-
-
     return null;
   }
 
@@ -130,7 +132,6 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append(lExpr.getLong());
     return null;
   }
-
 
   @Override
   public Void visitDateConstant(DateExpression lExpr, StringBuilder sb) throws RuntimeException {
@@ -186,7 +187,6 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     return null;
   }
 
-
   @Override
   public Void visitDecimal28Constant(Decimal28Expression decExpr, StringBuilder sb) throws RuntimeException {
     sb.append(decExpr.toString());
@@ -236,7 +236,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append(" ) as ");
     sb.append(mt.getMinorType().name());
 
-    switch(mt.getMinorType()){
+    switch(mt.getMinorType()) {
     case FLOAT4:
     case FLOAT8:
     case BIT:
@@ -313,4 +313,5 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append("NULL");
     return null;
   }
+
 }

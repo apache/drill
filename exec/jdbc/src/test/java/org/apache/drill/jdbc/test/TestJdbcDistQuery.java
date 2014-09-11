@@ -197,7 +197,7 @@ public class TestJdbcDistQuery extends JdbcTest{
           System.out.println();
           first = false;
         }
-        while(r.next()){
+        while (r.next()) {
           md = r.getMetaData();
 
           for (int i = 1; i <= md.getColumnCount(); i++) {
@@ -212,11 +212,11 @@ public class TestJdbcDistQuery extends JdbcTest{
 
       System.out.println("\n\n\n");
       success = true;
-    }finally{
-      if(!success) Thread.sleep(2000);
+    } finally {
+      if (!success) {
+        Thread.sleep(2000);
+      }
     }
-
-
   }
 
   @Test

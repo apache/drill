@@ -34,8 +34,8 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
   private final SelectionVector2 sv2;
   private final SelectionVector4 sv4;
 
-  public InternalBatch(RecordBatch incoming){
-    switch(incoming.getSchema().getSelectionVectorMode()){
+  public InternalBatch(RecordBatch incoming) {
+    switch(incoming.getSchema().getSelectionVectorMode()) {
     case FOUR_BYTE:
       this.sv4 = incoming.getSelectionVector4().createNewWrapperCurrent();
       this.sv2 = null;
@@ -69,13 +69,17 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
     return container.iterator();
   }
 
-  public void clear(){
-    if(sv2 != null) sv2.clear();
-    if(sv4 != null) sv4.clear();
+  public void clear() {
+    if (sv2 != null) {
+      sv2.clear();
+    }
+    if (sv4 != null) {
+      sv4.clear();
+    }
     container.clear();
   }
 
-  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int[] fieldIds){
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int[] fieldIds) {
     return container.getValueAccessorById(clazz, fieldIds);
   }
 

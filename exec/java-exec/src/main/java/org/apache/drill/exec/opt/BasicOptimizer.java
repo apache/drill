@@ -228,7 +228,9 @@ public class BasicOptimizer extends Optimizer{
     @Override
     public PhysicalOperator visitScan(Scan scan, Object obj) throws OptimizerException {
       StoragePluginConfig config = logicalPlan.getStorageEngineConfig(scan.getStorageEngine());
-      if(config == null) throw new OptimizerException(String.format("Logical plan referenced the storage engine config %s but the logical plan didn't have that available as a config.", scan.getStorageEngine()));
+      if(config == null) {
+        throw new OptimizerException(String.format("Logical plan referenced the storage engine config %s but the logical plan didn't have that available as a config.", scan.getStorageEngine()));
+      }
       StoragePlugin storagePlugin;
       try {
         storagePlugin = context.getStorage().getPlugin(config);

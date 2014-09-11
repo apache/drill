@@ -95,9 +95,9 @@ public class BaseTestQuery extends ExecTest{
   public static void openClient() throws Exception{
     config = DrillConfig.create(TEST_CONFIGURATIONS);
     allocator = new TopLevelAllocator(config);
-    if(config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)){
+    if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
       serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
-    }else{
+    } else {
       serviceSet = RemoteServiceSet.getLocalServiceSet();
     }
     bit = new Drillbit(config, serviceSet);
@@ -105,23 +105,31 @@ public class BaseTestQuery extends ExecTest{
     client = new DrillClient(config, serviceSet.getCoordinator());
     client.connect();
     List<QueryResultBatch> results = client.runQuery(QueryType.SQL, String.format("alter session set `%s` = 2", ExecConstants.MAX_WIDTH_PER_NODE_KEY));
-    for(QueryResultBatch b : results){
+    for (QueryResultBatch b : results) {
       b.release();
     }
   }
 
 
 
-  protected BufferAllocator getAllocator(){
+  protected BufferAllocator getAllocator() {
     return allocator;
   }
 
   @AfterClass
   public static void closeClient() throws IOException{
-    if(client != null) client.close();
-    if(bit != null) bit.close();
-    if(serviceSet != null) serviceSet.close();
-    if(allocator != null) allocator.close();
+    if (client != null) {
+      client.close();
+    }
+    if (bit != null) {
+      bit.close();
+    }
+    if(serviceSet != null) {
+      serviceSet.close();
+    }
+    if (allocator != null) {
+      allocator.close();
+    }
   }
 
   protected void runSQL(String sql) throws Exception {
@@ -154,7 +162,7 @@ public class BaseTestQuery extends ExecTest{
     return resultListener.await();
   }
 
-  protected void testWithListener(QueryType type, String query, UserResultsListener resultListener){
+  protected void testWithListener(QueryType type, String query, UserResultsListener resultListener) {
     query = query.replace("[WORKING_PATH]", TestTools.getWorkingPath());
     client.runQuery(type, query, resultListener);
   }
@@ -176,8 +184,10 @@ public class BaseTestQuery extends ExecTest{
 
   protected void test(String query) throws Exception{
     String[] queries = query.split(";");
-    for(String q : queries){
-      if(q.trim().isEmpty()) continue;
+    for (String q : queries) {
+      if (q.trim().isEmpty()) {
+        continue;
+      }
       testRunAndPrint(QueryType.SQL, q);
     }
   }
@@ -197,19 +207,22 @@ public class BaseTestQuery extends ExecTest{
   protected void testPhysicalFromFile(String file) throws Exception{
     testPhysical(getFile(file));
   }
+
   protected List<QueryResultBatch> testPhysicalFromFileWithResults(String file) throws Exception {
     return testRunAndReturn(QueryType.PHYSICAL, getFile(file));
   }
+
   protected void testLogicalFromFile(String file) throws Exception{
     testLogical(getFile(file));
   }
+
   protected void testSqlFromFile(String file) throws Exception{
     test(getFile(file));
   }
 
   protected String getFile(String resource) throws IOException{
     URL url = Resources.getResource(resource);
-    if(url == null){
+    if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
     return Resources.toString(url, Charsets.UTF_8);
@@ -245,7 +258,9 @@ public class BaseTestQuery extends ExecTest{
 
     public int waitForCompletion() throws Exception {
       latch.await();
-      if(exception != null) throw exception;
+      if (exception != null) {
+        throw exception;
+      }
       return count.get();
     }
   }
@@ -261,7 +276,7 @@ public class BaseTestQuery extends ExecTest{
   protected int printResult(List<QueryResultBatch> results) throws SchemaChangeException {
     int rowCount = 0;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryResultBatch result : results){
+    for(QueryResultBatch result : results) {
       rowCount += result.getHeader().getRowCount();
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() <= 0) {
@@ -279,7 +294,7 @@ public class BaseTestQuery extends ExecTest{
     StringBuilder formattedResults = new StringBuilder();
     boolean includeHeader = true;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryResultBatch result : results){
+    for(QueryResultBatch result : results) {
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() <= 0) {
         break;
@@ -294,4 +309,5 @@ public class BaseTestQuery extends ExecTest{
 
     return formattedResults.toString();
   }
+
 }

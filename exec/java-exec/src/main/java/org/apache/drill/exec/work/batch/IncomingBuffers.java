@@ -54,7 +54,7 @@ public class IncomingBuffers implements AutoCloseable {
 
     // Determine the total number of incoming streams that will need to be completed before we are finished.
     int totalStreams = 0;
-    for(DataCollector bc : fragCounts.values()){
+    for (DataCollector bc : fragCounts.values()) {
       totalStreams += bc.getTotalIncomingFragments();
     }
     assert totalStreams >= remainingRequired.get() : String.format("Total Streams %d should be more than the minimum number of streams to commence (%d).  It isn't.", totalStreams, remainingRequired.get());
@@ -74,14 +74,16 @@ public class IncomingBuffers implements AutoCloseable {
       }
       return false;
     }
-    if(batch.getHeader().getIsLastBatch()){
+    if (batch.getHeader().getIsLastBatch()) {
       streamsRemaining.decrementAndGet();
     }
     int sendMajorFragmentId = batch.getHeader().getSendingMajorFragmentId();
     DataCollector fSet = fragCounts.get(sendMajorFragmentId);
-    if (fSet == null) throw new FragmentSetupException(String.format("We received a major fragment id that we were not expecting.  The id was %d. %s", sendMajorFragmentId, Arrays.toString(fragCounts.values().toArray())));
+    if (fSet == null) {
+      throw new FragmentSetupException(String.format("We received a major fragment id that we were not expecting.  The id was %d. %s", sendMajorFragmentId, Arrays.toString(fragCounts.values().toArray())));
+    }
     try {
-      synchronized(this){
+      synchronized (this) {
         boolean decremented = fSet.batchArrived(batch.getHeader().getSendingMinorFragmentId(), batch);
 
         // we should only return true if remaining required has been decremented and is currently equal to zero.
@@ -94,11 +96,13 @@ public class IncomingBuffers implements AutoCloseable {
 
   public int getRemainingRequired() {
     int rem = remainingRequired.get();
-    if (rem < 0) return 0;
+    if (rem < 0) {
+      return 0;
+    }
     return rem;
   }
 
-  public RawBatchBuffer[] getBuffers(int senderMajorFragmentId){
+  public RawBatchBuffer[] getBuffers(int senderMajorFragmentId) {
     return fragCounts.get(senderMajorFragmentId).getBuffers();
   }
 
@@ -124,7 +128,7 @@ public class IncomingBuffers implements AutoCloseable {
 
     @Override
     public Void visitOp(PhysicalOperator op, Map<Integer, DataCollector> value) throws RuntimeException {
-      for(PhysicalOperator o : op){
+      for (PhysicalOperator o : op) {
         o.accept(this, value);
       }
       return null;
@@ -132,7 +136,7 @@ public class IncomingBuffers implements AutoCloseable {
 
   }
 
-  public boolean isDone(){
+  public boolean isDone() {
     return streamsRemaining.get() < 1;
   }
 

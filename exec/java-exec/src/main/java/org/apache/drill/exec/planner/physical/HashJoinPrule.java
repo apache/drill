@@ -44,7 +44,9 @@ public class HashJoinPrule extends JoinPruleBase {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashJoinEnabled()) return;
+    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashJoinEnabled()) {
+      return;
+    }
 
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
     final RelNode left = join.getLeft();

@@ -59,7 +59,7 @@ public class SimpleParallelizer {
   private final int maxGlobalWidth;
   private double affinityFactor;
 
-  public SimpleParallelizer(QueryContext context){
+  public SimpleParallelizer(QueryContext context) {
     long sliceTarget = context.getOptions().getOption(ExecConstants.SLICE_TARGET).num_val;
     this.parallelizationThreshold = sliceTarget > 0 ? sliceTarget : 1;
     this.maxWidthPerNode = context.getOptions().getOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY).num_val.intValue();
@@ -67,7 +67,7 @@ public class SimpleParallelizer {
     this.affinityFactor = context.getOptions().getOption(ExecConstants.AFFINITY_FACTOR_KEY).float_val.intValue();
   }
 
-  public SimpleParallelizer(long parallelizationThreshold, int maxWidthPerNode, int maxGlobalWidth, double affinityFactor){
+  public SimpleParallelizer(long parallelizationThreshold, int maxWidthPerNode, int maxGlobalWidth, double affinityFactor) {
     this.parallelizationThreshold = parallelizationThreshold;
     this.maxWidthPerNode = maxWidthPerNode;
     this.maxGlobalWidth = maxGlobalWidth;
@@ -113,11 +113,12 @@ public class SimpleParallelizer {
       final PhysicalOperator physicalOperatorRoot = node.getRoot();
       boolean isRootNode = rootNode == node;
 
-      if (isRootNode && wrapper.getWidth() != 1)
+      if (isRootNode && wrapper.getWidth() != 1) {
         throw new FragmentSetupException(
             String.format(
                 "Failure while trying to setup fragment.  The root fragment must always have parallelization one.  In the current case, the width was set to %d.",
                 wrapper.getWidth()));
+      }
       // a fragment is self driven if it doesn't rely on any other exchanges.
       boolean isLeafFragment = node.getReceivingExchangePairs().size() == 0;
 
@@ -187,7 +188,9 @@ public class SimpleParallelizer {
 
       width = Math.min(width, maxWidthPerNode*allNodes.size());
 
-      if (width < 1) width = 1;
+      if (width < 1) {
+        width = 1;
+      }
 //      logger.debug("Setting width {} on fragment {}", width, wrapper);
       wrapper.setWidth(width);
       // figure out endpoint assignments. also informs the exchanges about their respective endpoints.

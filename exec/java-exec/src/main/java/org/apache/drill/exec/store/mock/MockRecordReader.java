@@ -103,12 +103,14 @@ public class MockRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
-    if(recordsRead >= this.config.getRecords()) return 0;
+    if (recordsRead >= this.config.getRecords()) {
+      return 0;
+    }
 
     int recordSetSize = Math.min(batchRecordCount, this.config.getRecords() - recordsRead);
 
     recordsRead += recordSetSize;
-    for(ValueVector v : valueVectors){
+    for (ValueVector v : valueVectors) {
 
 //      logger.debug(String.format("MockRecordReader:  Generating %d records of random data for VV of type %s.", recordSetSize, v.getClass().getName()));
       ValueVector.Mutator m = v.getMutator();
@@ -132,4 +134,5 @@ public class MockRecordReader extends AbstractRecordReader {
   @Override
   public void cleanup() {
   }
+
 }

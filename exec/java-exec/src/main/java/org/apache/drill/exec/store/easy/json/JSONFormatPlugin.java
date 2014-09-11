@@ -90,12 +90,13 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      } else if (obj == null) {
         return false;
-      if (getClass() == obj.getClass())
+      } else if (getClass() == obj.getClass()) {
         return true;
+      }
       return false;
     }
 
@@ -115,6 +116,5 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   public boolean supportsPushDown() {
     return true;
   }
-
 
 }

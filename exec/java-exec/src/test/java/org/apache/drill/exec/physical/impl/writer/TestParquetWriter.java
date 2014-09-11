@@ -505,7 +505,9 @@ public class TestParquetWriter extends BaseTestQuery {
       for (VectorWrapper w : loader) {
         String field = w.getField().toExpr();
         for (int j = 0; j < loader.getRecordCount(); j++) {
-          if (totalRecords - loader.getRecordCount() + j > 5000000) continue;
+          if (totalRecords - loader.getRecordCount() + j > 5000000) {
+            continue;
+          }
           Object obj = w.getValueVector().getAccessor().getObject(j);
           if (obj != null) {
             if (obj instanceof Text) {
@@ -568,7 +570,9 @@ public class TestParquetWriter extends BaseTestQuery {
 
     @Override
     public boolean hasNext() {
-      if (totalValuesRead == recordLimit) return false;
+      if (totalValuesRead == recordLimit) {
+        return false;
+      }
       if (indexInVectorList < hyperVector.getValueVectors().length) {
         return true;
       } else if ( indexInCurrentVector < currVec.getAccessor().getValueCount()) {
@@ -637,15 +641,17 @@ public class TestParquetWriter extends BaseTestQuery {
 
   public void compareValues(Object expected, Object actual, int counter, String column) throws Exception {
 
-    if (  expected == null ) {
-      if (actual == null ) {
-      if (VERBOSE_DEBUG) logger.debug("(1) at position " + counter + " column '" + column + "' matched value:  " + expected );
+    if (expected == null) {
+      if (actual == null) {
+      if (VERBOSE_DEBUG) {
+        logger.debug("(1) at position " + counter + " column '" + column + "' matched value:  " + expected );
+      }
         return;
       } else {
         throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: " + expected + " but received " + actual);
       }
     }
-    if ( actual == null) {
+    if (actual == null) {
       throw new Exception("unexpected null at position " + counter + " column '" + column + "' should have been:  " + expected);
     }
     if (actual instanceof byte[]) {
@@ -653,14 +659,18 @@ public class TestParquetWriter extends BaseTestQuery {
         throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: "
             + new String((byte[])expected, "UTF-8") + " but received " + new String((byte[])actual, "UTF-8"));
       } else {
-        if (VERBOSE_DEBUG) logger.debug("at position " + counter + " column '" + column + "' matched value " + new String((byte[])expected, "UTF-8"));
+        if (VERBOSE_DEBUG) {
+          logger.debug("at position " + counter + " column '" + column + "' matched value " + new String((byte[])expected, "UTF-8"));
+        }
         return;
       }
     }
-    if (  ! expected.equals(actual)) {
+    if (!expected.equals(actual)) {
       throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: " + expected + " but received " + actual);
     } else {
-      if (VERBOSE_DEBUG) logger.debug("at position " + counter + " column '" + column + "' matched value:  " + expected );
+      if (VERBOSE_DEBUG) {
+        logger.debug("at position " + counter + " column '" + column + "' matched value:  " + expected );
+      }
     }
   }
 
@@ -676,7 +686,7 @@ public class TestParquetWriter extends BaseTestQuery {
       for (String column : record.keySet()) {
         compareValues(record.get(column), actualRecords.get(i).get(column), counter, column );
       }
-      if ( ! actualRecords.get(i).equals(record)) {
+      if ( !actualRecords.get(i).equals(record)) {
         System.out.println("mismatch at position " + counter );
         missing.append(missmatch);
         missing.append(",");
@@ -691,4 +701,5 @@ public class TestParquetWriter extends BaseTestQuery {
     logger.debug(missing.toString());
     System.out.println(missing);
   }
+
 }

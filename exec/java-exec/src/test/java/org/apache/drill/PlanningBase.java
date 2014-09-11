@@ -63,11 +63,11 @@ public class PlanningBase extends ExecTest{
   private final DrillConfig config = DrillConfig.create();
 
 
-  protected void testSqlPlanFromFile(String file) throws Exception{
+  protected void testSqlPlanFromFile(String file) throws Exception {
     testSqlPlan(getFile(file));
   }
 
-  protected void testSqlPlan(String sqlCommands) throws Exception{
+  protected void testSqlPlan(String sqlCommands) throws Exception {
     String[] sqlStrings = sqlCommands.split(";");
 
     final DistributedCache cache = new LocalCache();
@@ -133,8 +133,10 @@ public class PlanningBase extends ExecTest{
       }
     };
 
-    for(String sql : sqlStrings){
-      if(sql.trim().isEmpty()) continue;
+    for (String sql : sqlStrings) {
+      if (sql.trim().isEmpty()) {
+        continue;
+      }
       DrillSqlWorker worker = new DrillSqlWorker(context);
       PhysicalPlan p = worker.getPlan(sql);
     }
@@ -143,7 +145,7 @@ public class PlanningBase extends ExecTest{
 
   protected String getFile(String resource) throws IOException{
     URL url = Resources.getResource(resource);
-    if(url == null){
+    if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
     return Resources.toString(url, Charsets.UTF_8);

@@ -57,8 +57,8 @@ public class SchemaBuilder {
     return this;
   }
 
-  public SchemaBuilder addFields(Iterable<MaterializedField> fields){
-    for(MaterializedField f : fields){
+  public SchemaBuilder addFields(Iterable<MaterializedField> fields) {
+    for (MaterializedField f : fields) {
       addField(f);
     }
     return this;
@@ -86,7 +86,7 @@ public class SchemaBuilder {
 //    fields.put(f.getFieldId(), f);
 //  }
 
-  public SchemaBuilder addField(MaterializedField f){
+  public SchemaBuilder addField(MaterializedField f) {
     fields.add(f);
     return this;
   }
@@ -104,12 +104,14 @@ public class SchemaBuilder {
 //    if (!fields.containsKey(fieldId))
 //      throw new SchemaChangeException(
 //          String.format("An attempt was made to replace a field in the schema, however the schema does " +
-//          		"not currently contain that field id.  The offending fieldId was %d", fieldId));
+//              "not currently contain that field id.  The offending fieldId was %d", fieldId));
 //    setTypedField(fieldId, type, nullable, mode, valueClass);
 //  }
 
-  public SchemaBuilder removeField(MaterializedField f) throws SchemaChangeException{
-    if(!fields.remove(f)) throw new SchemaChangeException("You attempted to remove an nonexistent field.");
+  public SchemaBuilder removeField(MaterializedField f) throws SchemaChangeException {
+    if (!fields.remove(f)) {
+      throw new SchemaChangeException("You attempted to remove an nonexistent field.");
+    }
     return this;
   }
 
@@ -118,8 +120,9 @@ public class SchemaBuilder {
    * @return
    * @throws SchemaChangeException
    */
-  public BatchSchema build(){
+  public BatchSchema build() {
     List<MaterializedField> fieldList = Lists.newArrayList(fields);
     return new BatchSchema(this.selectionVectorMode, fieldList);
   }
+
 }

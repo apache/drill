@@ -40,7 +40,7 @@ import org.eigenbase.sql.SqlNode;
 
 import com.google.common.collect.ImmutableList;
 
-public abstract class ViewHandler extends AbstractSqlHandler{
+public abstract class ViewHandler extends AbstractSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ViewHandler.class);
 
   protected Planner planner;
@@ -68,9 +68,10 @@ public abstract class ViewHandler extends AbstractSqlHandler{
         AbstractSchema drillSchema = getDrillSchema(schema);
 
         String schemaPath = drillSchema.getFullSchemaName();
-        if (!drillSchema.isMutable())
+        if (!drillSchema.isMutable()) {
           return DirectPlan.createDirectPlan(context, false, String.format("Unable to create view. " +
             "Schema [%s] is immutable. ", schemaPath));
+        }
 
         // find current workspace schema path
         List<String> workspaceSchemaPath = ImmutableList.of();
@@ -89,15 +90,17 @@ public abstract class ViewHandler extends AbstractSqlHandler{
         List<String> viewFieldNames = createView.getFieldNames();
         if (viewFieldNames.size() > 0) {
           // number of fields match.
-          if (viewFieldNames.size() != queryRowType.getFieldCount())
+          if (viewFieldNames.size() != queryRowType.getFieldCount()) {
             return DirectPlan.createDirectPlan(context, false,
                 "View's field list and View's query field list have different counts.");
+          }
 
           // make sure View's query field list has no "*"
-          for(String field : queryRowType.getFieldNames()) {
-            if (field.equals("*"))
+          for (String field : queryRowType.getFieldNames()) {
+            if (field.equals("*")) {
               return DirectPlan.createDirectPlan(context, false,
                   "View's query field list has a '*', which is invalid when View's field list is specified.");
+            }
           }
 
           queryRowType = new DrillFixedRelDataTypeImpl(planner.getTypeFactory(), viewFieldNames);
@@ -112,7 +115,7 @@ public abstract class ViewHandler extends AbstractSqlHandler{
             return DirectPlan.createDirectPlan(context, false, "View with given name already exists in current schema");
           }
           replaced = ((WorkspaceSchema) drillSchema).createView(view);
-        }else{
+        } else {
           return DirectPlan.createDirectPlan(context, false, "Schema provided was not a workspace schema.");
         }
 
@@ -142,13 +145,14 @@ public abstract class ViewHandler extends AbstractSqlHandler{
         AbstractSchema drillSchema = getDrillSchema(schema);
 
         String schemaPath = drillSchema.getFullSchemaName();
-        if (!drillSchema.isMutable())
+        if (!drillSchema.isMutable()) {
           return DirectPlan.createDirectPlan(context, false, String.format("Schema '%s' is not a mutable schema. " +
               "Views don't exist in this schema", schemaPath));
+        }
 
         if (drillSchema instanceof WorkspaceSchema) {
           ((WorkspaceSchema) drillSchema).dropView(dropView.getName());;
-        }else{
+        } else {
           return DirectPlan.createDirectPlan(context, false, "Schema provided was not a workspace schema.");
         }
 
@@ -160,4 +164,5 @@ public abstract class ViewHandler extends AbstractSqlHandler{
       }
     }
   }
+
 }

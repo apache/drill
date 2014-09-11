@@ -46,7 +46,9 @@ public class HBaseUtils {
   }
 
   static Filter parseFilterString(String filterString) {
-    if (filterString == null) return null;
+    if (filterString == null) {
+      return null;
+    }
     try {
       return FILTER_PARSEER.parseFilterString(filterString);
     } catch (CharacterCodingException e) {
@@ -55,8 +57,10 @@ public class HBaseUtils {
   }
 
   public static byte[] serializeFilter(Filter filter) {
-    if (filter == null) return null;
-    try(ByteArrayOutputStream byteStream = new ByteArrayOutputStream(); DataOutputStream out = new DataOutputStream(byteStream)) {
+    if (filter == null) {
+      return null;
+    }
+    try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream(); DataOutputStream out = new DataOutputStream(byteStream)) {
       HbaseObjectWritable.writeObject(out, filter, filter.getClass(), null);
       return byteStream.toByteArray();
     } catch (IOException e) {
@@ -65,8 +69,10 @@ public class HBaseUtils {
   }
 
   public static Filter deserializeFilter(byte[] filterBytes) {
-    if (filterBytes == null) return null;
-    try(DataInputStream dis = new DataInputStream(new ByteArrayInputStream(filterBytes));) {
+    if (filterBytes == null) {
+      return null;
+    }
+    try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(filterBytes));) {
       return (Filter) HbaseObjectWritable.readObject(dis, null);
     } catch (Exception e) {
       throw new DrillRuntimeException("Error deserializing filter: " + filterBytes, e);

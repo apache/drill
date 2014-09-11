@@ -82,8 +82,9 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     IterOutcome upstream;
     do {
       upstream = next(incoming);
-      if(first && upstream == IterOutcome.OK)
+      if(first && upstream == IterOutcome.OK) {
         upstream = IterOutcome.OK_NEW_SCHEMA;
+      }
       first = false;
 
       switch(upstream) {
@@ -91,14 +92,15 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
         case NONE:
         case STOP:
           cleanup();
-          if (upstream == IterOutcome.STOP)
+          if (upstream == IterOutcome.STOP) {
             return upstream;
+          }
           break;
 
         case OK_NEW_SCHEMA:
           try{
             setupNewSchema();
-          }catch(Exception ex){
+          } catch(Exception ex) {
             kill(false);
             logger.error("Failure during query", ex);
             context.fail(ex);
@@ -113,9 +115,9 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
             throw new RuntimeException(ex);
           }
 
-          for(VectorWrapper v : incoming)
+          for(VectorWrapper v : incoming) {
             v.getValueVector().clear();
-
+          }
           break;
 
         default:
@@ -176,4 +178,5 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       throw new RuntimeException("Failed to close RecordWriter", ex);
     }
   }
+
 }

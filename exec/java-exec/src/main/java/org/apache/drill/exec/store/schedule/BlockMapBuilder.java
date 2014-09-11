@@ -92,7 +92,9 @@ public class BlockMapBuilder {
     private FileStatus status;
 
     public FileStatusWork(FileStatus status) {
-      if(status.isDir()) throw new IllegalStateException("FileStatus work only works with files, not directories.");
+      if (status.isDir()) {
+        throw new IllegalStateException("FileStatus work only works with files, not directories.");
+      }
       this.status = status;
     }
 
@@ -151,7 +153,7 @@ public class BlockMapBuilder {
 
   private ImmutableRangeMap<Long,BlockLocation> getBlockMap(FileStatus status) throws IOException{
     ImmutableRangeMap<Long,BlockLocation> blockMap  = blockMapMap.get(status.getPath());
-    if(blockMap == null){
+    if (blockMap == null) {
       blockMap = buildBlockMap(status);
     }
     return blockMap;
@@ -194,9 +196,9 @@ public class BlockMapBuilder {
       // For each host in the current block location, add the intersecting bytes to the corresponding endpoint
       for (String host : hosts) {
         DrillbitEndpoint endpoint = getDrillBitEndpoint(host);
-        if(endpoint != null){
+        if (endpoint != null) {
           endpointByteMap.add(endpoint, bytes);
-        }else{
+        } else {
           logger.debug("Failure finding Drillbit running on host {}.  Skipping affinity to that host.", host);
         }
       }
@@ -226,4 +228,5 @@ public class BlockMapBuilder {
     watch.stop();
     logger.debug("Took {} ms to build endpoint map", watch.elapsed(TimeUnit.MILLISECONDS));
   }
+
 }

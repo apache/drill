@@ -53,12 +53,10 @@ public class TestSimpleProjection extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleProjection.class);
   DrillConfig c = DrillConfig.create();
 
-
   @Test
   public void project(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
 
-
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
@@ -66,14 +64,13 @@ public class TestSimpleProjection extends ExecTest {
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
-
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/project/test1.json"), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-    while(exec.next()){
+    while (exec.next()) {
       VectorUtil.showVectorAccessibleContent(exec.getIncoming(), "\t");
       NullableBigIntVector c1 = exec.getValueVectorById(new SchemaPath("col1", ExpressionPosition.UNKNOWN), NullableBigIntVector.class);
       NullableBigIntVector c2 = exec.getValueVectorById(new SchemaPath("col2", ExpressionPosition.UNKNOWN), NullableBigIntVector.class);
@@ -82,13 +79,15 @@ public class TestSimpleProjection extends ExecTest {
       a1 = c1.getAccessor();
       a2 = c2.getAccessor();
 
-      for(int i =0; i < c1.getAccessor().getValueCount(); i++){
-        if (!a1.isNull(i)) assertEquals(a1.get(i)+1, a2.get(i));
+      for (int i =0; i < c1.getAccessor().getValueCount(); i++) {
+        if (!a1.isNull(i)) {
+          assertEquals(a1.get(i)+1, a2.get(i));
+        }
         x += a1.isNull(i) ? 0 : a1.get(i);
       }
     }
 
-    if(context.getFailureCause() != null){
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
     }
     assertTrue(!context.isFailed());

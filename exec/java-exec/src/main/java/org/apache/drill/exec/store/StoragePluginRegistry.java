@@ -206,19 +206,25 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       throw new ExecutionSetupException("Two processes tried to change a plugin at the same time.");
     }
 
-    if(persist) pluginSystemTable.put(name, config);
+    if (persist) {
+      pluginSystemTable.put(name, config);
+    }
 
     return newPlugin;
   }
 
   public StoragePlugin getPlugin(String name) throws ExecutionSetupException {
     StoragePlugin plugin = plugins.get(name);
-    if(name.equals(SYS_PLUGIN) || name.equals(INFORMATION_SCHEMA_PLUGIN)) return plugin;
+    if (name.equals(SYS_PLUGIN) || name.equals(INFORMATION_SCHEMA_PLUGIN)) {
+      return plugin;
+    }
 
     // since we lazily manage the list of plugins per server, we need to update this once we know that it is time.
     StoragePluginConfig config = this.pluginSystemTable.get(name);
     if (config == null) {
-      if(plugin != null) plugins.remove(name);
+      if (plugin != null) {
+        plugins.remove(name);
+      }
       return null;
     } else {
       if (plugin == null || !plugin.getConfig().equals(config)) {
@@ -239,7 +245,9 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   public FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig) throws ExecutionSetupException {
     StoragePlugin p = getPlugin(storageConfig);
-    if(!(p instanceof FileSystemPlugin)) throw new ExecutionSetupException(String.format("You tried to request a format plugin for a storage plugin that wasn't of type FileSystemPlugin.  The actual type of plugin was %s.", p.getClass().getName()));
+    if (!(p instanceof FileSystemPlugin)) {
+      throw new ExecutionSetupException(String.format("You tried to request a format plugin for a storage plugin that wasn't of type FileSystemPlugin.  The actual type of plugin was %s.", p.getClass().getName()));
+    }
     FileSystemPlugin storage = (FileSystemPlugin) p;
     return storage.getFormatPlugin(formatConfig);
   }
@@ -256,8 +264,9 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       return plugin;
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       Throwable t = e instanceof InvocationTargetException ? ((InvocationTargetException) e).getTargetException() : e;
-      if (t instanceof ExecutionSetupException)
+      if (t instanceof ExecutionSetupException) {
         throw ((ExecutionSetupException) t);
+      }
       throw new ExecutionSetupException(String.format(
           "Failure setting up new storage plugin configuration for config %s", pluginConfig), t);
     }
@@ -304,7 +313,9 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
         }
         // remove those which are no longer in the registry
         for (String pluginName : currentPluginNames) {
-          if(pluginName.equals(SYS_PLUGIN) || pluginName.equals(INFORMATION_SCHEMA_PLUGIN)) continue;
+          if (pluginName.equals(SYS_PLUGIN) || pluginName.equals(INFORMATION_SCHEMA_PLUGIN)) {
+            continue;
+          }
           plugins.remove(pluginName);
         }
 

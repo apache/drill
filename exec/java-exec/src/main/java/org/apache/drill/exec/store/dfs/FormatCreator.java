@@ -36,66 +36,64 @@ import com.google.common.collect.Maps;
 public class FormatCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatCreator.class);
 
-
   static final ConstructorChecker FORMAT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class, FormatPluginConfig.class);
   static final ConstructorChecker DEFAULT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class);
 
-  static Map<String, FormatPlugin> getFormatPlugins(DrillbitContext context, DrillFileSystem fileSystem, FileSystemConfig storageConfig){
+  static Map<String, FormatPlugin> getFormatPlugins(DrillbitContext context, DrillFileSystem fileSystem, FileSystemConfig storageConfig) {
     final DrillConfig config = context.getConfig();
     Map<String, FormatPlugin> plugins = Maps.newHashMap();
 
     Collection<Class<? extends FormatPlugin>> pluginClasses = PathScanner.scanForImplementations(FormatPlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
 
 
-    if(storageConfig.formats == null || storageConfig.formats.isEmpty()){
+    if (storageConfig.formats == null || storageConfig.formats.isEmpty()) {
 
-      for(Class<? extends FormatPlugin> pluginClass: pluginClasses){
-        for(Constructor<?> c : pluginClass.getConstructors()){
-          try{
-
-            if(!DEFAULT_BASED.check(c)) continue;
+      for (Class<? extends FormatPlugin> pluginClass: pluginClasses) {
+        for (Constructor<?> c : pluginClass.getConstructors()) {
+          try {
+            if (!DEFAULT_BASED.check(c)) {
+              continue;
+            }
             FormatPlugin plugin = (FormatPlugin) c.newInstance(null, context, fileSystem, storageConfig);
             plugins.put(plugin.getName(), plugin);
-          }catch(Exception e){
+          } catch (Exception e) {
             logger.warn(String.format("Failure while trying instantiate FormatPlugin %s.", pluginClass.getName()), e);
           }
         }
       }
 
-    }else{
-
+    } else {
       Map<Class<?>, Constructor<?>> constructors = Maps.newHashMap();
-      for(Class<? extends FormatPlugin> pluginClass: pluginClasses){
-        for(Constructor<?> c : pluginClass.getConstructors()){
-          try{
-            if(!FORMAT_BASED.check(c)) continue;
+      for (Class<? extends FormatPlugin> pluginClass: pluginClasses) {
+        for (Constructor<?> c : pluginClass.getConstructors()) {
+          try {
+            if (!FORMAT_BASED.check(c)) {
+              continue;
+            }
             Class<? extends FormatPluginConfig> configClass = (Class<? extends FormatPluginConfig>) c.getParameterTypes()[4];
             constructors.put(configClass, c);
-          }catch(Exception e){
+          } catch (Exception e) {
             logger.warn(String.format("Failure while trying instantiate FormatPlugin %s.", pluginClass.getName()), e);
           }
         }
       }
 
-      for(Map.Entry<String, FormatPluginConfig> e : storageConfig.formats.entrySet()){
+      for (Map.Entry<String, FormatPluginConfig> e : storageConfig.formats.entrySet()) {
         Constructor<?> c = constructors.get(e.getValue().getClass());
-        if(c == null){
+        if (c == null) {
           logger.warn("Unable to find constructor for storage config named '{}' of type '{}'.", e.getKey(), e.getValue().getClass().getName());
           continue;
         }
-        try{
-        plugins.put(e.getKey(), (FormatPlugin) c.newInstance(e.getKey(), context, fileSystem, storageConfig, e.getValue()));
+        try {
+          plugins.put(e.getKey(), (FormatPlugin) c.newInstance(e.getKey(), context, fileSystem, storageConfig, e.getValue()));
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
           logger.warn("Failure initializing storage config named '{}' of type '{}'.", e.getKey(), e.getValue().getClass().getName(), e1);
         }
       }
 
-
     }
 
     return plugins;
   }
-
-
 
 }

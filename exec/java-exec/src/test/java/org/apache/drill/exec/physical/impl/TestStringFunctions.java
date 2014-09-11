@@ -62,15 +62,16 @@ public class TestStringFunctions extends ExecTest {
     for (ValueVector v : exec) {
       if  (v instanceof VarCharVector) {
         res[i++] = new String( ((VarCharVector) v).getAccessor().get(0), Charsets.UTF_8);
-      } else
+      } else {
         res[i++] =  v.getAccessor().getObject(0);
+      }
     }
     return res;
  }
 
   public void runTest(@Injectable final DrillbitContext bitContext,
                       @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
@@ -79,14 +80,19 @@ public class TestStringFunctions extends ExecTest {
     }};
 
     String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
-    if(reader == null) reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    if(registry == null) registry = new FunctionImplementationRegistry(c);
-    if(context == null) context =  new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry); //new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, registry);
+    if (reader == null) {
+      reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    }
+    if (registry == null) {
+      registry = new FunctionImplementationRegistry(c);
+    }
+    if (context == null) {
+      context =  new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry); //new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, registry);
+    }
     PhysicalPlan plan = reader.readPhysicalPlan(planString);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-
-    while(exec.next()){
+    while(exec.next()) {
       Object [] res = getRunResult(exec);
       assertEquals("return count does not match", expectedResults.length, res.length);
 
@@ -95,10 +101,9 @@ public class TestStringFunctions extends ExecTest {
       }
     }
 
-    if(context.getFailureCause() != null){
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
     }
-
     assertTrue(!context.isFailed());
   }
 
@@ -247,4 +252,5 @@ public class TestStringFunctions extends ExecTest {
     Object [] expected = new Object[] {97, 65, -32, "A", "btrim", "Peace Peace Peace ", "हकुना मताता हकुना मताता ", "katcit", "\u00C3\u00A2pple", "नदम"};
     runTest(bitContext, connection, expected, "functions/string/testStringFuncs.json");
   }
+
 }

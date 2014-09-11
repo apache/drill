@@ -86,19 +86,21 @@ public class JsonReader {
   }
 
   private boolean containsStar() {
-    for (SchemaPath expr : this.columns){
-      if (expr.getRootSegment().getPath().equals("*"))
+    for (SchemaPath expr : this.columns) {
+      if (expr.getRootSegment().getPath().equals("*")) {
         return true;
+      }
     }
     return false;
   }
 
-  private boolean fieldSelected(SchemaPath field){
-    if (starRequested)
+  private boolean fieldSelected(SchemaPath field) {
+    if (starRequested) {
       return true;
+    }
     int i = 0;
-    for (SchemaPath expr : this.columns){
-      if ( expr.contains(field)){
+    for (SchemaPath expr : this.columns) {
+      if ( expr.contains(field)) {
         columnsFound[i] = true;
         return true;
       }
@@ -122,7 +124,9 @@ public class JsonReader {
     parser = factory.createJsonParser(reader);
     reader.mark(MAX_RECORD_SIZE);
     JsonToken t = parser.nextToken();
-    while(!parser.hasCurrentToken()) t = parser.nextToken();
+    while (!parser.hasCurrentToken()) {
+      t = parser.nextToken();
+    }
 
 
     switch (t) {
@@ -146,7 +150,7 @@ public class JsonReader {
   }
 
   private void consumeEntireNextValue(JsonParser parser) throws IOException {
-    switch(parser.nextToken()){
+    switch (parser.nextToken()) {
       case START_ARRAY:
       case START_OBJECT:
         int arrayAndObjectCounter = 1;
@@ -176,9 +180,11 @@ public class JsonReader {
   private void writeData(MapWriter map) throws JsonParseException, IOException {
     //
     map.start();
-    outside: while(true){
+    outside: while(true) {
       JsonToken t = parser.nextToken();
-      if(t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) return;
+      if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
+        return;
+      }
 
       assert t == JsonToken.FIELD_NAME : String.format("Expected FIELD_NAME but got %s.", t.name());
       final String fieldName = parser.getText();
@@ -193,7 +199,7 @@ public class JsonReader {
         continue outside;
       }
 
-      switch(parser.nextToken()){
+      switch(parser.nextToken()) {
       case START_ARRAY:
         writeData(map.list(fieldName));
         break;
@@ -258,13 +264,12 @@ public class JsonReader {
         throw new IllegalStateException("Unexpected token " + parser.getCurrentToken());
 
       }
-
     }
     map.end();
 
   }
 
-  private void ensure(int length){
+  private void ensure(int length) {
     workBuf = workBuf.reallocIfNeeded(length);
   }
 
@@ -295,9 +300,9 @@ public class JsonReader {
 
   private void writeData(ListWriter list) throws JsonParseException, IOException {
     list.start();
-    outside: while(true){
+    outside: while (true) {
 
-      switch(parser.nextToken()){
+      switch (parser.nextToken()) {
       case START_ARRAY:
         writeData(list.list());
         break;
@@ -363,7 +368,6 @@ public class JsonReader {
       }
     }
     list.end();
-
 
   }
 

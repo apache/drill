@@ -58,7 +58,7 @@ public class Accountor {
     }
   }
 
-  public boolean transferTo(Accountor target, DrillBuf buf, long size){
+  public boolean transferTo(Accountor target, DrillBuf buf, long size) {
     boolean withinLimit = target.forceAdditionalReservation(size);
     release(buf, size);
 
@@ -89,18 +89,20 @@ public class Accountor {
   }
 
   public boolean forceAdditionalReservation(long size) {
-    if(size > 0){
+    if (size > 0) {
       return remainder.forceGet(size);
-    }else{
+    } else {
       return true;
     }
   }
 
-  public void reserved(long expected, DrillBuf buf){
+  public void reserved(long expected, DrillBuf buf) {
     // make sure to take away the additional memory that happened due to rounding.
 
     long additional = buf.capacity() - expected;
-    if(additional > 0) remainder.forceGet(additional);
+    if (additional > 0) {
+      remainder.forceGet(additional);
+    }
 
     if (ENABLE_ACCOUNTING) {
       buffers.put(buf, new DebugStackTrace(buf.capacity(), Thread.currentThread().getStackTrace()));
@@ -108,14 +110,16 @@ public class Accountor {
   }
 
 
-  public void releasePartial(DrillBuf buf, long size){
+  public void releasePartial(DrillBuf buf, long size) {
     remainder.returnAllocation(size);
     if (ENABLE_ACCOUNTING) {
-      if(buf != null){
+      if (buf != null) {
         DebugStackTrace dst = buffers.get(buf);
-        if(dst == null) throw new IllegalStateException("Partially releasing a buffer that has already been released. Buffer: " + buf);
+        if (dst == null) {
+          throw new IllegalStateException("Partially releasing a buffer that has already been released. Buffer: " + buf);
+        }
         dst.size -= size;
-        if(dst.size < 0){
+        if (dst.size < 0) {
           throw new IllegalStateException("Partially releasing a buffer that has already been released. Buffer: " + buf);
         }
       }
@@ -125,7 +129,9 @@ public class Accountor {
   public void release(DrillBuf buf, long size) {
     remainder.returnAllocation(size);
     if (ENABLE_ACCOUNTING) {
-      if(buf != null && buffers.remove(buf) == null) throw new IllegalStateException("Releasing a buffer that has already been released. Buffer: " + buf);
+      if (buf != null && buffers.remove(buf) == null) {
+        throw new IllegalStateException("Releasing a buffer that has already been released. Buffer: " + buf);
+      }
     }
   }
 
@@ -136,7 +142,7 @@ public class Accountor {
       sb.append("Attempted to close accountor with ");
       sb.append(buffers.size());
       sb.append(" buffer(s) still allocated");
-      if(handle != null){
+      if (handle != null) {
         sb.append("for QueryId: ");
         sb.append(QueryIdHelper.getQueryId(handle.getQueryId()));
         sb.append(", MajorFragmentId: ");
@@ -145,7 +151,6 @@ public class Accountor {
         sb.append(handle.getMinorFragmentId());
       }
       sb.append(".\n");
-
 
       Multimap<DebugStackTrace, DebugStackTrace> multi = LinkedListMultimap.create();
       for (DebugStackTrace t : buffers.values()) {
@@ -158,7 +163,7 @@ public class Accountor {
         sb.append("\n\n\tTotal ");
         sb.append(allocs.size());
         sb.append(" allocation(s) of byte size(s): ");
-        for(DebugStackTrace alloc : allocs){
+        for (DebugStackTrace alloc : allocs) {
           sb.append(alloc.size);
           sb.append(", ");
         }
@@ -167,12 +172,11 @@ public class Accountor {
         entry.addToString(sb);
       }
       IllegalStateException e = new IllegalStateException(sb.toString());
-      if(errorOnLeak){
+      if (errorOnLeak) {
         throw e;
-      }else{
+      } else {
         logger.warn("Memory leaked.", e);
       }
-
 
     }
 
@@ -210,15 +214,19 @@ public class Accountor {
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       DebugStackTrace other = (DebugStackTrace) obj;
-      if (!Arrays.equals(elements, other.elements))
+      if (!Arrays.equals(elements, other.elements)) {
         return false;
+      }
       // weird equal where size doesn't matter for multimap purposes.
 //      if (size != other.size)
 //        return false;
@@ -226,4 +234,5 @@ public class Accountor {
     }
 
   }
+
 }

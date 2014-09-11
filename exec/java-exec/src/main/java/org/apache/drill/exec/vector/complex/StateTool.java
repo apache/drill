@@ -22,10 +22,13 @@ import java.util.Arrays;
 public class StateTool {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StateTool.class);
 
-  public static <T extends Enum<?>> void check(T currentState, T... expectedStates){
-    for(T s : expectedStates){
-      if(s == currentState) return;
+  public static <T extends Enum<?>> void check(T currentState, T... expectedStates) {
+    for (T s : expectedStates) {
+      if (s == currentState) {
+        return;
+      }
     }
     throw new IllegalArgumentException(String.format("Expected to be in one of these states %s but was actuall in state %s", Arrays.toString(expectedStates), currentState));
   }
+
 }

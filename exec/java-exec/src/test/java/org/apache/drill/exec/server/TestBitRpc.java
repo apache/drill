@@ -73,20 +73,17 @@ public class TestBitRpc extends ExecTest {
     final BootStrapContext c = new BootStrapContext(DrillConfig.create());
     BootStrapContext c2 = new BootStrapContext(DrillConfig.create());
 
-
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       workBus.getOrCreateFragmentManager((FragmentHandle) any); result = fman;
       workBus.getFragmentManager( (FragmentHandle) any); result = fman;
       fman.getFragmentContext(); result = fcon;
       fcon.getAllocator(); result = c.getAllocator();
-  }};
-
+    }};
 
     int port = 1234;
 
     DataResponseHandler drp = new BitComTestHandler();
     DataServer server = new DataServer(c, workBus, drp);
-
 
     port = server.bind(port, false);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
@@ -139,8 +136,9 @@ public class TestBitRpc extends ExecTest {
       while (true) {
         long nowMax = max.get();
         if (nowMax < micros) {
-          if (max.compareAndSet(nowMax, micros))
+          if (max.compareAndSet(nowMax, micros)) {
             break;
+          }
         } else {
           break;
         }
@@ -175,4 +173,5 @@ public class TestBitRpc extends ExecTest {
     }
 
   }
+
 }

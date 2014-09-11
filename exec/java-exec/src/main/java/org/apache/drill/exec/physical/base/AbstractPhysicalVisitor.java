@@ -90,7 +90,7 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
 
   @Override
   public T visitHashAggregate(HashAggregate agg, X value) throws E {
-	return visitOp(agg, value);
+    return visitOp(agg, value);
   }
 
   @Override
@@ -120,7 +120,7 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
 
 
   public T visitChildren(PhysicalOperator op, X value) throws E{
-    for(PhysicalOperator child : op){
+    for (PhysicalOperator child : op) {
       child.accept(this, value);
     }
     return null;

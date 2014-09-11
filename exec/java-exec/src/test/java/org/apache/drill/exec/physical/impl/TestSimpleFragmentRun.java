@@ -44,17 +44,16 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
 
   private static final Charset UTF_8 = Charset.forName("UTF-8");
 
-
   @Test
   public void runNoExchangeFragment() throws Exception {
-    try(RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
         Drillbit bit = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());){
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
     // run query.
     bit.run();
     client.connect();
-      String path = "/physical_test2.json";
+    String path = "/physical_test2.json";
 //      String path = "/filter/test1.json";
     List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(path), Charsets.UTF_8));
 
@@ -62,7 +61,6 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
     RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
     int recordCount = 0;
     for (QueryResultBatch batch : results) {
-
       boolean schemaChanged = batchLoader.load(batch.getHeader().getDef(), batch.getData());
       boolean firstColumn = true;
 
@@ -95,7 +93,9 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           }
           System.out.print(value.getValueVector().getAccessor().getObject(i));
         }
-        if(!first) System.out.println();
+        if (!first) {
+          System.out.println();
+        }
       }
       batchLoader.clear();
       batch.release();
@@ -170,7 +170,9 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
             ValueVector.Accessor accessor = v.getValueVector().getAccessor();
             System.out.print(accessor.getObject(r));
           }
-          if (!first) System.out.println();
+          if (!first) {
+            System.out.println();
+          }
         }
         batchLoader.clear();
         batch.release();

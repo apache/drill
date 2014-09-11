@@ -31,24 +31,28 @@ public class RelUniqifier extends BasePrelVisitor<Prel, Set<Prel>, RuntimeExcept
 
   private static final RelUniqifier INSTANCE = new RelUniqifier();
 
-  public static Prel uniqifyGraph(Prel p){
+  public static Prel uniqifyGraph(Prel p) {
     Set<Prel> data = Sets.newIdentityHashSet();
     return p.accept(INSTANCE, data);
   }
+
   @Override
   public Prel visitPrel(Prel prel, Set<Prel> data) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
     boolean childrenChanged = false;
-    for(Prel child : prel){
+    for (Prel child : prel) {
       Prel newChild = visitPrel(child, data);
-      if(newChild != child) childrenChanged = true;
+      if (newChild != child) {
+        childrenChanged = true;
+      }
       children.add(newChild);
     }
 
-    if(data.contains(prel) || childrenChanged){
+    if (data.contains(prel) || childrenChanged) {
       return (Prel) prel.copy(prel.getTraitSet(), children);
-    }else{
+    } else {
       return prel;
     }
   }
+
 }

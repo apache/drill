@@ -120,7 +120,9 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
     @Override
     public void run() {
       try {
-        if (stop) return;
+        if (stop) {
+          return;
+        }
         outer:
         while (true) {
           IterOutcome upstream = incoming.next();
@@ -208,4 +210,5 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
       this.failed = failed;
     }
   }
+
 }

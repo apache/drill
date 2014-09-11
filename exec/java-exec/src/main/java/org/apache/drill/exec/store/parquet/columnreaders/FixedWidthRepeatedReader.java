@@ -91,8 +91,9 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
     pageReader.valuesReadyToRead += repeatedValuesInCurrentList;
     repeatedGroupsReadInCurrentPass++;
     currDictVal = null;
-    if ( ! notFishedReadingList)
+    if ( ! notFishedReadingList) {
       repeatedValuesInCurrentList = -1;
+    }
   }
 
   @Override
@@ -112,8 +113,9 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
   public void postPageRead() {
     super.postPageRead();
     // this is no longer correct as we figured out that lists can reach across pages
-    if ( ! notFishedReadingList)
+    if ( ! notFishedReadingList) {
       repeatedValuesInCurrentList = -1;
+    }
     definitionLevelsRead = 0;
   }
 
@@ -130,12 +132,14 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
   @Override
   protected boolean checkVectorCapacityReached() {
     boolean doneReading = super.checkVectorCapacityReached();
-    if (doneReading)
+    if (doneReading) {
       return true;
-    if (valuesReadInCurrentPass + pageReader.valuesReadyToRead + repeatedValuesInCurrentList >= valueVec.getValueCapacity())
+    }
+    if (valuesReadInCurrentPass + pageReader.valuesReadyToRead + repeatedValuesInCurrentList >= valueVec.getValueCapacity()) {
       return true;
-    else
+    } else {
       return false;
+    }
   }
 
   @Override
@@ -163,7 +167,7 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
       definitionLevelsRead++;
     }
     int repLevel;
-    if ( columnDescriptor.getMaxDefinitionLevel() == currDefLevel){
+    if ( columnDescriptor.getMaxDefinitionLevel() == currDefLevel) {
       if (repeatedValuesInCurrentList == -1 || notFishedReadingList) {
         repeatedValuesInCurrentList = 1;
         do {
@@ -178,7 +182,7 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
               // check that we have not hit the end of the row group (in which case we will not find the repetition level indicating
               // the end of this record as there is no next page to check, we have read all the values in this repetition so it is okay
               // to add it to the read )
-              if (totalValuesRead + pageReader.valuesReadyToRead + repeatedValuesInCurrentList != columnChunkMetaData.getValueCount()){
+              if (totalValuesRead + pageReader.valuesReadyToRead + repeatedValuesInCurrentList != columnChunkMetaData.getValueCount()) {
                 notFishedReadingList = true;
                 // if we hit this case, we cut off the current batch at the previous value, these extra values as well
                 // as those that spill into the next page will be added to the next batch
@@ -188,8 +192,7 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
           }
         } while (repLevel != 0);
       }
-    }
-    else {
+    } else {
       repeatedValuesInCurrentList = 0;
     }
     int currentValueListLength = repeatedValuesInCurrentList;
@@ -209,7 +212,9 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
 
   @Override
   protected void readRecords(int valuesToRead) {
-    if (valuesToRead == 0) return;
+    if (valuesToRead == 0) {
+      return;
+    }
     // TODO - validate that this works in all cases, it fixes a bug when reading from multiple pages into
     // a single vector
     dataReader.valuesReadInCurrentPass = 0;
@@ -228,5 +233,5 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
     super.clear();
     dataReader.clear();
   }
-}
 
+}

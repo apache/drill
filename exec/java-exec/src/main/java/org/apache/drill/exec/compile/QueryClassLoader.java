@@ -76,19 +76,21 @@ public class QueryClassLoader extends URLClassLoader {
     compilerSelector = new ClassCompilerSelector(config, sessionOptions);
   }
 
-  public long getNextClassIndex(){
+  public long getNextClassIndex() {
     return index.getAndIncrement();
   }
 
   public void injectByteCode(String className, byte[] classBytes) throws IOException {
-    if(customClasses.containsKey(className)) throw new IOException(String.format("The class defined {} has already been loaded.", className));
+    if (customClasses.containsKey(className)) {
+      throw new IOException(String.format("The class defined {} has already been loaded.", className));
+    }
     customClasses.put(className, classBytes);
   }
 
   @Override
   protected Class<?> findClass(String className) throws ClassNotFoundException {
     byte[] ba = customClasses.get(className);
-    if(ba != null){
+    if (ba != null) {
       return this.defineClass(className, ba, 0, ba.length);
     }else{
       return super.findClass(className);

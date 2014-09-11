@@ -457,8 +457,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         return hj;
     }
 
-    private void allocateVectors(){
-      for(VectorWrapper<?> v : container){
+    private void allocateVectors() {
+      for(VectorWrapper<?> v : container) {
         v.getValueVector().allocateNew();
       }
     }
@@ -472,7 +472,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
 
     private void updateStats(HashTable htable) {
-      if(htable == null) return;
+      if (htable == null) {
+        return;
+      }
       htable.getStats(htStats);
       this.stats.setLongStat(Metric.NUM_BUCKETS, htStats.numBuckets);
       this.stats.setLongStat(Metric.NUM_ENTRIES, htStats.numEntries);
@@ -488,7 +490,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     @Override
     public void cleanup() {
-        if(hjHelper != null){
+        if (hjHelper != null) {
           hjHelper.clear();
         }
 
@@ -504,4 +506,5 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         left.cleanup();
         right.cleanup();
     }
+
 }

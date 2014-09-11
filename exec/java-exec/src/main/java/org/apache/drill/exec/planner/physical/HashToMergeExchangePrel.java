@@ -34,7 +34,6 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-
 public class HashToMergeExchangePrel extends ExchangePrel {
 
   private final List<DistributionField> distFields;
@@ -52,10 +51,9 @@ public class HashToMergeExchangePrel extends ExchangePrel {
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
-
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
     RelNode child = this.getChild();
@@ -81,7 +79,9 @@ public class HashToMergeExchangePrel extends ExchangePrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
+    if (PrelUtil.getSettings(getCluster()).isSingleMode()) {
+      return childPOP;
+    }
 
     HashToMergeExchange g = new HashToMergeExchange(childPOP,
         PrelUtil.getHashExpression(this.distFields, getChild().getRowType()),
@@ -102,4 +102,5 @@ public class HashToMergeExchangePrel extends ExchangePrel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
+
 }

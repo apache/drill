@@ -93,9 +93,9 @@ public class ExpressionTreeMaterializer {
       out = out.accept(ConditionalExprOptimizer.INSTANCE, null);
     }
 
-    if(out instanceof NullExpression){
+    if (out instanceof NullExpression) {
       return new TypedNullConstant(Types.optional(MinorType.INT));
-    }else{
+    } else {
       return out;
     }
   }
@@ -258,7 +258,7 @@ public class ExpressionTreeMaterializer {
       boolean first = true;
       for(LogicalExpression e : call.args) {
         TypeProtos.MajorType mt = e.getMajorType();
-        if(first){
+        if (first) {
           first = false;
         } else {
           sb.append(", ");
@@ -482,7 +482,7 @@ public class ExpressionTreeMaterializer {
     }
 
     @Override
-    public LogicalExpression visitCastExpression(CastExpression e, FunctionImplementationRegistry value){
+    public LogicalExpression visitCastExpression(CastExpression e, FunctionImplementationRegistry value) {
 
       // if the cast is pointless, remove it.
       LogicalExpression input = e.getInput().accept(this,  value);
@@ -490,9 +490,11 @@ public class ExpressionTreeMaterializer {
       MajorType newMajor = e.getMajorType();
       MinorType newMinor = input.getMajorType().getMinorType();
 
-      if(castEqual(e.getPosition(), newMajor, input.getMajorType())) return input; // don't do pointless cast.
+      if (castEqual(e.getPosition(), newMajor, input.getMajorType())) {
+        return input; // don't do pointless cast.
+      }
 
-      if(newMinor == MinorType.LATE){
+      if (newMinor == MinorType.LATE) {
         // if the type still isn't fully bound, leave as cast expression.
         return new CastExpression(input, e.getMajorType(), e.getPosition());
       } else if (newMinor == MinorType.NULL) {
@@ -520,9 +522,11 @@ public class ExpressionTreeMaterializer {
       }
     }
 
-    private boolean castEqual(ExpressionPosition pos, MajorType from, MajorType to){
-      if(!from.getMinorType().equals(to.getMinorType())) return false;
-      switch(from.getMinorType()){
+    private boolean castEqual(ExpressionPosition pos, MajorType from, MajorType to) {
+      if (!from.getMinorType().equals(to.getMinorType())) {
+        return false;
+      }
+      switch(from.getMinorType()) {
       case FLOAT4:
       case FLOAT8:
       case INT:
@@ -564,10 +568,10 @@ public class ExpressionTreeMaterializer {
       case VAR16CHAR:
       case VARBINARY:
       case VARCHAR:
-        if(to.getWidth() < from.getWidth() && to.getWidth() > 0){
+        if (to.getWidth() < from.getWidth() && to.getWidth() > 0) {
           this.errorCollector.addGeneralError(pos, "Casting from a longer variable length type to a shorter variable length type is not currently supported.");
           return false;
-        }else{
+        } else {
           return true;
         }
 
@@ -577,4 +581,5 @@ public class ExpressionTreeMaterializer {
       }
     }
   }
+
 }

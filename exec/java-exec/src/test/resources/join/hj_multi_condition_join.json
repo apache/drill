@@ -56,7 +56,7 @@
         {relationship: "==", left: "B", right: "A"},
         {relationship: "==", left: "DCOL", right: "CCOL"}
         ],
-        joinType : "INNER"        
+        joinType : "INNER"
       },
       {
         @id: 6,

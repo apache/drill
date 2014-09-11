@@ -11,7 +11,7 @@
       @id:1,
       pop:"fs-sub-scan",
       format: {type: "json"},
-      storage:{type: "file", connection: "file:///"},   
+      storage:{type: "file", connection: "file:///"},
       files:[
         { path: "#{LEFT_FILE}" }
       ]
@@ -20,7 +20,7 @@
       @id:2,
       pop:"fs-sub-scan",
       format: {type: "json"},
-      storage:{type: "file", connection: "file:///"},      
+      storage:{type: "file", connection: "file:///"},
       files:[
         { path: "#{RIGHT_FILE}" }
       ]

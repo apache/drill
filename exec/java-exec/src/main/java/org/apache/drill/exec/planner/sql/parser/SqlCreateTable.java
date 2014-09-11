@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class SqlCreateTable extends DrillSqlCall {
-  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_TABLE", SqlKind.OTHER){
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_TABLE", SqlKind.OTHER) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlCreateTable(pos, (SqlIdentifier) operands[0], (SqlNodeList) operands[1], operands[2]);
@@ -79,7 +79,7 @@ public class SqlCreateTable extends DrillSqlCall {
     if (fieldList != null && fieldList.size() > 0) {
       writer.keyword("(");
       fieldList.get(0).unparse(writer, leftPrec, rightPrec);
-      for(int i=1; i<fieldList.size(); i++) {
+      for (int i=1; i<fieldList.size(); i++) {
         writer.keyword(",");
         fieldList.get(i).unparse(writer, leftPrec, rightPrec);
       }
@@ -103,14 +103,17 @@ public class SqlCreateTable extends DrillSqlCall {
   }
 
   public String getName() {
-    if (tblName.isSimple())
+    if (tblName.isSimple()) {
       return tblName.getSimple();
+    }
 
     return tblName.names.get(tblName.names.size() - 1);
   }
 
   public List<String> getFieldNames() {
-    if (fieldList == null) return ImmutableList.of();
+    if (fieldList == null) {
+      return ImmutableList.of();
+    }
 
     List<String> columnNames = Lists.newArrayList();
     for(SqlNode node : fieldList.getList()) {

@@ -133,7 +133,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     stats.startWait();
     try {
       RawFragmentBatch b = provider.getNext();
-      if(b != null){
+      if (b != null) {
         stats.addLongStat(Metric.BYTES_RECEIVED, b.getByteCount());
         stats.batchReceived(0, b.getHeader().getDef().getRecordCount(), false);
       }
@@ -191,7 +191,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
             emptyBatch = rawBatch;
           }
           try {
-            while ((rawBatch = getNext(provider)) != null && rawBatch.getHeader().getDef().getRecordCount() == 0);
+            while ((rawBatch = getNext(provider)) != null && rawBatch.getHeader().getDef().getRecordCount() == 0) {
+              ;
+            }
             if (rawBatch == null && context.isCancelled()) {
               return IterOutcome.STOP;
             }
@@ -400,14 +402,17 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         batchOffsets[node.batchId] = 0;
 
         // add front value from batch[x] to priority queue
-        if (batchLoaders[node.batchId].getRecordCount() != 0)
+        if (batchLoaders[node.batchId].getRecordCount() != 0) {
           pqueue.add(new Node(node.batchId, 0));
+        }
 
       } else {
         pqueue.add(new Node(node.batchId, node.valueIndex + 1));
       }
 
-      if (prevBatchWasFull) break;
+      if (prevBatchWasFull) {
+        break;
+      }
     }
 
     // set the value counts in the outgoing vectors
@@ -589,11 +594,13 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private void generateComparisons(ClassGenerator g, VectorAccessible batch) throws SchemaChangeException {
     g.setMappingSet(MAIN_MAPPING);
 
-    for(Ordering od : popConfig.getOrderings()){
+    for (Ordering od : popConfig.getOrderings()) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector,context.getFunctionRegistry());
-      if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      if (collector.hasErrors()) {
+        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
       g.setMappingSet(LEFT_MAPPING);
       HoldingContainer left = g.addExpr(expr, false);
       g.setMappingSet(RIGHT_MAPPING);
@@ -605,9 +612,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
-      if(od.getDirection() == Direction.ASCENDING){
+      if (od.getDirection() == Direction.ASCENDING) {
         jc._then()._return(out.getValue());
-      }else{
+      } else {
         jc._then()._return(out.getValue().minus());
       }
     }
@@ -648,7 +655,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   public void cleanup() {
     outgoingContainer.clear();
     if (batchLoaders != null) {
-      for(RecordBatchLoader rbl : batchLoaders){
+      for (RecordBatchLoader rbl : batchLoaders) {
         if (rbl != null) {
           rbl.clear();
         }

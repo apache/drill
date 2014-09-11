@@ -189,8 +189,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       }
       builder.add(incoming);
       recordsSampled += incoming.getRecordCount();
-      if (upstream == IterOutcome.NONE)
+      if (upstream == IterOutcome.NONE) {
         break;
+      }
     }
   VectorContainer sortedSamples = new VectorContainer();
     builder.build(context, sortedSamples);
@@ -258,7 +259,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     try {
 
-      if (!saveSamples()){
+      if (!saveSamples()) {
         return false;
       }
 
@@ -277,16 +278,17 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         // Wait until sufficient number of fragments have submitted samples, or proceed after xx ms passed
         // TODO: this should be polling.
 
-        if (val < fragmentsBeforeProceed)
+        if (val < fragmentsBeforeProceed) {
           Thread.sleep(10);
+        }
         for (int i = 0; i < 100 && finalTable == null; i++) {
           finalTable = tableMap.get(finalTableKey);
-          if (finalTable != null){
+          if (finalTable != null) {
             break;
           }
           Thread.sleep(10);
         }
-        if (finalTable == null){
+        if (finalTable == null) {
           buildTable();
         }
         finalTable = tableMap.get(finalTableKey);
@@ -429,8 +431,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // if we got IterOutcome.NONE while getting partition vectors, and there are no batches on the queue, then we are
     // done
-    if (upstreamNone && (batchQueue == null || batchQueue.size() == 0))
+    if (upstreamNone && (batchQueue == null || batchQueue.size() == 0)) {
       return IterOutcome.NONE;
+    }
 
     // if there are batches on the queue, process them first, rather than calling incoming.next()
     if (batchQueue != null && batchQueue.size() > 0) {
@@ -461,7 +464,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // If this is the first iteration, we need to generate the partition vectors before we can proceed
     if (this.first && upstream == IterOutcome.OK_NEW_SCHEMA) {
-      if (!getPartitionVectors()){
+      if (!getPartitionVectors()) {
         cleanup();
         return IterOutcome.STOP;
       }
@@ -490,8 +493,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // we need to generate a new schema, even if the outcome is IterOutcome.OK After that we can reuse the schema.
     if (this.startedUnsampledBatches == false) {
       this.startedUnsampledBatches = true;
-      if (upstream == IterOutcome.OK)
+      if (upstream == IterOutcome.OK) {
         upstream = IterOutcome.OK_NEW_SCHEMA;
+      }
     }
     switch (upstream) {
     case NONE:
@@ -560,8 +564,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     int count = 0;
     for (Ordering od : popConfig.getOrderings()) {
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
-      if (collector.hasErrors())
+      if (collector.hasErrors()) {
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
       cg.setMappingSet(incomingMapping);
       ClassGenerator.HoldingContainer left = cg.addExpr(expr, false);
       cg.setMappingSet(partitionMapping);

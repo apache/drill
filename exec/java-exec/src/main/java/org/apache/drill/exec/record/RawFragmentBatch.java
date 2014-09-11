@@ -38,7 +38,9 @@ public class RawFragmentBatch {
     this.body = body;
     this.connection = connection;
     this.sender = sender;
-    if(body != null) body.retain();
+    if (body != null) {
+      body.retain();
+    }
   }
 
   public FragmentRecordBatch getHeader() {
@@ -54,8 +56,10 @@ public class RawFragmentBatch {
     return "RawFragmentBatch [header=" + header + ", body=" + body + "]";
   }
 
-  public void release(){
-    if(body != null) body.release();
+  public void release() {
+    if (body != null) {
+      body.release();
+    }
   }
 
   public RemoteConnection getConnection() {
@@ -66,7 +70,7 @@ public class RawFragmentBatch {
     return sender;
   }
 
-  public void sendOk(){
+  public void sendOk() {
     sender.send(DataRpcConfig.OK);
   }
 

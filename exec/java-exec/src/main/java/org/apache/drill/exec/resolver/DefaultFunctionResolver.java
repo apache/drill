@@ -37,7 +37,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
       currcost = TypeCastRules.getCost(call, h);
 
       // if cost is lower than 0, func implementation is not matched, either w/ or w/o implicit casts
-      if (currcost  < 0 ){
+      if (currcost  < 0 ) {
         continue;
       }
 
@@ -51,8 +51,9 @@ public class DefaultFunctionResolver implements FunctionResolver {
       //did not find a matched func implementation, either w/ or w/o implicit casts
       //TODO: raise exception here?
       return null;
-    } else
+    } else {
       return bestmatch;
+    }
   }
 
 }

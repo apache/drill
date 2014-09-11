@@ -1,4 +1,4 @@
-{ "integer" : 2010, 
+{ "integer" : 2010,
   "float"   : 17.4,
   "x": {
     "y": "kevin",
@@ -12,9 +12,9 @@
   "rl": [ [2,1], [4,6] ]
 }
 { "integer" : -2002,
-  "float"   : -1.2 
+  "float"   : -1.2
 }
-{ "integer" : 2001, 
+{ "integer" : 2001,
   "float"   : 1.2,
   "x": {
     "y": "bill",
@@ -26,7 +26,7 @@
   "l": [4,2],
   "rl": [ [2,1], [4,6] ]
 }
-{ "integer" : 6005, 
+{ "integer" : 6005,
   "float"   : 1.2,
   "x": {
     "y": "mike",

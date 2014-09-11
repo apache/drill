@@ -71,7 +71,7 @@ $(window).load(function () {
                 return r1.end - r1.start > r2.end - r2.start ? 1 : -1;
             }
             else return r1.category > r2.category ? 1 : -1;
-            
+
         });
         return timetable;
     }
@@ -106,7 +106,7 @@ $(window).load(function () {
                 fragment: parseInt(ps[i][0].split("-")[0])
             });
         }
-        
+
         // edges
         var st = [ps[0]];
         for (var i = 1; i < ps.length; i++) {

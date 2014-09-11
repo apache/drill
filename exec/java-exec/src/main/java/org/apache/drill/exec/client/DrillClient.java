@@ -88,11 +88,11 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     this(config, null);
   }
 
-  public DrillClient(DrillConfig config, ClusterCoordinator coordinator){
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator) {
     this(config, coordinator, null);
   }
 
-  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator){
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator) {
     this.ownsZkConnection = coordinator == null;
     this.ownsAllocator = allocator == null;
     this.allocator = allocator == null ? new TopLevelAllocator(config) : allocator;
@@ -103,7 +103,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     this.supportComplexTypes = config.getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES);
   }
 
-  public DrillConfig getConfig(){
+  public DrillConfig getConfig() {
     return config;
   }
 
@@ -139,7 +139,9 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   }
 
   public synchronized void connect(String connect, Properties props) throws RpcException {
-    if (connected) return;
+    if (connected) {
+      return;
+    }
 
     if (ownsZkConnection) {
       try {
@@ -152,8 +154,9 @@ public class DrillClient implements Closeable, ConnectionThrottle{
 
     if (props != null) {
       UserProperties.Builder upBuilder = UserProperties.newBuilder();
-      for(String key : props.stringPropertyNames())
+      for (String key : props.stringPropertyNames()) {
         upBuilder.addProperties(Property.newBuilder().setKey(key).setValue(props.getProperty(key)));
+      }
 
       this.props = upBuilder.build();
     }
@@ -210,10 +213,14 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   /**
    * Closes this client's connection to the server
    */
-  public void close(){
-    if(this.client != null) this.client.close();
-    if(this.ownsAllocator && allocator != null) allocator.close();
-    if(ownsZkConnection){
+  public void close() {
+    if (this.client != null) {
+      this.client.close();
+    }
+    if (this.ownsAllocator && allocator != null) {
+      allocator.close();
+    }
+    if(ownsZkConnection) {
       try {
         this.clusterCoordinator.close();
       } catch (IOException e) {
@@ -240,7 +247,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     return listener.getResults();
   }
 
-  public DrillRpcFuture<Ack> cancelQuery(QueryId id){
+  public DrillRpcFuture<Ack> cancelQuery(QueryId id) {
     logger.debug("Cancelling query {}", QueryIdHelper.getQueryId(id));
     return client.send(RpcType.CANCEL_QUERY, id, Ack.class);
   }
@@ -253,7 +260,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
    * @return a handle for the query result
    * @throws RpcException
    */
-  public void runQuery(QueryType type, String plan, UserResultsListener resultsListener){
+  public void runQuery(QueryType type, String plan, UserResultsListener resultsListener) {
     client.submitQuery(resultsListener, newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build());
   }
 
@@ -294,15 +301,15 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
 //      logger.debug("Result arrived.  Is Last Chunk: {}.  Full Result: {}", result.getHeader().getIsLastChunk(), result);
       results.add(result);
-      if(result.getHeader().getIsLastChunk()){
+      if (result.getHeader().getIsLastChunk()) {
         future.set(results);
       }
     }
 
     public List<QueryResultBatch> getResults() throws RpcException{
-      try{
+      try {
         return future.get();
-      }catch(Throwable t){
+      } catch (Throwable t) {
         throw RpcException.mapException(t);
       }
     }
@@ -328,7 +335,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
       getInner().setException(new RpcException(String.format("Failure connecting to server. Failure of type %s.", type.name()), t));
     }
 
-    private SettableFuture<Void> getInner(){
+    private SettableFuture<Void> getInner() {
       return (SettableFuture<Void>) delegate();
     }
 

@@ -30,14 +30,14 @@ public class SelectionVector4Builder {
 
   private List<BatchSchema> schemas = Lists.newArrayList();
 
-  public void add(RecordBatch batch, boolean newSchema) throws SchemaChangeException{
-    if(!schemas.isEmpty() && newSchema) throw new SchemaChangeException("Currently, the sv4 builder doesn't support embedded types");
-    if(newSchema){
+  public void add(RecordBatch batch, boolean newSchema) throws SchemaChangeException {
+    if (!schemas.isEmpty() && newSchema) {
+      throw new SchemaChangeException("Currently, the sv4 builder doesn't support embedded types");
+    }
+    if (newSchema) {
       schemas.add(batch.getSchema());
     }
-
   }
-
 
   // deals with managing selection vectors.
   // take a four byte int
@@ -48,7 +48,7 @@ public class SelectionVector4Builder {
    *  we should manage an array of valuevectors
    */
 
-  private class VectorSchemaBuilder{
-
+  private class VectorSchemaBuilder {
   }
+
 }

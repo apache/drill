@@ -28,7 +28,7 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.local.LocalClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
 
-public class RemoteServiceSet implements Closeable{
+public class RemoteServiceSet implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteServiceSet.class);
 
   private final DistributedCache cache;
@@ -40,7 +40,6 @@ public class RemoteServiceSet implements Closeable{
     this.coordinator = coordinator;
   }
 
-
   public DistributedCache getCache() {
     return cache;
   }
@@ -49,19 +48,20 @@ public class RemoteServiceSet implements Closeable{
     return coordinator;
   }
 
-
   @Override
   public void close() throws IOException {
-    try{
-    cache.close();
-    }catch(Exception e){
-      if(e instanceof IOException) throw (IOException) e;
+    try {
+      cache.close();
+    } catch(Exception e) {
+      if (e instanceof IOException) {
+        throw (IOException) e;
+      }
       throw new IOException("Failure while closing cache", e);
     }
     coordinator.close();
   }
 
-  public static RemoteServiceSet getLocalServiceSet(){
+  public static RemoteServiceSet getLocalServiceSet() {
     return new RemoteServiceSet(new LocalCache(), new LocalClusterCoordinator());
   }
 
@@ -69,4 +69,5 @@ public class RemoteServiceSet implements Closeable{
     ICache c = new ICache(config, allocator, true);
     return new RemoteServiceSet(c, new LocalClusterCoordinator());
   }
+
 }

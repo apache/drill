@@ -42,7 +42,7 @@
     exprs : [ {
       ref : "SUM",
       expr : "sum($f1) "
-    }, {  
+    }, {
       ref : "MIN",
       expr : "min($f1) "
     }, {

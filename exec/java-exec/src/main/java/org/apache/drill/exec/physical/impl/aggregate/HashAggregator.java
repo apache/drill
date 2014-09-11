@@ -40,7 +40,7 @@ public interface HashAggregator {
 
   public static enum AggOutcome {
     RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR
-	  }
+  }
 
   public abstract void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context,
                              OperatorStats stats, BufferAllocator allocator, RecordBatch incoming,

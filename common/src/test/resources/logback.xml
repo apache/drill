@@ -33,8 +33,8 @@
       <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-	    <fileNamePattern>/logs/test-common.%d{yyyy-MM-dd}.log</fileNamePattern>
-	    <maxHistory>30</maxHistory>
+      <fileNamePattern>/logs/test-common.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
     </rollingPolicy>
   </appender>
   -->

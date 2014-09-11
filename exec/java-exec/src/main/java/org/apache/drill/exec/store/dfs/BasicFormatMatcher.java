@@ -54,7 +54,7 @@ public class BasicFormatMatcher extends FormatMatcher{
     this.codecFactory = null;
   }
 
-  public BasicFormatMatcher(FormatPlugin plugin, DrillFileSystem fs, List<String> extensions, boolean compressible){
+  public BasicFormatMatcher(FormatPlugin plugin, DrillFileSystem fs, List<String> extensions, boolean compressible) {
     List<Pattern> patterns = Lists.newArrayList();
     for (String extension : extensions) {
       patterns.add(Pattern.compile(".*\\." + extension));
@@ -74,7 +74,7 @@ public class BasicFormatMatcher extends FormatMatcher{
 
   @Override
   public FormatSelection isReadable(FileSelection selection) throws IOException {
-    if(isReadable(selection.getFirstPath(fs))){
+    if (isReadable(selection.getFirstPath(fs))) {
       if (plugin.getName() != null) {
         NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
         namedConfig.name = plugin.getName();
@@ -98,13 +98,15 @@ public class BasicFormatMatcher extends FormatMatcher{
     } else {
       fileName = status.getPath().toString();
     }
-    for(Pattern p : patterns){
-      if(p.matcher(fileName).matches()){
+    for (Pattern p : patterns) {
+      if (p.matcher(fileName).matches()) {
         return true;
       }
     }
 
-    if(matcher.matches(status)) return true;
+    if (matcher.matches(status)) {
+      return true;
+    }
     return false;
   }
 
@@ -116,32 +118,37 @@ public class BasicFormatMatcher extends FormatMatcher{
   }
 
 
-  private class MagicStringMatcher{
+  private class MagicStringMatcher {
 
     private List<RangeMagics> ranges;
 
-    public MagicStringMatcher(List<MagicString> magicStrings){
+    public MagicStringMatcher(List<MagicString> magicStrings) {
       ranges = Lists.newArrayList();
-      for(MagicString ms : magicStrings){
+      for(MagicString ms : magicStrings) {
         ranges.add(new RangeMagics(ms));
       }
     }
 
     public boolean matches(FileStatus status) throws IOException{
-      if(ranges.isEmpty()) return false;
+      if (ranges.isEmpty()) {
+        return false;
+      }
       final Range<Long> fileRange = Range.closedOpen( 0L, status.getLen());
 
-      try(FSDataInputStream is = fs.open(status.getPath()).getInputStream()){
-        for(RangeMagics rMagic : ranges){
+      try (FSDataInputStream is = fs.open(status.getPath()).getInputStream()) {
+        for(RangeMagics rMagic : ranges) {
           Range<Long> r = rMagic.range;
-          if(!fileRange.encloses(r)) continue;
+          if (!fileRange.encloses(r)) {
+            continue;
+          }
           int len = (int) (r.upperEndpoint() - r.lowerEndpoint());
           byte[] bytes = new byte[len];
           is.readFully(r.lowerEndpoint(), bytes);
-          for(byte[] magic : rMagic.magics){
-            if(Arrays.equals(magic, bytes)) return true;
+          for (byte[] magic : rMagic.magics) {
+            if (Arrays.equals(magic, bytes)) {
+              return true;
+            }
           }
-
         }
       }
       return false;
@@ -151,10 +158,11 @@ public class BasicFormatMatcher extends FormatMatcher{
       Range<Long> range;
       byte[][] magics;
 
-      public RangeMagics(MagicString ms){
+      public RangeMagics(MagicString ms) {
         this.range = Range.closedOpen( ms.getOffset(), (long) ms.getBytes().length);
         this.magics = new byte[][]{ms.getBytes()};
       }
     }
   }
+
 }

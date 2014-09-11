@@ -36,7 +36,7 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
 
   private static FinalColumnReorderer INSTANCE = new FinalColumnReorderer();
 
-  public static Prel addFinalColumnOrdering(Prel prel){
+  public static Prel addFinalColumnOrdering(Prel prel) {
     return prel.accept(INSTANCE, null);
   }
 
@@ -46,7 +46,7 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
     return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel( newChild )));
   }
 
-  private Prel addTrivialOrderedProjectPrel(Prel prel){
+  private Prel addTrivialOrderedProjectPrel(Prel prel) {
 
     if ( !prel.needsFinalColumnReordering()) {
       return prel;
@@ -59,9 +59,11 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
     int projectCount = t.getFieldList().size();
 
     // no point in reordering if we only have one column
-    if(projectCount < 2) return prel;
+    if (projectCount < 2) {
+      return prel;
+    }
 
-    for(int i =0; i < projectCount; i++){
+    for (int i =0; i < projectCount; i++) {
       projections.add(b.makeInputRef(prel, i));
     }
     return new ProjectPrel(prel.getCluster(), prel.getTraitSet(), prel, projections, prel.getRowType());
@@ -77,17 +79,18 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
     boolean changed = false;
-    for(Prel p : prel){
+    for (Prel p : prel) {
       Prel newP = p.accept(this, null);
-      if(newP != p) changed = true;
+      if (newP != p) {
+        changed = true;
+      }
       children.add(newP);
     }
-    if(changed){
+    if (changed) {
       return (Prel) prel.copy(prel.getTraitSet(), children);
-    }else{
+    } else {
       return prel;
     }
   }
-
 
 }

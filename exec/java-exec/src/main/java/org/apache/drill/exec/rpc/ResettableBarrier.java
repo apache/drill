@@ -49,10 +49,11 @@ public class ResettableBarrier {
 
       while(true) {
         int c = getState();
-        if (c == 0)
+        if (c == 0) {
           return false;
+        }
         int nextc = c - 1;
-        if (compareAndSetState(c, nextc)){
+        if (compareAndSetState(c, nextc)) {
           return nextc == 0;
         }
       }
@@ -79,7 +80,7 @@ public class ResettableBarrier {
     sync.releaseShared(1);
   }
 
-  public void closeBarrier(){
+  public void closeBarrier() {
 //    logger.debug("closing barrier.");
     sync.reset();
   }

@@ -40,10 +40,11 @@ public class Join extends LogicalOperatorBase {
   private final JoinRelType type;
   private final JoinCondition[] conditions;
 
-  public static JoinRelType resolve(String val){
+  public static JoinRelType resolve(String val) {
     for (JoinRelType jt : JoinRelType.values()) {
-      if (jt.name().equalsIgnoreCase(val))
+      if (jt.name().equalsIgnoreCase(val)) {
         return jt;
+      }
     }
     throw new ExpressionParsingException(String.format("Unable to determine join type for value '%s'.", val));
   }
@@ -97,7 +98,7 @@ public class Join extends LogicalOperatorBase {
     return Iterators.forArray(getLeft(), getRight());
   }
 
-  public static Builder builder(){
+  public static Builder builder() {
     return new Builder();
   }
 
@@ -107,25 +108,24 @@ public class Join extends LogicalOperatorBase {
     private JoinRelType type;
     private List<JoinCondition> conditions = Lists.newArrayList();
 
-    public Builder type(JoinRelType type){
+    public Builder type(JoinRelType type) {
       this.type = type;
       return this;
     }
 
-    public Builder left(LogicalOperator left){
+    public Builder left(LogicalOperator left) {
       this.left = left;
       return this;
     }
-    public Builder right(LogicalOperator right){
+    public Builder right(LogicalOperator right) {
       this.right = right;
       return this;
     }
 
-    public Builder addCondition(String relationship, LogicalExpression left, LogicalExpression right){
+    public Builder addCondition(String relationship, LogicalExpression left, LogicalExpression right) {
       conditions.add(new JoinCondition(relationship, left, right));
       return this;
     }
-
 
     @Override
     public Join build() {
@@ -136,4 +136,5 @@ public class Join extends LogicalOperatorBase {
     }
 
   }
+
 }

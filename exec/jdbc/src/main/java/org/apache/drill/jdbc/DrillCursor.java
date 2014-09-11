@@ -67,24 +67,26 @@ public class DrillCursor implements Cursor{
 
   @Override
   public boolean next() throws SQLException {
-    if(!started){
+    if (!started) {
       started = true;
       redoFirstNext = true;
-    }else if(redoFirstNext && !finished){
+    } else if(redoFirstNext && !finished) {
       redoFirstNext = false;
       return true;
     }
 
-    if(finished) return false;
+    if (finished) {
+      return false;
+    }
 
-    if(currentRecord+1 < currentBatch.getRecordCount()){
+    if (currentRecord+1 < currentBatch.getRecordCount()) {
       currentRecord++;
       return true;
-    }else{
+    } else {
       try {
         QueryResultBatch qrb = listener.getNext();
         recordBatchCount++;
-        while(qrb != null && qrb.getHeader().getRowCount() == 0 && !first){
+        while (qrb != null && qrb.getHeader().getRowCount() == 0 && !first) {
           qrb.release();
           qrb = listener.getNext();
           recordBatchCount++;
@@ -92,14 +94,16 @@ public class DrillCursor implements Cursor{
 
         first = false;
 
-        if(qrb == null){
+        if (qrb == null) {
           finished = true;
           return false;
-        }else{
+        } else {
           currentRecord = 0;
           boolean changed = currentBatch.load(qrb.getHeader().getDef(), qrb.getData());
           schema = currentBatch.getSchema();
-          if(changed) updateColumns();
+          if (changed) {
+            updateColumns();
+          }
           if (redoFirstNext && currentBatch.getRecordCount() == 0) {
             redoFirstNext = false;
           }
@@ -112,13 +116,15 @@ public class DrillCursor implements Cursor{
     }
   }
 
-  void updateColumns(){
+  void updateColumns() {
     accessors.generateAccessors(this, currentBatch);
     columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, schema);
-    if(results.changeListener != null) results.changeListener.schemaChanged(schema);
+    if (results.changeListener != null) {
+      results.changeListener.schemaChanged(schema);
+    }
   }
 
-  public long getRecordBatchCount(){
+  public long getRecordBatchCount() {
     return recordBatchCount;
   }
 

@@ -32,7 +32,6 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-
 public class TestUnionExchange extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionExchange.class);
 
@@ -40,7 +39,7 @@ public class TestUnionExchange extends PopUnitTestBase {
   public void twoBitTwoExchangeTwoEntryRun() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
@@ -51,9 +50,10 @@ public class TestUnionExchange extends PopUnitTestBase {
           Files.toString(FileUtils.getResourceAsFile("/sender/union_exchange.json"),
               Charsets.UTF_8));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       assertEquals(150, count);

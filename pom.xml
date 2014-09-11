@@ -200,9 +200,13 @@
             <id>checkstyle-validation</id>
             <phase>validate</phase>
             <configuration>
+              <includes>**/*.java</includes>
               <encoding>UTF-8</encoding>
               <failsOnError>true</failsOnError>
               <consoleOutput>true</consoleOutput>
+              <includeResources>true</includeResources>
+              <includeTestResources>true</includeTestResources>
+              <resourceIncludes>**/*.properties,**/*.conf,**/*.json,**/*.xml</resourceIncludes>
               <includeTestSourceDirectory>true</includeTestSourceDirectory>
               <configLocation>src/main/resources/checkstyle-config.xml</configLocation>
               <suppressionsLocation>src/main/resources/checkstyle-suppressions.xml</suppressionsLocation>

@@ -84,14 +84,18 @@ public class HiveTable {
     this.tableType = tableType;
 
     List<FieldSchema> partitionKeysUnwrapped = Lists.newArrayList();
-    for (FieldSchemaWrapper w : partitionKeys) partitionKeysUnwrapped.add(w.getFieldSchema());
+    for (FieldSchemaWrapper w : partitionKeys) {
+      partitionKeysUnwrapped.add(w.getFieldSchema());
+    }
     StorageDescriptor sdUnwrapped = sd.getSd();
     this.table = new Table(tableName, dbName, owner, createTime, lastAccessTime, retention, sdUnwrapped, partitionKeysUnwrapped,
             parameters, viewOriginalText, viewExpandedText, tableType);
   }
 
   public HiveTable(Table table) {
-    if (table == null) return;
+    if (table == null) {
+      return;
+    }
     this.table = table;
     this.tableName = table.getTableName();
     this.dbName = table.getDbName();
@@ -101,7 +105,9 @@ public class HiveTable {
     this.retention = table.getRetention();
     this.sd = new StorageDescriptorWrapper(table.getSd());
     this.partitionKeys = Lists.newArrayList();
-    for (FieldSchema f : table.getPartitionKeys()) this.partitionKeys.add(new FieldSchemaWrapper(f));
+    for (FieldSchema f : table.getPartitionKeys()) {
+      this.partitionKeys.add(new FieldSchemaWrapper(f));
+    }
     this.parameters = table.getParameters();
     this.viewOriginalText = table.getViewOriginalText();
     this.viewExpandedText = table.getViewExpandedText();
@@ -151,7 +157,9 @@ public class HiveTable {
     }
 
     public HivePartition(Partition partition) {
-      if (partition == null) return;
+      if (partition == null) {
+        return;
+      }
       this.partition = partition;
       this.values = partition.getValues();
       this.tableName = partition.getTableName();
@@ -208,10 +216,14 @@ public class HiveTable {
       this.sortCols = sortCols;
       this.parameters = parameters;
       List<FieldSchema> colsUnwrapped = Lists.newArrayList();
-      for (FieldSchemaWrapper w: cols) colsUnwrapped.add(w.getFieldSchema());
+      for (FieldSchemaWrapper w: cols) {
+        colsUnwrapped.add(w.getFieldSchema());
+      }
       SerDeInfo serDeInfoUnwrapped = serDeInfo.getSerDeInfo();
       List<Order> sortColsUnwrapped = Lists.newArrayList();
-      for (OrderWrapper w : sortCols) sortColsUnwrapped.add(w.getOrder());
+      for (OrderWrapper w : sortCols) {
+        sortColsUnwrapped.add(w.getOrder());
+      }
 //      this.sd = new StorageDescriptor(colsUnwrapped, location, inputFormat, outputFormat, compressed, numBuckets, serDeInfoUnwrapped,
 //              bucketCols, sortColsUnwrapped, parameters);
       this.sd = new StorageDescriptor(colsUnwrapped, location, inputFormat, outputFormat, compressed, numBuckets, serDeInfoUnwrapped,
@@ -221,7 +233,9 @@ public class HiveTable {
     public StorageDescriptorWrapper(StorageDescriptor sd) {
       this.sd = sd;
       this.cols = Lists.newArrayList();
-      for (FieldSchema f : sd.getCols()) this.cols.add(new FieldSchemaWrapper(f));
+      for (FieldSchema f : sd.getCols()) {
+        this.cols.add(new FieldSchemaWrapper(f));
+      }
       this.location = sd.getLocation();
       this.inputFormat = sd.getInputFormat();
       this.outputFormat = sd.getOutputFormat();
@@ -230,7 +244,9 @@ public class HiveTable {
       this.serDeInfo = new SerDeInfoWrapper(sd.getSerdeInfo());
 //      this.bucketCols = sd.getBucketCols();
       this.sortCols = Lists.newArrayList();
-      for (Order o : sd.getSortCols()) this.sortCols.add(new OrderWrapper(o));
+      for (Order o : sd.getSortCols()) {
+        this.sortCols.add(new OrderWrapper(o));
+      }
       this.parameters = sd.getParameters();
     }
 
@@ -328,4 +344,5 @@ public class HiveTable {
       return ord;
     }
   }
+
 }

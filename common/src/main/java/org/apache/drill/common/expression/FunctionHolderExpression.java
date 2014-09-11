@@ -31,7 +31,9 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
 
   public FunctionHolderExpression(String nameUsed, ExpressionPosition pos, List<LogicalExpression> args) {
     super(pos);
-    if(args == null) args = Lists.newArrayList();
+    if (args == null) {
+      args = Lists.newArrayList();
+    }
 
     if (!(args instanceof ImmutableList)) {
       args = ImmutableList.copyOf(args);
@@ -77,4 +79,5 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
 
   /** Return the underlying function implementation holder. */
   public abstract FuncHolder getHolder();
+
 }

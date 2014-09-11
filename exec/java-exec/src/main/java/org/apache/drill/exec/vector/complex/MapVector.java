@@ -62,17 +62,17 @@ public class MapVector extends AbstractContainerVector {
   private MaterializedField field;
   private int valueCount;
 
-  public MapVector(String path, BufferAllocator allocator){
+  public MapVector(String path, BufferAllocator allocator) {
     this.field = MaterializedField.create(SchemaPath.getSimplePath(path), TYPE);
     this.allocator = allocator;
   }
-  public MapVector(MaterializedField field, BufferAllocator allocator){
+  public MapVector(MaterializedField field, BufferAllocator allocator) {
     this.field = field;
     this.allocator = allocator;
   }
 
   @Override
-  public int size(){
+  public int size() {
     return vectors.size();
   }
 
@@ -95,15 +95,15 @@ public class MapVector extends AbstractContainerVector {
   transient private MapTransferPair ephPair;
   transient private MapSingleCopier ephPair2;
 
-  public boolean copyFromSafe(int fromIndex, int thisIndex, MapVector from){
-    if(ephPair == null || ephPair.from != from){
+  public boolean copyFromSafe(int fromIndex, int thisIndex, MapVector from) {
+    if(ephPair == null || ephPair.from != from) {
       ephPair = (MapTransferPair) from.makeTransferPair(this);
     }
     return ephPair.copyValueSafe(fromIndex, thisIndex);
   }
 
-  public boolean copyFromSafe(int fromSubIndex, int thisIndex, RepeatedMapVector from){
-    if(ephPair2 == null || ephPair2.from != from){
+  public boolean copyFromSafe(int fromSubIndex, int thisIndex, RepeatedMapVector from) {
+    if(ephPair2 == null || ephPair2.from != from) {
       ephPair2 = from.makeSingularCopier(this);
     }
     return ephPair2.copySafe(fromSubIndex, thisIndex);
@@ -112,8 +112,7 @@ public class MapVector extends AbstractContainerVector {
   @Override
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
     ValueVector v = vectors.get(name);
-
-    if(v == null){
+    if (v == null) {
       v = TypeHelper.getNewVector(field.getPath(), name, allocator, type);
       Preconditions.checkNotNull(v, String.format("Failure to create vector of type %s.", type));
       put(name, v);
@@ -122,9 +121,9 @@ public class MapVector extends AbstractContainerVector {
 
   }
 
-  protected void put(String name, ValueVector vv){
+  protected void put(String name, ValueVector vv) {
     int ordinal = vectors.size();
-    if(vectors.put(name, vv) != null){
+    if (vectors.put(name, vv) != null) {
       throw new IllegalStateException();
     }
     vectorIds.put(name, new VectorWithOrdinal(vv, ordinal));
@@ -138,19 +137,23 @@ public class MapVector extends AbstractContainerVector {
     return true;
   }
 
-  public Iterator<String> fieldNameIterator(){
+  public Iterator<String> fieldNameIterator() {
     return vectors.keySet().iterator();
   }
 
   @Override
   public void allocateNew() throws OutOfMemoryRuntimeException {
-    if(!allocateNewSafe()) throw new OutOfMemoryRuntimeException();
+    if (!allocateNewSafe()) {
+      throw new OutOfMemoryRuntimeException();
+    }
   }
 
   @Override
   public boolean allocateNewSafe() {
-    for(ValueVector v : vectors.values()){
-      if(!v.allocateNewSafe()) return false;
+    for (ValueVector v : vectors.values()) {
+      if (!v.allocateNewSafe()) {
+        return false;
+      }
     }
     return true;
   }
@@ -158,15 +161,19 @@ public class MapVector extends AbstractContainerVector {
   @Override
   public <T extends ValueVector> T get(String name, Class<T> clazz) {
     ValueVector v = vectors.get(name);
-    if(v == null) throw new IllegalStateException(String.format("Attempting to access invalid map field of name %s.", name));
+    if (v == null) {
+      throw new IllegalStateException(String.format("Attempting to access invalid map field of name %s.", name));
+    }
     return typeify(v, clazz);
   }
 
   @Override
   public int getBufferSize() {
-    if(valueCount == 0 || vectors.isEmpty()) return 0;
+    if (valueCount == 0 || vectors.isEmpty()) {
+      return 0;
+    }
     long buffer = 0;
-    for(ValueVector v : this){
+    for (ValueVector v : this) {
       buffer += v.getBufferSize();
     }
 
@@ -175,7 +182,7 @@ public class MapVector extends AbstractContainerVector {
 
   @Override
   public void close() {
-    for(ValueVector v : this){
+    for (ValueVector v : this) {
       v.close();
     }
   }
@@ -210,11 +217,11 @@ public class MapVector extends AbstractContainerVector {
     private TransferPair[] pairs;
     private MapVector to;
 
-    public MapTransferPair(SchemaPath path){
+    public MapTransferPair(SchemaPath path) {
       MapVector v = new MapVector(MaterializedField.create(path, TYPE), allocator);
       pairs = new TransferPair[vectors.size()];
       int i =0;
-      for(Map.Entry<String, ValueVector> e : vectors.entrySet()){
+      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
         TransferPair otherSide = e.getValue().getTransferPair();
         v.put(e.getKey(), otherSide.getTo());
         pairs[i++] = otherSide;
@@ -222,14 +229,16 @@ public class MapVector extends AbstractContainerVector {
       this.to = v;
     }
 
-    public MapTransferPair(MapVector to){
+    public MapTransferPair(MapVector to) {
       this.to = to;
       pairs = new TransferPair[vectors.size()];
       int i =0;
-      for(Map.Entry<String, ValueVector> e : vectors.entrySet()){
+      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
         int preSize = to.vectors.size();
         ValueVector v = to.addOrGet(e.getKey(), e.getValue().getField().getType(), e.getValue().getClass());
-        if(to.vectors.size() != preSize) v.allocateNew();
+        if (to.vectors.size() != preSize) {
+          v.allocateNew();
+        }
         pairs[i++] = e.getValue().makeTransferPair(v);
       }
     }
@@ -237,7 +246,7 @@ public class MapVector extends AbstractContainerVector {
 
     @Override
     public void transfer() {
-      for(TransferPair p : pairs){
+      for (TransferPair p : pairs) {
         p.transfer();
       }
       to.valueCount = valueCount;
@@ -251,8 +260,10 @@ public class MapVector extends AbstractContainerVector {
 
     @Override
     public boolean copyValueSafe(int from, int to) {
-      for(TransferPair p : pairs){
-        if(!p.copyValueSafe(from, to)) return false;
+      for (TransferPair p : pairs) {
+        if (!p.copyValueSafe(from, to)) {
+          return false;
+        }
       }
       return true;
     }
@@ -266,7 +277,9 @@ public class MapVector extends AbstractContainerVector {
 
   @Override
   public int getValueCapacity() {
-    if(this.vectors.isEmpty()) return 0;
+    if (this.vectors.isEmpty()) {
+      return 0;
+    }
     return vectors.values().iterator().next().getValueCapacity();
   }
 
@@ -278,8 +291,8 @@ public class MapVector extends AbstractContainerVector {
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
     List<DrillBuf> bufs = Lists.newArrayList();
-    for(ValueVector v : vectors.values()){
-      for(DrillBuf b : v.getBuffers(clear)){
+    for (ValueVector v : vectors.values()) {
+      for (DrillBuf b : v.getBuffers(clear)) {
         bufs.add(b);
       }
     }
@@ -296,12 +309,11 @@ public class MapVector extends AbstractContainerVector {
       MaterializedField fieldDef = MaterializedField.create(fmd);
 
       ValueVector v = vectors.get(fieldDef.getLastName());
-      if(v == null) {
+      if (v == null) {
         // if we arrive here, we didn't have a matching vector.
-
         v = TypeHelper.getNewVector(fieldDef, allocator);
       }
-      if (fmd.getValueCount() == 0){
+      if (fmd.getValueCount() == 0) {
         v.clear();
       } else {
         v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
@@ -319,7 +331,7 @@ public class MapVector extends AbstractContainerVector {
         .setValueCount(valueCount);
 
 
-    for(ValueVector v : vectors.values()){
+    for(ValueVector v : vectors.values()) {
       b.addChild(v.getMetadata());
     }
     return b.build();
@@ -335,18 +347,18 @@ public class MapVector extends AbstractContainerVector {
     @Override
     public Object getObject(int index) {
       Map<String, Object> vv = new JsonStringHashMap();
-      for(Map.Entry<String, ValueVector> e : vectors.entrySet()){
+      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
         ValueVector v = e.getValue();
         String k = e.getKey();
         Object value = v.getAccessor().getObject(index);
-        if(value != null){
+        if (value != null) {
           vv.put(k, value);
         }
       }
       return vv;
     }
 
-    public void get(int index, ComplexHolder holder){
+    public void get(int index, ComplexHolder holder) {
       reader.setPosition(index);
       holder.reader = reader;
     }
@@ -370,10 +382,9 @@ public class MapVector extends AbstractContainerVector {
       //return new SingleMapReaderImpl(MapVector.this);
       return reader;
     }
-
   }
 
-  public ValueVector getVectorById(int id){
+  public ValueVector getVectorById(int id) {
     return vectorsById.get(id);
   }
 
@@ -381,7 +392,7 @@ public class MapVector extends AbstractContainerVector {
 
     @Override
     public void setValueCount(int valueCount) {
-      for(ValueVector v : vectors.values()){
+      for (ValueVector v : vectors.values()) {
         v.getMutator().setValueCount(valueCount);
       }
       MapVector.this.valueCount = valueCount;
@@ -400,13 +411,14 @@ public class MapVector extends AbstractContainerVector {
   @Override
   public void clear() {
     valueCount = 0;
-    for(ValueVector v : vectors.values()){
+    for (ValueVector v : vectors.values()) {
       v.clear();;
     }
   }
 
   @Override
-  public VectorWithOrdinal getVectorWithOrdinal(String name){
+  public VectorWithOrdinal getVectorWithOrdinal(String name) {
     return vectorIds.get(name);
   }
+
 }

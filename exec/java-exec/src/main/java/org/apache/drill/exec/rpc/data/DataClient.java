@@ -74,20 +74,22 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
     throw new UnsupportedOperationException("DataClient is unidirectional by design.");
   }
 
-  BufferAllocator getAllocator(){
+  BufferAllocator getAllocator() {
     return allocator;
   }
 
   @Override
   protected void validateHandshake(BitServerHandshake handshake) throws RpcException {
-    if(handshake.getRpcVersion() != DataRpcConfig.RPC_VERSION) throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", handshake.getRpcVersion(), DataRpcConfig.RPC_VERSION));
+    if (handshake.getRpcVersion() != DataRpcConfig.RPC_VERSION) {
+      throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", handshake.getRpcVersion(), DataRpcConfig.RPC_VERSION));
+    }
   }
 
   @Override
   protected void finalizeConnection(BitServerHandshake handshake, DataClientConnection connection) {
   }
 
-  public DataClientConnection getConnection(){
+  public DataClientConnection getConnection() {
     return this.connection;
   }
 

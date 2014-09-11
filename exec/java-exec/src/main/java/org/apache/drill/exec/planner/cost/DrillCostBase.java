@@ -130,25 +130,25 @@ public class DrillCostBase implements DrillRelOptCost {
     this.memory = memory;
   }
 
-	@Override
-	public double getRows() {
-		return rowCount;
-	}
+  @Override
+  public double getRows() {
+    return rowCount;
+  }
 
-	@Override
-	public double getCpu() {
-		return cpu;
-	}
+  @Override
+  public double getCpu() {
+    return cpu;
+  }
 
-	@Override
-	public double getIo() {
-		return io;
-	}
+  @Override
+  public double getIo() {
+    return io;
+  }
 
-	@Override
-	public double getNetwork() {
-		return network;
-	}
+  @Override
+  public double getNetwork() {
+    return network;
+  }
 
   public double getMemory() {
     return memory;
@@ -159,31 +159,31 @@ public class DrillCostBase implements DrillRelOptCost {
     return Util.hashCode(rowCount) + Util.hashCode(cpu) + Util.hashCode(io) + Util.hashCode(network);
   }
 
-	@Override
-	public boolean isInfinite() {
+  @Override
+  public boolean isInfinite() {
     return (this == INFINITY)
       || (this.cpu == Double.POSITIVE_INFINITY)
       || (this.io == Double.POSITIVE_INFINITY)
       || (this.network == Double.POSITIVE_INFINITY)
       || (this.rowCount == Double.POSITIVE_INFINITY);
-	}
+  }
 
-	@Override
-	public boolean equals(RelOptCost other) {
-	  // here we compare the individual components similar to VolcanoCost, however
-	  // an alternative would be to add up the components and compare the total.
-	  // Note that VolcanoPlanner mainly uses isLe() and isLt() for cost comparisons,
-	  // not equals().
+  @Override
+  public boolean equals(RelOptCost other) {
+    // here we compare the individual components similar to VolcanoCost, however
+    // an alternative would be to add up the components and compare the total.
+    // Note that VolcanoPlanner mainly uses isLe() and isLt() for cost comparisons,
+    // not equals().
     return this == other
       || (other instanceof DrillCostBase
           && (this.cpu == ((DrillCostBase) other).cpu)
           && (this.io == ((DrillCostBase) other).io)
           && (this.network == ((DrillCostBase) other).network)
           && (this.rowCount == ((DrillCostBase) other).rowCount));
-	}
+  }
 
-	@Override
-	public boolean isEqWithEpsilon(RelOptCost other) {
+  @Override
+  public boolean isEqWithEpsilon(RelOptCost other) {
     if (!(other instanceof DrillCostBase)) {
       return false;
     }
@@ -193,7 +193,7 @@ public class DrillCostBase implements DrillRelOptCost {
           && (Math.abs(this.io - that.io) < RelOptUtil.EPSILON)
           && (Math.abs(this.network - that.network) < RelOptUtil.EPSILON)
           && (Math.abs(this.rowCount - that.rowCount) < RelOptUtil.EPSILON));
-	}
+  }
 
   @Override
   public boolean isLe(RelOptCost other) {
@@ -216,8 +216,8 @@ public class DrillCostBase implements DrillRelOptCost {
            );
   }
 
-	@Override
-	public RelOptCost plus(RelOptCost other) {
+  @Override
+  public RelOptCost plus(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
     if ((this == INFINITY) || (that == INFINITY)) {
       return INFINITY;
@@ -228,10 +228,10 @@ public class DrillCostBase implements DrillRelOptCost {
         this.io + that.io,
         this.network + that.network,
         this.memory + that.memory);
-	}
+  }
 
-	@Override
-	public RelOptCost minus(RelOptCost other) {
+  @Override
+  public RelOptCost minus(RelOptCost other) {
     if (this == INFINITY) {
       return this;
     }
@@ -242,18 +242,18 @@ public class DrillCostBase implements DrillRelOptCost {
         this.io - that.io,
         this.network - that.network,
         this.memory - that.memory);
-	}
+  }
 
-	@Override
-	public RelOptCost multiplyBy(double factor) {
+  @Override
+  public RelOptCost multiplyBy(double factor) {
     if (this == INFINITY) {
       return this;
     }
     return new DrillCostBase(rowCount * factor, cpu * factor, io * factor, network * factor);
-	}
+  }
 
-	@Override
-	public double divideBy(RelOptCost cost) {
+  @Override
+  public double divideBy(RelOptCost cost) {
     // Compute the geometric average of the ratios of all of the factors
     // which are non-zero and finite.
     DrillCostBase that = (DrillCostBase) cost;
@@ -292,7 +292,7 @@ public class DrillCostBase implements DrillRelOptCost {
       return 1.0;
     }
     return Math.pow(d, 1 / n);
-	}
+  }
 
   @Override
   public String toString() {

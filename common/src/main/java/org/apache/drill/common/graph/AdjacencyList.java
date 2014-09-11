@@ -47,7 +47,7 @@ class AdjacencyList<V extends GraphValue<V>> {
     }
   }
 
-  Node getNewNode(V value){
+  Node getNewNode(V value) {
     return new Node(value);
   }
 
@@ -83,7 +83,9 @@ class AdjacencyList<V extends GraphValue<V>> {
 
       // remove any nodes that have one or more outbound edges.
       List<Edge<Node>> adjList = this.getAdjacent(n);
-      if (adjList != null && !adjList.isEmpty()) i.remove();
+      if (adjList != null && !adjList.isEmpty()) {
+        i.remove();
+      }
 
     }
     return nodes;
@@ -94,7 +96,7 @@ class AdjacencyList<V extends GraphValue<V>> {
    *
    * @return
    */
-  public Collection<V> getLeafNodes(){
+  public Collection<V> getLeafNodes() {
     return convert(getInternalLeafNodes());
   }
 
@@ -112,7 +114,7 @@ class AdjacencyList<V extends GraphValue<V>> {
    *
    * @return
    */
-  public List<V> getRootNodes(){
+  public List<V> getRootNodes() {
     return convert(getInternalRootNodes());
   }
 
@@ -149,7 +151,9 @@ class AdjacencyList<V extends GraphValue<V>> {
     int index = -1; // used for Tarjan's algorithm
 
     public Node(final V operator) {
-      if (operator == null) throw new IllegalArgumentException("Operator node was null.");
+      if (operator == null) {
+        throw new IllegalArgumentException("Operator node was null.");
+      }
       this.nodeValue = operator;
     }
 
@@ -174,12 +178,13 @@ class AdjacencyList<V extends GraphValue<V>> {
 
   }
 
-  public static <V extends GraphValue<V>> AdjacencyList<V> newInstance(Collection<V> nodes){
+  public static <V extends GraphValue<V>> AdjacencyList<V> newInstance(Collection<V> nodes) {
     AdjacencyList<V> list = new AdjacencyList<V>();
     AdjacencyListBuilder<V> builder = new AdjacencyListBuilder<V>(list);
-    for(V v : nodes){
+    for (V v : nodes) {
       v.accept(builder);
     }
     return builder.getAdjacencyList();
   }
+
 }

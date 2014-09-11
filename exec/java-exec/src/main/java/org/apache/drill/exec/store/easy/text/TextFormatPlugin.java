@@ -117,15 +117,18 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      } else if (obj == null) {
         return false;
-      if (!(obj instanceof TextFormatConfig))
+      } else if (!(obj instanceof TextFormatConfig)) {
         return false;
+      }
+
       TextFormatConfig that = (TextFormatConfig) obj;
-      if (this.delimiter.equals(that.delimiter))
+      if (this.delimiter.equals(that.delimiter)) {
         return true;
+      }
       return false;
     }
 
@@ -145,4 +148,5 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   public boolean supportsPushDown() {
     return true;
   }
+
 }

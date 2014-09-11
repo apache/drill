@@ -61,7 +61,7 @@ public class SingleMergeExchangePrel extends ExchangePrel {
    */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
     RelNode child = this.getChild();
@@ -85,7 +85,9 @@ public class SingleMergeExchangePrel extends ExchangePrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
+    if (PrelUtil.getSettings(getCluster()).isSingleMode()) {
+      return childPOP;
+    }
 
     SingleMergeExchange g = new SingleMergeExchange(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()));
     return creator.addMetadata(this, g);
@@ -108,8 +110,5 @@ public class SingleMergeExchangePrel extends ExchangePrel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-
-
-
 
 }

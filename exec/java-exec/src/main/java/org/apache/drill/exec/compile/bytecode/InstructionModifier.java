@@ -61,8 +61,9 @@ public class InstructionModifier extends MethodVisitor {
 
   private ReplacingBasicValue popCurrent(boolean includeReturnVals) {
     // for vararg, we could try to pop an empty stack. TODO: handle this better.
-    if (list.currentFrame.getStackSize() == 0)
+    if (list.currentFrame.getStackSize() == 0) {
       return null;
+    }
 
     Object o = list.currentFrame.pop();
     if (o instanceof ReplacingBasicValue) {
@@ -76,8 +77,9 @@ public class InstructionModifier extends MethodVisitor {
 
   private ReplacingBasicValue getReturn() {
     Object o = list.nextFrame.getStack(list.nextFrame.getStackSize() - 1);
-    if (o instanceof ReplacingBasicValue)
+    if (o instanceof ReplacingBasicValue) {
       return (ReplacingBasicValue) o;
+    }
     return null;
   }
 
@@ -85,8 +87,9 @@ public class InstructionModifier extends MethodVisitor {
   public void visitInsn(int opcode) {
     switch (opcode) {
     case Opcodes.DUP:
-      if (popCurrent() != null)
+      if (popCurrent() != null) {
         return;
+      }
     }
     super.visitInsn(opcode);
   }
@@ -111,14 +114,14 @@ public class InstructionModifier extends MethodVisitor {
   @Override
   public void visitVarInsn(int opcode, int var) {
     ReplacingBasicValue v;
-    if(opcode == Opcodes.ASTORE && (v = popCurrent(true)) != null){
-      if(!v.isFunctionReturn){
+    if (opcode == Opcodes.ASTORE && (v = popCurrent(true)) != null) {
+      if (!v.isFunctionReturn) {
         ValueHolderSub from = oldToNew.get(v.getIndex());
 
         ReplacingBasicValue current = local(var);
         // if local var is set, then transfer to it to the existing holders in the local position.
-        if(current != null){
-          if(oldToNew.get(current.getIndex()).iden() == from.iden()){
+        if (current != null) {
+          if (oldToNew.get(current.getIndex()).iden() == from.iden()) {
             int targetFirst = oldToNew.get(current.index).first();
             from.transfer(this, targetFirst);
             return;
@@ -126,9 +129,9 @@ public class InstructionModifier extends MethodVisitor {
         }
 
         // if local var is not set, then check map to see if existing holders are mapped to local var.
-        if(oldLocalToFirst.containsKey(var)){
+        if (oldLocalToFirst.containsKey(var)) {
           ValueHolderSub sub = oldToNew.get(oldLocalToFirst.lget());
-          if(sub.iden() == from.iden()){
+          if (sub.iden() == from.iden()) {
             // if they are, then transfer to that.
             from.transfer(this, oldToNew.get(oldLocalToFirst.lget()).first());
             return;
@@ -139,13 +142,13 @@ public class InstructionModifier extends MethodVisitor {
         // map from variables to global space for future use.
         oldLocalToFirst.put(var, v.getIndex());
 
-      }else{
+      } else {
         // this is storage of a function return, we need to map the fields to the holder spots.
         int first;
-        if(oldLocalToFirst.containsKey(var)){
+        if (oldLocalToFirst.containsKey(var)) {
           first = oldToNew.get(oldLocalToFirst.lget()).first();
           v.iden.transferToLocal(adder, first);
-        }else{
+        } else {
           first = v.iden.createLocalAndTrasfer(adder);
         }
         ValueHolderSub from = v.iden.getHolderSubWithDefinedLocals(first);
@@ -153,13 +156,11 @@ public class InstructionModifier extends MethodVisitor {
         v.disableFunctionReturn();
       }
 
-    }else if(opcode == Opcodes.ALOAD && (v = getReturn()) != null){
-
+    } else if (opcode == Opcodes.ALOAD && (v = getReturn()) != null) {
       // noop.
-    }else{
+    } else {
       super.visitVarInsn(opcode, var);
     }
-
 
   }
 
@@ -176,10 +177,10 @@ public class InstructionModifier extends MethodVisitor {
       // pop twice for put.
       v = popCurrent(true);
       if (v != null) {
-        if(v.isFunctionReturn){
+        if (v.isFunctionReturn) {
           super.visitFieldInsn(opcode, owner, name, desc);
           return;
-        }else{
+        } else {
           // we are trying to store a replaced variable in an external context, we need to generate an instance and
           // transfer it out.
           ValueHolderSub sub = oldToNew.get(v.getIndex());
@@ -197,8 +198,6 @@ public class InstructionModifier extends MethodVisitor {
         sub.addInsn(name, this, opcode);
         return;
       }
-
-
     }
 
     super.visitFieldInsn(opcode, owner, name, desc);
@@ -246,14 +245,14 @@ public class InstructionModifier extends MethodVisitor {
   }
 
   private void checkArg(String name, ReplacingBasicValue obj) {
-    if (obj == null)
+    if (obj == null) {
       return;
+    }
     throw new IllegalStateException(
         String
             .format(
                 "Holder types are not allowed to be passed between methods.  Ran across problem attempting to invoke method '%s' on line number %d",
                 name, lastLineNumber));
-
   }
 
 }

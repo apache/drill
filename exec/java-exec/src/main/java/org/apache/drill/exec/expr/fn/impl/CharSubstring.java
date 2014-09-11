@@ -89,8 +89,9 @@ public class CharSubstring implements DrillSimpleFunc {
           break;
         }
 
-        if (currentByte < 128)
+        if (currentByte < 128) {
           ++charCount;
+        }
         ++byteCount;
       }
 
@@ -112,8 +113,9 @@ public class CharSubstring implements DrillSimpleFunc {
             // search forward until we find <length> characters
             while (byteCount <= endBytePos) {
               currentByte = string.buffer.getByte(byteCount);
-              if (currentByte < 128)
+              if (currentByte < 128) {
                 ++charCount;
+              }
               ++byteCount;
               if (charCount == (int)length.value) {
                 out.end = byteCount;
@@ -122,8 +124,9 @@ public class CharSubstring implements DrillSimpleFunc {
             }
             break;
           }
-          if (currentByte < 128)
+          if (currentByte < 128) {
             --charCount;
+          }
           --byteCount;
         }
       }
@@ -134,4 +137,5 @@ public class CharSubstring implements DrillSimpleFunc {
       }
     }
   }
+
 }

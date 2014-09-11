@@ -92,7 +92,7 @@ public class PrelUtil {
     return func;
   }
 
-  public static Iterator<Prel> iter(RelNode... nodes){
+  public static Iterator<Prel> iter(RelNode... nodes) {
     return (Iterator<Prel>) (Object) Arrays.asList(nodes).iterator();
   }
 
@@ -100,7 +100,7 @@ public class PrelUtil {
     return (Iterator<Prel>) (Object) nodes.iterator();
   }
 
-  public static PlannerSettings getSettings(RelOptCluster cluster){
+  public static PlannerSettings getSettings(RelOptCluster cluster) {
     return cluster.getPlanner().getContext().unwrap(PlannerSettings.class);
   }
 
@@ -108,17 +108,21 @@ public class PrelUtil {
     return planner.getContext().unwrap(PlannerSettings.class);
   }
 
-  public static Prel removeSvIfRequired(Prel prel, SelectionVectorMode... allowed){
+  public static Prel removeSvIfRequired(Prel prel, SelectionVectorMode... allowed) {
     SelectionVectorMode current = prel.getEncoding();
-    for(SelectionVectorMode m : allowed){
-      if(current == m) return prel;
+    for (SelectionVectorMode m : allowed) {
+      if (current == m) {
+        return prel;
+      }
     }
     return new SelectionVectorRemoverPrel(prel);
   }
 
   public static ProjectPushInfo getColumns(RelDataType rowType, List<RexNode> projects) {
     final List<String> fieldNames = rowType.getFieldNames();
-    if (fieldNames.isEmpty()) return null;
+    if (fieldNames.isEmpty()) {
+      return null;
+    }
 
     RefFieldsVisitor v = new RefFieldsVisitor(rowType);
     for (RexNode exp : projects) {
@@ -154,30 +158,37 @@ public class PrelUtil {
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       DesiredField other = (DesiredField) obj;
       if (field == null) {
-        if (other.field != null)
+        if (other.field != null) {
           return false;
-      } else if (!field.equals(other.field))
+        }
+      } else if (!field.equals(other.field)) {
         return false;
+      }
       if (name == null) {
-        if (other.name != null)
+        if (other.name != null) {
           return false;
-      } else if (!name.equals(other.name))
+        }
+      } else if (!name.equals(other.name)) {
         return false;
-      if (origIndex != other.origIndex)
+      }
+      if (origIndex != other.origIndex) {
         return false;
+      }
       return true;
     }
 
   }
-
 
   public static class ProjectPushInfo {
     public final List<SchemaPath> columns;
@@ -196,7 +207,7 @@ public class PrelUtil {
       IntIntOpenHashMap oldToNewIds = new IntIntOpenHashMap();
 
       int i =0;
-      for(DesiredField f : desiredFields){
+      for (DesiredField f : desiredFields) {
         fieldNames.add(f.name);
         types.add(f.field.getType());
         oldToNewIds.put(f.origIndex, i);
@@ -205,7 +216,7 @@ public class PrelUtil {
       this.rewriter = new InputRewriter(oldToNewIds);
     }
 
-    public InputRewriter getInputRewriter(){
+    public InputRewriter getInputRewriter() {
       return rewriter;
     }
 
@@ -242,10 +253,9 @@ public class PrelUtil {
       }
     }
 
-    public ProjectPushInfo getInfo(){
+    public ProjectPushInfo getInfo() {
       return new ProjectPushInfo(ImmutableList.copyOf(columns), ImmutableList.copyOf(desiredFields));
     }
-
 
     @Override
     public PathSegment visitInputRef(RexInputRef inputRef) {
@@ -288,14 +298,14 @@ public class PrelUtil {
 
   }
 
-  public static RelTraitSet fixTraits(RelOptRuleCall call, RelTraitSet set){
+  public static RelTraitSet fixTraits(RelOptRuleCall call, RelTraitSet set) {
     return fixTraits(call.getPlanner(), set);
   }
 
-  public static RelTraitSet fixTraits(RelOptPlanner cluster, RelTraitSet set){
-    if(getPlannerSettings(cluster).isSingleMode()){
+  public static RelTraitSet fixTraits(RelOptPlanner cluster, RelTraitSet set) {
+    if (getPlannerSettings(cluster).isSingleMode()) {
       return set.replace(DrillDistributionTrait.ANY);
-    }else{
+    } else {
       return set;
     }
   }
@@ -316,9 +326,7 @@ public class PrelUtil {
       return newIndex;
     }
 
-
   }
-
 
   public static class InputRewriter extends RexShuttle {
 
@@ -340,4 +348,5 @@ public class PrelUtil {
     }
 
   }
+
 }

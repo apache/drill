@@ -123,7 +123,7 @@ public class EasyGroupScan extends AbstractGroupScan{
   @Override
   public ScanStats getScanStats() {
     long data =0;
-    for(CompleteFileWork work : chunks){
+    for (CompleteFileWork work : chunks) {
       data += work.getTotalBytes();
     }
 
@@ -137,13 +137,13 @@ public class EasyGroupScan extends AbstractGroupScan{
   }
 
   @JsonProperty("columns")
-  public List<SchemaPath> getColumns(){
+  public List<SchemaPath> getColumns() {
     return columns;
   }
 
 
   @JsonIgnore
-  public FileSelection getFileSelection(){
+  public FileSelection getFileSelection() {
     return selection;
   }
 
@@ -183,21 +183,21 @@ public class EasyGroupScan extends AbstractGroupScan{
     return new EasySubScan(convert(filesForMinor), formatPlugin, columns, selectionRoot);
   }
 
-  private List<FileWorkImpl> convert(List<CompleteFileWork> list){
+  private List<FileWorkImpl> convert(List<CompleteFileWork> list) {
     List<FileWorkImpl> newList = Lists.newArrayList();
-    for(CompleteFileWork f : list){
+    for (CompleteFileWork f : list) {
       newList.add(f.getAsFileWork());
     }
     return newList;
   }
 
   @JsonProperty("storage")
-  public StoragePluginConfig getStorageConfig(){
+  public StoragePluginConfig getStorageConfig() {
     return formatPlugin.getStorageConfig();
   }
 
   @JsonProperty("format")
-  public FormatPluginConfig getFormatConfig(){
+  public FormatPluginConfig getFormatConfig() {
     return formatPlugin.getConfig();
   }
 
@@ -213,7 +213,9 @@ public class EasyGroupScan extends AbstractGroupScan{
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    if(!formatPlugin.supportsPushDown()) throw new IllegalStateException(String.format("%s doesn't support pushdown.", this.getClass().getSimpleName()));
+    if (!formatPlugin.supportsPushDown()) {
+      throw new IllegalStateException(String.format("%s doesn't support pushdown.", this.getClass().getSimpleName()));
+    }
     EasyGroupScan newScan = new EasyGroupScan(this);
     newScan.columns = columns;
     return newScan;

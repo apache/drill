@@ -108,14 +108,14 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     this.queryRequest = queryRequest;
     this.context = new QueryContext(connection.getSession(), queryId, dContext);
     this.queuingEnabled = context.getOptions().getOption(ExecConstants.ENABLE_QUEUE_KEY).bool_val;
-    if(queuingEnabled){
+    if (queuingEnabled) {
       int smallQueue = context.getOptions().getOption(ExecConstants.SMALL_QUEUE_KEY).num_val.intValue();
       int largeQueue = context.getOptions().getOption(ExecConstants.LARGE_QUEUE_KEY).num_val.intValue();
       this.largeSemaphore = dContext.getClusterCoordinator().getSemaphore("query.large", largeQueue);
       this.smallSemaphore = dContext.getClusterCoordinator().getSemaphore("query.small", smallQueue);
       this.queueThreshold = context.getOptions().getOption(ExecConstants.QUEUE_THRESHOLD_KEY).num_val;
       this.queueTimeout = context.getOptions().getOption(ExecConstants.QUEUE_TIMEOUT_KEY).num_val;
-    }else{
+    } else {
       this.largeSemaphore = null;
       this.smallSemaphore = null;
       this.queueThreshold = 0;
@@ -138,8 +138,8 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     return context;
   }
 
-  private boolean isFinished(){
-    switch(state.getState()){
+  private boolean isFinished() {
+    switch(state.getState()) {
     case PENDING:
     case RUNNING:
       return false;
@@ -150,12 +150,13 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   }
 
   private void fail(String message, Throwable t) {
-    if(isFinished()){
+    if(isFinished()) {
       logger.error("Received a failure message query finished of: {}", message, t);
     }
     if (!state.updateState(QueryState.RUNNING, QueryState.FAILED)) {
-      if (!state.updateState(QueryState.PENDING, QueryState.FAILED))
-      logger.warn("Tried to update query state to FAILED, but was not RUNNING");
+      if (!state.updateState(QueryState.PENDING, QueryState.FAILED)) {
+        logger.warn("Tried to update query state to FAILED, but was not RUNNING");
+      }
     }
 
     boolean verbose = getContext().getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
@@ -171,7 +172,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   }
 
   public void cancel() {
-    if(isFinished()){
+    if (isFinished()) {
       return;
     }
 
@@ -182,7 +183,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     cleanupAndSendResult(result);
   }
 
-  void cleanupAndSendResult(QueryResult result){
+  void cleanupAndSendResult(QueryResult result) {
     bee.retireForeman(this);
     initiatingClient.sendResult(new ResponseSendListener(), new QueryWritableBatch(result), true);
     state.updateState(QueryState.RUNNING, QueryState.COMPLETED);
@@ -206,7 +207,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     Thread.currentThread().setName(QueryIdHelper.getQueryId(queryId) + ":foreman");
     fragmentManager.getStatus().setStartTime(System.currentTimeMillis());
     // convert a run query request into action
-    try{
+    try {
       switch (queryRequest.getType()) {
       case LOGICAL:
         parseAndRunLogicalPlan(queryRequest.getPlan());
@@ -220,23 +221,23 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       default:
         throw new UnsupportedOperationException();
       }
-    }catch(AssertionError | Exception ex){
+    } catch (AssertionError | Exception ex) {
       fail("Failure while setting up Foreman.", ex);
-    }catch(OutOfMemoryError e){
+    } catch (OutOfMemoryError e) {
       System.out.println("Out of memory, exiting.");
       System.out.flush();
       System.exit(-1);
-    }finally{
+    } finally {
       releaseLease();
       Thread.currentThread().setName(originalThread);
     }
   }
 
-  private void releaseLease(){
-    if(lease != null){
-      try{
+  private void releaseLease() {
+    if (lease != null) {
+      try {
         lease.close();
-      }catch(Exception e){
+      } catch (Exception e) {
         logger.warn("Failure while releasing lease.", e);
       };
     }
@@ -247,18 +248,22 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     try {
       LogicalPlan logicalPlan = context.getPlanReader().readLogicalPlan(json);
 
-      if(logicalPlan.getProperties().resultMode == ResultMode.LOGICAL){
+      if (logicalPlan.getProperties().resultMode == ResultMode.LOGICAL) {
         fail("Failure running plan.  You requested a result mode of LOGICAL and submitted a logical plan.  In this case you're output mode must be PHYSICAL or EXEC.", new Exception());
       }
-      if(logger.isDebugEnabled()) logger.debug("Logical {}", logicalPlan.unparse(context.getConfig()));
+      if (logger.isDebugEnabled()) {
+        logger.debug("Logical {}", logicalPlan.unparse(context.getConfig()));
+      }
       PhysicalPlan physicalPlan = convert(logicalPlan);
 
-      if(logicalPlan.getProperties().resultMode == ResultMode.PHYSICAL){
+      if (logicalPlan.getProperties().resultMode == ResultMode.PHYSICAL) {
         returnPhysical(physicalPlan);
         return;
       }
 
-      if(logger.isDebugEnabled()) logger.debug("Physical {}", context.getConfig().getMapper().writeValueAsString(physicalPlan));
+      if (logger.isDebugEnabled()) {
+        logger.debug("Physical {}", context.getConfig().getMapper().writeValueAsString(physicalPlan));
+      }
       runPhysicalPlan(physicalPlan);
     } catch (IOException e) {
       fail("Failure while parsing logical plan.", e);
@@ -267,7 +272,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
   }
 
-  private void returnPhysical(PhysicalPlan plan){
+  private void returnPhysical(PhysicalPlan plan) {
     String jsonPlan = plan.unparse(context.getConfig().getMapper().writer());
     runPhysicalPlan(DirectPlan.createDirectPlan(context, new PhysicalFromLogicalExplain(jsonPlan)));
   }
@@ -286,7 +291,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
     final SendingAccountor acct;
 
-    public SingleListener(){
+    public SingleListener() {
       acct  = new SendingAccountor();
       acct.increment();
       acct.increment();
@@ -304,6 +309,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
 
   }
+
   private void parseAndRunPhysicalPlan(String json) {
     try {
       PhysicalPlan plan = context.getPlanReader().readPhysicalPlan(json);
@@ -315,10 +321,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
   private void runPhysicalPlan(PhysicalPlan plan) {
 
-
-
-
-    if(plan.getProperties().resultMode != ResultMode.EXEC){
+    if(plan.getProperties().resultMode != ResultMode.EXEC) {
       fail(String.format("Failure running plan.  You requested a result mode of %s and a physical plan can only be output as EXEC", plan.getProperties().resultMode), new Exception());
     }
     PhysicalOperator rootOperator = plan.getSortedOperators(false).iterator().next();
@@ -334,7 +337,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
     int sortCount = 0;
     for (PhysicalOperator op : plan.getSortedOperators()) {
-      if (op instanceof ExternalSort) sortCount++;
+      if (op instanceof ExternalSort) {
+        sortCount++;
+      }
     }
 
     if (sortCount > 0) {
@@ -356,13 +361,13 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     try {
 
       double size = 0;
-      for(PhysicalOperator ops : plan.getSortedOperators()){
+      for (PhysicalOperator ops : plan.getSortedOperators()) {
         size += ops.getCost();
       }
-      if(queuingEnabled){
-        if(size > this.queueThreshold){
+      if (queuingEnabled) {
+        if (size > this.queueThreshold) {
           this.lease = largeSemaphore.acquire(this.queueTimeout, TimeUnit.MILLISECONDS);
-        }else{
+        } else {
           this.lease = smallSemaphore.acquire(this.queueTimeout, TimeUnit.MILLISECONDS);
         }
       }
@@ -420,13 +425,15 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       PhysicalPlan plan = sqlWorker.getPlan(sql, textPlan);
       fragmentManager.getStatus().setPlanText(textPlan.value);
       runPhysicalPlan(plan);
-    }catch(Exception e){
+    } catch(Exception e) {
       fail("Failure while parsing sql.", e);
     }
   }
 
   private PhysicalPlan convert(LogicalPlan plan) throws OptimizerException {
-    if(logger.isDebugEnabled()) logger.debug("Converting logical plan {}.", plan.toJsonStringSafe(context.getConfig()));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Converting logical plan {}.", plan.toJsonStringSafe(context.getConfig()));
+    }
     return new BasicOptimizer(DrillConfig.create(), context, initiatingClient).optimize(new BasicOptimizer.BasicOptimizationContext(context), plan);
   }
 
@@ -443,7 +450,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   public void close() throws IOException {
   }
 
-  public QueryState getQueryState(){
+  public QueryState getQueryState() {
     return this.state.getState();
   }
 
@@ -457,7 +464,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       ForemanManagerListener.this.fail(message, t);
     }
 
-    void cleanupAndSendResult(QueryResult result){
+    void cleanupAndSendResult(QueryResult result) {
       Foreman.this.cleanupAndSendResult(result);
     }
 

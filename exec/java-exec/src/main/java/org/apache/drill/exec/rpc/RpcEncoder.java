@@ -45,22 +45,26 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
   static final int PROTOBUF_BODY_TAG_LENGTH = getRawVarintSize(PROTOBUF_BODY_TAG);
   static final int RAW_BODY_TAG_LENGTH = getRawVarintSize(RAW_BODY_TAG);
 
-  public RpcEncoder(String name){
+  public RpcEncoder(String name) {
     this.logger = org.slf4j.LoggerFactory.getLogger(RpcEncoder.class.getCanonicalName() + "-" + name);
   }
 
   @Override
   protected void encode(ChannelHandlerContext ctx, OutboundRpcMessage msg, List<Object> out) throws Exception {
-    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Rpc Encoder called with msg {}", msg);
+    if (RpcConstants.EXTRA_DEBUGGING) {
+      logger.debug("Rpc Encoder called with msg {}", msg);
+    }
 
-    if(!ctx.channel().isOpen()){
+    if (!ctx.channel().isOpen()) {
       //output.add(ctx.alloc().buffer(0));
       logger.debug("Channel closed, skipping encode.");
       return;
     }
 
     try{
-      if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Encoding outbound message {}", msg);
+      if (RpcConstants.EXTRA_DEBUGGING) {
+        logger.debug("Encoding outbound message {}", msg);
+      }
       // first we build the RpcHeader
       RpcHeader header = RpcHeader.newBuilder() //
           .setMode(msg.mode) //
@@ -75,7 +79,7 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
           HEADER_TAG_LENGTH + getRawVarintSize(headerLength) + headerLength +   //
           PROTOBUF_BODY_TAG_LENGTH + getRawVarintSize(protoBodyLength) + protoBodyLength; //
 
-      if(rawBodyLength > 0){
+      if (rawBodyLength > 0) {
         fullLength += (RAW_BODY_TAG_LENGTH + getRawVarintSize(rawBodyLength) + rawBodyLength);
       }
 
@@ -97,8 +101,10 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
       msg.pBody.writeTo(cos);
 
       // if exists, write data body and tag.
-      if(msg.getRawBodySize() > 0){
-        if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Writing raw body of size {}", msg.getRawBodySize());
+      if (msg.getRawBodySize() > 0) {
+        if(RpcConstants.EXTRA_DEBUGGING) {
+          logger.debug("Writing raw body of size {}", msg.getRawBodySize());
+        }
 
         cos.writeRawVarint32(RAW_BODY_TAG);
         cos.writeRawVarint32(rawBodyLength);
@@ -107,23 +113,24 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
         CompositeByteBuf cbb = new CompositeByteBuf(buf.alloc(), true, msg.dBodies.length + 1);
         cbb.addComponent(buf);
         int bufLength = buf.readableBytes();
-        for(ByteBuf b : msg.dBodies){
+        for (ByteBuf b : msg.dBodies) {
           cbb.addComponent(b);
           bufLength += b.readableBytes();
         }
         cbb.writerIndex(bufLength);
         out.add(cbb);
-
-
-      }else{
+      } else {
         cos.flush();
         out.add(buf);
       }
 
-      if(RpcConstants.SOME_DEBUGGING) logger.debug("Wrote message length {}:{} bytes (head:body).  Message: " + msg, getRawVarintSize(fullLength), fullLength);
-      if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Sent message.  Ending writer index was {}.", buf.writerIndex());
-
-    }finally{
+      if (RpcConstants.SOME_DEBUGGING) {
+        logger.debug("Wrote message length {}:{} bytes (head:body).  Message: " + msg, getRawVarintSize(fullLength), fullLength);
+      }
+      if (RpcConstants.EXTRA_DEBUGGING) {
+        logger.debug("Sent message.  Ending writer index was {}.", buf.writerIndex());
+      }
+    } finally {
       // make sure to release Rpc Messages underlying byte buffers.
       //msg.release();
     }

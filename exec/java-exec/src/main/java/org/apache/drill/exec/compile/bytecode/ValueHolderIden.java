@@ -38,8 +38,8 @@ class ValueHolderIden {
     Field[] fields = c.getFields();
 
     List<Field> fldList = Lists.newArrayList();
-    for(Field f : fields){
-      if(!Modifier.isStatic(f.getModifiers())) {
+    for (Field f : fields) {
+      if (!Modifier.isStatic(f.getModifiers())) {
         fldList.add(f);
       }
     }
@@ -48,7 +48,7 @@ class ValueHolderIden {
     this.names = new String[fldList.size()];
     fieldMap = new ObjectIntOpenHashMap<String>();
     int i =0;
-    for(Field f : fldList){
+    for (Field f : fldList) {
       types[i] = Type.getType(f.getType());
       names[i] = f.getName();
       fieldMap.put(f.getName(), i);
@@ -56,8 +56,8 @@ class ValueHolderIden {
     }
   }
 
-  private static void initType(int index, Type t, DirectSorter v){
-    switch(t.getSort()){
+  private static void initType(int index, Type t, DirectSorter v) {
+    switch(t.getSort()) {
     case Type.BOOLEAN:
     case Type.BYTE:
     case Type.CHAR:
@@ -97,30 +97,28 @@ class ValueHolderIden {
     }
 
     return new ValueHolderSub(first);
-
   }
 
-  public ValueHolderSub getHolderSubWithDefinedLocals(int first){
+  public ValueHolderSub getHolderSubWithDefinedLocals(int first) {
     return new ValueHolderSub(first);
   }
 
-  private int dup(Type t){
+  private int dup(Type t) {
     return t.getSize() == 1 ? Opcodes.DUP : Opcodes.DUP2;
   }
 
-  public void transferToLocal(DirectSorter adder, int localVariable){
+  public void transferToLocal(DirectSorter adder, int localVariable) {
     for (int i = 0; i < types.length; i++) {
       Type t = types[i];
-      if(i + 1 < types.length) adder.visitInsn(dup(t)); // don't dup for last value.
+      if (i + 1 < types.length) {
+        adder.visitInsn(dup(t)); // don't dup for last value.
+      }
       adder.visitFieldInsn(Opcodes.GETFIELD, type.getInternalName(), names[i], t.getDescriptor());
       adder.directVarInsn(t.getOpcode(Opcodes.ISTORE), localVariable+i);
     }
   }
 
-
-
-
-  public int createLocalAndTrasfer(DirectSorter adder){
+  public int createLocalAndTrasfer(DirectSorter adder) {
     int first = 0;
     for (int i = 0; i < types.length; i++) {
       Type t = types[i];
@@ -141,29 +139,31 @@ class ValueHolderIden {
       this.first = first;
     }
 
-    public ValueHolderIden iden(){
+    public ValueHolderIden iden() {
       return ValueHolderIden.this;
     }
 
-    public void init(DirectSorter mv){
+    public void init(DirectSorter mv) {
       for (int i = 0; i < types.length; i++) {
         initType(first+i, types[i], mv);
       }
     }
-    public int size(){
+    public int size() {
       return types.length;
     }
 
-    public int first(){
+    public int first() {
       return first;
     }
 
-    public void updateFirst(int newFirst){
+    public void updateFirst(int newFirst) {
       this.first = newFirst;
     }
 
     private int field(String name, InstructionModifier mv) {
-      if (!fieldMap.containsKey(name)) throw new IllegalArgumentException(String.format("Unknown name '%s' on line %d.", name, mv.lastLineNumber));
+      if (!fieldMap.containsKey(name)) {
+        throw new IllegalArgumentException(String.format("Unknown name '%s' on line %d.", name, mv.lastLineNumber));
+      }
       return fieldMap.lget();
     }
 
@@ -178,9 +178,11 @@ class ValueHolderIden {
       }
     }
 
-    public void transfer(InstructionModifier mv, int newStart){
-      if(first == newStart) return;
-      for(int i =0; i < types.length; i++){
+    public void transfer(InstructionModifier mv, int newStart) {
+      if (first == newStart) {
+        return;
+      }
+      for (int i =0; i < types.length; i++) {
         mv.directVarInsn(types[i].getOpcode(Opcodes.ILOAD), first + i);
         mv.directVarInsn(types[i].getOpcode(Opcodes.ISTORE), newStart + i);
       }
@@ -193,7 +195,7 @@ class ValueHolderIden {
       mv.directVarInsn(t.getOpcode(analogOpcode), first + f);
     }
 
-    public void transferToExternal(DirectSorter adder, String owner, String name, String desc){
+    public void transferToExternal(DirectSorter adder, String owner, String name, String desc) {
 
       // create a new object and assign it to the desired field.
       adder.visitTypeInsn(Opcodes.NEW, type.getInternalName());
@@ -212,10 +214,8 @@ class ValueHolderIden {
 
       // lastly we save it to the desired field.
       adder.visitFieldInsn(Opcodes.PUTFIELD, owner, name, desc);
-
     }
 
   }
-
 
 }

@@ -63,7 +63,7 @@ public class WritableBatch {
         "Attempted to reconstruct a container from a WritableBatch after it had been cleared");
     if (buffers.length > 0) { /* If we have DrillBuf's associated with value vectors */
       int len = 0;
-      for(DrillBuf b : buffers){
+      for (DrillBuf b : buffers) {
         len += b.capacity();
       }
 
@@ -114,7 +114,9 @@ public class WritableBatch {
   }
 
   public void clear() {
-    if(cleared) return;
+    if(cleared) {
+      return;
+    }
     for (DrillBuf buf : buffers) {
       buf.release();
     }
@@ -157,8 +159,9 @@ public class WritableBatch {
   }
 
   public static WritableBatch get(RecordBatch batch) {
-    if (batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE)
+    if (batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) {
       throw new UnsupportedOperationException("Only batches without hyper selections vectors are writable.");
+    }
 
     boolean sv2 = (batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
     return getBatchNoHVWrap(batch.getRecordCount(), batch, sv2);
@@ -175,4 +178,5 @@ public class WritableBatch {
       buf.retain(increment);
     }
   }
+
 }

@@ -86,11 +86,13 @@ public class CachedVectorContainer extends LoopedAbstractDrillSerializable {
   }
 
   public void clear() {
-    if(container != null) container.clear();
+    if (container != null) {
+      container.clear();
+    }
     container = null;
   }
 
-  public byte[] getData(){
+  public byte[] getData() {
     return data;
   }
 

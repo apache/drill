@@ -60,7 +60,9 @@ public class Screen extends AbstractStore {
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
     // we actually don't have to do anything since nothing should have changed. we'll check just check that things
     // didn't get screwed up.
-    if (endpoints.size() != 1) throw new PhysicalOperatorSetupException("A Screen operator can only be assigned to a single node.");
+    if (endpoints.size() != 1) {
+      throw new PhysicalOperatorSetupException("A Screen operator can only be assigned to a single node.");
+    }
     DrillbitEndpoint endpoint = endpoints.iterator().next();
 //    logger.debug("Endpoint this: {}, assignment: {}", this.endpoint, endpoint);
     if (!endpoint.equals(this.endpoint)) {

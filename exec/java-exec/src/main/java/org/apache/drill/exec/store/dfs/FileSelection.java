@@ -53,7 +53,7 @@ public class FileSelection {
     this.selectionRoot = selectionRoot;
   }
 
-  public FileSelection(List<String> files, boolean dummy){
+  public FileSelection(List<String> files, boolean dummy) {
     this.files = files;
   }
 
@@ -73,7 +73,9 @@ public class FileSelection {
   public boolean containsDirectories(DrillFileSystem fs) throws IOException {
     init(fs);
     for (FileStatus p : statuses) {
-      if (p.isDir()) return true;
+      if (p.isDir()) {
+        return true;
+      }
     }
     return false;
   }
@@ -99,11 +101,15 @@ public class FileSelection {
     return statuses.get(0);
   }
 
-  public List<String> getAsFiles(){
-    if(!files.isEmpty()) return files;
-    if(statuses == null) return Collections.emptyList();
+  public List<String> getAsFiles() {
+    if (!files.isEmpty()) {
+      return files;
+    }
+    if (statuses == null) {
+      return Collections.emptyList();
+    }
     List<String> files = Lists.newArrayList();
-    for(FileStatus s : statuses){
+    for (FileStatus s : statuses) {
       files.add(s.getPath().toString());
     }
     return files;
@@ -131,7 +137,9 @@ public class FileSelection {
     } else {
       Path p = new Path(parent,removeLeadingSlash(path));
       FileStatus[] status = fs.getUnderlying().globStatus(p);
-      if(status == null || status.length == 0) return null;
+      if (status == null || status.length == 0) {
+        return null;
+      }
       String[] s = p.toUri().getPath().split("/");
       String newPath = StringUtils.join(ArrayUtils.subarray(s, 0, s.length - 1), "/");
       Preconditions.checkState(!newPath.contains("*") && !newPath.contains("?"), String.format("Unsupported selection path: %s", p));

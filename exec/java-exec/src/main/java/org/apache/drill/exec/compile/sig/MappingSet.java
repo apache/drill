@@ -42,7 +42,7 @@ public class MappingSet {
     this("inIndex", "outIndex", new GeneratorMapping[] { mapping, mapping });
   }
 
-  public boolean hasEmbeddedConstant(){
+  public boolean hasEmbeddedConstant() {
     return constant == current;
   }
 
@@ -98,16 +98,18 @@ public class MappingSet {
   public void enterChild() {
     assert current == mappings[mappingIndex];
     mappingIndex++;
-    if (mappingIndex >= mappings.length)
+    if (mappingIndex >= mappings.length) {
       throw new IllegalStateException("This generator does not support mappings beyond");
+    }
     current = mappings[mappingIndex];
   }
 
   public void exitChild() {
     assert current == mappings[mappingIndex];
     mappingIndex--;
-    if (mappingIndex < 0)
+    if (mappingIndex < 0) {
       throw new IllegalStateException("You tried to traverse higher than the provided mapping provides.");
+    }
     current = mappings[mappingIndex];
   }
 

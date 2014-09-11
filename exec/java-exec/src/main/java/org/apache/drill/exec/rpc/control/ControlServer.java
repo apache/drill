@@ -74,13 +74,17 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
 
   @Override
   protected ServerHandshakeHandler<BitControlHandshake> getHandshakeHandler(final ControlConnection connection) {
-    return new ServerHandshakeHandler<BitControlHandshake>(RpcType.HANDSHAKE, BitControlHandshake.PARSER){
+    return new ServerHandshakeHandler<BitControlHandshake>(RpcType.HANDSHAKE, BitControlHandshake.PARSER) {
 
       @Override
       public MessageLite getHandshakeResponse(BitControlHandshake inbound) throws Exception {
 //        logger.debug("Handling handshake from other bit. {}", inbound);
-        if(inbound.getRpcVersion() != ControlRpcConfig.RPC_VERSION) throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
-        if(!inbound.hasEndpoint() || inbound.getEndpoint().getAddress().isEmpty() || inbound.getEndpoint().getControlPort() < 1) throw new RpcException(String.format("RPC didn't provide valid counter endpoint information.  Received %s.", inbound.getEndpoint()));
+        if (inbound.getRpcVersion() != ControlRpcConfig.RPC_VERSION) {
+          throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
+        }
+        if (!inbound.hasEndpoint() || inbound.getEndpoint().getAddress().isEmpty() || inbound.getEndpoint().getControlPort() < 1) {
+          throw new RpcException(String.format("RPC didn't provide valid counter endpoint information.  Received %s.", inbound.getEndpoint()));
+        }
         connection.setEndpoint(inbound.getEndpoint());
 
         // add the
@@ -128,6 +132,5 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
     }
 
   }
-
 
 }

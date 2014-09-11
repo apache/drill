@@ -27,12 +27,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Iterators;
 
 @JsonTypeName("transform")
-public class Transform extends SingleInputOperator{
+public class Transform extends SingleInputOperator {
 
-	private final NamedExpression[] transforms;
+  private final NamedExpression[] transforms;
 
-	@JsonCreator
-	public Transform(@JsonProperty("transforms") NamedExpression[] transforms) {
+  @JsonCreator
+  public Transform(@JsonProperty("transforms") NamedExpression[] transforms) {
     super();
     this.transforms = transforms;
   }
@@ -41,15 +41,14 @@ public class Transform extends SingleInputOperator{
     return transforms;
   }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-        return logicalVisitor.visitTransform(this, value);
-    }
+  @Override
+  public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitTransform(this, value);
+  }
 
-    @Override
-    public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(getInput());
-    }
-
+  @Override
+  public Iterator<LogicalOperator> iterator() {
+    return Iterators.singletonIterator(getInput());
+  }
 
 }

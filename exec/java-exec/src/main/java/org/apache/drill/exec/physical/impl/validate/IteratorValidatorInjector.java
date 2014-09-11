@@ -36,10 +36,11 @@ public class IteratorValidatorInjector extends
     IteratorValidatorInjector inject = new IteratorValidatorInjector();
     PhysicalOperator newOp = root.accept(inject, context);
 
-    if( !(newOp instanceof FragmentRoot) ) throw new IllegalStateException("This shouldn't happen.");
+    if ( !(newOp instanceof FragmentRoot) ) {
+      throw new IllegalStateException("This shouldn't happen.");
+    }
 
     return (FragmentRoot) newOp;
-
   }
 
   /**
@@ -67,11 +68,10 @@ public class IteratorValidatorInjector extends
     }
 
     /* Inject trace operator */
-    if (newChildren.size() > 0){
+    if (newChildren.size() > 0) {
       newOp = op.getNewWithChildren(newChildren);
       newOp.setOperatorId(op.getOperatorId());
     }
-
 
     return newOp;
   }

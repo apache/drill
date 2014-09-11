@@ -1,5 +1,3 @@
-
-
 /*******************************************************************************
 
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,7 +17,6 @@
  * limitations under the License.
  ******************************************************************************/
 package org.apache.drill.exec.vector.complex.impl;
-
 
 import java.util.Map;
 
@@ -43,20 +40,20 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
     this.vector = vector;
   }
 
-  private void setChildrenPosition(int index){
-    for(FieldReader r : fields.values()){
+  private void setChildrenPosition(int index) {
+    for (FieldReader r : fields.values()) {
       r.setPosition(index);
     }
   }
 
   @Override
-  public FieldReader reader(String name){
+  public FieldReader reader(String name) {
     FieldReader reader = fields.get(name);
-    if(reader == null){
+    if (reader == null) {
       ValueVector child = vector.get(name, ValueVector.class);
-      if(child == null){
+      if (child == null) {
         reader = NullReader.INSTANCE;
-      }else{
+      } else {
         reader = child.getAccessor().getReader();
       }
       fields.put(name, reader);
@@ -67,8 +64,9 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public FieldReader reader() {
-    if (currentOffset == NO_VALUES)
+    if (currentOffset == NO_VALUES) {
       return NullReader.INSTANCE;
+    }
 
     setChildrenPosition(currentOffset);
     return new SingleLikeRepeatedMapReaderImpl(vector, this);
@@ -78,7 +76,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   private int maxOffset;
 
   @Override
-  public int size(){
+  public int size() {
     if (isNull()) {
       return 0;
     }
@@ -86,26 +84,26 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public void setPosition(int index){
+  public void setPosition(int index) {
     super.setPosition(index);
     RepeatedMapHolder h = new RepeatedMapHolder();
     vector.getAccessor().get(index, h);
-    if(h.start == h.end){
+    if (h.start == h.end) {
       currentOffset = NO_VALUES;
-    }else{
+    } else {
       currentOffset = h.start-1;
       maxOffset = h.end;
       setChildrenPosition(currentOffset);
     }
   }
 
-  public void setSinglePosition(int index, int childIndex){
+  public void setSinglePosition(int index, int childIndex) {
     super.setPosition(index);
     RepeatedMapHolder h = new RepeatedMapHolder();
     vector.getAccessor().get(index, h);
-    if(h.start == h.end){
+    if (h.start == h.end) {
       currentOffset = NO_VALUES;
-    }else{
+    } else {
       int singleOffset = h.start + childIndex;
       assert singleOffset < h.end;
       currentOffset = singleOffset;
@@ -115,11 +113,11 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public boolean next(){
-    if(currentOffset +1 < maxOffset){
+  public boolean next() {
+    if (currentOffset +1 < maxOffset) {
       setChildrenPosition(++currentOffset);
       return true;
-    }else{
+    } else {
       currentOffset = NO_VALUES;
       return false;
     }
@@ -135,12 +133,12 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public MajorType getType(){
+  public MajorType getType() {
     return vector.getField().getType();
   }
 
   @Override
-  public java.util.Iterator<String> iterator(){
+  public java.util.Iterator<String> iterator() {
     return vector.fieldNameIterator();
   }
 
@@ -150,26 +148,29 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public void copyAsValue(MapWriter writer){
-    if(currentOffset == NO_VALUES) return;
+  public void copyAsValue(MapWriter writer) {
+    if (currentOffset == NO_VALUES) {
+      return;
+    }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer;
     impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), vector));
   }
 
-  public void copyAsValueSingle(MapWriter writer){
-    if(currentOffset == NO_VALUES) return;
+  public void copyAsValueSingle(MapWriter writer) {
+    if (currentOffset == NO_VALUES) {
+      return;
+    }
     SingleMapWriter impl = (SingleMapWriter) writer;
     impl.inform(impl.container.copyFromSafe(currentOffset, impl.idx(), vector));
   }
 
   @Override
-  public void copyAsField(String name, MapWriter writer){
-    if(currentOffset == NO_VALUES) return;
+  public void copyAsField(String name, MapWriter writer) {
+    if (currentOffset == NO_VALUES) {
+      return;
+    }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer.map(name);
     impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), vector));
   }
 
-
 }
-
-

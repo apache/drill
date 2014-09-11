@@ -35,16 +35,22 @@ public class InboundRpcMessage extends RpcMessage{
   }
 
   @Override
-  public int getBodySize(){
+  public int getBodySize() {
     int len = pBody.capacity();
-    if(dBody != null) len += dBody.capacity();
+    if (dBody != null) {
+      len += dBody.capacity();
+    }
     return len;
   }
 
   @Override
-  void release(){
-    if (pBody != null) pBody.release();
-    if(dBody != null) dBody.release();
+  void release() {
+    if (pBody != null) {
+      pBody.release();
+    }
+    if (dBody != null) {
+      dBody.release();
+    }
   }
 
   @Override
@@ -53,7 +59,8 @@ public class InboundRpcMessage extends RpcMessage{
         + coordinationId + ", dBody=" + dBody + "]";
   }
 
-  public InputStream getProtobufBodyAsIS(){
+  public InputStream getProtobufBodyAsIS() {
     return new ByteBufInputStream(pBody);
   }
+
 }

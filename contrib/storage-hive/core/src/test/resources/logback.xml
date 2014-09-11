@@ -27,7 +27,7 @@
   </appender>
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <!-- The property 'logback.log.dir' is defined in pom.xml --> 
+    <!-- The property 'logback.log.dir' is defined in pom.xml -->
     <file>${logback.log.dir:-./target/surefire-reports}/hive-tests-${bySecond}.log</file>
     <append>false</append>
     <encoder>

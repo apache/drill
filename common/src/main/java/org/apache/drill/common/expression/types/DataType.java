@@ -75,12 +75,12 @@ abstract class DataType {
   public static final DataType NULL = new AtomType("NULL", Comparability.NONE, false);
 
   //TODO: Hack to get some size data, needs to be fixed so that each type reveals it's size.
-  public int size(){
-    if(this == BOOLEAN){
+  public int size() {
+    if(this == BOOLEAN) {
       return 1;
-    }else if(this == INT32){
+    }else if(this == INT32) {
       return 4;
-    }else if(this == INT16){
+    }else if(this == INT16) {
       return 4;
     }
     return 2;
@@ -90,27 +90,28 @@ abstract class DataType {
   static {
     Field[] fields = DataType.class.getFields();
     Map<String, DataType> types = new HashMap<String, DataType>();
-    for(Field f : fields){
+    for (Field f : fields) {
       //logger.debug("Reviewing {}, Field: {}", f.getClass(), f);
-      if(Modifier.isStatic(f.getModifiers())){
+      if (Modifier.isStatic(f.getModifiers())) {
         try {
           Object o = f.get(null);
           //logger.debug("Object {}", o);
 
-          if(o instanceof DataType) types.put(((DataType) o).getName(), (DataType) o);
+          if (o instanceof DataType) {
+            types.put(((DataType) o).getName(), (DataType) o);
+          }
         } catch (IllegalArgumentException | IllegalAccessException e) {
           logger.warn("Failure while reading DataType.", e);
         }
       }
     }
     TYPES = Collections.unmodifiableMap(types);
-
   }
 
-  public static DataType getDataType(String name){
-    if(TYPES.containsKey(name)){
+  public static DataType getDataType(String name) {
+    if (TYPES.containsKey(name)) {
       return TYPES.get(name);
-    }else{
+    } else {
       throw new IllegalArgumentException(String.format("Unknown type requested of [%s].", name));
     }
   }
@@ -142,4 +143,5 @@ abstract class DataType {
     }
 
   }
+
 }

@@ -26,7 +26,7 @@ import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
 import com.google.common.collect.Maps;
 
-public class ConnectionManagerRegistry implements Iterable<ControlConnectionManager>{
+public class ConnectionManagerRegistry implements Iterable<ControlConnectionManager> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConnectionManagerRegistry.class);
 
   private final ConcurrentMap<DrillbitEndpoint, ControlConnectionManager> registry = Maps.newConcurrentMap();
@@ -41,13 +41,15 @@ public class ConnectionManagerRegistry implements Iterable<ControlConnectionMana
     this.context = context;
   }
 
-  public ControlConnectionManager getConnectionManager(DrillbitEndpoint endpoint){
+  public ControlConnectionManager getConnectionManager(DrillbitEndpoint endpoint) {
     assert localEndpoint != null : "DrillbitEndpoint must be set before a connection manager can be retrieved";
     ControlConnectionManager m = registry.get(endpoint);
-    if(m == null){
+    if (m == null) {
       m = new ControlConnectionManager(endpoint, localEndpoint, handler, context);
       ControlConnectionManager m2 = registry.putIfAbsent(endpoint, m);
-      if(m2 != null) m = m2;
+      if (m2 != null) {
+        m = m2;
+      }
     }
 
     return m;
@@ -58,7 +60,7 @@ public class ConnectionManagerRegistry implements Iterable<ControlConnectionMana
     return registry.values().iterator();
   }
 
-  public void setEndpoint(DrillbitEndpoint endpoint){
+  public void setEndpoint(DrillbitEndpoint endpoint) {
     this.localEndpoint = endpoint;
   }
 

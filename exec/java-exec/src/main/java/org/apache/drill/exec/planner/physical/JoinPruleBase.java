@@ -108,8 +108,9 @@ public abstract class JoinPruleBase extends Prule {
 
     assert (join.getLeftKeys().size() == join.getRightKeys().size());
 
-    if (!hashSingleKey)
+    if (!hashSingleKey) {
       return;
+    }
 
     int numJoinKeys = join.getLeftKeys().size();
     if (numJoinKeys > 1) {
@@ -185,7 +186,7 @@ public abstract class JoinPruleBase extends Prule {
     final RelNode convertedLeft = convert(left, traitsLeft);
     final RelNode convertedRight = convert(right, traitsRight);
 
-    new SubsetTransformer<DrillJoinRel, InvalidRelException>(call){
+    new SubsetTransformer<DrillJoinRel, InvalidRelException>(call) {
 
       @Override
       public RelNode convertChild(final DrillJoinRel join, final RelNode rel) throws InvalidRelException {

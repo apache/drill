@@ -106,7 +106,7 @@ public class QuerySubmitter {
     RemoteServiceSet serviceSet = null;
     Drillbit[] drillbits = null;
 
-    try{
+    try {
       if (local) {
         serviceSet = RemoteServiceSet.getLocalServiceSet();
         drillbits = new Drillbit[bits];
@@ -133,10 +133,12 @@ public class QuerySubmitter {
     } catch(Throwable th) {
       System.err.println("Query Failed due to : " + th.getMessage());
       return -1;
-    }finally{
-      if(client != null) client.close();
-      if(local){
-        for(Drillbit b : drillbits){
+    } finally {
+      if (client != null) {
+        client.close();
+      }
+      if (local) {
+        for (Drillbit b : drillbits) {
           b.close();
         }
         serviceSet.close();
@@ -151,7 +153,7 @@ public class QuerySubmitter {
     String[] queries;
     QueryType queryType;
     type = type.toLowerCase();
-    switch(type) {
+    switch (type) {
       case "sql":
         queryType = QueryType.SQL;
         queries = plan.trim().split(";");
@@ -171,7 +173,7 @@ public class QuerySubmitter {
 
     Format outputFormat;
     format = format.toLowerCase();
-    switch(format) {
+    switch (format) {
       case "csv":
         outputFormat = Format.CSV;
         break;
@@ -201,4 +203,5 @@ public class QuerySubmitter {
     return 0;
 
   }
+
 }

@@ -139,18 +139,21 @@ public abstract class ColumnReader<V extends ValueVector> {
   public boolean determineSize(long recordsReadInCurrentPass, Integer lengthVarFieldsInCurrentRecord) throws IOException {
 
     boolean doneReading = readPage();
-    if (doneReading)
+    if (doneReading) {
       return true;
+    }
 
     doneReading = processPageData((int) recordsReadInCurrentPass);
-    if (doneReading)
+    if (doneReading) {
       return true;
+    }
 
     lengthVarFieldsInCurrentRecord += dataTypeLengthInBits;
 
     doneReading = checkVectorCapacityReached();
-    if (doneReading)
+    if (doneReading) {
       return true;
+    }
 
     return false;
   }
@@ -189,8 +192,9 @@ public abstract class ColumnReader<V extends ValueVector> {
     if (pageReader.currentPage == null
         || totalValuesReadAndReadyToReadInPage() == pageReader.currentPage.getValueCount()) {
       readRecords(pageReader.valuesReadyToRead);
-      if (pageReader.currentPage != null)
+      if (pageReader.currentPage != null) {
         totalValuesRead += pageReader.currentPage.getValueCount();
+      }
       if (!pageReader.next()) {
         hitRowGroupEnd();
         return true;
@@ -215,9 +219,10 @@ public abstract class ColumnReader<V extends ValueVector> {
       logger.debug("Reached the capacity of the data vector in a variable length value vector.");
       return true;
     }
-    else if (valuesReadInCurrentPass > valueVec.getValueCapacity()){
+    else if (valuesReadInCurrentPass > valueVec.getValueCapacity()) {
       return true;
     }
     return false;
   }
+
 }

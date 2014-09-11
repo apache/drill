@@ -30,41 +30,43 @@ public abstract class PathSegment{
   public static final class ArraySegment extends PathSegment {
     private final int index;
 
-    public ArraySegment(String numberAsText, PathSegment child){
+    public ArraySegment(String numberAsText, PathSegment child) {
       this(Integer.parseInt(numberAsText), child);
     }
 
-    public ArraySegment(int index, PathSegment child){
+    public ArraySegment(int index, PathSegment child) {
       this.child = child;
       this.index = index;
       assert index >=0;
     }
 
-    public ArraySegment(PathSegment child){
+    public ArraySegment(PathSegment child) {
       this.child = child;
       this.index = -1;
     }
 
-    public boolean hasIndex(){
+    public boolean hasIndex() {
       return index != -1;
     }
 
-    public ArraySegment(int index){
-      if(index < 0 ) throw new IllegalArgumentException();
+    public ArraySegment(int index) {
+      if (index < 0 ) {
+        throw new IllegalArgumentException();
+      }
       this.index = index;
     }
 
-    public int getIndex(){
+    public int getIndex() {
       return index;
     }
 
     @Override
-    public boolean isArray(){
+    public boolean isArray() {
       return true;
     }
 
     @Override
-    public boolean isNamed(){
+    public boolean isNamed() {
       return false;
     }
 
@@ -85,28 +87,31 @@ public abstract class PathSegment{
 
     @Override
     public boolean segmentEquals(PathSegment obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      else if (obj == null)
+      } else if (obj == null) {
         return false;
-      else if (obj instanceof ArraySegment)
+      } else if (obj instanceof ArraySegment) {
         return index == ((ArraySegment)obj).getIndex();
+      }
       return false;
     }
 
     @Override
     public PathSegment clone() {
       PathSegment seg = new ArraySegment(index);
-      if(child != null) seg.setChild(child.clone());
+      if (child != null) {
+        seg.setChild(child.clone());
+      }
       return seg;
     }
 
     @Override
-    public ArraySegment cloneWithNewChild(PathSegment newChild){
+    public ArraySegment cloneWithNewChild(PathSegment newChild) {
       ArraySegment seg = new ArraySegment(index);
-      if(child != null){
+      if (child != null) {
         seg.setChild(child.cloneWithNewChild(newChild));
-      }else{
+      } else {
         seg.setChild(newChild);
       }
       return seg;
@@ -117,26 +122,26 @@ public abstract class PathSegment{
   public static final class NameSegment extends PathSegment {
     private final String path;
 
-    public NameSegment(CharSequence n, PathSegment child){
+    public NameSegment(CharSequence n, PathSegment child) {
       this.child = child;
       this.path = n.toString();
     }
 
-    public NameSegment(CharSequence n){
+    public NameSegment(CharSequence n) {
       this.path = n.toString();
     }
 
-    public String getPath(){
+    public String getPath() {
       return path;
     }
 
     @Override
-    public boolean isArray(){
+    public boolean isArray() {
       return false;
     }
 
     @Override
-    public boolean isNamed(){
+    public boolean isNamed() {
       return true;
     }
 
@@ -157,12 +162,13 @@ public abstract class PathSegment{
 
     @Override
     public boolean segmentEquals(PathSegment obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      else if (obj == null)
+      } else if (obj == null) {
         return false;
-      else if (getClass() != obj.getClass())
+      } else if (getClass() != obj.getClass()) {
         return false;
+      }
 
       NameSegment other = (NameSegment) obj;
       if (path == null) {
@@ -174,16 +180,18 @@ public abstract class PathSegment{
     @Override
     public NameSegment clone() {
       NameSegment s = new NameSegment(this.path);
-      if(child != null) s.setChild(child.clone());
+      if (child != null) {
+        s.setChild(child.clone());
+      }
       return s;
     }
 
     @Override
     public NameSegment cloneWithNewChild(PathSegment newChild) {
       NameSegment s = new NameSegment(this.path);
-      if(child != null){
+      if (child != null) {
         s.setChild(child.cloneWithNewChild(newChild));
-      }else{
+      } else {
         s.setChild(newChild);
       }
       return s;
@@ -191,18 +199,18 @@ public abstract class PathSegment{
 
   }
 
-  public NameSegment getNameSegment(){
+  public NameSegment getNameSegment() {
     throw new UnsupportedOperationException();
   }
 
-  public ArraySegment getArraySegment(){
+  public ArraySegment getArraySegment() {
     throw new UnsupportedOperationException();
   }
 
   public abstract boolean isArray();
   public abstract boolean isNamed();
 
-  public boolean isLastPath(){
+  public boolean isLastPath() {
     return child == null;
   }
 
@@ -230,19 +238,24 @@ public abstract class PathSegment{
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
 
     PathSegment other = (PathSegment) obj;
     if (!segmentEquals(other)) {
       return false;
     } else if (child == null) {
       return (other.child == null);
-    } else return child.equals(other.child);
+    } else {
+      return child.equals(other.child);
+    }
   }
 
   /**
@@ -266,24 +279,30 @@ public abstract class PathSegment{
    * @return - is this a match
    */
   public boolean contains(PathSegment otherSeg) {
-    if (this == otherSeg)
+    if (this == otherSeg) {
       return true;
-    if (otherSeg == null)
+    }
+    if (otherSeg == null) {
       return false;
+    }
     // TODO - fix this in the future to match array segments are part of the path
     // the current behavior to always return true when we hit an array may be useful in some cases,
     // but we can get better performance in the JSON reader if we avoid reading unwanted elements in arrays
-    if (otherSeg.isArray() || this.isArray())
+    if (otherSeg.isArray() || this.isArray()) {
       return true;
-    if (getClass() != otherSeg.getClass())
+    }
+    if (getClass() != otherSeg.getClass()) {
       return false;
+    }
 
     if (!segmentEquals(otherSeg)) {
       return false;
     }
     else if (child == null || otherSeg.child == null) {
       return true;
-    } else return child.contains(otherSeg.child);
+    } else {
+      return child.contains(otherSeg.child);
+    }
 
   }
 

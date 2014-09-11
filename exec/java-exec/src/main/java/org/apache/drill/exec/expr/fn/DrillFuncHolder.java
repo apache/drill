@@ -123,17 +123,17 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       WorkspaceReference ref = workspaceVars[i];
       JType jtype = g.getModel()._ref(ref.type);
 
-      if(ScalarReplacementTypes.CLASSES.contains(ref.type)){
+      if (ScalarReplacementTypes.CLASSES.contains(ref.type)) {
         workspaceJVars[i] = g.declareClassField("work", jtype);
         JBlock b = g.getBlock(SignatureHolder.DRILL_INIT_METHOD);
         b.assign(workspaceJVars[i], JExpr._new(jtype));
-      }else{
+      } else {
         workspaceJVars[i] = g.declareClassField("work", jtype);
       }
 
-      if(ref.isInject()){
+      if (ref.isInject()) {
         g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], g.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer"));
-      }else{
+      } else {
         //g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], JExpr._new(jtype));
       }
     }
@@ -159,8 +159,9 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       JVar[] workspaceJVars, boolean decConstInputOnly) {
     if (inputVariables != null) {
       for (int i = 0; i < inputVariables.length; i++) {
-        if (decConstInputOnly && !inputVariables[i].isConstant())
+        if (decConstInputOnly && !inputVariables[i].isConstant()) {
           continue;
+        }
 
         ValueReference parameter = parameters[i];
         HoldingContainer inputVariable = inputVariables[i];
@@ -177,10 +178,9 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
     JVar[] internalVars = new JVar[workspaceJVars.length];
     for (int i = 0; i < workspaceJVars.length; i++) {
-      if(decConstInputOnly){
+      if (decConstInputOnly) {
         internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
-      }else{
-
+      } else {
         internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
       }
 
@@ -313,7 +313,6 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       MajorType type = Types.required(MinorType.LATE);
       ValueReference ref = new ValueReference(type, name);
       ref.isComplexWriter = true;
-
       return ref;
     }
 
@@ -342,7 +341,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       this.majorType = majorType;
     }
 
-    public boolean isInject(){
+    public boolean isInject() {
       return inject;
     }
   }
@@ -358,4 +357,5 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   public ValueReference getReturnValue() {
     return returnValue;
   }
+
 }

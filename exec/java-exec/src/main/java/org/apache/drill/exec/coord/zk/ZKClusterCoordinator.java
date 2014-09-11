@@ -75,7 +75,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
     // check if this is a complex zk string.  If so, parse into components.
     Matcher m = ZK_COMPLEX_STRING.matcher(connect);
-    if(m.matches()){
+    if(m.matches()) {
       connect = m.group(1);
       zkRoot = m.group(2);
       clusterId = m.group(3);
@@ -101,7 +101,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
       .build();
   }
 
-  public CuratorFramework getCurator(){
+  public CuratorFramework getCurator() {
     return curator;
   }
 
@@ -112,9 +112,11 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     serviceCache.start();
     serviceCache.addListener(new ZKListener());
 
-    if(millisToWait != 0){
+    if(millisToWait != 0) {
       boolean success = this.initialConnection.await(millisToWait, TimeUnit.MILLISECONDS);
-      if(!success) throw new IOException(String.format("Failure to connect to the zookeeper cluster service within the allotted time of %d milliseconds.", millisToWait));
+      if (!success) {
+        throw new IOException(String.format("Failure to connect to the zookeeper cluster service within the allotted time of %d milliseconds.", millisToWait));
+      }
     }else{
       this.initialConnection.await();
     }
@@ -126,7 +128,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
     @Override
     public void stateChanged(CuratorFramework client, ConnectionState newState) {
-      if(newState == ConnectionState.CONNECTED){
+      if(newState == ConnectionState.CONNECTED) {
         ZKClusterCoordinator.this.initialConnection.countDown();
         client.getConnectionStateListenable().removeListener(this);
       }
@@ -166,7 +168,9 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
   @Override
   public void unregister(RegistrationHandle handle) {
-    if (!(handle instanceof ZKRegistrationHandle)) throw new UnsupportedOperationException("Unknown handle type: " + handle.getClass().getName());
+    if (!(handle instanceof ZKRegistrationHandle)) {
+      throw new UnsupportedOperationException("Unknown handle type: " + handle.getClass().getName());
+    }
 
     ZKRegistrationHandle h = (ZKRegistrationHandle) handle;
     try {
@@ -223,4 +227,5 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
       .serializer(DrillServiceInstanceHelper.SERIALIZER)
       .build();
   }
+
 }

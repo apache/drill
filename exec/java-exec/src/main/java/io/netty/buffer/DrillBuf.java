@@ -62,7 +62,7 @@ public final class DrillBuf extends AbstractByteBuf {
     this.emptyBuffer = false;
   }
 
-  private DrillBuf(ByteBuffer bb){
+  private DrillBuf(ByteBuffer bb) {
     super(bb.remaining());
     UnpooledUnsafeDirectByteBuf bytebuf = new UnpooledUnsafeDirectByteBuf(UnpooledByteBufAllocator.DEFAULT, bb, bb.remaining());
     this.acct = FakeAllocator.FAKE_ACCOUNTOR;
@@ -76,7 +76,7 @@ public final class DrillBuf extends AbstractByteBuf {
     this.writerIndex(bb.remaining());
   }
 
-  private DrillBuf(BufferAllocator allocator, Accountor a){
+  private DrillBuf(BufferAllocator allocator, Accountor a) {
     super(0);
     this.b = new EmptyByteBuf(allocator.getUnderlyingAllocator()).order(ByteOrder.LITTLE_ENDIAN);
     this.allocator = allocator;
@@ -106,24 +106,26 @@ public final class DrillBuf extends AbstractByteBuf {
     this.allocator = buffer.allocator;
   }
 
-  public void setOperatorContext(OperatorContext c){
+  public void setOperatorContext(OperatorContext c) {
     this.context = c;
   }
-  public void setFragmentContext(FragmentContext c){
+  public void setFragmentContext(FragmentContext c) {
     this.fContext = c;
   }
 
-  public BufferAllocator getAllocator(){
+  public BufferAllocator getAllocator() {
     return allocator;
   }
 
-  public DrillBuf reallocIfNeeded(int size){
-    if(this.capacity() >= size) return this;
-    if(context != null){
+  public DrillBuf reallocIfNeeded(int size) {
+    if (this.capacity() >= size) {
+      return this;
+    }
+    if (context != null) {
       return context.replace(this, size);
-    }else if(fContext != null){
+    } else if(fContext != null) {
       return fContext.replace(this, size);
-    }else{
+    } else {
       throw new UnsupportedOperationException("Realloc is only available in the context of an operator's UDFs");
     }
 
@@ -138,25 +140,23 @@ public final class DrillBuf extends AbstractByteBuf {
     return addr + index;
   }
 
-
-
   private final void checkIndexD(int index) {
-      ensureAccessible();
-      if (index < 0 || index >= capacity()) {
-          throw new IndexOutOfBoundsException(String.format(
-                  "index: %d (expected: range(0, %d))", index, capacity()));
-      }
+    ensureAccessible();
+    if (index < 0 || index >= capacity()) {
+      throw new IndexOutOfBoundsException(String.format(
+              "index: %d (expected: range(0, %d))", index, capacity()));
+    }
   }
 
   private final void checkIndexD(int index, int fieldLength) {
-      ensureAccessible();
-      if (fieldLength < 0) {
-          throw new IllegalArgumentException("length: " + fieldLength + " (expected: >= 0)");
-      }
-      if (index < 0 || index > capacity() - fieldLength) {
-          throw new IndexOutOfBoundsException(String.format(
-                  "index: %d, length: %d (expected: range(0, %d))", index, fieldLength, capacity()));
-      }
+    ensureAccessible();
+    if (fieldLength < 0) {
+      throw new IllegalArgumentException("length: " + fieldLength + " (expected: >= 0)");
+    }
+    if (index < 0 || index > capacity() - fieldLength) {
+      throw new IndexOutOfBoundsException(String.format(
+              "index: %d, length: %d (expected: range(0, %d))", index, fieldLength, capacity()));
+    }
   }
 
   private void chk(int index, int width) {
@@ -209,7 +209,6 @@ public final class DrillBuf extends AbstractByteBuf {
   public int capacity() {
     return length;
   }
-
 
   @Override
   public synchronized ByteBuf capacity(int newCapacity) {
@@ -363,20 +362,20 @@ public final class DrillBuf extends AbstractByteBuf {
 
   @Override
   public String toString(int index, int length, Charset charset) {
-      if (length == 0) {
-          return "";
-      }
+    if (length == 0) {
+      return "";
+    }
 
-      ByteBuffer nioBuffer;
-      if (nioBufferCount() == 1) {
-          nioBuffer = nioBuffer(index, length);
-      } else {
-          nioBuffer = ByteBuffer.allocate(length);
-          getBytes(index, nioBuffer);
-          nioBuffer.flip();
-      }
+    ByteBuffer nioBuffer;
+    if (nioBufferCount() == 1) {
+      nioBuffer = nioBuffer(index, length);
+    } else {
+      nioBuffer = ByteBuffer.allocate(length);
+      getBytes(index, nioBuffer);
+      nioBuffer.flip();
+    }
 
-      return ByteBufUtil.decodeString(nioBuffer, charset);
+    return ByteBufUtil.decodeString(nioBuffer, charset);
   }
 
   @Override
@@ -615,10 +614,10 @@ public final class DrillBuf extends AbstractByteBuf {
 
   @Override
   protected int _getUnsignedMedium(int index) {
-      long addr = addr(index);
-      return (PlatformDependent.getByte(addr) & 0xff) << 16 |
-              (PlatformDependent.getByte(addr + 1) & 0xff) << 8 |
-              PlatformDependent.getByte(addr + 2) & 0xff;
+    long addr = addr(index);
+    return (PlatformDependent.getByte(addr) & 0xff) << 16 |
+            (PlatformDependent.getByte(addr + 1) & 0xff) << 8 |
+            PlatformDependent.getByte(addr + 2) & 0xff;
   }
 
   @Override
@@ -659,20 +658,21 @@ public final class DrillBuf extends AbstractByteBuf {
     return PlatformDependent.getByte(addr(index));
   }
 
-  public static DrillBuf getEmpty(BufferAllocator allocator, Accountor a){
+  public static DrillBuf getEmpty(BufferAllocator allocator, Accountor a) {
     return new DrillBuf(allocator, a);
   }
 
-  public boolean isRootBuffer(){
+  public boolean isRootBuffer() {
     return rootBuffer;
   }
 
-  public static DrillBuf wrapByteBuffer(ByteBuffer b){
-    if(!b.isDirect()){
+  public static DrillBuf wrapByteBuffer(ByteBuffer b) {
+    if (!b.isDirect()) {
       throw new IllegalStateException("DrillBufs can only refer to direct memory.");
-    }else{
+    } else {
       return new DrillBuf(b);
     }
 
   }
+
 }

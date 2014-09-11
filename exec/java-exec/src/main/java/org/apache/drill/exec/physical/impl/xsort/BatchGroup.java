@@ -143,14 +143,24 @@ public class BatchGroup implements VectorAccessible {
   }
 
   public void cleanup() throws IOException {
-    if (sv2 != null) sv2.clear();
-    if (outputStream != null) outputStream.close();
-    if (inputStream != null) inputStream.close();
-    if (fs != null && fs.exists(path)) fs.delete(path, false);
+    if (sv2 != null) {
+      sv2.clear();
+    }
+    if (outputStream != null) {
+      outputStream.close();
+    }
+    if (inputStream != null) {
+      inputStream.close();
+    }
+    if (fs != null && fs.exists(path)) {
+      fs.delete(path, false);
+    }
   }
 
   public void closeOutputStream() throws IOException {
-    if (outputStream != null) outputStream.close();
+    if (outputStream != null) {
+      outputStream.close();
+    }
   }
 
   @Override
@@ -181,4 +191,5 @@ public class BatchGroup implements VectorAccessible {
   public Iterator<VectorWrapper<?>> iterator() {
     return currentContainer.iterator();
   }
+
 }

@@ -92,10 +92,11 @@ public class FunctionCallFactory {
 
   public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
     String name = replaceOpWithFuncName(functionName);
-    if (isBooleanOperator(name))
+    if (isBooleanOperator(name)) {
       return new BooleanOperator(name, args, ep);
-    else
+    } else {
       return new FunctionCall(name, args, ep);
+    }
   }
 
   public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, LogicalExpression... e){
@@ -115,8 +116,9 @@ public class FunctionCallFactory {
       return args.get(0);
     }
 
-    if (args.size() - 1 != opTypes.size())
+    if (args.size() - 1 != opTypes.size()) {
       throw new DrillRuntimeException("Must receive one more expression then the provided number of operators.");
+    }
 
     LogicalExpression first = args.get(0);
     for (int i = 0; i < opTypes.size(); i++) {
@@ -127,4 +129,5 @@ public class FunctionCallFactory {
     }
     return first;
   }
+
 }

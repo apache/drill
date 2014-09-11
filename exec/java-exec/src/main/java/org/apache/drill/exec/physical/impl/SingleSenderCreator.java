@@ -79,7 +79,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
     @Override
     public boolean innerNext() {
-      if(!ok){
+      if (!ok) {
         incoming.kill(false);
 
         return false;
@@ -93,7 +93,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         out = IterOutcome.NONE;
       }
 //      logger.debug("Outcome of sender next {}", out);
-      switch(out){
+      switch (out) {
       case STOP:
       case NONE:
         FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLastWithSchema(handle.getQueryId(), handle.getMajorFragmentId(),
@@ -158,7 +158,9 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       @Override
       public void success(Ack value, ByteBuf buf) {
         sendCount.decrement();
-        if(value.getOk()) return;
+        if (value.getOk()) {
+          return;
+        }
 
         logger.error("Downstream fragment was not accepted.  Stopping future sends.");
         // if we didn't get ack ok, we'll need to kill the query.
@@ -169,6 +171,5 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     }
 
   }
-
 
 }

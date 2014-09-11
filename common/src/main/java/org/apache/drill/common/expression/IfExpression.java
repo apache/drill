@@ -29,63 +29,63 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class IfExpression extends LogicalExpressionBase{
-	static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
+public class IfExpression extends LogicalExpressionBase {
+  static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
 
-	public final IfCondition ifCondition;
-	public final LogicalExpression elseExpression;
+  public final IfCondition ifCondition;
+  public final LogicalExpression elseExpression;
 
-	private IfExpression(ExpressionPosition pos, IfCondition conditions, LogicalExpression elseExpression){
-	  super(pos);
-		this.ifCondition = conditions;
-		this.elseExpression = elseExpression;
-	}
+  private IfExpression(ExpressionPosition pos, IfCondition conditions, LogicalExpression elseExpression) {
+    super(pos);
+    this.ifCondition = conditions;
+    this.elseExpression = elseExpression;
+  }
 
-	public static class IfCondition{
-		public final LogicalExpression condition;
-		public final LogicalExpression expression;
+  public static class IfCondition{
+    public final LogicalExpression condition;
+    public final LogicalExpression expression;
 
-		public IfCondition(LogicalExpression condition, LogicalExpression expression) {
-			//logger.debug("Generating IfCondition {}, {}", condition, expression);
+    public IfCondition(LogicalExpression condition, LogicalExpression expression) {
+      //logger.debug("Generating IfCondition {}, {}", condition, expression);
 
-			this.condition = condition;
-			this.expression = expression;
-		}
+      this.condition = condition;
+      this.expression = expression;
+    }
 
-	}
+  }
 
-	@Override
-  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E{
+  @Override
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
     return visitor.visitIfExpression(this, value);
   }
 
-  public static class Builder{
-		IfCondition conditions;
-		private LogicalExpression elseExpression;
-		private ExpressionPosition pos = ExpressionPosition.UNKNOWN;
+  public static class Builder {
+    IfCondition conditions;
+    private LogicalExpression elseExpression;
+    private ExpressionPosition pos = ExpressionPosition.UNKNOWN;
 
-		public Builder setPosition(ExpressionPosition pos){
-		  this.pos = pos;
-		  return this;
-		}
+    public Builder setPosition(ExpressionPosition pos) {
+      this.pos = pos;
+      return this;
+    }
 
-		public Builder setElse(LogicalExpression elseExpression) {
-			this.elseExpression = elseExpression;
+    public Builder setElse(LogicalExpression elseExpression) {
+      this.elseExpression = elseExpression;
             return this;
-		}
+    }
 
     public Builder setIfCondition(IfCondition conditions) {
       this.conditions = conditions;
       return this;
     }
 
-		public IfExpression build(){
-		  Preconditions.checkNotNull(pos);
-		  Preconditions.checkNotNull(conditions);
-			return new IfExpression(pos, conditions, elseExpression);
-		}
+    public IfExpression build(){
+      Preconditions.checkNotNull(pos);
+      Preconditions.checkNotNull(conditions);
+      return new IfExpression(pos, conditions, elseExpression);
+    }
 
-	}
+  }
 
   @Override
   public MajorType getMajorType() {
@@ -105,9 +105,9 @@ public class IfExpression extends LogicalExpressionBase{
     return majorType;
   }
 
-  public static Builder newBuilder(){
-		return new Builder();
-	}
+  public static Builder newBuilder() {
+    return new Builder();
+  }
 
   @Override
   public Iterator<LogicalExpression> iterator() {

@@ -27,14 +27,17 @@ public class ExprHelper {
 
   private final static String COMPOUND_FAIL_MESSAGE = "The current Optiq based logical plan interpreter does not complicated expressions.  For Order By and Filter";
 
-  public static String getAggregateFieldName(FunctionCall c){
+  public static String getAggregateFieldName(FunctionCall c) {
     List<LogicalExpression> exprs = c.args;
-    if(exprs.size() != 1) throw new UnsupportedOperationException(COMPOUND_FAIL_MESSAGE);
+    if (exprs.size() != 1) {
+      throw new UnsupportedOperationException(COMPOUND_FAIL_MESSAGE);
+    }
     return getFieldName(exprs.iterator().next());
   }
 
-  public static String getFieldName(LogicalExpression e){
+  public static String getFieldName(LogicalExpression e) {
     //if(e instanceof SchemaPath) return ((SchemaPath) e).getPath().toString();
     throw new UnsupportedOperationException(COMPOUND_FAIL_MESSAGE);
   }
+
 }

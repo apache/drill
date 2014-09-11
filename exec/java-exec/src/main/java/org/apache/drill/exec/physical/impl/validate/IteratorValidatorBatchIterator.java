@@ -111,7 +111,9 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
 
   @Override
   public IterOutcome next() {
-    if(state == IterOutcome.NONE ) throw new IllegalStateException("The incoming iterator has previously moved to a state of NONE. You should not be attempting to call next() again.");
+    if (state == IterOutcome.NONE ) {
+      throw new IllegalStateException("The incoming iterator has previously moved to a state of NONE. You should not be attempting to call next() again.");
+    }
     state = incoming.next();
     if (first && state == IterOutcome.NONE) {
       throw new IllegalStateException("The incoming iterator returned a state of NONE on the first batch. There should always be at least one batch output before returning NONE");
@@ -119,14 +121,16 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
     if (first && state == IterOutcome.OK) {
       throw new IllegalStateException("The incoming iterator returned a state of OK on the first batch. There should always be a new schema on the first batch. Incoming: " + incoming.getClass().getName());
     }
-    if (first) first = !first;
+    if (first) {
+      first = !first;
+    }
 
-    if(state == IterOutcome.OK || state == IterOutcome.OK_NEW_SCHEMA) {
+    if (state == IterOutcome.OK || state == IterOutcome.OK_NEW_SCHEMA) {
       BatchSchema schema = incoming.getSchema();
-      if(schema.getFieldCount() == 0){
+      if (schema.getFieldCount() == 0) {
         throw new IllegalStateException ("Incoming batch has an empty schema. This is not allowed.");
       }
-      if(incoming.getRecordCount() > MAX_BATCH_SIZE){
+      if (incoming.getRecordCount() > MAX_BATCH_SIZE) {
         throw new IllegalStateException (String.format("Incoming batch of %s has size %d, which is beyond the limit of %d",  incoming.getClass().getName(), incoming.getRecordCount(), MAX_BATCH_SIZE));
       }
 
@@ -157,4 +161,5 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
   }
+
 }

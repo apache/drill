@@ -45,11 +45,10 @@ public class FunctionGenerationHelper {
     return getFunctionExpression(COMPARE_TO, Types.required(MinorType.INT), registry, left, right);
   }
 
-  public static FunctionHolderExpression getFunctionExpression(String name, MajorType returnType, FunctionImplementationRegistry registry, HoldingContainer... args){
-
+  public static FunctionHolderExpression getFunctionExpression(String name, MajorType returnType, FunctionImplementationRegistry registry, HoldingContainer... args) {
     List<MajorType> argTypes = new ArrayList<MajorType>(args.length);
     List<LogicalExpression> argExpressions = new ArrayList<LogicalExpression>(args.length);
-    for(HoldingContainer c : args){
+    for(HoldingContainer c : args) {
       argTypes.add(c.getMajorType());
       argExpressions.add(new HoldingContainerExpression(c));
     }
@@ -63,19 +62,22 @@ public class FunctionGenerationHelper {
     sb.append("Failure finding function that runtime code generation expected.  Signature: ");
     sb.append(name);
     sb.append("( ");
-    for(int i =0; i < args.length; i++){
+    for(int i =0; i < args.length; i++) {
       MajorType mt = args[i].getMajorType();
       appendType(mt, sb);
-      if(i != 0) sb.append(", ");
+      if (i != 0) {
+        sb.append(", ");
+      }
     }
     sb.append(" ) returns ");
     appendType(returnType, sb);
     throw new UnsupportedOperationException(sb.toString());
   }
 
-  private static final void appendType(MajorType mt, StringBuilder sb){
+  private static final void appendType(MajorType mt, StringBuilder sb) {
     sb.append(mt.getMinorType().name());
     sb.append(":");
     sb.append(mt.getMode().name());
   }
+
 }

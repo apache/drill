@@ -49,23 +49,23 @@ public class SchemaPath extends LogicalExpressionBase {
 
   private final NameSegment rootSegment;
 
-  public static SchemaPath getSimplePath(String name){
+  public static SchemaPath getSimplePath(String name) {
     return getCompoundPath(name);
   }
 
-  public static SchemaPath getCompoundPath(String... strings){
+  public static SchemaPath getCompoundPath(String... strings) {
     List<String> paths = Arrays.asList(strings);
     Collections.reverse(paths);
     NameSegment s = null;
-    for(String p : paths){
+    for (String p : paths) {
       s = new NameSegment(p, s);
     }
     return new SchemaPath(s);
   }
 
-  public PathSegment getLastSegment(){
+  public PathSegment getLastSegment() {
     PathSegment s= rootSegment;
-    while(s.getChild() != null){
+    while (s.getChild() != null) {
       s = s.getChild();
     }
     return s;
@@ -76,74 +76,81 @@ public class SchemaPath extends LogicalExpressionBase {
    * @param simpleName
    */
   @Deprecated
-  public SchemaPath(String simpleName, ExpressionPosition pos){
+  public SchemaPath(String simpleName, ExpressionPosition pos) {
     super(pos);
     this.rootSegment = new NameSegment(simpleName);
-    if(simpleName.contains(".")) throw new IllegalStateException("This is deprecated and only supports simpe paths.");
+    if (simpleName.contains(".")) {
+      throw new IllegalStateException("This is deprecated and only supports simpe paths.");
+    }
   }
 
 
-  public NamePart getAsNamePart(){
+  public NamePart getAsNamePart() {
     return getNamePart(rootSegment);
   }
 
-  private static NamePart getNamePart(PathSegment s){
-    if(s == null) return null;
+  private static NamePart getNamePart(PathSegment s) {
+    if (s == null) {
+      return null;
+    }
     NamePart.Builder b = NamePart.newBuilder();
-    if(s.getChild() != null){
+    if (s.getChild() != null) {
       b.setChild(getNamePart(s.getChild()));
     }
 
-    if(s.isArray()){
-      if(s.getArraySegment().hasIndex()) throw new IllegalStateException("You cannot convert a indexed schema path to a NamePart.  NameParts can only reference Vectors, not individual records or values.");
+    if (s.isArray()) {
+      if (s.getArraySegment().hasIndex()) {
+        throw new IllegalStateException("You cannot convert a indexed schema path to a NamePart.  NameParts can only reference Vectors, not individual records or values.");
+      }
       b.setType(Type.ARRAY);
-    }else{
+    } else {
       b.setType(Type.NAME);
       b.setName(s.getNameSegment().getPath());
     }
     return b.build();
   }
 
-  private static PathSegment getPathSegment(NamePart n){
+  private static PathSegment getPathSegment(NamePart n) {
     PathSegment child = n.hasChild() ? getPathSegment(n.getChild()) : null;
-    if(n.getType() == Type.ARRAY){
+    if (n.getType() == Type.ARRAY) {
       return new ArraySegment(child);
-    }else{
+    } else {
       return new NameSegment(n.getName(), child);
     }
   }
 
-  public static SchemaPath create(NamePart namePart){
+  public static SchemaPath create(NamePart namePart) {
     Preconditions.checkArgument(namePart.getType() == NamePart.Type.NAME);
     return new SchemaPath((NameSegment) getPathSegment(namePart));
   }
-
 
   /**
    * A simple is a path where there are no repeated elements outside the lowest level of the path.
    * @return Whether this path is a simple path.
    */
-  public boolean isSimplePath(){
+  public boolean isSimplePath() {
     PathSegment seg = rootSegment;
-    while(seg != null){
-      if(seg.isArray() && !seg.isLastPath()) return false;
+    while (seg != null) {
+      if (seg.isArray() && !seg.isLastPath()) {
+        return false;
+      }
       seg = seg.getChild();
     }
     return true;
   }
 
 
-  public SchemaPath(SchemaPath path){
+  public SchemaPath(SchemaPath path) {
     super(path.getPosition());
     this.rootSegment = path.rootSegment;
   }
 
-  public SchemaPath(NameSegment rootSegment){
+  public SchemaPath(NameSegment rootSegment) {
     super(ExpressionPosition.UNKNOWN);
     this.rootSegment = rootSegment;
   }
 
-  public SchemaPath(NameSegment rootSegment, ExpressionPosition pos){
+  public SchemaPath(NameSegment rootSegment, ExpressionPosition pos) {
     super(pos);
     this.rootSegment = rootSegment;
   }
@@ -153,17 +160,17 @@ public class SchemaPath extends LogicalExpressionBase {
     return visitor.visitSchemaPath(this, value);
   }
 
-  public SchemaPath getChild(String childPath){
+  public SchemaPath getChild(String childPath) {
     NameSegment newRoot = rootSegment.cloneWithNewChild(new NameSegment(childPath));
     return new SchemaPath(newRoot);
   }
 
-  public SchemaPath getUnindexedArrayChild(){
+  public SchemaPath getUnindexedArrayChild() {
     NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(null));
     return new SchemaPath(newRoot);
   }
 
-  public SchemaPath getChild(int index){
+  public SchemaPath getChild(int index) {
     NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(index));
     return new SchemaPath(newRoot);
   }
@@ -184,12 +191,15 @@ public class SchemaPath extends LogicalExpressionBase {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (!(obj instanceof SchemaPath))
+    }
+    if (!(obj instanceof SchemaPath)) {
       return false;
+    }
 
     SchemaPath other = (SchemaPath) obj;
     if (rootSegment == null) {
@@ -199,19 +209,21 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   public boolean contains(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (!(obj instanceof SchemaPath))
+    }
+    if (!(obj instanceof SchemaPath)) {
       return false;
+    }
 
     SchemaPath other = (SchemaPath) obj;
     if (rootSegment == null) {
       return true;
     }
     return rootSegment.contains(other.rootSegment);
-
   }
 
   @Override
@@ -219,28 +231,29 @@ public class SchemaPath extends LogicalExpressionBase {
     return Iterators.emptyIterator();
   }
 
-
   @Override
   public String toString() {
     String expr = ExpressionStringBuilder.toString(this);
     return "SchemaPath ["+ expr + "]";
   }
 
-  public String toExpr(){
+  public String toExpr() {
     return ExpressionStringBuilder.toString(this);
   }
 
-  public String getAsUnescapedPath(){
+  public String getAsUnescapedPath() {
     StringBuilder sb = new StringBuilder();
     PathSegment seg = getRootSegment();
-    if(seg.isArray()) throw new IllegalStateException("Drill doesn't currently support top level arrays");
+    if (seg.isArray()) {
+      throw new IllegalStateException("Drill doesn't currently support top level arrays");
+    }
     sb.append(seg.getNameSegment().getPath());
 
-    while( (seg = seg.getChild()) != null){
-      if(seg.isNamed()){
+    while ( (seg = seg.getChild()) != null) {
+      if (seg.isNamed()) {
         sb.append('.');
         sb.append(seg.getNameSegment().getPath());
-      }else{
+      } else {
         sb.append('[');
         sb.append(seg.getArraySegment().getIndex());
         sb.append(']');
@@ -248,7 +261,6 @@ public class SchemaPath extends LogicalExpressionBase {
     }
     return sb.toString();
   }
-
 
   public static class De extends StdDeserializer<SchemaPath> {
     DrillConfig config;
@@ -263,8 +275,9 @@ public class SchemaPath extends LogicalExpressionBase {
         JsonProcessingException {
       String expr = jp.getText();
 
-      if (expr == null || expr.isEmpty())
+      if (expr == null || expr.isEmpty()) {
         return null;
+      }
       try {
         // logger.debug("Parsing expression string '{}'", expr);
         ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
@@ -276,9 +289,9 @@ public class SchemaPath extends LogicalExpressionBase {
         parse_return ret = parser.parse();
 
         // ret.e.resolveAndValidate(expr, errorCollector);
-        if(ret.e instanceof SchemaPath){
+        if (ret.e instanceof SchemaPath) {
           return (SchemaPath) ret.e;
-        }else{
+        } else {
           throw new IllegalStateException("Schema path is not a valid format.");
         }
       } catch (RecognitionException e) {

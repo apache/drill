@@ -84,7 +84,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
     while (l < rightStart) {
       aux.set(o++, vector4.get(l++));
     }
-    while (r < rightEnd){
+    while (r < rightEnd) {
       aux.set(o++, vector4.get(r++));
     }
     assert o == outStart + (rightEnd - leftStart);
@@ -97,7 +97,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
   }
 
   @Override
-  public void sort(VectorContainer container){
+  public void sort(VectorContainer container) {
     Stopwatch watch = new Stopwatch();
     watch.start();
     while (runStarts.size() > 1) {
@@ -109,9 +109,13 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
         int left = runStarts.poll();
         int right = runStarts.poll();
         Integer end = runStarts.peek();
-        if (end == null) end = vector4.getTotalCount();
+        if (end == null) {
+          end = vector4.getTotalCount();
+        }
         outIndex = merge(left, right, end, outIndex);
-        if (outIndex < vector4.getTotalCount()) newRunStarts.add(outIndex);
+        if (outIndex < vector4.getTotalCount()) {
+          newRunStarts.add(outIndex);
+        }
       }
       if (outIndex < vector4.getTotalCount()) {
         copyRun(outIndex, vector4.getTotalCount());

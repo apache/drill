@@ -40,8 +40,9 @@ class ByteCodeLoader {
     @Override
     public byte[] load(String path) throws ClassTransformationException, IOException {
       URL u = this.getClass().getResource(path);
-      if (u == null)
+      if (u == null) {
         throw new ClassTransformationException(String.format("Unable to find TemplateClass at path %s", path));
+      }
       return Resources.toByteArray(u);
     }
   };
@@ -51,11 +52,14 @@ class ByteCodeLoader {
       return byteCode.get(path);
     } catch (ExecutionException e) {
       Throwable c = e.getCause();
-      if (c instanceof ClassTransformationException)
+      if (c instanceof ClassTransformationException) {
         throw (ClassTransformationException) c;
-      if (c instanceof IOException)
+      }
+      if (c instanceof IOException) {
         throw (IOException) c;
+      }
       throw new ClassTransformationException(c);
     }
   }
+
 }

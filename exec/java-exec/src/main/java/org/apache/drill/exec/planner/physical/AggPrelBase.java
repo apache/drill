@@ -51,8 +51,7 @@ import org.eigenbase.sql.type.ReturnTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-
-public abstract class AggPrelBase extends AggregateRelBase implements Prel{
+public abstract class AggPrelBase extends AggregateRelBase implements Prel {
 
   protected static enum OperatorPhase {PHASE_1of1, PHASE_1of2, PHASE_2of2};
 
@@ -60,7 +59,6 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
   protected List<NamedExpression> keys = Lists.newArrayList();
   protected List<NamedExpression> aggExprs = Lists.newArrayList();
   protected List<AggregateCall> phase2AggCallList = Lists.newArrayList();
-
 
   /**
    * Specialized aggregate function for SUMing the COUNTs.  Since return type of
@@ -166,12 +164,14 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
 
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillParseContext pContext) {
     List<LogicalExpression> args = Lists.newArrayList();
-    for(Integer i : call.getArgList()){
+    for (Integer i : call.getArgList()) {
       args.add(new FieldReference(fn.get(i)));
     }
 
     // for count(1).
-    if(args.isEmpty()) args.add(new ValueExpressions.LongExpression(1l));
+    if (args.isEmpty()) {
+      args.add(new ValueExpressions.LongExpression(1l));
+    }
     LogicalExpression expr = new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN );
     return expr;
   }

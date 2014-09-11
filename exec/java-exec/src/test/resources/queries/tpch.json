@@ -1,7 +1,7 @@
 [
 
   tpch1: "
-  
+
 select
   l_returnflag,
   l_linestatus,
@@ -27,7 +27,7 @@ LIMIT 1;
 
   ",
  tpch1a: "
-  
+
 select
   l_returnflag,
   l_linestatus,
@@ -50,5 +50,4 @@ order by
 LIMIT 1;
 
   "
-
 ]

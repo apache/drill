@@ -35,10 +35,9 @@ public class GraphAlgos {
     private TopoSorter(AdjacencyList<V> graph, boolean reverse) {
       graph.clearVisited();
 
-      if (reverse){
+      if (reverse) {
         this.rGraph = graph.getReversedList();
-      }
-      else{
+      } else {
         this.rGraph = graph;
       }
       Collection<AdjacencyList<V>.Node> sourceNodes = rGraph.getInternalRootNodes();
@@ -49,7 +48,9 @@ public class GraphAlgos {
     }
 
     private void visit(AdjacencyList<V>.Node n) {
-      if (n.visited) return;
+      if (n.visited) {
+        return;
+      }
 
       n.visited = true;
       List<Edge<AdjacencyList<V>.Node>> edges = rGraph.getAdjacent(n);
@@ -93,7 +94,9 @@ public class GraphAlgos {
     List<List<AdjacencyList<V>.Node>> subgraphs = t.executeTarjan(graph);
     for (Iterator<List<AdjacencyList<V>.Node>> i = subgraphs.iterator(); i.hasNext();) {
       List<AdjacencyList<V>.Node> l = i.next();
-      if (l.size() == 1) i.remove();
+      if (l.size() == 1) {
+        i.remove();
+      }
     }
     return subgraphs;
   }
@@ -152,4 +155,5 @@ public class GraphAlgos {
       return SCC;
     }
   }
+
 }

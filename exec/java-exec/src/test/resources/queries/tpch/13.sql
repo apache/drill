@@ -8,8 +8,8 @@ from
       c.c_custkey,
       count(o.o_orderkey)
     from
-      cp.`tpch/customer.parquet` c 
-      left outer join cp.`tpch/orders.parquet` o 
+      cp.`tpch/customer.parquet` c
+      left outer join cp.`tpch/orders.parquet` o
         on c.c_custkey = o.o_custkey
         and o.o_comment not like '%special%requests%'
     group by

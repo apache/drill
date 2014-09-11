@@ -83,12 +83,14 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
       @Override
       public MessageLite getHandshakeResponse(BitClientHandshake inbound) throws Exception {
         // logger.debug("Handling handshake from other bit. {}", inbound);
-        if (inbound.getRpcVersion() != DataRpcConfig.RPC_VERSION)
+        if (inbound.getRpcVersion() != DataRpcConfig.RPC_VERSION) {
           throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.",
               inbound.getRpcVersion(), DataRpcConfig.RPC_VERSION));
-        if (inbound.getChannel() != RpcChannel.BIT_DATA)
+        }
+        if (inbound.getChannel() != RpcChannel.BIT_DATA) {
           throw new RpcException(String.format("Invalid NodeMode.  Expected BIT_DATA but received %s.",
               inbound.getChannel()));
+        }
 
         return BitServerHandshake.newBuilder().setRpcVersion(DataRpcConfig.RPC_VERSION).build();
       }
@@ -113,8 +115,8 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
         }
       }
       BufferAllocator allocator = manager.getFragmentContext().getAllocator();
-      if(body != null){
-        if(!allocator.takeOwnership((DrillBuf) body.unwrap())){
+      if (body != null) {
+        if (!allocator.takeOwnership((DrillBuf) body.unwrap())) {
           dataHandler.handle(connection, manager, OOM_FRAGMENT, null, null);
         }
       }
@@ -142,8 +144,6 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
   }
 
-
-
   @Override
   public OutOfMemoryHandler getOutOfMemoryHandler() {
     return new OutOfMemoryHandler() {
@@ -158,4 +158,5 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
     return new DataProtobufLengthDecoder(allocator, outOfMemoryHandler);
   }
+
 }

@@ -62,12 +62,12 @@ public class TestJsonReader extends BaseTestQuery {
   private static final boolean VERBOSE_DEBUG = true;
 
   @BeforeClass
-  public static void setupAllocator(){
+  public static void setupAllocator() {
     allocator = new TopLevelAllocator();
   }
 
   @AfterClass
-  public static void destroyAllocator(){
+  public static void destroyAllocator() {
     allocator.close();
   }
 
@@ -254,7 +254,9 @@ public class TestJsonReader extends BaseTestQuery {
         "}\n }";
 
     String compound = simple;
-    for(int i =0; i < repeatSize; i++) compound += simple;
+    for (int i =0; i < repeatSize; i++) {
+      compound += simple;
+    }
 
 //    simple = "{ \"integer\" : 2001, \n" +
 //        "  \"float\"   : 1.2\n" +
@@ -272,9 +274,9 @@ public class TestJsonReader extends BaseTestQuery {
     int i =0;
     List<Integer> batchSizes = Lists.newArrayList();
 
-    outside: while(true){
+    outside: while(true) {
       writer.setPosition(i);
-      switch(jsonReader.write(writer)){
+      switch (jsonReader.write(writer)) {
       case WRITE_SUCCEED:
         i++;
         break;
@@ -291,7 +293,7 @@ public class TestJsonReader extends BaseTestQuery {
         writer.allocate();
         writer.reset();
 
-        switch(jsonReader.write(writer)){
+        switch(jsonReader.write(writer)) {
         case NO_MORE:
           System.out.println("no more records - new alloc loop.");
           break outside;
@@ -306,7 +308,7 @@ public class TestJsonReader extends BaseTestQuery {
 
     int total = 0;
     int lastRecordCount = 0;
-    for(Integer records : batchSizes){
+    for (Integer records : batchSizes) {
       total += records;
       lastRecordCount = records;
     }
@@ -340,4 +342,5 @@ public class TestJsonReader extends BaseTestQuery {
     writer.clear();
     buffer.release();
   }
+
 }

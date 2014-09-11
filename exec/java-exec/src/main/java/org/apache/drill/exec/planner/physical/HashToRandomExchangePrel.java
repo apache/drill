@@ -89,7 +89,9 @@ public class HashToRandomExchangePrel extends ExchangePrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
+    if (PrelUtil.getSettings(getCluster()).isSingleMode()) {
+      return childPOP;
+    }
 
     HashToRandomExchange g = new HashToRandomExchange(childPOP, PrelUtil.getHashExpression(this.fields, getChild().getRowType()));
     return creator.addMetadata(this, g);
@@ -117,6 +119,5 @@ public class HashToRandomExchangePrel extends ExchangePrel {
   public SelectionVectorMode[] getSupportedEncodings() {
     return SelectionVectorMode.ALL;
   }
-
 
 }

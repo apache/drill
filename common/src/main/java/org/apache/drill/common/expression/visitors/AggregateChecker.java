@@ -49,7 +49,7 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   public static final AggregateChecker INSTANCE = new AggregateChecker();
 
-  public static boolean isAggregating(LogicalExpression e, ErrorCollector errors){
+  public static boolean isAggregating(LogicalExpression e, ErrorCollector errors) {
     return e.accept(INSTANCE, errors);
   }
 
@@ -61,38 +61,42 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   @Override
   public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder, ErrorCollector errors) {
-    if(holder.isAggregating()){
+    if (holder.isAggregating()) {
       for (int i = 0; i < holder.args.size(); i++) {
         LogicalExpression e = holder.args.get(i);
-        if(e.accept(this, errors)){
+        if(e.accept(this, errors)) {
           errors.addGeneralError(e.getPosition(),
             String.format("Aggregating function call %s includes nested aggregations at arguments number %d. " +
               "This isn't allowed.", holder.getName(), i));
         }
       }
       return true;
-    }else{
-      for(LogicalExpression e : holder.args){
-        if(e.accept(this, errors)) return true;
+    } else {
+      for (LogicalExpression e : holder.args) {
+        if (e.accept(this, errors)) {
+          return true;
+        }
       }
       return false;
     }
   }
 
   @Override
-  public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors){
+  public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors) {
     for (LogicalExpression arg : op.args) {
-      if (arg.accept(this, errors))
+      if (arg.accept(this, errors)) {
         return true;
+      }
     }
-
     return false;
   }
 
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr, ErrorCollector errors) {
     IfCondition c = ifExpr.ifCondition;
-    if(c.condition.accept(this, errors) || c.expression.accept(this, errors)) return true;
+    if (c.condition.accept(this, errors) || c.expression.accept(this, errors)) {
+      return true;
+    }
     return ifExpr.elseExpression.accept(this, errors);
   }
 
@@ -198,4 +202,5 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
   public Boolean visitNullExpression(NullExpression e, ErrorCollector value) throws RuntimeException {
     return false;
   }
+
 }

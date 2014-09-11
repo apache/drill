@@ -74,15 +74,15 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     add(vv, releasable);
   }
 
-  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz){
+  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
     MaterializedField field = MaterializedField.create(name, type);
     ValueVector v = TypeHelper.getNewVector(field, this.oContext.getAllocator());
 
     add(v);
 
-    if(clazz.isAssignableFrom(v.getClass())){
+    if (clazz.isAssignableFrom(v.getClass())) {
       return (T) v;
-    }else{
+    } else {
       throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), v.getClass().getSimpleName()));
     }
   }
@@ -107,9 +107,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
 
   public static VectorContainer canonicalize(VectorContainer original) {
     VectorContainer vc = new VectorContainer();
-
     List<VectorWrapper<?>> canonicalWrappers = new ArrayList<VectorWrapper<?>>(original.wrappers);
-
     // Sort list of VectorWrapper alphabetically based on SchemaPath.
     Collections.sort(canonicalWrappers, new Comparator<VectorWrapper<?>>() {
       public int compare(VectorWrapper<?> v1, VectorWrapper<?> v2) {
@@ -122,7 +120,6 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     }
     return vc;
   }
-
 
   private void cloneAndTransfer(VectorWrapper<?> wrapper) {
     wrappers.add(wrapper.cloneAndTransfer());
@@ -145,6 +142,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
   public void add(ValueVector[] hyperVector) {
     add(hyperVector, true);
   }
+
   public void add(ValueVector[] hyperVector, boolean releasable) {
     assert hyperVector.length != 0;
     schema = null;
@@ -167,7 +165,6 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
         return;
       }
     }
-
     throw new IllegalStateException("You attempted to remove a vector that didn't exist.");
   }
 
@@ -175,7 +172,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     for (int i = 0; i < wrappers.size(); i++) {
       VectorWrapper<?> va = wrappers.get(i);
       TypedFieldId id = va.getFieldIdIfMatches(i, path);
-      if(id != null){
+      if (id != null) {
         return id;
       }
     }
@@ -183,15 +180,14 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     return null;
   }
 
-
-
-
   @Override
   public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds) {
     Preconditions.checkArgument(fieldIds.length >= 1);
     VectorWrapper<?> va = wrappers.get(fieldIds[0]);
 
-    if(va == null) return null;
+    if (va == null) {
+      return null;
+    }
 
     if (fieldIds.length == 1 && clazz != null && !clazz.isAssignableFrom(va.getVectorClass())) {
       throw new IllegalStateException(String.format(
@@ -242,7 +238,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     return recordCount;
   }
 
-  public void zeroVectors(){
+  public void zeroVectors() {
     for (VectorWrapper<?> w : wrappers) {
       w.clear();
     }
@@ -252,17 +248,18 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     return this.wrappers.size();
   }
 
-  public void allocateNew(){
+  public void allocateNew() {
     for (VectorWrapper<?> w : wrappers) {
       w.getValueVector().allocateNew();
     }
   }
 
-  public boolean allocateNewSafe(){
+  public boolean allocateNewSafe() {
     for (VectorWrapper<?> w : wrappers) {
-      if(!w.getValueVector().allocateNewSafe()) return false;
+      if (!w.getValueVector().allocateNewSafe()) {
+        return false;
+      }
     }
-
     return true;
   }
 

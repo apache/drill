@@ -41,14 +41,15 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   private final Map<MaterializedField, ValueVector> fieldVectorMap = Maps.newHashMap();
   private final BufferAllocator allocator;
 
-  public TestOutputMutator(BufferAllocator allocator){
+  public TestOutputMutator(BufferAllocator allocator) {
     this.allocator = allocator;
   }
 
   public void removeField(MaterializedField field) throws SchemaChangeException {
     ValueVector vector = fieldVectorMap.remove(field);
-    if (vector == null)
+    if (vector == null) {
       throw new SchemaChangeException("Failure attempting to remove an unknown field.");
+    }
     container.remove(vector);
     vector.close();
   }
@@ -66,7 +67,7 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     return container.iterator();
   }
 
-  public void clear(){
+  public void clear() {
 
   }
 
@@ -83,7 +84,9 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   @Override
   public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
     ValueVector v = TypeHelper.getNewVector(field, allocator);
-    if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+    if (!clazz.isAssignableFrom(v.getClass())) {
+      throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+    }
     addField(v);
     return (T) v;
   }
@@ -92,4 +95,5 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   public DrillBuf getManagedBuffer() {
     return allocator.buffer(255);
   }
+
 }

@@ -50,9 +50,9 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
 
   private final static ConstantChecker INSTANCE = new ConstantChecker();
 
-  private ConstantChecker(){}
+  private ConstantChecker() {}
 
-  public static void checkConstants(LogicalExpression e, ErrorCollector errors){
+  public static void checkConstants(LogicalExpression e, ErrorCollector errors) {
     e.accept(INSTANCE, errors);
   }
 
@@ -67,7 +67,7 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
     boolean allArgsAreConstant = true;
     for (int i = 0; i < holder.args.size(); i++) {
       boolean thisArgIsConstant = holder.args.get(i).accept(this, errors);
-      if(!thisArgIsConstant){
+      if (!thisArgIsConstant) {
         allArgsAreConstant = false;
         if (holder.argConstantOnly(i)) {
           errors.addGeneralError( //
@@ -82,8 +82,9 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   @Override
   public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors) {
     for (LogicalExpression e : op.args) {
-      if (!e.accept(this, errors))
+      if (!e.accept(this, errors)) {
         return false;
+      }
     }
     return true;
   }
@@ -91,10 +92,13 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr, ErrorCollector errors) {
     IfCondition c = ifExpr.ifCondition;
-    if (!c.condition.accept(this, errors) || !c.expression.accept(this, errors))
+    if (!c.condition.accept(this, errors) || !c.expression.accept(this, errors)) {
       return false;
+    }
 
-    if (!ifExpr.elseExpression.accept(this, errors)) return false;
+    if (!ifExpr.elseExpression.accept(this, errors)) {
+      return false;
+    }
     return true;
   }
 
@@ -179,7 +183,7 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   }
 
   @Override
-  public Boolean visitUnknown(LogicalExpression e, ErrorCollector errors){
+  public Boolean visitUnknown(LogicalExpression e, ErrorCollector errors) {
     return false;
   }
 
@@ -202,4 +206,5 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   public Boolean visitNullExpression(NullExpression e, ErrorCollector value) throws RuntimeException {
     return true;
   }
+
 }

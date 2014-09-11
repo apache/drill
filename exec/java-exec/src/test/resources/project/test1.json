@@ -6,18 +6,18 @@
             type:"manual"
         }
     },
-	graph:[
+    graph:[
         {
             @id:1,
             pop:"mock-sub-scan",
             url: "http://apache.org",
             entries:[
-            	{records: 100, types: [
-            	  {name: "blue", type: "INT", mode: "REQUIRED"},
-            	  {name: "red", type: "BIGINT", mode: "OPTIONAL"},
-            	  {name: "green", type: "INT", mode: "REQUIRED"},
-            	  {name: "orange", type: "VARCHAR", mode: "OPTIONAL"}
-            	]}
+                {records: 100, types: [
+                  {name: "blue", type: "INT", mode: "REQUIRED"},
+                  {name: "red", type: "BIGINT", mode: "OPTIONAL"},
+                  {name: "green", type: "INT", mode: "REQUIRED"},
+                  {name: "orange", type: "VARCHAR", mode: "OPTIONAL"}
+                ]}
             ]
         },
         {

@@ -8,7 +8,7 @@
     },
     graph:[
         {
-        	@id:1,
+            @id:1,
           pop:"fs-scan",
           format: {type: "json"},
           storage:{type: "file", connection: "classpath:///"},
@@ -18,9 +18,9 @@
             child: 1,
             pop:"project",
             exprs: [
-							{ ref: "int2varchar", expr:"cast(integer as varchar(20))" },
-							{ ref: "float2varchar", expr:"cast(float as varchar(20))" }
-	        ]
+                { ref: "int2varchar", expr:"cast(integer as varchar(20))" },
+                { ref: "float2varchar", expr:"cast(float as varchar(20))" }
+            ]
         },
         {
             @id: 3,

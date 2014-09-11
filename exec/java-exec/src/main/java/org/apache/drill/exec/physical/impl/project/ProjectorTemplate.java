@@ -39,27 +39,25 @@ public abstract class ProjectorTemplate implements Projector {
   private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
 
-  public ProjectorTemplate() throws SchemaChangeException{
+  public ProjectorTemplate() throws SchemaChangeException {
   }
 
   @Override
   public final int projectRecords(int startIndex, final int recordCount, int firstOutputIndex) {
-    switch(svMode){
+    switch (svMode) {
     case FOUR_BYTE:
       throw new UnsupportedOperationException();
 
-
     case TWO_BYTE:
       final int count = recordCount;
-      for(int i = 0; i < count; i++, firstOutputIndex++){
-        if (!doEval(vector2.getIndex(i), firstOutputIndex))
+      for (int i = 0; i < count; i++, firstOutputIndex++) {
+        if (!doEval(vector2.getIndex(i), firstOutputIndex)) {
           return i;
+        }
       }
       return recordCount;
 
-
     case NONE:
-
       final int countN = recordCount;
       int i;
       for (i = startIndex; i < startIndex + countN; i++, firstOutputIndex++) {
@@ -68,17 +66,15 @@ public abstract class ProjectorTemplate implements Projector {
         }
       }
       if (i < startIndex + recordCount || startIndex > 0) {
-        for(TransferPair t : transfers){
+        for (TransferPair t : transfers) {
           t.splitAndTransfer(startIndex, i - startIndex);
         }
         return i - startIndex;
       }
-      for(TransferPair t : transfers){
+      for (TransferPair t : transfers) {
           t.transfer();
       }
       return recordCount;
-
-
 
     default:
       throw new UnsupportedOperationException();
@@ -89,7 +85,7 @@ public abstract class ProjectorTemplate implements Projector {
   public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException{
 
     this.svMode = incoming.getSchema().getSelectionVectorMode();
-    switch(svMode){
+    switch (svMode) {
     case FOUR_BYTE:
       this.vector4 = incoming.getSelectionVector4();
       break;
@@ -103,9 +99,5 @@ public abstract class ProjectorTemplate implements Projector {
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-
-
-
-
 
 }

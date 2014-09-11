@@ -76,8 +76,10 @@ public class JdbcTestQueryBase extends JdbcTest {
 
       System.out.println("\n\n\n");
       success = true;
-    }finally{
-      if(!success) Thread.sleep(2000);
+    } finally {
+      if (!success) {
+        Thread.sleep(2000);
+      }
     }
   }
 }

@@ -38,7 +38,7 @@ public class TestBroadcastExchange extends PopUnitTestBase {
   public void TestSingleBroadcastExchangeWithTwoScans() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
@@ -52,8 +52,10 @@ public class TestBroadcastExchange extends PopUnitTestBase {
               .replace("#{RIGHT_FILE}", FileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString());
       List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, physicalPlan);
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0) count += b.getHeader().getRowCount();
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
+          count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       assertEquals(25, count);
@@ -64,7 +66,7 @@ public class TestBroadcastExchange extends PopUnitTestBase {
   public void TestMultipleSendLocationBroadcastExchange() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
@@ -76,11 +78,14 @@ public class TestBroadcastExchange extends PopUnitTestBase {
           FileUtils.getResourceAsFile("/sender/broadcast_exchange_long_run.json"), Charsets.UTF_8);
       List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, physicalPlan);
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0) count += b.getHeader().getRowCount();
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
+          count += b.getHeader().getRowCount();
+        }
         b.release();
       }
       System.out.println(count);
     }
   }
+
 }

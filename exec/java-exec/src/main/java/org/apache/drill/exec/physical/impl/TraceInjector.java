@@ -82,10 +82,12 @@ public class TraceInjector extends AbstractPhysicalVisitor<PhysicalOperator, Fra
         }
 
         /* Inject trace operator */
-        if (list.size() > 0)
-            newOp = op.getNewWithChildren(list);
-            newOp.setOperatorId(op.getOperatorId());
+        if (list.size() > 0) {
+          newOp = op.getNewWithChildren(list);
+        }
+        newOp.setOperatorId(op.getOperatorId());
 
         return newOp;
     }
+
 }

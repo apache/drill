@@ -53,7 +53,7 @@ public class TopLevelAllocator implements BufferAllocator {
     this(maximumAllocation, true);
   }
 
-  private TopLevelAllocator(long maximumAllocation, boolean errorOnLeak){
+  private TopLevelAllocator(long maximumAllocation, boolean errorOnLeak) {
     this.errorOnLeak = errorOnLeak;
     this.acct = new Accountor(errorOnLeak, null, null, maximumAllocation, 0);
     this.empty = DrillBuf.getEmpty(this, acct);
@@ -72,8 +72,12 @@ public class TopLevelAllocator implements BufferAllocator {
   }
 
   public DrillBuf buffer(int min, int max) {
-    if(min == 0) return empty;
-    if(!acct.reserve(min)) return null;
+    if (min == 0) {
+      return empty;
+    }
+    if(!acct.reserve(min)) {
+      return null;
+    }
     UnsafeDirectLittleEndian buffer = innerAllocator.directBuffer(min, max);
     DrillBuf wrapped = new DrillBuf(this, acct, buffer);
     acct.reserved(min, wrapped);
@@ -97,12 +101,14 @@ public class TopLevelAllocator implements BufferAllocator {
 
   @Override
   public BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation) throws OutOfMemoryException {
-    if(!acct.reserve(initialReservation)){
+    if(!acct.reserve(initialReservation)) {
       throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
     };
     logger.debug("New child allocator with initial reservation {}", initialReservation);
     ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation, childrenMap);
-    if(ENABLE_ACCOUNTING) childrenMap.put(allocator, Thread.currentThread().getStackTrace());
+    if (ENABLE_ACCOUNTING) {
+      childrenMap.put(allocator, Thread.currentThread().getStackTrace());
+    }
 
     return allocator;
   }
@@ -158,8 +164,10 @@ public class TopLevelAllocator implements BufferAllocator {
 
     @Override
     public DrillBuf buffer(int size, int max) {
-      if(size == 0) return empty;
-      if(!childAcct.reserve(size)){
+      if (size == 0) {
+        return empty;
+      }
+      if(!childAcct.reserve(size)) {
         logger.warn("Unable to allocate buffer of size {} due to memory limit. Current allocation: {}", size, getAllocatedMemory(), new Exception());
         return null;
       };
@@ -182,7 +190,7 @@ public class TopLevelAllocator implements BufferAllocator {
     @Override
     public BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation)
         throws OutOfMemoryException {
-      if(!childAcct.reserve(initialReservation)){
+      if (!childAcct.reserve(initialReservation)) {
         throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getAvailable()));
       };
       logger.debug("New child allocator with initial reservation {}", initialReservation);
@@ -191,14 +199,16 @@ public class TopLevelAllocator implements BufferAllocator {
       return newChildAllocator;
     }
 
-    public PreAllocator getNewPreAllocator(){
+    public PreAllocator getNewPreAllocator() {
       return new PreAlloc(this, this.childAcct);
     }
 
     @Override
     public void close() {
       if (ENABLE_ACCOUNTING) {
-        if(thisMap != null) thisMap.remove(this);
+        if (thisMap != null) {
+          thisMap.remove(this);
+        }
         for (ChildAllocator child : children.keySet()) {
           if (!child.isClosed()) {
             StringBuilder sb = new StringBuilder();
@@ -213,9 +223,9 @@ public class TopLevelAllocator implements BufferAllocator {
             IllegalStateException e = new IllegalStateException(String.format(
                     "Failure while trying to close child allocator: Child level allocators not closed. Fragment %d:%d. Stack trace: \n %s",
                     handle.getMajorFragmentId(), handle.getMinorFragmentId(), sb.toString()));
-            if(errorOnLeak){
+            if (errorOnLeak) {
               throw e;
-            }else{
+            } else {
               logger.warn("Memory leak.", e);
             }
           }
@@ -242,7 +252,7 @@ public class TopLevelAllocator implements BufferAllocator {
 
   }
 
-  public PreAllocator getNewPreAllocator(){
+  public PreAllocator getNewPreAllocator() {
     return new PreAlloc(this, this.acct);
   }
 
@@ -250,7 +260,7 @@ public class TopLevelAllocator implements BufferAllocator {
     int bytes = 0;
     final Accountor acct;
     final BufferAllocator allocator;
-    private PreAlloc(BufferAllocator allocator, Accountor acct){
+    private PreAlloc(BufferAllocator allocator, Accountor acct) {
       this.acct = acct;
       this.allocator = allocator;
     }
@@ -258,9 +268,9 @@ public class TopLevelAllocator implements BufferAllocator {
     /**
      *
      */
-    public boolean preAllocate(int bytes){
+    public boolean preAllocate(int bytes) {
 
-      if(!acct.reserve(bytes)){
+      if (!acct.reserve(bytes)) {
         return false;
       }
       this.bytes += bytes;
@@ -269,10 +279,11 @@ public class TopLevelAllocator implements BufferAllocator {
     }
 
 
-    public DrillBuf getAllocation(){
+    public DrillBuf getAllocation() {
       DrillBuf b = new DrillBuf(allocator, acct, innerAllocator.directBuffer(bytes, bytes));
       acct.reserved(bytes, b);
       return b;
     }
   }
+
 }
