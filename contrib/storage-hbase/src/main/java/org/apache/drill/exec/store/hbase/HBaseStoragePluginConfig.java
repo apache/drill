@@ -41,21 +41,34 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements
   @JsonIgnore
   private Configuration hbaseConf;
 
+  @JsonIgnore
+  private Boolean sizeCalculatorEnabled;
+
   public static final String NAME = "hbase";
 
   @JsonCreator
-  public HBaseStoragePluginConfig(@JsonProperty("config") Map<String, String> props) {
+  public HBaseStoragePluginConfig(@JsonProperty("config") Map<String, String> props, @JsonProperty("size.calculator.enabled") Boolean sizeCalculatorEnabled) {
     this.config = props;
     if (config == null) {
       config = Maps.newHashMap();
     }
     logger.debug("Initializing HBase StoragePlugin configuration with zookeeper quorum '{}', port '{}'.",
         config.get(HConstants.ZOOKEEPER_QUORUM), config.get(HBASE_ZOOKEEPER_PORT));
+    if (sizeCalculatorEnabled == null) {
+      this.sizeCalculatorEnabled = false;
+    } else {
+      this.sizeCalculatorEnabled = sizeCalculatorEnabled;
+    }
   }
 
   @JsonProperty
   public Map<String, String> getConfig() {
     return ImmutableMap.copyOf(config);
+  }
+
+  @JsonProperty("size.calculator.enabled")
+  public boolean isSizeCalculatorEnabled() {
+    return sizeCalculatorEnabled;
   }
 
   @Override

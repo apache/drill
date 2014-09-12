@@ -147,7 +147,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
       HTable table = new HTable(storagePluginConfig.getHBaseConf(), hbaseScanSpec.getTableName());
       this.hTableDesc = table.getTableDescriptor();
       NavigableMap<HRegionInfo, ServerName> regionsMap = table.getRegionLocations();
-      statsCalculator = new TableStatsCalculator(table, hbaseScanSpec, storagePlugin.getContext().getConfig());
+      statsCalculator = new TableStatsCalculator(table, hbaseScanSpec, storagePlugin.getContext().getConfig(), storagePluginConfig);
 
       boolean foundStartRegion = false;
       regionsToScan = new TreeMap<HRegionInfo, ServerName>();

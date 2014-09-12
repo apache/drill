@@ -46,8 +46,6 @@ public class TableStatsCalculator {
 
   private static final String DRILL_EXEC_HBASE_SCAN_SAMPLE_ROWS_COUNT = "drill.exec.hbase.scan.samplerows.count";
 
-  private static final String DRILL_EXEC_HBASE_SCAN_SIZECALCULATOR_ENABLED = "drill.exec.hbase.scan.sizecalculator.enabled";
-
   private static final int DEFAULT_SAMPLE_SIZE = 100;
 
   /**
@@ -64,10 +62,10 @@ public class TableStatsCalculator {
    *
    * @param table
    * @param hbaseScanSpec
-   * @param drillConfig
+   * @param config
    * @throws IOException
    */
-  public TableStatsCalculator(HTable table, HBaseScanSpec hbaseScanSpec, DrillConfig config) throws IOException {
+  public TableStatsCalculator(HTable table, HBaseScanSpec hbaseScanSpec, DrillConfig config, HBaseStoragePluginConfig storageConfig) throws IOException {
     HBaseAdmin admin = new HBaseAdmin(table.getConfiguration());
     try {
       int rowsToSample = rowsToSample(config);
@@ -90,7 +88,7 @@ public class TableStatsCalculator {
         scanner.close();
       }
 
-      if (!enabled(config)) {
+      if (!enabled(storageConfig)) {
         logger.info("Region size calculation disabled.");
         return;
       }
@@ -141,9 +139,8 @@ public class TableStatsCalculator {
 
   }
 
-  private boolean enabled(DrillConfig config) {
-    return config.hasPath(DRILL_EXEC_HBASE_SCAN_SIZECALCULATOR_ENABLED)
-        ? config.getBoolean(DRILL_EXEC_HBASE_SCAN_SIZECALCULATOR_ENABLED) : true;
+  private boolean enabled(HBaseStoragePluginConfig config) {
+    return config.isSizeCalculatorEnabled();
   }
 
   private int rowsToSample(DrillConfig config) {
