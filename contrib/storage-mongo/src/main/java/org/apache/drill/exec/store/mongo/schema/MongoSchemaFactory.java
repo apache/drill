@@ -63,8 +63,6 @@ public class MongoSchemaFactory implements SchemaFactory {
   private MongoClient client;
   private LoadingCache<String, List<String>> databases;
   private LoadingCache<String, List<String>> tableNameLoader;
-  @SuppressWarnings("unused")
-  private LoadingCache<String, LoadingCache<String, String>> tableLoaders;
   private final String schemaName;
   private final MongoStoragePlugin plugin;
   
@@ -92,12 +90,6 @@ public class MongoSchemaFactory implements SchemaFactory {
         .newBuilder() //
         .expireAfterAccess(1, TimeUnit.MINUTES) //
         .build(new TableNameLoader());
-
-    tableLoaders = CacheBuilder //
-        .newBuilder() //
-        .expireAfterAccess(4, TimeUnit.HOURS) //
-        .maximumSize(20) //
-        .build(new TableLoaderLoader());
   }
 
   private class DatabaseLoader extends CacheLoader<String, List<String>> {
@@ -120,35 +112,6 @@ public class MongoSchemaFactory implements SchemaFactory {
       Set<String> collectionNames = db.getCollectionNames();
       return new ArrayList<>(collectionNames);
     }
-
-  }
-
-  private class TableLoaderLoader extends
-      CacheLoader<String, LoadingCache<String, String>> {
-
-    @Override
-    public LoadingCache<String, String> load(String key) throws Exception {
-      return CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES)
-          .build(new TableLoader(key));
-    }
-
-  }
-
-  private class TableLoader extends CacheLoader<String, String> {
-
-    private final String dbName;
-
-    public TableLoader(String dbName) {
-      super();
-      this.dbName = dbName;
-    }
-
-    @Override
-    public String load(String key) throws Exception {
-      DB db = client.getDB(dbName);
-      db.setReadPreference(ReadPreference.nearest());
-      return db.getCollection(key).getName();
-    }
   }
 
   @Override
@@ -169,8 +132,7 @@ public class MongoSchemaFactory implements SchemaFactory {
       List<String> tables;
       try {
         tables = tableNameLoader.get(name);
-        MongoDatabaseSchema schema = new MongoDatabaseSchema(tables, this, name);
-        return schema;
+        return new MongoDatabaseSchema(tables, this, name);
       } catch (ExecutionException e) {
         logger.warn("Failure while attempting to access MongoDataBase '{}'.",
             name, e.getCause());
@@ -197,8 +159,8 @@ public class MongoSchemaFactory implements SchemaFactory {
         return Sets.newHashSet(dbs);
       } catch (ExecutionException e) {
         logger.warn("Failure while getting Mongo database list.", e);
+        return Collections.emptySet();
       }
-      return super.getSubSchemaNames();
     }
 
     List<String> getTableNames(String dbName) {
@@ -220,7 +182,5 @@ public class MongoSchemaFactory implements SchemaFactory {
     public String getTypeName() {
       return MongoStoragePluginConfig.NAME;
     }
-
   }
-
 }
