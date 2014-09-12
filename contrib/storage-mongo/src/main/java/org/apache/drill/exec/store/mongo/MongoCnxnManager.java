@@ -46,12 +46,13 @@ public class MongoCnxnManager {
   private static class AddressCloser implements RemovalListener<ServerAddress, MongoClient> {
     @Override
     public void onRemoval(RemovalNotification<ServerAddress, MongoClient> notification) {
-      logger.debug("Closing the Mongo Client : " + notification.getValue());
+      logger.debug("Closing the Mongo client connection to {}." , notification.getValue().getAddress().toString());
       notification.getValue().close();
+      addressClientMap.invalidate(notification.getKey());
     }
   }
 
-  public static MongoClient getClient(List<ServerAddress> addresses, MongoClientOptions clientOptions) throws UnknownHostException {
+  public synchronized static MongoClient getClient(List<ServerAddress> addresses, MongoClientOptions clientOptions) throws UnknownHostException {
     // Take the first replica from the replicated servers
     ServerAddress serverAddress = addresses.get(0);
     MongoClient mongoClient = addressClientMap.getIfPresent(serverAddress);
