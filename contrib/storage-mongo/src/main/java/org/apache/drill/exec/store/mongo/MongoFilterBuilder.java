@@ -86,56 +86,24 @@ public class MongoFilterBuilder extends
     return null;
   }
   
-//  @Override
-//  public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value)
-//      throws RuntimeException {
-//    String functionName = op.getName();
-//    ImmutableList<LogicalExpression> args = op.args;
-//    MongoScanSpec nodeScanSpec = null;
-//    switch (functionName) {
-//    case "booleanAnd":
-//    case "booleanOr":
-//      MongoScanSpec leftScanSpec = args.get(0).accept(this, null);
-//      MongoScanSpec rightScanSpec = args.get(1).accept(this, null);
-//      if (leftScanSpec != null && rightScanSpec != null) {
-//        nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec, rightScanSpec);
-//      } else {
-//        allExpressionsConverted = false;
-//        if ("booleanAnd".equals(functionName)) {
-//          nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
-//        }
-//      }
-//      break;
-//    }
-//    return nodeScanSpec;
-//  }
-  
 	@Override
 	public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value) {
 		List<LogicalExpression> args = op.args;
 		MongoScanSpec nodeScanSpec = null;
 		String functionName = op.getName();
-		for (int i = 0; i < args.size() - 1; ++i) {
+		for (int i = 0; i < args.size(); ++i) {
 			switch (functionName) {
 			case "booleanAnd":
 			case "booleanOr":
-				MongoScanSpec leftScanSpec = args.get(i).accept(this, null);
-				MongoScanSpec rightScanSpec = args.get(i + 1)
-						.accept(this, null);
-				if (leftScanSpec != null && rightScanSpec != null) {
-					MongoScanSpec tempnodeScanSpec = mergeScanSpecs(
-							functionName, leftScanSpec, rightScanSpec);
-					if (nodeScanSpec == null) {
-						nodeScanSpec = tempnodeScanSpec;
-					} else {
-						nodeScanSpec = mergeScanSpecs(functionName,
-								nodeScanSpec, tempnodeScanSpec);
-					}
+				if (nodeScanSpec == null) {
+					nodeScanSpec = args.get(i).accept(this, null);
 				} else {
-					allExpressionsConverted = false;
-					if ("booleanAnd".equals(functionName)) {
-						nodeScanSpec = leftScanSpec == null ? rightScanSpec
-								: leftScanSpec;
+					MongoScanSpec scanSpec = args.get(i).accept(this, null);
+					if (scanSpec != null) {
+						nodeScanSpec = mergeScanSpecs(functionName,
+								nodeScanSpec, scanSpec);
+					} else {
+						allExpressionsConverted = false;
 					}
 				}
 				break;
