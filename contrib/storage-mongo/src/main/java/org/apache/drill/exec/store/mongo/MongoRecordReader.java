@@ -94,9 +94,8 @@ public class MongoRecordReader extends AbstractRecordReader {
     this.fragmentContext = context;
     this.filters = new BasicDBObject();
     Map<String, List<BasicDBObject>> mergedFilters = mergeFilters(
-        subScanSpec.getMinFilters(), subScanSpec.getMaxFilters(),
-        subScanSpec.getFilter());
-    buildFilters(this.filters, mergedFilters);
+        subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
+    buildFilters(subScanSpec.getFilter(), mergedFilters);
     enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
     init(subScanSpec);
   }
@@ -120,8 +119,7 @@ public class MongoRecordReader extends AbstractRecordReader {
 	}
   
   private Map<String, List<BasicDBObject>> mergeFilters(
-      Map<String, Object> minFilters, Map<String, Object> maxFilters,
-      DBObject inputFilters) {
+      Map<String, Object> minFilters, Map<String, Object> maxFilters) {
     Map<String, List<BasicDBObject>> filters = Maps.newHashMap();
     
     for(Entry<String, Object> entry : minFilters.entrySet()) {
@@ -145,33 +143,21 @@ public class MongoRecordReader extends AbstractRecordReader {
         list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$lt", entry.getValue())));
       }
     }
-
-    if (inputFilters != null) {
-      BasicDBObject pushdownFilters = (BasicDBObject) inputFilters;
-      Set<Entry<String, Object>> filterSet = pushdownFilters.entrySet();
-      for (Entry<String, Object> filter : filterSet) {
-        List<BasicDBObject> list = filters.get(filter.getKey());
-        if (list == null) {
-          list = Lists.newArrayList();
-          filters.put(filter.getKey(), list);
-        }
-        list.add(new BasicDBObject(filter.getKey(), filter.getValue()));
-      }
-    }
     return filters;
   }
 
-  private void buildFilters(DBObject filters, Map<String, List<BasicDBObject>> mergedFilters) {
+  private void buildFilters(DBObject pushdownFilters, Map<String, List<BasicDBObject>> mergedFilters) {
     for(Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {
       List<BasicDBObject> list = entry.getValue();
       if(list.size() == 1) {
-        filters.putAll(list.get(0).toMap());
+        this.filters.putAll(list.get(0).toMap());
       } else {
         BasicDBObject andQueryFilter = new BasicDBObject();
         andQueryFilter.put("$and", list);
-        filters.putAll(andQueryFilter.toMap());
+        this.filters.putAll(andQueryFilter.toMap());
       }
     }
+    this.filters.put("$and", pushdownFilters);
   }
 
   private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {
