@@ -71,7 +71,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   private VectorContainerWriter writer;
   private List<SchemaPath> columns;
 
-  private DBObject filters;
+  private BasicDBObject filters;
   private DBObject fields;
 
   private MongoClientOptions clientOptions;
@@ -146,7 +146,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     return filters;
   }
 
-  private void buildFilters(DBObject pushdownFilters, Map<String, List<BasicDBObject>> mergedFilters) {
+  private void buildFilters(BasicDBObject pushdownFilters, Map<String, List<BasicDBObject>> mergedFilters) {
     for(Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {
       List<BasicDBObject> list = entry.getValue();
       if(list.size() == 1) {
@@ -159,7 +159,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
     if (pushdownFilters != null && !pushdownFilters.toMap().isEmpty()) {
       if (!mergedFilters.isEmpty()) {
-        this.filters.put("$and", pushdownFilters);
+        this.filters = MongoUtils.andFilterAtIndex(this.filters, pushdownFilters);
       } else {
         this.filters = pushdownFilters;
       }
