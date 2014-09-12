@@ -29,6 +29,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Maps;
@@ -84,7 +85,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       }
       if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
 //        v.clear();
-        v.load(fmd, allocator.buffer(0));
+//        v.load(fmd, allocator.buffer(8));
+        AllocationHelper.allocate(v, 0, 0, 0);
       } else {
         v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
       }
