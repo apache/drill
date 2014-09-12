@@ -157,7 +157,11 @@ public class MongoRecordReader extends AbstractRecordReader {
         this.filters.putAll(andQueryFilter.toMap());
       }
     }
-    this.filters.put("$and", pushdownFilters);
+    if (!mergedFilters.isEmpty()) {
+      this.filters.put("$and", pushdownFilters);
+    } else {
+      this.filters = pushdownFilters;
+    }
   }
 
   private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {
