@@ -21,7 +21,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>0.5.0-incubating-SNAPSHOT</version>
+  <version>0.6.0-incubating-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
