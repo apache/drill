@@ -131,7 +131,7 @@ public class MongoRecordReader extends AbstractRecordReader {
           list = Lists.newArrayList();
           filters.put(entry.getKey(), list);
         }
-        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$gt", entry.getValue())));
+        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$gte", entry.getValue())));
       }
     }
     
@@ -142,7 +142,7 @@ public class MongoRecordReader extends AbstractRecordReader {
           list = Lists.newArrayList();
           filters.put(entry.getKey(), list);
         }
-        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$lte", entry.getValue())));
+        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$lt", entry.getValue())));
       }
     }
 
@@ -273,7 +273,7 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   @Override
   public void cleanup() {
-    cursor.close();
+//    cursor.close();
   }
 
   public OperatorContext getOperatorContext() {
