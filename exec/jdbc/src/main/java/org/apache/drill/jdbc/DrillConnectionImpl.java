@@ -48,7 +48,6 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
   public final DrillStatementRegistry registry = new DrillStatementRegistry();
   final DrillConnectionConfig config;
 
-
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
 
   private final DrillClient client;
@@ -56,14 +55,18 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
   private Drillbit bit;
   private RemoteServiceSet serviceSet;
 
-  protected DrillConnectionImpl(Driver driver, AvaticaFactory factory, String url, Properties info)  throws SQLException{
+  protected DrillConnectionImpl(Driver driver, AvaticaFactory factory, String url, Properties info) throws SQLException {
     super(driver, factory, url, info);
     this.config = new DrillConnectionConfig(info);
 
-
-
-    try{
+    try {
       if (config.isLocal()) {
+        try {
+          Class.forName("org.eclipse.jetty.server.Handler");
+        } catch (ClassNotFoundException e1) {
+          throw new SQLException("Running Drill in embedded mode using the JDBC jar alone is not supported.");
+        }
+
         DrillConfig dConfig = DrillConfig.create();
         this.allocator = new TopLevelAllocator(dConfig);
         RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
@@ -72,8 +75,8 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
           serviceSet = RemoteServiceSet.getLocalServiceSet();
           set = serviceSet;
           try {
-          bit = new Drillbit(dConfig, serviceSet);
-          bit.run();
+            bit = new Drillbit(dConfig, serviceSet);
+            bit.run();
           } catch (Exception e) {
             throw new SQLException("Failure while attempting to start Drillbit in embedded mode.", e);
           }
@@ -93,7 +96,6 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
       throw new SQLException("Failure while attempting to connect to Drill.", e);
     }
   }
-
 
   @Override
   public DrillConnectionConfig config() {
@@ -171,4 +173,5 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
       }
     }
   }
+
 }
