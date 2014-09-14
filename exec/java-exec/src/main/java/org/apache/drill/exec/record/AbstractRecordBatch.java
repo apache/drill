@@ -41,10 +41,20 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     super();
     this.context = context;
     this.popConfig = popConfig;
-    this.oContext = new OperatorContext(popConfig, context);
+    this.oContext = new OperatorContext(popConfig, context, true);
     this.stats = oContext.getStats();
     this.container = new VectorContainer(this.oContext);
   }
+
+  protected AbstractRecordBatch(T popConfig, FragmentContext context, OperatorContext oContext) throws OutOfMemoryException {
+    super();
+    this.context = context;
+    this.popConfig = popConfig;
+    this.oContext = oContext;
+    this.stats = oContext.getStats();
+    this.container = new VectorContainer(this.oContext);
+  }
+
 
   @Override
   public Iterator<VectorWrapper<?>> iterator() {

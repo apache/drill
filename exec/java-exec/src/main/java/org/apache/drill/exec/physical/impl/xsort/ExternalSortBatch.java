@@ -128,7 +128,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     SPILL_DIRECTORIES = config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS);
     dirs = Iterators.cycle(Lists.newArrayList(SPILL_DIRECTORIES));
     uid = System.nanoTime();
-    copierAllocator = oContext.getAllocator().getChildAllocator(context.getHandle(), 10000000, 20000000);
+    copierAllocator = oContext.getAllocator().getChildAllocator(context, 10000000, 20000000, true);
   }
 
   @Override
@@ -286,6 +286,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           batchesSinceLastSpill++;
           if ((spillCount > 0 && totalSizeInMemory > .75 * highWaterMark) ||
                   (totalSizeInMemory > .95 * popConfig.getMaxAllocation()) ||
+                  (totalSizeInMemory > .95 * oContext.getAllocator().getFragmentLimit()) ||
                   (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE)) {
             mergeAndSpill();
             batchesSinceLastSpill = 0;

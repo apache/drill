@@ -20,6 +20,7 @@ package io.netty.buffer;
 import org.apache.drill.exec.memory.Accountor;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 class FakeAllocator implements BufferAllocator {
@@ -45,7 +46,8 @@ class FakeAllocator implements BufferAllocator {
   }
 
   @Override
-  public BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation)
+  public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation, long maximumReservation,
+                                           boolean applyFragmentLimit)
       throws OutOfMemoryException {
     throw new UnsupportedOperationException();
   }
@@ -66,6 +68,21 @@ class FakeAllocator implements BufferAllocator {
   }
 
   @Override
+  public void resetFragmentLimits() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setFragmentLimit(long l) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public long getFragmentLimit(){
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void close() {
   }
 
@@ -77,7 +94,7 @@ class FakeAllocator implements BufferAllocator {
   static class FakeAccountor extends Accountor {
 
     public FakeAccountor() {
-      super(false, null, null, 0, 0);
+      super(false, null, null, 0, 0, true);
     }
 
     @Override
@@ -129,7 +146,6 @@ class FakeAllocator implements BufferAllocator {
     public void close() {
 
     }
-
 
 
   }

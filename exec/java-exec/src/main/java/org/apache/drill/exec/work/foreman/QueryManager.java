@@ -115,8 +115,6 @@ public class QueryManager implements FragmentStatusListener{
         // if we do, record the fragment manager in the workBus.
         workBus.setRootFragmentManager(fragmentManager);
       }
-
-
     }
 
     // keep track of intermediate fragments (not root or leaf)
@@ -129,6 +127,8 @@ public class QueryManager implements FragmentStatusListener{
     for (PlanFragment f : leafFragments) {
       sendRemoteFragment(f);
     }
+
+    bee.getContext().getAllocator().resetFragmentLimits();
 
     logger.debug("Fragment runs setup is complete.");
     running = true;

@@ -33,10 +33,18 @@ public abstract class BaseRootExec implements RootExec {
   protected OperatorContext oContext = null;
 
   public BaseRootExec(FragmentContext context, PhysicalOperator config) throws OutOfMemoryException {
-    this.oContext = new OperatorContext(config, context, stats);
+    this.oContext = new OperatorContext(config, context, stats, true);
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
         config.getOperatorType(), OperatorContext.getChildCount(config)),
         oContext.getAllocator());
+    context.getStats().addOperatorStats(this.stats);
+  }
+
+  public BaseRootExec(FragmentContext context, OperatorContext oContext, PhysicalOperator config) throws OutOfMemoryException {
+    this.oContext = oContext;
+    stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
+      config.getOperatorType(), OperatorContext.getChildCount(config)),
+      oContext.getAllocator());
     context.getStats().addOperatorStats(this.stats);
   }
 

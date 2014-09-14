@@ -97,7 +97,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException{
     super();
-    this.oContext=new OperatorContext(writer, context);
+    this.oContext=new OperatorContext(writer, context, true);
   }
 
   @Override

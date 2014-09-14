@@ -27,8 +27,9 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
-import org.apache.drill.exec.ops.OpProfileDef;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -58,6 +59,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
   private OperatorStats stats;
   private boolean first = true;
   private UnorderedReceiver config;
+  OperatorContext oContext;
 
   public enum Metric implements MetricDef {
     BYTES_RECEIVED,
@@ -74,7 +76,8 @@ public class UnorderedReceiverBatch implements RecordBatch {
     this.context = context;
     // In normal case, batchLoader does not require an allocator. However, in case of splitAndTransfer of a value vector,
     // we may need an allocator for the new offset vector. Therefore, here we pass the context's allocator to batchLoader.
-    this.batchLoader = new RecordBatchLoader(context.getAllocator());
+    oContext = new OperatorContext(config, context, false);
+    this.batchLoader = new RecordBatchLoader(oContext.getAllocator());
 
     this.stats = context.getStats().getOperatorStats(new OpProfileDef(config.getOperatorId(), config.getOperatorType(), 1), null);
     this.stats.setLongStat(Metric.NUM_SENDERS, config.getNumSenders());
@@ -194,6 +197,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
   public void cleanup() {
     batchLoader.clear();
     fragProvider.cleanup();
+    oContext.close();
   }
 
   @Override

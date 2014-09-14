@@ -22,6 +22,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.Closeable;
 
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 /**
@@ -52,8 +53,8 @@ public interface BufferAllocator extends Closeable {
 
   public abstract ByteBufAllocator getUnderlyingAllocator();
 
-  public abstract BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation,
-      long maximumReservation) throws OutOfMemoryException;
+  public abstract BufferAllocator getChildAllocator(FragmentContext context, long initialReservation,
+      long maximumReservation, boolean applyFragmentLimit) throws OutOfMemoryException;
 
   /**
    * Take over ownership of fragment accounting.  Always takes over ownership.
@@ -64,6 +65,22 @@ public interface BufferAllocator extends Closeable {
 
 
   public PreAllocator getNewPreAllocator();
+
+  //public void addFragmentContext(FragmentContext c);
+
+  /**
+   * For Top Level Allocators. Reset the fragment limits for all allocators
+   */
+  public void resetFragmentLimits();
+
+  /**
+   * For Child allocators to set the Fragment limit for the corresponding fragment allocator.
+   * @param l the new fragment limit
+   */
+  public void setFragmentLimit(long l);
+
+  public long getFragmentLimit();
+
 
   /**
    * Not thread safe.

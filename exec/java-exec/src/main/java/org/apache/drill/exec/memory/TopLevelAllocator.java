@@ -22,13 +22,16 @@ import io.netty.buffer.DrillBuf;
 import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.buffer.UnsafeDirectLittleEndian;
 
-import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.Map;
+
 import java.util.Map.Entry;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.FragmentContext;
+
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.util.AssertionUtil;
 
@@ -42,7 +45,6 @@ public class TopLevelAllocator implements BufferAllocator {
   private final boolean errorOnLeak;
   private final DrillBuf empty;
 
-
   @Deprecated
   public TopLevelAllocator() {
     this(DrillConfig.getMaxDirectMemory());
@@ -53,9 +55,9 @@ public class TopLevelAllocator implements BufferAllocator {
     this(maximumAllocation, true);
   }
 
-  private TopLevelAllocator(long maximumAllocation, boolean errorOnLeak) {
+  private TopLevelAllocator(long maximumAllocation, boolean errorOnLeak){
     this.errorOnLeak = errorOnLeak;
-    this.acct = new Accountor(errorOnLeak, null, null, maximumAllocation, 0);
+    this.acct = new Accountor(errorOnLeak, null, null, maximumAllocation, 0, true);
     this.empty = DrillBuf.getEmpty(this, acct);
     this.childrenMap = ENABLE_ACCOUNTING ? new IdentityHashMap<ChildAllocator, StackTraceElement[]>() : null;
   }
@@ -100,17 +102,33 @@ public class TopLevelAllocator implements BufferAllocator {
   }
 
   @Override
-  public BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation) throws OutOfMemoryException {
-    if(!acct.reserve(initialReservation)) {
+  public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation, long maximumReservation, boolean applyFragmentLimit) throws OutOfMemoryException {
+    if(!acct.reserve(initialReservation)){
+      logger.debug(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
       throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
     };
     logger.debug("New child allocator with initial reservation {}", initialReservation);
-    ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation, childrenMap);
-    if (ENABLE_ACCOUNTING) {
+    ChildAllocator allocator = new ChildAllocator(context, acct, maximumReservation, initialReservation, childrenMap, applyFragmentLimit);
+    if(ENABLE_ACCOUNTING){
       childrenMap.put(allocator, Thread.currentThread().getStackTrace());
     }
 
     return allocator;
+  }
+
+  @Override
+  public void resetFragmentLimits() {
+    acct.resetFragmentLimits();
+  }
+
+  @Override
+  public void setFragmentLimit(long limit){
+    acct.setFragmentLimit(limit);
+  }
+
+  @Override
+  public long getFragmentLimit(){
+    return acct.getFragmentLimit();
   }
 
   @Override
@@ -147,12 +165,22 @@ public class TopLevelAllocator implements BufferAllocator {
     private Map<ChildAllocator, StackTraceElement[]> children = new HashMap<>();
     private boolean closed = false;
     private FragmentHandle handle;
+    private FragmentContext fragmentContext;
     private Map<ChildAllocator, StackTraceElement[]> thisMap;
+    private boolean applyFragmentLimit;
 
-    public ChildAllocator(FragmentHandle handle, Accountor parentAccountor, long max, long pre, Map<ChildAllocator, StackTraceElement[]> map) throws OutOfMemoryException{
+    public ChildAllocator(FragmentContext context,
+                          Accountor parentAccountor,
+                          long max,
+                          long pre,
+                          Map<ChildAllocator,
+                          StackTraceElement[]> map,
+                          boolean applyFragmentLimit) throws OutOfMemoryException{
       assert max >= pre;
-      childAcct = new Accountor(errorOnLeak, handle, parentAccountor, max, pre);
-      this.handle = handle;
+      this.applyFragmentLimit=applyFragmentLimit;
+      childAcct = new Accountor(errorOnLeak, context, parentAccountor, max, pre, applyFragmentLimit);
+      this.fragmentContext=context;
+      this.handle = context.getHandle();
       thisMap = map;
       this.empty = DrillBuf.getEmpty(this, childAcct);
     }
@@ -188,19 +216,34 @@ public class TopLevelAllocator implements BufferAllocator {
     }
 
     @Override
-    public BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation)
+    public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation, long maximumReservation, boolean applyFragmentLimit)
         throws OutOfMemoryException {
       if (!childAcct.reserve(initialReservation)) {
         throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getAvailable()));
       };
       logger.debug("New child allocator with initial reservation {}", initialReservation);
-      ChildAllocator newChildAllocator = new ChildAllocator(handle, childAcct, maximumReservation, initialReservation, null);
+      ChildAllocator newChildAllocator = new ChildAllocator(context, childAcct, maximumReservation, initialReservation, null, applyFragmentLimit);
       this.children.put(newChildAllocator, Thread.currentThread().getStackTrace());
       return newChildAllocator;
     }
 
     public PreAllocator getNewPreAllocator() {
       return new PreAlloc(this, this.childAcct);
+    }
+
+    @Override
+    public void resetFragmentLimits(){
+      childAcct.resetFragmentLimits();
+    }
+
+    @Override
+    public void setFragmentLimit(long limit){
+      childAcct.setFragmentLimit(limit);
+    }
+
+    @Override
+    public long getFragmentLimit(){
+      return childAcct.getFragmentLimit();
     }
 
     @Override

@@ -104,7 +104,15 @@ public class FragmentContext implements Closeable {
     } catch (Exception e) {
       throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
-    this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
+    // Add the fragment context to the root allocator.
+    // The QueryManager will call the root allocator to recalculate all the memory limits for all the fragments
+    try {
+      this.allocator = context.getAllocator().getChildAllocator(this, fragment.getMemInitial(), fragment.getMemMax(), true);
+      assert (allocator != null);
+    }catch(Throwable e){
+      throw new ExecutionSetupException("Failure while getting memory allocator for fragment.", e);
+    }
+
     this.loader = new QueryClassLoader(dbContext.getConfig(), fragmentOptions);
   }
 
@@ -176,11 +184,18 @@ public class FragmentContext implements Closeable {
    */
   @Deprecated
   public BufferAllocator getAllocator() {
+    if(allocator == null){
+      FragmentHandle handle=getHandle();
+      String frag=handle!=null?handle.getMajorFragmentId()+":"+handle.getMinorFragmentId():"0:0";
+      logger.debug("Fragment:"+frag+" Allocator is NULL");
+    }
     return allocator;
   }
 
-  public BufferAllocator getNewChildAllocator(long initialReservation, long maximumReservation) throws OutOfMemoryException {
-    return allocator.getChildAllocator(getHandle(), initialReservation, maximumReservation);
+  public BufferAllocator getNewChildAllocator(long initialReservation,
+                                              long maximumReservation,
+                                              boolean applyFragmentLimit) throws OutOfMemoryException {
+    return allocator.getChildAllocator(this, initialReservation, maximumReservation, applyFragmentLimit);
   }
 
   public <T> T getImplementationClass(ClassGenerator<T> cg) throws ClassTransformationException, IOException {
@@ -252,6 +267,10 @@ public class FragmentContext implements Closeable {
     return context.getConfig();
   }
 
+  public void setFragmentLimit(long limit) {
+    this.allocator.setFragmentLimit(limit);
+  }
+
   @Override
   public void close() {
     for (Thread thread: daemonThreads) {
@@ -267,7 +286,11 @@ public class FragmentContext implements Closeable {
     if (buffers != null) {
       buffers.close();
     }
+
+    FragmentHandle handle=getHandle();
+    String frag=handle!=null?handle.getMajorFragmentId()+":"+handle.getMinorFragmentId():"0:0";
     allocator.close();
+    logger.debug("Fragment:"+frag+" After close allocator is: "+allocator!=null?"OK":"NULL");
   }
 
   public DrillBuf replace(DrillBuf old, int newSize) {

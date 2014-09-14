@@ -35,10 +35,13 @@ public class AtomicRemainder {
   private final long initTotal;
   private final long initShared;
   private final long initPrivate;
+  private long limit;       // An Allocator can set a variable limit less than or equal to the initTotal
+  private boolean hasLimit; // True for Atomic Remainders associated with a Fragment. May be true for Operator Level allocators some day.
   private boolean closed = false;
   private final boolean errorOnLeak;
+  private final boolean applyFragmentLimit;
 
-  public AtomicRemainder(boolean errorOnLeak, AtomicRemainder parent, long max, long pre) {
+  public AtomicRemainder(boolean errorOnLeak, AtomicRemainder parent, long max, long pre, boolean applyFragLimit) {
     this.errorOnLeak = errorOnLeak;
     this.parent = parent;
     this.availableShared = new AtomicLong(max - pre);
@@ -46,6 +49,9 @@ public class AtomicRemainder {
     this.initTotal = max;
     this.initShared = max - pre;
     this.initPrivate = pre;
+    this.limit = max;
+    this.hasLimit=false;
+    this.applyFragmentLimit=applyFragLimit; // If this is an operator that is exempt from the fragment limit, set this to false.
 //    logger.info("new AtomicRemainder. a.s. {} a.p. {} hashcode {}", availableShared, availablePrivate, hashCode(), new Exception());
   }
 
@@ -58,13 +64,25 @@ public class AtomicRemainder {
   }
 
   /**
+   * Allow an allocator to constrain the remainder to a particular limit that is lower than the initTotal.
+   * If limit is larger than initTotal, then the function will do nothing and the hasLimit flag will not be set.
+   * @param limit
+   */
+  public void setLimit(long limit) {
+    if(limit<initTotal){
+      this.hasLimit=true;
+      this.limit=limit;
+    }
+
+  }
+  /**
    * Automatically allocate memory. This is used when an actual allocation happened to be larger than requested. This
    * memory has already been used up so it must be accurately accounted for in future allocations.
    *
    * @param size
    */
   public boolean forceGet(long size) {
-    if (get(size)) {
+    if (get(size, this.applyFragmentLimit)) {
       return true;
     } else {
       availableShared.addAndGet(size);
@@ -75,12 +93,19 @@ public class AtomicRemainder {
     }
   }
 
-  public boolean get(long size) {
+  public boolean get(long size, boolean applyFragmentLimitForChild) {
     if (availablePrivate.get() < 1) {
       // if there is no preallocated memory, we can operate normally.
 
       // if there is a parent allocator, check it before allocating.
-      if (parent != null && !parent.get(size)) {
+      if (parent != null && !parent.get(size, this.applyFragmentLimit)) {
+        return false;
+      }
+
+      // If we need to allocate memory beyond the allowed Fragment Limit
+      if(applyFragmentLimitForChild && this.applyFragmentLimit && this.hasLimit && (getUsed()+size > this.limit)){
+        logger.debug("No more memory. Fragment limit ("+this.limit +
+          " bytes) reached. Trying to allocate "+size+ " bytes. "+getUsed()+" bytes already allocated.");
         return false;
       }
 
@@ -111,7 +136,7 @@ public class AtomicRemainder {
 
         long additionalSpaceNeeded = -unaccount;
         // if there is a parent allocator, check it before allocating.
-        if (parent != null && !parent.get(additionalSpaceNeeded)) {
+        if (parent != null && !parent.get(additionalSpaceNeeded, this.applyFragmentLimit)) {
           // parent allocation failed, return space to private pool.
           availablePrivate.getAndAdd(size);
           return false;

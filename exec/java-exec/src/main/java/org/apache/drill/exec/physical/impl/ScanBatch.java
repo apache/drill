@@ -87,7 +87,8 @@ public class ScanBatch implements RecordBatch {
       throw new ExecutionSetupException("A scan batch must contain at least one reader.");
     }
     this.currentReader = readers.next();
-    this.oContext = new OperatorContext(subScanConfig, context);
+    // Scan Batch is not subject to fragment memory limit
+    this.oContext = new OperatorContext(subScanConfig, context, false);
     this.currentReader.setOperatorContext(this.oContext);
     this.currentReader.setup(mutator);
     this.partitionColumns = partitionColumns.iterator();
