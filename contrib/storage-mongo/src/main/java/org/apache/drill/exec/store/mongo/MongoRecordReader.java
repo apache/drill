@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -93,7 +92,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     transformColumns(projectedColumns);
     this.fragmentContext = context;
     this.filters = new BasicDBObject();
-    Map<String, List<BasicDBObject>> mergedFilters = mergeFilters(
+    Map<String, List<BasicDBObject>> mergedFilters = MongoUtils.mergeFilters(
         subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
     buildFilters(subScanSpec.getFilter(), mergedFilters);
     enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
@@ -117,34 +116,6 @@ public class MongoRecordReader extends AbstractRecordReader {
 		}
 		return transformed;
 	}
-  
-  private Map<String, List<BasicDBObject>> mergeFilters(
-      Map<String, Object> minFilters, Map<String, Object> maxFilters) {
-    Map<String, List<BasicDBObject>> filters = Maps.newHashMap();
-    
-    for(Entry<String, Object> entry : minFilters.entrySet()) {
-      if (entry.getValue() instanceof String || entry.getValue() instanceof Number) {
-        List<BasicDBObject> list = filters.get(entry.getKey());
-        if(list == null) {
-          list = Lists.newArrayList();
-          filters.put(entry.getKey(), list);
-        }
-        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$gte", entry.getValue())));
-      }
-    }
-    
-    for(Entry<String, Object> entry : maxFilters.entrySet()) {
-      if (entry.getValue() instanceof String || entry.getValue() instanceof Number) {
-        List<BasicDBObject> list = filters.get(entry.getKey());
-        if(list == null) {
-          list = Lists.newArrayList();
-          filters.put(entry.getKey(), list);
-        }
-        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$lt", entry.getValue())));
-      }
-    }
-    return filters;
-  }
 
   private void buildFilters(BasicDBObject pushdownFilters, Map<String, List<BasicDBObject>> mergedFilters) {
     for(Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {

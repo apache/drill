@@ -19,22 +19,18 @@ package org.apache.drill.exec.store.mongo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bson.LazyBSONCallback;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.LazyWriteableDBObject;
 
 public class MongoUtils {
-  
-//  private final static ObjectMapper mapper = new ObjectMapper(MongoBsonFactory.createFactory());
-//
-//
-//  static {
-//    mapper.setVisibilityChecker(VisibilityChecker.Std.defaultInstance().withFieldVisibility(
-//            JsonAutoDetect.Visibility.ANY));
-//}
   
   public static BasicDBObject andFilterAtIndex(BasicDBObject leftFilter,
       BasicDBObject rightFilter) {
@@ -62,5 +58,33 @@ public class MongoUtils {
     result.putAll(dbo);
     return result;
   }
+  
+  public static Map<String, List<BasicDBObject>> mergeFilters(
+	      Map<String, Object> minFilters, Map<String, Object> maxFilters) {
+	    Map<String, List<BasicDBObject>> filters = Maps.newHashMap();
+	    
+	    for(Entry<String, Object> entry : minFilters.entrySet()) {
+	      if (entry.getValue() instanceof String || entry.getValue() instanceof Number) {
+	        List<BasicDBObject> list = filters.get(entry.getKey());
+	        if(list == null) {
+	          list = Lists.newArrayList();
+	          filters.put(entry.getKey(), list);
+	        }
+	        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$gte", entry.getValue())));
+	      }
+	    }
+	    
+	    for(Entry<String, Object> entry : maxFilters.entrySet()) {
+	      if (entry.getValue() instanceof String || entry.getValue() instanceof Number) {
+	        List<BasicDBObject> list = filters.get(entry.getKey());
+	        if(list == null) {
+	          list = Lists.newArrayList();
+	          filters.put(entry.getKey(), list);
+	        }
+	        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$lt", entry.getValue())));
+	      }
+	    }
+	    return filters;
+	  }
 
 }
