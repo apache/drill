@@ -59,7 +59,7 @@ public class TestJsonReader extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
 
   private static BufferAllocator allocator;
-  private static final boolean VERBOSE_DEBUG = true;
+  private static final boolean VERBOSE_DEBUG = false;
 
   @BeforeClass
   public static void setupAllocator() {
@@ -96,6 +96,15 @@ public class TestJsonReader extends BaseTestQuery {
       i++;
     }
   }
+
+  @Test
+  public void testDrill_1419() throws Exception {
+    String[] queries = {"select t.trans_id, t.trans_info.prod_id[0],t.trans_info.prod_id[1] from cp.`/store/json/clicks.json` t limit 5"};
+    long[] rowCounts = {5};
+    String filename = "/store/json/clicks.json";
+    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+  }
+
 
   @Test
   public void testSingleColumnRead_vector_fill_bug() throws Exception {

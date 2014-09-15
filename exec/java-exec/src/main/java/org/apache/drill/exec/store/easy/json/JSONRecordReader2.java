@@ -126,16 +126,11 @@ public class JSONRecordReader2 extends AbstractRecordReader {
       for (SchemaPath sp :jsonReader.getNullColumns() ) {
         PathSegment root = sp.getRootSegment();
         BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
-        if (root.getChild() != null && ! root.getChild().isArray()) {
+        while (root.getChild() != null && ! root.getChild().isArray()) {
           fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
-          while ( root.getChild().getChild() != null && ! root.getChild().isArray() ) {
-            fieldWriter = fieldWriter.map(root.getChild().getNameSegment().getPath());
-            root = root.getChild();
-          }
-          fieldWriter.integer(root.getChild().getNameSegment().getPath());
-        } else  {
-          fieldWriter.integer(root.getNameSegment().getPath());
+          root = root.getChild();
         }
+        fieldWriter.integer(root.getNameSegment().getPath());
       }
 
       writer.setValueCount(recordCount);
