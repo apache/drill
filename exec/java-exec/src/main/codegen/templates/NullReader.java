@@ -26,18 +26,30 @@ package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
 
+import org.apache.drill.common.types.TypeProtos;
+
+
 @SuppressWarnings("unused")
 public class NullReader extends AbstractBaseReader implements FieldReader{
   
   public static final NullReader INSTANCE = new NullReader();
+  public static final NullReader EMPTY_LIST_INSTANCE = new NullReader(Types.repeated(TypeProtos.MinorType.NULL));
+  public static final NullReader EMPTY_MAP_INSTANCE = new NullReader(Types.required(TypeProtos.MinorType.MAP));
+  private MajorType type;
   
   private NullReader(){
     super();
+    type = Types.NULL;
+  }
+
+  private NullReader(MajorType type){
+    super();
+    this.type = type;
   }
 
   @Override
   public MajorType getType() {
-    return Types.NULL;
+    return type;
   }
   
   public void copyAsValue(MapWriter writer) {}

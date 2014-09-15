@@ -442,7 +442,15 @@ public class EvaluationVisitor {
             JConditional jc = generator.getEvalBlock()._if(isNull.eq(JExpr.lit(0)));
 
             JClass nrClass = generator.getModel().ref(org.apache.drill.exec.vector.complex.impl.NullReader.class);
-            JExpression nullReader = nrClass.staticRef("INSTANCE");
+            JExpression nullReader;
+            if (complex) {
+              nullReader = nrClass.staticRef("EMPTY_MAP_INSTANCE");
+            } else if (repeated) {
+              nullReader = nrClass.staticRef("EMPTY_LIST_INSTANCE");
+            } else {
+              nullReader = nrClass.staticRef("INSTANCE");
+            }
+
 
             jc._then().assign(complexReader, expr);
             jc._else().assign(complexReader, nullReader);

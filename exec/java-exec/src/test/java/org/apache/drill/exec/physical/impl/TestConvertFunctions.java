@@ -64,6 +64,13 @@ public class TestConvertFunctions extends BaseTestQuery {
   String textFileContent;
 
   @Test
+  public void test_JSON_convertTo_empty_list_drill_1416() throws Exception {
+    test("select cast(convert_to(rl[1], 'JSON') as varchar(100)) from cp.`/store/json/input2.json`");
+    test("select convert_from(convert_to(rl[1], 'JSON'), 'JSON') from cp.`/store/json/input2.json`");
+    test("select convert_from(convert_to(rl[1], 'JSON'), 'JSON') from cp.`/store/json/json_project_null_object_from_list.json`");
+  }
+
+  @Test
   public void testDateTime1() throws Throwable {
     verifyPhysicalPlan("(convert_from(binary_string('" + DATE_TIME_BE + "'), 'TIME_EPOCH_BE'))", time);
   }
