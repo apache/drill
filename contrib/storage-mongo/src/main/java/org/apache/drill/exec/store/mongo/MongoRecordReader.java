@@ -236,16 +236,15 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   @Override
   public void cleanup() {
-//    cursor.close();
   }
 
   public OperatorContext getOperatorContext() {
-	return operatorContext;
+    return operatorContext;
   }
 
   @Override
   public void setOperatorContext(OperatorContext operatorContext) {
-	this.operatorContext = operatorContext;
+    this.operatorContext = operatorContext;
   }
 
 }
