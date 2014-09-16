@@ -34,32 +34,38 @@ import com.mongodb.ServerAddress;
 
 public class MongoCnxnManager {
 
-  private static final Logger logger = LoggerFactory.getLogger(MongoCnxnManager.class);
+  private static final Logger logger = LoggerFactory
+      .getLogger(MongoCnxnManager.class);
   private static Cache<ServerAddress, MongoClient> addressClientMap;
-  
+
   static {
-    addressClientMap = CacheBuilder.newBuilder().maximumSize(10)
-        .expireAfterAccess(5, TimeUnit.MINUTES)
+    addressClientMap = CacheBuilder.newBuilder().maximumSize(5)
+        .expireAfterAccess(10, TimeUnit.MINUTES)
         .removalListener(new AddressCloser()).build();
   }
 
-  private static class AddressCloser implements RemovalListener<ServerAddress, MongoClient> {
+  private static class AddressCloser implements
+      RemovalListener<ServerAddress, MongoClient> {
     @Override
-    public void onRemoval(RemovalNotification<ServerAddress, MongoClient> notification) {
-      logger.debug("Closing the Mongo client connection to {}." , notification.getValue().getAddress().toString());
-      notification.getValue().close();
-      addressClientMap.invalidate(notification.getKey());
+    public synchronized void onRemoval(
+        RemovalNotification<ServerAddress, MongoClient> removal) {
+      removal.getValue().close();;
+      logger.debug("Closed connection to {}.", removal.getKey().toString());
     }
   }
 
-  public synchronized static MongoClient getClient(List<ServerAddress> addresses, MongoClientOptions clientOptions) throws UnknownHostException {
+  public synchronized static MongoClient getClient(
+      List<ServerAddress> addresses, MongoClientOptions clientOptions)
+      throws UnknownHostException {
     // Take the first replica from the replicated servers
     ServerAddress serverAddress = addresses.get(0);
-    MongoClient mongoClient = addressClientMap.getIfPresent(serverAddress);
-    if (mongoClient == null) {
-      mongoClient = new MongoClient(addresses, clientOptions);
-      addressClientMap.put(serverAddress, mongoClient);
+    MongoClient client = addressClientMap.getIfPresent(serverAddress);
+    if (client == null) {
+      client = new MongoClient(addresses, clientOptions);
+      addressClientMap.put(serverAddress, client);
+      logger.debug("Created connection to {}.", serverAddress.toString());
+      logger.debug("Number of connections opened are {}.", addressClientMap.size());
     }
-    return mongoClient;
+    return client;
   }
 }

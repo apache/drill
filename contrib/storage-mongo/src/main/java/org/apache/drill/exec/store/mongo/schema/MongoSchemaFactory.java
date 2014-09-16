@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mongodb.DB;
-import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
@@ -60,11 +60,13 @@ public class MongoSchemaFactory implements SchemaFactory {
 
   private static final String DATABASES = "databases";
 
-  private MongoClient client;
   private LoadingCache<String, List<String>> databases;
   private LoadingCache<String, List<String>> tableNameLoader;
   private final String schemaName;
   private final MongoStoragePlugin plugin;
+  
+  private final List<ServerAddress> addresses;
+  private final MongoClientOptions options;
   
   public MongoSchemaFactory(MongoStoragePlugin schema, String schemaName)
       throws ExecutionSetupException, UnknownHostException {
@@ -75,11 +77,11 @@ public class MongoSchemaFactory implements SchemaFactory {
 
     MongoClientURI clientURI = new MongoClientURI(connection);
     List<String> hosts = clientURI.getHosts();
-    List<ServerAddress> addresses = Lists.newArrayList();
+    addresses = Lists.newArrayList();
     for (String host : hosts) {
       addresses.add(new ServerAddress(host));
     }
-    client = MongoCnxnManager.getClient(addresses, clientURI.getOptions());
+    options = clientURI.getOptions();
 
     databases = CacheBuilder //
         .newBuilder() //
@@ -98,7 +100,7 @@ public class MongoSchemaFactory implements SchemaFactory {
     public List<String> load(String key) throws Exception {
       if (!DATABASES.equals(key))
         throw new UnsupportedOperationException();
-      return client.getDatabaseNames();
+      return MongoCnxnManager.getClient(addresses, options).getDatabaseNames();
     }
 
   }
@@ -107,7 +109,7 @@ public class MongoSchemaFactory implements SchemaFactory {
 
     @Override
     public List<String> load(String dbName) throws Exception {
-      DB db = client.getDB(dbName);
+      DB db = MongoCnxnManager.getClient(addresses, options).getDB(dbName);
       db.setReadPreference(ReadPreference.nearest());
       Set<String> collectionNames = db.getCollectionNames();
       return new ArrayList<>(collectionNames);
