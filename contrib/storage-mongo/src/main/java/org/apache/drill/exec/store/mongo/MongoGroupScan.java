@@ -18,9 +18,9 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -198,27 +198,25 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
           DBCursor hostCursor = shardsCollection.find(query, fields);
           while (hostCursor.hasNext()) {
             DBObject hostObj = hostCursor.next();
-            String host = (String) hostObj.get(HOST); //needs to verify this
-            String[] tagAndHost = StringUtils.split(host, '/');
-            if (tagAndHost.length > 1) {
-              host = tagAndHost[1];
-            }
+            String hostEntry = (String) hostObj.get(HOST);
+            String[] tagAndHost = StringUtils.split(hostEntry, '/');
+            String[] hosts = tagAndHost.length > 1 ? StringUtils.split(tagAndHost[1], ',') : StringUtils.split(tagAndHost[0], ',');
             Set<ServerAddress> addressList = chunksMapping.get(chunkId);
             if (addressList == null) {
               addressList = Sets.newHashSet();
               chunksMapping.put(chunkId, addressList);
             }
-            ServerAddress address = new ServerAddress(host);
-            addressList.add(address);
+            for(String host : hosts) {
+              addressList.add(new ServerAddress(host));
+            }
+            ServerAddress address = addressList.iterator().next();
             
             List<ChunkInfo> chunkList = chunksInverseMapping.get(address.getHost());
             if (chunkList == null) {
               chunkList = Lists.newArrayList();
               chunksInverseMapping.put(address.getHost(), chunkList);
             }
-            List<String> hosts = new ArrayList<>();
-            hosts.add(host);
-            ChunkInfo chunkInfo = new ChunkInfo(hosts, chunkId);
+            ChunkInfo chunkInfo = new ChunkInfo(Arrays.asList(hosts), chunkId);
             DBObject minObj = (BasicDBObject) chunkObj.get(MIN);
             
             Map<String, Object> minFilters = Maps.newHashMap();
@@ -226,7 +224,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
             Set keySet = minMap.keySet();
             for(Object keyObj : keySet) {
               Object object = minMap.get(keyObj);
-              if(!(object instanceof MinKey) && object instanceof Serializable) {
+              if(!(object instanceof MinKey)) {
                 minFilters.put(keyObj.toString(), object);
               }
             }
@@ -238,7 +236,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
             keySet = maxMap.keySet();
             for(Object keyObj : keySet) {
               Object object = maxMap.get(keyObj);
-              if(!(object instanceof MaxKey) && object instanceof Serializable) {
+              if(!(object instanceof MaxKey)) {
                 maxFilters.put(keyObj.toString(), object);
               }
             }
