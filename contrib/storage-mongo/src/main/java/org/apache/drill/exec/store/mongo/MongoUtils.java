@@ -60,31 +60,29 @@ public class MongoUtils {
   }
   
   public static Map<String, List<BasicDBObject>> mergeFilters(
-	      Map<String, Object> minFilters, Map<String, Object> maxFilters) {
-	    Map<String, List<BasicDBObject>> filters = Maps.newHashMap();
-	    
-	    for(Entry<String, Object> entry : minFilters.entrySet()) {
-	      if (entry.getValue() instanceof String || entry.getValue() instanceof Number) {
-	        List<BasicDBObject> list = filters.get(entry.getKey());
-	        if(list == null) {
-	          list = Lists.newArrayList();
-	          filters.put(entry.getKey(), list);
-	        }
-	        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$gte", entry.getValue())));
-	      }
-	    }
-	    
-	    for(Entry<String, Object> entry : maxFilters.entrySet()) {
-	      if (entry.getValue() instanceof String || entry.getValue() instanceof Number) {
-	        List<BasicDBObject> list = filters.get(entry.getKey());
-	        if(list == null) {
-	          list = Lists.newArrayList();
-	          filters.put(entry.getKey(), list);
-	        }
-	        list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$lt", entry.getValue())));
-	      }
-	    }
-	    return filters;
-	  }
+      Map<String, Object> minFilters, Map<String, Object> maxFilters) {
+    Map<String, List<BasicDBObject>> filters = Maps.newHashMap();
+
+    for (Entry<String, Object> entry : minFilters.entrySet()) {
+      List<BasicDBObject> list = filters.get(entry.getKey());
+      if (list == null) {
+        list = Lists.newArrayList();
+        filters.put(entry.getKey(), list);
+      }
+      list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$gte",
+          entry.getValue())));
+    }
+
+    for (Entry<String, Object> entry : maxFilters.entrySet()) {
+      List<BasicDBObject> list = filters.get(entry.getKey());
+      if (list == null) {
+        list = Lists.newArrayList();
+        filters.put(entry.getKey(), list);
+      }
+      list.add(new BasicDBObject(entry.getKey(), new BasicDBObject("$lt", entry
+          .getValue())));
+    }
+    return filters;
+  }
 
 }
