@@ -37,6 +37,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos;
@@ -199,7 +200,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
     FutureHandler f = new FutureHandler();
     try {
-      client.connect(f, endpoint, props);
+      client.connect(f, endpoint, props, getUserCredentials());
       f.checkedGet();
     } catch (InterruptedException e) {
       throw new RpcException(e);
@@ -245,6 +246,26 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     ListHoldingResultsListener listener = new ListHoldingResultsListener(query);
     client.submitQuery(listener,query);
     return listener.getResults();
+  }
+
+
+  /*
+   * Helper method to generate the UserCredentials message from the properties.
+   */
+  private UserBitShared.UserCredentials getUserCredentials() {
+    // If username is not propagated as one of the properties
+    String userName = "anonymous";
+
+    if (props != null) {
+      for (Property property: props.getPropertiesList()) {
+        if (property.getKey().equalsIgnoreCase("user")) {
+          userName = property.getValue();
+          break;
+        }
+      }
+    }
+
+    return UserBitShared.UserCredentials.newBuilder().setUserName(userName).build();
   }
 
   public DrillRpcFuture<Ack> cancelQuery(QueryId id) {
@@ -350,5 +371,4 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     }
 
   }
-
 }

@@ -34,7 +34,9 @@ import org.apache.drill.exec.planner.fragment.Materializer.IndexedFragmentNode;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.QueryWorkUnit;
 
@@ -89,13 +91,13 @@ public class SimpleParallelizer {
    * @throws ExecutionSetupException
    */
   public QueryWorkUnit getFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId, Collection<DrillbitEndpoint> activeEndpoints,
-      PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet) throws ExecutionSetupException {
+      PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet, UserSession session) throws ExecutionSetupException {
     assignEndpoints(activeEndpoints, planningSet);
-    return generateWorkUnit(options, foremanNode, queryId, reader, rootNode, planningSet);
+    return generateWorkUnit(options, foremanNode, queryId, reader, rootNode, planningSet, session);
   }
 
   private QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId, PhysicalPlanReader reader, Fragment rootNode,
-                                         PlanningSet planningSet) throws ExecutionSetupException {
+                                         PlanningSet planningSet, UserSession session) throws ExecutionSetupException {
 
     List<PlanFragment> fragments = Lists.newArrayList();
 
@@ -157,6 +159,7 @@ public class SimpleParallelizer {
             .setMemInitial(wrapper.getInitialAllocation())//
             .setMemMax(wrapper.getMaxAllocation())
             .setOptionsJson(optionsData)
+            .setCredentials(session.getCredentials())
             .build();
 
         if (isRootNode) {

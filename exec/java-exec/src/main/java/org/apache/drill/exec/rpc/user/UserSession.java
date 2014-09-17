@@ -99,6 +99,10 @@ public class UserSession {
     return user;
   }
 
+  public UserCredentials getCredentials() {
+    return credentials;
+  }
+
   /**
    * Update the schema path for the session.
    * @param fullPath The desired path to set to.

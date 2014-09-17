@@ -40,6 +40,7 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
@@ -75,6 +76,7 @@ public class FragmentContext implements Closeable {
   private final long queryStartTime;
   private final int rootFragmentTimeZone;
   private final OptionManager fragmentOptions;
+  private final UserCredentials credentials;
   private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
 
   private volatile Throwable failureCause;
@@ -91,6 +93,7 @@ public class FragmentContext implements Closeable {
     this.funcRegistry = funcRegistry;
     this.queryStartTime = fragment.getQueryStartTime();
     this.rootFragmentTimeZone = fragment.getTimeZone();
+    this.credentials = fragment.getCredentials();
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
     logger.debug("Fragment max allocation: {}", fragment.getMemMax());
     try {
@@ -257,6 +260,10 @@ public class FragmentContext implements Closeable {
 
   public FunctionImplementationRegistry getFunctionRegistry() {
     return funcRegistry;
+  }
+
+  public UserCredentials getCredentials() {
+    return credentials;
   }
 
   public QueryClassLoader getClassLoader() {
