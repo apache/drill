@@ -326,7 +326,8 @@ public class ProfileWrapper {
     public String getDisplayName() {
       OperatorProfile op = ops.get(0).getLeft();
       String path = new OperatorPathBuilder().setMajor(major).setOperator(op).build();
-      return String.format("%s - %s", path, CoreOperatorType.valueOf(op.getOperatorType()).toString());
+      CoreOperatorType operatorType = CoreOperatorType.valueOf(op.getOperatorType());
+      return String.format("%s - %s", path, operatorType == null ? "UKNOWN_OPERATOR" : operatorType.toString());
     }
 
     public String getId() {
@@ -364,7 +365,8 @@ public class ProfileWrapper {
       OperatorProfile op = ops.get(0).getLeft();
       String path = new OperatorPathBuilder().setMajor(major).setOperator(op).build();
       tb.appendCell(path, null);
-      tb.appendCell(CoreOperatorType.valueOf(ops.get(0).getLeft().getOperatorType() ).toString(), null);
+      CoreOperatorType operatorType = CoreOperatorType.valueOf(ops.get(0).getLeft().getOperatorType());
+      tb.appendCell(operatorType == null ? "UNKNOWN_OPERATOR" : operatorType.toString(), null);
 
       int li = ops.size() - 1;
       String fmt = " (%s)";
