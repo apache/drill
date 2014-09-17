@@ -123,6 +123,8 @@ class DrillClientQueryResult{
     bool hasError(){ return m_bHasError;}
     status_t getErrorStatus(){ return m_pError!=NULL?(status_t)m_pError->status:QRY_SUCCESS;}
     const DrillClientError* getError(){ return m_pError;}
+    void setQueryStatus(status_t s){ m_status = s;}
+    status_t getQueryStatus(){ return m_status;}
 
     private:
     status_t setupColumnDefs(exec::shared::QueryResult* pQueryResult);
@@ -163,6 +165,7 @@ class DrillClientQueryResult{
     const DrillClientError* m_pError;
 
     exec::shared::QueryId* m_pQueryId;
+    status_t m_status;
 
     // Schema change listener
     pfnSchemaListener m_pSchemaListener;
@@ -250,9 +253,9 @@ class DrillClientImpl{
         // Query results
         void getNextResult();
         status_t readMsg(
-                ByteBuf_t _buf, 
-                AllocatedBufferPtr* allocatedBuffer, 
-                InBoundRpcMessage& msg, 
+                ByteBuf_t _buf,
+                AllocatedBufferPtr* allocatedBuffer,
+                InBoundRpcMessage& msg,
                 boost::system::error_code& error);
         status_t processQueryResult(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg);
         status_t processQueryId(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg );
@@ -263,6 +266,11 @@ class DrillClientImpl{
         status_t handleQryError(status_t status, std::string msg, DrillClientQueryResult* pQueryResult);
         status_t handleQryError(status_t status,
                 const exec::shared::DrillPBError& e,
+                DrillClientQueryResult* pQueryResult);
+        // handle query state indicating query is COMPELTED or CANCELED
+        // (i.e., COMPELTED or CANCELE)
+        status_t handleTerminatedQryState(status_t status,
+                std::string msg,
                 DrillClientQueryResult* pQueryResult);
         void broadcastError(DrillClientError* pErr);
         void clearMapEntries(DrillClientQueryResult* pQueryResult);

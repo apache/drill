@@ -51,15 +51,15 @@ static Drill::ErrorMessages errorMessages[]={
     {ERR_QRY_FAILURE, ERR_CATEGORY_QRY, 0, "Query execution error. Details:[ \n%s\n]"},
     {ERR_QRY_SELVEC2, ERR_CATEGORY_QRY, 0, "Receiving a selection_vector_2 from the server came as a complete surprise at this point"},
     {ERR_QRY_RESPFAIL, ERR_CATEGORY_QRY, 0, "Got a RESPONSE_FAILURE from the server and don't know what to do"},
-    {ERR_QRY_12, ERR_CATEGORY_QRY, 0, "Query Failed."},
+    {ERR_QRY_UNKQRYSTATE, ERR_CATEGORY_QRY, 0, "Got an unknown query state message from the server."},
     {ERR_QRY_UNKQRY, ERR_CATEGORY_QRY, 0, "The server didn't find this query"},
     {ERR_QRY_CANCELED, ERR_CATEGORY_QRY, 0, "The server says this query has been cancelled"},
-    {ERR_QRY_15, ERR_CATEGORY_QRY, 0, "Query Failed."},
+    {ERR_QRY_COMPLETED, ERR_CATEGORY_QRY, 0, "Received query_state: COMPLETED."},
     {ERR_QRY_16, ERR_CATEGORY_QRY, 0, "Query Failed."},
     {ERR_QRY_17, ERR_CATEGORY_QRY, 0, "Query Failed."},
     {ERR_QRY_18, ERR_CATEGORY_QRY, 0, "Query Failed."},
     {ERR_QRY_19, ERR_CATEGORY_QRY, 0, "Query Failed."},
-    {ERR_QRY_20, ERR_CATEGORY_QRY, 0, "Query Failed."}
+    {ERR_QRY_20, ERR_CATEGORY_QRY, 0, "Query Failed."},
 };
 
 std::string getMessage(uint32_t msgId, ...){

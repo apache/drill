@@ -60,7 +60,12 @@ Drill::status_t SchemaListener(void* ctx, Drill::FieldDefPtr fields, Drill::Dril
 }
 
 Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::DrillClientError* err){
+    // Invariant:
+    // (received an record batch and err is NULL)
+    // or
+    // (received query state message passed by `err` and b is NULL)
     if(!err){
+        assert(b!=NULL);
         b->print(std::cout, 0); // print all rows
         delete b; // we're done with this batch, we can delete it
         if(bTestCancel){
@@ -69,8 +74,16 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
         return Drill::QRY_SUCCESS ;
         }
     }else{
-        std::cerr<< "ERROR: " << err->msg << std::endl;
-        return Drill::QRY_FAILURE;
+        assert(b==NULL);
+        switch(err->status) {
+            case Drill::QRY_COMPLETED:
+            case Drill::QRY_CANCELED:
+                std::cerr<< "INFO: " << err->msg << std::endl;
+                return Drill::QRY_SUCCESS;
+            default:
+                std::cerr<< "ERROR: " << err->msg << std::endl;
+                return Drill::QRY_FAILURE;
+        }
     }
 }
 
