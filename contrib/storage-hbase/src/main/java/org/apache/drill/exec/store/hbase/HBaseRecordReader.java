@@ -182,7 +182,16 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           result = leftOver;
           leftOver = null;
         } else {
-          result = resultScanner.next();
+          if (operatorContext != null) {
+            operatorContext.getStats().startWait();
+          }
+          try {
+            result = resultScanner.next();
+          } finally {
+            if (operatorContext != null) {
+              operatorContext.getStats().stopWait();
+            }
+          }
         }
       } catch (IOException e) {
         throw new DrillRuntimeException(e);
