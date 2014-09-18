@@ -23,7 +23,6 @@ import java.io.ObjectOutput;
 import java.util.Set;
 
 import org.apache.drill.exec.cache.CachedVectorContainer;
-import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 

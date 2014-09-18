@@ -18,26 +18,21 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashToMergeExchange;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataTypeField;
-
 
 public class HashToMergeExchangePrel extends ExchangePrel {
 
@@ -56,10 +51,9 @@ public class HashToMergeExchangePrel extends ExchangePrel {
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
-
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
     RelNode child = this.getChild();
@@ -85,7 +79,9 @@ public class HashToMergeExchangePrel extends ExchangePrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
+    if (PrelUtil.getSettings(getCluster()).isSingleMode()) {
+      return childPOP;
+    }
 
     HashToMergeExchange g = new HashToMergeExchange(childPOP,
         PrelUtil.getHashExpression(this.distFields, getChild().getRowType()),
@@ -106,4 +102,5 @@ public class HashToMergeExchangePrel extends ExchangePrel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
+
 }

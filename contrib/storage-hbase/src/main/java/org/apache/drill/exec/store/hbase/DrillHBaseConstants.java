@@ -36,6 +36,6 @@ public interface DrillHBaseConstants {
   public static final MajorType COLUMN_TYPE = Types.optional(MinorType.VARBINARY);
 
   public static final String SYS_STORE_PROVIDER_HBASE_TABLE = "drill.exec.sys.store.provider.hbase.table";
-  
+
   public static final String SYS_STORE_PROVIDER_HBASE_CONFIG = "drill.exec.sys.store.provider.hbase.config";
 }

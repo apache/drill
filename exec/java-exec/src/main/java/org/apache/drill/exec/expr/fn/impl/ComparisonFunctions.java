@@ -17,18 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.exec.expr.DrillSimpleFunc;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.Float4Holder;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 public class ComparisonFunctions {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathFunctions.class);
@@ -370,7 +358,7 @@ public class ComparisonFunctions {
 //            out.value = (left.value <= right.value) ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryEqual implements DrillSimpleFunc {
 //
@@ -384,7 +372,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 0 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarCharEqual implements DrillSimpleFunc {
 //
@@ -398,7 +386,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 0 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryCharEqual implements DrillSimpleFunc {
 //
@@ -412,7 +400,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 0 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryGTE implements DrillSimpleFunc {
 //
@@ -426,7 +414,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) > -1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarCharGTE implements DrillSimpleFunc {
 //
@@ -440,7 +428,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) > -1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryCharGTE implements DrillSimpleFunc {
 //
@@ -454,7 +442,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) > -1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryGT implements DrillSimpleFunc {
 //
@@ -468,7 +456,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarCharGT implements DrillSimpleFunc {
 //
@@ -482,7 +470,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryCharGT implements DrillSimpleFunc {
 //
@@ -496,7 +484,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 1? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryLTE implements DrillSimpleFunc {
 //
@@ -510,7 +498,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) < 1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarCharLTE implements DrillSimpleFunc {
 //
@@ -524,7 +512,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) < 1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryCharLTE implements DrillSimpleFunc {
 //
@@ -538,7 +526,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) < 1? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryLT implements DrillSimpleFunc {
 //
@@ -552,7 +540,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == -1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarCharLT implements DrillSimpleFunc {
 //
@@ -566,7 +554,7 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == -1 ? 1 : 0;
 //        }
 //    }
-//    
+//
 //    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
 //    public static class VarBinaryCharLT implements DrillSimpleFunc {
 //
@@ -580,5 +568,5 @@ public class ComparisonFunctions {
 //            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == -1 ? 1 : 0;
 //        }
 //    }
-    
+
 }

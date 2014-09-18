@@ -29,7 +29,6 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.WriterRecordBatch;
@@ -77,7 +76,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
   public ParquetFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig){
     this(name, context, fs, storageConfig, new ParquetFormatConfig());
   }
-  
+
   public ParquetFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig, ParquetFormatConfig formatConfig){
     this.context = context;
     this.codecFactoryExposer = new CodecFactoryExposer(fs.getUnderlying().getConf());
@@ -109,7 +108,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
   public boolean supportsRead() {
     return true;
   }
-  
+
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
     return ImmutableSet.of();
@@ -170,7 +169,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
   public String getName(){
     return name;
   }
-  
+
   @Override
   public boolean supportsWrite() {
     return false;
@@ -184,9 +183,9 @@ public class ParquetFormatPlugin implements FormatPlugin{
   }
 
   private static class ParquetFormatMatcher extends BasicFormatMatcher{
-    
+
     private final DrillFileSystem fs;
-    
+
     public ParquetFormatMatcher(ParquetFormatPlugin plugin, DrillFileSystem fs) {
       super(plugin, fs, //
           Lists.newArrayList( //
@@ -195,12 +194,12 @@ public class ParquetFormatPlugin implements FormatPlugin{
               //
               ),
           Lists.newArrayList(new MagicString(0, ParquetFileWriter.MAGIC))
-                    
+
           );
       this.fs = fs;
-      
+
     }
-    
+
     @Override
     public boolean supportDirectoryReads() {
       return true;
@@ -208,7 +207,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
     @Override
     public FormatSelection isReadable(FileSelection selection) throws IOException {
-      // TODO: we only check the first file for directory reading.  This is because 
+      // TODO: we only check the first file for directory reading.  This is because
       if(selection.containsDirectories(fs)){
         if(isDirReadable(selection.getFirstPath(fs))){
           return new FormatSelection(plugin.getConfig(), selection);
@@ -216,7 +215,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
       }
       return super.isReadable(selection);
     }
-    
+
     boolean isDirReadable(FileStatus dir) {
       Path p = new Path(dir.getPath(), ParquetFileWriter.PARQUET_METADATA_FILE);
       try {
@@ -237,9 +236,9 @@ public class ParquetFormatPlugin implements FormatPlugin{
         return false;
       }
     }
-    
-    
-    
+
+
+
   }
-  
+
 }

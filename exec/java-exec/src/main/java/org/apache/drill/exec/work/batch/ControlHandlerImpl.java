@@ -23,13 +23,8 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.exception.FragmentSetupException;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
-import org.apache.drill.exec.physical.impl.ImplCreator;
-import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -63,10 +58,11 @@ public class ControlHandlerImpl implements ControlMessageHandler {
     this.bee = bee;
   }
 
-
   @Override
   public Response handle(ControlConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
-    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Received bit com message of type {}", rpcType);
+    if (RpcConstants.EXTRA_DEBUGGING) {
+      logger.debug("Received bit com message of type {}", rpcType);
+    }
 
     switch (rpcType) {
 
@@ -117,8 +113,6 @@ public class ControlHandlerImpl implements ControlMessageHandler {
 
   }
 
-
-
   /* (non-Javadoc)
    * @see org.apache.drill.exec.work.batch.BitComHandler#startNewRemoteFragment(org.apache.drill.exec.proto.ExecProtos.PlanFragment)
    */
@@ -129,19 +123,18 @@ public class ControlHandlerImpl implements ControlMessageHandler {
     ControlTunnel tunnel = bee.getContext().getController().getTunnel(fragment.getForeman());
 
     NonRootStatusReporter listener = new NonRootStatusReporter(context, tunnel);
-    try{
+    try {
       FragmentRoot rootOperator = bee.getContext().getPlanReader().readFragmentOperator(fragment.getFragmentJson());
       FragmentExecutor fr = new FragmentExecutor(context, bee, rootOperator, listener);
       bee.addFragmentRunner(fr);
     } catch (Exception e) {
       listener.fail(fragment.getHandle(), "Failure due to uncaught exception", e);
     } catch (OutOfMemoryError t) {
-      if(t.getMessage().startsWith("Direct buffer")){
+      if (t.getMessage().startsWith("Direct buffer")) {
         listener.fail(fragment.getHandle(), "Failure due to error", t);
-      }else{
+      } else {
         throw t;
       }
-
     }
 
   }
@@ -150,16 +143,17 @@ public class ControlHandlerImpl implements ControlMessageHandler {
    * @see org.apache.drill.exec.work.batch.BitComHandler#cancelFragment(org.apache.drill.exec.proto.ExecProtos.FragmentHandle)
    */
   @Override
-  public Ack cancelFragment(FragmentHandle handle){
+  public Ack cancelFragment(FragmentHandle handle) {
     FragmentManager manager = bee.getContext().getWorkBus().getFragmentManager(handle);
-
-    if(manager != null){
+    if (manager != null) {
       // try remote fragment cancel.
       manager.cancel();
-    }else{
+    } else {
       // then try local cancel.
       FragmentExecutor runner = bee.getFragmentRunner(handle);
-      if(runner != null) runner.cancel();
+      if (runner != null) {
+        runner.cancel();
+      }
     }
 
     return Acks.OK;
@@ -169,7 +163,7 @@ public class ControlHandlerImpl implements ControlMessageHandler {
     FragmentManager manager = bee.getContext().getWorkBus().getFragmentManager(finishedReceiver.getSender());
 
     FragmentExecutor executor;
-    if(manager != null) {
+    if (manager != null) {
       executor = manager.getRunnable();
     } else {
       // then try local cancel.

@@ -17,19 +17,14 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import java.util.List;
+
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
-import org.apache.drill.exec.physical.impl.svremover.Copier;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
-
-import java.util.List;
 
 public interface PriorityQueueCopier {
   public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,

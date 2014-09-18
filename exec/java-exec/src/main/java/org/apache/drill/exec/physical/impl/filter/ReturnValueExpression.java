@@ -22,8 +22,8 @@ import java.util.Iterator;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
 
 import com.google.common.collect.Iterators;
 
@@ -32,11 +32,11 @@ public class ReturnValueExpression implements LogicalExpression{
 
   private LogicalExpression child;
   private boolean returnTrueOnOne;
-  
+
   public ReturnValueExpression(LogicalExpression child) {
     this(child, true);
   }
-  
+
   public ReturnValueExpression(LogicalExpression child, boolean returnTrueOnOne) {
     this.child = child;
     this.returnTrueOnOne = returnTrueOnOne;
@@ -60,7 +60,7 @@ public class ReturnValueExpression implements LogicalExpression{
   public ExpressionPosition getPosition() {
     return ExpressionPosition.UNKNOWN;
   }
-  
+
   @Override
   public Iterator<LogicalExpression> iterator() {
     return Iterators.singletonIterator(child);
@@ -70,12 +70,12 @@ public class ReturnValueExpression implements LogicalExpression{
     return returnTrueOnOne;
   }
 
-  public int getSelfCost() { 
-    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName())); 
+  public int getSelfCost() {
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName()));
   }
-  
-  public int getCumulativeCost() { 
-    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName())); 
+
+  public int getCumulativeCost() {
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName()));
   }
-  
+
 }

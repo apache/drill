@@ -22,8 +22,6 @@ import io.netty.util.internal.PlatformDependent;
 
 import java.nio.ByteOrder;
 
-import org.apache.drill.exec.memory.BufferAllocator;
-
 public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
     private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
     private final PooledUnsafeDirectByteBuf wrapped;
@@ -31,7 +29,9 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
 
     UnsafeDirectLittleEndian(PooledUnsafeDirectByteBuf buf) {
         super(buf);
-        if(!NATIVE_ORDER || buf.order() != ByteOrder.BIG_ENDIAN) throw new IllegalStateException("Drill only runs on LittleEndian systems.");
+        if (!NATIVE_ORDER || buf.order() != ByteOrder.BIG_ENDIAN) {
+          throw new IllegalStateException("Drill only runs on LittleEndian systems.");
+        }
         wrapped = buf;
         this.memoryAddress = buf.memoryAddress();
     }
@@ -189,7 +189,5 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
       PlatformDependent.putByte(addr(index), (byte) value);
       return this;
     }
-
-
 
 }

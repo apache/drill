@@ -39,12 +39,12 @@ public class CoordinationQueue {
   }
 
   void channelClosed(Throwable ex) {
-    if(ex != null){
+    if (ex != null) {
       RpcException e;
-      if(ex instanceof RpcException){
+      if (ex instanceof RpcException) {
         e = (RpcException) ex;
-      }else{
-        e = new RpcException(ex);  
+      } else {
+        e = new RpcException(ex);
       }
       for (RpcOutcome<?> f : map.values()) {
         f.setException(e);
@@ -52,22 +52,23 @@ public class CoordinationQueue {
     }
   }
 
-  public <V> ChannelListenerWithCoordinationId get(RpcOutcomeListener<V> handler, Class<V> clazz, RemoteConnection connection){
+  public <V> ChannelListenerWithCoordinationId get(RpcOutcomeListener<V> handler, Class<V> clazz, RemoteConnection connection) {
     int i = circularInt.getNext();
     RpcListener<V> future = new RpcListener<V>(handler, clazz, i, connection);
     Object old = map.put(i, future);
-    if (old != null)
+    if (old != null) {
       throw new IllegalStateException(
           "You attempted to reuse a coordination id when the previous coordination id has not been removed.  This is likely rpc future callback memory leak.");
+    }
     return future;
   }
-  
+
   private class RpcListener<T> implements ChannelListenerWithCoordinationId, RpcOutcome<T>{
     final RpcOutcomeListener<T> handler;
     final Class<T> clazz;
     final int coordinationId;
     final RemoteConnection connection;
-    
+
     public RpcListener(RpcOutcomeListener<T> handler, Class<T> clazz, int coordinationId, RemoteConnection connection) {
       super();
       this.handler = handler;
@@ -79,11 +80,11 @@ public class CoordinationQueue {
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
 
-      if(!future.isSuccess()){
+      if (!future.isSuccess()) {
         removeFromMap(coordinationId);
-        if(future.channel().isActive()) {
+        if (future.channel().isActive()) {
            throw new RpcException("Future failed") ;
-        }else{
+        } else {
           throw  new ChannelClosedException();
         }
       }
@@ -110,8 +111,7 @@ public class CoordinationQueue {
     public int getCoordinationId() {
       return coordinationId;
     }
-    
-    
+
   }
 
   private RpcOutcome<?> removeFromMap(int coordinationId) {
@@ -130,7 +130,6 @@ public class CoordinationQueue {
     Class<?> outcomeClass = rpc.getOutcomeType();
 
     if (outcomeClass != clazz) {
-
       throw new IllegalStateException(
           String
               .format(
@@ -149,11 +148,12 @@ public class CoordinationQueue {
 
   public void updateFailedFuture(int coordinationId, RpcFailure failure) {
     // logger.debug("Updating failed future.");
-    try{
+    try {
       RpcOutcome<?> rpc = removeFromMap(coordinationId);
       rpc.setException(new RemoteRpcException(failure));
-    }catch(Exception ex){
+    } catch(Exception ex) {
       logger.warn("Failed to remove from map.  Not a problem since we were updating on failed future.", ex);
     }
   }
+
 }

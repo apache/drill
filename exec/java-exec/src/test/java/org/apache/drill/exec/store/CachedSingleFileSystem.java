@@ -38,32 +38,35 @@ import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
 
-public class CachedSingleFileSystem extends FileSystem{
+public class CachedSingleFileSystem extends FileSystem {
 
   private ByteBuf file;
   private String path;
-  
-  public CachedSingleFileSystem(String path) throws IOException{
+
+  public CachedSingleFileSystem(String path) throws IOException {
     this.path = path;
     File f = new File(path);
     long length = f.length();
-    if(length > Integer.MAX_VALUE) throw new UnsupportedOperationException("Cached file system only supports files of less than 2GB.");
+    if (length > Integer.MAX_VALUE) {
+      throw new UnsupportedOperationException("Cached file system only supports files of less than 2GB.");
+    }
     System.out.println(length);
-    try(InputStream is = new BufferedInputStream(new FileInputStream(path))){
+    try (InputStream is = new BufferedInputStream(new FileInputStream(path))) {
       byte[] buffer = new byte[64*1024];
       this.file = UnpooledByteBufAllocator.DEFAULT.directBuffer((int) length);
       int read;
-      while( (read = is.read(buffer)) > 0){
+      while ( (read = is.read(buffer)) > 0) {
         file.writeBytes(buffer, 0, read);
       }
     }
   }
 
+  @Override
   public void close() throws IOException{
     file.release();
     super.close();
   }
-  
+
   @Override
   public FSDataOutputStream append(Path arg0, int arg1, Progressable arg2) throws IOException {
     throw new UnsupportedOperationException();
@@ -112,7 +115,9 @@ public class CachedSingleFileSystem extends FileSystem{
 
   @Override
   public FSDataInputStream open(Path path, int arg1) throws IOException {
-    if(!path.toString().equals(this.path)) throw new IOException(String.format("You requested file %s but this cached single file system only has the file %s.", path.toString(), this.path));
+    if (!path.toString().equals(this.path)) {
+      throw new IOException(String.format("You requested file %s but this cached single file system only has the file %s.", path.toString(), this.path));
+    }
     return new FSDataInputStream(new CachedFSDataInputStream(file.slice()));
   }
 
@@ -125,14 +130,14 @@ public class CachedSingleFileSystem extends FileSystem{
   public void setWorkingDirectory(Path arg0) {
     throw new UnsupportedOperationException();
   }
-  
-  
+
+
   private class CachedFSDataInputStream extends ByteBufInputStream implements Seekable, PositionedReadable{
     private ByteBuf buf;
     public CachedFSDataInputStream(ByteBuf buffer) {
       super(buffer);
       this.buf = buffer;
-      
+
     }
 
     @Override
@@ -164,8 +169,11 @@ public class CachedSingleFileSystem extends FileSystem{
 
     @Override
     public void readFully(long pos, byte[] buffer, int offset, int length) throws IOException {
-      if(length + pos > buf.capacity()) throw new IOException("Read was too big.");
+      if (length + pos > buf.capacity()) {
+        throw new IOException("Read was too big.");
+      }
       read(pos, buffer, offset, length);
     }
   }
+
 }

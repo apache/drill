@@ -17,16 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.TopN;
 
-import com.google.common.base.Preconditions;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.TopN;
 import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.sort.SortBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
 
 public class TopNSortBatchCreator implements BatchCreator<TopN>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNSortBatchCreator.class);
@@ -36,6 +35,6 @@ public class TopNSortBatchCreator implements BatchCreator<TopN>{
     Preconditions.checkArgument(children.size() == 1);
     return new TopNBatch(config, context, children.iterator().next());
   }
-  
-  
+
+
 }

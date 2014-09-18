@@ -85,33 +85,32 @@ public class MongoFilterBuilder extends
     allExpressionsConverted = false;
     return null;
   }
-  
-	@Override
-	public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value) {
-		List<LogicalExpression> args = op.args;
-		MongoScanSpec nodeScanSpec = null;
-		String functionName = op.getName();
-		for (int i = 0; i < args.size(); ++i) {
-			switch (functionName) {
-			case "booleanAnd":
-			case "booleanOr":
-				if (nodeScanSpec == null) {
-					nodeScanSpec = args.get(i).accept(this, null);
-				} else {
-					MongoScanSpec scanSpec = args.get(i).accept(this, null);
-					if (scanSpec != null) {
-						nodeScanSpec = mergeScanSpecs(functionName,
-								nodeScanSpec, scanSpec);
-					} else {
-						allExpressionsConverted = false;
-					}
-				}
-				break;
-			}
-		}
-		return nodeScanSpec;
-	}
-  
+
+  @Override
+  public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value) {
+    List<LogicalExpression> args = op.args;
+    MongoScanSpec nodeScanSpec = null;
+    String functionName = op.getName();
+    for (int i = 0; i < args.size(); ++i) {
+      switch (functionName) {
+      case "booleanAnd":
+      case "booleanOr":
+        if (nodeScanSpec == null) {
+          nodeScanSpec = args.get(i).accept(this, null);
+        } else {
+          MongoScanSpec scanSpec = args.get(i).accept(this, null);
+          if (scanSpec != null) {
+            nodeScanSpec = mergeScanSpecs(functionName, nodeScanSpec, scanSpec);
+          } else {
+            allExpressionsConverted = false;
+          }
+        }
+        break;
+      }
+    }
+    return nodeScanSpec;
+  }
+
   @Override
   public MongoScanSpec visitFunctionCall(FunctionCall call, Void value)
       throws RuntimeException {
@@ -198,7 +197,7 @@ public class MongoFilterBuilder extends
       if(compareOp == MongoCompareOp.IFNULL){
         queryFilter.put(fieldName, new BasicDBObject(MongoCompareOp.EQUAL.getCompareOp(), null));
       } else if(compareOp == MongoCompareOp.IFNOTNULL){
-    	  queryFilter.put(fieldName, new BasicDBObject(MongoCompareOp.NOT_EQUAL.getCompareOp(), null));
+        queryFilter.put(fieldName, new BasicDBObject(MongoCompareOp.NOT_EQUAL.getCompareOp(), null));
       } else{
         queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
       }

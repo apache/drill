@@ -47,8 +47,9 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
     if (!ctx.channel().isOpen()) {
-      if (in.readableBytes() > 0)
+      if (in.readableBytes() > 0) {
         logger.info("Channel is closed, discarding remaining {} byte(s) in buffer.", in.readableBytes());
+      }
       in.skipBytes(in.readableBytes());
       return;
     }
@@ -80,7 +81,7 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
           // need to make buffer copy, otherwise netty will try to refill this buffer if we move the readerIndex forward...
           // TODO: Can we avoid this copy?
           ByteBuf outBuf = allocator.buffer(length);
-          if(outBuf == null){
+          if (outBuf == null) {
             logger.warn("Failure allocating buffer on incoming stream due to memory limits.  Current Allocation: {}.", allocator.getAllocatedMemory());
             in.resetReaderIndex();
             outOfMemoryHandler.handle();
@@ -90,10 +91,11 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
 
           in.skipBytes(length);
 
-          if (RpcConstants.EXTRA_DEBUGGING)
+          if (RpcConstants.EXTRA_DEBUGGING) {
             logger.debug(String.format(
                 "ReaderIndex is %d after length header of %d bytes and frame body of length %d bytes.",
                 in.readerIndex(), i + 1, length));
+          }
 
           out.add(outBuf);
           return;

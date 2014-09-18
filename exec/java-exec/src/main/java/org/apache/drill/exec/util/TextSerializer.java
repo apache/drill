@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.util;
 
+import java.io.IOException;
+
+import org.apache.hadoop.io.Text;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.apache.hadoop.io.Text;
-
-import java.io.IOException;
 
 public class TextSerializer extends StdSerializer<Text> {
 

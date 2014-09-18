@@ -40,27 +40,31 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 public class FieldReference extends SchemaPath {
   MajorType overrideType;
 
-  public FieldReference(SchemaPath sp){
+  public FieldReference(SchemaPath sp) {
     super(sp);
     checkData();
   }
 
-  private void checkData(){
-    if(getRootSegment().getChild() != null) throw new UnsupportedOperationException("Field references must be singular names.");
+  private void checkData() {
+    if (getRootSegment().getChild() != null) {
+      throw new UnsupportedOperationException("Field references must be singular names.");
+    }
 
   }
 
 
-  private void checkSimpleString(CharSequence value){
-    if(value.toString().contains(".")) throw new UnsupportedOperationException("Field references must be singular names.");
+  private void checkSimpleString(CharSequence value) {
+    if (value.toString().contains(".")) {
+      throw new UnsupportedOperationException("Field references must be singular names.");
+    }
   }
 
-  public FieldReference(CharSequence value){
+  public FieldReference(CharSequence value) {
     this(value, ExpressionPosition.UNKNOWN);
     checkSimpleString(value);
   }
 
-  public static FieldReference getWithQuotedRef(CharSequence safeString){
+  public static FieldReference getWithQuotedRef(CharSequence safeString) {
     return new FieldReference(safeString, ExpressionPosition.UNKNOWN, false);
   }
 
@@ -71,7 +75,7 @@ public class FieldReference extends SchemaPath {
 
   public FieldReference(CharSequence value, ExpressionPosition pos, boolean check) {
     super(new NameSegment(value), pos);
-    if(check){
+    if (check) {
       checkData();
       checkSimpleString(value);
     }
@@ -83,16 +87,16 @@ public class FieldReference extends SchemaPath {
     this.overrideType = dataType;
   }
 
-    @Override
-    public MajorType getMajorType() {
-        if(overrideType == null) {
-            return super.getMajorType();
-        } else {
-            return overrideType;
-        }
+  @Override
+  public MajorType getMajorType() {
+    if (overrideType == null) {
+      return super.getMajorType();
+    } else {
+      return overrideType;
     }
+  }
 
-    public static class De extends StdDeserializer<FieldReference> {
+  public static class De extends StdDeserializer<FieldReference> {
 
     public De() {
       super(FieldReference.class);

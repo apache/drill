@@ -89,7 +89,7 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     }
 
   }
-  
+
   @Override
   public boolean matches(RelOptRuleCall call) {
     final ScanPrel scan = (ScanPrel) call.rel(1);

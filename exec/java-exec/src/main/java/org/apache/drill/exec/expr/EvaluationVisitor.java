@@ -29,9 +29,9 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
@@ -83,9 +83,9 @@ public class EvaluationVisitor {
   public HoldingContainer addExpr(LogicalExpression e, ClassGenerator<?> generator) {
 
     Set<LogicalExpression> constantBoundaries;
-    if(generator.getMappingSet().hasEmbeddedConstant()){
+    if (generator.getMappingSet().hasEmbeddedConstant()) {
       constantBoundaries = Collections.emptySet();
-    }else{
+    } else {
       constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
     }
     return e.accept(new ConstantFilter(constantBoundaries), generator);
@@ -104,7 +104,7 @@ public class EvaluationVisitor {
         ClassGenerator<?> generator) throws RuntimeException {
       if (op.getName().equals("booleanAnd")) {
         return visitBooleanAnd(op, generator);
-      }else if(op.getName().equals("booleanOr")) {
+      } else if(op.getName().equals("booleanOr")) {
         return visitBooleanOr(op, generator);
       } else {
         throw new UnsupportedOperationException("BooleanOperator can only be booleanAnd, booleanOr. You are using " + op.getName());
@@ -119,8 +119,9 @@ public class EvaluationVisitor {
 
       JVar[] workspaceVars = holder.renderStart(generator, null);
 
-      if (holder.isNested())
+      if (holder.isNested()) {
         generator.getMappingSet().enterChild();
+      }
 
       HoldingContainer[] args = new HoldingContainer[holderExpr.args.size()];
       for (int i = 0; i < holderExpr.args.size(); i++) {
@@ -129,8 +130,9 @@ public class EvaluationVisitor {
 
       holder.renderMiddle(generator, args, workspaceVars);
 
-      if (holder.isNested())
+      if (holder.isNested()) {
         generator.getMappingSet().exitChild();
+      }
 
       return holder.renderEnd(generator, args, workspaceVars);
     }
@@ -392,8 +394,9 @@ public class EvaluationVisitor {
           if (seg.isArray()) {
             // stop once we get to the last segment and the final type is neither complex nor repeated (map, list, repeated list).
             // In case of non-complex and non-repeated type, we return Holder, in stead of FieldReader.
-            if (seg.isLastPath() && !complex && !repeated)
+            if (seg.isLastPath() && !complex && !repeated) {
               break;
+            }
 
             JVar list = generator.declareClassField("list", generator.getModel()._ref(FieldReader.class));
             eval.assign(list, expr);
@@ -466,11 +469,13 @@ public class EvaluationVisitor {
      */
     private boolean isNullReaderLikely(PathSegment seg, boolean complexOrRepeated) {
       while (seg != null) {
-        if (seg.isArray() && !seg.isLastPath())
+        if (seg.isArray() && !seg.isLastPath()) {
           return true;
+        }
 
-        if (seg.isLastPath() && complexOrRepeated)
+        if (seg.isLastPath() && complexOrRepeated) {
           return true;
+        }
 
         seg = seg.getChild();
       }
@@ -624,9 +629,9 @@ public class EvaluationVisitor {
         JBlock earlyExit = null;
         if (arg.isOptional()) {
           earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().ne(JExpr.lit(1))))._then();
-          if(e == null){
+          if (e == null) {
             e = arg.getIsSet();
-          }else{
+          } else {
             e = e.mul(arg.getIsSet());
           }
         } else {
@@ -687,9 +692,9 @@ public class EvaluationVisitor {
         JBlock earlyExit = null;
         if (arg.isOptional()) {
           earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().eq(JExpr.lit(1))))._then();
-          if(e == null){
+          if (e == null) {
             e = arg.getIsSet();
-          }else{
+          } else {
             e = e.mul(arg.getIsSet());
           }
         } else {
@@ -1033,4 +1038,5 @@ public class EvaluationVisitor {
           .setConstant(true);
     }
   }
+
 }

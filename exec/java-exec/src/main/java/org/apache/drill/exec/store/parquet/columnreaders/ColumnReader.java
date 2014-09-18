@@ -18,22 +18,24 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import io.netty.buffer.ByteBuf;
+
+import java.io.IOException;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
+
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.schema.PrimitiveType;
 import parquet.schema.PrimitiveType.PrimitiveTypeName;
 
-import java.io.IOException;
-
 public abstract class ColumnReader<V extends ValueVector> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnReader.class);
 
   final ParquetRecordReader parentReader;
-  
+
   // Value Vector for this column
   final V valueVec;
 
@@ -57,10 +59,10 @@ public abstract class ColumnReader<V extends ValueVector> {
   // counter for the total number of values read from one or more pages
   // when a batch is filled all of these values should be the same for all of the columns
   int totalValuesRead;
-  
+
   // counter for the values that have been read in this pass (a single call to the next() method)
   int valuesReadInCurrentPass;
-  
+
   // length of single data value in bits, if the length is fixed
   int dataTypeLengthInBits;
   int bytesReadInCurrentPass;
@@ -137,18 +139,21 @@ public abstract class ColumnReader<V extends ValueVector> {
   public boolean determineSize(long recordsReadInCurrentPass, Integer lengthVarFieldsInCurrentRecord) throws IOException {
 
     boolean doneReading = readPage();
-    if (doneReading)
+    if (doneReading) {
       return true;
+    }
 
     doneReading = processPageData((int) recordsReadInCurrentPass);
-    if (doneReading)
+    if (doneReading) {
       return true;
+    }
 
     lengthVarFieldsInCurrentRecord += dataTypeLengthInBits;
 
     doneReading = checkVectorCapacityReached();
-    if (doneReading)
+    if (doneReading) {
       return true;
+    }
 
     return false;
   }
@@ -187,8 +192,9 @@ public abstract class ColumnReader<V extends ValueVector> {
     if (pageReader.currentPage == null
         || totalValuesReadAndReadyToReadInPage() == pageReader.currentPage.getValueCount()) {
       readRecords(pageReader.valuesReadyToRead);
-      if (pageReader.currentPage != null)
+      if (pageReader.currentPage != null) {
         totalValuesRead += pageReader.currentPage.getValueCount();
+      }
       if (!pageReader.next()) {
         hitRowGroupEnd();
         return true;
@@ -213,9 +219,10 @@ public abstract class ColumnReader<V extends ValueVector> {
       logger.debug("Reached the capacity of the data vector in a variable length value vector.");
       return true;
     }
-    else if (valuesReadInCurrentPass > valueVec.getValueCapacity()){
+    else if (valuesReadInCurrentPass > valueVec.getValueCapacity()) {
       return true;
     }
     return false;
   }
+
 }

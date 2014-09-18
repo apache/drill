@@ -18,7 +18,6 @@
 package org.apache.drill.exec.cache;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.Future;
 
 public interface DistributedMultiMap<K, V> {

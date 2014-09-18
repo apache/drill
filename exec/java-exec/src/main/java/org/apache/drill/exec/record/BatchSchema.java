@@ -18,16 +18,15 @@
 package org.apache.drill.exec.record;
 
 
-import com.google.common.collect.Lists;
-
 import java.util.Iterator;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 
 public class BatchSchema implements Iterable<MaterializedField> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);
   final SelectionVectorMode selectionVectorMode;
-  ;
   private final List<MaterializedField> fields;
 
   BatchSchema(SelectionVectorMode selectionVector, List<MaterializedField> fields) {
@@ -39,12 +38,14 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return new SchemaBuilder();
   }
 
-  public int getFieldCount(){
+  public int getFieldCount() {
     return fields.size();
   }
 
-  public MaterializedField getColumn(int index){
-    if(index < 0 || index >= fields.size()) return null;
+  public MaterializedField getColumn(int index) {
+    if (index < 0 || index >= fields.size()) {
+      return null;
+    }
     return fields.get(index);
   }
 
@@ -57,6 +58,7 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return selectionVectorMode;
   }
 
+  @Override
   public BatchSchema clone() {
     List<MaterializedField> newFields = Lists.newArrayList();
     newFields.addAll(fields);
@@ -94,23 +96,27 @@ public class BatchSchema implements Iterable<MaterializedField> {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     BatchSchema other = (BatchSchema) obj;
     if (fields == null) {
-      if (other.fields != null)
+      if (other.fields != null) {
         return false;
-    } else if (!fields.equals(other.fields))
+      }
+    } else if (!fields.equals(other.fields)) {
       return false;
-    if (selectionVectorMode != other.selectionVectorMode)
+    }
+    if (selectionVectorMode != other.selectionVectorMode) {
       return false;
+    }
     return true;
   }
-
-
 
 }

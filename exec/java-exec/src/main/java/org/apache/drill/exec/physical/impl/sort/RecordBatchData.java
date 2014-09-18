@@ -35,21 +35,23 @@ import com.google.common.collect.Lists;
  */
 public class RecordBatchData {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchData.class);
-  
+
   private SelectionVector2 sv2;
   private int recordCount;
   VectorContainer container = new VectorContainer();
-  
-  public RecordBatchData(VectorAccessible batch){
+
+  public RecordBatchData(VectorAccessible batch) {
     List<ValueVector> vectors = Lists.newArrayList();
     if (batch instanceof RecordBatch && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) {
       this.sv2 = ((RecordBatch)batch).getSelectionVector2().clone();
     } else {
       this.sv2 = null;
     }
-    
-    for(VectorWrapper<?> v : batch){
-      if(v.isHyper()) throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
+
+    for (VectorWrapper<?> v : batch) {
+      if (v.isHyper()) {
+        throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
+      }
       TransferPair tp = v.getValueVector().getTransferPair();
       tp.transfer();
       vectors.add(tp.getTo());
@@ -66,10 +68,11 @@ public class RecordBatchData {
     container = VectorContainer.canonicalize(container);
     container.buildSchema(mode);
   }
-  
-  public int getRecordCount(){
+
+  public int getRecordCount() {
     return recordCount;
   }
+
   public List<ValueVector> getVectors() {
     List<ValueVector> vectors = Lists.newArrayList();
     for (VectorWrapper w : container) {
@@ -91,4 +94,5 @@ public class RecordBatchData {
   public VectorContainer getContainer() {
     return container;
   }
+
 }

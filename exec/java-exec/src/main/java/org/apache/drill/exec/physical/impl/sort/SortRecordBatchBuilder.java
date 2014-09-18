@@ -49,14 +49,14 @@ public class SortRecordBatchBuilder {
   private SelectionVector4 sv4;
   final PreAllocator svAllocator;
 
-  public SortRecordBatchBuilder(BufferAllocator a, long maxBytes){
+  public SortRecordBatchBuilder(BufferAllocator a, long maxBytes) {
     this.maxBytes = maxBytes;
     this.svAllocator = a.getNewPreAllocator();
   }
 
-  private long getSize(VectorAccessible batch){
+  private long getSize(VectorAccessible batch) {
     long bytes = 0;
-    for(VectorWrapper<?> v : batch){
+    for (VectorWrapper<?> v : batch) {
       bytes += v.getValueVector().getBufferSize();
     }
     return bytes;
@@ -68,8 +68,10 @@ public class SortRecordBatchBuilder {
    * @return True if the requested add completed successfully.  Returns false in the case that this builder is full and cannot receive additional packages.
    * @throws SchemaChangeException
    */
-  public boolean add(VectorAccessible batch){
-    if(batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) throw new UnsupportedOperationException("A sort cannot currently work against a sv4 batch.");
+  public boolean add(VectorAccessible batch) {
+    if (batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) {
+      throw new UnsupportedOperationException("A sort cannot currently work against a sv4 batch.");
+    }
     if (batch.getRecordCount() == 0 && batches.size() > 0) {
       return true; // skip over empty record batches.
     }
@@ -78,9 +80,15 @@ public class SortRecordBatchBuilder {
     if (batchBytes == 0 && batches.size() > 0) {
       return true;
     }
-    if(batchBytes + runningBytes > maxBytes) return false; // enough data memory.
-    if(runningBatches+1 > Character.MAX_VALUE) return false; // allowed in batch.
-    if(!svAllocator.preAllocate(batch.getRecordCount()*4)) return false;  // sv allocation available.
+    if (batchBytes + runningBytes > maxBytes) {
+      return false; // enough data memory.
+    }
+    if (runningBatches+1 > Character.MAX_VALUE) {
+      return false; // allowed in batch.
+    }
+    if (!svAllocator.preAllocate(batch.getRecordCount()*4)) {
+      return false;  // sv allocation available.
+    }
 
 
     RecordBatchData bd = new RecordBatchData(batch);
@@ -126,15 +134,19 @@ public class SortRecordBatchBuilder {
     }
   }
 
-  public boolean isEmpty(){
+  public boolean isEmpty() {
     return batches.isEmpty();
   }
 
   public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException{
     outputContainer.clear();
-    if(batches.keySet().size() > 1) throw new SchemaChangeException("Sort currently only supports a single schema.");
-    if(batches.size() > Character.MAX_VALUE) throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
-    if(batches.keys().size() < 1){
+    if (batches.keySet().size() > 1) {
+      throw new SchemaChangeException("Sort currently only supports a single schema.");
+    }
+    if (batches.size() > Character.MAX_VALUE) {
+      throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
+    }
+    if (batches.keys().size() < 1) {
       assert false : "Invalid to have an empty set of batches with no schemas.";
     }
     sv4 = new SelectionVector4(svAllocator.getAllocation(), recordCount, Character.MAX_VALUE);
@@ -142,12 +154,12 @@ public class SortRecordBatchBuilder {
     List<RecordBatchData> data = batches.get(schema);
 
     // now we're going to generate the sv4 pointers
-    switch(schema.getSelectionVectorMode()){
+    switch (schema.getSelectionVectorMode()) {
     case NONE: {
       int index = 0;
       int recordBatchId = 0;
-      for(RecordBatchData d : data){
-        for(int i =0; i < d.getRecordCount(); i++, index++){
+      for (RecordBatchData d : data) {
+        for (int i =0; i < d.getRecordCount(); i++, index++) {
           sv4.set(index, recordBatchId, i);
         }
         recordBatchId++;
@@ -157,8 +169,8 @@ public class SortRecordBatchBuilder {
     case TWO_BYTE: {
       int index = 0;
       int recordBatchId = 0;
-      for(RecordBatchData d : data){
-        for(int i =0; i < d.getRecordCount(); i++, index++){
+      for (RecordBatchData d : data) {
+        for (int i =0; i < d.getRecordCount(); i++, index++) {
           sv4.set(index, recordBatchId, (int) d.getSv2().getIndex(i));
         }
         // might as well drop the selection vector since we'll stop using it now.
@@ -173,13 +185,13 @@ public class SortRecordBatchBuilder {
 
     // next, we'll create lists of each of the vector types.
     ArrayListMultimap<MaterializedField, ValueVector> vectors = ArrayListMultimap.create();
-    for(RecordBatchData rbd : batches.values()){
-      for(ValueVector v : rbd.getVectors()){
+    for (RecordBatchData rbd : batches.values()) {
+      for (ValueVector v : rbd.getVectors()) {
         vectors.put(v.getField(), v);
       }
     }
 
-    for(MaterializedField f : schema){
+    for (MaterializedField f : schema) {
       List<ValueVector> v = vectors.get(f);
       outputContainer.addHyperList(v, false);
     }
@@ -191,11 +203,13 @@ public class SortRecordBatchBuilder {
     return sv4;
   }
 
-  public void clear(){
-    for(RecordBatchData d : batches.values()){
+  public void clear() {
+    for (RecordBatchData d : batches.values()) {
       d.container.clear();
     }
-    if(sv4 != null) sv4.clear();
+    if (sv4 != null) {
+      sv4.clear();
+    }
   }
 
   public List<VectorContainer> getHeldRecordBatches() {

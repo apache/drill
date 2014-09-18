@@ -34,10 +34,6 @@ import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
 import org.apache.hadoop.conf.Configuration;
@@ -49,6 +45,9 @@ import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.MessageType;
 import parquet.schema.Type;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 
 public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan>{

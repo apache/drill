@@ -37,7 +37,7 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
   private Map<String, StoragePluginConfig> storage;
 
   @JsonCreator
-  public StoragePlugins(@JsonProperty("storage") Map<String, StoragePluginConfig> storage){
+  public StoragePlugins(@JsonProperty("storage") Map<String, StoragePluginConfig> storage) {
     this.storage = storage;
   }
 
@@ -73,8 +73,9 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
     builder.append("[");
     int i = 0;
     for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
-      if (i > 0)
+      if (i > 0) {
         builder.append(", ");
+      }
       builder.append(iterator.next());
     }
     builder.append("]");
@@ -88,6 +89,5 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
     }
     return storage.equals(((StoragePlugins) obj).getStorage());
   }
-
 
 }

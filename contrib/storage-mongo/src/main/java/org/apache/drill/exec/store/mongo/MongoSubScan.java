@@ -51,7 +51,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   @JsonIgnore
   private final MongoStoragePlugin mongoStoragePlugin;
   private final List<SchemaPath> columns;
-  
+
   private final List<MongoSubScanSpec> chunkScanSpecList;
 
   @JsonCreator
@@ -91,7 +91,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   public List<SchemaPath> getColumns() {
     return columns;
   }
-  
+
   public List<MongoSubScanSpec> getChunkScanSpecList() {
     return chunkScanSpecList;
   }
@@ -113,13 +113,13 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   }
 
   public static class MongoSubScanSpec {
-   
+
     protected String dbName;
     protected String collectionName;
     protected List<String> hosts;
     protected Map<String, Object> minFilters;
     protected Map<String, Object> maxFilters;
-    
+
     protected BasicDBObject filter;
 
     @parquet.org.codehaus.jackson.annotate.JsonCreator
@@ -157,7 +157,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
       this.collectionName = collectionName;
       return this;
     }
-    
+
     public List<String> getHosts() {
       return hosts;
     }
@@ -166,7 +166,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
       this.hosts = hosts;
       return this;
     }
-    
+
     public Map<String, Object> getMinFilters() {
       return minFilters;
     }
@@ -184,11 +184,11 @@ public class MongoSubScan extends AbstractBase implements SubScan {
       this.maxFilters = maxFilters;
       return this;
     }
-    
+
     public BasicDBObject getFilter() {
       return filter;
     }
-    
+
     public MongoSubScanSpec setFilter(BasicDBObject filter) {
       this.filter = filter;
       return this;
@@ -200,7 +200,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
           + collectionName + ", hosts=" + hosts + ", minFilters=" + minFilters
           + ", maxFilters=" + maxFilters + ", filter=" + filter + "]";
     }
-    
+
   }
 
 }

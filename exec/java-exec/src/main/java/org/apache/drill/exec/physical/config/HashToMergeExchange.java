@@ -35,16 +35,16 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class HashToMergeExchange extends AbstractExchange{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashToMergeExchange.class);
 
-  
+
   private final LogicalExpression distExpr;
   private final List<Ordering> orderExprs;
 
   //ephemeral for setup tasks.
   private List<DrillbitEndpoint> senderLocations;
   private List<DrillbitEndpoint> receiverLocations;
-  
+
   @JsonCreator
-  public HashToMergeExchange(@JsonProperty("child") PhysicalOperator child, 
+  public HashToMergeExchange(@JsonProperty("child") PhysicalOperator child,
       @JsonProperty("expr") LogicalExpression expr,
       @JsonProperty("orderings") List<Ordering> orderExprs) {
     super(child);
@@ -88,6 +88,6 @@ public class HashToMergeExchange extends AbstractExchange{
     return orderExprs;
   }
 
-  
-  
+
+
 }

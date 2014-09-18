@@ -29,13 +29,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
-
-
-
-
-
-
-
 @SuppressWarnings("unused")
 public class SingleListReaderImpl extends AbstractFieldReader{
 
@@ -44,20 +37,24 @@ public class SingleListReaderImpl extends AbstractFieldReader{
   private final AbstractContainerVector container;
   private FieldReader reader;
 
-  public SingleListReaderImpl(String name, AbstractContainerVector container){
+  public SingleListReaderImpl(String name, AbstractContainerVector container) {
     super();
     this.name = name;
     this.container = container;
   }
 
-  public MajorType getType(){
+  @Override
+  public MajorType getType() {
     return TYPE;
   }
 
 
-  public void setPosition(int index){
+  @Override
+  public void setPosition(int index) {
     super.setPosition(index);
-    if(reader != null) reader.setPosition(index);
+    if (reader != null) {
+      reader.setPosition(index);
+    }
   }
 
   @Override
@@ -65,8 +62,9 @@ public class SingleListReaderImpl extends AbstractFieldReader{
     return reader.readObject();
   }
 
-  public FieldReader reader(){
-    if(reader == null){
+  @Override
+  public FieldReader reader() {
+    if (reader == null) {
       reader = container.get(name, ValueVector.class).getAccessor().getReader();
       setPosition(idx());
     }
@@ -78,15 +76,14 @@ public class SingleListReaderImpl extends AbstractFieldReader{
     return false;
   }
 
-  public void copyAsValue(ListWriter writer){
+  @Override
+  public void copyAsValue(ListWriter writer) {
     throw new UnsupportedOperationException("Generic list copying not yet supported.  Please resolve to typed list.");
   }
 
-  public void copyAsField(String name, MapWriter writer){
+  @Override
+  public void copyAsField(String name, MapWriter writer) {
     throw new UnsupportedOperationException("Generic list copying not yet supported.  Please resolve to typed list.");
   }
-
-
 
 }
-

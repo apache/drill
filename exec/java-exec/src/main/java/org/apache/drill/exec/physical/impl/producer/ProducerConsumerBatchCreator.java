@@ -17,16 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.producer;
 
-import com.google.common.collect.Iterables;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.config.ProducerConsumer;
 import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.producer.ProducerConsumerBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.util.List;
+import com.google.common.collect.Iterables;
 
 public class ProducerConsumerBatchCreator implements BatchCreator<ProducerConsumer> {
   @Override

@@ -9,7 +9,7 @@
             &REPLACED_IN_TEST&
         }
     },
-	graph:[
+    graph:[
         {
             @id:1,
             pop:"options-reader-group-scan"
@@ -21,4 +21,3 @@
         }
     ]
 }
-

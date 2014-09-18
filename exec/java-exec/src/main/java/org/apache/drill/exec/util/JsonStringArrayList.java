@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.util;
 
+import java.util.ArrayList;
+
+import org.apache.hadoop.io.Text;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.apache.hadoop.io.Text;
-
-import java.util.ArrayList;
 
 public class JsonStringArrayList<E> extends ArrayList<E> {
 

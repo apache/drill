@@ -29,12 +29,12 @@ import org.apache.drill.exec.work.batch.ControlMessageHandler;
  */
 public class ControlConnectionManager extends ReconnectingConnection<ControlConnection, BitControlHandshake>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlConnectionManager.class);
-  
+
   private final DrillbitEndpoint endpoint;
   private final ControlMessageHandler handler;
   private final BootStrapContext context;
   private final DrillbitEndpoint localIdentity;
-  
+
   public ControlConnectionManager(DrillbitEndpoint remoteEndpoint, DrillbitEndpoint localIdentity, ControlMessageHandler handler, BootStrapContext context) {
     super(BitControlHandshake.newBuilder().setRpcVersion(ControlRpcConfig.RPC_VERSION).setEndpoint(localIdentity).build(), remoteEndpoint.getAddress(), remoteEndpoint.getControlPort());
     assert remoteEndpoint != null : "Endpoint cannot be null.";
@@ -52,9 +52,9 @@ public class ControlConnectionManager extends ReconnectingConnection<ControlConn
     return new ControlClient(endpoint, localIdentity, handler, context, new CloseHandlerCreator());
   }
 
-  
+
   public DrillbitEndpoint getEndpoint() {
     return endpoint;
   }
-  
+
 }

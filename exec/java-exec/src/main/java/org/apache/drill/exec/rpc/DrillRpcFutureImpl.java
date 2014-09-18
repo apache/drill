@@ -24,13 +24,13 @@ import com.google.common.util.concurrent.AbstractFuture;
 
 class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> implements DrillRpcFuture<V>, RpcOutcomeListener<V>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRpcFutureImpl.class);
-  
+
   private volatile ByteBuf buffer;
-  
+
   public DrillRpcFutureImpl() {
     super(new InnerFuture<V>());
   }
-  
+
   /**
    * Drill doesn't currently support rpc cancellations since nearly all requests should be either instance of
    * asynchronous. Business level cancellation is managed a separate call (e.g. canceling a query.). Calling this method
@@ -54,6 +54,7 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
       super.set(value);
     }
 
+    @Override
     protected boolean setException(Throwable t) {
       return super.setException(t);
     }
@@ -75,10 +76,10 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
     return buffer;
   }
 
-  public void release(){
-    if(buffer != null) buffer.release();
+  public void release() {
+    if (buffer != null) {
+      buffer.release();
+    }
   }
 
-  
-  
 }

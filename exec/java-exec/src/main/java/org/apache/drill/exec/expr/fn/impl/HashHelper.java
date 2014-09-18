@@ -22,8 +22,8 @@ import java.nio.ByteOrder;
 
 public class HashHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashHelper.class);
-  
-  
+
+
   /** taken from mahout **/
   public static int hash(ByteBuffer buf, int seed) {
     // save byte order for later restoration

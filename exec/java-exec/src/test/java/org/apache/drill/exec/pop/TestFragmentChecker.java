@@ -36,13 +36,11 @@ import com.google.common.collect.Lists;
 public class TestFragmentChecker extends PopUnitTestBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestFragmentChecker.class);
 
-
   @Test
   public void checkSimpleExchangePlan() throws Exception{
     print("/physical_double_exchange.json", 2, 3);
 
   }
-
 
   private void print(String fragmentFile, int bitCount, int exepectedFragmentCount) throws Exception{
 
@@ -53,9 +51,11 @@ public class TestFragmentChecker extends PopUnitTestBase{
     SimpleParallelizer par = new SimpleParallelizer(1000*1000, 5, 10, 1.2);
     List<DrillbitEndpoint> endpoints = Lists.newArrayList();
     DrillbitEndpoint localBit = null;
-    for(int i =0; i < bitCount; i++){
+    for(int i =0; i < bitCount; i++) {
       DrillbitEndpoint b1 = DrillbitEndpoint.newBuilder().setAddress("localhost").setControlPort(1234+i).build();
-      if(i ==0) localBit = b1;
+      if (i == 0) {
+        localBit = b1;
+      }
       endpoints.add(b1);
     }
 
@@ -64,12 +64,10 @@ public class TestFragmentChecker extends PopUnitTestBase{
 
     System.out.print(qwu.getRootFragment().getFragmentJson());
 
-
-    for(PlanFragment f : qwu.getFragments()){
+    for(PlanFragment f : qwu.getFragments()) {
       System.out.println(String.format("=========Fragment [%d:%d]=====", f.getHandle().getMajorFragmentId(), f.getHandle().getMinorFragmentId()));
       System.out.print(f.getFragmentJson());
     }
-
     //assertEquals(exepectedFragmentCount, qwu.getFragments().size());
 
     logger.debug("Planning Set {}", planningSet);
@@ -80,4 +78,5 @@ public class TestFragmentChecker extends PopUnitTestBase{
     print("/physical_single_exchange.json", 1, 2);
 
   }
+
 }

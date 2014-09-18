@@ -34,17 +34,17 @@ public class ValueVectorWriteExpression implements LogicalExpression {
   private final TypedFieldId fieldId;
   private final LogicalExpression child;
   private final boolean safe;
-  
+
   public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child){
     this(fieldId, child, false);
   }
-  
+
   public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child, boolean safe){
     this.fieldId = fieldId;
     this.child = child;
     this.safe = safe;
   }
-  
+
   public TypedFieldId getFieldId() {
     return fieldId;
   }
@@ -54,7 +54,7 @@ public class ValueVectorWriteExpression implements LogicalExpression {
     return Types.NULL;
   }
 
-  
+
   public boolean isSafe() {
     return safe;
   }
@@ -72,21 +72,21 @@ public class ValueVectorWriteExpression implements LogicalExpression {
   public LogicalExpression getChild() {
     return child;
   }
-  
+
   @Override
   public Iterator<LogicalExpression> iterator() {
     return Iterators.singletonIterator(child);
   }
 
   @Override
-  public int getSelfCost() { 
-    return 0;  // TODO 
+  public int getSelfCost() {
+    return 0;  // TODO
   }
-  
+
   @Override
-  public int getCumulativeCost() { 
+  public int getCumulativeCost() {
     return 0; // TODO
   }
-  
+
 
 }

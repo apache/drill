@@ -25,7 +25,7 @@ import org.apache.drill.exec.work.fragment.AbstractStatusReporter;
 public class RootStatusReporter extends AbstractStatusReporter{
 
   QueryManager runningFragmentManager;
-  
+
   private RootStatusReporter(FragmentContext context){
     super(context);
   }
@@ -35,5 +35,5 @@ public class RootStatusReporter extends AbstractStatusReporter{
     runningFragmentManager.statusUpdate(status);
   }
 
-  
+
 }

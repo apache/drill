@@ -306,7 +306,7 @@ public class TestConvertFunctions extends BaseTestQuery {
     List<QueryResultBatch> results =  testLogicalWithResults(logicalPlan);
     int count = 0;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryResultBatch result : results){
+    for (QueryResultBatch result : results){
       count += result.getHeader().getRowCount();
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() > 0) {
@@ -365,7 +365,9 @@ public class TestConvertFunctions extends BaseTestQuery {
   protected <T> void verifyPhysicalPlan(String expression, T expectedResults) throws Throwable {
     expression = expression.replace("\\", "\\\\\\\\"); // "\\\\\\\\" => Java => "\\\\" => JsonParser => "\\" => AntlrParser "\"
 
-    if (textFileContent == null) textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
+    if (textFileContent == null) {
+      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
+    }
     String planString = textFileContent.replace("__CONVERT_EXPRESSION__", expression);
 
     verifyResults(expression, expectedResults, getRunResult(QueryType.PHYSICAL, planString));
@@ -432,4 +434,5 @@ public class TestConvertFunctions extends BaseTestQuery {
           expected.getClass().getName(), (actual == null ? "null" : actual.getClass().getName())));
     }
   }
+
 }

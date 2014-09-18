@@ -17,20 +17,16 @@
  */
 package org.apache.drill.exec.vector;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.Random;
+
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.vector.NullableVarCharVector.Accessor;
-import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Random;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class TestAdaptiveAllocation {
 

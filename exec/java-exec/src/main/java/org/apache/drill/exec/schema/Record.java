@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.schema;
 
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.SchemaPath;
-
-import java.io.IOException;
 
 public interface Record {
     public DiffSchema getSchemaChanges();

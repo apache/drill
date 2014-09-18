@@ -26,19 +26,17 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTest;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.junit.rules.TestRule;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 
 public class TestJdbcDistQuery extends JdbcTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcDistQuery.class);
@@ -199,7 +197,7 @@ public class TestJdbcDistQuery extends JdbcTest{
           System.out.println();
           first = false;
         }
-        while(r.next()){
+        while (r.next()) {
           md = r.getMetaData();
 
           for (int i = 1; i <= md.getColumnCount(); i++) {
@@ -214,11 +212,11 @@ public class TestJdbcDistQuery extends JdbcTest{
 
       System.out.println("\n\n\n");
       success = true;
-    }finally{
-      if(!success) Thread.sleep(2000);
+    } finally {
+      if (!success) {
+        Thread.sleep(2000);
+      }
     }
-
-
   }
 
   @Test

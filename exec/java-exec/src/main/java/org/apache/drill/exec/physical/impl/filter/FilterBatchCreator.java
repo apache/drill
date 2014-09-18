@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl.filter;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.impl.BatchCreator;
@@ -36,6 +35,6 @@ public class FilterBatchCreator implements BatchCreator<Filter>{
     Preconditions.checkArgument(children.size() == 1);
     return new FilterRecordBatch(config, children.iterator().next(), context);
   }
-  
-  
+
+
 }

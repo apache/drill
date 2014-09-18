@@ -24,26 +24,27 @@ import java.util.Set;
 import org.eigenbase.reltype.RelDataType;
 
 public class StarColumnHelper {
-  
+
   public final static String PREFIX_DELIMITER = "\u00a6\u00a6";
 
   public final static String STAR_COLUMN = "*";
- 
+
   public final static String PREFIXED_STAR_COLUMN = PREFIX_DELIMITER + STAR_COLUMN;
-  
+
   public static boolean containsStarColumn(RelDataType type) {
     List<String> fieldNames = type.getFieldNames();
-    
+
     for (String s : fieldNames) {
-      if (s.startsWith(STAR_COLUMN))
+      if (s.startsWith(STAR_COLUMN)) {
         return true;
+      }
     }
-    
+
     return false;
   }
-  
+
   public static boolean isPrefixedStarColumn(String fieldName) {
-    return fieldName.indexOf(PREFIXED_STAR_COLUMN) > 0 ; // the delimiter * starts at none-zero position. 
+    return fieldName.indexOf(PREFIXED_STAR_COLUMN) > 0 ; // the delimiter * starts at none-zero position.
   }
 
   public static boolean isNonPrefixedStarColumn(String fieldName) {
@@ -55,26 +56,27 @@ public class StarColumnHelper {
   }
 
   public static String extractStarColumnPrefix(String fieldName) {
-    
+
     assert (isPrefixedStarColumn(fieldName));
-    
-    return fieldName.substring(0, fieldName.indexOf(PREFIXED_STAR_COLUMN)); 
+
+    return fieldName.substring(0, fieldName.indexOf(PREFIXED_STAR_COLUMN));
   }
-  
+
   public static String extractColumnPrefix(String fieldName) {
-    if (fieldName.indexOf(PREFIX_DELIMITER) >=0) { 
+    if (fieldName.indexOf(PREFIX_DELIMITER) >=0) {
       return fieldName.substring(0, fieldName.indexOf(PREFIX_DELIMITER));
     } else {
       return "";
     }
   }
-  
-  // Given a set of prefixes, check if a regular column is subsumed by any of the prefixed star column in the set. 
+
+  // Given a set of prefixes, check if a regular column is subsumed by any of the prefixed star column in the set.
   public static boolean subsumeRegColumn(Set<String> prefixes, String fieldName) {
-    if (isPrefixedStarColumn(fieldName))
+    if (isPrefixedStarColumn(fieldName)) {
       return false;  // only applies to regular column.
-    
-    return prefixes.contains(extractColumnPrefix(fieldName));  
+    }
+
+    return prefixes.contains(extractColumnPrefix(fieldName));
   }
-  
+
 }

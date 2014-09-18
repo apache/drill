@@ -39,10 +39,12 @@ public class ExternalSort extends Sort {
     super(child, orderings, reverse);
   }
 
+  @Override
   public List<Ordering> getOrderings() {
     return orderings;
   }
 
+  @Override
   public boolean getReverse() {
     return reverse;
   }
@@ -68,6 +70,7 @@ public class ExternalSort extends Sort {
     this.maxAllocation = Math.max(initialAllocation, maxAllocation);
   }
 
+  @Override
   public long getInitialAllocation() {
     return initialAllocation;
   }

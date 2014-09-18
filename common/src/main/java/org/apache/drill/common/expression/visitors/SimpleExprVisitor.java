@@ -22,20 +22,20 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntExpression;
-import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
-import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
-import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 
 public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, RuntimeException>{
 
@@ -135,7 +135,7 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
     return visitQuotedStringConstant(e);
   }
 
-  
+
   public abstract T visitFunctionCall(FunctionCall call);
   public abstract T visitFunctionHolderExpression(FunctionHolderExpression call);
   public abstract T visitIfExpression(IfExpression ifExpr);
@@ -154,5 +154,5 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
   public abstract T visitDecimal38Constant(Decimal38Expression intExpr);
   public abstract T visitDoubleConstant(DoubleExpression dExpr);
   public abstract T visitBooleanConstant(BooleanExpression e);
-  public abstract T visitQuotedStringConstant(QuotedString e); 
+  public abstract T visitQuotedStringConstant(QuotedString e);
 }

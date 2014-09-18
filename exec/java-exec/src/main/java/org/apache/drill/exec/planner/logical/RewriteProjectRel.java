@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
@@ -29,9 +32,6 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.util.NlsString;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This class rewrites all the project expression that contain convert_to/ convert_from

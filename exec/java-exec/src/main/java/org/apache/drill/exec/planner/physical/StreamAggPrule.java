@@ -23,7 +23,6 @@ import java.util.logging.Logger;
 import net.hydromatic.optiq.util.BitSets;
 
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
-import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.eigenbase.rel.InvalidRelException;
@@ -34,7 +33,6 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableList;
@@ -76,6 +74,7 @@ public class StreamAggPrule extends AggPruleBase {
           RelNode convertedInput = convert(input, traits);
           new SubsetTransformer<DrillAggregateRel, InvalidRelException>(call){
 
+            @Override
             public RelNode convertChild(final DrillAggregateRel join, final RelNode rel) throws InvalidRelException {
               DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
               RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, toDist);
@@ -127,6 +126,7 @@ public class StreamAggPrule extends AggPruleBase {
 
           new SubsetTransformer<DrillAggregateRel, InvalidRelException>(call){
 
+            @Override
             public RelNode convertChild(final DrillAggregateRel aggregate, final RelNode rel) throws InvalidRelException {
               DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
               RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, collation, toDist);

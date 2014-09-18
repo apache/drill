@@ -45,7 +45,7 @@ public class LocalPStore<V> implements PStore<V>{
   public LocalPStore(File base, PStoreConfig<V> config) {
     super();
     this.basePath = new File(base, config.getName());
-    if(!basePath.exists()){
+    if (!basePath.exists()) {
       basePath.mkdirs();
     }
     this.config = config;
@@ -54,10 +54,12 @@ public class LocalPStore<V> implements PStore<V>{
   @Override
   public Iterator<Entry<String, V>> iterator() {
     String[] f = basePath.list();
-    if(f == null) return Collections.emptyIterator();
+    if (f == null) {
+      return Collections.emptyIterator();
+    }
     List<String> files = Lists.newArrayList();
-    for(String s : f){
-      if(s.endsWith(SUFFIX)){
+    for (String s : f) {
+      if (s.endsWith(SUFFIX)) {
         files.add(s.substring(0, s.length() - SUFFIX.length()));
       }
     }
@@ -81,42 +83,42 @@ public class LocalPStore<V> implements PStore<V>{
 
   @Override
   public V get(String key) {
-    try(InputStream is = new FileInputStream(p(key))){
+    try (InputStream is = new FileInputStream(p(key))) {
       return config.getSerializer().deserialize(IOUtils.toByteArray(is));
-    }catch(IOException e){
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
   public void put(String key, V value) {
-    try(OutputStream os = new FileOutputStream(p(key))){
+    try (OutputStream os = new FileOutputStream(p(key))) {
       IOUtils.write(config.getSerializer().serialize(value), os);
-    }catch(IOException e){
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
   public boolean putIfAbsent(String key, V value) {
-    try{
+    try {
       File f = p(key);
-      if(f.exists()){
+      if (f.exists()) {
         return false;
-      }else{
+      } else {
         put(key, value);
         return true;
       }
-    }catch(IOException e){
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
   public void delete(String key) {
-    try{
+    try {
       p(key).delete();
-    }catch(IOException e){
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -148,11 +150,9 @@ public class LocalPStore<V> implements PStore<V>{
       keys.remove();
     }
 
-
-    private class DeferredEntry implements Entry<String, V>{
+    private class DeferredEntry implements Entry<String, V> {
 
       private String name;
-
 
       public DeferredEntry(String name) {
         super();
@@ -176,4 +176,5 @@ public class LocalPStore<V> implements PStore<V>{
 
     }
   }
+
 }

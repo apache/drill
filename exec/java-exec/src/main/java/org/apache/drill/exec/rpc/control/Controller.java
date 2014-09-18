@@ -21,7 +21,6 @@ import java.io.Closeable;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.work.fragment.FragmentManager;
 
 /**
  * Service that allows one Drillbit to communicate with another. Internally manages whether each particular bit is a
@@ -34,7 +33,7 @@ public interface Controller extends Closeable {
   /**
    * Get a Bit to Bit communication tunnel. If the BitCom doesn't have a tunnel attached to the node already, it will
    * start creating one. This create the connection asynchronously.
-   * 
+   *
    * @param node
    * @return
    */
@@ -42,5 +41,5 @@ public interface Controller extends Closeable {
 
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws InterruptedException, DrillbitStartupException;
 
-  
+
 }

@@ -28,13 +28,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * record set to a set of destination locations. This is typically only utilized at the level of the execution plan.
  */
 public interface Sender extends FragmentRoot {
-  
+
   /**
    * Get the list of destination endpoints that this Sender will be communicating with.
    * @return List of DrillbitEndpoints.
    */
   public abstract List<DrillbitEndpoint> getDestinations();
-  
+
   /**
    * Get the receiver major fragment id that is opposite this sender.
    * @return

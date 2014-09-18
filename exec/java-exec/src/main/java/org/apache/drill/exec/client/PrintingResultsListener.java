@@ -94,7 +94,9 @@ public class PrintingResultsListener implements UserResultsListener {
 
   public int await() throws Exception {
     latch.await();
-    if(exception != null) throw exception;
+    if (exception != null) {
+      throw exception;
+    }
     return count.get();
   }
 
@@ -106,4 +108,5 @@ public class PrintingResultsListener implements UserResultsListener {
   public void queryIdArrived(QueryId queryId) {
     this.queryId = queryId;
   }
+
 }

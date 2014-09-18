@@ -22,7 +22,6 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlFunctionCategory;
-import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;

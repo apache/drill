@@ -40,7 +40,6 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 import com.google.common.collect.Lists;
 
@@ -80,7 +79,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected void doWork() {
     int recordCount = incoming.getRecordCount();
     filter.filterBatch(recordCount);
-//    for(VectorWrapper<?> v : container){
+//    for (VectorWrapper<?> v : container) {
 //      ValueVector.Mutator m = v.getValueVector().getMutator();
 //      m.setValueCount(recordCount);
 //    }
@@ -89,8 +88,12 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
   @Override
   public void cleanup() {
-    if(sv2 != null) sv2.clear();
-    if(sv4 != null) sv4.clear();
+    if (sv2 != null) {
+      sv2.clear();
+    }
+    if (sv4 != null) {
+      sv4.clear();
+    }
     super.cleanup();
   }
 
@@ -101,7 +104,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
       sv2.clear();
     }
 
-    switch(incoming.getSchema().getSelectionVectorMode()){
+    switch (incoming.getSchema().getSelectionVectorMode()) {
       case NONE:
         sv2 = new SelectionVector2(oContext.getAllocator());
         this.filter = generateSV2Filterer();
@@ -138,13 +141,13 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());
-    if(collector.hasErrors()){
+    if (collector.hasErrors()) {
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
 
     cg.addExpr(new ReturnValueExpression(expr));
 
-//    for(VectorWrapper<?> i : incoming){
+//    for (VectorWrapper<?> i : incoming) {
 //      ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
 //      container.add(v);
 //      allocators.add(getAllocator4(v));
@@ -178,13 +181,13 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());
-    if(collector.hasErrors()){
+    if (collector.hasErrors()) {
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
 
     cg.addExpr(new ReturnValueExpression(expr));
 
-    for(VectorWrapper<?> v : incoming){
+    for (VectorWrapper<?> v : incoming) {
       TransferPair pair = v.getValueVector().getTransferPair();
       container.add(pair.getTo());
       transfers.add(pair);
@@ -202,6 +205,5 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     }
 
   }
-
 
 }

@@ -66,10 +66,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(Float.floatToIntBits(in.value)).asInt();
+      }
     }
   }
 
@@ -97,10 +98,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(Double.doubleToLongBits(in.value)).asInt();
+      }
     }
   }
 
@@ -128,10 +130,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
+      }
     }
   }
 
@@ -145,10 +148,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
+      }
     }
   }
 
@@ -162,10 +166,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
+      }
     }
   }
 
@@ -180,10 +185,11 @@ public class HashFunctions {
 
     public void eval() {
       // TODO: implement hash function for other types
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+      }
     }
   }
 
@@ -197,10 +203,11 @@ public class HashFunctions {
 
     public void eval() {
       // TODO: implement hash function for other types
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
+      }
     }
   }
 
@@ -296,10 +303,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+      }
     }
   }
 
@@ -325,10 +333,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+      }
     }
   }
 
@@ -354,10 +363,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
+      }
     }
   }
 
@@ -383,10 +393,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value ^ in.index).asInt();
+      }
     }
   }
 
@@ -412,10 +423,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
+      }
     }
   }
 
@@ -441,10 +453,11 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else
+      } else {
         out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+      }
     }
   }
 
@@ -475,9 +488,9 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else {
+      } else {
         int xor = 0;
         for (int i = 0; i < in.nDecimalDigits; i++) {
           xor = xor ^ NullableDecimal28SparseHolder.getInteger(i, in.start, in.buffer);
@@ -514,9 +527,9 @@ public class HashFunctions {
     }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 0;
-      else {
+      } else {
         int xor = 0;
         for (int i = 0; i < in.nDecimalDigits; i++) {
           xor = xor ^ NullableDecimal38SparseHolder.getInteger(i, in.start, in.buffer);
@@ -525,4 +538,5 @@ public class HashFunctions {
       }
     }
   }
+
 }

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.json;
 
 import org.apache.drill.BaseTestQuery;
-import org.junit.Ignore;
 import org.junit.Test;
 
 

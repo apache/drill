@@ -38,27 +38,27 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public abstract class AbstractDynamicBean {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractDynamicBean.class);
-  
+
   private static volatile ObjectMapper MAPPER;
-  
+
   private ObjectNode objectNode = new ObjectNode(null);
 
-  @JsonAnySetter 
+  @JsonAnySetter
   public void _anySetter(String name, JsonNode value){
     objectNode.put(name, value);
   }
-  
+
   @JsonAnyGetter
   public Map<String,JsonNode> _anyGetter() {
     Map<String, JsonNode> unknowns = new HashMap<String, JsonNode>();
-    
+
     for(Iterator<Entry<String, JsonNode>> i = objectNode.fields(); i.hasNext(); ){
       Entry<String, JsonNode> e = i.next();
       unknowns.put(e.getKey(), e.getValue());
     }
     return unknowns;
   }
-  
+
   public <T> T getWith(Class<T> c){
     try {
       return getMapper().treeToValue(objectNode, c);
@@ -66,8 +66,8 @@ public abstract class AbstractDynamicBean {
       throw new LogicalPlanParsingException(String.format("Failure while trying to convert late bound json type to type of %s.", c.getCanonicalName()), e);
     }
   }
-  
-  
+
+
   private static synchronized ObjectMapper getMapper(){
     if(MAPPER == null){
       ObjectMapper mapper = new ObjectMapper();

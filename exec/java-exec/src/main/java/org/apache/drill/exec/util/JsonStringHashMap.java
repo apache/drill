@@ -17,14 +17,13 @@
  */
 package org.apache.drill.exec.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import java.util.LinkedHashMap;
 
 import org.apache.hadoop.io.Text;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /*
  * Simple class that extends the regular java.util.HashMap but overrides the

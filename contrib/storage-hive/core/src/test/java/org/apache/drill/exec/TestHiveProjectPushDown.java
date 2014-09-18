@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestHiveProjectPushDown extends PlanTestBase {
 

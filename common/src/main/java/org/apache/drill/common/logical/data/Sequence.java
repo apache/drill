@@ -20,7 +20,6 @@ package org.apache.drill.common.logical.data;
 import java.io.IOException;
 import java.util.Iterator;
 
-import com.google.common.collect.Iterators;
 import org.apache.drill.common.logical.data.Sequence.De;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 import org.slf4j.Logger;
@@ -41,19 +40,20 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.google.common.collect.Iterators;
 
 /**
  * Describes a list of operators where each operator only has one input and that
  * input is the operator that came before.
- * 
+ *
  */
 @JsonDeserialize(using = De.class)
 @JsonTypeName("sequence")
 public class Sequence extends LogicalOperatorBase {
   static final Logger logger = LoggerFactory.getLogger(Sequence.class);
 
-  private Sequence(){}
-  
+  private Sequence() {}
+
   public boolean openTop;
   public LogicalOperator input;
   @JsonProperty("do")
@@ -68,7 +68,6 @@ public class Sequence extends LogicalOperatorBase {
     public Iterator<LogicalOperator> iterator() {
         return Iterators.singletonIterator(stream[stream.length - 1]);
     }
-
 
     public static class De extends StdDeserializer<LogicalOperator> {
 
@@ -101,11 +100,12 @@ public class Sequence extends LogicalOperatorBase {
           break;
 
         case "do":
-          if (!jp.isExpectedStartArrayToken())
+          if (!jp.isExpectedStartArrayToken()) {
             throwE(
                 jp,
                 "The do parameter of sequence should be an array of SimpleOperators.  Expected a JsonToken.START_ARRAY token but received a "
                     + t.name() + "token.");
+          }
 
           int pos = 0;
           while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
@@ -119,16 +119,18 @@ public class Sequence extends LogicalOperatorBase {
             LogicalOperator o = jp.readValueAs(LogicalOperator.class);
 
             if (pos == 0) {
-              if (!(o instanceof SingleInputOperator) && !(o instanceof SourceOperator))
+              if (!(o instanceof SingleInputOperator) && !(o instanceof SourceOperator)) {
                 throwE(
                     l,
                     "The first operator in a sequence must be either a ZeroInput or SingleInput operator.  The provided first operator was not. It was of type "
                         + o.getClass().getName());
+              }
               first = o;
             } else {
-              if (!(o instanceof SingleInputOperator))
+              if (!(o instanceof SingleInputOperator)) {
                 throwE(l, "All operators after the first must be single input operators.  The operator at position "
                     + pos + " was not. It was of type " + o.getClass().getName());
+              }
               SingleInputOperator now = (SingleInputOperator) o;
               now.setInput(prev);
             }
@@ -147,12 +149,14 @@ public class Sequence extends LogicalOperatorBase {
         }
       }
 
-      if (first == null)
+      if (first == null) {
         throwE(start, "A sequence must include at least one operator.");
+      }
       if ((parent == null && first instanceof SingleInputOperator)
-          || (parent != null && first instanceof SourceOperator))
+          || (parent != null && first instanceof SourceOperator)) {
         throwE(start,
             "A sequence must either start with a ZeroInputOperator or have a provided input. It cannot have both or neither.");
+      }
 
       if (parent != null && first instanceof SingleInputOperator) {
         ((SingleInputOperator) first).setInput(parent);
@@ -179,4 +183,5 @@ public class Sequence extends LogicalOperatorBase {
   private static void throwE(JsonParser jp, String e) throws JsonParseException {
     throw new JsonParseException(e, jp.getCurrentLocation());
   }
+
 }

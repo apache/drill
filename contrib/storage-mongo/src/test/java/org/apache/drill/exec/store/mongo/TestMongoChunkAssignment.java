@@ -51,33 +51,33 @@ public class TestMongoChunkAssignment {
   static final String HOST_K = "K";
   static final String HOST_L = "L";
   static final String HOST_M = "M";
-  
+
   static final String HOST_X = "X";
-  
+
   static final String dbName = "testDB";
   static final String collectionName = "testCollection";
-  
+
   private Map<String, Set<ServerAddress>> chunksMapping;
   private Map<String, List<ChunkInfo>> chunksInverseMapping;
   private MongoGroupScan mongoGroupScan;
-  
+
   @Before
   public void setUp() throws UnknownHostException {
     chunksMapping = Maps.newHashMap();
     chunksInverseMapping = Maps.newLinkedHashMap();
-    
+
     //entry1
     Set<ServerAddress> hosts_A = Sets.newHashSet();
     hosts_A.add(new ServerAddress(HOST_A));
     chunksMapping.put(dbName + "." + collectionName + "-01", hosts_A);
     chunksMapping.put(dbName + "." + collectionName + "-05", hosts_A);
-    
+
     ChunkInfo chunk1Info = new ChunkInfo(Arrays.asList(HOST_A), dbName + "." + collectionName + "-01");
     chunk1Info.setMinFilters(Collections.<String, Object> emptyMap());
     Map<String, Object> chunk1MaxFilters = Maps.newHashMap();
     chunk1MaxFilters.put("name", Integer.valueOf(5));
     chunk1Info.setMaxFilters(chunk1MaxFilters);
-    
+
     ChunkInfo chunk5Info = new ChunkInfo(Arrays.asList(HOST_A), dbName + "." + collectionName + "-05");
     Map<String, Object> chunk5MinFilters = Maps.newHashMap();
     chunk5MinFilters.put("name", Integer.valueOf(25));
@@ -87,12 +87,12 @@ public class TestMongoChunkAssignment {
     chunk5Info.setMaxFilters(chunk5MaxFilters);
     List<ChunkInfo> chunkList = Arrays.asList(chunk1Info, chunk5Info);
     chunksInverseMapping.put(HOST_A, chunkList);
-    
+
     //entry2
     Set<ServerAddress> hosts_B = Sets.newHashSet();
     hosts_A.add(new ServerAddress(HOST_B));
     chunksMapping.put(dbName + "." + collectionName + "-02", hosts_B);
-    
+
     ChunkInfo chunk2Info = new ChunkInfo(Arrays.asList(HOST_B), dbName + "." + collectionName + "-02");
     Map<String, Object> chunk2MinFilters = Maps.newHashMap();
     chunk2MinFilters.put("name", Integer.valueOf(5));
@@ -102,13 +102,13 @@ public class TestMongoChunkAssignment {
     chunk2Info.setMaxFilters(chunk2MaxFilters);
     chunkList = Arrays.asList(chunk2Info);
     chunksInverseMapping.put(HOST_B, chunkList);
-    
+
     //enty3
     Set<ServerAddress> hosts_C = Sets.newHashSet();
     hosts_A.add(new ServerAddress(HOST_C));
     chunksMapping.put(dbName + "." + collectionName + "-03", hosts_C);
     chunksMapping.put(dbName + "." + collectionName + "-06", hosts_C);
-    
+
     ChunkInfo chunk3Info = new ChunkInfo(Arrays.asList(HOST_C), dbName + "." + collectionName + "-03");
     Map<String, Object> chunk3MinFilters = Maps.newHashMap();
     chunk5MinFilters.put("name", Integer.valueOf(15));
@@ -116,7 +116,7 @@ public class TestMongoChunkAssignment {
     Map<String, Object> chunk3MaxFilters = Maps.newHashMap();
     chunk3MaxFilters.put("name", Integer.valueOf(20));
     chunk3Info.setMaxFilters(chunk3MaxFilters);
-    
+
     ChunkInfo chunk6Info = new ChunkInfo(Arrays.asList(HOST_C), dbName + "." + collectionName + "-06");
     Map<String, Object> chunk6MinFilters = Maps.newHashMap();
     chunk5MinFilters.put("name", Integer.valueOf(25));
@@ -126,13 +126,13 @@ public class TestMongoChunkAssignment {
     chunk6Info.setMaxFilters(chunk6MaxFilters);
     chunkList = Arrays.asList(chunk3Info, chunk6Info);
     chunksInverseMapping.put(HOST_C, chunkList);
-    
+
     //entry4
     Set<ServerAddress> hosts_D = Sets.newHashSet();
     hosts_A.add(new ServerAddress(HOST_D));
     chunksMapping.put(dbName + "." + collectionName + "-04", hosts_D);
-    
-    
+
+
     ChunkInfo chunk4Info = new ChunkInfo(Arrays.asList(HOST_D), dbName + "." + collectionName + "-04");
     Map<String, Object> chunk4MinFilters = Maps.newHashMap();
     chunk4MinFilters.put("name", Integer.valueOf(20));
@@ -142,14 +142,14 @@ public class TestMongoChunkAssignment {
     chunk4Info.setMaxFilters(chunk4MaxFilters);
     chunkList = Arrays.asList(chunk4Info);
     chunksInverseMapping.put(HOST_D, chunkList);
-    
+
     mongoGroupScan = new MongoGroupScan();
     mongoGroupScan.setChunksMapping(chunksMapping);
     mongoGroupScan.setInverseChunsMapping(chunksInverseMapping);
     MongoScanSpec scanSpec = new MongoScanSpec(dbName, collectionName);
     mongoGroupScan.setScanSpec(scanSpec);
   }
-  
+
   @Test
   public void testMongoGroupScanAssignmentMix() throws UnknownHostException, ExecutionSetupException {
     final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
@@ -162,21 +162,21 @@ public class TestMongoChunkAssignment {
     endpoints.add(DB_D);
     final DrillbitEndpoint DB_X = DrillbitEndpoint.newBuilder().setAddress(HOST_X).setControlPort(1234).build();
     endpoints.add(DB_X);
-    
+
     mongoGroupScan.applyAssignments(endpoints);
-    
+
     //assignments for chunks on host A, assign on drill bit A
     assertEquals(1, mongoGroupScan.getSpecificScan(0).getChunkScanSpecList().size());
     //assignments for chunks on host A, assign on drill bit A
     assertEquals(1, mongoGroupScan.getSpecificScan(1).getChunkScanSpecList().size());
     //assignments for chunks on host B, assign on drill bit B
-    assertEquals(1, mongoGroupScan.getSpecificScan(2).getChunkScanSpecList().size()); 
+    assertEquals(1, mongoGroupScan.getSpecificScan(2).getChunkScanSpecList().size());
     //assignments for chunks on host D, assign on drill bit D
     assertEquals(1, mongoGroupScan.getSpecificScan(3).getChunkScanSpecList().size());
     //assignments for chunks on host C, assign on drill bit X
     assertEquals(2, mongoGroupScan.getSpecificScan(4).getChunkScanSpecList().size());
   }
-  
+
   @Test
   public void testMongoGroupScanAssignmentAllAffinity() throws UnknownHostException, ExecutionSetupException {
     final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
@@ -188,9 +188,9 @@ public class TestMongoChunkAssignment {
     endpoints.add(DB_C);
     final DrillbitEndpoint DB_D = DrillbitEndpoint.newBuilder().setAddress(HOST_D).setControlPort(1234).build();
     endpoints.add(DB_D);
-    
+
     mongoGroupScan.applyAssignments(endpoints);
-    
+
     //assignments for chunks on host A, assign on drill bit A
     assertEquals(2, mongoGroupScan.getSpecificScan(0).getChunkScanSpecList().size());
     //assignments for chunks on host B, assign on drill bit B
@@ -200,7 +200,7 @@ public class TestMongoChunkAssignment {
     //assignments for chunks on host D, assign on drill bit D
     assertEquals(1, mongoGroupScan.getSpecificScan(3).getChunkScanSpecList().size());
   }
-  
+
   @Test
   public void testMongoGroupScanAssignmentNoAffinity() throws UnknownHostException, ExecutionSetupException {
     final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
@@ -211,9 +211,9 @@ public class TestMongoChunkAssignment {
     endpoints.add(DB_L);
     final DrillbitEndpoint DB_X = DrillbitEndpoint.newBuilder().setAddress(HOST_X).setControlPort(1234).build();
     endpoints.add(DB_X);
-    
+
     mongoGroupScan.applyAssignments(endpoints);
-    
+
     //assignments for chunks on host A, assign on drill bit M
     assertEquals(1, mongoGroupScan.getSpecificScan(0).getChunkScanSpecList().size());
     //assignments for chunks on host B, assign on drill bit M
@@ -223,15 +223,15 @@ public class TestMongoChunkAssignment {
     //assignments for chunks on host D, assign on drill bit X
     assertEquals(1, mongoGroupScan.getSpecificScan(3).getChunkScanSpecList().size());
   }
-  
+
   @Test
   public void testMongoGroupScanAssignmentWhenOnlyOneDrillBit() throws UnknownHostException, ExecutionSetupException {
     final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
     final DrillbitEndpoint DB_A = DrillbitEndpoint.newBuilder().setAddress(HOST_A).setControlPort(1234).build();
     endpoints.add(DB_A);
-    
+
     mongoGroupScan.applyAssignments(endpoints);
-    
+
     //All the assignments should be given to drill bit A.
     assertEquals(6, mongoGroupScan.getSpecificScan(0).getChunkScanSpecList().size());
   }

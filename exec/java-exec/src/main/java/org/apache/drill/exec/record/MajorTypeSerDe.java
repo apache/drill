@@ -39,8 +39,8 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 public class MajorTypeSerDe {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MajorTypeSerDe.class);
-  
-  
+
+
   public static class De extends StdDeserializer<MajorType> {
 
     public De() {
@@ -52,11 +52,9 @@ public class MajorTypeSerDe {
         JsonProcessingException {
       return jp.readValueAs(MajorTypeHolder.class).getMajorType();
     }
-    
-    
+
   }
-  
-  
+
   public static class Se extends StdSerializer<MajorType> {
 
     public Se() {
@@ -69,9 +67,9 @@ public class MajorTypeSerDe {
       MajorTypeHolder holder = MajorTypeHolder.get(value);
       jgen.writeObject(holder);
     }
-    
+
   }
-  
+
   @JsonInclude(Include.NON_NULL)
   public static class MajorTypeHolder{
     @JsonProperty("type") public MinorType minorType;
@@ -79,7 +77,7 @@ public class MajorTypeSerDe {
     public Integer width;
     public Integer precision;
     public Integer scale;
-    
+
     @JsonCreator
     public MajorTypeHolder(@JsonProperty("type") MinorType minorType, @JsonProperty("mode") DataMode mode, @JsonProperty("width") Integer width, @JsonProperty("precision") Integer precision, @JsonProperty("scale") Integer scale) {
       super();
@@ -90,27 +88,40 @@ public class MajorTypeSerDe {
       this.scale = scale;
     }
 
-    private MajorTypeHolder(){}
-    
+    private MajorTypeHolder() {}
+
     @JsonIgnore
-    public MajorType getMajorType(){
+    public MajorType getMajorType() {
       MajorType.Builder b = MajorType.newBuilder();
       b.setMode(mode);
       b.setMinorType(minorType);
-      if(precision != null) b.setPrecision(precision);
-      if(width != null) b.setWidth(width);
-      if(scale != null) b.setScale(scale);
+      if (precision != null) {
+        b.setPrecision(precision);
+      }
+      if (width != null) {
+        b.setWidth(width);
+      }
+      if (scale != null) {
+        b.setScale(scale);
+      }
       return b.build();
     }
-    
-    public static MajorTypeHolder get(MajorType mt){
+
+    public static MajorTypeHolder get(MajorType mt) {
       MajorTypeHolder h = new MajorTypeHolder();
       h.minorType = mt.getMinorType();
       h.mode = mt.getMode();
-      if(mt.hasPrecision()) h.precision = mt.getPrecision();
-      if(mt.hasScale()) h.scale = mt.getScale();
-      if(mt.hasWidth()) h.width = mt.getWidth();
+      if (mt.hasPrecision()) {
+        h.precision = mt.getPrecision();
+      }
+      if (mt.hasScale()) {
+        h.scale = mt.getScale();
+      }
+      if (mt.hasWidth()) {
+        h.width = mt.getWidth();
+      }
       return h;
     }
   }
+
 }

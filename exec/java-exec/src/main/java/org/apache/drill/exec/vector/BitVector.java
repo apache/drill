@@ -67,7 +67,9 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   public void allocateNew() {
-    if(!allocateNewSafe()) throw new OutOfMemoryRuntimeException();
+    if (!allocateNewSafe()) {
+      throw new OutOfMemoryRuntimeException();
+    }
   }
 
   public boolean allocateNewSafe() {
@@ -84,7 +86,9 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     valueCapacity = allocationValueCount;
     int valueSize = getSizeFromCount(allocationValueCount);
     data = allocator.buffer(valueSize);
-    if(data == null) return false;
+    if (data == null) {
+      return false;
+    }
     zeroVector();
     return true;
   }
@@ -125,8 +129,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     this.mutator.set(outIndex, from.accessor.get(inIndex));
   }
 
-  public boolean copyFromSafe(int inIndex, int outIndex, BitVector from){
-    if(outIndex >= this.getValueCapacity()) {
+  public boolean copyFromSafe(int inIndex, int outIndex, BitVector from) {
+    if (outIndex >= this.getValueCapacity()) {
       decrementAllocationMonitor();
       return false;
     }
@@ -154,10 +158,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return new Accessor();
   }
 
-  public TransferPair getTransferPair(){
+  public TransferPair getTransferPair() {
     return new TransferImpl(getField());
   }
-  public TransferPair getTransferPair(FieldReference ref){
+  public TransferPair getTransferPair(FieldReference ref) {
     return new TransferImpl(getField().clone(ref));
   }
 
@@ -195,14 +199,14 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       for (int i = 0; i < byteSize - 1; i++) {
         target.data.setByte(i, (((this.data.getByte(firstByte + i) & 0xFF) >>> offset) + (this.data.getByte(firstByte + i + 1) <<  (8 - offset))));
       }
-      if (length % 8 != 0)
+      if (length % 8 != 0) {
         target.data.setByte(byteSize - 1, ((this.data.getByte(firstByte + byteSize - 1) & 0xFF) >>> offset));
-      else
+      } else {
         target.data.setByte(byteSize - 1,
             (((this.data.getByte(firstByte + byteSize - 1) & 0xFF) >>> offset) + (this.data.getByte(firstByte + byteSize) <<  (8 - offset))));
+      }
     }
   }
-
 
   private class TransferImpl implements TransferPair {
     BitVector to;
@@ -260,7 +264,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       return Long.bitCount(b &  (1L << bitIndex));
     }
 
-    public boolean isNull(int index){
+    public boolean isNull(int index) {
       return false;
     }
 
@@ -269,6 +273,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       return new Boolean(get(index) != 0);
     }
 
+    @Override
     public final int getValueCount() {
       return valueCount;
     }
@@ -380,4 +385,5 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
 
   }
+
 }

@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl.join;
 
 import javax.inject.Named;
 
-import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
@@ -95,8 +94,9 @@ public abstract class JoinTemplate implements JoinWorker {
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
           // we've hit the end of the right record batch; copy any remaining values from the left batch
           while (status.isLeftPositionAllowed()) {
-            if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
+            if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition())) {
               return false;
+            }
 
             status.incOutputPos();
             status.advanceLeft();
@@ -104,8 +104,9 @@ public abstract class JoinTemplate implements JoinWorker {
         }
         return true;
       }
-      if (!status.isLeftPositionAllowed())
+      if (!status.isLeftPositionAllowed()) {
         return true;
+      }
 
       int comparison = doCompare(status.getLeftPosition(), status.getRightPosition());
       switch (comparison) {
@@ -113,8 +114,9 @@ public abstract class JoinTemplate implements JoinWorker {
       case -1:
         // left key < right key
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
-          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
+          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition())) {
             return false;
+          }
           status.incOutputPos();
         }
         status.advanceLeft();
@@ -126,25 +128,27 @@ public abstract class JoinTemplate implements JoinWorker {
         // check for repeating values on the left side
         if (!status.isLeftRepeating() &&
             status.isNextLeftPositionInCurrentBatch() &&
-            doCompareNextLeftKey(status.getLeftPosition()) == 0)
+            doCompareNextLeftKey(status.getLeftPosition()) == 0) {
           // subsequent record(s) in the left batch have the same key
           status.notifyLeftRepeating();
-
-        else if (status.isLeftRepeating() &&
+        } else if (status.isLeftRepeating() &&
                  status.isNextLeftPositionInCurrentBatch() &&
-                 doCompareNextLeftKey(status.getLeftPosition()) != 0)
+                 doCompareNextLeftKey(status.getLeftPosition()) != 0) {
           // this record marks the end of repeated keys
           status.notifyLeftStoppedRepeating();
+        }
 
         boolean crossedBatchBoundaries = false;
         int initialRightPosition = status.getRightPosition();
         do {
           // copy all equal right keys to the output record batch
-          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
+          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition())) {
             return false;
+          }
 
-          if (!doCopyRight(status.getRightPosition(), status.getOutPosition()))
+          if (!doCopyRight(status.getRightPosition(), status.getOutPosition())) {
             return false;
+          }
 
           status.incOutputPos();
 
@@ -160,9 +164,10 @@ public abstract class JoinTemplate implements JoinWorker {
         } while ((!status.isLeftRepeating() || status.isRightPositionInCurrentBatch()) && status.isRightPositionAllowed() && doCompare(status.getLeftPosition(), status.getRightPosition()) == 0);
 
         if (status.getRightPosition() > initialRightPosition &&
-            (status.isLeftRepeating() || ! status.isNextLeftPositionInCurrentBatch()))
+            (status.isLeftRepeating() || ! status.isNextLeftPositionInCurrentBatch())) {
           // more than one matching result from right table; reset position in case of subsequent left match
           status.setRightPosition(initialRightPosition);
+        }
         status.advanceLeft();
 
         if (status.isLeftRepeating() && doCompareNextLeftKey(status.getLeftPosition()) != 0) {
@@ -233,6 +238,5 @@ public abstract class JoinTemplate implements JoinWorker {
    *         -1 if there are no more keys in this batch
    */
   protected abstract int doCompareNextLeftKey(@Named("leftIndex") int leftIndex);
-
 
 }

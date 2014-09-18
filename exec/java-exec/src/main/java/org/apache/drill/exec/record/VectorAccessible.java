@@ -18,7 +18,6 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * Created with IntelliJ IDEA.

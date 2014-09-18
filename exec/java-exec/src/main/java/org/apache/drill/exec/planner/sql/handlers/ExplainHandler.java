@@ -41,7 +41,7 @@ import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 
-public class ExplainHandler extends DefaultSqlHandler{
+public class ExplainHandler extends DefaultSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplainHandler.class);
 
   private ResultMode mode;
@@ -59,7 +59,7 @@ public class ExplainHandler extends DefaultSqlHandler{
     DrillRel drel = convertToDrel(rel);
     log("Drill Logical", drel);
 
-    if(mode == ResultMode.LOGICAL){
+    if (mode == ResultMode.LOGICAL) {
       LogicalExplain logicalResult = new LogicalExplain(drel, level, context);
       return DirectPlan.createDirectPlan(context, logicalResult);
     }
@@ -78,8 +78,10 @@ public class ExplainHandler extends DefaultSqlHandler{
     SqlExplain node = unwrap(sqlNode, SqlExplain.class);
     SqlLiteral op = node.operand(2);
     SqlExplain.Depth depth = (SqlExplain.Depth) op.getValue();
-    if(node.getDetailLevel() != null) level = node.getDetailLevel();
-    switch(depth){
+    if (node.getDetailLevel() != null) {
+      level = node.getDetailLevel();
+    }
+    switch (depth) {
     case LOGICAL:
       mode = ResultMode.LOGICAL;
       break;
@@ -98,7 +100,7 @@ public class ExplainHandler extends DefaultSqlHandler{
     public String text;
     public String json;
 
-    public LogicalExplain(RelNode node, SqlExplainLevel level, QueryContext context){
+    public LogicalExplain(RelNode node, SqlExplainLevel level, QueryContext context) {
       this.text = RelOptUtil.toString(node, level);
       DrillImplementor implementor = new DrillImplementor(new DrillParseContext(), ResultMode.LOGICAL);
       implementor.go( (DrillRel) node);
@@ -111,12 +113,10 @@ public class ExplainHandler extends DefaultSqlHandler{
     public String text;
     public String json;
 
-    public PhysicalExplain(RelNode node, PhysicalPlan plan, SqlExplainLevel level, QueryContext context){
+    public PhysicalExplain(RelNode node, PhysicalPlan plan, SqlExplainLevel level, QueryContext context) {
       this.text = PrelSequencer.printWithIds((Prel) node, level);
       this.json = plan.unparse(context.getConfig().getMapper().writer());
     }
   }
-
-
 
 }

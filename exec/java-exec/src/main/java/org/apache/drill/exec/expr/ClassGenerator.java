@@ -81,7 +81,7 @@ public class ClassGenerator<T>{
   private int labelIndex = 0;
   private MappingSet mappings;
 
-  public static MappingSet getDefaultMapping(){
+  public static MappingSet getDefaultMapping() {
     return new MappingSet("inIndex", "outIndex", DEFAULT_CONSTANT_MAP, DEFAULT_SCALAR_MAP);
   }
 
@@ -94,29 +94,29 @@ public class ClassGenerator<T>{
     this.evaluationVisitor = eval;
     this.model = model;
     blocks = (LinkedList<JBlock>[]) new LinkedList[sig.size()];
-    for(int i =0; i < sig.size(); i++){
+    for (int i =0; i < sig.size(); i++) {
       blocks[i] = Lists.newLinkedList();
     }
     rotateBlock();
 
-    for(SignatureHolder child : signature.getChildHolders()){
+    for (SignatureHolder child : signature.getChildHolders()) {
       String innerClassName = child.getSignatureClass().getSimpleName();
       JDefinedClass innerClazz = clazz._class(Modifier.FINAL + Modifier.PRIVATE, innerClassName);
       innerClasses.put(innerClassName, new ClassGenerator<>(codeGenerator, mappingSet, child, eval, innerClazz, model));
     }
   }
 
-  public ClassGenerator<T> getInnerGenerator(String name){
+  public ClassGenerator<T> getInnerGenerator(String name) {
     ClassGenerator<T> inner = innerClasses.get(name);
     Preconditions.checkNotNull(inner);
     return inner;
   }
 
-  public MappingSet getMappingSet(){
+  public MappingSet getMappingSet() {
     return mappings;
   }
 
-  public void setMappingSet(MappingSet mappings){
+  public void setMappingSet(MappingSet mappings) {
     this.mappings = mappings;
   }
 
@@ -124,30 +124,30 @@ public class ClassGenerator<T>{
     return codeGenerator;
   }
 
-  private GeneratorMapping getCurrentMapping(){
+  private GeneratorMapping getCurrentMapping() {
     return mappings.getCurrentMapping();
   }
 
-  public JBlock getBlock(String methodName){
+  public JBlock getBlock(String methodName) {
     JBlock blk = this.blocks[sig.get(methodName)].getLast();
     Preconditions.checkNotNull(blk, "Requested method name of %s was not available for signature %s.",  methodName, this.sig);
     return blk;
   }
 
-  public JBlock getBlock(BlockType type){
+  public JBlock getBlock(BlockType type) {
     return getBlock(getCurrentMapping().getMethodName(type));
   }
 
-  public JBlock getSetupBlock(){
+  public JBlock getSetupBlock() {
     return getBlock(getCurrentMapping().getMethodName(BlockType.SETUP));
   }
-  public JBlock getEvalBlock(){
+  public JBlock getEvalBlock() {
     return getBlock(getCurrentMapping().getMethodName(BlockType.EVAL));
   }
-  public JBlock getResetBlock(){
+  public JBlock getResetBlock() {
     return getBlock(getCurrentMapping().getMethodName(BlockType.RESET));
   }
-  public JBlock getCleanupBlock(){
+  public JBlock getCleanupBlock() {
     return getBlock(getCurrentMapping().getMethodName(BlockType.CLEANUP));
   }
 
@@ -165,11 +165,11 @@ public class ClassGenerator<T>{
     return getEvalBlock().label(prefix + labelIndex ++);
   }
 
-  public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId){
+  public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId) {
     return declareVectorValueSetupAndMember( DirectExpression.direct(batchName), fieldId);
   }
 
-  public JVar declareVectorValueSetupAndMember(DirectExpression batchName, TypedFieldId fieldId){
+  public JVar declareVectorValueSetupAndMember(DirectExpression batchName, TypedFieldId fieldId) {
     final ValueVectorSetup setup = new ValueVectorSetup(batchName, fieldId);
 //    JVar var = this.vvDeclaration.get(setup);
 //    if(var != null) return var;
@@ -178,7 +178,7 @@ public class ClassGenerator<T>{
     JClass vvClass = model.ref(valueVectorClass);
     JClass retClass = vvClass;
     String vectorAccess = "getValueVector";
-    if(fieldId.isHyperReader()){
+    if (fieldId.isHyperReader()) {
       retClass = retClass.array();
       vectorAccess = "getValueVectors";
     }
@@ -191,7 +191,7 @@ public class ClassGenerator<T>{
 
     JVar fieldArr = b.decl(model.INT.array(), "fieldIds" + index++, JExpr.newArray(model.INT, fieldId.getFieldIds().length));
     int[] fieldIndices = fieldId.getFieldIds();
-    for(int i = 0; i < fieldIndices.length; i++){
+    for (int i = 0; i < fieldIndices.length; i++) {
        b.assign(fieldArr.component(JExpr.lit(i)), JExpr.lit(fieldIndices[i]));
     }
 
@@ -213,18 +213,20 @@ public class ClassGenerator<T>{
     return vv;
   }
 
-  public HoldingContainer addExpr(LogicalExpression ex){
+  public HoldingContainer addExpr(LogicalExpression ex) {
     return addExpr(ex, true);
   }
 
-  public HoldingContainer addExpr(LogicalExpression ex, boolean rotate){
+  public HoldingContainer addExpr(LogicalExpression ex, boolean rotate) {
 //    logger.debug("Adding next write {}", ex);
-    if(rotate) rotateBlock();
+    if (rotate) {
+      rotateBlock();
+    }
     return evaluationVisitor.addExpr(ex, this);
   }
 
-  public void rotateBlock(){
-    for(LinkedList<JBlock> b : blocks){
+  public void rotateBlock() {
+    for (LinkedList<JBlock> b : blocks) {
       b.add(new JBlock(true, true));
     }
   }
@@ -249,11 +251,11 @@ public class ClassGenerator<T>{
           if (blocksInMethod > MAX_BLOCKS_IN_FUNCTION) {
             JMethod inner = clazz.method(JMod.PRIVATE, model._ref(method.getReturnType()), method.getMethodName() + methodIndex);
             JInvocation methodCall = JExpr.invoke(inner);
-            for(CodeGeneratorArgument arg : method){
+            for (CodeGeneratorArgument arg : method) {
               inner.param(arg.getType(), arg.getName());
               methodCall.arg(JExpr.direct(arg.getName()));
             }
-            for(Class<?> c : method.getThrowsIterable()){
+            for (Class<?> c : method.getThrowsIterable()) {
               inner._throws(model.ref(c));
             }
             inner._throws(SchemaChangeException.class);
@@ -286,32 +288,32 @@ public class ClassGenerator<T>{
     return "v" + index++;
   }
 
-  public String getNextVar(String prefix){
+  public String getNextVar(String prefix) {
     return prefix + index++;
   }
 
-  public JVar declareClassField(String prefix, JType t){
+  public JVar declareClassField(String prefix, JType t) {
     return clazz.field(JMod.NONE, t, prefix + index++);
   }
 
-  public JVar declareClassField(String prefix, JType t, JExpression init){
+  public JVar declareClassField(String prefix, JType t, JExpression init) {
     return clazz.field(JMod.NONE, t, prefix + index++, init);
   }
 
-  public HoldingContainer declare(MajorType t){
+  public HoldingContainer declare(MajorType t) {
     return declare(t, true);
   }
 
-  public HoldingContainer declare(MajorType t, boolean includeNewInstance){
+  public HoldingContainer declare(MajorType t, boolean includeNewInstance) {
     JType holderType = getHolderType(t);
     JVar var;
-    if(includeNewInstance){
+    if (includeNewInstance) {
       var = getEvalBlock().decl(holderType, "out" + index, JExpr._new(holderType));
-    }else{
+    } else {
       var = getEvalBlock().decl(holderType, "out" + index);
     }
     JFieldRef outputSet = null;
-    if(t.getMode() == DataMode.OPTIONAL){
+    if (t.getMode() == DataMode.OPTIONAL) {
       outputSet = var.ref("isSet");
     }
     index++;
@@ -347,23 +349,30 @@ public class ClassGenerator<T>{
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       ValueVectorSetup other = (ValueVectorSetup) obj;
       if (batch == null) {
-        if (other.batch != null)
+        if (other.batch != null) {
           return false;
-      } else if (!batch.equals(other.batch))
+        }
+      } else if (!batch.equals(other.batch)) {
         return false;
+      }
       if (fieldId == null) {
-        if (other.fieldId != null)
+        if (other.fieldId != null) {
           return false;
-      } else if (!fieldId.equals(other.fieldId))
+        }
+      } else if (!fieldId.equals(other.fieldId)) {
         return false;
+      }
       return true;
     }
 
@@ -396,7 +405,7 @@ public class ClassGenerator<T>{
       return this.isReader;
     }
 
-    public boolean isSingularRepeated(){
+    public boolean isSingularRepeated() {
       return singularRepeated;
     }
 
@@ -405,7 +414,7 @@ public class ClassGenerator<T>{
       return this;
     }
 
-    public JFieldRef f(String name){
+    public JFieldRef f(String name) {
       return holder.ref(name);
     }
 
@@ -421,7 +430,7 @@ public class ClassGenerator<T>{
       return value;
     }
 
-    public MajorType getMajorType(){
+    public MajorType getMajorType() {
       return type;
     }
 
@@ -430,11 +439,11 @@ public class ClassGenerator<T>{
       return isSet;
     }
 
-    public boolean isOptional(){
+    public boolean isOptional() {
       return type.getMode() == DataMode.OPTIONAL;
     }
 
-    public boolean isRepeated(){
+    public boolean isRepeated() {
       return type.getMode() == DataMode.REPEATED;
     }
 
@@ -443,7 +452,7 @@ public class ClassGenerator<T>{
     }
   }
 
-  public JType getHolderType(MajorType t){
+  public JType getHolderType(MajorType t) {
     return TypeHelper.getHolderType(model, t.getMinorType(), t.getMode());
   }
 

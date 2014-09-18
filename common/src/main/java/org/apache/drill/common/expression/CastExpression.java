@@ -24,12 +24,12 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
 public class CastExpression extends LogicalExpressionBase implements Iterable<LogicalExpression>{
-  
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CastExpression.class);
-  
+
   private final LogicalExpression input;
   private final MajorType type;
-  
+
   public CastExpression(LogicalExpression input, MajorType type, ExpressionPosition pos) {
     super(pos);
     this.input = input;
@@ -60,6 +60,6 @@ public class CastExpression extends LogicalExpressionBase implements Iterable<Lo
     return "CastExpression [input=" + input + ", type=" + type + "]";
   }
 
-  
-  
+
+
 }

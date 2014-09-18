@@ -25,11 +25,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 @JsonPropertyOrder({ "type" })
-public abstract class LogicalExpressionBase implements LogicalExpression{
+public abstract class LogicalExpressionBase implements LogicalExpression {
 
   private final ExpressionPosition pos;
 
-	protected LogicalExpressionBase(ExpressionPosition pos) {
+  protected LogicalExpressionBase(ExpressionPosition pos) {
     super();
     this.pos = pos;
   }
@@ -39,30 +39,30 @@ public abstract class LogicalExpressionBase implements LogicalExpression{
     return pos;
   }
 
-  protected void i(StringBuilder sb, int indent){
-		for(int i = 0; i < indent; i++){
-			sb.append("  ");
-		}
-	}
-	
-	@Override
-	public MajorType getMajorType() {
-		throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getDataType().", this.getClass().getCanonicalName()));
-	}
+  protected void i(StringBuilder sb, int indent) {
+    for (int i = 0; i < indent; i++){
+      sb.append("  ");
+    }
+  }
+
+  @Override
+  public MajorType getMajorType() {
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getDataType().", this.getClass().getCanonicalName()));
+  }
 
   @JsonProperty("type")
-	public String getDescription(){
-		return this.getClass().getSimpleName();
-	}
-	
-  @JsonIgnore
-  public int getSelfCost() { 
-    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName())); 
+  public String getDescription() {
+    return this.getClass().getSimpleName();
   }
-  
+
   @JsonIgnore
-  public int getCumulativeCost() { 
-    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName())); 
+  public int getSelfCost() {
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName()));
   }
-  	
+
+  @JsonIgnore
+  public int getCumulativeCost() {
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName()));
+  }
+
 }

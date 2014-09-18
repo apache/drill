@@ -68,8 +68,8 @@ public class DrillResultSet extends AvaticaResultSet {
     close();
   }
 
-  synchronized void cleanup(){
-    if (queryId != null && !listener.completed){
+  synchronized void cleanup() {
+    if (queryId != null && !listener.completed) {
       client.cancelQuery(queryId);
     }
     listener.close();
@@ -108,8 +108,8 @@ public class DrillResultSet extends AvaticaResultSet {
 
     final LinkedBlockingDeque<QueryResultBatch> queue = Queues.newLinkedBlockingDeque();
 
-    private boolean releaseIfFirst(){
-      if(receivedMessage.compareAndSet(false, true)){
+    private boolean releaseIfFirst() {
+      if (receivedMessage.compareAndSet(false, true)) {
         latch.countDown();
         return true;
       }
@@ -164,8 +164,9 @@ public class DrillResultSet extends AvaticaResultSet {
 
     public QueryResultBatch getNext() throws RpcException, InterruptedException {
       while (true) {
-        if (ex != null)
+        if (ex != null) {
           throw ex;
+        }
         if (completed && queue.isEmpty()) {
           return null;
         } else {
@@ -178,9 +179,7 @@ public class DrillResultSet extends AvaticaResultSet {
             }
             return q;
           }
-
         }
-
       }
     }
 
@@ -188,7 +187,9 @@ public class DrillResultSet extends AvaticaResultSet {
       closed = true;
       while (!queue.isEmpty()) {
         QueryResultBatch qrb = queue.poll();
-        if(qrb != null && qrb.getData() != null) qrb.getData().release();
+        if (qrb != null && qrb.getData() != null) {
+          qrb.getData().release();
+        }
       }
       completed = true;
     }

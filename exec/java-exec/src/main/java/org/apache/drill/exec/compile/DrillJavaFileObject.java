@@ -83,8 +83,9 @@ final class DrillJavaFileObject extends SimpleJavaFileObject {
 
   @Override
   public CharSequence getCharContent(final boolean ignoreEncodingErrors) throws IOException {
-    if (sourceCode == null)
+    if (sourceCode == null) {
       throw new UnsupportedOperationException("This instance of DrillJavaFileObject is not an input object.");
+    }
     return sourceCode;
   }
 

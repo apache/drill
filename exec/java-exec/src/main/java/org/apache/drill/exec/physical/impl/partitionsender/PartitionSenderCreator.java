@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.physical.impl.partitionsender;
 
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.RootCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.record.RecordBatch;
-import java.util.List;
 
 public class PartitionSenderCreator implements RootCreator<HashPartitionSender> {
 

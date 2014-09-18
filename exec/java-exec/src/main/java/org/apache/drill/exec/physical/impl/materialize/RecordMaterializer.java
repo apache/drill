@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.materialize;
 
 
 public interface RecordMaterializer {
-  
+
   public QueryWritableBatch convertNext(boolean isLast);
-  
+
 }

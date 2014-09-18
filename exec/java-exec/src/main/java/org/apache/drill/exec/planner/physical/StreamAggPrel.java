@@ -27,7 +27,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
-import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.AggregateCall;
@@ -51,6 +50,7 @@ public class StreamAggPrel extends AggPrelBase implements Prel{
     super(cluster, traits, child, groupSet, aggCalls, phase);
   }
 
+  @Override
   public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
     try {
       return new StreamAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls,

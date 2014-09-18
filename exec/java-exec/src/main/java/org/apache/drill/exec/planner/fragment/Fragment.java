@@ -23,31 +23,32 @@ import java.util.List;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.collect.Lists;
 
-public class Fragment implements Iterable<Fragment.ExchangeFragmentPair>{
+public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Fragment.class);
-  
+
   private PhysicalOperator root;
   private Exchange sendingExchange;
   private final List<ExchangeFragmentPair> receivingExchangePairs = Lists.newLinkedList();
   private Stats stats = new Stats();
-  
-  public void addOperator(PhysicalOperator o){
-    if(root == null){
+
+  public void addOperator(PhysicalOperator o) {
+    if (root == null) {
       root = o;
     }
   }
-  
+
   public void addSendExchange(Exchange e) throws FragmentSetupException{
-    if(sendingExchange != null) throw new FragmentSetupException("Fragment was trying to add a second SendExchange.  ");
+    if (sendingExchange != null) {
+      throw new FragmentSetupException("Fragment was trying to add a second SendExchange.  ");
+    }
     addOperator(e);
     sendingExchange = e;
   }
-  
-  public void addReceiveExchange(Exchange e, Fragment fragment){
+
+  public void addReceiveExchange(Exchange e, Fragment fragment) {
     this.receivingExchangePairs.add(new ExchangeFragmentPair(e, fragment));
   }
 
@@ -68,28 +69,32 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair>{
     return sendingExchange;
   }
 
-//  public <T, V> T accept(FragmentVisitor<T, V> visitor, V extra){
+//  public <T, V> T accept(FragmentVisitor<T, V> visitor, V extra) {
 //    return visitor.visit(this, extra);
 //  }
-  
-  public Stats getStats(){
+
+  public Stats getStats() {
     return stats;
   }
-  
+
   public class ExchangeFragmentPair {
     private Exchange exchange;
     private Fragment node;
+
     public ExchangeFragmentPair(Exchange exchange, Fragment node) {
       super();
       this.exchange = exchange;
       this.node = node;
     }
+
     public Exchange getExchange() {
       return exchange;
     }
+
     public Fragment getNode() {
       return node;
     }
+
     @Override
     public int hashCode() {
       final int prime = 31;
@@ -98,13 +103,12 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair>{
       result = prime * result + ((node == null) ? 0 : node.hashCode());
       return result;
     }
+
     @Override
     public String toString() {
       return "ExchangeFragmentPair [exchange=" + exchange + "]";
     }
-    
-    
-    
+
   }
 
   @Override
@@ -120,22 +124,44 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair>{
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
     Fragment other = (Fragment) obj;
     if (receivingExchangePairs == null) {
-      if (other.receivingExchangePairs != null) return false;
-    } else if (!receivingExchangePairs.equals(other.receivingExchangePairs)) return false;
+      if (other.receivingExchangePairs != null) {
+        return false;
+      }
+    } else if (!receivingExchangePairs.equals(other.receivingExchangePairs)) {
+      return false;
+    }
     if (root == null) {
-      if (other.root != null) return false;
-    } else if (!root.equals(other.root)) return false;
+      if (other.root != null) {
+        return false;
+      }
+    } else if (!root.equals(other.root)) {
+      return false;
+    }
     if (sendingExchange == null) {
-      if (other.sendingExchange != null) return false;
-    } else if (!sendingExchange.equals(other.sendingExchange)) return false;
+      if (other.sendingExchange != null) {
+        return false;
+      }
+    } else if (!sendingExchange.equals(other.sendingExchange)) {
+      return false;
+    }
     if (stats == null) {
-      if (other.stats != null) return false;
-    } else if (!stats.equals(other.stats)) return false;
+      if (other.stats != null) {
+        return false;
+      }
+    } else if (!stats.equals(other.stats)) {
+      return false;
+    }
     return true;
   }
 
@@ -145,6 +171,4 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair>{
         + receivingExchangePairs + ", stats=" + stats + "]";
   }
 
-  
- 
 }

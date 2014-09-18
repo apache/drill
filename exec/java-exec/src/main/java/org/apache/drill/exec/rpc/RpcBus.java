@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.rpc;
 
-import com.google.common.base.Stopwatch;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
@@ -31,9 +29,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcFailure;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
@@ -85,10 +81,14 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, boolean allowInEventLoop, ByteBuf... dataBodies) {
 
-    if(!allowInEventLoop){
-      if(connection.inEventLoop()) throw new IllegalStateException("You attempted to send while inside the rpc event thread.  This isn't allowed because sending will block if the channel is backed up.");
+    if (!allowInEventLoop) {
+      if (connection.inEventLoop()) {
+        throw new IllegalStateException("You attempted to send while inside the rpc event thread.  This isn't allowed because sending will block if the channel is backed up.");
+      }
 
-      if(!connection.blockOnNotWritable(listener)) return;
+      if (!connection.blockOnNotWritable(listener)) {
+        return;
+      }
     }
 
     ByteBuf pBuffer = null;
@@ -106,11 +106,13 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       channelFuture.addListener(futureListener);
       channelFuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
       completed = true;
-    } catch(Exception | AssertionError e){
+    } catch (Exception | AssertionError e) {
       listener.failed(new RpcException("Failure sending message.", e));
     } finally {
       if (!completed) {
-        if (pBuffer != null) pBuffer.release();
+        if (pBuffer != null) {
+          pBuffer.release();
+        }
         if (dataBodies != null) {
           for (ByteBuf b : dataBodies) {
             b.release();
@@ -134,7 +136,9 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   }
 
   protected void closeQueueDueToChannelClose() {
-    if (this.isClient()) queue.channelClosed(new ChannelClosedException("Queue closed due to channel closure."));
+    if (this.isClient()) {
+      queue.channelClosed(new ChannelClosedException("Queue closed due to channel closure."));
+    }
   }
 
   protected GenericFutureListener<ChannelFuture> getCloseHandler(C clientConnection) {
@@ -152,11 +156,13 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       this.coordinationId = coordinationId;
     }
 
-    public void send(Response r){
+    public void send(Response r) {
       assert rpcConfig.checkResponseSend(r.rpcType, r.pBody.getClass());
       OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE, r.rpcType, coordinationId,
           r.pBody, r.dBodies);
-      if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Adding message to outbound buffer. {}", outMessage);
+      if (RpcConstants.EXTRA_DEBUGGING) {
+        logger.debug("Adding message to outbound buffer. {}", outMessage);
+      }
       connection.getChannel().writeAndFlush(outMessage);
     }
 
@@ -172,8 +178,12 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
     @Override
     protected void decode(ChannelHandlerContext ctx, InboundRpcMessage msg, List<Object> output) throws Exception {
-      if (!ctx.channel().isOpen()) return;
-      if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Received message {}", msg);
+      if (!ctx.channel().isOpen()) {
+        return;
+      }
+      if (RpcConstants.EXTRA_DEBUGGING) {
+        logger.debug("Received message {}", msg);
+      }
       switch (msg.mode) {
       case REQUEST: {
         // handle message and ack.
@@ -192,8 +202,10 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         Object value = parser.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
         rpcFuture.set(value, msg.dBody);
         msg.release();  // we release our ownership.  Handle could have taken over ownership.
-        if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
-        }catch(Exception ex){
+        if (RpcConstants.EXTRA_DEBUGGING) {
+          logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
+        }
+        }catch(Exception ex) {
           logger.error("Failure while handling response.", ex);
           throw ex;
         }
@@ -203,8 +215,9 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         RpcFailure failure = RpcFailure.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
         queue.updateFailedFuture(msg.coordinationId, failure);
         msg.release();
-        if (RpcConstants.EXTRA_DEBUGGING)
+        if (RpcConstants.EXTRA_DEBUGGING) {
           logger.debug("Updated rpc future with coordinationId {} with failure ", msg.coordinationId, failure);
+        }
         break;
 
       default:
@@ -256,4 +269,5 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       throw new RpcException(String.format("Failure while decoding message with parser of type. %s", parser.getClass().getCanonicalName()), e);
     }
   }
+
 }

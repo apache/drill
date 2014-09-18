@@ -32,16 +32,16 @@ import com.google.common.collect.Lists;
 @JsonTypeName("groupingaggregate")
 public class GroupingAggregate extends SingleInputOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GroupingAggregate.class);
-  
+
   private final NamedExpression[] keys;
   private final NamedExpression[] exprs;
-  
+
   public GroupingAggregate(@JsonProperty("keys") NamedExpression[] keys, @JsonProperty("exprs") NamedExpression[] exprs) {
     super();
     this.keys = keys;
     this.exprs = exprs;
   }
-  
+
   @Override
   public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
       return logicalVisitor.visitGroupingAggregate(this, value);
@@ -55,19 +55,19 @@ public class GroupingAggregate extends SingleInputOperator{
   public static Builder builder(){
     return new Builder();
   }
-  
+
   public NamedExpression[] getKeys(){
     return keys;
   }
-  
+
   public NamedExpression[] getExprs(){
     return exprs;
   }
-  
+
   public static class Builder extends AbstractSingleBuilder<GroupingAggregate, Builder>{
     private List<NamedExpression> keys = Lists.newArrayList();
     private List<NamedExpression> exprs = Lists.newArrayList();
-    
+
     public Builder addKey(FieldReference ref, LogicalExpression expr){
       keys.add(new NamedExpression(expr, ref));
       return this;
@@ -77,24 +77,25 @@ public class GroupingAggregate extends SingleInputOperator{
       keys.add(expr);
       return this;
     }
-    
+
     public Builder addExpr(NamedExpression expr){
       exprs.add(expr);
       return this;
     }
-    
+
     public Builder addExpr(FieldReference ref, LogicalExpression expr){
       exprs.add(new NamedExpression(expr, ref));
       return this;
     }
 
+    @Override
     public GroupingAggregate internalBuild(){
       GroupingAggregate ga =  new GroupingAggregate(aN(keys), aN(exprs));
       return ga;
     }
-    
+
   }
-  
-  
-     
+
+
+
 }

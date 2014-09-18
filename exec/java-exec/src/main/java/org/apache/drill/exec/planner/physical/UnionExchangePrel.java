@@ -21,14 +21,11 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.Screen;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.UnionExchange;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -55,7 +52,7 @@ public class UnionExchangePrel extends ExchangePrel {
    */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
 
@@ -78,7 +75,9 @@ public class UnionExchangePrel extends ExchangePrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
+    if (PrelUtil.getSettings(getCluster()).isSingleMode()) {
+      return childPOP;
+    }
 
     UnionExchange g = new UnionExchange(childPOP);
     return creator.addMetadata(this, g);
@@ -88,6 +87,5 @@ public class UnionExchangePrel extends ExchangePrel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-
 
 }

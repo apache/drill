@@ -18,14 +18,11 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Project;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
@@ -46,6 +43,7 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
     super(DRILL_PHYSICAL, cluster, traits, child, exps, rowType);
   }
 
+  @Override
   public ProjectRelBase copy(RelTraitSet traitSet, RelNode input, List<RexNode> exps, RelDataType rowType) {
     return new ProjectPrel(getCluster(), traitSet, input, exps, rowType);
   }
@@ -85,5 +83,5 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
   public boolean needsFinalColumnReordering() {
     return false;
   }
-  
+
 }

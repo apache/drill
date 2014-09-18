@@ -87,7 +87,7 @@ public interface ExecConstants {
 
   public static String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static OptionValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE, false);
-  
+
   public static String MONGO_ALL_TEXT_MODE = "store.mongo.all_text_mode";
   public static OptionValidator MONGO_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(MONGO_ALL_TEXT_MODE, false);
 

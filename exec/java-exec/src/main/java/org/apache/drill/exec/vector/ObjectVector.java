@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.expr.holders.ObjectHolder;
@@ -28,10 +31,6 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class ObjectVector extends BaseValueVector{
 

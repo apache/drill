@@ -44,7 +44,6 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
 import org.apache.hadoop.conf.Configuration;
@@ -173,7 +172,9 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   }
 
   private void verifyColumns() {
-    if (AbstractRecordReader.isStarQuery(columns)) return;
+    if (AbstractRecordReader.isStarQuery(columns)) {
+      return;
+    }
     for (SchemaPath column : columns) {
       if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
         DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
@@ -280,7 +281,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     for(List<HBaseSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
       if (listOfScan.size() < minPerEndpointSlot) {
         minHeap.offer(listOfScan);
-      } else if (listOfScan.size() > minPerEndpointSlot){
+      } else if (listOfScan.size() > minPerEndpointSlot) {
         maxHeap.offer(listOfScan);
       }
     }
@@ -406,6 +407,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     return hbaseScanSpec;
   }
 
+  @Override
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;

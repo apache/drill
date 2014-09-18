@@ -56,7 +56,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
   private FieldReferenceFinder finder = new FieldReferenceFinder();
   private Map<Scan, FieldList> scanFields = Maps.newHashMap();
 
-  
+
   public static Map<Scan, FieldList> getFieldLists(LogicalPlan plan){
     Collection<SinkOperator> ops = plan.getGraph().getRoots();
     Preconditions.checkArgument(ops.size() == 1, "Scan Field determiner currently only works with plans that have a single root.");
@@ -64,10 +64,10 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
     ops.iterator().next().accept(sfd, new FieldList());
     return sfd.scanFields;
   }
-  
+
   private ScanFieldDeterminer(){
   }
-  
+
   public static class FieldList {
     private Set<SchemaPath> projected = Sets.newHashSet();
     private Set<SchemaPath> referenced = Sets.newHashSet();
@@ -88,6 +88,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
       projected.addAll(paths);
     }
 
+    @Override
     public FieldList clone() {
       FieldList newList = new FieldList();
       for (SchemaPath p : projected) {
@@ -166,7 +167,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
       }
       join.getLeft().accept(this, leftList);
     }
-    
+
     {
       FieldList rightList = fl.clone();
       for (JoinCondition c : join.getConditions()) {
@@ -191,7 +192,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
     return null;
   }
 
-  
+
   /**
    * Search through a LogicalExpression, finding all internal schema path references and returning them in a set.
    */

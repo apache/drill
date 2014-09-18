@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.server.options;
 
+import java.util.Iterator;
+import java.util.Map;
+
+import org.eigenbase.sql.SqlLiteral;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import org.eigenbase.sql.SqlLiteral;
-
-import java.util.Iterator;
-import java.util.Map;
 
 public class FragmentOptionManager implements OptionManager {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentOptionManager.class);

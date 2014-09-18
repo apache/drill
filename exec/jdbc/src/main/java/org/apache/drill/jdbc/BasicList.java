@@ -89,11 +89,11 @@ abstract class BasicList<T> implements List<T>{
     throw new UnsupportedOperationException();
   }
 
-  
+
   public void clear(){
     throw new UnsupportedOperationException();
   }
-  
+
   @Override
   public T set(int index, T element) {
     throw new UnsupportedOperationException();

@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.server.options;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.util.NlsString;
-
-import java.math.BigDecimal;
 
 public class TypeValidators {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
@@ -40,9 +40,10 @@ public class TypeValidators {
     @Override
     public void validate(OptionValue v) throws ExpressionParsingException {
       super.validate(v);
-      if (v.num_val > max || v.num_val < 0)
+      if (v.num_val > max || v.num_val < 0) {
         throw new ExpressionParsingException(String.format("Option %s must be between %d and %d.", getOptionName(), 0,
             max));
+      }
     }
   }
 
@@ -55,8 +56,9 @@ public class TypeValidators {
     @Override
     public void validate(OptionValue v) throws ExpressionParsingException {
       super.validate(v);
-      if (!isPowerOfTwo(v.num_val))
+      if (!isPowerOfTwo(v.num_val)) {
         throw new ExpressionParsingException(String.format("Option %s must be a power of two.", getOptionName()));
+      }
     }
 
     private boolean isPowerOfTwo(long num) {
@@ -77,36 +79,37 @@ public class TypeValidators {
     @Override
     public void validate(OptionValue v) throws ExpressionParsingException {
       super.validate(v);
-      if (v.float_val > max || v.float_val < min)
+      if (v.float_val > max || v.float_val < min) {
         throw new ExpressionParsingException(String.format("Option %s must be between %d and %d.", getOptionName(), min,
             max));
+      }
     }
 
   }
 
   public static class BooleanValidator extends TypeValidator{
-    public BooleanValidator(String name, boolean def){
+    public BooleanValidator(String name, boolean def) {
       super(name, Kind.BOOLEAN, OptionValue.createBoolean(OptionType.SYSTEM, name, def));
     }
   }
+
   public static class StringValidator extends TypeValidator{
-    public StringValidator(String name, String def){
+    public StringValidator(String name, String def) {
       super(name, Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def));
     }
 
   }
+
   public static class LongValidator extends TypeValidator{
-    public LongValidator(String name, long def){
+    public LongValidator(String name, long def) {
       super(name, Kind.LONG, OptionValue.createLong(OptionType.SYSTEM, name, def));
     }
   }
-  public static class DoubleValidator extends TypeValidator{
 
-    public DoubleValidator(String name, double def){
+  public static class DoubleValidator extends TypeValidator{
+    public DoubleValidator(String name, double def) {
       super(name, Kind.DOUBLE, OptionValue.createDouble(OptionType.SYSTEM, name, def));
     }
-
-
   }
 
   public static abstract class TypeValidator extends OptionValidator {
@@ -133,9 +136,10 @@ public class TypeValidators {
 
     @Override
     public void validate(OptionValue v) throws ExpressionParsingException {
-      if (v.kind != kind)
+      if (v.kind != kind) {
         throw new ExpressionParsingException(String.format("Option %s must be of type %s but you tried to set to %s.",
             getOptionName(), kind.name(), v.kind.name()));
+      }
     }
 
     public void extraValidate(OptionValue v) throws ExpressionParsingException {
@@ -174,4 +178,5 @@ public class TypeValidators {
     throw new ExpressionParsingException(String.format(
         "Drill doesn't support set option expressions with literals of type %s.", literal.getTypeName()));
   }
+
 }

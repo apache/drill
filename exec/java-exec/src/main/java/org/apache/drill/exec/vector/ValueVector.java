@@ -22,7 +22,6 @@ import io.netty.buffer.DrillBuf;
 import java.io.Closeable;
 
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;

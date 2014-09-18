@@ -31,7 +31,7 @@ import com.mongodb.DBObject;
 import com.mongodb.LazyWriteableDBObject;
 
 public class MongoUtils {
-  
+
   public static BasicDBObject andFilterAtIndex(BasicDBObject leftFilter,
       BasicDBObject rightFilter) {
     BasicDBObject andQueryFilter = new BasicDBObject();
@@ -58,7 +58,7 @@ public class MongoUtils {
     result.putAll(dbo);
     return result;
   }
-  
+
   public static Map<String, List<BasicDBObject>> mergeFilters(
       Map<String, Object> minFilters, Map<String, Object> maxFilters) {
     Map<String, List<BasicDBObject>> filters = Maps.newHashMap();

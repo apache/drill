@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.ImmutableList;
+import java.util.logging.Logger;
+
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
@@ -29,7 +30,7 @@ import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.trace.EigenbaseTrace;
 
-import java.util.logging.Logger;
+import com.google.common.collect.ImmutableList;
 
 public class HashAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new HashAggPrule();
@@ -47,7 +48,9 @@ public class HashAggPrule extends AggPruleBase {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashAggEnabled()) return;
+    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashAggEnabled()) {
+      return;
+    }
 
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
     final RelNode input = call.rel(1);
@@ -95,7 +98,6 @@ public class HashAggPrule extends AggPruleBase {
     }
   }
 
-
   private class TwoPhaseSubset extends SubsetTransformer<DrillAggregateRel, InvalidRelException> {
     final RelTrait distOnAllKeys;
 
@@ -123,7 +125,6 @@ public class HashAggPrule extends AggPruleBase {
                                                aggregate.getGroupSet(),
                                                phase1Agg.getPhase2AggCalls(),
                                                OperatorPhase.PHASE_2of2);
-
       return phase2Agg;
     }
 
@@ -139,4 +140,5 @@ public class HashAggPrule extends AggPruleBase {
 
     call.transformTo(newAgg);
   }
+
 }

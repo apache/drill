@@ -16,7 +16,7 @@
       orderings: [
         {order: "desc", expr: "data.key" }
       ]
-    }, 
+    },
     {
       op: "project",
       projections: [
@@ -24,7 +24,7 @@
         { ref: "output.value", expr: "data.value" }
       ]
     },
-	{
+    {
       op: "store",
       storageengine: "fs1",
       target: {

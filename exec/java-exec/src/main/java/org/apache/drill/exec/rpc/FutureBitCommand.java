@@ -37,7 +37,7 @@ public abstract class FutureBitCommand<T extends MessageLite, C extends RemoteCo
 
   @Override
   public void connectionAvailable(C connection) {
-    
+
     doRpcCall(new DeferredRpcOutcome(), connection);
   }
 

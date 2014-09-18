@@ -20,10 +20,9 @@ package org.apache.drill.exec.physical;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.common.logical.PlanProperties;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.graph.Graph;
 import org.apache.drill.common.graph.GraphAlgos;
+import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.exec.physical.base.Leaf;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Root;
@@ -39,23 +38,23 @@ import com.google.common.collect.Lists;
 @JsonPropertyOrder({ "head", "graph" })
 public class PhysicalPlan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlan.class);
-  
+
   PlanProperties properties;
-  
+
   Graph<PhysicalOperator, Root, Leaf> graph;
-  
+
   @JsonCreator
   public PhysicalPlan(@JsonProperty("head") PlanProperties properties, @JsonProperty("graph") List<PhysicalOperator> operators){
     this.properties = properties;
     this.graph = Graph.newGraph(operators, Root.class, Leaf.class);
   }
-  
+
   @JsonProperty("graph")
   public List<PhysicalOperator> getSortedOperators(){
     // reverse the list so that nested references are flattened rather than nested.
     return getSortedOperators(true);
   }
-  
+
   public List<PhysicalOperator> getSortedOperators(boolean reverse){
     List<PhysicalOperator> list = GraphAlgos.TopoSorter.sort(graph);
     if(reverse){
@@ -63,7 +62,7 @@ public class PhysicalPlan {
     }else{
       return list;
     }
-    
+
   }
 
 
@@ -90,5 +89,5 @@ public class PhysicalPlan {
       throw new RuntimeException(e);
     }
   }
-  
+
 }

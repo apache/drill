@@ -75,10 +75,10 @@
       </form>
     </div>
   </div>
-  
+
   <div class="page-header"></div>
   <h3>Fragment Profiles</h3>
-  
+
   <div class="panel-group" id="fragment-accordion">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -112,10 +112,10 @@
     </div>
     </#list>
   </div>
-  
+
   <div class="page-header"></div>
   <h3>Operator Profiles</h3>
-  
+
   <div class="panel-group" id="operator-accordion">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -149,10 +149,10 @@
     </div>
     </#list>
   </div>
-  
+
   <div class="page-header"></div>
   <h3>Full JSON Profile</h3>
-  
+
   <div class="span4 collapse-group" id="full-json-profile">
     <a class="btn btn-default" data-toggle="collapse" data-target="#full-json-profile-json">JSON profile</a>
     <br> <br>

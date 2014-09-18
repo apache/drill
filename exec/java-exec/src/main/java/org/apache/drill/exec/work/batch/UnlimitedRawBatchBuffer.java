@@ -19,14 +19,11 @@ package org.apache.drill.exec.work.batch;
 
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.rpc.ResponseSender;
-import org.apache.drill.exec.rpc.data.DataRpcConfig;
 
 import com.google.common.collect.Queues;
 
@@ -69,10 +66,10 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
       return;
     }
     buffer.add(batch);
-    if(buffer.size() == softlimit){
+    if (buffer.size() == softlimit) {
       overlimit.set(true);
       readController.enqueueResponse(batch.getSender());
-    }else{
+    } else {
       batch.sendOk();
     }
   }
@@ -96,14 +93,16 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
       }
       RawFragmentBatch batch;
       while ((batch = buffer.poll()) != null) {
-        if (batch.getBody() != null) batch.getBody().release();
+        if (batch.getBody() != null) {
+          batch.getBody().release();
+        }
       }
     }
   }
 
   @Override
   public void kill(FragmentContext context) {
-    while(!buffer.isEmpty()){
+    while (!buffer.isEmpty()) {
       RawFragmentBatch batch = buffer.poll();
       batch.getBody().release();
     }
@@ -118,7 +117,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   }
 
   @Override
-  public RawFragmentBatch getNext(){
+  public RawFragmentBatch getNext() {
 
     if (outOfMemory.get() && buffer.size() < 10) {
       logger.debug("Setting autoread true");
@@ -131,7 +130,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     b = buffer.poll();
 
     // if we didn't get a buffer, block on waiting for buffer.
-    if(b == null && (!finished || !buffer.isEmpty())){
+    if (b == null && (!finished || !buffer.isEmpty())) {
       try {
         b = buffer.take();
       } catch (InterruptedException e) {
@@ -146,8 +145,8 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
 
     // if we are in the overlimit condition and aren't finished, check if we've passed the start limit.  If so, turn off the overlimit condition and set auto read to true (start reading from socket again).
-    if(!finished && overlimit.get()){
-      if(buffer.size() == startlimit){
+    if (!finished && overlimit.get()) {
+      if (buffer.size() == startlimit) {
         overlimit.set(false);
         readController.flushResponses();
       }
@@ -169,6 +168,5 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     return b;
 
   }
-
 
 }

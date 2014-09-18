@@ -55,8 +55,9 @@ public class TestSimpleExternalSort extends BaseTestQuery {
     List<QueryResultBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending_sv2.json");
     int count = 0;
     for(QueryResultBatch b : results) {
-      if (b.getHeader().getRowCount() != 0)
+      if (b.getHeader().getRowCount() != 0) {
         count += b.getHeader().getRowCount();
+      }
     }
     assertEquals(500000, count);
 
@@ -66,7 +67,9 @@ public class TestSimpleExternalSort extends BaseTestQuery {
     int batchCount = 0;
 
     for (QueryResultBatch b : results) {
-      if (b.getHeader().getRowCount() == 0) break;
+      if (b.getHeader().getRowCount() == 0) {
+        break;
+      }
       batchCount++;
       RecordBatchLoader loader = new RecordBatchLoader(allocator);
       loader.load(b.getHeader().getDef(),b.getData());
@@ -76,7 +79,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
       BigIntVector.Accessor a1 = c1.getAccessor();
 
-      for(int i =0; i < c1.getAccessor().getValueCount(); i++){
+      for (int i =0; i < c1.getAccessor().getValueCount(); i++) {
         recordCount++;
         assertTrue(String.format("%d > %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
         previousBigInt = a1.get(i);
@@ -92,9 +95,10 @@ public class TestSimpleExternalSort extends BaseTestQuery {
   public void sortOneKeyDescendingMergeSort() throws Throwable{
     List<QueryResultBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending.json");
     int count = 0;
-    for(QueryResultBatch b : results) {
-      if (b.getHeader().getRowCount() != 0)
+    for (QueryResultBatch b : results) {
+      if (b.getHeader().getRowCount() != 0) {
         count += b.getHeader().getRowCount();
+      }
     }
     assertEquals(1000000, count);
 
@@ -104,7 +108,9 @@ public class TestSimpleExternalSort extends BaseTestQuery {
     int batchCount = 0;
 
     for (QueryResultBatch b : results) {
-      if (b.getHeader().getRowCount() == 0) break;
+      if (b.getHeader().getRowCount() == 0) {
+        break;
+      }
       batchCount++;
       RecordBatchLoader loader = new RecordBatchLoader(allocator);
       loader.load(b.getHeader().getDef(),b.getData());
@@ -113,7 +119,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
       BigIntVector.Accessor a1 = c1.getAccessor();
 
-      for(int i =0; i < c1.getAccessor().getValueCount(); i++){
+      for (int i =0; i < c1.getAccessor().getValueCount(); i++) {
         recordCount++;
         assertTrue(String.format("%d > %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
         previousBigInt = a1.get(i);
@@ -131,7 +137,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
     DrillConfig config = DrillConfig.create("drill-external-sort.conf");
 
-    try(Drillbit bit1 = new Drillbit(config, serviceSet);
+    try (Drillbit bit1 = new Drillbit(config, serviceSet);
         Drillbit bit2 = new Drillbit(config, serviceSet);
         DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
 
@@ -142,9 +148,10 @@ public class TestSimpleExternalSort extends BaseTestQuery {
               Files.toString(FileUtils.getResourceAsFile("/xsort/one_key_sort_descending.json"),
                       Charsets.UTF_8));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
       }
       assertEquals(1000000, count);
 
@@ -154,7 +161,9 @@ public class TestSimpleExternalSort extends BaseTestQuery {
       int batchCount = 0;
 
       for (QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() == 0) break;
+        if (b.getHeader().getRowCount() == 0) {
+          break;
+        }
         batchCount++;
         RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
         loader.load(b.getHeader().getDef(),b.getData());
@@ -163,7 +172,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
         BigIntVector.Accessor a1 = c1.getAccessor();
 
-        for(int i =0; i < c1.getAccessor().getValueCount(); i++){
+        for (int i =0; i < c1.getAccessor().getValueCount(); i++) {
           recordCount++;
           assertTrue(String.format("%d < %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
           previousBigInt = a1.get(i);
@@ -171,7 +180,6 @@ public class TestSimpleExternalSort extends BaseTestQuery {
         loader.clear();
         b.release();
       }
-
       System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
 
     }
@@ -183,7 +191,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
     DrillConfig config = DrillConfig.create("drill-oom-xsort.conf");
 
-    try(Drillbit bit1 = new Drillbit(config, serviceSet);
+    try (Drillbit bit1 = new Drillbit(config, serviceSet);
         DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
 
       bit1.run();
@@ -192,9 +200,10 @@ public class TestSimpleExternalSort extends BaseTestQuery {
               Files.toString(FileUtils.getResourceAsFile("/xsort/oom_sort_test.json"),
                       Charsets.UTF_8));
       int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
+        }
       }
       assertEquals(10000000, count);
 
@@ -204,7 +213,9 @@ public class TestSimpleExternalSort extends BaseTestQuery {
       int batchCount = 0;
 
       for (QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() == 0) break;
+        if (b.getHeader().getRowCount() == 0) {
+          break;
+        }
         batchCount++;
         RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
         loader.load(b.getHeader().getDef(),b.getData());
@@ -213,7 +224,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
         BigIntVector.Accessor a1 = c1.getAccessor();
 
-        for(int i =0; i < c1.getAccessor().getValueCount(); i++){
+        for (int i =0; i < c1.getAccessor().getValueCount(); i++) {
           recordCount++;
           assertTrue(String.format("%d < %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
           previousBigInt = a1.get(i);
@@ -222,9 +233,9 @@ public class TestSimpleExternalSort extends BaseTestQuery {
         loader.clear();
         b.release();
       }
-
       System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
 
     }
   }
+
 }

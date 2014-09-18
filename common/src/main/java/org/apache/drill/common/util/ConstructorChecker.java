@@ -21,35 +21,41 @@ import java.lang.reflect.Constructor;
 
 public class ConstructorChecker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConstructorChecker.class);
-  
+
   private final String requirementString;
   private final Class<?>[] classes;
- 
-  
+
   public ConstructorChecker(Class<?>... classes) {
     super();
     this.classes = classes;
     StringBuffer sb = new StringBuffer();
     sb.append("The required constructor is (");
-    for(int i =0; i < classes.length; i++){
-      if(i != 0) sb.append(", ");
+    for (int i =0; i < classes.length; i++) {
+      if (i != 0) {
+        sb.append(", ");
+      }
       sb.append(classes[i].getName());
     }
-     
+
     this.requirementString = sb.toString();
   }
 
-  public boolean check(Constructor<?> c){
+  public boolean check(Constructor<?> c) {
     Class<?>[] params = c.getParameterTypes();
-    if(params.length != classes.length) return false;
-    for(int i =0; i < classes.length; i++){
-      if( !classes[i].isAssignableFrom(params[i])) return false;
+    if (params.length != classes.length) {
+      return false;
     }
-    
+    for (int i =0; i < classes.length; i++) {
+      if ( !classes[i].isAssignableFrom(params[i])) {
+        return false;
+      }
+    }
+
     return true;
   }
-  
-  public String getRequirementString(){
+
+  public String getRequirementString() {
     return requirementString;
   }
+
 }

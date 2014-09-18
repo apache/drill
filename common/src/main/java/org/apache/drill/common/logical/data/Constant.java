@@ -17,8 +17,6 @@
  */
 package org.apache.drill.common.logical.data;
 
-import java.util.Iterator;
-
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
@@ -48,5 +46,5 @@ public class Constant extends SourceOperator {
       return logicalVisitor.visitConstant(this, value);
     }
 
-    
+
 }

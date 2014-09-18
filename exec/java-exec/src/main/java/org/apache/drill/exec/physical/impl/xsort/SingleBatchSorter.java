@@ -20,16 +20,13 @@ package org.apache.drill.exec.physical.impl.xsort;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.sort.SortTemplate;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.record.selection.SelectionVector4;
 
 public interface SingleBatchSorter {
   public void setup(FragmentContext context, SelectionVector2 vector2, RecordBatch incoming) throws SchemaChangeException;
   public void sort(SelectionVector2 vector2);
-  
+
   public static TemplateClassDefinition<SingleBatchSorter> TEMPLATE_DEFINITION = new TemplateClassDefinition<SingleBatchSorter>(SingleBatchSorter.class, SingleBatchSorterTemplate.class);
 
 }

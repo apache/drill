@@ -17,21 +17,19 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
+
+import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
-import parquet.bytes.BytesUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.Encoding;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.io.api.Binary;
-
-import java.io.IOException;
 
 public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLengthColumn {
 
@@ -64,22 +62,26 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
     updatePosition();
   }
 
+  @Override
   public void updateReadyToReadPosition() {
     pageReader.readyToReadPosInBytes += dataTypeLengthInBits + 4;
     pageReader.valuesReadyToRead++;
     currLengthDeterminingDictVal = null;
   }
 
+  @Override
   public void updatePosition() {
     pageReader.readPosInBytes += dataTypeLengthInBits + 4;
     bytesReadInCurrentPass += dataTypeLengthInBits;
     valuesReadInCurrentPass++;
   }
 
+  @Override
   public boolean skipReadyToReadPositionUpdate() {
     return false;
   }
 
+  @Override
   protected boolean readAndStoreValueSizeInformation() throws IOException {
     // re-purposing this field here for length in BYTES to prevent repetitive multiplication/division
     if (usingDictionary) {

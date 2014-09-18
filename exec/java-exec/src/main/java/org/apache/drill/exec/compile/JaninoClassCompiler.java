@@ -41,6 +41,7 @@ public class JaninoClassCompiler extends AbstractClassCompiler {
     this.compilationClassLoader = new ClassLoaderIClassLoader(parentClassLoader);
   }
 
+  @Override
   protected byte[][] getByteCode(final ClassNames className, final String sourcecode)
       throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
     StringReader reader = new StringReader(sourcecode);
@@ -56,6 +57,7 @@ public class JaninoClassCompiler extends AbstractClassCompiler {
     return byteCodes;
   }
 
+  @Override
   protected org.slf4j.Logger getLogger() { return logger; }
 
 }

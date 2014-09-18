@@ -56,10 +56,12 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
     return internalMap.isEmpty();
   }
 
-  public boolean alreadyContainsKey(Object k){
+  public boolean alreadyContainsKey(Object k) {
     @SuppressWarnings("unchecked") KEY key = (KEY) k;
 
-    if(internalMap.containsKey(key)) return true;
+    if (internalMap.containsKey(key)) {
+      return true;
+    }
     return false;
   }
 
@@ -67,7 +69,9 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
   public boolean containsKey(Object k) {
     @SuppressWarnings("unchecked") KEY key = (KEY) k;
 
-    if(internalMap.containsKey(key)) return true;
+    if (internalMap.containsKey(key)) {
+      return true;
+    }
     VALUE v = getNewEntry(k);
     return v != null;
   }
@@ -80,17 +84,23 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
   @Override
   public VALUE get(Object key) {
     VALUE out = internalMap.get(key);
-    if(out != null) return out;
+    if (out != null) {
+      return out;
+    }
     return getNewEntry(key);
   }
 
-  private VALUE getNewEntry(Object k){
+  private VALUE getNewEntry(Object k) {
     @SuppressWarnings("unchecked")
     KEY key = (KEY) k;
     VALUE v = this.fac.create(key);
-    if(v == null) return null;
+    if (v == null) {
+      return null;
+    }
     VALUE old = internalMap.putIfAbsent(key, v);
-    if(old == null) return v;
+    if (old == null) {
+      return v;
+    }
     fac.destroy(v);
     return old;
   }
@@ -194,8 +204,10 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
 
     @Override
     public boolean containsAll(Collection<?> c) {
-      for(Object o : c){
-        if(this.contains(o)) return false;
+      for (Object o : c) {
+        if (this.contains(o)) {
+          return false;
+        }
       }
       return true;
     }
@@ -227,4 +239,5 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
     public VALUE create(KEY key);
     public void destroy(VALUE value);
   }
+
 }

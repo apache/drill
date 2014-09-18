@@ -17,8 +17,8 @@
             pop:"scan",
             storageengine:"fs1",
             entries:[
-            	{"test1"}
-           	],
+                {"test1"}
+            ],
             output:[
                 { "name":"key", mode: "VECTOR", type:"SINT32"},
                 { "name":"value", mode: "VECTOR", type:"SINT32"}
@@ -36,7 +36,7 @@
                     key:"Text",
                     type:"JAVA_SEQUENCE"
                 }
-            ] 
-        }           
+            ]
+        }
     ]
 }

@@ -17,7 +17,11 @@
  */
 package org.apache.drill.exec.server.options;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -30,12 +34,9 @@ import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.eigenbase.sql.SqlLiteral;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
+import com.google.common.collect.Maps;
 
-public class SystemOptionManager implements OptionManager{
+public class SystemOptionManager implements OptionManager {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
@@ -93,7 +94,7 @@ public class SystemOptionManager implements OptionManager{
   private final ConcurrentMap<String, OptionValidator> knownOptions = Maps.newConcurrentMap();
   private final PStoreProvider provider;
 
-  public SystemOptionManager(DrillConfig config, PStoreProvider provider){
+  public SystemOptionManager(DrillConfig config, PStoreProvider provider) {
     this.provider = provider;
     this.config =  PStoreConfig //
         .newJacksonBuilder(config.getMapper(), OptionValue.class) //
@@ -110,7 +111,7 @@ public class SystemOptionManager implements OptionManager{
   private class Iter implements Iterator<OptionValue>{
     private Iterator<Map.Entry<String, OptionValue>> inner;
 
-    public Iter(Iterator<Map.Entry<String, OptionValue>> inner){
+    public Iter(Iterator<Map.Entry<String, OptionValue>> inner) {
       this.inner = inner;
     }
 
@@ -172,8 +173,8 @@ public class SystemOptionManager implements OptionManager{
 
   private class SystemOptionAdmin implements OptionAdmin{
 
-    public SystemOptionAdmin(){
-      for(OptionValidator v : VALIDATORS){
+    public SystemOptionAdmin() {
+      for(OptionValidator v : VALIDATORS) {
         knownOptions.put(v.getOptionName(), v);
         options.putIfAbsent(v.getOptionName(), v.getDefault());
       }
@@ -182,7 +183,7 @@ public class SystemOptionManager implements OptionManager{
 
     @Override
     public void registerOptionType(OptionValidator validator) {
-      if(null != knownOptions.putIfAbsent(validator.getOptionName(), validator) ){
+      if (null != knownOptions.putIfAbsent(validator.getOptionName(), validator) ) {
         throw new IllegalArgumentException("Only one option is allowed to be registered with name: " + validator.getOptionName());
       }
     }
@@ -190,20 +191,21 @@ public class SystemOptionManager implements OptionManager{
     @Override
     public void validate(OptionValue v) throws SetOptionException {
       OptionValidator validator = knownOptions.get(v.name);
-      if(validator == null) throw new SetOptionException("Unknown option " + v.name);
+      if (validator == null) {
+        throw new SetOptionException("Unknown option " + v.name);
+      }
       validator.validate(v);
     }
 
     @Override
     public OptionValue validate(String name, SqlLiteral value) throws SetOptionException {
       OptionValidator validator = knownOptions.get(name);
-      if(validator == null) throw new SetOptionException("Unknown option: " + name);
+      if (validator == null) {
+        throw new SetOptionException("Unknown option: " + name);
+      }
       return validator.validate(value);
     }
 
-
-
   }
-
 
 }

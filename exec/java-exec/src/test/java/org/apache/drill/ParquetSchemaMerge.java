@@ -21,7 +21,6 @@ import parquet.schema.GroupType;
 import parquet.schema.MessageType;
 import parquet.schema.PrimitiveType;
 import parquet.schema.PrimitiveType.PrimitiveTypeName;
-import parquet.schema.Type;
 import parquet.schema.Type.Repetition;
 
 public class ParquetSchemaMerge {

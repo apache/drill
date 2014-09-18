@@ -49,14 +49,20 @@ public class RpcException extends DrillIOException{
     super(cause);
   }
 
-  public static RpcException mapException(Throwable t){
-    while(t instanceof ExecutionException) t = ((ExecutionException)t).getCause();
-    if(t instanceof RpcException) return ((RpcException) t);
+  public static RpcException mapException(Throwable t) {
+    while (t instanceof ExecutionException) {
+      t = ((ExecutionException)t).getCause();
+    }
+    if (t instanceof RpcException) {
+      return ((RpcException) t);
+    }
     return new RpcException(t);
   }
 
-  public static RpcException mapException(String message, Throwable t){
-    while(t instanceof ExecutionException) t = ((ExecutionException)t).getCause();
+  public static RpcException mapException(String message, Throwable t) {
+    while (t instanceof ExecutionException) {
+      t = ((ExecutionException)t).getCause();
+    }
     return new RpcException(message, t);
   }
 

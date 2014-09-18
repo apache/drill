@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr.fn;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -38,6 +37,7 @@ import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBridge;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Sets;
 
 public class HiveFunctionRegistry implements PluggableFunctionRegistry{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveFunctionRegistry.class);
@@ -52,14 +52,16 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
    * (function name) --> (implementation class) mappings.
    * @param config
    */
-  public HiveFunctionRegistry(DrillConfig config){
+  public HiveFunctionRegistry(DrillConfig config) {
     Set<Class<? extends GenericUDF>> genericUDFClasses = PathScanner.scanForImplementations(GenericUDF.class, null);
-    for (Class<? extends GenericUDF> clazz : genericUDFClasses)
+    for (Class<? extends GenericUDF> clazz : genericUDFClasses) {
       register(clazz, methodsGenericUDF);
+    }
 
     Set<Class<? extends UDF>> udfClasses = PathScanner.scanForImplementations(UDF.class, null);
-    for (Class<? extends UDF> clazz : udfClasses)
+    for (Class<? extends UDF> clazz : udfClasses) {
       register(clazz, methodsUDF);
+    }
   }
 
   @Override
@@ -72,18 +74,22 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
   private <C,I> void register(Class<? extends I> clazz, ArrayListMultimap<String,Class<? extends I>> methods) {
     Description desc = clazz.getAnnotation(Description.class);
     String[] names;
-    if(desc != null){
+    if (desc != null) {
       names = desc.name().split(",");
-      for(int i=0; i<names.length; i++) names[i] = names[i].trim();
+      for (int i=0; i<names.length; i++) {
+        names[i] = names[i].trim();
+      }
     }else{
       names = new String[]{clazz.getName().replace('.', '_')};
     }
-    
+
     UDFType type = clazz.getAnnotation(UDFType.class);
-    if (type != null && type.deterministic()) nonDeterministicUDFs.add(clazz);
+    if (type != null && type.deterministic()) {
+      nonDeterministicUDFs.add(clazz);
+    }
 
 
-    for(int i=0; i<names.length;i++){
+    for(int i=0; i<names.length;i++) {
       methods.put(names[i].toLowerCase(), clazz);
     }
   }
@@ -118,7 +124,7 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     HiveFuncHolder holder;
     MajorType[] argTypes = new MajorType[call.args.size()];
     ObjectInspector[] argOIs = new ObjectInspector[call.args.size()];
-    for(int i=0; i<call.args.size(); i++) {
+    for (int i=0; i<call.args.size(); i++) {
       try {
         argTypes[i] = call.args.get(i).getMajorType();
         if (convertVarCharToVar16Char && argTypes[i].getMinorType() == MinorType.VARCHAR) {
@@ -136,17 +142,19 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     String funcName = call.getName().toLowerCase();
 
     // search in GenericUDF list
-    for(Class<? extends GenericUDF> clazz: methodsGenericUDF.get(funcName)) {
+    for (Class<? extends GenericUDF> clazz: methodsGenericUDF.get(funcName)) {
       holder = matchAndCreateGenericUDFHolder(clazz, argTypes, argOIs);
-      if(holder != null)
+      if (holder != null) {
         return holder;
+      }
     }
 
     // search in UDF list
     for (Class<? extends UDF> clazz : methodsUDF.get(funcName)) {
       holder = matchAndCreateUDFHolder(call.getName(), clazz, argTypes, argOIs);
-      if (holder != null)
+      if (holder != null) {
         return holder;
+      }
     }
 
     return null;
@@ -166,9 +174,9 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
         returnOI,
         Types.optional(ObjectInspectorHelper.getDrillType(returnOI)),
         nonDeterministicUDFs.contains(udfClazz));
-    } catch(IllegalAccessException | InstantiationException e) {
+    } catch (IllegalAccessException | InstantiationException e) {
       logger.debug("Failed to instantiate class", e);
-    } catch(Exception e) { /*ignore this*/ }
+    } catch (Exception e) { /*ignore this*/ }
 
     return null;
   }
@@ -188,8 +196,9 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
         returnOI,
         Types.optional(ObjectInspectorHelper.getDrillType(returnOI)),
         nonDeterministicUDFs.contains(udfClazz));
-    } catch(Exception e) { /*ignore this*/ }
+    } catch (Exception e) { /*ignore this*/ }
 
     return null;
   }
+
 }

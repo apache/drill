@@ -17,10 +17,14 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import java.io.IOException;
+import java.util.List;
+
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
+
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -38,9 +42,6 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlNode;
-
-import java.io.IOException;
-import java.util.List;
 
 public class CreateTableHandler extends DefaultSqlHandler {
 
@@ -62,15 +63,17 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
       if (tblFiledNames.size() > 0) {
         // Field count should match.
-        if (tblFiledNames.size() != queryRowType.getFieldCount())
+        if (tblFiledNames.size() != queryRowType.getFieldCount()) {
           return DirectPlan.createDirectPlan(context, false,
               "Table's field list and the table's query field list have different counts.");
+        }
 
         // CTAS's query field list shouldn't have "*" when table's field list is specified.
-        for(String field : queryRowType.getFieldNames()) {
-          if (field.equals("*"))
+        for (String field : queryRowType.getFieldNames()) {
+          if (field.equals("*")) {
             return DirectPlan.createDirectPlan(context, false,
                 "Table's query field list has a '*', which is invalid when table's field list is specified.");
+          }
         }
       }
 
@@ -89,9 +92,10 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
       AbstractSchema drillSchema = getDrillSchema(schema);
 
-      if (!drillSchema.isMutable())
+      if (!drillSchema.isMutable()) {
         return DirectPlan.createDirectPlan(context, false, String.format("Current schema '%s' is not a mutable schema. " +
             "Can't create tables in this schema.", drillSchema.getFullSchemaName()));
+      }
 
       String newTblName = sqlCreateTable.getName();
       if (schema.getTable(newTblName) != null) {
@@ -120,11 +124,13 @@ public class CreateTableHandler extends DefaultSqlHandler {
     RelNode convertedRelNode = planner.transform(DrillSqlWorker.LOGICAL_RULES,
         relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
 
-    if (convertedRelNode instanceof DrillStoreRel)
+    if (convertedRelNode instanceof DrillStoreRel) {
       throw new UnsupportedOperationException();
+    }
 
     DrillWriterRel writerRel = new DrillWriterRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(),
         convertedRelNode, schema.createNewTable(tableName));
     return new DrillScreenRel(writerRel.getCluster(), writerRel.getTraitSet(), writerRel);
   }
+
 }

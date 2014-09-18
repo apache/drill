@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.service;
 
-import io.netty.channel.nio.NioEventLoopGroup;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -28,7 +26,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.TransportCheck;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.ControllerImpl;

@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.base.Joiner;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
@@ -29,15 +28,17 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.eigenbase.sql.SqlNode;
 
+import com.google.common.base.Joiner;
+
 public abstract class AbstractSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSqlHandler.class);
 
   public abstract PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException;
 
-  public static <T> T unwrap(Object o, Class<T> clazz) throws RelConversionException{
-    if(clazz.isAssignableFrom(o.getClass())){
+  public static <T> T unwrap(Object o, Class<T> clazz) throws RelConversionException {
+    if (clazz.isAssignableFrom(o.getClass())) {
       return (T) o;
-    }else{
+    } else {
       throw new RelConversionException(String.format("Failure trying to treat %s as type %s.", o.getClass().getSimpleName(), clazz.getSimpleName()));
     }
   }
@@ -46,12 +47,12 @@ public abstract class AbstractSqlHandler {
    * From a given SchemaPlus return a Drill schema object of type AbstractSchema if exists.
    * Otherwise throw errors.
    */
-  public static AbstractSchema getDrillSchema(SchemaPlus schemaPlus) throws Exception{
+  public static AbstractSchema getDrillSchema(SchemaPlus schemaPlus) throws Exception {
     AbstractSchema drillSchema;
     try {
       drillSchema = schemaPlus.unwrap(AbstractSchema.class);
       drillSchema = drillSchema.getDefaultSchema();
-    } catch(ClassCastException e) {
+    } catch (ClassCastException e) {
       throw new Exception("Current schema is not a Drill schema. " +
               "Can't create new relations (tables or views) in non-Drill schemas.", e);
     }
@@ -65,16 +66,19 @@ public abstract class AbstractSqlHandler {
    */
   public static SchemaPlus findSchema(SchemaPlus rootSchema, SchemaPlus defaultSchema, List<String> schemaPath)
       throws Exception {
-    if (schemaPath.size() == 0)
+    if (schemaPath.size() == 0) {
       return defaultSchema;
+    }
 
     SchemaPlus schema;
 
-    if ((schema = searchSchemaTree(defaultSchema, schemaPath)) != null)
+    if ((schema = searchSchemaTree(defaultSchema, schemaPath)) != null) {
       return schema;
+    }
 
-    if ((schema = searchSchemaTree(rootSchema, schemaPath)) != null)
+    if ((schema = searchSchemaTree(rootSchema, schemaPath)) != null) {
       return schema;
+    }
 
     throw new Exception(String.format("Invalid schema path '%s'.", Joiner.on(".").join(schemaPath)));
   }
@@ -92,4 +96,5 @@ public abstract class AbstractSqlHandler {
     }
     return schema;
   }
+
 }

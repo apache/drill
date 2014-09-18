@@ -161,16 +161,21 @@ public class HiveTextRecordReader extends HiveRecordReader {
           boolean success = false; // setValue(primitiveCategories.get(i), vectors.get(i), recordCount, bytes, delimPositions[id] + 1);
           if (!success) {
             redoRecord = value;
-            if (partition != null) populatePartitionVectors(recordCount);
+            if (partition != null) {
+              populatePartitionVectors(recordCount);
+            }
             return recordCount;
           }
         }
         recordCount++;
       }
-      if (partition != null) populatePartitionVectors(recordCount);
+      if (partition != null) {
+        populatePartitionVectors(recordCount);
+      }
       return recordCount;
     } catch (IOException e) {
       throw new DrillRuntimeException(e);
     }
   }
+
 }

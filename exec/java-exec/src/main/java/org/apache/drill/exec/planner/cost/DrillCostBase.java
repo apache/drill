@@ -29,12 +29,12 @@ public class DrillCostBase implements DrillRelOptCost {
 
   /**
    * NOTE: the multiplication factors below are not calibrated yet...these
-   * are chosen based on approximations for now. For reference purposes, 
-   * assume each disk on a server can have a sustained I/O throughput of 
+   * are chosen based on approximations for now. For reference purposes,
+   * assume each disk on a server can have a sustained I/O throughput of
    * 100 MBytes/sec.  Suppose there is an array of 16 disks per server..theoretically
-   * one could get 1.6GBytes/sec. Suppose network speed is 1GBit/sec which is 
+   * one could get 1.6GBytes/sec. Suppose network speed is 1GBit/sec which is
    * 128MBytes/sec, although actual transfer rate over the network may be lower.
-   * We are only concerned with relative costs, not absolute values.  
+   * We are only concerned with relative costs, not absolute values.
    * For relative costing, let's assume sending data over the network is
    * about 16x slower than reading/writing to an array of local disks.
    */
@@ -47,48 +47,50 @@ public class DrillCostBase implements DrillRelOptCost {
   public static final int FUNC_CPU_COST = 12 * BASE_CPU_COST;         // cpu cost for a function evaluation
 
   // cpu cost for projecting an expression; note that projecting an expression
-  // that is not a simple column or constant may include evaluation, but we 
-  // currently don't model it at that level of detail.  
-  public static final int PROJECT_CPU_COST = 4 * BASE_CPU_COST;       
+  // that is not a simple column or constant may include evaluation, but we
+  // currently don't model it at that level of detail.
+  public static final int PROJECT_CPU_COST = 4 * BASE_CPU_COST;
 
-  // hash cpu cost per field (for now we don't distinguish between fields of different types) involves 
-  // the cost of the following operations: 
+  // hash cpu cost per field (for now we don't distinguish between fields of different types) involves
+  // the cost of the following operations:
   // compute hash value, probe hash table, walk hash chain and compare with each element,
   // add to the end of hash chain if no match found
-  public static final int HASH_CPU_COST = 8 * BASE_CPU_COST;  
- 
+  public static final int HASH_CPU_COST = 8 * BASE_CPU_COST;
+
   public static final int RANGE_PARTITION_CPU_COST = 12 * BASE_CPU_COST;
-      
-  // cost of comparing one field with another (ignoring data types for now) 
-  public static final int COMPARE_CPU_COST = 4 * BASE_CPU_COST;   
+
+  // cost of comparing one field with another (ignoring data types for now)
+  public static final int COMPARE_CPU_COST = 4 * BASE_CPU_COST;
   public static final int AVG_FIELD_WIDTH = 8;
-  
-  /** For the costing formulas in computeSelfCost(), assume the following notations: 
-  * Let 
-  *   C = Cost per node. 
+
+  /** For the costing formulas in computeSelfCost(), assume the following notations:
+  * Let
+  *   C = Cost per node.
   *   k = number of fields on which to distribute on
-  *   h = CPU cost of computing hash value on 1 field 
+  *   h = CPU cost of computing hash value on 1 field
   *   s = CPU cost of Selection-Vector remover per row
   *   w = Network cost of sending 1 row to 1 destination
   *   c = CPU cost of comparing an incoming row with one on a heap of size N
   */
-  
+
   static final DrillCostBase INFINITY =
       new DrillCostBase(
           Double.POSITIVE_INFINITY,
           Double.POSITIVE_INFINITY,
-          Double.POSITIVE_INFINITY, 
+          Double.POSITIVE_INFINITY,
           Double.POSITIVE_INFINITY) {
+        @Override
         public String toString() {
           return "{inf}";
         }
       };
 
   static final DrillCostBase HUGE =
-      new DrillCostBase(Double.MAX_VALUE, 
-        Double.MAX_VALUE, 
-        Double.MAX_VALUE, 
+      new DrillCostBase(Double.MAX_VALUE,
+        Double.MAX_VALUE,
+        Double.MAX_VALUE,
         Double.MAX_VALUE) {
+        @Override
         public String toString() {
           return "{huge}";
         }
@@ -96,6 +98,7 @@ public class DrillCostBase implements DrillRelOptCost {
 
   static final DrillCostBase ZERO =
       new DrillCostBase(0.0, 0.0, 0.0, 0.0) {
+        @Override
         public String toString() {
           return "{0}";
         }
@@ -103,6 +106,7 @@ public class DrillCostBase implements DrillRelOptCost {
 
   static final DrillCostBase TINY =
       new DrillCostBase(1.0, 1.0, 0.0, 0.0) {
+        @Override
         public String toString() {
           return "{tiny}";
         }
@@ -126,25 +130,25 @@ public class DrillCostBase implements DrillRelOptCost {
     this.memory = memory;
   }
 
-	@Override
-	public double getRows() {
-		return rowCount;
-	}
+  @Override
+  public double getRows() {
+    return rowCount;
+  }
 
-	@Override
-	public double getCpu() {
-		return cpu;
-	}
+  @Override
+  public double getCpu() {
+    return cpu;
+  }
 
-	@Override
-	public double getIo() {
-		return io;
-	}
+  @Override
+  public double getIo() {
+    return io;
+  }
 
-	@Override
-	public double getNetwork() {
-		return network;
-	}
+  @Override
+  public double getNetwork() {
+    return network;
+  }
 
   public double getMemory() {
     return memory;
@@ -155,49 +159,49 @@ public class DrillCostBase implements DrillRelOptCost {
     return Util.hashCode(rowCount) + Util.hashCode(cpu) + Util.hashCode(io) + Util.hashCode(network);
   }
 
-	@Override
-	public boolean isInfinite() {
+  @Override
+  public boolean isInfinite() {
     return (this == INFINITY)
       || (this.cpu == Double.POSITIVE_INFINITY)
       || (this.io == Double.POSITIVE_INFINITY)
-      || (this.network == Double.POSITIVE_INFINITY) 
+      || (this.network == Double.POSITIVE_INFINITY)
       || (this.rowCount == Double.POSITIVE_INFINITY);
-	}
+  }
 
-	@Override
-	public boolean equals(RelOptCost other) {
-	  // here we compare the individual components similar to VolcanoCost, however
-	  // an alternative would be to add up the components and compare the total.
-	  // Note that VolcanoPlanner mainly uses isLe() and isLt() for cost comparisons, 
-	  // not equals(). 
+  @Override
+  public boolean equals(RelOptCost other) {
+    // here we compare the individual components similar to VolcanoCost, however
+    // an alternative would be to add up the components and compare the total.
+    // Note that VolcanoPlanner mainly uses isLe() and isLt() for cost comparisons,
+    // not equals().
     return this == other
       || (other instanceof DrillCostBase
           && (this.cpu == ((DrillCostBase) other).cpu)
           && (this.io == ((DrillCostBase) other).io)
           && (this.network == ((DrillCostBase) other).network)
           && (this.rowCount == ((DrillCostBase) other).rowCount));
-	}
+  }
 
-	@Override
-	public boolean isEqWithEpsilon(RelOptCost other) {
+  @Override
+  public boolean isEqWithEpsilon(RelOptCost other) {
     if (!(other instanceof DrillCostBase)) {
       return false;
     }
     DrillCostBase that = (DrillCostBase) other;
-    return (this == that) 
+    return (this == that)
       || ((Math.abs(this.cpu - that.cpu) < RelOptUtil.EPSILON)
           && (Math.abs(this.io - that.io) < RelOptUtil.EPSILON)
           && (Math.abs(this.network - that.network) < RelOptUtil.EPSILON)
           && (Math.abs(this.rowCount - that.rowCount) < RelOptUtil.EPSILON));
-	}
-	
+  }
+
   @Override
   public boolean isLe(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
- 
-    return this == that 
+
+    return this == that
       || ( (this.cpu + this.io + this.network) <=
-           (that.cpu + that.io + that.network) 
+           (that.cpu + that.io + that.network)
           && this.rowCount <= that.rowCount
          );
   }
@@ -206,14 +210,14 @@ public class DrillCostBase implements DrillRelOptCost {
   public boolean isLt(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
 
-     return ( (this.cpu + this.io + this.network) < 
-             (that.cpu + that.io + that.network) 
+     return ( (this.cpu + this.io + this.network) <
+             (that.cpu + that.io + that.network)
             && this.rowCount <= that.rowCount
            );
   }
-	
-	@Override
-	public RelOptCost plus(RelOptCost other) {
+
+  @Override
+  public RelOptCost plus(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
     if ((this == INFINITY) || (that == INFINITY)) {
       return INFINITY;
@@ -224,10 +228,10 @@ public class DrillCostBase implements DrillRelOptCost {
         this.io + that.io,
         this.network + that.network,
         this.memory + that.memory);
-	}
+  }
 
-	@Override
-	public RelOptCost minus(RelOptCost other) {
+  @Override
+  public RelOptCost minus(RelOptCost other) {
     if (this == INFINITY) {
       return this;
     }
@@ -238,18 +242,18 @@ public class DrillCostBase implements DrillRelOptCost {
         this.io - that.io,
         this.network - that.network,
         this.memory - that.memory);
-	}
+  }
 
-	@Override
-	public RelOptCost multiplyBy(double factor) {
+  @Override
+  public RelOptCost multiplyBy(double factor) {
     if (this == INFINITY) {
       return this;
     }
     return new DrillCostBase(rowCount * factor, cpu * factor, io * factor, network * factor);
-	}
+  }
 
-	@Override
-	public double divideBy(RelOptCost cost) {
+  @Override
+  public double divideBy(RelOptCost cost) {
     // Compute the geometric average of the ratios of all of the factors
     // which are non-zero and finite.
     DrillCostBase that = (DrillCostBase) cost;
@@ -288,12 +292,13 @@ public class DrillCostBase implements DrillRelOptCost {
       return 1.0;
     }
     return Math.pow(d, 1 / n);
-	}
+  }
 
+  @Override
   public String toString() {
     return "{" + rowCount + " rows, " + cpu + " cpu, " + io + " io, " + network + " network, " + memory + " memory}";
   }
-  
+
   public static class DrillCostFactory implements DrillRelOptCostFactory {
 
     public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork, double dMemory) {
@@ -303,11 +308,11 @@ public class DrillCostBase implements DrillRelOptCost {
     public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork) {
       return new DrillCostBase(dRows, dCpu, dIo, dNetwork, 0);
     }
-		
+
     public RelOptCost makeCost(double dRows, double dCpu, double dIo) {
       return new DrillCostBase(dRows, dCpu, dIo, 0, 0);
     }
-		
+
     public RelOptCost makeHugeCost() {
       return DrillCostBase.HUGE;
     }
@@ -323,6 +328,6 @@ public class DrillCostBase implements DrillRelOptCost {
     public RelOptCost makeZeroCost() {
       return DrillCostBase.ZERO;
     }
-  }	
-	
+  }
+
 }

@@ -66,10 +66,10 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private final AtomicIntegerArray remainingReceivers;
   private final AtomicInteger remaingReceiverCount;
   private volatile boolean done = false;
-  
+
   long minReceiverRecordCount = Long.MAX_VALUE;
   long maxReceiverRecordCount = Long.MIN_VALUE;
-  
+
   public enum Metric implements MetricDef {
     BATCHES_SENT,
     RECORDS_SENT,
@@ -249,7 +249,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
       }
     }
   }
-  
+
   public void stop() {
     logger.debug("Partition sender stopping.");
     ok = false;

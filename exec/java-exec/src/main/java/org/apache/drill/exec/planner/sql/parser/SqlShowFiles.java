@@ -44,7 +44,8 @@ public class SqlShowFiles extends DrillSqlCall {
   private final SqlIdentifier db;
 
   public static final SqlSpecialOperator OPERATOR =
-      new SqlSpecialOperator("SHOW_FILES", SqlKind.OTHER){
+      new SqlSpecialOperator("SHOW_FILES", SqlKind.OTHER) {
+    @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       return new SqlShowFiles(pos, (SqlIdentifier) operands[0]);
     }
@@ -69,12 +70,16 @@ public class SqlShowFiles extends DrillSqlCall {
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("SHOW");
     writer.keyword("FILES");
-    if (db != null) db.unparse(writer, leftPrec, rightPrec);
+    if (db != null) {
+      db.unparse(writer, leftPrec, rightPrec);
+    }
   }
 
   @Override
   public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
     return new ShowFileHandler(planner, context);
   }
+
   public SqlIdentifier getDb() { return db; }
+
 }

@@ -25,8 +25,6 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public abstract class StreamingAggTemplate implements StreamingAggregator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggregator.class);
@@ -62,7 +60,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
 
   private void allocateOutgoing() {
-    for(VectorWrapper<?> w : outgoing){
+    for (VectorWrapper<?> w : outgoing) {
       w.getValueVector().allocateNew();
     }
   }
@@ -77,7 +75,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     return outputCount;
   }
 
-  private AggOutcome tooBigFailure(){
+  private AggOutcome tooBigFailure() {
     context.fail(new Exception(TOO_BIG_ERROR));
     this.outcome = IterOutcome.STOP;
     return AggOutcome.CLEANUP_AND_RETURN;
@@ -89,11 +87,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
       outcome = IterOutcome.NONE;
       return AggOutcome.CLEANUP_AND_RETURN;
     }
-    try{ // outside loop to ensure that first is set to false after the first run.
+    try { // outside loop to ensure that first is set to false after the first run.
       outputCount = 0;
 
       // if we're in the first state, allocate outgoing.
-      if(first){
+      if (first) {
         allocateOutgoing();
       }
 
@@ -121,8 +119,10 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
       }
 
       // pick up a remainder batch if we have one.
-      if(remainderBatch != null){
-        if (!outputToBatch( previousIndex )) return tooBigFailure();
+      if (remainderBatch != null) {
+        if (!outputToBatch( previousIndex )) {
+          return tooBigFailure();
+        }
         remainderBatch.clear();
         remainderBatch = null;
         return setOkAndReturn();
@@ -133,38 +133,56 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
       if (pendingOutput) {
         allocateOutgoing();
         pendingOutput = false;
-        if(EXTRA_DEBUG) logger.debug("Attempting to output remainder.");
-        if (!outputToBatch( previousIndex)) return tooBigFailure();
+        if (EXTRA_DEBUG) {
+          logger.debug("Attempting to output remainder.");
+        }
+        if (!outputToBatch( previousIndex)) {
+          return tooBigFailure();
+        }
       }
 
-      if(newSchema){
+      if (newSchema) {
         return AggOutcome.UPDATE_AGGREGATOR;
       }
 
-      if(lastOutcome != null){
+      if (lastOutcome != null) {
         outcome = lastOutcome;
         return AggOutcome.CLEANUP_AND_RETURN;
       }
 
-      outside: while(true){
+      outside: while(true) {
       // loop through existing records, adding as necessary.
         for (; underlyingIndex < incoming.getRecordCount(); incIndex()) {
-          if(EXTRA_DEBUG) logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
+          if (EXTRA_DEBUG) {
+            logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
+          }
           if (previousIndex == -1) {
-            if (EXTRA_DEBUG) logger.debug("Adding the initial row's keys and values.");
+            if (EXTRA_DEBUG) {
+              logger.debug("Adding the initial row's keys and values.");
+            }
             addRecordInc(currentIndex);
           }
           else if (isSame( previousIndex, currentIndex )) {
-            if(EXTRA_DEBUG) logger.debug("Values were found the same, adding.");
+            if (EXTRA_DEBUG) {
+              logger.debug("Values were found the same, adding.");
+            }
             addRecordInc(currentIndex);
           } else {
-            if(EXTRA_DEBUG) logger.debug("Values were different, outputting previous batch.");
+            if (EXTRA_DEBUG) {
+              logger.debug("Values were different, outputting previous batch.");
+            }
             if (outputToBatch(previousIndex)) {
-              if(EXTRA_DEBUG) logger.debug("Output successful.");
+              if (EXTRA_DEBUG) {
+                logger.debug("Output successful.");
+              }
               addRecordInc(currentIndex);
             } else {
-              if(EXTRA_DEBUG) logger.debug("Output failed.");
-              if(outputCount == 0) return tooBigFailure();
+              if (EXTRA_DEBUG) {
+                logger.debug("Output failed.");
+              }
+              if (outputCount == 0) {
+                return tooBigFailure();
+              }
 
               // mark the pending output but move forward for the next cycle.
               pendingOutput = true;
@@ -180,23 +198,29 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
         InternalBatch previous = null;
 
-        try{
-          while(true){
+        try {
+          while (true) {
             if (previous != null) {
               previous.clear();
             }
             previous = new InternalBatch(incoming);
             IterOutcome out = outgoing.next(0, incoming);
-            if(EXTRA_DEBUG) logger.debug("Received IterOutcome of {}", out);
-            switch(out){
+            if (EXTRA_DEBUG) {
+              logger.debug("Received IterOutcome of {}", out);
+            }
+            switch (out) {
             case NONE:
               done = true;
               lastOutcome = out;
               if (first && addedRecordCount == 0) {
                 return setOkAndReturn();
-              } else if(addedRecordCount > 0){
-                if( !outputToBatchPrev( previous, previousIndex, outputCount) ) remainderBatch = previous;
-                if(EXTRA_DEBUG) logger.debug("Received no more batches, returning.");
+              } else if(addedRecordCount > 0) {
+                if ( !outputToBatchPrev( previous, previousIndex, outputCount) ) {
+                  remainderBatch = previous;
+                }
+                if (EXTRA_DEBUG) {
+                  logger.debug("Received no more batches, returning.");
+                }
                 return setOkAndReturn();
               }else{
                 if (first && out == IterOutcome.OK) {
@@ -206,17 +230,21 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                 return AggOutcome.CLEANUP_AND_RETURN;
               }
 
-
-
             case NOT_YET:
               this.outcome = out;
               return AggOutcome.RETURN_OUTCOME;
 
             case OK_NEW_SCHEMA:
-              if(EXTRA_DEBUG) logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
-              if(addedRecordCount > 0){
-                if( !outputToBatchPrev( previous, previousIndex, outputCount) ) remainderBatch = previous;
-                if(EXTRA_DEBUG) logger.debug("Wrote out end of previous batch, returning.");
+              if (EXTRA_DEBUG) {
+                logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
+              }
+              if (addedRecordCount > 0) {
+                if ( !outputToBatchPrev( previous, previousIndex, outputCount) ) {
+                  remainderBatch = previous;
+                }
+                if (EXTRA_DEBUG) {
+                  logger.debug("Wrote out end of previous batch, returning.");
+                }
                 newSchema = true;
                 return setOkAndReturn();
               }
@@ -224,21 +252,27 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               return AggOutcome.UPDATE_AGGREGATOR;
             case OK:
               resetIndex();
-              if(incoming.getRecordCount() == 0){
+              if (incoming.getRecordCount() == 0) {
                 continue;
-              }else{
-                if(previousIndex != -1 && isSamePrev(previousIndex , previous, currentIndex)){
-                  if(EXTRA_DEBUG) logger.debug("New value was same as last value of previous batch, adding.");
+              } else {
+                if (previousIndex != -1 && isSamePrev(previousIndex , previous, currentIndex)) {
+                  if (EXTRA_DEBUG) {
+                    logger.debug("New value was same as last value of previous batch, adding.");
+                  }
                   addRecordInc(currentIndex);
                   previousIndex = currentIndex;
                   incIndex();
-                  if(EXTRA_DEBUG) logger.debug("Continuing outside");
+                  if (EXTRA_DEBUG) {
+                    logger.debug("Continuing outside");
+                  }
                   continue outside;
-                }else{ // not the same
-                  if(EXTRA_DEBUG) logger.debug("This is not the same as the previous, add record and continue outside.");
+                } else { // not the same
+                  if (EXTRA_DEBUG) {
+                    logger.debug("This is not the same as the previous, add record and continue outside.");
+                  }
                   previousIndex = currentIndex;
-                  if(addedRecordCount > 0){
-                    if( !outputToBatchPrev( previous, previousIndex, outputCount) ){
+                  if (addedRecordCount > 0) {
+                    if ( !outputToBatchPrev( previous, previousIndex, outputCount) ) {
                       remainderBatch = previous;
                       return setOkAndReturn();
                     }
@@ -253,72 +287,78 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               return AggOutcome.CLEANUP_AND_RETURN;
             }
 
-
         }
-        }finally{
+        } finally {
           // make sure to clear previous if we haven't saved it.
-          if(remainderBatch == null && previous != null){
+          if (remainderBatch == null && previous != null) {
             previous.clear();
           }
         }
       }
-    }finally{
-      if(first) first = !first;
+    } finally {
+      if (first) {
+        first = !first;
+      }
     }
 
   }
 
-
-  private final void incIndex(){
+  private final void incIndex() {
     underlyingIndex++;
-    if(underlyingIndex >= incoming.getRecordCount()){
+    if (underlyingIndex >= incoming.getRecordCount()) {
       currentIndex = Integer.MAX_VALUE;
       return;
     }
     currentIndex = getVectorIndex(underlyingIndex);
   }
 
-  private final void resetIndex(){
+  private final void resetIndex() {
     underlyingIndex = -1;
     incIndex();
   }
 
-  private final AggOutcome setOkAndReturn(){
-    if(first){
+  private final AggOutcome setOkAndReturn() {
+    if (first) {
       this.outcome = IterOutcome.OK_NEW_SCHEMA;
-    }else{
+    } else {
       this.outcome = IterOutcome.OK;
     }
-    for(VectorWrapper<?> v : outgoing){
+    for (VectorWrapper<?> v : outgoing) {
       v.getValueVector().getMutator().setValueCount(outputCount);
     }
     return AggOutcome.RETURN_OUTCOME;
   }
 
-  private final boolean outputToBatch(int inIndex){
+  private final boolean outputToBatch(int inIndex) {
 
-    if(!outputRecordKeys(inIndex, outputCount)){
-      if(EXTRA_DEBUG) logger.debug("Failure while outputting keys {}", outputCount);
+    if (!outputRecordKeys(inIndex, outputCount)) {
+      if(EXTRA_DEBUG) {
+        logger.debug("Failure while outputting keys {}", outputCount);
+      }
       return false;
     }
 
-    if(!outputRecordValues(outputCount)){
-      if(EXTRA_DEBUG) logger.debug("Failure while outputting values {}", outputCount);
+    if (!outputRecordValues(outputCount)) {
+      if (EXTRA_DEBUG) {
+        logger.debug("Failure while outputting values {}", outputCount);
+      }
       return false;
     }
 
-    if(EXTRA_DEBUG) logger.debug("{} values output successfully", outputCount);
+    if (EXTRA_DEBUG) {
+      logger.debug("{} values output successfully", outputCount);
+    }
     resetValues();
     outputCount++;
     addedRecordCount = 0;
     return true;
   }
 
-  private final boolean outputToBatchPrev(InternalBatch b1, int inIndex, int outIndex){
+  private final boolean outputToBatchPrev(InternalBatch b1, int inIndex, int outIndex) {
     boolean success = outputRecordKeysPrev(b1, inIndex, outIndex) //
         && outputRecordValues(outIndex) //
         && resetValues();
-    if(success){
+    if (success) {
       resetValues();
       outputCount++;
       addedRecordCount = 0;
@@ -327,16 +367,17 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     return success;
   }
 
-  private void addRecordInc(int index){
+  private void addRecordInc(int index) {
     addRecord(index);
     this.addedRecordCount++;
   }
 
   @Override
-  public void cleanup(){
-    if(remainderBatch != null) remainderBatch.clear();
+  public void cleanup() {
+    if (remainderBatch != null) {
+      remainderBatch.clear();
+    }
   }
-
 
   public abstract void setupInterior(@Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
   public abstract boolean isSame(@Named("index1") int index1, @Named("index2") int index2);

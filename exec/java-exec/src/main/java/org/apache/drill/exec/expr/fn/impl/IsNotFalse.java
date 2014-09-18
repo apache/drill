@@ -37,10 +37,11 @@ public class IsNotFalse {
     public void setup(RecordBatch incoming) { }
 
     public void eval() {
-      if (in.isSet == 0)
+      if (in.isSet == 0) {
         out.value = 1;
-      else
+      } else {
         out.value = in.value;
+      }
     }
   }
 

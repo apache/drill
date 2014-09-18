@@ -21,7 +21,6 @@ import java.util.Arrays;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
@@ -37,15 +36,15 @@ public class TypedFieldId {
   final boolean isHyperReader;
   final PathSegment remainder;
 
-  public TypedFieldId(MajorType type, int... fieldIds){
+  public TypedFieldId(MajorType type, int... fieldIds) {
     this(type, type, type, false, null, fieldIds);
   }
 
-  public TypedFieldId(MajorType type, IntArrayList breadCrumb, PathSegment remainder){
+  public TypedFieldId(MajorType type, IntArrayList breadCrumb, PathSegment remainder) {
     this(type, type, type, false, remainder, breadCrumb.toArray());
   }
 
-  public TypedFieldId(MajorType type, boolean isHyper, int... fieldIds){
+  public TypedFieldId(MajorType type, boolean isHyper, int... fieldIds) {
     this(type, type, type, isHyper, null, fieldIds);
   }
 
@@ -59,35 +58,35 @@ public class TypedFieldId {
     this.remainder = remainder;
   }
 
-
-
-  public TypedFieldId cloneWithChild(int id){
+  public TypedFieldId cloneWithChild(int id) {
     int[] fieldIds = ArrayUtils.add(this.fieldIds, id);
     return new TypedFieldId(intermediateType, secondaryFinal, finalType, isHyperReader, remainder, fieldIds);
   }
 
-  public PathSegment getLastSegment(){
-    if(remainder == null) return null;
+  public PathSegment getLastSegment() {
+    if (remainder == null) {
+      return null;
+    }
     PathSegment seg = remainder;
-    while(seg.getChild() != null){
+    while (seg.getChild() != null) {
       seg = seg.getChild();
     }
     return seg;
   }
 
-  public TypedFieldId cloneWithRemainder(PathSegment remainder){
+  public TypedFieldId cloneWithRemainder(PathSegment remainder) {
     return new TypedFieldId(intermediateType, secondaryFinal, finalType, isHyperReader, remainder, fieldIds);
   }
 
-  public boolean hasRemainder(){
+  public boolean hasRemainder() {
     return remainder != null;
   }
 
-  public PathSegment getRemainder(){
+  public PathSegment getRemainder() {
     return remainder;
   }
 
-  public boolean isHyperReader(){
+  public boolean isHyperReader() {
     return isHyperReader;
   }
 
@@ -95,11 +94,11 @@ public class TypedFieldId {
     return intermediateType;
   }
 
-  public Class<? extends ValueVector> getIntermediateClass(){
+  public Class<? extends ValueVector> getIntermediateClass() {
     return (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(intermediateType.getMinorType(), intermediateType.getMode());
   }
 
-  public MajorType getFinalType(){
+  public MajorType getFinalType() {
     return finalType;
   }
 
@@ -107,13 +106,11 @@ public class TypedFieldId {
     return fieldIds;
   }
 
-
-
   public MajorType getSecondaryFinal() {
     return secondaryFinal;
   }
 
-  public static Builder newBuilder(){
+  public static Builder newBuilder() {
     return new Builder();
   }
 
@@ -126,27 +123,27 @@ public class TypedFieldId {
     boolean hyperReader = false;
     boolean withIndex = false;
 
-    public Builder addId(int id){
+    public Builder addId(int id) {
       ids.add(id);
       return this;
     }
 
-    public Builder withIndex(){
+    public Builder withIndex() {
       withIndex = true;
       return this;
     }
 
-    public Builder remainder(PathSegment remainder){
+    public Builder remainder(PathSegment remainder) {
       this.remainder = remainder;
       return this;
     }
 
-    public Builder hyper(){
+    public Builder hyper() {
       this.hyperReader = true;
       return this;
     }
 
-    public Builder finalType(MajorType finalType){
+    public Builder finalType(MajorType finalType) {
       this.finalType = finalType;
       return this;
     }
@@ -156,17 +153,21 @@ public class TypedFieldId {
       return this;
     }
 
-    public Builder intermediateType(MajorType intermediateType){
+    public Builder intermediateType(MajorType intermediateType) {
       this.intermediateType = intermediateType;
       return this;
     }
 
-    public TypedFieldId build(){
+    public TypedFieldId build() {
       Preconditions.checkNotNull(intermediateType);
       Preconditions.checkNotNull(finalType);
 
-      if(intermediateType == null) intermediateType = finalType;
-      if (secondaryFinal == null) secondaryFinal = finalType;
+      if (intermediateType == null) {
+        intermediateType = finalType;
+      }
+      if (secondaryFinal == null) {
+        secondaryFinal = finalType;
+      }
 
       MajorType actualFinalType = finalType;
       //MajorType secondaryFinal = finalType;
@@ -197,37 +198,50 @@ public class TypedFieldId {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     TypedFieldId other = (TypedFieldId) obj;
-    if (!Arrays.equals(fieldIds, other.fieldIds))
+    if (!Arrays.equals(fieldIds, other.fieldIds)) {
       return false;
+    }
     if (finalType == null) {
-      if (other.finalType != null)
+      if (other.finalType != null) {
         return false;
-    } else if (!finalType.equals(other.finalType))
+      }
+    } else if (!finalType.equals(other.finalType)) {
       return false;
+    }
     if (intermediateType == null) {
-      if (other.intermediateType != null)
+      if (other.intermediateType != null) {
         return false;
-    } else if (!intermediateType.equals(other.intermediateType))
+      }
+    } else if (!intermediateType.equals(other.intermediateType)) {
       return false;
-    if (isHyperReader != other.isHyperReader)
+    }
+    if (isHyperReader != other.isHyperReader) {
       return false;
+    }
     if (remainder == null) {
-      if (other.remainder != null)
+      if (other.remainder != null) {
         return false;
-    } else if (!remainder.equals(other.remainder))
+      }
+    } else if (!remainder.equals(other.remainder)) {
       return false;
+    }
     if (secondaryFinal == null) {
-      if (other.secondaryFinal != null)
+      if (other.secondaryFinal != null) {
         return false;
-    } else if (!secondaryFinal.equals(other.secondaryFinal))
+      }
+    } else if (!secondaryFinal.equals(other.secondaryFinal)) {
       return false;
+    }
     return true;
   }
 
@@ -238,7 +252,5 @@ public class TypedFieldId {
         + (fieldIds != null ? Arrays.toString(Arrays.copyOf(fieldIds, Math.min(fieldIds.length, maxLen))) : null)
         + ", remainder=" + remainder + "]";
   }
-
-
 
 }

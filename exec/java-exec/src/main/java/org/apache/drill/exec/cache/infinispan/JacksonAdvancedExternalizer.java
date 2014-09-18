@@ -23,13 +23,10 @@ import java.io.ObjectOutput;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.exec.cache.SerializationDefinition;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
 
 public class JacksonAdvancedExternalizer<T> implements AdvancedExternalizer<T>  {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JacksonAdvancedExternalizer.class);

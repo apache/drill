@@ -29,6 +29,7 @@ class VariableVectorAllocator extends VectorAllocator{
     this.out = out;
   }
 
+  @Override
   public void alloc(int recordCount){
     out.allocateNew(in.getByteCapacity(), recordCount);
   }

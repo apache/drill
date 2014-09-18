@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-
 import io.netty.buffer.ByteBuf;
+
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 
 public class StringFunctionUtil {
 
@@ -42,8 +42,9 @@ public class StringFunctionUtil {
   public static int getUTF8CharPosition(ByteBuf buffer, int start, int end, int charLength) {
     int charCount = 0;
 
-    if (start >= end)
+    if (start >= end) {
       return -1;  //wrong input here.
+    }
 
     for (int idx = start, charLen = 0; idx < end; idx += charLen) {
       charLen = utf8CharLen(buffer, idx);
@@ -60,8 +61,9 @@ public class StringFunctionUtil {
     for (int i = strStart; i <= strEnd - (subEnd - subStart); i++) {
       int j = subStart;
       for (; j< subEnd; j++) {
-        if (str.getByte(i + j - subStart) != substr.getByte(j))
+        if (str.getByte(i + j - subStart) != substr.getByte(j)) {
           break;
+        }
       }
 
       if (j == subEnd  && j!= subStart) {  // found a matched substr (non-empty) in str.
@@ -88,18 +90,19 @@ public class StringFunctionUtil {
   }
 
   public static int utf8CharLen(byte currentByte) {
-    if (currentByte >= 0){                 // 1-byte char. First byte is 0xxxxxxx.
-        return 1;
+    if (currentByte >= 0) {                 // 1-byte char. First byte is 0xxxxxxx.
+      return 1;
     }
-    else if ((currentByte & 0xE0) == 0xC0 ){   // 2-byte char. First byte is 110xxxxx
-        return 2;
+    else if ((currentByte & 0xE0) == 0xC0 ) {   // 2-byte char. First byte is 110xxxxx
+      return 2;
     }
-    else if ((currentByte & 0xF0) == 0xE0 ){   // 3-byte char. First byte is 1110xxxx
-        return 3;
+    else if ((currentByte & 0xF0) == 0xE0 ) {   // 3-byte char. First byte is 1110xxxx
+      return 3;
     }
-    else if ((currentByte & 0xF8) == 0xF0){    //4-byte char. First byte is 11110xxx
-        return 4;
+    else if ((currentByte & 0xF8) == 0xF0) {    //4-byte char. First byte is 11110xxx
+      return 4;
     }
     throw new DrillRuntimeException("Unexpected byte 0x" + Integer.toString((int)currentByte & 0xff, 16) + " encountered while decoding UTF8 string.");
   }
+
 }

@@ -17,7 +17,16 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import com.google.common.base.Preconditions;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
@@ -28,21 +37,12 @@ import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 public class ProfileWrapper {
 
@@ -528,6 +528,7 @@ public class ProfileWrapper {
       appendCell(Long.toString(l), link);
     }
 
+    @Override
     public String toString() {
       String rv;
       rv = sb.append("\n</table>").toString();

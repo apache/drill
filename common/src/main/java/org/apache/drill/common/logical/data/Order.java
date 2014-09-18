@@ -45,11 +45,11 @@ public class Order extends SingleInputOperator {
     this.orderings = orderings;
     this.within = within;
   }
-  
+
   public Ordering[] getOrderings() {
     return orderings;
   }
-  
+
   public FieldReference getWithin() {
     return within;
   }
@@ -70,7 +70,7 @@ public class Order extends SingleInputOperator {
     private final RelFieldCollation.Direction direction;
     private final LogicalExpression expr;
     private final RelFieldCollation.NullDirection nulls;
-    
+
     @JsonCreator
     public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("nullDirection") String nullCollation) {
       this.expr = expr;
@@ -83,7 +83,7 @@ public class Order extends SingleInputOperator {
       this.nulls = nullCollation;
       this.direction = direction;
     }
-    
+
     public Ordering(Direction direction, LogicalExpression e) {
       this(direction, e, NullDirection.FIRST);
     }
@@ -98,7 +98,7 @@ public class Order extends SingleInputOperator {
     }
 
     public String getOrder() {
-      
+
       switch(direction){
       case DESCENDING: return "DESC";
       default: return "ASC";
@@ -108,24 +108,24 @@ public class Order extends SingleInputOperator {
     public NullDirection getNullDirection() {
       return nulls;
     }
-    
-    
+
+
 
   }
-  
+
   public static Builder builder(){
     return new Builder();
   }
-  
+
   public static class Builder extends AbstractSingleBuilder<Order, Builder>{
     private List<Ordering> orderings = Lists.newArrayList();
     private FieldReference within;
-    
+
     public Builder setWithin(FieldReference within){
       this.within = within;
       return this;
     }
-    
+
     public Builder addOrdering(Direction direction, LogicalExpression e, NullDirection collation){
       orderings.add(new Ordering(direction, e, collation));
       return this;
@@ -135,14 +135,14 @@ public class Order extends SingleInputOperator {
     public Order internalBuild() {
       return new Order(within, orderings.toArray(new Ordering[orderings.size()]));
     }
-    
-    
+
+
   }
-  
+
   public static Direction getDirectionFromString(String direction){
     return "DESC".equalsIgnoreCase(direction) ? Direction.DESCENDING : Direction.ASCENDING;
   }
-  
+
   public static String getStringFromDirection(Direction direction){
     return direction == Direction.DESCENDING ? "DESC" : "ASC";
   }

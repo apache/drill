@@ -66,31 +66,32 @@ public final class JoinStatus {
     this.joinType = output.getJoinType();
   }
 
-  private final IterOutcome nextLeft(){
+  private final IterOutcome nextLeft() {
     return outputBatch.next(LEFT_INPUT, left);
   }
 
-  private final IterOutcome nextRight(){
+  private final IterOutcome nextRight() {
     return outputBatch.next(RIGHT_INPUT, right);
   }
 
-  public final void ensureInitial(){
-    if(!initialSet){
+  public final void ensureInitial() {
+    if(!initialSet) {
       this.lastLeft = nextLeft();
       this.lastRight = nextRight();
       initialSet = true;
     }
   }
 
-  public final void advanceLeft(){
+  public final void advanceLeft() {
     leftPosition++;
   }
 
-  public final void advanceRight(){
-    if (rightSourceMode == RightSourceMode.INCOMING)
+  public final void advanceRight() {
+    if (rightSourceMode == RightSourceMode.INCOMING) {
       rightPosition++;
-    else
+    } else {
       svRightPosition++;
+    }
   }
 
   public final int getLeftPosition() {
@@ -101,7 +102,7 @@ public final class JoinStatus {
     return (rightSourceMode == RightSourceMode.INCOMING) ? rightPosition : svRightPosition;
   }
 
-  public final int getRightCount(){
+  public final int getRightCount() {
     return right.getRecordCount();
   }
 
@@ -153,9 +154,10 @@ public final class JoinStatus {
    * Check if the left record position can advance by one.
    * Side effect: advances to next left batch if current left batch size is exceeded.
    */
-  public final boolean isLeftPositionAllowed(){
-    if (lastLeft == IterOutcome.NONE)
+  public final boolean isLeftPositionAllowed() {
+    if (lastLeft == IterOutcome.NONE) {
       return false;
+    }
     if (!isLeftPositionInCurrentBatch()) {
       leftPosition = 0;
       releaseData(left);
@@ -170,11 +172,13 @@ public final class JoinStatus {
    * Check if the right record position can advance by one.
    * Side effect: advances to next right batch if current right batch size is exceeded
    */
-  public final boolean isRightPositionAllowed(){
-    if (rightSourceMode == RightSourceMode.SV4)
+  public final boolean isRightPositionAllowed() {
+    if (rightSourceMode == RightSourceMode.SV4) {
       return svRightPosition < sv4.getCount();
-    if (lastRight == IterOutcome.NONE)
+    }
+    if (lastRight == IterOutcome.NONE) {
       return false;
+    }
     if (!isRightPositionInCurrentBatch()) {
       rightPosition = 0;
       releaseData(right);
@@ -185,11 +189,13 @@ public final class JoinStatus {
     return true;
   }
 
-  private void releaseData(RecordBatch b){
-    for(VectorWrapper<?> v : b){
+  private void releaseData(RecordBatch b) {
+    for (VectorWrapper<?> v : b) {
       v.clear();
     }
-    if(b.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) b.getSelectionVector2().clear();
+    if (b.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) {
+      b.getSelectionVector2().clear();
+    }
   }
 
   /**
@@ -220,29 +226,34 @@ public final class JoinStatus {
     return rightPosition + 1 < right.getRecordCount();
   }
 
-  public JoinOutcome getOutcome(){
-    if (!ok)
+  public JoinOutcome getOutcome() {
+    if (!ok) {
       return JoinOutcome.FAILURE;
+    }
     if (bothMatches(IterOutcome.NONE) ||
             (joinType == JoinRelType.INNER && eitherMatches(IterOutcome.NONE)) ||
             (joinType == JoinRelType.LEFT && lastLeft == IterOutcome.NONE) ||
-            (joinType == JoinRelType.RIGHT && lastRight == IterOutcome.NONE))
+            (joinType == JoinRelType.RIGHT && lastRight == IterOutcome.NONE)) {
       return JoinOutcome.NO_MORE_DATA;
+    }
     if (bothMatches(IterOutcome.OK) ||
-            (eitherMatches(IterOutcome.NONE) && eitherMatches(IterOutcome.OK)))
+            (eitherMatches(IterOutcome.NONE) && eitherMatches(IterOutcome.OK))) {
       return JoinOutcome.BATCH_RETURNED;
-    if (eitherMatches(IterOutcome.OK_NEW_SCHEMA))
+    }
+    if (eitherMatches(IterOutcome.OK_NEW_SCHEMA)) {
       return JoinOutcome.SCHEMA_CHANGED;
-    if (eitherMatches(IterOutcome.NOT_YET))
+    }
+    if (eitherMatches(IterOutcome.NOT_YET)) {
       return JoinOutcome.WAITING;
+    }
     return JoinOutcome.FAILURE;
   }
 
-  private boolean bothMatches(IterOutcome outcome){
+  private boolean bothMatches(IterOutcome outcome) {
     return lastLeft == outcome && lastRight == outcome;
   }
 
-  private boolean eitherMatches(IterOutcome outcome){
+  private boolean eitherMatches(IterOutcome outcome) {
     return lastLeft == outcome || lastRight == outcome;
   }
 

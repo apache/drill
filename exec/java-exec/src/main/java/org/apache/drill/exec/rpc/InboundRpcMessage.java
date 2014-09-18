@@ -27,22 +27,30 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 public class InboundRpcMessage extends RpcMessage{
   public ByteBuf pBody;
   public ByteBuf dBody;
-  
+
   public InboundRpcMessage(RpcMode mode, int rpcType, int coordinationId, ByteBuf pBody, ByteBuf dBody) {
     super(mode, rpcType, coordinationId);
     this.pBody = pBody;
     this.dBody = dBody;
   }
-  
-  public int getBodySize(){
+
+  @Override
+  public int getBodySize() {
     int len = pBody.capacity();
-    if(dBody != null) len += dBody.capacity();
+    if (dBody != null) {
+      len += dBody.capacity();
+    }
     return len;
   }
-  
-  void release(){
-    if (pBody != null) pBody.release();
-    if(dBody != null) dBody.release();
+
+  @Override
+  void release() {
+    if (pBody != null) {
+      pBody.release();
+    }
+    if (dBody != null) {
+      dBody.release();
+    }
   }
 
   @Override
@@ -50,8 +58,9 @@ public class InboundRpcMessage extends RpcMessage{
     return "InboundRpcMessage [pBody=" + pBody + ", mode=" + mode + ", rpcType=" + rpcType + ", coordinationId="
         + coordinationId + ", dBody=" + dBody + "]";
   }
-  
-  public InputStream getProtobufBodyAsIS(){
+
+  public InputStream getProtobufBodyAsIS() {
     return new ByteBufInputStream(pBody);
   }
+
 }

@@ -43,7 +43,7 @@ import org.apache.drill.exec.record.RecordBatch;
 public class StringFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctions.class);
 
-  private StringFunctions(){}
+  private StringFunctions() {}
 
   /*
    * String Function Implementation.
@@ -57,12 +57,12 @@ public class StringFunctions{
     @Output BitHolder out;
     @Workspace java.util.regex.Matcher matcher;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))).matcher("");
     }
 
-    public void eval(){
+    public void eval() {
       String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
       matcher.reset(i);
       out.value = matcher.matches()? 1:0;
@@ -76,12 +76,12 @@ public class StringFunctions{
     @Output BitHolder out;
     @Workspace java.util.regex.Matcher matcher;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
 
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))).matcher("");
     }
 
-    public void eval(){
+    public void eval() {
       String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
       matcher.reset(i);
       out.value = matcher.matches()? 1:0;
@@ -101,11 +101,11 @@ public class StringFunctions{
     @Workspace java.util.regex.Matcher matcher;
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
     }
 
-    public void eval(){
+    public void eval() {
 
       out.start = 0;
       String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
@@ -117,16 +117,15 @@ public class StringFunctions{
     }
   }
 
-
   @FunctionTemplate(names = {"char_length", "character_length", "length"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class CharLength implements DrillSimpleFunc{
 
     @Param  VarCharHolder input;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming){}
+    public void setup(RecordBatch incoming) {}
 
-    public void eval(){
+    public void eval() {
       out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(input.buffer, input.start, input.end);
     }
   }
@@ -137,9 +136,9 @@ public class StringFunctions{
     @Param  VarBinaryHolder input;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming){}
+    public void setup(RecordBatch incoming) {}
 
-    public void eval(){
+    public void eval() {
       out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(input.buffer, input.start, input.end);
     }
   }
@@ -150,9 +149,9 @@ public class StringFunctions{
     @Param  VarCharHolder input;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming){}
+    public void setup(RecordBatch incoming) {}
 
-    public void eval(){
+    public void eval() {
       out.value = input.end - input.start;
     }
   }
@@ -163,9 +162,9 @@ public class StringFunctions{
     @Param  VarCharHolder input;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming){}
+    public void setup(RecordBatch incoming) {}
 
-    public void eval(){
+    public void eval() {
       out.value = (input.end - input.start) * 8;
     }
   }
@@ -186,9 +185,9 @@ public class StringFunctions{
 
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming){}
+    public void setup(RecordBatch incoming) {}
 
-    public void eval(){
+    public void eval() {
       //Do string match.
       int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(str.buffer, str.start, str.end,
                                                                                           substr.buffer, substr.start, substr.end);
@@ -211,9 +210,9 @@ public class StringFunctions{
 
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming){}
+    public void setup(RecordBatch incoming) {}
 
-    public void eval(){
+    public void eval() {
       //Do string match.
       int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(str.buffer, str.start, str.end,
                                                                                           substr.buffer, substr.start, substr.end);
@@ -237,10 +236,10 @@ public class StringFunctions{
     @Output VarCharHolder out;
     @Inject DrillBuf buffer;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
-    public void eval(){
+    public void eval() {
       out.buffer = buffer = buffer.reallocIfNeeded(input.end- input.start);
       out.start = 0;
       out.end = input.end - input.start;
@@ -268,7 +267,7 @@ public class StringFunctions{
     @Output VarCharHolder out;
     @Inject DrillBuf buffer;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -380,7 +379,7 @@ public class StringFunctions{
     @Output VarCharHolder out;
     @Workspace ByteBuf buffer;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -415,7 +414,7 @@ public class StringFunctions{
     @Output VarCharHolder out;
     @Workspace ByteBuf buffer;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -457,7 +456,7 @@ public class StringFunctions{
     @Output VarCharHolder out;
     @Inject DrillBuf buffer;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -479,11 +478,11 @@ public class StringFunctions{
     @Inject DrillBuf buffer;
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
       buffer = buffer.reallocIfNeeded(8000);
     }
 
-    public void eval(){
+    public void eval() {
       out.buffer = buffer;
       out.start = out.end = 0;
       int fromL = from.end - from.start;
@@ -496,8 +495,9 @@ public class StringFunctions{
         for (; i<=text.end - fromL; ) {
           int j = from.start;
           for (; j<from.end; j++) {
-            if (text.buffer.getByte(i + j - from.start) != from.buffer.getByte(j))
+            if (text.buffer.getByte(i + j - from.start) != from.buffer.getByte(j)) {
               break;
+            }
           }
 
           if (j == from.end ) {
@@ -544,7 +544,7 @@ public class StringFunctions{
 
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -579,8 +579,9 @@ public class StringFunctions{
 
         while (count < length.value - textCharCount) {
           for (id = fill.start; id < fill.end; id++) {
-            if (count == length.value - textCharCount)
+            if (count == length.value - textCharCount) {
               break;
+            }
 
             currentByte = fill.buffer.getByte(id);
             if (currentByte < 0x128  ||           // 1-byte char. First byte is 0xxxxxxx.
@@ -594,8 +595,9 @@ public class StringFunctions{
         } // end of while
 
         //copy "text" into "out"
-        for (id = text.start; id < text.end; id++)
+        for (id = text.start; id < text.end; id++) {
           out.buffer.setByte(out.end++, text.buffer.getByte(id));
+        }
       }
     } // end of eval
 
@@ -615,7 +617,7 @@ public class StringFunctions{
 
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -648,16 +650,18 @@ public class StringFunctions{
         out.buffer = buffer;
         out.start = out.end = 0;
 
-        for (id = text.start; id < text.end; id++)
+        for (id = text.start; id < text.end; id++) {
           out.buffer.setByte(out.end++, text.buffer.getByte(id));
+        }
 
         //copy "fill" on right. Total # of char to copy : length.value - textCharCount
         int count = 0;
 
         while (count < length.value - textCharCount) {
           for (id = fill.start; id < fill.end; id++) {
-            if (count == length.value - textCharCount)
+            if (count == length.value - textCharCount) {
               break;
+            }
 
             currentByte = fill.buffer.getByte(id);
             if (currentByte < 0x128  ||           // 1-byte char. First byte is 0xxxxxxx.
@@ -686,7 +690,7 @@ public class StringFunctions{
 
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -719,7 +723,7 @@ public class StringFunctions{
 
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -729,7 +733,9 @@ public class StringFunctions{
       int bytePerChar = 0;
       //Scan from right of "text", stop until find a char not in "from"
       for (int id = text.end - 1; id >= text.start; id -= bytePerChar) {
-        while ((text.buffer.getByte(id) & 0xC0) == 0x80 && id >= text.start) id--;
+        while ((text.buffer.getByte(id) & 0xC0) == 0x80 && id >= text.start) {
+          id--;
+        }
         bytePerChar = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(text.buffer, id);
         int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(from.buffer, from.start, from.end,
                                                                                             text.buffer, id, id + bytePerChar);
@@ -752,7 +758,7 @@ public class StringFunctions{
 
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
@@ -773,7 +779,9 @@ public class StringFunctions{
 
       //Scan from right of "text", stop until find a char not in "from"
       for (int id = text.end - 1; id >= text.start; id -= bytePerChar) {
-        while ((text.buffer.getByte(id) & 0xC0) == 0x80 && id >= text.start) id--;
+        while ((text.buffer.getByte(id) & 0xC0) == 0x80 && id >= text.start) {
+          id--;
+        }
         bytePerChar = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(text.buffer, id);
         int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(from.buffer, from.start, from.end,
                                                                                             text.buffer, id, id + bytePerChar);
@@ -796,19 +804,21 @@ public class StringFunctions{
     @Inject DrillBuf buffer;
 
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
-    public void eval(){
+    public void eval() {
       out.buffer = buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
       int id = 0;
-      for (id = left.start; id < left.end; id++)
+      for (id = left.start; id < left.end; id++) {
         out.buffer.setByte(out.end++, left.buffer.getByte(id));
+      }
 
-      for (id = right.start; id < right.end; id++)
+      for (id = right.start; id < right.end; id++) {
         out.buffer.setByte(out.end++, right.buffer.getByte(id));
+      }
     }
 
   }
@@ -822,20 +832,22 @@ public class StringFunctions{
     @Inject DrillBuf buffer;
 
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
-    public void eval(){
+    public void eval() {
       out.buffer = buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));;
       out.start = out.end = 0;
 
       int id = 0;
-      for (id = left.start; id < left.end; id++)
+      for (id = left.start; id < left.end; id++) {
         out.buffer.setByte(out.end++, left.buffer.getByte(id));
+      }
 
       if (right.isSet == 1) {
-       for (id = right.start; id < right.end; id++)
-         out.buffer.setByte(out.end++, right.buffer.getByte(id));
+       for (id = right.start; id < right.end; id++) {
+        out.buffer.setByte(out.end++, right.buffer.getByte(id));
+      }
       }
     }
   }
@@ -849,21 +861,23 @@ public class StringFunctions{
     @Inject DrillBuf buffer;
 
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
-    public void eval(){
+    public void eval() {
       out.buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
       int id = 0;
       if (left.isSet == 1) {
-        for (id = left.start; id < left.end; id++)
+        for (id = left.start; id < left.end; id++) {
           out.buffer.setByte(out.end++, left.buffer.getByte(id));
+        }
       }
 
-       for (id = right.start; id < right.end; id++)
-         out.buffer.setByte(out.end++, right.buffer.getByte(id));
+      for (id = right.start; id < right.end; id++) {
+        out.buffer.setByte(out.end++, right.buffer.getByte(id));
+      }
     }
   }
 
@@ -876,22 +890,24 @@ public class StringFunctions{
     @Inject DrillBuf buffer;
 
 
-    public void setup(RecordBatch incoming){
+    public void setup(RecordBatch incoming) {
     }
 
-    public void eval(){
+    public void eval() {
       out.buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
       int id = 0;
       if (left.isSet == 1) {
-        for (id = left.start; id < left.end; id++)
+        for (id = left.start; id < left.end; id++) {
           out.buffer.setByte(out.end++, left.buffer.getByte(id));
+        }
       }
 
       if (right.isSet == 1) {
-       for (id = right.start; id < right.end; id++)
-         out.buffer.setByte(out.end++, right.buffer.getByte(id));
+        for (id = right.start; id < right.end; id++) {
+          out.buffer.setByte(out.end++, right.buffer.getByte(id));
+        }
       }
     }
   }
@@ -974,7 +990,7 @@ public class StringFunctions{
       System.out.println(len + ":" + num);
       out.start = 0;
       out.buffer = buffer = buffer.reallocIfNeeded( len * num );
-      for(int i =0; i < num; i++){
+      for (int i =0; i < num; i++) {
         in.buffer.getBytes(in.start, out.buffer, i * len, len);
       }
       out.end = len * num;
@@ -1001,8 +1017,8 @@ public class StringFunctions{
     public void eval() {
       byte[] bytea = new byte[in.end - in.start];
       int index =0;
-      for(int i = in.start; i<in.end; i++, index++){
-      bytea[index]=in.buffer.getByte(i);
+      for (int i = in.start; i<in.end; i++, index++) {
+        bytea[index]=in.buffer.getByte(i);
       }
       byte[] outBytea = new String(bytea, inCharset).getBytes(com.google.common.base.Charsets.UTF_8);
       out.buffer = buffer = buffer.reallocIfNeeded(outBytea.length);
@@ -1035,10 +1051,10 @@ public class StringFunctions{
       int index = in.end;
       int innerindex = 0;
 
-      for (int id = in.start; id < in.end; id+=charlen){
+      for (int id = in.start; id < in.end; id+=charlen) {
         innerindex = charlen = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(in.buffer, id);
 
-        while(innerindex > 0){
+        while (innerindex > 0) {
           out.buffer.setByte(index - innerindex, in.buffer.getByte(id + (charlen - innerindex)));
           innerindex-- ;
         }
@@ -1047,4 +1063,5 @@ public class StringFunctions{
       }
     }
   }
+
 }

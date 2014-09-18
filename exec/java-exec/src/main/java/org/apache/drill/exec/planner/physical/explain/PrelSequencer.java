@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Queue;
 
 import org.apache.drill.exec.planner.physical.ExchangePrel;
-import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.BasePrelVisitor;
 import org.eigenbase.rel.RelWriter;
@@ -34,12 +33,11 @@ import org.eigenbase.sql.SqlExplainLevel;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, RuntimeException>{
+public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, RuntimeException> {
 
   private List<Frag> frags = Lists.newLinkedList();
 
-
-  public static String printWithIds(final Prel rel, SqlExplainLevel explainlevel){
+  public static String printWithIds(final Prel rel, SqlExplainLevel explainlevel) {
       if (rel == null) {
         return null;
       }
@@ -50,13 +48,12 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
 
   }
 
-  public static Map<Prel, OpId> getIdMap(Prel rel){
+  public static Map<Prel, OpId> getIdMap(Prel rel) {
     PrelSequencer s = new PrelSequencer();
     return s.go(rel);
   }
 
-
-  static class Frag implements Iterable<Frag>{
+  static class Frag implements Iterable<Frag> {
     Prel root;
     int majorFragmentId;
     final List<Frag> children = Lists.newArrayList();
@@ -82,25 +79,33 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       Frag other = (Frag) obj;
       if (children == null) {
-        if (other.children != null)
+        if (other.children != null) {
           return false;
-      } else if (!children.equals(other.children))
+        }
+      } else if (!children.equals(other.children)) {
         return false;
-      if (majorFragmentId != other.majorFragmentId)
+      }
+      if (majorFragmentId != other.majorFragmentId) {
         return false;
+      }
       if (root == null) {
-        if (other.root != null)
+        if (other.root != null) {
           return false;
-      } else if (!root.equals(other.root))
+        }
+      } else if (!root.equals(other.root)) {
         return false;
+      }
       return true;
     }
 
@@ -110,7 +115,6 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
       return "Frag [root=" + root + ", majorFragmentId=" + majorFragmentId + ", children="
           + (children != null ? children.subList(0, Math.min(children.size(), maxLen)) : null) + "]";
     }
-
 
   }
 
@@ -123,7 +127,6 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
       this.opId = opId;
     }
 
-
     public int getFragmentId() {
       return fragmentId;
     }
@@ -133,7 +136,7 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
       return opId;
     }
 
-    public int getAsSingleInt(){
+    public int getAsSingleInt() {
       return (fragmentId << 16) + opId;
     }
 
@@ -145,30 +148,36 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
       result = prime * result + opId;
       return result;
     }
+
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       OpId other = (OpId) obj;
-      if (fragmentId != other.fragmentId)
+      if (fragmentId != other.fragmentId) {
         return false;
-      if (opId != other.opId)
+      }
+      if (opId != other.opId) {
         return false;
+      }
       return true;
     }
+
     @Override
     public String toString() {
       return fragmentId + ":*:" + opId;
     }
 
-
   }
 
-  public Map<Prel, OpId> go(Prel root){
+  public Map<Prel, OpId> go(Prel root) {
 
     // get fragments.
     Frag rootFrag = new Frag(root);
@@ -180,12 +189,12 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
 
     q.add(rootFrag);
     int majorFragmentId = 0;
-    while(!q.isEmpty()){
+    while (!q.isEmpty()) {
       Frag frag = q.remove();
 
       frag.majorFragmentId = majorFragmentId++;
 
-      for(Frag child : frag){
+      for (Frag child : frag) {
         q.add(child);
       }
     }
@@ -194,22 +203,21 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
     Map<Prel, OpId> ids = Maps.newIdentityHashMap();
 
     ids.put(rootFrag.root, new OpId(0, 0));
-    for(Frag f : frags){
+    for (Frag f : frags) {
       int id = 1;
       Queue<Prel> ops = Lists.newLinkedList();
       ops.add(f.root);
-      while(!ops.isEmpty()){
+      while (!ops.isEmpty()) {
         Prel p = ops.remove();
         boolean isExchange = p instanceof ExchangePrel;
 
-        if(p != f.root){      // we account for exchanges as receviers to guarantee unique identifiers.
+        if (p != f.root) {      // we account for exchanges as receviers to guarantee unique identifiers.
           ids.put(p, new OpId(f.majorFragmentId, id++) );
         }
 
-
-        if(!isExchange || p == f.root){
+        if (!isExchange || p == f.root) {
           List<Prel> children = Lists.reverse(Lists.newArrayList(p.iterator()));
-          for(Prel child : children){
+          for (Prel child : children) {
             ops.add(child);
           }
         }
@@ -218,16 +226,14 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
 
 
     return ids;
-
   }
-
 
   @Override
   public Void visitExchange(ExchangePrel prel, Frag value) throws RuntimeException {
     Frag newFrag = new Frag(prel);
     frags.add(newFrag);
     value.children.add(newFrag);
-    for(Prel child : prel){
+    for (Prel child : prel) {
       child.accept(this, newFrag);
     }
 
@@ -236,14 +242,10 @@ public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, Run
 
   @Override
   public Void visitPrel(Prel prel, Frag value) throws RuntimeException {
-    for(Prel children : prel){
+    for (Prel children : prel) {
       children.accept(this, value);
     }
     return null;
   }
-
-
-
-
 
 }

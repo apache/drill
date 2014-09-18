@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.cache;
 
-import java.util.Map;
-
 import org.apache.drill.exec.exception.DrillbitStartupException;
 
 import com.google.protobuf.Message;
-
 
 public interface DistributedCache extends AutoCloseable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedCache.class);
@@ -40,13 +37,15 @@ public interface DistributedCache extends AutoCloseable{
     PROTOBUF(String.class, Message.class);
 
     private final Class<?>[] classes;
-    private SerializationMode(Class<?>... classes){
+    private SerializationMode(Class<?>... classes) {
       this.classes = classes;
     }
 
-    public void checkClass(Class<?> classToCheck){
-      for(Class<?> c : classes){
-        if(c.isAssignableFrom(classToCheck)) return;
+    public void checkClass(Class<?> classToCheck) {
+      for(Class<?> c : classes) {
+        if(c.isAssignableFrom(classToCheck)) {
+          return;
+        }
       }
 
       throw new UnsupportedOperationException(String.format("You are trying to serialize the class %s using the serialization mode %s.  This is not allowed.", classToCheck.getName(), this.name()));
@@ -104,33 +103,42 @@ public interface DistributedCache extends AutoCloseable{
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       CacheConfig other = (CacheConfig) obj;
       if (keyClass == null) {
-        if (other.keyClass != null)
+        if (other.keyClass != null) {
           return false;
-      } else if (!keyClass.equals(other.keyClass))
+        }
+      } else if (!keyClass.equals(other.keyClass)) {
         return false;
-      if (mode != other.mode)
+      }
+      if (mode != other.mode) {
         return false;
+      }
       if (name == null) {
-        if (other.name != null)
+        if (other.name != null) {
           return false;
-      } else if (!name.equals(other.name))
+        }
+      } else if (!name.equals(other.name)) {
         return false;
+      }
       if (valueClass == null) {
-        if (other.valueClass != null)
+        if (other.valueClass != null) {
           return false;
-      } else if (!valueClass.equals(other.valueClass))
+        }
+      } else if (!valueClass.equals(other.valueClass)) {
         return false;
+      }
       return true;
     }
-
 
   }
 
@@ -147,40 +155,38 @@ public interface DistributedCache extends AutoCloseable{
       this.name = keyClass.getName();
     }
 
-
-    public CacheConfigBuilder<K, V> mode(SerializationMode mode){
+    public CacheConfigBuilder<K, V> mode(SerializationMode mode) {
       this.mode = mode;
       return this;
     }
 
-    public CacheConfigBuilder<K, V> proto(){
+    public CacheConfigBuilder<K, V> proto() {
       this.mode = SerializationMode.PROTOBUF;
       return this;
     }
 
-    public CacheConfigBuilder<K, V> jackson(){
+    public CacheConfigBuilder<K, V> jackson() {
       this.mode = SerializationMode.JACKSON;
       return this;
     }
 
-    public CacheConfigBuilder<K, V> drill(){
+    public CacheConfigBuilder<K, V> drill() {
       this.mode = SerializationMode.DRILL_SERIALIZIABLE;
       return this;
     }
 
 
-    public CacheConfigBuilder<K, V> name(String name){
+    public CacheConfigBuilder<K, V> name(String name) {
       this.name = name;
       return this;
     }
 
-    public CacheConfig<K, V> build(){
+    public CacheConfig<K, V> build() {
       mode.checkClass(keyClass);
       mode.checkClass(valueClass);
       return new CacheConfig<K, V>(keyClass, valueClass, name, mode);
     }
 
-
-
   }
+
 }

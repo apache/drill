@@ -22,33 +22,35 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.DrillFunc;
-
-import com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 import org.eigenbase.sql.SqlOperator;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Sets;
 
 public class DrillFunctionRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFunctionRegistry.class);
 
   private ArrayListMultimap<String, DrillFuncHolder> methods = ArrayListMultimap.create();
 
-  public DrillFunctionRegistry(DrillConfig config){
+  public DrillFunctionRegistry(DrillConfig config) {
     FunctionConverter converter = new FunctionConverter();
     Set<Class<? extends DrillFunc>> providerClasses = PathScanner.scanForImplementations(DrillFunc.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
     for (Class<? extends DrillFunc> clazz : providerClasses) {
       DrillFuncHolder holder = converter.getHolder(clazz);
-      if(holder != null){
+      if (holder != null) {
         // register handle for each name the function can be referred to
         String[] names = holder.getRegisteredNames();
-        for(String name : names) methods.put(name.toLowerCase(), holder);
-      }else{
+        for (String name : names) {
+          methods.put(name.toLowerCase(), holder);
+        }
+      } else {
         logger.warn("Unable to initialize function for class {}", clazz.getName());
       }
     }
@@ -83,4 +85,5 @@ public class DrillFunctionRegistry {
       }
     }
   }
+
 }

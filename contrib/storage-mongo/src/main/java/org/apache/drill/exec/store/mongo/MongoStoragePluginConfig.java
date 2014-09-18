@@ -29,14 +29,14 @@ import com.mongodb.MongoClientURI;
 @JsonTypeName(MongoStoragePluginConfig.NAME)
 public class MongoStoragePluginConfig extends StoragePluginConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoStoragePluginConfig.class);
-  
+
   public static final String NAME = "mongo";
-  
+
   private String connection;
-  
+
   @JsonIgnore
-  private MongoClientURI clientURI; 
-  
+  private MongoClientURI clientURI;
+
   @JsonCreator
   public MongoStoragePluginConfig(@JsonProperty("connection") String connection) {
     this.connection = connection;
@@ -54,18 +54,18 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
     return this.connection.equals(thatConfig.connection);
 
   }
-  
+
   @Override
   public int hashCode() {
     return this.connection != null ? this.connection.hashCode() : 0;
   }
-  
+
   @JsonIgnore
   public MongoClientOptions getMongoOptions() {
     MongoClientURI clientURI = new MongoClientURI(connection);
     return clientURI.getOptions();
   }
-  
+
   public String getConnection() {
     return connection;
   }

@@ -22,14 +22,14 @@ public class ReadEntryWithPath {
 
   protected String path;
 
-  
+
   public ReadEntryWithPath(String path) {
     super();
     this.path = path;
   }
 
   public ReadEntryWithPath(){}
-  
+
   public String getPath(){
    return path;
   }

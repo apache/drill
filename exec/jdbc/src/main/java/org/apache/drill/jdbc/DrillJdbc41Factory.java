@@ -52,6 +52,7 @@ public class DrillJdbc41Factory extends DrillFactory {
     super(major, minor);
   }
 
+  @Override
   public DrillJdbc41Connection newDrillConnection(Driver driver, DrillFactory factory, String url, Properties info)  throws SQLException{
     return new DrillJdbc41Connection((Driver) driver, factory, url, info);
   }

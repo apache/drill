@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
@@ -24,8 +26,6 @@ import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.exec.work.batch.RawBatchBuffer;
-
-import java.util.List;
 
 public class MergingReceiverCreator implements BatchCreator<MergingReceiverPOP> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergingReceiverCreator.class);
@@ -44,6 +44,6 @@ public class MergingReceiverCreator implements BatchCreator<MergingReceiverPOP> 
 
     return new MergingRecordBatch(context, receiver, buffers);
   }
-  
-  
+
+
 }

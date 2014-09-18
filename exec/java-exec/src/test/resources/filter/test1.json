@@ -6,17 +6,17 @@
             type:"manual"
         }
     },
-	graph:[
+    graph:[
         {
             @id:1,
             pop:"mock-sub-scan",
             url: "http://apache.org",
             entries:[
-            	{records: 100, types: [
-            	  {name: "blue", type: "INT", mode: "REQUIRED"},
-            	  {name: "red", type: "BIGINT", mode: "REQUIRED"},
-            	  {name: "green", type: "INT", mode: "REQUIRED"}
-            	]}
+                {records: 100, types: [
+                  {name: "blue", type: "INT", mode: "REQUIRED"},
+                  {name: "red", type: "BIGINT", mode: "REQUIRED"},
+                  {name: "green", type: "INT", mode: "REQUIRED"}
+                ]}
             ]
         },
         {
@@ -29,7 +29,7 @@
           @id:4,
           child:2,
           pop: "selection-vector-remover"
-          
+
         },
         {
             @id: 3,

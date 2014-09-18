@@ -43,27 +43,27 @@ public class UnionAllPrule extends Prule {
   @Override
   public boolean matches(RelOptRuleCall call) {
     DrillUnionRel union = (DrillUnionRel) call.rel(0);
-    return (! union.isDistinct()); 
+    return (! union.isDistinct());
   }
-  
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillUnionRel union = (DrillUnionRel) call.rel(0);
     final List<RelNode> inputs = union.getInputs();
     List<RelNode> convertedInputList = Lists.newArrayList();
     RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
-    
+
     try {
       for (int i = 0; i < inputs.size(); i++) {
         RelNode convertedInput = convert(inputs.get(i), PrelUtil.fixTraits(call, traits));
-        convertedInputList.add(convertedInput);    
+        convertedInputList.add(convertedInput);
       }
-      
+
       traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
       UnionAllPrel unionAll = new UnionAllPrel(union.getCluster(), traits, convertedInputList);
 
       call.transformTo(unionAll);
-      
+
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }

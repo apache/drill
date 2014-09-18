@@ -93,7 +93,7 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     public T visitGroupingAggregate(GroupingAggregate groupBy, X value) throws E {
       return visitOp(groupBy, value);
     }
-    
+
     @Override
     public T visitSequence(Sequence sequence, X value) throws E {
         return visitOp(sequence, value);

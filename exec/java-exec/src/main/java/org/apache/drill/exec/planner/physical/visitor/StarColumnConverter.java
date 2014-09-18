@@ -44,7 +44,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
 
   private static final AtomicLong tableNumber = new AtomicLong(0);
 
-  public static Prel insertRenameProject(Prel root, RelDataType origRowType){
+  public static Prel insertRenameProject(Prel root, RelDataType origRowType) {
     // Insert top project to do rename only when : 1) there is a join
     // 2) there is a SCAN with * column.  We pass two boolean to keep track of
     // these two conditions.
@@ -82,7 +82,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
   @Override
   public Prel visitPrel(Prel prel, boolean [] renamedForStar) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
-    for(Prel child : prel){
+    for (Prel child : prel) {
       child = child.accept(this, renamedForStar);
       children.add(child);
     }
@@ -171,8 +171,9 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
       if (uniqueNames.contains(s)) {
         for (int i = 0; ; i++ ) {
           s = s + i;
-          if (! origNames.contains(s) && ! uniqueNames.contains(s))
+          if (! origNames.contains(s) && ! uniqueNames.contains(s)) {
             break;
+          }
         }
       }
       uniqueNames.add(s);

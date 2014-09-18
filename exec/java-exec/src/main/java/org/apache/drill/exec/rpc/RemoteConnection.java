@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.rpc;
 
-import java.util.concurrent.ExecutionException;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+
+import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;

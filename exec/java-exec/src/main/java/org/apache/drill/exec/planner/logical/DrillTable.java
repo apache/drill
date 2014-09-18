@@ -31,43 +31,42 @@ import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 
+public abstract class DrillTable implements Table {
 
-public abstract class DrillTable implements Table{
-  
-  private final String storageEngineName;  
+  private final String storageEngineName;
   public final StoragePluginConfig storageEngineConfig;
   private Object selection;
   private StoragePlugin plugin;
-  private GroupScan scan; 
-  
+  private GroupScan scan;
+
   /** Creates a DrillTable. */
   public DrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
     this.selection = selection;
     this.plugin = plugin;
-    
+
     this.storageEngineConfig = plugin.getConfig();
     this.storageEngineName = storageEngineName;
   }
 
   public GroupScan getGroupScan() throws IOException{
-    if(scan == null){
+    if (scan == null) {
       this.scan = plugin.getPhysicalScan(new JSONOptions(selection));
     }
     return scan;
   }
-  
-  public StoragePluginConfig getStorageEngineConfig(){
+
+  public StoragePluginConfig getStorageEngineConfig() {
     return storageEngineConfig;
   }
-  
-  public StoragePlugin getPlugin(){
+
+  public StoragePlugin getPlugin() {
     return plugin;
   }
-    
+
   public Object getSelection() {
     return selection;
   }
-  
+
   public String getStorageEngineName() {
     return storageEngineName;
   }
@@ -100,31 +99,38 @@ public abstract class DrillTable implements Table{
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     DrillTable other = (DrillTable) obj;
     if (selection == null) {
-      if (other.selection != null)
+      if (other.selection != null) {
         return false;
-    } else if (!selection.equals(other.selection))
+      }
+    } else if (!selection.equals(other.selection)) {
       return false;
+    }
     if (storageEngineConfig == null) {
-      if (other.storageEngineConfig != null)
+      if (other.storageEngineConfig != null) {
         return false;
-    } else if (!storageEngineConfig.equals(other.storageEngineConfig))
+      }
+    } else if (!storageEngineConfig.equals(other.storageEngineConfig)) {
       return false;
+    }
     if (storageEngineName == null) {
-      if (other.storageEngineName != null)
+      if (other.storageEngineName != null) {
         return false;
-    } else if (!storageEngineName.equals(other.storageEngineName))
+      }
+    } else if (!storageEngineName.equals(other.storageEngineName)) {
       return false;
+    }
     return true;
   }
 
-  
-  
 }

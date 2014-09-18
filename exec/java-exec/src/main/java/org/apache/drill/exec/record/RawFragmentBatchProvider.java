@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.record;
 
-import org.apache.drill.exec.ops.FragmentContext;
-
 import java.io.IOException;
 
+import org.apache.drill.exec.ops.FragmentContext;
+
 public interface RawFragmentBatchProvider {
-  
+
   public RawFragmentBatch getNext() throws IOException;
   public void kill(FragmentContext context);
   public void cleanup();

@@ -24,10 +24,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PartitionRange {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionRange.class);
-  
+
   private LogicalExpression start;
   private LogicalExpression finish;
-  
+
   @JsonCreator
   public PartitionRange(@JsonProperty("start") LogicalExpression start, @JsonProperty("finish") LogicalExpression finish) {
     super();
@@ -42,6 +42,6 @@ public class PartitionRange {
   public LogicalExpression getFinish() {
     return finish;
   }
-  
-  
+
+
 }

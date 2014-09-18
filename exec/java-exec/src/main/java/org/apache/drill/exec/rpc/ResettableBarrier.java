@@ -37,20 +37,23 @@ public class ResettableBarrier {
       setState(1);
     }
 
+    @Override
     protected int tryAcquireShared(int acquires) {
       assert acquires == 1;
       return (getState() == 0) ? 1 : -1;
     }
 
+    @Override
     protected boolean tryReleaseShared(int releases) {
       assert releases == 1;
 
       while(true) {
         int c = getState();
-        if (c == 0)
+        if (c == 0) {
           return false;
+        }
         int nextc = c - 1;
-        if (compareAndSetState(c, nextc)){
+        if (compareAndSetState(c, nextc)) {
           return nextc == 0;
         }
       }
@@ -76,8 +79,8 @@ public class ResettableBarrier {
 //    logger.debug("opening barrier.");
     sync.releaseShared(1);
   }
-  
-  public void closeBarrier(){
+
+  public void closeBarrier() {
 //    logger.debug("closing barrier.");
     sync.reset();
   }

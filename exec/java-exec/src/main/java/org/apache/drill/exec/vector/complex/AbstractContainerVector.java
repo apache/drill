@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.vector.complex;
 
+import java.util.List;
+
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.vector.ValueVector;
-
-import java.util.List;
 
 public abstract class AbstractContainerVector implements ValueVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
@@ -33,10 +33,10 @@ public abstract class AbstractContainerVector implements ValueVector{
   public abstract <T extends ValueVector> T get(String name, Class<T> clazz);
   public abstract int size();
 
-  protected <T extends ValueVector> T typeify(ValueVector v, Class<T> clazz){
-    if(clazz.isAssignableFrom(v.getClass())){
+  protected <T extends ValueVector> T typeify(ValueVector v, Class<T> clazz) {
+    if (clazz.isAssignableFrom(v.getClass())) {
       return (T) v;
-    }else{
+    } else {
       throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), v.getClass().getSimpleName()));
     }
   }
@@ -45,10 +45,11 @@ public abstract class AbstractContainerVector implements ValueVector{
 
   public abstract VectorWithOrdinal getVectorWithOrdinal(String name);
 
-
   public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
     if (seg == null) {
-      if(addToBreadCrumb) builder.intermediateType(this.getField().getType());
+      if (addToBreadCrumb) {
+        builder.intermediateType(this.getField().getType());
+      }
       return builder.finalType(this.getField().getType()).build();
     }
 
@@ -72,7 +73,9 @@ public abstract class AbstractContainerVector implements ValueVector{
     }
 
     VectorWithOrdinal vord = getVectorWithOrdinal(seg.isArray() ? null : seg.getNameSegment().getPath());
-    if (vord == null) return null;
+    if (vord == null) {
+      return null;
+    }
 
     ValueVector v = vord.vector;
     if (addToBreadCrumb) {
@@ -86,7 +89,9 @@ public abstract class AbstractContainerVector implements ValueVector{
       return c.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
     } else {
       if (seg.isNamed()) {
-        if(addToBreadCrumb) builder.intermediateType(v.getField().getType());
+        if(addToBreadCrumb) {
+          builder.intermediateType(v.getField().getType());
+        }
         builder.finalType(v.getField().getType());
       } else {
         builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
@@ -116,8 +121,9 @@ public abstract class AbstractContainerVector implements ValueVector{
         this.getField().getType().getMode() == DataMode.REPEATED)) {  // Use Repeated scalar type instead of Required List.
       VectorWithOrdinal vord = getVectorWithOrdinal(null);
       ValueVector v = vord.vector;
-      if (! (v instanceof  AbstractContainerVector))
+      if (! (v instanceof  AbstractContainerVector)) {
         return v.getField().getType();
+      }
     } else if (this.getField().getType().getMinorType() == MinorType.MAP  &&
         this.getField().getType().getMode() == DataMode.REPEATED) {  // Use Required Map
       return this.getField().getType().toBuilder().setMode(DataMode.REQUIRED).build();
@@ -126,7 +132,7 @@ public abstract class AbstractContainerVector implements ValueVector{
     return this.getField().getType();
   }
 
-  protected boolean supportsDirectRead(){
+  protected boolean supportsDirectRead() {
     return false;
   }
 
@@ -134,10 +140,10 @@ public abstract class AbstractContainerVector implements ValueVector{
     final ValueVector vector;
     final int ordinal;
 
-    public VectorWithOrdinal(ValueVector v, int ordinal){
+    public VectorWithOrdinal(ValueVector v, int ordinal) {
       this.vector = v;
       this.ordinal = ordinal;
     }
   }
-}
 
+}

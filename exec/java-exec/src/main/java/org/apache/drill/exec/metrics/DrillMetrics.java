@@ -65,8 +65,9 @@ public class DrillMetrics {
         reporter.start();
 
         return reporter;
-      } else
+      } else {
         return null;
+      }
     }
 
     private static Slf4jReporter getLogReporter() {
@@ -76,8 +77,9 @@ public class DrillMetrics {
         reporter.start(config.getInt(ExecConstants.METRICS_LOG_OUTPUT_INTERVAL), TimeUnit.SECONDS);
 
         return reporter;
-      } else
+      } else {
         return null;
+      }
     }
   }
 

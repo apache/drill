@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.base;
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
 public abstract class AbstractBase implements PhysicalOperator{
@@ -34,8 +33,10 @@ public abstract class AbstractBase implements PhysicalOperator{
   @Override
   public void accept(GraphVisitor<PhysicalOperator> visitor) {
     visitor.enter(this);
-    if(this.iterator() == null) throw new IllegalArgumentException("Null iterator for pop." + this);
-    for(PhysicalOperator o : this){
+    if (this.iterator() == null) {
+      throw new IllegalArgumentException("Null iterator for pop." + this);
+    }
+    for (PhysicalOperator o : this) {
       Preconditions.checkNotNull(o, String.format("Null in iterator for pop %s.", this));
       o.accept(visitor);
     }
@@ -47,7 +48,7 @@ public abstract class AbstractBase implements PhysicalOperator{
     return true;
   }
 
-  public final void setOperatorId(int id){
+  public final void setOperatorId(int id) {
     this.id = id;
   }
 

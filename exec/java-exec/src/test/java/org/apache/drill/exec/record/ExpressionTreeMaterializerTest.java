@@ -126,8 +126,9 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
     //ifCondition = newIfExpr.conditions.get(0);
     assertEquals(bigIntType, ifCondition.expression.getMajorType());
     assertEquals(true, ((ValueExpressions.BooleanExpression) ((IfExpression)(newIfExpr.elseExpression)).ifCondition.condition).value);
-    if (ec.hasErrors())
+    if (ec.hasErrors()) {
       System.out.println(ec.toErrorString());
+    }
     assertFalse(ec.hasErrors());
   }
 
@@ -204,4 +205,5 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
     assertEquals(1, ec.getErrorCount());
     System.out.println(ec.toErrorString());
   }
+
 }

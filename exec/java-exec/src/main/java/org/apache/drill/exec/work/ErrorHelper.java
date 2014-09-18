@@ -21,7 +21,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.UUID;
 
-import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.planner.sql.parser.impl.ParseException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
@@ -36,7 +35,7 @@ public class ErrorHelper {
 //  }
 
   public static DrillPBError logAndConvertError(DrillbitEndpoint endpoint, String message, Throwable t, Logger logger,
-                                                boolean verbose){
+                                                boolean verbose) {
     String id = UUID.randomUUID().toString();
     DrillPBError.Builder builder = DrillPBError.newBuilder();
     builder.setEndpoint(endpoint);
@@ -66,17 +65,20 @@ public class ErrorHelper {
     while (true) {
       rootCause = t;
       if (t.getCause() == null || t.getCause() == t
-        || (t instanceof SqlParseException && t.getCause() instanceof ParseException)) break;
+        || (t instanceof SqlParseException && t.getCause() instanceof ParseException)) {
+        break;
+      }
       t = t.getCause();
     }
 
     String finalMsg = rootCause.getMessage() == null ? original.getMessage() : rootCause.getMessage();
     builder.setMessage(String.format(sb.toString(), finalMsg));
     builder.setErrorType(0);
-    
+
     // record the error to the log for later reference.
     logger.error("Error {}: {}", id, message, t);
 
     return builder.build();
   }
+
 }

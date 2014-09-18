@@ -18,28 +18,19 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
-import org.apache.drill.exec.planner.logical.DrillImplementor;
-import org.apache.drill.exec.planner.logical.DrillParseContext;
-import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
-import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.type.SqlTypeName;
 
 public class LimitPrel extends DrillLimitRelBase implements Prel {
 
@@ -93,7 +84,7 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
   public boolean needsFinalColumnReordering() {
     return true;
   }
-  
+
 //  @Override
 //  public LogicalOperator implement(DrillImplementor implementor) {
 //    LogicalOperator inputOp = implementor.visitChild(this, 0, getChild());

@@ -67,17 +67,20 @@ public class ByteSubstring implements DrillSimpleFunc {
     } else {
 
       // handle negative and positive offset values
-      if (offset.value < 0)
+      if (offset.value < 0) {
         out.start = string.end + (int)offset.value;
-      else
+      } else {
         out.start = (int)offset.value - 1;
-  
+      }
+
       // calculate end position from length and truncate to upper value bounds
-      if (out.start + length.value > string.end)
+      if (out.start + length.value > string.end) {
         out.end = string.end;
-      else
+      } else {
         out.end = out.start + (int)length.value;
+      }
 
     }
   }
+
 }

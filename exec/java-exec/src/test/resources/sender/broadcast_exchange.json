@@ -11,14 +11,14 @@
               @id:1,
               pop:"fs-scan",
               format: {type: "json"},
-              storage:{type: "file", connection: "file:///"},   
+              storage:{type: "file", connection: "file:///"},
               files:["#{LEFT_FILE}"]
             },
             {
               @id:2,
               pop:"fs-scan",
               format: {type: "json"},
-              storage:{type: "file", connection: "file:///"},   
+              storage:{type: "file", connection: "file:///"},
               files:["#{RIGHT_FILE}"]
             },
         {

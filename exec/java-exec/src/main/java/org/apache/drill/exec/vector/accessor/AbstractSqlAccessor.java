@@ -28,60 +28,60 @@ import java.sql.Timestamp;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
 abstract class AbstractSqlAccessor implements SqlAccessor {
-  
+
   @Override
   public abstract boolean isNull(int index);
-  
+
   @Override
   public BigDecimal getBigDecimal(int index) throws InvalidAccessException{
     throw new InvalidAccessException("BigDecimal");
   }
-  
+
   @Override
   public boolean getBoolean(int index) throws InvalidAccessException{
     throw new InvalidAccessException("boolean");
   }
-  
+
   @Override
   public byte getByte(int index) throws InvalidAccessException{
     throw new InvalidAccessException("byte");
   }
-  
+
   @Override
   public byte[] getBytes(int index) throws InvalidAccessException{
     throw new InvalidAccessException("byte[]");
   }
-  
+
   @Override
   public Date getDate(int index) throws InvalidAccessException{
     throw new InvalidAccessException("Date");
   }
-  
+
   @Override
   public double getDouble(int index) throws InvalidAccessException{
     throw new InvalidAccessException("double");
   }
-  
+
   @Override
   public float getFloat(int index) throws InvalidAccessException{
     throw new InvalidAccessException("float");
   }
-  
+
   @Override
   public int getInt(int index) throws InvalidAccessException{
     throw new InvalidAccessException("int");
   }
-  
+
   @Override
   public long getLong(int index) throws InvalidAccessException{
     throw new InvalidAccessException("long");
   }
-  
+
   @Override
   public short getShort(int index) throws InvalidAccessException{
     throw new InvalidAccessException("short");
   }
-  
+
   @Override
   public InputStream getStream(int index) throws InvalidAccessException{
     throw new InvalidAccessException("InputStream");
@@ -91,8 +91,8 @@ abstract class AbstractSqlAccessor implements SqlAccessor {
   public char getChar(int index) throws InvalidAccessException{
     throw new InvalidAccessException("Char");
   }
-  
-  @Override 
+
+  @Override
   public Reader getReader(int index) throws InvalidAccessException{
     throw new InvalidAccessException("Reader");
   }
@@ -113,8 +113,8 @@ abstract class AbstractSqlAccessor implements SqlAccessor {
   }
 
   abstract MajorType getType();
-    
-  
+
+
   public class InvalidAccessException extends SQLException{
     public InvalidAccessException(String name){
       super(String.format("Requesting class of type %s for an object of type %s:%s is not allowed.", name, getType().getMinorType().name(), getType().getMode().name()));

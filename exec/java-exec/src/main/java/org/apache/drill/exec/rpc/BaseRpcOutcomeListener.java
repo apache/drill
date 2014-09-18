@@ -29,6 +29,6 @@ public class BaseRpcOutcomeListener<T> implements RpcOutcomeListener<T> {
   @Override
   public void success(T value, ByteBuf buffer) {
   }
-  
-  
+
+
 }

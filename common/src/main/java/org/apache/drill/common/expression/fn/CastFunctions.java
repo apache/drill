@@ -17,10 +17,10 @@
  */
 package org.apache.drill.common.expression.fn;
 
-import org.apache.drill.common.types.TypeProtos.MinorType;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public class CastFunctions {
 
@@ -53,11 +53,12 @@ public class CastFunctions {
 
   public static String getCastFunc(MinorType targetMinorType) {
     String func = TYPE2FUNC.get(targetMinorType);
-    if (func != null)
+    if (func != null) {
       return func;
+    }
 
     throw new RuntimeException(
       String.format("cast function for type %s is not defined", targetMinorType.name()));
   }
-}
 
+}

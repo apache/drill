@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.rpc;
 
-import org.apache.drill.exec.rpc.RpcConnectionHandler;
-
 import com.google.protobuf.MessageLite;
 
 public interface RpcCommand<T extends MessageLite, C extends RemoteConnection> extends RpcConnectionHandler<C>{

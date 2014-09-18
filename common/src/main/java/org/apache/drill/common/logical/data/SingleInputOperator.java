@@ -30,7 +30,7 @@ import com.google.common.collect.Iterators;
 public abstract class SingleInputOperator extends LogicalOperatorBase {
 
   private LogicalOperator input;
-  
+
   @JsonProperty("input")
   public LogicalOperator getInput() {
     return input;
@@ -38,15 +38,16 @@ public abstract class SingleInputOperator extends LogicalOperatorBase {
 
   @JsonProperty(value="input", required=true)
   public void setInput(LogicalOperator input) {
-    if(input instanceof SinkOperator) throw new UnexpectedOperatorType("You have set the input of a sink node of type ["+input.getClass().getSimpleName()+ "] as the input for another node of type ["+this.getClass().getSimpleName()+ "].  This is invalid.");
+    if (input instanceof SinkOperator) {
+      throw new UnexpectedOperatorType("You have set the input of a sink node of type ["+input.getClass().getSimpleName()+ "] as the input for another node of type ["+this.getClass().getSimpleName()+ "].  This is invalid.");
+    }
     this.input = input;
     input.registerAsSubscriber(this);
   }
 
-  
   @Override
   public Iterator<LogicalOperator> iterator() {
     return Iterators.singletonIterator(input);
   }
-  
+
 }

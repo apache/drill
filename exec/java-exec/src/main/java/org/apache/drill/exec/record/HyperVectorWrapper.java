@@ -17,15 +17,13 @@
  */
 package org.apache.drill.exec.record;
 
-import java.lang.reflect.Array;
-
-import com.google.common.base.Preconditions;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+
+import com.google.common.base.Preconditions;
 
 
 public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{
@@ -35,11 +33,11 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   private MaterializedField f;
   private final boolean releasable;
 
-  public HyperVectorWrapper(MaterializedField f, T[] v){
+  public HyperVectorWrapper(MaterializedField f, T[] v) {
     this(f, v, true);
   }
 
-  public HyperVectorWrapper(MaterializedField f, T[] v, boolean releasable){
+  public HyperVectorWrapper(MaterializedField f, T[] v, boolean releasable) {
     assert(v.length > 0);
     this.f = f;
     this.vectors = v;
@@ -74,22 +72,26 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
 
   @Override
   public void clear() {
-    if(!releasable) return;
-    for(T x : vectors){
+    if (!releasable) {
+      return;
+    }
+    for (T x : vectors) {
       x.clear();
     }
   }
 
   @Override
   public VectorWrapper<?> getChildWrapper(int[] ids) {
-    if(ids.length == 1) return this;
+    if (ids.length == 1) {
+      return this;
+    }
 
     ValueVector[] vectors = new ValueVector[this.vectors.length];
     int index = 0;
 
-    for(ValueVector v : this.vectors){
+    for (ValueVector v : this.vectors) {
       ValueVector vector = v;
-      for(int i = 1; i < ids.length; i++){
+      for (int i = 1; i < ids.length; i++) {
         MapVector map = (MapVector) vector;
         vector = map.getVectorById(ids[i]);
       }
@@ -102,9 +104,11 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   @Override
   public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath) {
     ValueVector v = vectors[0];
-    if(!expectedPath.getRootSegment().segmentEquals(v.getField().getPath().getRootSegment())) return null;
+    if (!expectedPath.getRootSegment().segmentEquals(v.getField().getPath().getRootSegment())) {
+      return null;
+    }
 
-    if(v instanceof AbstractContainerVector){
+    if (v instanceof AbstractContainerVector) {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) v;
       TypedFieldId.Builder builder = TypedFieldId.newBuilder();
@@ -113,7 +117,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
       builder.addId(id);
       return c.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
 
-    }else{
+    } else {
       return TypedFieldId.newBuilder() //
           .intermediateType(v.getField().getType()) //
           .finalType(v.getField().getType()) //
@@ -128,7 +132,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   public VectorWrapper<T> cloneAndTransfer() {
     return new HyperVectorWrapper<T>(f, vectors, false);
 //    T[] newVectors = (T[]) Array.newInstance(vectors.getClass().getComponentType(), vectors.length);
-//    for(int i =0; i < newVectors.length; i++){
+//    for(int i =0; i < newVectors.length; i++) {
 //      TransferPair tp = vectors[i].getTransferPair();
 //      tp.transfer();
 //      newVectors[i] = (T) tp.getTo();
@@ -136,7 +140,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
 //    return new HyperVectorWrapper<T>(f, newVectors);
   }
 
-  public static <T extends ValueVector> HyperVectorWrapper<T> create(MaterializedField f, T[] v, boolean releasable){
+  public static <T extends ValueVector> HyperVectorWrapper<T> create(MaterializedField f, T[] v, boolean releasable) {
     return new HyperVectorWrapper<T>(f, v, releasable);
   }
 
@@ -148,4 +152,5 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   public void addVectors(ValueVector[] vv) {
     vectors = (T[]) ArrayUtils.add(vectors, vv);
   }
+
 }

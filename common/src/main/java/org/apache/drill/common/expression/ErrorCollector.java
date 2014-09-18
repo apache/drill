@@ -38,7 +38,7 @@ public interface ErrorCollector {
     public void addExpectedConstantValue(ExpressionPosition expr, int actual, String s);
 
     boolean hasErrors();
-    
+
     public int getErrorCount();
 
     String toErrorString();

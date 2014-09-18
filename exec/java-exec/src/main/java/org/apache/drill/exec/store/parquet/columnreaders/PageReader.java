@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
-import io.netty.buffer.Unpooled;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -104,7 +103,7 @@ final class PageReader {
     long start = columnChunkMetaData.getFirstDataPageOffset();
     try {
       FSDataInputStream f = fs.open(path);
-      this.dataReader = new ColumnDataReader(f, start, totalByteLength);
+      this.dataReader = new ColumnDataReader(f, start, columnChunkMetaData.getTotalSize());
       if (columnChunkMetaData.getDictionaryPageOffset() > 0) {
         f.seek(columnChunkMetaData.getDictionaryPageOffset());
         PageHeader pageHeader = Util.readPageHeader(f);

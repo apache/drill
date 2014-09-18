@@ -30,10 +30,10 @@ public class StartupOptions {
 
   @Parameter(names={"-h", "--help"}, description="Provide description of usage.", help=true)
   private boolean help = false;
-  
+
   @Parameter(names= {"-d", "--debug"}, description="Whether you want to run the program in debug mode.", required=false)
   private boolean debug = false;
-  
+
   @Parameter(names= {"-c", "--config"}, description="Configuration file you want to load.  Defaults to loading 'drill-override.conf' from the classpath.", required=false)
   private String configLocation = null;
 
@@ -62,5 +62,5 @@ public class StartupOptions {
     }
     return args;
   }
-  
+
 }

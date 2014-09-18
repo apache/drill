@@ -53,6 +53,7 @@ public class ModifiedUnparseVisitor extends UnparseVisitor {
     super(w);
   }
 
+  @Override
   public void visitMethodDeclarator(Java.MethodDeclarator md) {
     if (md.optionalStatements == null) {
       this.pw.print(';');
@@ -73,6 +74,7 @@ public class ModifiedUnparseVisitor extends UnparseVisitor {
       }
   }
 
+  @Override
   public void visitReturnStatement(Java.ReturnStatement rs) {
     this.pw.print("break " + returnLabel);
     if (rs.optionalReturnValue != null) {
@@ -98,7 +100,9 @@ public class ModifiedUnparseVisitor extends UnparseVisitor {
           bs instanceof Java.SynchronizedStatement             ? 4 :
           99
       );
-      if (state != -1 && state != x) this.pw.println(AutoIndentWriter.CLEAR_TABULATORS);
+      if (state != -1 && state != x) {
+        this.pw.println(AutoIndentWriter.CLEAR_TABULATORS);
+      }
       state = x;
 
       this.unparseBlockStatement(bs);

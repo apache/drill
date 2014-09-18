@@ -74,13 +74,18 @@ class JDKClassCompiler extends AbstractClassCompiler {
       Throwable cause = rte.getCause();
       if (cause != null) {
         cause = cause.getCause();
-        if (cause instanceof CompileException) throw (CompileException) cause;
-        if (cause instanceof IOException) throw (IOException) cause;
+        if (cause instanceof CompileException) {
+          throw (CompileException) cause;
+        }
+        if (cause instanceof IOException) {
+          throw (IOException) cause;
+        }
       }
       throw rte;
     }
   }
 
+  @Override
   protected org.slf4j.Logger getLogger() { return logger; }
 
 }

@@ -44,7 +44,7 @@ public class UserWorker{
     this.bee = bee;
   }
 
-  public QueryId submitWork(UserClientConnection connection, RunQuery query){
+  public QueryId submitWork(UserClientConnection connection, RunQuery query) {
     UUID uuid = UUID.randomUUID();
     QueryId id = QueryId.newBuilder().setPart1(uuid.getMostSignificantBits()).setPart2(uuid.getLeastSignificantBits()).build();
     Foreman foreman = new Foreman(bee, bee.getContext(), connection, id, query);
@@ -52,31 +52,36 @@ public class UserWorker{
     return id;
   }
 
-  public QueryResult getResult(UserClientConnection connection, RequestResults req){
+  public QueryResult getResult(UserClientConnection connection, RequestResults req) {
     Foreman foreman = bee.getForemanForQueryId(req.getQueryId());
-    if(foreman == null) return QueryResult.newBuilder().setQueryState(QueryState.UNKNOWN_QUERY).build();
+    if (foreman == null) {
+      return QueryResult.newBuilder().setQueryState(QueryState.UNKNOWN_QUERY).build();
+    }
     return foreman.getResult(connection, req);
   }
 
-  public Ack cancelQuery(QueryId query){
+  public Ack cancelQuery(QueryId query) {
     Foreman foreman = bee.getForemanForQueryId(query);
-    if(foreman != null){
+    if(foreman != null) {
       foreman.cancel();
     }
     return Acks.OK;
   }
 
-  public Ack cancelFragment(FragmentHandle handle){
+  public Ack cancelFragment(FragmentHandle handle) {
     FragmentExecutor runner = bee.getFragmentRunner(handle);
-    if(runner != null) runner.cancel();
+    if (runner != null) {
+      runner.cancel();
+    }
     return Acks.OK;
   }
 
-  public SchemaFactory getSchemaFactory(){
+  public SchemaFactory getSchemaFactory() {
     return bee.getContext().getSchemaFactory();
   }
 
-  public OptionManager getSystemOptions(){
+  public OptionManager getSystemOptions() {
     return bee.getContext().getOptionManager();
   }
+
 }

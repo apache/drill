@@ -51,32 +51,36 @@ public class OperatorContext implements Closeable {
     this.stats     = stats;
   }
 
-  public DrillBuf replace(DrillBuf old, int newSize){
-    if(managedBuffers.remove(old.memoryAddress()) == null) throw new IllegalStateException("Tried to remove unmanaged buffer.");
+  public DrillBuf replace(DrillBuf old, int newSize) {
+    if (managedBuffers.remove(old.memoryAddress()) == null) {
+      throw new IllegalStateException("Tried to remove unmanaged buffer.");
+    }
     old.release();
     return getManagedBuffer(newSize);
   }
 
-  public DrillBuf getManagedBuffer(){
+  public DrillBuf getManagedBuffer() {
     return getManagedBuffer(256);
   }
 
-  public DrillBuf getManagedBuffer(int size){
+  public DrillBuf getManagedBuffer(int size) {
     DrillBuf newBuf = allocator.buffer(size);
     managedBuffers.put(newBuf.memoryAddress(), newBuf);
     newBuf.setOperatorContext(this);
     return newBuf;
   }
 
-  public static int getChildCount(PhysicalOperator popConfig){
+  public static int getChildCount(PhysicalOperator popConfig) {
     Iterator<PhysicalOperator> iter = popConfig.iterator();
     int i = 0;
-    while(iter.hasNext()){
+    while (iter.hasNext()) {
       iter.next();
       i++;
     }
 
-    if(i == 0) i = 1;
+    if (i == 0) {
+      i = 1;
+    }
     return i;
   }
 
@@ -101,8 +105,10 @@ public class OperatorContext implements Closeable {
 
     // release managed buffers.
     Object[] buffers = ((LongObjectOpenHashMap<Object>)(Object)managedBuffers).values;
-    for(int i =0; i < buffers.length; i++){
-      if(managedBuffers.allocated[i]) ((DrillBuf)buffers[i]).release();
+    for (int i =0; i < buffers.length; i++) {
+      if (managedBuffers.allocated[i]) {
+        ((DrillBuf)buffers[i]).release();
+      }
     }
 
     if (allocator != null) {
@@ -111,7 +117,8 @@ public class OperatorContext implements Closeable {
     closed = true;
   }
 
-  public OperatorStats getStats(){
+  public OperatorStats getStats() {
     return stats;
   }
+
 }

@@ -31,7 +31,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 
 public class PhysicalPlanCreator {

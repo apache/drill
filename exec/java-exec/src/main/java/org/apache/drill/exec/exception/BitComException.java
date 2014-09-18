@@ -41,5 +41,5 @@ public class BitComException extends DrillException{
   public BitComException(Throwable cause) {
     super(cause);
   }
-  
+
 }

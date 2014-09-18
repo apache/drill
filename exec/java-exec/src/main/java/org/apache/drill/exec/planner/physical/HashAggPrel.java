@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.List;
+
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.IntHolder;
@@ -35,10 +39,6 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-import java.io.IOException;
-import java.util.BitSet;
-import java.util.List;
-
 public class HashAggPrel extends AggPrelBase implements Prel{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggPrel.class);
@@ -48,6 +48,7 @@ public class HashAggPrel extends AggPrelBase implements Prel{
     super(cluster, traits, child, groupSet, aggCalls, phase);
   }
 
+  @Override
   public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
     try {
       return new HashAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls,

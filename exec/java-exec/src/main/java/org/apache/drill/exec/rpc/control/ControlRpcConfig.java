@@ -33,7 +33,7 @@ import org.apache.drill.exec.rpc.RpcConfig;
 
 public class ControlRpcConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlRpcConfig.class);
-  
+
   public static RpcConfig MAPPING = RpcConfig.newBuilder("BIT-CONTROL-RPC-MAPPING") //
       .add(RpcType.HANDSHAKE, BitControlHandshake.class, RpcType.HANDSHAKE, BitControlHandshake.class)
       .add(RpcType.REQ_INIATILIZE_FRAGMENT, PlanFragment.class, RpcType.ACK, Ack.class)
@@ -42,8 +42,8 @@ public class ControlRpcConfig {
       .add(RpcType.REQ_FRAGMENT_STATUS, FragmentStatus.class, RpcType.ACK, Ack.class)
       .add(RpcType.REQ_QUERY_STATUS, QueryId.class, RpcType.RESP_QUERY_STATUS, QueryProfile.class)
       .build();
-  
+
   public static int RPC_VERSION = 2;
-  
+
   public static final Response OK = new Response(RpcType.ACK, Acks.OK);
 }

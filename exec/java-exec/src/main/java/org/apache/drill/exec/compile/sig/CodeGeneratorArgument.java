@@ -19,10 +19,10 @@ package org.apache.drill.exec.compile.sig;
 
 
 public class CodeGeneratorArgument {
-  
+
   private final String name;
   private final Class<?> type;
-  
+
   public CodeGeneratorArgument(String name, Class<?> type) {
     super();
     this.name = name;
@@ -36,5 +36,5 @@ public class CodeGeneratorArgument {
   public Class<?> getType() {
     return type;
   }
-  
+
 }

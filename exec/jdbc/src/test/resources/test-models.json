@@ -59,7 +59,6 @@
              path: '/donuts.json',
              useReferenceInterpreter: 'true'
            }
-           
          },
          {
            name: 'TIME_BY_DAY',
@@ -69,7 +68,6 @@
              path: '/donuts.json',
              useReferenceInterpreter: 'true'
            }
-           
          }
        ]
      }

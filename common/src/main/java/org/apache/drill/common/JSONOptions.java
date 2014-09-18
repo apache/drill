@@ -47,33 +47,33 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 @JsonSerialize(using = Se.class)
 @JsonDeserialize(using = De.class)
 public class JSONOptions {
-  
+
   final static Logger logger = LoggerFactory.getLogger(JSONOptions.class);
-  
+
   private JsonNode root;
   private JsonLocation location;
   private Object opaque;
-  
-  public JSONOptions(Object opaque){
+
+  public JSONOptions(Object opaque) {
     this.opaque = opaque;
   }
-  
-  public JSONOptions(JsonNode n, JsonLocation location){
+
+  public JSONOptions(JsonNode n, JsonLocation location) {
     this.root = n;
     this.location = location;
   }
-  
+
   @SuppressWarnings("unchecked")
-  public <T> T getWith(DrillConfig config, Class<T> c){
+  public <T> T getWith(DrillConfig config, Class<T> c) {
     try {
-      if(opaque != null){
-        if (opaque.getClass().equals(c)){
+      if (opaque != null) {
+        if (opaque.getClass().equals(c)) {
           return (T) opaque;
-        }else{
+        } else {
           throw new IllegalArgumentException(String.format("Attmpted to retrieve a option with type of %s.  However, the JSON options carried an opaque value of type %s.", c.getName(), opaque.getClass().getName()));
         }
       }
-      
+
       //logger.debug("Read tree {}", root);
       return config.getMapper().treeToValue(root, c);
     } catch (JsonProcessingException e) {
@@ -87,29 +87,33 @@ public class JSONOptions {
 
   @SuppressWarnings("unchecked")
   public <T> T getListWith(ObjectMapper mapper, TypeReference<T> t) throws IOException {
-    if(opaque != null){
+    if (opaque != null) {
       Type c = t.getType();
-      if(c instanceof ParameterizedType) c = ((ParameterizedType)c).getRawType();
-      if ( c.equals(opaque.getClass())){
+      if (c instanceof ParameterizedType) {
+        c = ((ParameterizedType)c).getRawType();
+      }
+      if ( c.equals(opaque.getClass())) {
         return (T) opaque;
-      }else{
+      } else {
         throw new IOException(String.format("Attmpted to retrieve a list with type of %s.  However, the JSON options carried an opaque value of type %s.", t.getType(), opaque.getClass().getName()));
       }
     }
-    if(root == null) return null;
+    if (root == null) {
+      return null;
+    }
     return mapper.treeAsTokens(root).readValueAs(t);
   }
-  
-  public JsonNode path(String name){
+
+  public JsonNode path(String name) {
     return root.path(name);
   }
 
-  public JsonNode getRoot(){
+  public JsonNode getRoot() {
       return root;
   }
-  
+
   public static class De extends StdDeserializer<JSONOptions> {
-    
+
     public De() {
       super(JSONOptions.class);
       logger.debug("Creating Deserializer.");
@@ -122,9 +126,9 @@ public class JSONOptions {
 //      logger.debug("Reading tree.");
       TreeNode n = jp.readValueAsTree();
 //      logger.debug("Tree {}", n);
-      if(n instanceof JsonNode){
-        return new JSONOptions( (JsonNode) n, l); 
-      }else{
+      if (n instanceof JsonNode) {
+        return new JSONOptions( (JsonNode) n, l);
+      } else {
         throw new IllegalArgumentException(String.format("Received something other than a JsonNode %s", n));
       }
     }
@@ -140,13 +144,14 @@ public class JSONOptions {
     @Override
     public void serialize(JSONOptions value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
         JsonGenerationException {
-      if(value.opaque != null){
+      if (value.opaque != null) {
         jgen.writeObject(value.opaque);
-      }else{
-        jgen.writeTree(value.root);  
+      } else {
+        jgen.writeTree(value.root);
       }
-      
+
     }
 
   }
+
 }

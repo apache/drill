@@ -63,39 +63,40 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
 
 
     try{
-      if(config.isLocal()){
+      if (config.isLocal()) {
         DrillConfig dConfig = DrillConfig.create();
         this.allocator = new TopLevelAllocator(dConfig);
         RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
-        if(set == null){
+        if (set == null) {
           // we're embedded, start a local drill bit.
           serviceSet = RemoteServiceSet.getLocalServiceSet();
           set = serviceSet;
-          try{
+          try {
           bit = new Drillbit(dConfig, serviceSet);
           bit.run();
-          }catch(Exception e){
+          } catch (Exception e) {
             throw new SQLException("Failure while attempting to start Drillbit in embedded mode.", e);
           }
-        }else{
+        } else {
           serviceSet = null;
           bit = null;
         }
         this.client = new DrillClient(dConfig, set.getCoordinator());
         this.client.connect(null, info);
-      }else{
+      } else {
         DrillConfig dConfig = DrillConfig.createClient();
         this.allocator = new TopLevelAllocator(dConfig);
         this.client = new DrillClient();
         this.client.connect(config.getZookeeperConnectionString(), info);
       }
-    }catch(RpcException e){
+    } catch (RpcException e) {
       throw new SQLException("Failure while attempting to connect to Drill.", e);
     }
   }
 
 
-  public DrillConnectionConfig config(){
+  @Override
+  public DrillConnectionConfig config() {
     return config;
   }
 
@@ -108,11 +109,11 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
     return (MetaImpl) meta;
   }
 
-  BufferAllocator getAllocator(){
+  BufferAllocator getAllocator() {
     return allocator;
   }
 
-  public DrillClient getClient(){
+  public DrillClient getClient() {
     return client;
   }
 
@@ -155,15 +156,17 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
     return factory;
   }
 
-  void cleanup(){
+  void cleanup() {
     client.close();
     allocator.close();
-    if(bit != null) bit.close();
+    if (bit != null) {
+      bit.close();
+    }
 
-    if(serviceSet != null){
-      try{
+    if (serviceSet != null) {
+      try {
         serviceSet.close();
-      }catch(IOException e){
+      } catch (IOException e) {
         logger.warn("Exception while closing service set.", e);
       }
     }

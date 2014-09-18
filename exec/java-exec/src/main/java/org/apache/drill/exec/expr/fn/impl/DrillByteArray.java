@@ -19,7 +19,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 /**
  * Thin wrapper around byte array. This class is used by aggregate functions which
- * consume decimal, variable width vectors as inputs. 
+ * consume decimal, variable width vectors as inputs.
  */
 public class DrillByteArray {
   private byte[] bytes;

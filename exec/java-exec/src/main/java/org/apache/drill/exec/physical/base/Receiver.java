@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * corresponding Senders.  Receivers are a special type of Physical Operator that are typically only expressed within the execution plan.
  */
 public interface Receiver extends FragmentLeaf {
-  
+
   /**
    * A receiver is expecting streams from one or more providing endpoints.  This method should return a list of the expected sending endpoints.
    * @return List of counterpart sending DrillbitEndpoints.
@@ -40,7 +40,7 @@ public interface Receiver extends FragmentLeaf {
    * Whether or not this receive supports out of order exchange. This provides a hint for the scheduling node on whether
    * the receiver can start work if only a subset of all sending endpoints are currently providing data. A random
    * receiver would supports this form of operation. A NWAY receiver would not.
-   * 
+   *
    * @return True if this receiver supports working on a streaming/out of order input.
    */
   @JsonIgnore

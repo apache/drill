@@ -18,7 +18,6 @@
 package org.apache.drill.exec.vector;
 
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 
@@ -55,21 +54,23 @@ public abstract class BaseDataValueVector extends BaseValueVector{
     }
   }
 
+  @Override
   public void setCurrentValueCount(int count) {
     currentValueCount = count;
   }
 
+  @Override
   public int getCurrentValueCount() {
     return currentValueCount;
   }
 
 
   @Override
-  public DrillBuf[] getBuffers(boolean clear){
+  public DrillBuf[] getBuffers(boolean clear) {
     DrillBuf[] out;
-    if(valueCount == 0){
+    if (valueCount == 0) {
       out = new DrillBuf[0];
-    }else{
+    } else {
       out = new DrillBuf[]{data};
       if (clear) {
         data.readerIndex(0);
@@ -83,18 +84,21 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   }
 
   public int getBufferSize() {
-    if(valueCount == 0) return 0;
+    if (valueCount == 0) {
+      return 0;
+    }
     return data.writerIndex();
   }
 
   @Override
   public abstract SerializedField getMetadata();
 
-  public DrillBuf getData(){
+  @Override
+  public DrillBuf getData() {
     return data;
   }
 
-  public long getDataAddr(){
+  public long getDataAddr() {
     return data.memoryAddress();
   }
 
@@ -102,7 +106,5 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   public Iterator<ValueVector> iterator() {
     return Iterators.emptyIterator();
   }
-
-
 
 }

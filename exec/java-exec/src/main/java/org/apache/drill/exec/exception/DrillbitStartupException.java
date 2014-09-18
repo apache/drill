@@ -41,6 +41,6 @@ public class DrillbitStartupException extends DrillException{
   public DrillbitStartupException(Throwable cause) {
     super(cause);
   }
-  
-  
+
+
 }

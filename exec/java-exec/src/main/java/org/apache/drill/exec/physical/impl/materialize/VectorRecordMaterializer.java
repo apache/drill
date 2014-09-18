@@ -35,7 +35,7 @@ public class VectorRecordMaterializer implements RecordMaterializer{
     this.batch = batch;
     BatchSchema schema = batch.getSchema();
     assert schema != null : "Schema must be defined.";
-    
+
 //    for (MaterializedField f : batch.getSchema()) {
 //      logger.debug("New Field: {}", f);
 //    }

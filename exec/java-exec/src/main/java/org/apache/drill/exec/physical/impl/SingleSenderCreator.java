@@ -25,8 +25,6 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
-import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -45,9 +43,9 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     assert children != null && children.size() == 1;
     return new SingleSenderRootExec(context, children.iterator().next(), config);
   }
-  
-  
-  
+
+
+
   private static class SingleSenderRootExec extends BaseRootExec {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSenderRootExec.class);
     private RecordBatch incoming;
@@ -61,13 +59,13 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
     public enum Metric implements MetricDef {
       BYTES_SENT;
-      
+
       @Override
       public int metricId() {
         return ordinal();
       }
     }
-    
+
     public SingleSenderRootExec(FragmentContext context, RecordBatch batch, SingleSender config) throws OutOfMemoryException {
       super(context, config);
       this.incoming = batch;
@@ -78,12 +76,12 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       this.tunnel = context.getDataTunnel(config.getDestination(), opposite);
       this.context = context;
     }
-    
+
     @Override
     public boolean innerNext() {
-      if(!ok){
+      if (!ok) {
         incoming.kill(false);
-        
+
         return false;
       }
 
@@ -95,7 +93,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         out = IterOutcome.NONE;
       }
 //      logger.debug("Outcome of sender next {}", out);
-      switch(out){
+      switch (out) {
       case STOP:
       case NONE:
         FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLastWithSchema(handle.getQueryId(), handle.getMajorFragmentId(),
@@ -128,9 +126,9 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         throw new IllegalStateException();
       }
     }
-    
+
     public void updateStats(FragmentWritableBatch writableBatch) {
-      stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount()); 
+      stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount());
     }
 
     @Override
@@ -160,17 +158,18 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       @Override
       public void success(Ack value, ByteBuf buf) {
         sendCount.decrement();
-        if(value.getOk()) return;
+        if (value.getOk()) {
+          return;
+        }
 
         logger.error("Downstream fragment was not accepted.  Stopping future sends.");
         // if we didn't get ack ok, we'll need to kill the query.
         context.fail(new RpcException("A downstream fragment batch wasn't accepted.  This fragment thus fails."));
         stop();
       }
-      
+
     }
-    
+
   }
-  
 
 }

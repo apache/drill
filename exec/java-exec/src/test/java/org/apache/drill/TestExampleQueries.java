@@ -19,7 +19,6 @@ package org.apache.drill;
 
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.rpc.RpcException;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery{
@@ -31,7 +30,7 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select * from cp.`parquet/complex.parquet`");
     test("select recipe, c.inventor.name as name, c.inventor.age as age from cp.`parquet/complex.parquet` c");
   }
-  
+
   @Test // see DRILL-553
   public void testQueryWithNullValues() throws Exception {
     test("select count(*) from cp.`customer.json` limit 1");
@@ -111,8 +110,8 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-1293
-  public void testStarView1() throws Exception { 
-    test("use dfs.tmp");  
+  public void testStarView1() throws Exception {
+    test("use dfs.tmp");
     test("create view vt1 as select * from cp.`tpch/region.parquet` r, cp.`tpch/nation.parquet` n where r.r_regionkey = n.n_regionkey");
     test("select * from vt1");
     test("drop view vt1");
@@ -313,7 +312,7 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select n.n_nationkey from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey limit 0");
     test("select n_regionkey, count(*) from cp.`tpch/nation.parquet` group by n_regionkey limit 0");
   }
-  
+
   @Test
   public void testTextJoin() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/data/nations.csv").toURI().toString();

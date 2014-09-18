@@ -31,7 +31,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.collect.Maps;
 
-public class LocalClusterCoordinator extends ClusterCoordinator{
+public class LocalClusterCoordinator extends ClusterCoordinator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalClusterCoordinator.class);
 
   private volatile Map<RegistrationHandle, DrillbitEndpoint> endpoints = Maps.newConcurrentMap();
@@ -57,7 +57,9 @@ public class LocalClusterCoordinator extends ClusterCoordinator{
 
   @Override
   public void unregister(RegistrationHandle handle) {
-    if(handle == null) return;
+    if(handle == null) {
+      return;
+    }
 
     endpoints.remove(handle);
   }
@@ -66,7 +68,6 @@ public class LocalClusterCoordinator extends ClusterCoordinator{
   public Collection<DrillbitEndpoint> getAvailableEndpoints() {
     return endpoints.values();
   }
-
 
   private class Handle implements RegistrationHandle{
     UUID id = UUID.randomUUID();
@@ -82,14 +83,26 @@ public class LocalClusterCoordinator extends ClusterCoordinator{
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (obj == null) return false;
-      if (getClass() != obj.getClass()) return false;
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
       Handle other = (Handle) obj;
-      if (!getOuterType().equals(other.getOuterType())) return false;
+      if (!getOuterType().equals(other.getOuterType())) {
+        return false;
+      }
       if (id == null) {
-        if (other.id != null) return false;
-      } else if (!id.equals(other.id)) return false;
+        if (other.id != null) {
+          return false;
+        }
+      } else if (!id.equals(other.id)) {
+        return false;
+      }
       return true;
     }
 
@@ -98,7 +111,6 @@ public class LocalClusterCoordinator extends ClusterCoordinator{
     }
 
   }
-
 
   @Override
   public DistributedSemaphore getSemaphore(String name, int maximumLeases) {
@@ -111,19 +123,18 @@ public class LocalClusterCoordinator extends ClusterCoordinator{
     private final Semaphore inner;
     private final LocalLease lease = new LocalLease();
 
-    public LocalSemaphore(int size){
+    public LocalSemaphore(int size) {
       inner = new Semaphore(size);
     }
 
     @Override
     public DistributedLease acquire(long timeout, TimeUnit unit) throws Exception {
-      if(!inner.tryAcquire(timeout, unit)){
+      if(!inner.tryAcquire(timeout, unit)) {
         return null;
       }else{
         return lease;
       }
     }
-
 
     private class LocalLease implements DistributedLease{
 
@@ -134,6 +145,5 @@ public class LocalClusterCoordinator extends ClusterCoordinator{
 
     }
   }
-
 
 }

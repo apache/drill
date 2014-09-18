@@ -75,6 +75,7 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
     return engineConfig;
   }
 
+  @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
     return ImmutableSet.of(HBasePushFilterIntoScan.INSTANCE);
   }

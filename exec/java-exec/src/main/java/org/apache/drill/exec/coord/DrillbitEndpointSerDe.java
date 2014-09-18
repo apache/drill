@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 public class DrillbitEndpointSerDe {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitEndpointSerDe.class);
-  
+
   public static class De extends StdDeserializer<DrillbitEndpoint> {
 
     public De() {
@@ -44,11 +44,11 @@ public class DrillbitEndpointSerDe {
         JsonProcessingException {
       return DrillbitEndpoint.parseFrom(jp.getBinaryValue());
     }
-    
-    
+
+
   }
-  
-  
+
+
   public static class Se extends StdSerializer<DrillbitEndpoint> {
 
     public Se() {
@@ -60,6 +60,6 @@ public class DrillbitEndpointSerDe {
         JsonGenerationException {
       jgen.writeBinary(value.toByteArray());
     }
-    
+
   }
 }

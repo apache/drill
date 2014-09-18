@@ -45,7 +45,7 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
     List<SchemaPath> columns = null;
     for (MongoSubScan.MongoSubScanSpec scanSpec : subScan.getChunkScanSpecList()) {
       try {
-    	if ((columns = subScan.getColumns())==null) {
+        if ((columns = subScan.getColumns()) == null) {
           columns = GroupScan.ALL_COLUMNS;
         }
         MongoClientOptions clientOptions = subScan.getMongoPluginConfig().getMongoOptions();

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.vector.complex.impl;
 
 import java.util.Iterator;
-import java.util.Map.Entry;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;

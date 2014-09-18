@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr.fn;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.codemodel.JType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.Types;
@@ -41,6 +40,7 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JForLoop;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
 class DrillAggFuncHolder extends DrillFuncHolder{
@@ -74,10 +74,12 @@ class DrillAggFuncHolder extends DrillFuncHolder{
     Preconditions.checkNotNull(reset);
   }
 
+  @Override
   public boolean isNested(){
     return true;
   }
 
+  @Override
   public boolean isAggregating() {
     return true;
   }

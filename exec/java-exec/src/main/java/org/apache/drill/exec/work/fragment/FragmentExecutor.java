@@ -49,7 +49,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   private Thread executionThread;
   private AtomicBoolean closed = new AtomicBoolean(false);
 
-  public FragmentExecutor(FragmentContext context, WorkerBee bee, FragmentRoot rootOperator, StatusReporter listener){
+  public FragmentExecutor(FragmentContext context, WorkerBee bee, FragmentRoot rootOperator, StatusReporter listener) {
     this.context = context;
     this.bee = bee;
     this.rootOperator = rootOperator;
@@ -75,7 +75,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     root.receivingFragmentFinished(handle);
   }
 
-  public UserClientConnection getClient(){
+  public UserClientConnection getClient() {
     return context.getConnection();
   }
 
@@ -102,7 +102,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       // run the query until root.next returns false.
       while (state.get() == FragmentState.RUNNING_VALUE) {
         if (!root.next()) {
-          if (context.isFailed()){
+          if (context.isFailed()) {
             internalFail(context.getFailureCause());
             closeOutResources(false);
           } else {
@@ -125,32 +125,38 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     }
   }
 
-  private void closeOutResources(boolean throwFailure){
-    if(closed.get()) return;
+  private void closeOutResources(boolean throwFailure) {
+    if (closed.get()) {
+      return;
+    }
 
-    try{
+    try {
       root.stop();
-    }catch(RuntimeException e){
-      if(throwFailure) throw e;
+    } catch (RuntimeException e) {
+      if (throwFailure) {
+        throw e;
+      }
       logger.warn("Failure while closing out resources.", e);
     }
 
-    try{
+    try {
       context.close();
-    }catch(RuntimeException e){
-      if(throwFailure) throw e;
+    } catch (RuntimeException e) {
+      if (throwFailure) {
+        throw e;
+      }
       logger.warn("Failure while closing out resources.", e);
     }
 
     closed.set(true);
   }
 
-  private void internalFail(Throwable excep){
+  private void internalFail(Throwable excep) {
     state.set(FragmentState.FAILED_VALUE);
     listener.fail(context.getHandle(), "Failure while running fragment.", excep);
   }
 
-  private void updateState(FragmentState update){
+  private void updateState(FragmentState update) {
     state.set(update.getNumber());
     listener.stateChanged(context.getHandle(), update);
   }
@@ -172,7 +178,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     return o.hashCode() - this.hashCode();
   }
 
-  public FragmentContext getContext(){
+  public FragmentContext getContext() {
     return context;
   }
 

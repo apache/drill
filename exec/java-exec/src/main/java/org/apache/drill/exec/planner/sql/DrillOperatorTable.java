@@ -17,13 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlIdentifier;

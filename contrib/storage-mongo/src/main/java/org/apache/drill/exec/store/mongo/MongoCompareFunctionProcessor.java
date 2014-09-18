@@ -112,7 +112,7 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
       case "UINT4":
         if (valueArg instanceof IntExpression
             && (isEqualityFn || encodingType.startsWith("U"))) {
-          this.value = ((IntExpression)valueArg).getInt(); 
+          this.value = ((IntExpression)valueArg).getInt();
         }
         break;
       case "BIGINT_BE":
@@ -176,31 +176,31 @@ public class MongoCompareFunctionProcessor extends AbstractExprVisitor<Boolean, 
       this.path = path;
       return true;
     }
-    
+
     if (valueArg instanceof IntExpression) {
-       this.value = ((IntExpression) valueArg).getInt(); 
+       this.value = ((IntExpression) valueArg).getInt();
        this.path = path;
        return true;
     }
-    
+
     if (valueArg instanceof LongExpression) {
       this.value = ((LongExpression)valueArg).getLong();
       this.path = path;
       return true;
     }
-    
+
     if (valueArg instanceof FloatExpression ) {
       this.value = ((FloatExpression)valueArg).getFloat();
       this.path = path;
       return true;
     }
-    
+
     if (valueArg instanceof DoubleExpression ) {
       this.value = ((DoubleExpression)valueArg).getDouble();
       this.path = path;
       return true;
     }
-    
+
     if (valueArg instanceof BooleanExpression) {
       this.value = ((BooleanExpression)valueArg).getBoolean();
       this.path = path;

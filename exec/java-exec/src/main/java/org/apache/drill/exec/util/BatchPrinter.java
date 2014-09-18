@@ -17,18 +17,15 @@
  */
 package org.apache.drill.exec.util;
 
-import com.google.common.collect.Lists;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.drill.common.expression.ExpressionStringBuilder;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.vector.ValueVector;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * This is a tool for printing the content of record batches to screen. Used for debugging.

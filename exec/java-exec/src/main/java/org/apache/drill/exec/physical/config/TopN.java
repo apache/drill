@@ -40,10 +40,12 @@ public class TopN extends Sort {
     this.limit = limit;
   }
 
+  @Override
   public List<Ordering> getOrderings() {
     return orderings;
   }
 
+  @Override
   public boolean getReverse() {
     return reverse;
   }

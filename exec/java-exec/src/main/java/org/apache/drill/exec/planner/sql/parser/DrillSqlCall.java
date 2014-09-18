@@ -18,9 +18,10 @@
 package org.apache.drill.exec.planner.sql.parser;
 
 import net.hydromatic.optiq.tools.Planner;
+
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.parser.SqlParserPos;
 

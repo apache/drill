@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.vector;
 
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JVar;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
+
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JVar;
 
 public class CopyUtil {
   public static void generateCopies(ClassGenerator g, VectorAccessible batch, boolean hyper){

@@ -20,26 +20,26 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
+import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
+import org.apache.drill.exec.vector.NullableDateVector;
+import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
-import org.apache.drill.exec.store.ParquetOutputRecordWriter;
-import org.apache.drill.exec.vector.NullableDateVector;
-import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
 import org.joda.time.DateTimeUtils;
 
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
-
-import java.math.BigDecimal;
 
 public class NullableFixedByteAlignedReaders {
 
@@ -54,12 +54,6 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      this.recordsReadInThisIteration = recordsToReadInThisPass;
-
-      // set up metadata
-      this.readStartInBytes = pageReader.readPosInBytes;
-      this.readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-      this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
       this.bytebuf = pageReader.pageDataByteArray;
 
       // fill in data.
@@ -171,16 +165,10 @@ public class NullableFixedByteAlignedReaders {
     @Override
     protected void readField(long recordsToReadInThisPass) {
 
-      this.recordsReadInThisIteration = recordsToReadInThisPass;
-
-      // set up metadata
-      this.readStartInBytes = pageReader.readPosInBytes;
-      this.readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-      this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
       this.bytebuf = pageReader.pageDataByteArray;
 
       dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
-      for (int i = 0; i < recordsReadInThisIteration; i++) {
+      for (int i = 0; i < recordsToReadInThisPass; i++) {
         addNext((int) readStartInBytes + i * dataTypeLengthInBytes, i + valuesReadInCurrentPass);
       }
     }

@@ -24,9 +24,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PositiveAtomicInteger {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PositiveAtomicInteger.class);
-  
+
   private final AtomicInteger internal = new AtomicInteger(0);
-  
+
   public int getNext(){
     int i = internal.addAndGet(1);
     if(i < 0){
@@ -35,5 +35,5 @@ public class PositiveAtomicInteger {
       return i;
     }
   }
-  
+
 }

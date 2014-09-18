@@ -60,11 +60,11 @@ public class WriterPrule extends Prule{
     public RelNode convertChild(DrillWriterRelBase writer, RelNode rel) throws RuntimeException {
       DrillDistributionTrait childDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
 
-      // Create the Writer with the child's distribution because the degree of parallelism for the writer 
-      // should correspond to the number of child minor fragments. The Writer itself is not concerned with 
-      // the collation of the child.  Note that the Writer's output RowType consists of 
-      // {fragment_id varchar(255), number_of_records_written bigint} which are very different from the 
-      // child's output RowType. 
+      // Create the Writer with the child's distribution because the degree of parallelism for the writer
+      // should correspond to the number of child minor fragments. The Writer itself is not concerned with
+      // the collation of the child.  Note that the Writer's output RowType consists of
+      // {fragment_id varchar(255), number_of_records_written bigint} which are very different from the
+      // child's output RowType.
       return new WriterPrel(writer.getCluster(),
           writer.getTraitSet().plus(childDist).plus(Prel.DRILL_PHYSICAL),
           rel, writer.getCreateTableEntry());

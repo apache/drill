@@ -65,8 +65,8 @@
     child: 5,
     first: 0,
     last: 100
-  }, { 
-    pop : "screen", 
+  }, {
+    pop : "screen",
     @id : 7,
     child : 6
   } ]

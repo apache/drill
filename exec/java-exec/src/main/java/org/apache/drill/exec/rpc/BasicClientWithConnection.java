@@ -35,13 +35,13 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicClientWithConnection.class);
 
   private BufferAllocator alloc;
-  
+
   public BasicClientWithConnection(RpcConfig rpcMapping, BufferAllocator alloc, EventLoopGroup eventLoopGroup, T handshakeType,
       Class<HANDSHAKE_RESPONSE> responseClass, Parser<HANDSHAKE_RESPONSE> handshakeParser) {
     super(rpcMapping, alloc.getUnderlyingAllocator(), eventLoopGroup, handshakeType, responseClass, handshakeParser);
     this.alloc = alloc;
   }
-  
+
   @Override
   protected GenericFutureListener<ChannelFuture> getCloseHandler(ServerConnection clientConnection) {
     return getCloseHandler(clientConnection.getChannel());
@@ -51,9 +51,9 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
   protected Response handle(ServerConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     return handleReponse( (ConnectionThrottle) connection, rpcType, pBody, dBody);
   }
-  
+
   protected abstract Response handleReponse(ConnectionThrottle throttle, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException ;
-    
+
   @Override
   public ServerConnection initRemoteConnection(Channel channel) {
     return new ServerConnection(channel, alloc);
@@ -62,7 +62,7 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
   public static class ServerConnection extends RemoteConnection{
 
     private final BufferAllocator alloc;
-    
+
     public ServerConnection(Channel channel, BufferAllocator alloc) {
       super(channel);
       this.alloc = alloc;
@@ -72,10 +72,10 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
     public BufferAllocator getAllocator() {
       return alloc;
     }
-    
-    
+
+
 
   }
 
-  
+
 }

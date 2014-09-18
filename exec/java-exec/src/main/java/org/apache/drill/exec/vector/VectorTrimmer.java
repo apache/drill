@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.DrillBuf;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 public class VectorTrimmer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorTrimmer.class);

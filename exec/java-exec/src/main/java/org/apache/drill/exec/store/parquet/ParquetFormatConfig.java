@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -34,5 +33,5 @@ public class ParquetFormatConfig implements FormatPluginConfig{
   public boolean equals(Object obj) {
     return obj instanceof ParquetFormatConfig;
   }
-  
+
 }

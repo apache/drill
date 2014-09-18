@@ -19,7 +19,7 @@ package org.apache.drill.exec.work;
 
 public interface RootNodeDriver {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootNodeDriver.class);
-  
+
   public boolean doNext();
-  
+
 }

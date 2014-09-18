@@ -27,9 +27,9 @@ import com.google.protobuf.Internal.EnumLite;
  */
 public abstract class AtomicState<T extends EnumLite> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AtomicState.class);
-  
+
   private final AtomicInteger state = new AtomicInteger();
-  
+
   /**
    * Constructor that defines initial T state.
    * @param initial
@@ -37,11 +37,11 @@ public abstract class AtomicState<T extends EnumLite> {
   public AtomicState(T initial){
     state.set(initial.getNumber());
   }
-  
+
   protected abstract T getStateFromNumber(int i);
-  
+
   /**
-   * Does an atomic conditional update from one state to another.  
+   * Does an atomic conditional update from one state to another.
    * @param oldState The expected current state.
    * @param newState The desired new state.
    * @return Whether or not the update was successful.
@@ -49,7 +49,7 @@ public abstract class AtomicState<T extends EnumLite> {
   public boolean updateState(T oldState, T newState){
     return state.compareAndSet(oldState.getNumber(), newState.getNumber());
   }
-  
+
   public T getState(){
     return getStateFromNumber(state.get());
   }

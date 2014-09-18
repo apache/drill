@@ -17,16 +17,16 @@
  */
 package org.apache.drill.exec.physical.impl.orderedpartitioner;
 
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
-import javax.inject.Named;
-
 public abstract class SampleCopierTemplate implements SampleCopier {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SampleCopierTemplate.class);
-  
+
   private SelectionVector4 sv4;
   private int outputRecords = 0;
 
@@ -41,7 +41,7 @@ public abstract class SampleCopierTemplate implements SampleCopier {
   public int getOutputRecords() {
     return outputRecords;
   }
-  
+
 
   @Override
   public boolean copyRecords(int skip, int start, int total) {
@@ -57,10 +57,10 @@ public abstract class SampleCopierTemplate implements SampleCopier {
     }
     return true;
   }
-  
+
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
   public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
-        
+
 
 }

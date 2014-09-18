@@ -559,7 +559,7 @@ public class TestFunctionsQuery {
         "DATE1=2011-02-01; " +
         "DATE2=2011-01-01\n");
   }
-  
+
   @Test
   @Ignore
   public void testToTimeStamp() throws Exception {

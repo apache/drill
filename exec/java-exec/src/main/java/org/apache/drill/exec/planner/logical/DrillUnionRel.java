@@ -24,7 +24,6 @@ import net.hydromatic.linq4j.Ord;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.exec.planner.common.DrillUnionRelBase;
-import org.apache.drill.exec.planner.logical.DrillImplementor;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
@@ -46,7 +45,7 @@ public class DrillUnionRel extends DrillUnionRelBase implements DrillRel {
   @Override
   public DrillUnionRel copy(RelTraitSet traitSet, List<RelNode> inputs,
       boolean all) {
-    try { 
+    try {
       return new DrillUnionRel(getCluster(), traitSet, inputs, all);
     } catch (InvalidRelException e) {
       throw new AssertionError(e) ;
@@ -68,7 +67,7 @@ public class DrillUnionRel extends DrillUnionRelBase implements DrillRel {
     builder.setDistinct(!all);
     return builder.build();
   }
-  
+
   public static DrillUnionRel convert(Union union, ConversionContext context) throws InvalidRelException{
     throw new UnsupportedOperationException();
   }

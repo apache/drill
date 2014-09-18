@@ -6,12 +6,12 @@
             type:"manual"
         }
     },
-	graph:[
+    graph:[
         {
             @id:1,
             pop:"fs-scan",
             format: {type: "json"},
-            storage:{type: "file", connection: "file:///"},   
+            storage:{type: "file", connection: "file:///"},
             files: [ "#{TEST_FILE}" ]
         },
         {

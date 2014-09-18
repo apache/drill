@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.StringOutputRecordWriter;
@@ -52,7 +51,7 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
   private boolean fRecordStarted = false; // true once the startRecord() is called until endRecord() is called
   private StringBuilder currentRecord; // contains the current record separated by field delimiter
 
-  public DrillTextRecordWriter(BufferAllocator allocator){
+  public DrillTextRecordWriter(BufferAllocator allocator) {
     super(allocator);
   }
 
@@ -98,16 +97,18 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
 
   @Override
   public void startRecord() throws IOException {
-    if (fRecordStarted)
+    if (fRecordStarted) {
       throw new IOException("Previous record is not written completely");
+    }
 
     fRecordStarted = true;
   }
 
   @Override
   public void endRecord() throws IOException {
-    if (!fRecordStarted)
+    if (!fRecordStarted) {
       throw new IOException("No record is in writing");
+    }
 
     // remove the extra delimiter at the end
     currentRecord.deleteCharAt(currentRecord.length()-fieldDelimiter.length());
@@ -166,4 +167,5 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
       throw ex;
     }
   }
+
 }

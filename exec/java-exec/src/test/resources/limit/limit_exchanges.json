@@ -63,11 +63,11 @@
     "pop" : "union-exchange",
     "@id" : 4,
     "child" : 3
-  }, 
+  },
 {
     "pop" : "project",
     "@id" : 5,
-    "exprs" : [ { 
+    "exprs" : [ {
       "ref" : "`N_NATIONKEY`",
       "expr" : "`N_NATIONKEY`"
     } ],

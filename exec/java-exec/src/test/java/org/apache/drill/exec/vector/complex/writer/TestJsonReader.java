@@ -19,16 +19,13 @@ package org.apache.drill.exec.vector.complex.writer;
 
 import static org.jgroups.util.Util.assertTrue;
 import static org.junit.Assert.assertEquals;
-import io.netty.buffer.DrillBuf;
 import static org.junit.Assert.assertNull;
+import io.netty.buffer.DrillBuf;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.List;
 
-import com.google.common.io.Files;
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -40,12 +37,9 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.RepeatedBigIntVector;
-import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.fn.JsonWriter;
 import org.apache.drill.exec.vector.complex.fn.ReaderJSONRecordSplitter;
@@ -53,13 +47,13 @@ import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 public class TestJsonReader extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
@@ -68,12 +62,12 @@ public class TestJsonReader extends BaseTestQuery {
   private static final boolean VERBOSE_DEBUG = true;
 
   @BeforeClass
-  public static void setupAllocator(){
+  public static void setupAllocator() {
     allocator = new TopLevelAllocator();
   }
 
   @AfterClass
-  public static void destroyAllocator(){
+  public static void destroyAllocator() {
     allocator.close();
   }
 
@@ -260,7 +254,9 @@ public class TestJsonReader extends BaseTestQuery {
         "}\n }";
 
     String compound = simple;
-    for(int i =0; i < repeatSize; i++) compound += simple;
+    for (int i =0; i < repeatSize; i++) {
+      compound += simple;
+    }
 
 //    simple = "{ \"integer\" : 2001, \n" +
 //        "  \"float\"   : 1.2\n" +
@@ -278,9 +274,9 @@ public class TestJsonReader extends BaseTestQuery {
     int i =0;
     List<Integer> batchSizes = Lists.newArrayList();
 
-    outside: while(true){
+    outside: while(true) {
       writer.setPosition(i);
-      switch(jsonReader.write(writer)){
+      switch (jsonReader.write(writer)) {
       case WRITE_SUCCEED:
         i++;
         break;
@@ -297,7 +293,7 @@ public class TestJsonReader extends BaseTestQuery {
         writer.allocate();
         writer.reset();
 
-        switch(jsonReader.write(writer)){
+        switch(jsonReader.write(writer)) {
         case NO_MORE:
           System.out.println("no more records - new alloc loop.");
           break outside;
@@ -312,7 +308,7 @@ public class TestJsonReader extends BaseTestQuery {
 
     int total = 0;
     int lastRecordCount = 0;
-    for(Integer records : batchSizes){
+    for (Integer records : batchSizes) {
       total += records;
       lastRecordCount = records;
     }
@@ -346,4 +342,5 @@ public class TestJsonReader extends BaseTestQuery {
     writer.clear();
     buffer.release();
   }
+
 }

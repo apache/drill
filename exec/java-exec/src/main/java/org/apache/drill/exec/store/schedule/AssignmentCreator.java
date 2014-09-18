@@ -41,18 +41,18 @@ public class AssignmentCreator<T extends CompleteWork> {
   private final ArrayListMultimap<Integer, T> mappings;
   private final List<DrillbitEndpoint> endpoints;
 
-  
+
 
   /**
    * Given a set of endpoints to assign work to, attempt to evenly assign work based on affinity of work units to
    * Drillbits.
-   * 
+   *
    * @param incomingEndpoints
    *          The set of nodes to assign work to. Note that nodes can be listed multiple times if we want to have
    *          multiple slices on a node working on the task simultaneously.
    * @param units
    *          The work units to assign.
-   * @return ListMultimap of Integer > List<CompleteWork> (based on their incoming order) to with 
+   * @return ListMultimap of Integer > List<CompleteWork> (based on their incoming order) to with
    */
   public static <T extends CompleteWork> ListMultimap<Integer, T> getMappings(List<DrillbitEndpoint> incomingEndpoints,
       List<T> units) {
@@ -63,7 +63,7 @@ public class AssignmentCreator<T extends CompleteWork> {
   private AssignmentCreator(List<DrillbitEndpoint> incomingEndpoints, List<T> units) {
     logger.debug("Assigning {} units to {} endpoints", units.size(), incomingEndpoints.size());
     Stopwatch watch = new Stopwatch();
-    
+
     Preconditions.checkArgument(incomingEndpoints.size() <= units.size(), String.format("Incoming endpoints %d "
         + "is greater than number of row groups %d", incomingEndpoints.size(), units.size()));
     this.mappings = ArrayListMultimap.create();
@@ -83,7 +83,7 @@ public class AssignmentCreator<T extends CompleteWork> {
   }
 
   /**
-   * 
+   *
    * @param mappings
    *          the mapping between fragment/endpoint and rowGroup
    * @param endpoints
@@ -101,8 +101,9 @@ public class AssignmentCreator<T extends CompleteWork> {
     final boolean requireAffinity = requiredPercentage > 0;
     int maxAssignments = (int) (workunits.size() / endpoints.size());
 
-    if (maxAssignments < 1)
+    if (maxAssignments < 1) {
       maxAssignments = 1;
+    }
 
     for (Iterator<T> iter = workunits.iterator(); iter.hasNext();) {
       T unit = iter.next();

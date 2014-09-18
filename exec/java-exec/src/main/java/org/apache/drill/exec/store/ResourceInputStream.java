@@ -27,13 +27,9 @@ import org.apache.hadoop.fs.Seekable;
 public class ResourceInputStream extends ByteArrayInputStream implements Seekable, PositionedReadable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourceInputStream.class);
 
-
   public ResourceInputStream(byte[] bytes) {
     super(bytes);
   }
-
-  
-  
 
   @Override
   public void readFully(long position, byte[] buffer) throws IOException {
@@ -64,12 +60,14 @@ public class ResourceInputStream extends ByteArrayInputStream implements Seekabl
     }
     System.arraycopy(buf, start, b, off, len);
     return len;
-}
-  
+  }
+
   @Override
   public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
     int l = read(position, buffer, offset, length);
-    if (l < length) throw new EOFException();
+    if (l < length) {
+      throw new EOFException();
+    }
   }
 
   @Override
@@ -77,7 +75,6 @@ public class ResourceInputStream extends ByteArrayInputStream implements Seekabl
     return pos;
   }
 
-  
   @Override
   public int read(byte[] b) throws IOException {
     int l = read(pos, b, 0, b.length);
@@ -91,14 +88,11 @@ public class ResourceInputStream extends ByteArrayInputStream implements Seekabl
     return true;
   }
 
-
-
-
   @Override
   public void seek(long arg0) throws IOException {
-    if(buf.length > arg0){
+    if (buf.length > arg0) {
       pos = (int) arg0;
-    }else{
+    } else {
       throw new EOFException();
     }
   }

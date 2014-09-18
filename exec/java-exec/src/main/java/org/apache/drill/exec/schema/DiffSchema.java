@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.schema;
 
-import com.google.common.collect.Lists;
-
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 public class DiffSchema {
     List<Field> addedFields;

@@ -47,10 +47,10 @@ class AdjacencyList<V extends GraphValue<V>> {
     }
   }
 
-  Node getNewNode(V value){
+  Node getNewNode(V value) {
     return new Node(value);
   }
-  
+
   public List<Edge<Node>> getAdjacent(AdjacencyList<V>.Node source) {
     return adjacencies.get(source);
   }
@@ -83,18 +83,20 @@ class AdjacencyList<V extends GraphValue<V>> {
 
       // remove any nodes that have one or more outbound edges.
       List<Edge<Node>> adjList = this.getAdjacent(n);
-      if (adjList != null && !adjList.isEmpty()) i.remove();
+      if (adjList != null && !adjList.isEmpty()) {
+        i.remove();
+      }
 
     }
     return nodes;
   }
-  
+
   /**
    * Get a list of nodes that have no outbound edges.
-   * 
+   *
    * @return
    */
-  public Collection<V> getLeafNodes(){
+  public Collection<V> getLeafNodes() {
     return convert(getInternalLeafNodes());
   }
 
@@ -109,13 +111,13 @@ class AdjacencyList<V extends GraphValue<V>> {
 
   /**
    * Get a list of all nodes that have no incoming edges.
-   * 
+   *
    * @return
    */
-  public List<V> getRootNodes(){
+  public List<V> getRootNodes() {
     return convert(getInternalRootNodes());
   }
-  
+
   public Collection<Edge<Node>> getAllEdges() {
     return adjacencies.values();
   }
@@ -149,7 +151,9 @@ class AdjacencyList<V extends GraphValue<V>> {
     int index = -1; // used for Tarjan's algorithm
 
     public Node(final V operator) {
-      if (operator == null) throw new IllegalArgumentException("Operator node was null.");
+      if (operator == null) {
+        throw new IllegalArgumentException("Operator node was null.");
+      }
       this.nodeValue = operator;
     }
 
@@ -173,13 +177,14 @@ class AdjacencyList<V extends GraphValue<V>> {
     }
 
   }
-  
-  public static <V extends GraphValue<V>> AdjacencyList<V> newInstance(Collection<V> nodes){
+
+  public static <V extends GraphValue<V>> AdjacencyList<V> newInstance(Collection<V> nodes) {
     AdjacencyList<V> list = new AdjacencyList<V>();
     AdjacencyListBuilder<V> builder = new AdjacencyListBuilder<V>(list);
-    for(V v : nodes){
-      v.accept(builder); 
+    for (V v : nodes) {
+      v.accept(builder);
     }
     return builder.getAdjacencyList();
   }
+
 }

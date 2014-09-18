@@ -18,18 +18,16 @@
 package org.apache.drill.jdbc;
 
 import java.sql.ResultSetMetaData;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.drill.common.types.Types;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
 
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.ColumnMetaData.AvaticaType;
 import net.hydromatic.avatica.ColumnMetaData.Rep;
+
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
 
 public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillColumnMetaDataList.class);

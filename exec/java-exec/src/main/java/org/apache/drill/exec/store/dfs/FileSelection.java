@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
@@ -29,6 +28,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -52,8 +52,8 @@ public class FileSelection {
     this.files = files;
     this.selectionRoot = selectionRoot;
   }
-  
-  public FileSelection(List<String> files, boolean dummy){
+
+  public FileSelection(List<String> files, boolean dummy) {
     this.files = files;
   }
 
@@ -73,7 +73,9 @@ public class FileSelection {
   public boolean containsDirectories(DrillFileSystem fs) throws IOException {
     init(fs);
     for (FileStatus p : statuses) {
-      if (p.isDir()) return true;
+      if (p.isDir()) {
+        return true;
+      }
     }
     return false;
   }
@@ -99,16 +101,20 @@ public class FileSelection {
     return statuses.get(0);
   }
 
-  public List<String> getAsFiles(){
-    if(!files.isEmpty()) return files;
-    if(statuses == null) return Collections.emptyList();
+  public List<String> getAsFiles() {
+    if (!files.isEmpty()) {
+      return files;
+    }
+    if (statuses == null) {
+      return Collections.emptyList();
+    }
     List<String> files = Lists.newArrayList();
-    for(FileStatus s : statuses){
+    for (FileStatus s : statuses) {
       files.add(s.getPath().toString());
     }
     return files;
   }
-  
+
   private void init(DrillFileSystem fs) throws IOException {
     if (files != null && statuses == null) {
       statuses = Lists.newArrayList();
@@ -131,7 +137,9 @@ public class FileSelection {
     } else {
       Path p = new Path(parent,removeLeadingSlash(path));
       FileStatus[] status = fs.getUnderlying().globStatus(p);
-      if(status == null || status.length == 0) return null;
+      if (status == null || status.length == 0) {
+        return null;
+      }
       String[] s = p.toUri().getPath().split("/");
       String newPath = StringUtils.join(ArrayUtils.subarray(s, 0, s.length - 1), "/");
       Preconditions.checkState(!newPath.contains("*") && !newPath.contains("?"), String.format("Unsupported selection path: %s", p));

@@ -18,14 +18,14 @@
 
 package org.apache.drill.exec.physical.impl;
 
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Trace;
-
-import java.util.List;
 
 import com.google.common.collect.Lists;
 
@@ -82,10 +82,12 @@ public class TraceInjector extends AbstractPhysicalVisitor<PhysicalOperator, Fra
         }
 
         /* Inject trace operator */
-        if (list.size() > 0)
-            newOp = op.getNewWithChildren(list);
-            newOp.setOperatorId(op.getOperatorId());
+        if (list.size() > 0) {
+          newOp = op.getNewWithChildren(list);
+        }
+        newOp.setOperatorId(op.getOperatorId());
 
         return newOp;
     }
+
 }

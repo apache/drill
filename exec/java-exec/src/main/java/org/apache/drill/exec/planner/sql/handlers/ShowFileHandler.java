@@ -26,21 +26,17 @@ import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
 
-import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.SubSchemaWrapper;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlNode;
-
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlShowFiles;
+import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlNode;
 
 
 public class ShowFileHandler extends DefaultSqlHandler {

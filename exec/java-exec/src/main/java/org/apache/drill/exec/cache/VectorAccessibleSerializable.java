@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.cache;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
@@ -66,7 +65,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     this.va = new VectorContainer();
   }
 
-  public VectorAccessibleSerializable(WritableBatch batch, BufferAllocator allocator){
+  public VectorAccessibleSerializable(WritableBatch batch, BufferAllocator allocator) {
     this(batch, null, allocator);
   }
 
@@ -136,7 +135,6 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     writeToStream(output);
   }
 
-
   /**
    * Serializes the VectorAccessible va and writes it to an output stream
    * @param output the OutputStream to write to
@@ -154,29 +152,25 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     DrillBuf svBuf = null;
     Integer svCount =  null;
 
-    if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE)
-    {
+    if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE) {
       svCount = sv2.getCount();
       svBuf = sv2.getBuffer(); //this calls retain() internally
     }
 
-    try
-    {
-            /* Write the metadata to the file */
+    try {
+      /* Write the metadata to the file */
       batchDef.writeDelimitedTo(output);
 
-            /* If we have a selection vector, dump it to file first */
-      if (svBuf != null)
-      {
+      /* If we have a selection vector, dump it to file first */
+      if (svBuf != null) {
         svBuf.getBytes(0, output, svBuf.readableBytes());
         sv2.setBuffer(svBuf);
         svBuf.release(); // sv2 now owns the buffer
         sv2.setRecordCount(svCount);
       }
 
-            /* Dump the array of ByteBuf's associated with the value vectors */
-      for (DrillBuf buf : incomingBuffers)
-      {
+      /* Dump the array of ByteBuf's associated with the value vectors */
+      for (DrillBuf buf : incomingBuffers) {
                 /* dump the buffer into the OutputStream */
         int bufLength = buf.readableBytes();
         buf.getBytes(0, output, bufLength);
@@ -185,8 +179,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       output.flush();
 
       timerContext.stop();
-    } catch (IOException e)
-    {
+    } catch (IOException e) {
       throw new RuntimeException(e);
     } finally {
       clear();
@@ -196,7 +189,9 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
   public void clear() {
     if (!retain) {
       batch.clear();
-      if(sv2 != null) sv2.clear();
+      if (sv2 != null) {
+        sv2.clear();
+      }
     }
   }
 

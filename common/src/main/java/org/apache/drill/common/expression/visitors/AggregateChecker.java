@@ -30,26 +30,26 @@ import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
-import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
-import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 
 public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollector, RuntimeException>{
 
   public static final AggregateChecker INSTANCE = new AggregateChecker();
 
-  public static boolean isAggregating(LogicalExpression e, ErrorCollector errors){
+  public static boolean isAggregating(LogicalExpression e, ErrorCollector errors) {
     return e.accept(INSTANCE, errors);
   }
 
@@ -61,38 +61,42 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   @Override
   public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder, ErrorCollector errors) {
-    if(holder.isAggregating()){
+    if (holder.isAggregating()) {
       for (int i = 0; i < holder.args.size(); i++) {
         LogicalExpression e = holder.args.get(i);
-        if(e.accept(this, errors)){
+        if(e.accept(this, errors)) {
           errors.addGeneralError(e.getPosition(),
             String.format("Aggregating function call %s includes nested aggregations at arguments number %d. " +
               "This isn't allowed.", holder.getName(), i));
         }
       }
       return true;
-    }else{
-      for(LogicalExpression e : holder.args){
-        if(e.accept(this, errors)) return true;
+    } else {
+      for (LogicalExpression e : holder.args) {
+        if (e.accept(this, errors)) {
+          return true;
+        }
       }
       return false;
     }
   }
 
   @Override
-  public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors){
+  public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors) {
     for (LogicalExpression arg : op.args) {
-      if (arg.accept(this, errors))
+      if (arg.accept(this, errors)) {
         return true;
+      }
     }
-    
     return false;
   }
-  
+
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr, ErrorCollector errors) {
     IfCondition c = ifExpr.ifCondition;
-    if(c.condition.accept(this, errors) || c.expression.accept(this, errors)) return true;
+    if (c.condition.accept(this, errors) || c.expression.accept(this, errors)) {
+      return true;
+    }
     return ifExpr.elseExpression.accept(this, errors);
   }
 
@@ -198,4 +202,5 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
   public Boolean visitNullExpression(NullExpression e, ErrorCollector value) throws RuntimeException {
     return false;
   }
+
 }

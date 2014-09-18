@@ -36,19 +36,19 @@ import com.mongodb.WriteConcern;
 public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoPStoreProvider.class);
-  
+
   static final String pKey = "pKey";
-  
+
   private MongoClient client;
-  
+
   private DBCollection collection;
-  
+
   private final String mongoURL;
-  
+
   public MongoPStoreProvider(PStoreRegistry registry) {
     mongoURL = registry.getConfig().getString(SYS_STORE_PROVIDER_MONGO_URL);
   }
-  
+
   @Override
   public void start() throws IOException {
     MongoClientURI clientURI = new MongoClientURI(mongoURL);

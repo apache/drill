@@ -45,7 +45,7 @@ public class JsonReaderWithState {
     reader = splitter.getNextReader();
     jsonReader = new JsonReader(workspace, columns, allTextMode);
   }
-  
+
   public JsonReaderWithState(DrillBuf workspace, boolean allTextMode) throws IOException {
     jsonReader = new JsonReader(workspace, GroupScan.ALL_COLUMNS, allTextMode);
   }
@@ -65,9 +65,9 @@ public class JsonReaderWithState {
   public WriteState write(ComplexWriter writer) throws JsonParseException, IOException {
     if (reader == null) {
       reader = splitter.getNextReader();
-      if (reader == null)
+      if (reader == null) {
         return WriteState.NO_MORE;
-
+      }
     }
 
     jsonReader.write(reader, writer);

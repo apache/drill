@@ -17,25 +17,25 @@
  */
 package org.apache.drill.common.logical.data;
 
-import com.google.common.collect.Iterators;
+import java.util.Iterator;
+
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-
-import java.util.Iterator;
+import com.google.common.collect.Iterators;
 
 @JsonTypeName("windowframe")
 public class WindowFrame extends SingleInputOperator{
-  
-  
+
+
   private final FieldReference within;
   private final FrameRef frame;
   private final long start;
   private final long end;
-  
+
 
   @JsonCreator
   public WindowFrame(@JsonProperty("within") FieldReference within, @JsonProperty("ref") FrameRef frame, @JsonProperty("start") Long start, @JsonProperty("end") Long end) {
@@ -78,21 +78,21 @@ public class WindowFrame extends SingleInputOperator{
     public static class FrameRef{
     private final FieldReference segment;
     private final FieldReference position;
-    
+
     @JsonCreator
     public FrameRef(@JsonProperty("segment") FieldReference segment, @JsonProperty("position") FieldReference position) {
       super();
       this.segment = segment;
       this.position = position;
     }
-    
+
     public FieldReference getSegment() {
       return segment;
     }
     public FieldReference getPosition() {
       return position;
     }
-    
-    
+
+
   }
 }

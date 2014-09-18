@@ -149,7 +149,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }
-  
+
   @Override
   public void cleanup() {
     super.cleanup();

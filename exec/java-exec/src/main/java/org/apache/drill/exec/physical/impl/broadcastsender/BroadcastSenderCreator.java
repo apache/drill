@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.broadcastsender;
 
-import com.google.common.collect.Iterators;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.BroadcastSender;
@@ -25,7 +26,7 @@ import org.apache.drill.exec.physical.impl.RootCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.util.List;
+import com.google.common.collect.Iterators;
 
 public class BroadcastSenderCreator implements RootCreator<BroadcastSender> {
   @Override

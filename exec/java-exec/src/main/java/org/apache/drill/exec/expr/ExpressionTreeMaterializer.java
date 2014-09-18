@@ -17,16 +17,8 @@
  */
 package org.apache.drill.exec.expr;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
@@ -36,27 +28,26 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
-import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
-import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
-import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
-import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.expression.visitors.ConditionalExprOptimizer;
@@ -73,12 +64,15 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.resolver.DefaultFunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
-
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.resolver.TypeCastRules;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class ExpressionTreeMaterializer {
 
@@ -91,17 +85,17 @@ public class ExpressionTreeMaterializer {
     return ExpressionTreeMaterializer.materialize(expr, batch, errorCollector, registry, false);
   }
 
-  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionImplementationRegistry registry, 
+  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionImplementationRegistry registry,
       boolean allowComplexWriterExpr) {
     LogicalExpression out =  expr.accept(new MaterializeVisitor(batch, errorCollector, allowComplexWriterExpr), registry);
-    
+
     if (!errorCollector.hasErrors()) {
       out = out.accept(ConditionalExprOptimizer.INSTANCE, null);
     }
-    
-    if(out instanceof NullExpression){
+
+    if (out instanceof NullExpression) {
       return new TypedNullConstant(Types.optional(MinorType.INT));
-    }else{
+    } else {
       return out;
     }
   }
@@ -110,7 +104,7 @@ public class ExpressionTreeMaterializer {
     private ExpressionValidator validator = new ExpressionValidator();
     private final ErrorCollector errorCollector;
     private final VectorAccessible batch;
-    private final boolean allowComplexWriter; 
+    private final boolean allowComplexWriter;
 
     public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector, boolean allowComplexWriter) {
       this.batch = batch;
@@ -145,7 +139,7 @@ public class ExpressionTreeMaterializer {
       }
 
       //replace with a new function call, since its argument could be changed.
-      return new BooleanOperator(op.getName(), args, op.getPosition());      
+      return new BooleanOperator(op.getName(), args, op.getPosition());
     }
 
     private LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionImplementationRegistry registry) {
@@ -197,7 +191,7 @@ public class ExpressionTreeMaterializer {
       if (matchedFuncHolder instanceof DrillComplexWriterFuncHolder && ! allowComplexWriter) {
         errorCollector.addGeneralError(call.getPosition(), "Only ProjectRecordBatch could have complex writer function. You are using complex writer function " + call.getName() + " in a non-project operation!");
       }
-      
+
       //new arg lists, possible with implicit cast inserted.
       List<LogicalExpression> argsWithCast = Lists.newArrayList();
 
@@ -264,7 +258,7 @@ public class ExpressionTreeMaterializer {
       boolean first = true;
       for(LogicalExpression e : call.args) {
         TypeProtos.MajorType mt = e.getMajorType();
-        if(first){
+        if (first) {
           first = false;
         } else {
           sb.append(", ");
@@ -488,7 +482,7 @@ public class ExpressionTreeMaterializer {
     }
 
     @Override
-    public LogicalExpression visitCastExpression(CastExpression e, FunctionImplementationRegistry value){
+    public LogicalExpression visitCastExpression(CastExpression e, FunctionImplementationRegistry value) {
 
       // if the cast is pointless, remove it.
       LogicalExpression input = e.getInput().accept(this,  value);
@@ -496,13 +490,15 @@ public class ExpressionTreeMaterializer {
       MajorType newMajor = e.getMajorType();
       MinorType newMinor = input.getMajorType().getMinorType();
 
-      if(castEqual(e.getPosition(), newMajor, input.getMajorType())) return input; // don't do pointless cast.
+      if (castEqual(e.getPosition(), newMajor, input.getMajorType())) {
+        return input; // don't do pointless cast.
+      }
 
-      if(newMinor == MinorType.LATE){
+      if (newMinor == MinorType.LATE) {
         // if the type still isn't fully bound, leave as cast expression.
         return new CastExpression(input, e.getMajorType(), e.getPosition());
       } else if (newMinor == MinorType.NULL) {
-        // if input is a NULL expression, remove cast expression and return a TypedNullConstant directly.  
+        // if input is a NULL expression, remove cast expression and return a TypedNullConstant directly.
         return new TypedNullConstant(Types.optional(e.getMajorType().getMinorType()));
       } else {
         // if the type is fully bound, convert to functioncall and materialze the function.
@@ -526,9 +522,11 @@ public class ExpressionTreeMaterializer {
       }
     }
 
-    private boolean castEqual(ExpressionPosition pos, MajorType from, MajorType to){
-      if(!from.getMinorType().equals(to.getMinorType())) return false;
-      switch(from.getMinorType()){
+    private boolean castEqual(ExpressionPosition pos, MajorType from, MajorType to) {
+      if (!from.getMinorType().equals(to.getMinorType())) {
+        return false;
+      }
+      switch(from.getMinorType()) {
       case FLOAT4:
       case FLOAT8:
       case INT:
@@ -570,10 +568,10 @@ public class ExpressionTreeMaterializer {
       case VAR16CHAR:
       case VARBINARY:
       case VARCHAR:
-        if(to.getWidth() < from.getWidth() && to.getWidth() > 0){
+        if (to.getWidth() < from.getWidth() && to.getWidth() > 0) {
           this.errorCollector.addGeneralError(pos, "Casting from a longer variable length type to a shorter variable length type is not currently supported.");
           return false;
-        }else{
+        } else {
           return true;
         }
 
@@ -583,4 +581,5 @@ public class ExpressionTreeMaterializer {
       }
     }
   }
+
 }

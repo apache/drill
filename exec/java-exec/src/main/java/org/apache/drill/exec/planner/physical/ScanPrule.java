@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.List;
-
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;

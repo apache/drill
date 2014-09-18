@@ -31,7 +31,7 @@ public class SelectionVectorPrelVisitor extends BasePrelVisitor<Prel, Void, Runt
 
   private static SelectionVectorPrelVisitor INSTANCE = new SelectionVectorPrelVisitor();
 
-  public static Prel addSelectionRemoversWhereNecessary(Prel prel){
+  public static Prel addSelectionRemoversWhereNecessary(Prel prel) {
     return prel.accept(INSTANCE, null);
   }
 
@@ -39,7 +39,7 @@ public class SelectionVectorPrelVisitor extends BasePrelVisitor<Prel, Void, Runt
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
     SelectionVectorMode[] encodings = prel.getSupportedEncodings();
     List<RelNode> children = Lists.newArrayList();
-    for(Prel child : prel){
+    for (Prel child : prel) {
       child = child.accept(this, null);
       children.add(convert(encodings, child));
     }
@@ -47,12 +47,13 @@ public class SelectionVectorPrelVisitor extends BasePrelVisitor<Prel, Void, Runt
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 
-  private Prel convert(SelectionVectorMode[] encodings, Prel prel){
-    for(SelectionVectorMode m : encodings){
-      if(prel.getEncoding() == m) return prel;
+  private Prel convert(SelectionVectorMode[] encodings, Prel prel) {
+    for (SelectionVectorMode m : encodings) {
+      if (prel.getEncoding() == m) {
+        return prel;
+      }
     }
     return new SelectionVectorRemoverPrel(prel);
   }
-
 
 }

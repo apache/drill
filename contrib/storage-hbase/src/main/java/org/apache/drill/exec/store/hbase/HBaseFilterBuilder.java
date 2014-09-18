@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hbase;
 
 import java.util.Arrays;
 
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -70,6 +71,11 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
   public HBaseScanSpec visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
     allExpressionsConverted = false;
     return null;
+  }
+
+  @Override
+  public HBaseScanSpec visitBooleanOperator(BooleanOperator op, Void value) throws RuntimeException {
+    return visitFunctionCall(op, value);
   }
 
   @Override

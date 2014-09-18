@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.io.IOException;
+import java.util.Iterator;
+
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ExternalSort;
@@ -34,9 +37,6 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
-
-import java.io.IOException;
-import java.util.Iterator;
 
 public class SortPrel extends SortRel implements Prel {
 
@@ -86,6 +86,7 @@ public class SortPrel extends SortRel implements Prel {
     return creator.addMetadata(this, g);
   }
 
+  @Override
   public SortPrel copy(
       RelTraitSet traitSet,
       RelNode newInput,
@@ -114,10 +115,10 @@ public class SortPrel extends SortRel implements Prel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.FOUR_BYTE;
   }
-  
+
   @Override
   public boolean needsFinalColumnReordering() {
     return true;
   }
-  
+
 }

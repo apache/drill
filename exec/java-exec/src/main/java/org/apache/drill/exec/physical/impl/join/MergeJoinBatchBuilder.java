@@ -50,15 +50,24 @@ public class MergeJoinBatchBuilder {
   }
 
   public boolean add(RecordBatch batch) {
-    if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE)
+    if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
       throw new UnsupportedOperationException("A merge join cannot currently work against a sv4 batch.");
-    if (batch.getRecordCount() == 0) return true; // skip over empty record batches.
+    }
+    if (batch.getRecordCount() == 0) {
+      return true;      // skip over empty record batches.
+    }
 
     // resource checks
     long batchBytes = getSize(batch);
-    if (batchBytes + runningBytes > Integer.MAX_VALUE) return false;      // TODO: 2GB is arbitrary
-    if (runningBatches++ >= Character.MAX_VALUE) return false;            // allowed in batch.
-    if (!svAllocator.preAllocate(batch.getRecordCount()*4)) return false; // sv allocation available.
+    if (batchBytes + runningBytes > Integer.MAX_VALUE) {
+      return false;     // TODO: 2GB is arbitrary
+    }
+    if (runningBatches++ >= Character.MAX_VALUE) {
+      return false;     // allowed in batch.
+    }
+    if (!svAllocator.preAllocate(batch.getRecordCount()*4)) {
+      return false;     // sv allocation available.
+    }
 
     // transfer VVs to a new RecordBatchData
     RecordBatchData bd = new RecordBatchData(batch);
@@ -68,9 +77,9 @@ public class MergeJoinBatchBuilder {
     return true;
   }
 
-  private long getSize(RecordBatch batch){
+  private long getSize(RecordBatch batch) {
     long bytes = 0;
-    for(VectorWrapper<?> v : batch){
+    for (VectorWrapper<?> v : batch) {
       bytes += v.getValueVector().getBufferSize();
     }
     return bytes;
@@ -78,18 +87,20 @@ public class MergeJoinBatchBuilder {
 
   public void build() throws SchemaChangeException {
     container.clear();
-    if (queuedRightBatches.size() > Character.MAX_VALUE) throw new SchemaChangeException("Join cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
+    if (queuedRightBatches.size() > Character.MAX_VALUE) {
+      throw new SchemaChangeException("Join cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
+    }
     status.sv4 = new SelectionVector4(svAllocator.getAllocation(), recordCount, Character.MAX_VALUE);
     BatchSchema schema = queuedRightBatches.keySet().iterator().next();
     List<RecordBatchData> data = queuedRightBatches.get(schema);
 
     // now we're going to generate the sv4 pointers
-    switch(schema.getSelectionVectorMode()){
+    switch (schema.getSelectionVectorMode()) {
       case NONE: {
         int index = 0;
         int recordBatchId = 0;
-        for(RecordBatchData d : data){
-          for(int i =0; i < d.getRecordCount(); i++, index++){
+        for (RecordBatchData d : data) {
+          for (int i =0; i < d.getRecordCount(); i++, index++) {
             status.sv4.set(index, recordBatchId, i);
           }
           recordBatchId++;
@@ -99,8 +110,8 @@ public class MergeJoinBatchBuilder {
       case TWO_BYTE: {
         int index = 0;
         int recordBatchId = 0;
-        for(RecordBatchData d : data){
-          for(int i =0; i < d.getRecordCount(); i++, index++){
+        for (RecordBatchData d : data) {
+          for (int i =0; i < d.getRecordCount(); i++, index++) {
             status.sv4.set(index, recordBatchId, (int) d.getSv2().getIndex(i));
           }
           // might as well drop the selection vector since we'll stop using it now.
@@ -121,7 +132,7 @@ public class MergeJoinBatchBuilder {
       }
     }
 
-    for(MaterializedField f : vectors.keySet()){
+    for (MaterializedField f : vectors.keySet()) {
       List<ValueVector> v = vectors.get(f);
       container.addHyperList(v);
     }

@@ -22,9 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.LoadingCache;
 import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -39,6 +36,8 @@ import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.fragment.NonRootFragmentManager;
 import org.apache.drill.exec.work.fragment.RootFragmentManager;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 
 public class WorkEventBus {
@@ -65,9 +64,10 @@ public class WorkEventBus {
   public void setFragmentStatusListener(QueryId queryId, FragmentStatusListener listener) throws RpcException {
     logger.debug("Adding fragment status listener for queryId {}.", queryId);
     FragmentStatusListener old = listeners.putIfAbsent(queryId, listener);
-    if (old != null)
+    if (old != null) {
       throw new RpcException(
           "Failure.  The provided handle already exists in the listener pool.  You need to remove one listener before adding another.");
+    }
   }
 
   public void status(FragmentStatus status) {
@@ -84,12 +84,13 @@ public class WorkEventBus {
 
   public void setRootFragmentManager(RootFragmentManager fragmentManager) {
     FragmentManager old = managers.putIfAbsent(fragmentManager.getHandle(), fragmentManager);
-    if (old != null)
+    if (old != null) {
       throw new IllegalStateException(
           "Tried to set fragment manager when has already been set for the provided fragment handle.");
+    }
   }
 
-  public FragmentManager getFragmentManager(FragmentHandle handle){
+  public FragmentManager getFragmentManager(FragmentHandle handle) {
     return managers.get(handle);
   }
 
@@ -104,9 +105,11 @@ public class WorkEventBus {
       return null;
     }
     FragmentManager manager = managers.get(handle);
-    if (manager != null) return manager;
+    if (manager != null) {
+      return manager;
+    }
     DistributedMap<FragmentHandle, PlanFragment> planCache = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE);
-    for(Map.Entry<FragmentHandle, PlanFragment> e : planCache.getLocalEntries()){
+    for (Map.Entry<FragmentHandle, PlanFragment> e : planCache.getLocalEntries()) {
 //      logger.debug("Key: {}", e.getKey());
 //      logger.debug("Value: {}", e.getValue());
     }
@@ -131,7 +134,8 @@ public class WorkEventBus {
     return manager;
   }
 
-  public void removeFragmentManager(FragmentHandle handle){
+  public void removeFragmentManager(FragmentHandle handle) {
     managers.remove(handle);
   }
+
 }

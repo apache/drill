@@ -24,14 +24,11 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.ImmutableList;
-
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
@@ -50,6 +47,7 @@ import org.apache.thrift.TException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -120,8 +118,9 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     @Override
     public List<String> load(String key) throws Exception {
-      if (!DATABASES.equals(key))
+      if (!DATABASES.equals(key)) {
         throw new UnsupportedOperationException();
+      }
       try {
         return mClient.getAllDatabases();
       } catch (TException e) {
@@ -160,8 +159,9 @@ public class HiveSchemaFactory implements SchemaFactory {
         t = mClient.getTable(dbName, key);
       }
 
-      if (t == null)
+      if (t == null) {
         throw new UnknownTableException(String.format("Unable to find table '%s'.", key));
+      }
 
       List<Partition> partitions = null;
       try {
@@ -176,8 +176,9 @@ public class HiveSchemaFactory implements SchemaFactory {
         hivePartitions.add(new HiveTable.HivePartition(part));
       }
 
-      if (hivePartitions.size() == 0)
+      if (hivePartitions.size() == 0) {
         hivePartitions = null;
+      }
       return new HiveReadEntry(new HiveTable(t), hivePartitions, hiveConfigOverride);
 
     }
@@ -211,7 +212,7 @@ public class HiveSchemaFactory implements SchemaFactory {
         }
         tables = tableNameLoader.get(name);
         HiveDatabaseSchema schema = new HiveDatabaseSchema(tables, this, name);
-        if(name.equals("default")){
+        if (name.equals("default")) {
           this.defaultSchema = schema;
         }
         return schema;
@@ -223,8 +224,8 @@ public class HiveSchemaFactory implements SchemaFactory {
     }
 
 
-    void setHolder(SchemaPlus plusOfThis){
-      for(String s : getSubSchemaNames()){
+    void setHolder(SchemaPlus plusOfThis) {
+      for (String s : getSubSchemaNames()) {
         plusOfThis.add(s, getSubSchema(s));
       }
     }
@@ -236,10 +237,10 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     @Override
     public Set<String> getSubSchemaNames() {
-      try{
+      try {
         List<String> dbs = databases.get(DATABASES);
         return Sets.newHashSet(dbs);
-      }catch(ExecutionException e){
+      } catch (ExecutionException e) {
         logger.warn("Failure while getting Hive database list.", e);
       }
       return super.getSubSchemaNames();
@@ -247,7 +248,7 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     @Override
     public net.hydromatic.optiq.Table getTable(String name) {
-      if(defaultSchema == null){
+      if (defaultSchema == null) {
         return super.getTable(name);
       }
       return defaultSchema.getTable(name);
@@ -255,24 +256,26 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     @Override
     public Set<String> getTableNames() {
-      if(defaultSchema == null){
+      if (defaultSchema == null) {
         return super.getTableNames();
       }
       return defaultSchema.getTableNames();
     }
 
-    List<String> getTableNames(String dbName){
+    List<String> getTableNames(String dbName) {
       try{
         return tableNameLoader.get(dbName);
-      }catch(ExecutionException e){
+      } catch (ExecutionException e) {
         logger.warn("Failure while loading table names for database '{}'.", dbName, e.getCause());
         return Collections.emptyList();
       }
     }
 
-    DrillTable getDrillTable(String dbName, String t){
+    DrillTable getDrillTable(String dbName, String t) {
       HiveReadEntry entry = getSelectionBaseOnName(dbName, t);
-      if(entry == null) return null;
+      if (entry == null) {
+        return null;
+      }
 
       if (entry.getJdbcTableType() == TableType.VIEW) {
         return new DrillHiveViewTable(schemaName, plugin, entry);
@@ -282,10 +285,12 @@ public class HiveSchemaFactory implements SchemaFactory {
     }
 
     HiveReadEntry getSelectionBaseOnName(String dbName, String t) {
-      if(dbName == null) dbName = "default";
+      if (dbName == null) {
+        dbName = "default";
+      }
       try{
         return tableLoaders.get(dbName).get(t);
-      }catch(ExecutionException e){
+      }catch(ExecutionException e) {
         logger.warn("Exception occurred while trying to read table. {}.{}", dbName, t, e.getCause());
         return null;
       }
@@ -302,6 +307,5 @@ public class HiveSchemaFactory implements SchemaFactory {
     }
 
   }
-
 
 }

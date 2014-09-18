@@ -21,12 +21,19 @@ package org.apache.drill.exec.store;
 public class ByteArrayUtil {
 
   public static byte[] toByta(Object data) throws Exception {
-    if (data instanceof Integer) return toByta((int) data);
-    else if (data instanceof Double) return toByta((double) data);
-    else if (data instanceof Float) return toByta((float) data);
-    else if (data instanceof Boolean) return toByta((boolean) data);
-    else if (data instanceof Long) return toByta((long) data);
-    else throw new Exception("Cannot convert that type to a byte array.");
+    if (data instanceof Integer) {
+      return toByta((int) data);
+    } else if (data instanceof Double) {
+      return toByta((double) data);
+    } else if (data instanceof Float) {
+      return toByta((float) data);
+    } else if (data instanceof Boolean) {
+      return toByta((boolean) data);
+    } else if (data instanceof Long) {
+      return toByta((long) data);
+    } else {
+      throw new Exception("Cannot convert that type to a byte array.");
+    }
   }
 
   // found at http://www.daniweb.com/software-development/java/code/216874/primitive-types-as-byte-arrays
@@ -51,11 +58,14 @@ public class ByteArrayUtil {
   }
 
   public static byte[] toByta(short[] data) {
-    if (data == null) return null;
+    if (data == null) {
+      return null;
+    }
     // ----------
     byte[] byts = new byte[data.length * 2];
-    for (int i = 0; i < data.length; i++)
+    for (int i = 0; i < data.length; i++) {
       System.arraycopy(toByta(data[i]), 0, byts, i * 2, 2);
+    }
     return byts;
   }
 
@@ -68,11 +78,14 @@ public class ByteArrayUtil {
   }
 
   public static byte[] toByta(char[] data) {
-    if (data == null) return null;
+    if (data == null) {
+      return null;
+    }
     // ----------
     byte[] byts = new byte[data.length * 2];
-    for (int i = 0; i < data.length; i++)
+    for (int i = 0; i < data.length; i++) {
       System.arraycopy(toByta(data[i]), 0, byts, i * 2, 2);
+    }
     return byts;
   }
 
@@ -87,11 +100,14 @@ public class ByteArrayUtil {
   }
 
   public static byte[] toByta(int[] data) {
-    if (data == null) return null;
+    if (data == null) {
+      return null;
+    }
     // ----------
     byte[] byts = new byte[data.length * 4];
-    for (int i = 0; i < data.length; i++)
+    for (int i = 0; i < data.length; i++) {
       System.arraycopy(toByta(data[i]), 0, byts, i * 4, 4);
+    }
     return byts;
   }
 
@@ -110,11 +126,14 @@ public class ByteArrayUtil {
   }
 
   public static byte[] toByta(long[] data) {
-    if (data == null) return null;
+    if (data == null) {
+      return null;
+    }
     // ----------
     byte[] byts = new byte[data.length * 8];
-    for (int i = 0; i < data.length; i++)
+    for (int i = 0; i < data.length; i++) {
       System.arraycopy(toByta(data[i]), 0, byts, i * 8, 8);
+    }
     return byts;
   }
 
@@ -124,11 +143,14 @@ public class ByteArrayUtil {
   }
 
   public static byte[] toByta(float[] data) {
-    if (data == null) return null;
+    if (data == null) {
+      return null;
+    }
     // ----------
     byte[] byts = new byte[data.length * 4];
-    for (int i = 0; i < data.length; i++)
+    for (int i = 0; i < data.length; i++) {
       System.arraycopy(toByta(data[i]), 0, byts, i * 4, 4);
+    }
     return byts;
   }
 
@@ -138,11 +160,14 @@ public class ByteArrayUtil {
   }
 
   public static byte[] toByta(double[] data) {
-    if (data == null) return null;
+    if (data == null) {
+      return null;
+    }
     // ----------
     byte[] byts = new byte[data.length * 8];
-    for (int i = 0; i < data.length; i++)
+    for (int i = 0; i < data.length; i++) {
       System.arraycopy(toByta(data[i]), 0, byts, i * 8, 8);
+    }
     return byts;
   }
 
@@ -156,7 +181,9 @@ public class ByteArrayUtil {
     // about how many boolean values are involved, so the exact
     // array is returned when later decoded.
     // ----------
-    if (data == null) return null;
+    if (data == null) {
+      return null;
+    }
     // ----------
     int len = data.length;
     byte[] lena = toByta(len); // int conversion; length array = lena

@@ -17,8 +17,8 @@
  */
 package org.apache.drill.jdbc.test;
 
-import java.lang.Exception;
-import java.lang.RuntimeException;
+import static org.junit.Assert.assertEquals;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -28,8 +28,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Function;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestJdbcQuery extends JdbcTestQueryBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
@@ -328,7 +326,7 @@ public class TestJdbcQuery extends JdbcTestQueryBase{
             "L_UTF8=5\n"
        );
   }
- 
+
   @Test
   public void testTimeIntervalAddOverflow() throws Exception {
     JdbcAssert.withNoDefaultSchema()

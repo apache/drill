@@ -48,7 +48,7 @@ public class Graph<G extends GraphValue<G>, R extends G, T extends G> {
     }
     return (List<O>) ops;
   }
-  
+
   public AdjacencyList<G> getAdjList() {
     return adjList;
   }
@@ -64,5 +64,5 @@ public class Graph<G extends GraphValue<G>, R extends G, T extends G> {
   public static <G extends GraphValue<G>, R extends G, T extends G> Graph<G, R, T> newGraph(List<G> operators, Class<R> root, Class<T> leaf){
     return new Graph<G, R, T>(operators, root, leaf);
   }
-  
+
 }

@@ -17,18 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
+
+import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
 
-import parquet.bytes.BytesUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
-
-import java.io.IOException;
 
 public abstract class NullableVarLengthValuesColumn<V extends ValueVector> extends VarLengthValuesColumn<V> {
 
@@ -41,10 +39,13 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
+  @Override
   public abstract boolean setSafe(int index, DrillBuf value, int start, int length);
 
+  @Override
   public abstract int capacity();
 
+  @Override
   public void reset() {
     bytesReadInCurrentPass = 0;
     valuesReadInCurrentPass = 0;
@@ -52,11 +53,13 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     pageReader.valuesReadyToRead = 0;
   }
 
+  @Override
   protected void postPageRead() {
     currLengthDeterminingDictVal = null;
     pageReader.valuesReadyToRead = 0;
   }
 
+  @Override
   protected boolean readAndStoreValueSizeInformation() throws IOException {
     // we need to read all of the lengths to determine if this value will fit in the current vector,
     // as we can only read each definition level once, we have to store the last one as we will need it
@@ -66,7 +69,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     if ( currDefLevel == -1 ) {
       currDefLevel = pageReader.definitionLevels.readInteger();
     }
-    if ( columnDescriptor.getMaxDefinitionLevel() > currDefLevel){
+    if ( columnDescriptor.getMaxDefinitionLevel() > currDefLevel) {
       nullsRead++;
       // set length of zero, each index in the vector defaults to null so no need to set the nullability
       variableWidthVector.getMutator().setValueLengthSafe(
@@ -90,21 +93,24 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     // I think this also needs to happen if it is null for the random access
     boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageDataByteArray,
         (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-    if ( ! success )
+    if ( ! success ) {
       return true;
+    }
     return false;
   }
 
+  @Override
   public void updateReadyToReadPosition() {
-    if (! currentValNull){
+    if (! currentValNull) {
       pageReader.readyToReadPosInBytes += dataTypeLengthInBits + 4;
     }
     pageReader.valuesReadyToRead++;
     currLengthDeterminingDictVal = null;
   }
 
+  @Override
   public void updatePosition() {
-    if (! currentValNull){
+    if (! currentValNull) {
       pageReader.readPosInBytes += dataTypeLengthInBits + 4;
       bytesReadInCurrentPass += dataTypeLengthInBits;
     }
@@ -123,11 +129,12 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);
     currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
-    if (! currentValNull){
+    if (! currentValNull) {
       boolean success = setSafe(valuesReadInCurrentPass, pageReader.pageDataByteArray,
           (int) pageReader.readPosInBytes + 4, dataTypeLengthInBits);
       assert success;
     }
     updatePosition();
   }
+
 }

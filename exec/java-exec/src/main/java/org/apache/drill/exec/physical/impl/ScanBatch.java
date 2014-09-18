@@ -32,7 +32,6 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -84,8 +83,9 @@ public class ScanBatch implements RecordBatch {
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
     this.context = context;
     this.readers = readers;
-    if (!readers.hasNext())
+    if (!readers.hasNext()) {
       throw new ExecutionSetupException("A scan batch must contain at least one reader.");
+    }
     this.currentReader = readers.next();
     this.oContext = new OperatorContext(subScanConfig, context);
     this.currentReader.setOperatorContext(this.oContext);
@@ -122,7 +122,7 @@ public class ScanBatch implements RecordBatch {
 
   @Override
   public void kill(boolean sendUpstream) {
-    if(currentReader != null){
+    if (currentReader != null) {
       currentReader.cleanup();
     }
 
@@ -221,8 +221,8 @@ public class ScanBatch implements RecordBatch {
 
   private void addPartitionVectors() throws ExecutionSetupException{
     try {
-      if(partitionVectors != null){
-        for(ValueVector v : partitionVectors){
+      if (partitionVectors != null) {
+        for (ValueVector v : partitionVectors) {
           v.clear();
         }
       }
@@ -291,7 +291,9 @@ public class ScanBatch implements RecordBatch {
       if (v == null || v.getClass() != clazz) {
         // Field does not exist add it to the map and the output container
         v = TypeHelper.getNewVector(field, oContext.getAllocator());
-        if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+        if (!clazz.isAssignableFrom(v.getClass())) {
+          throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+        }
         container.add(v);
         fieldVectorMap.put(field.key(), v);
 
@@ -343,9 +345,9 @@ public class ScanBatch implements RecordBatch {
     return WritableBatch.get(this);
   }
 
-  public void cleanup(){
+  public void cleanup() {
     container.clear();
-    for(ValueVector v : partitionVectors){
+    for (ValueVector v : partitionVectors) {
       v.clear();
     }
     fieldVectorMap.clear();

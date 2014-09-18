@@ -51,6 +51,7 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
     super(cluster, traits, child, groupSet, aggCalls);
   }
 
+  @Override
   public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
     try {
       return new DrillAggregateRel(getCluster(), traitSet, input, getGroupSet(), aggCalls);
@@ -71,31 +72,30 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
       FieldReference fr = new FieldReference(childFields.get(group), ExpressionPosition.UNKNOWN);
       builder.addKey(fr, fr);
     }
-    
+
     for (Ord<AggregateCall> aggCall : Ord.zip(aggCalls)) {
       FieldReference ref = new FieldReference(fields.get(groupSet.cardinality() + aggCall.i));
       LogicalExpression expr = toDrill(aggCall.e, childFields, implementor);
       builder.addExpr(ref, expr);
     }
-    
+
     return builder.build();
   }
 
-  
-  
-  
   private LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillImplementor implementor) {
     List<LogicalExpression> args = Lists.newArrayList();
-    for(Integer i : call.getArgList()){
+    for(Integer i : call.getArgList()) {
       args.add(new FieldReference(fn.get(i)));
     }
-    
+
     // for count(1).
-    if(args.isEmpty()) args.add(new ValueExpressions.LongExpression(1l));
+    if (args.isEmpty()) {
+      args.add(new ValueExpressions.LongExpression(1l));
+    }
     LogicalExpression expr = FunctionCallFactory.createExpression(call.getAggregation().getName().toLowerCase(), ExpressionPosition.UNKNOWN, args);
     return expr;
   }
-  
+
   public static DrillAggregateRel convert(GroupingAggregate groupBy, ConversionContext value)
       throws InvalidRelException {
     throw new UnsupportedOperationException();

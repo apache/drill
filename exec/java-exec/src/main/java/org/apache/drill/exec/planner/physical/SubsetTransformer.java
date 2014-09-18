@@ -30,13 +30,13 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
 
   private final RelOptRuleCall call;
 
-  public SubsetTransformer(RelOptRuleCall call){
+  public SubsetTransformer(RelOptRuleCall call) {
     this.call = call;
   }
 
-  public RelTraitSet newTraitSet(RelTrait... traits){
+  public RelTraitSet newTraitSet(RelTrait... traits) {
     RelTraitSet set = call.getPlanner().emptyTraitSet();
-    for(RelTrait t : traits){
+    for (RelTrait t : traits) {
       set = set.plus(t);
     }
     return set;
@@ -44,14 +44,16 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
   }
 
   boolean go(T n, RelNode candidateSet) throws E {
-    if( !(candidateSet instanceof RelSubset) ) return false;
+    if ( !(candidateSet instanceof RelSubset) ) {
+      return false;
+    }
 
     boolean transform = false;
 
     for (RelNode rel : ((RelSubset)candidateSet).getRelList()) {
       if (!isDefaultDist(rel)) {
         RelNode out = convertChild(n, rel);
-        if(out != null){
+        if (out != null) {
           call.transformTo(out);
           transform = true;
 
@@ -62,7 +64,7 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
     return transform;
   }
 
-  private boolean isDefaultDist(RelNode n){
+  private boolean isDefaultDist(RelNode n) {
     return n.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT);
   }
 

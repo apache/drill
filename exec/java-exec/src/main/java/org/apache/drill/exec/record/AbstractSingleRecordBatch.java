@@ -18,7 +18,6 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -50,8 +49,10 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
         }
       } while ((upstream = next(incoming)) == IterOutcome.OK && incoming.getRecordCount() == 0);
     }
-    if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
-    switch(upstream){
+    if (first && upstream == IterOutcome.OK) {
+      upstream = IterOutcome.OK_NEW_SCHEMA;
+    }
+    switch (upstream) {
     case NONE:
       assert !first;
     case NOT_YET:
@@ -61,15 +62,15 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       return upstream;
     case OK_NEW_SCHEMA:
       first = false;
-      try{
+      try {
         stats.startSetup();
         setupNewSchema();
-      }catch(SchemaChangeException ex){
+      } catch (SchemaChangeException ex) {
         kill(false);
         logger.error("Failure during query", ex);
         context.fail(ex);
         return IterOutcome.STOP;
-      }finally{
+      } finally {
         stats.stopSetup();
       }
       // fall through.
@@ -100,4 +101,5 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
 
   protected abstract void setupNewSchema() throws SchemaChangeException;
   protected abstract void doWork();
+
 }

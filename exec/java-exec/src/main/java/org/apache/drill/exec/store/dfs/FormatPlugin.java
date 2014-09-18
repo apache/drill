@@ -39,7 +39,7 @@ public interface FormatPlugin {
   public boolean supportsRead();
 
   public boolean supportsWrite();
-  
+
   public FormatMatcher getMatcher();
 
   public AbstractWriter getWriter(PhysicalOperator child, String location) throws IOException;
@@ -47,13 +47,13 @@ public interface FormatPlugin {
   public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException;
 
   public Set<StoragePluginOptimizerRule> getOptimizerRules();
-  
+
   public AbstractGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException;
-  
+
   public FormatPluginConfig getConfig();
   public StoragePluginConfig getStorageConfig();
   public DrillFileSystem getFileSystem();
   public DrillbitContext getContext();
   public String getName();
-  
+
 }

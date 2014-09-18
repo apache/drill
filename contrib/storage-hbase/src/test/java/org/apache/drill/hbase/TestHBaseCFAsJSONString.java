@@ -40,7 +40,9 @@ public class TestHBaseCFAsJSONString extends BaseHBaseTest {
 
   @AfterClass
   public static void closeMyClient() throws IOException {
-    if(client != null) client.close();
+    if (client != null) {
+      client.close();
+    }
     client = parent_client;
   }
 

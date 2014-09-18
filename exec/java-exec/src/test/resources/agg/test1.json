@@ -6,16 +6,16 @@
             type:"manual"
         }
     },
-	graph:[
+    graph:[
         {
             @id:1,
             pop:"mock-sub-scan",
             entries:[
-            	{records: 20000, types: [
-            	  {name: "blue", type: "INT", mode: "REQUIRED"},
-            	  {name: "red", type: "BIGINT", mode: "REQUIRED"},
-            	  {name: "green", type: "INT", mode: "REQUIRED"}
-            	]}
+                {records: 20000, types: [
+                  {name: "blue", type: "INT", mode: "REQUIRED"},
+                  {name: "red", type: "BIGINT", mode: "REQUIRED"},
+                  {name: "green", type: "INT", mode: "REQUIRED"}
+                ]}
             ]
         },
         {
@@ -30,7 +30,7 @@
             @id:3,
             child: 2,
             pop:"streaming-aggregate",
-            keys: [ 
+            keys: [
               { ref: "blue", expr: "blue" }
             ],
             exprs: [

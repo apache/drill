@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillSortRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SortRel;
 import org.eigenbase.rel.convert.ConverterRule;
@@ -28,9 +26,9 @@ import org.eigenbase.relopt.RelOptRuleCall;
 
 /**
  * Rule that converts an {@link SortRel} to a physical {@link SortPrel}, implemented by a Drill "order" operation.
- * 
- * The {@link SortRel} is added in optiq's AbstractConvert call, when it enforces certain "order" to the input stream. 
- * Drill uses this rule to convert such sort enforcer into physical {@link SortPrel}. 
+ *
+ * The {@link SortRel} is added in optiq's AbstractConvert call, when it enforces certain "order" to the input stream.
+ * Drill uses this rule to convert such sort enforcer into physical {@link SortPrel}.
  */
 public class SortConvertPrule extends ConverterRule {
   public static final RelOptRule INSTANCE = new SortConvertPrule("SortConvertPrule", Convention.NONE);
@@ -49,9 +47,9 @@ public class SortConvertPrule extends ConverterRule {
   @Override
   public RelNode convert(RelNode r) {
     SortRel rel = (SortRel) r;
-    return new SortPrel(rel.getCluster(), 
-                        rel.getChild().getTraitSet().replace(Prel.DRILL_PHYSICAL).plus(rel.getCollation()), 
-                        convert(rel.getChild(), rel.getChild().getTraitSet().replace(Prel.DRILL_PHYSICAL)), 
+    return new SortPrel(rel.getCluster(),
+                        rel.getChild().getTraitSet().replace(Prel.DRILL_PHYSICAL).plus(rel.getCollation()),
+                        convert(rel.getChild(), rel.getChild().getTraitSet().replace(Prel.DRILL_PHYSICAL)),
                         rel.getCollation());
   }
 }

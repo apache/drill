@@ -27,7 +27,6 @@ import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
 
 public abstract class UnionPrel extends DrillUnionRelBase implements Prel{
 
@@ -44,7 +43,7 @@ public abstract class UnionPrel extends DrillUnionRelBase implements Prel{
   public Iterator<Prel> iterator() {
     return PrelUtil.iter(this.getInputs());
   }
-  
+
   @Override
   public boolean needsFinalColumnReordering() {
     return false;

@@ -26,7 +26,6 @@ import java.util.Set;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -771,7 +770,9 @@ public class TypeCastRules {
   }
 
   public static boolean isCastableWithNullHandling(MajorType from, MajorType to, NullHandling nullHandling) {
-    if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) return false;
+    if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) {
+      return false;
+    }
     return isCastable(from.getMinorType(), to.getMinorType());
   }
 

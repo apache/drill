@@ -25,7 +25,7 @@ import org.apache.drill.exec.physical.base.Receiver;
 public class MergingCollector extends AbstractDataCollector{
 
   private AtomicInteger streamsRunning;
-  
+
   public MergingCollector(AtomicInteger parentAccounter, Receiver receiver, FragmentContext context) {
     super(parentAccounter, receiver, 1, context);
     streamsRunning = new AtomicInteger(receiver.getProvidingEndpoints().size());

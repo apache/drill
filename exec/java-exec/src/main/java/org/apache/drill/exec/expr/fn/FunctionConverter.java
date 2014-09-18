@@ -67,12 +67,14 @@ public class FunctionConverter {
     path = path.replace(".", FileUtils.separator);
     path = "/" + path + ".java";
     CompilationUnit cu = functionUnits.get(path);
-    if(cu != null) return cu;
+    if(cu != null) {
+      return cu;
+    }
 
     URL u = Resources.getResource(c, path);
     InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
-    try(InputStream is = supplier.getInput()){
-      if(is == null){
+    try (InputStream is = supplier.getInput()) {
+      if (is == null) {
         throw new IOException(String.format("Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(), path));
       }
       String body = IO.toString(is);
@@ -92,9 +94,9 @@ public class FunctionConverter {
 
   }
 
-  public <T extends DrillFunc> DrillFuncHolder getHolder(Class<T> clazz){
+  public <T extends DrillFunc> DrillFuncHolder getHolder(Class<T> clazz) {
     FunctionTemplate template = clazz.getAnnotation(FunctionTemplate.class);
-    if(template == null){
+    if (template == null) {
       return failure("Class does not declare FunctionTemplate annotation.", clazz);
     }
 
@@ -110,7 +112,7 @@ public class FunctionConverter {
     ValueReference outputField = null;
 
 
-    for(Field field : clazz.getDeclaredFields()){
+    for (Field field : clazz.getDeclaredFields()) {
 
       Param param = field.getAnnotation(Param.class);
       Output output = field.getAnnotation(Output.class);
@@ -118,17 +120,25 @@ public class FunctionConverter {
       Inject inject = field.getAnnotation(Inject.class);
 
       int i =0;
-      if(param != null) i++;
-      if(output != null) i++;
-      if(workspace != null) i++;
-      if(inject != null) i++;
-      if(i == 0){
+      if (param != null) {
+        i++;
+      }
+      if (output != null) {
+        i++;
+      }
+      if (workspace != null) {
+        i++;
+      }
+      if (inject != null) {
+        i++;
+      }
+      if (i == 0) {
         return failure("The field must be either a @Param, @Output, @Inject or @Workspace field.", clazz, field);
-      }else if(i > 1){
+      } else if(i > 1) {
         return failure("The field must be only one of @Param, @Output, @Inject or @Workspace.  It currently has more than one of these annotations.", clazz, field);
       }
 
-      if(param != null || output != null){
+      if (param != null || output != null) {
 
         // Special processing for @Param FieldReader
         if (param != null && FieldReader.class.isAssignableFrom(field.getType())) {
@@ -138,8 +148,7 @@ public class FunctionConverter {
 
         // Special processing for @Output ComplexWriter
         if (output != null && ComplexWriter.class.isAssignableFrom(field.getType())) {
-
-          if(outputField != null){
+          if (outputField != null) {
             return failure("You've declared more than one @Output field.  You must declare one and only @Output field per Function class.", clazz, field);
           }else{
             outputField = ValueReference.createComplexWriterRef(field.getName());
@@ -148,37 +157,39 @@ public class FunctionConverter {
         }
 
         // check that param and output are value holders.
-        if(!ValueHolder.class.isAssignableFrom(field.getType())){
+        if (!ValueHolder.class.isAssignableFrom(field.getType())) {
           return failure(String.format("The field doesn't holds value of type %s which does not implement the ValueHolder interface.  All fields of type @Param or @Output must extend this interface..", field.getType()), clazz, field);
         }
 
         // get the type field from the value holder.
         MajorType type = null;
-        try{
+        try {
           type = getStaticFieldValue("TYPE", field.getType(), MajorType.class);
-        }catch(Exception e){
+        } catch (Exception e) {
           return failure("Failure while trying to access the ValueHolder's TYPE static variable.  All ValueHolders must contain a static TYPE variable that defines their MajorType.", e, clazz, field.getName());
         }
 
 
         ValueReference p = new ValueReference(type, field.getName());
-        if(param != null){
+        if (param != null) {
           if (param.constant()) {
             p.setConstant(true);
           }
           params.add(p);
-        }else{
-          if(outputField != null){
+        } else {
+          if (outputField != null) {
             return failure("You've declared more than one @Output field.  You must declare one and only @Output field per Function class.", clazz, field);
-          }else{
+          } else {
             outputField = p;
           }
         }
 
-      }else{
+      } else {
         // workspace work.
         boolean isInject = inject != null;
-        if(isInject && !field.getType().equals(DrillBuf.class)) return failure(String.format("Only DrillBuf is allowed to be injected.  You attempted to inject %s.", field.getType()), clazz, field);
+        if (isInject && !field.getType().equals(DrillBuf.class)) {
+          return failure(String.format("Only DrillBuf is allowed to be injected.  You attempted to inject %s.", field.getType()), clazz, field);
+        }
         WorkspaceReference wsReference = new WorkspaceReference(field.getType(), field.getName(), isInject);
 
         if (!isInject && template.scope() == FunctionScope.POINT_AGGREGATE && !ValueHolder.class.isAssignableFrom(field.getType()) ) {
@@ -186,31 +197,32 @@ public class FunctionConverter {
         }
 
         //If the workspace var is of Holder type, get its MajorType and assign to WorkspaceReference.
-        if(ValueHolder.class.isAssignableFrom(field.getType())){
+        if (ValueHolder.class.isAssignableFrom(field.getType())) {
           MajorType majorType = null;
-          try{
+          try {
             majorType = getStaticFieldValue("TYPE", field.getType(), MajorType.class);
-          }catch(Exception e){
+          } catch (Exception e) {
             return failure("Failure while trying to access the ValueHolder's TYPE static variable.  All ValueHolders must contain a static TYPE variable that defines their MajorType.", e, clazz, field.getName());
           }
           wsReference.setMajorType(majorType);
         }
-
         workspaceFields.add(wsReference);
       }
-
     }
 
-
-   // if(!workspaceFields.isEmpty()) return failure("This function declares one or more workspace fields.  However, those have not yet been implemented.", clazz);
-    if(outputField == null)  return failure("This function declares zero output fields.  A function must declare one output field.", clazz);
+   // if (!workspaceFields.isEmpty()) return failure("This function declares one or more workspace fields.  However, those have not yet been implemented.", clazz);
+    if (outputField == null) {
+      return failure("This function declares zero output fields.  A function must declare one output field.", clazz);
+    }
 
     // get function body.
 
     CompilationUnit cu;
     try {
       cu = get(clazz);
-      if(cu == null) return null;
+      if (cu == null) {
+        return null;
+      }
     } catch (IOException e) {
       return failure("Failure while getting class body.", e, clazz);
     }
@@ -225,7 +237,7 @@ public class FunctionConverter {
 
 
       String[] registeredNames = ((template.name().isEmpty()) ? template.names() : new String[] {template.name()} );
-      switch(template.scope()){
+      switch (template.scope()) {
       case POINT_AGGREGATE:
         return new DrillAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
           template.isRandom(), registeredNames, ps, outputField, works, methods, imports, template.costCategory());
@@ -236,16 +248,17 @@ public class FunctionConverter {
         return new DrillDecimalSumAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
           template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case SIMPLE:
-        if (outputField.isComplexWriter)
+        if (outputField.isComplexWriter) {
           return new DrillComplexWriterFuncHolder(template.scope(), template.nulls(),
               template.isBinaryCommutative(),
               template.isRandom(), registeredNames,
               ps, outputField, works, methods, imports);
-        else
+        } else {
           return new DrillSimpleFuncHolder(template.scope(), template.nulls(),
                                            template.isBinaryCommutative(),
                                            template.isRandom(), registeredNames,
                                            ps, outputField, works, methods, imports, template.costCategory());
+        }
       case SC_BOOLEAN_OPERATOR:
         return new DrillBooleanOPHolder(template.scope(), template.nulls(),
             template.isBinaryCommutative(),
@@ -281,7 +294,7 @@ public class FunctionConverter {
       default:
         return failure("Unsupported Function Type.", clazz);
       }
-    }catch(Exception | NoSuchFieldError | AbstractMethodError ex){
+    } catch (Exception | NoSuchFieldError | AbstractMethodError ex) {
       return failure("Failure while creating function holder.", ex, clazz);
     }
 
@@ -296,8 +309,8 @@ public class FunctionConverter {
     path = "/" + path + ".java";
     URL u = Resources.getResource(c, path);
     InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
-    try(InputStream is = supplier.getInput()){
-      if(is == null){
+    try (InputStream is = supplier.getInput()) {
+      if (is == null) {
         throw new IOException(String.format("Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(), path));
       }
       String body = IO.toString(is);
@@ -318,30 +331,28 @@ public class FunctionConverter {
       return (T) val;
   }
 
-  private static DrillFuncHolder failure(String message, Throwable t, Class<?> clazz, String fieldName){
+  private static DrillFuncHolder failure(String message, Throwable t, Class<?> clazz, String fieldName) {
     logger.warn("Failure loading function class {}, field {}. " + message, clazz.getName(), fieldName, t);
     return null;
   }
 
-  private DrillFuncHolder failure(String message, Class<?> clazz, String fieldName){
+  private DrillFuncHolder failure(String message, Class<?> clazz, String fieldName) {
     logger.warn("Failure loading function class {}, field {}. " + message, clazz.getName(), fieldName);
     return null;
   }
 
-  private DrillFuncHolder failure(String message, Class<?> clazz){
+  private DrillFuncHolder failure(String message, Class<?> clazz) {
     logger.warn("Failure loading function class [{}]. Message: {}", clazz.getName(), message);
     return null;
   }
 
-  private DrillFuncHolder failure(String message, Throwable t, Class<?> clazz){
+  private DrillFuncHolder failure(String message, Throwable t, Class<?> clazz) {
     logger.warn("Failure loading function class [{}]. Message: {}", clazz.getName(), message, t);
     return null;
   }
 
-  private DrillFuncHolder failure(String message, Class<?> clazz, Field field){
+  private DrillFuncHolder failure(String message, Class<?> clazz, Field field) {
     return failure(message, clazz, field.getName());
   }
-
-
 
 }

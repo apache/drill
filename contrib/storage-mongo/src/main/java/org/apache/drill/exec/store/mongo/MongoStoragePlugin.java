@@ -50,11 +50,11 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     this.mongoConfig = mongoConfig;
     this.schemaFactory = new MongoSchemaFactory(this, name);
   }
-  
+
   public DrillbitContext getContext() {
     return this.context;
   }
-  
+
   @Override
   public MongoStoragePluginConfig getConfig() {
     return mongoConfig;
@@ -64,18 +64,18 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   public void registerSchemas(UserSession session, SchemaPlus parent) {
     schemaFactory.registerSchemas(session, parent);
   }
-  
+
   @Override
   public boolean supportsRead() {
     return true;
   }
-  
+
   @Override
   public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
     MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>(){});
     return new MongoGroupScan(this, mongoScanSpec, null);
   }
-  
+
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
     return ImmutableSet.of(MongoPushDownFilterForScan.INSTANCE);
   }

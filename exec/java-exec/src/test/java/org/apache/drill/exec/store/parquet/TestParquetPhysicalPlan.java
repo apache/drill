@@ -26,7 +26,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
@@ -36,7 +35,6 @@ import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
-import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -55,7 +53,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     DrillConfig config = DrillConfig.create();
 
-    try(Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());){
+    try (Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
       bit1.run();
       client.connect();
       List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));
@@ -90,6 +88,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
   private class ParquetResultsListener implements UserResultsListener {
     AtomicInteger count = new AtomicInteger();
     private CountDownLatch latch = new CountDownLatch(1);
+
     @Override
     public void submissionFailed(RpcException ex) {
       logger.error("submission failed", ex);
@@ -101,7 +100,9 @@ public class TestParquetPhysicalPlan extends ExecTest {
       int rows = result.getHeader().getRowCount();
       System.out.println(String.format("Result batch arrived. Number of records: %d", rows));
       count.addAndGet(rows);
-      if (result.getHeader().getIsLastChunk()) latch.countDown();
+      if (result.getHeader().getIsLastChunk()) {
+        latch.countDown();
+      }
       result.release();
     }
 
@@ -114,12 +115,13 @@ public class TestParquetPhysicalPlan extends ExecTest {
     public void queryIdArrived(QueryId queryId) {
     }
   }
+
   @Test
   @Ignore
   public void testParseParquetPhysicalPlanRemote() throws Exception {
     DrillConfig config = DrillConfig.create();
 
-    try(DrillClient client = new DrillClient(config);){
+    try(DrillClient client = new DrillClient(config);) {
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
       Stopwatch watch = new Stopwatch();

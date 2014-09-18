@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.schema;
 
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import java.util.List;
-import java.util.Map;
 
 public class ObjectSchema implements RecordSchema {
     private final Map<String, Field> fields;

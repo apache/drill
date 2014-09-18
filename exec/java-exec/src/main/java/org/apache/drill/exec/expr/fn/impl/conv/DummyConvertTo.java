@@ -28,7 +28,7 @@ import org.apache.drill.exec.record.RecordBatch;
 
 /**
  * This and {@link DummyConvertFrom} class merely act as a placeholder so that Optiq
- * allows 'convert_to()' and 'convert_from()' functions in SQL. 
+ * allows 'convert_to()' and 'convert_from()' functions in SQL.
  */
 @FunctionTemplate(name = "convert_to", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class DummyConvertTo implements DrillSimpleFunc {

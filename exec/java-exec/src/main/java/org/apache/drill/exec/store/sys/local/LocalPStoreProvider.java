@@ -43,7 +43,7 @@ public class LocalPStoreProvider implements PStoreProvider{
   public LocalPStoreProvider(DrillConfig config) {
     path = new File(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
     enableWrite = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
-    if(!enableWrite){
+    if (!enableWrite) {
       pstores = Maps.newConcurrentMap();
     }
   }
@@ -58,12 +58,14 @@ public class LocalPStoreProvider implements PStoreProvider{
 
   @Override
   public <V> PStore<V> getPStore(PStoreConfig<V> storeConfig) throws IOException {
-    if(enableWrite){
+    if (enableWrite) {
       return new LocalPStore<V>(path, storeConfig);
-    }else{
+    } else {
       PStore<V> p = new NoWriteLocalPStore<V>();
       PStore<?> p2 = pstores.putIfAbsent(storeConfig, p);
-      if(p2 != null) return (PStore<V>) p2;
+      if(p2 != null) {
+        return (PStore<V>) p2;
+      }
       return p;
     }
   }

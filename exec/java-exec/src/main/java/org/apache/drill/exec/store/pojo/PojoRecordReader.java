@@ -59,7 +59,7 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
   private T currentPojo;
   private OperatorContext operatorContext;
 
-  public PojoRecordReader(Class<T> pojoClass, Iterator<T> iterator){
+  public PojoRecordReader(Class<T> pojoClass, Iterator<T> iterator) {
     this.pojoClass = pojoClass;
     this.iterator = iterator;
   }
@@ -74,40 +74,42 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
-    try{
+    try {
       Field[] fields = pojoClass.getDeclaredFields();
       List<PojoWriter> writers = Lists.newArrayList();
 
-      for(int i = 0; i < fields.length; i++){
+      for (int i = 0; i < fields.length; i++) {
         Field f = fields[i];
 
-        if(Modifier.isStatic(f.getModifiers())) continue;
+        if (Modifier.isStatic(f.getModifiers())) {
+          continue;
+        }
 
         Class<?> type = f.getType();
         PojoWriter w = null;
-        if(type == int.class){
+        if(type == int.class) {
           w = new IntWriter(f);
-        }else if(type == Integer.class){
+        } else if(type == Integer.class) {
           w = new NIntWriter(f);
-        }else if(type == Long.class){
+        } else if(type == Long.class) {
           w = new NBigIntWriter(f);
-        }else if(type == Boolean.class){
+        } else if(type == Boolean.class) {
           w = new NBooleanWriter(f);
-        }else if(type == double.class){
+        } else if(type == double.class) {
           w = new DoubleWriter(f);
-        }else if(type == Double.class){
+        } else if(type == Double.class) {
           w = new NDoubleWriter(f);
-        }else if(type.isEnum()){
+        } else if(type.isEnum()) {
           w = new EnumWriter(f, output.getManagedBuffer());
-        }else if(type == boolean.class){
+        } else if(type == boolean.class) {
           w = new BitWriter(f);
-        }else if(type == long.class){
+        } else if(type == long.class) {
           w = new LongWriter(f);
-        }else if(type == String.class){
+        } else if(type == String.class) {
           w = new StringWriter(f, output.getManagedBuffer());
-        }else if (type == Timestamp.class) {
+        } else if (type == Timestamp.class) {
           w = new NTimeStampWriter(f);
-        }else{
+        } else {
           throw new ExecutionSetupException(String.format("PojoRecord reader doesn't yet support conversions from type [%s].", type));
         }
         writers.add(w);
@@ -116,7 +118,7 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
 
       this.writers = writers.toArray(new PojoWriter[writers.size()]);
 
-    }catch(SchemaChangeException e){
+    } catch(SchemaChangeException e) {
       throw new ExecutionSetupException("Failure while setting up schema for PojoRecordReader.", e);
     }
 
@@ -130,14 +132,14 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
     }
   }
 
-  private void allocate(){
-    for(PojoWriter writer : writers){
+  private void allocate() {
+    for (PojoWriter writer : writers) {
       writer.allocate();
     }
   }
 
-  private void setValueCount(int i){
-    for(PojoWriter writer : writers){
+  private void setValueCount(int i) {
+    for (PojoWriter writer : writers) {
       writer.setValueCount(i);
     }
   }
@@ -146,32 +148,36 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
   public int next() {
     boolean allocated = false;
 
-    try{
+    try {
       int i =0;
       outside:
-      while(doCurrent || iterator.hasNext()){
-        if(doCurrent){
+      while (doCurrent || iterator.hasNext()) {
+        if (doCurrent) {
           doCurrent = false;
-        }else{
+        } else {
           currentPojo = iterator.next();
         }
 
-        if(!allocated){
+        if (!allocated) {
           allocate();
           allocated = true;
         }
 
-        for(PojoWriter writer : writers){
-          if(!writer.writeField(currentPojo, i)){
+        for (PojoWriter writer : writers) {
+          if (!writer.writeField(currentPojo, i)) {
             doCurrent = true;
-            if(i == 0) throw new IllegalStateException("Got into a position where we can't write data but the batch is empty.");
+            if (i == 0) {
+              throw new IllegalStateException("Got into a position where we can't write data but the batch is empty.");
+            }
             break outside;
           };
         }
         i++;
       }
 
-      if(i != 0 ) setValueCount(i);
+      if (i != 0 ) {
+        setValueCount(i);
+      }
       return i;
     } catch (IllegalArgumentException | IllegalAccessException e) {
       throw new RuntimeException("Failure while trying to use PojoRecordReader.", e);
@@ -181,6 +187,5 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
   @Override
   public void cleanup() {
   }
-
 
 }

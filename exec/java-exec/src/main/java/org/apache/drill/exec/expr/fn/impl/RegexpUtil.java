@@ -18,7 +18,7 @@
 package org.apache.drill.exec.expr.fn.impl;
 
 /**
- * Code copied from optiq (https://github.com/julianhyde/optiq). 
+ * Code copied from optiq (https://github.com/julianhyde/optiq).
  * Thanks goes to Julian Hyde and other contributors of optiq.
  */
 
@@ -48,12 +48,12 @@ public class RegexpUtil {
   };
 
   /**
-   * Translates a SQL LIKE pattern to Java regex pattern. No escape char. 
+   * Translates a SQL LIKE pattern to Java regex pattern. No escape char.
    */
   public static String sqlToRegexLike(String sqlPattern) {
     return sqlToRegexLike(sqlPattern, (char)0);
   }
-       
+
   /**
    * Translates a SQL LIKE pattern to Java regex pattern, with optional
    * escape string.
@@ -216,12 +216,12 @@ public class RegexpUtil {
   }
 
   /**
-   * Translates a SQL SIMILAR pattern to Java regex pattern. No escape char. 
-   */  
+   * Translates a SQL SIMILAR pattern to Java regex pattern. No escape char.
+   */
   public static String sqlToRegexSimilar(String sqlPattern) {
     return sqlToRegexSimilar(sqlPattern, (char) 0);
   }
-    
+
   /**
    * Translates a SQL SIMILAR pattern to Java regex pattern, with optional
    * escape string.

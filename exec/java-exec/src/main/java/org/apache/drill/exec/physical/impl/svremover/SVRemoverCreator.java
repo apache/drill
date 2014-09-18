@@ -35,6 +35,6 @@ public class SVRemoverCreator implements BatchCreator<SelectionVectorRemover>{
     Preconditions.checkArgument(children.size() == 1);
     return new RemovingRecordBatch(config, context, children.iterator().next());
   }
-  
-  
+
+
 }

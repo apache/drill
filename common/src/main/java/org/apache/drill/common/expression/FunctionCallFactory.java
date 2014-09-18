@@ -21,15 +21,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.drill.common.config.CommonConstants;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.util.PathScanner;
-import org.apache.drill.common.types.Types;
 
 import com.google.common.collect.Lists;
 
@@ -64,7 +58,7 @@ public class FunctionCallFactory {
     opToFuncTable.put("is not true", "isnottrue");
     opToFuncTable.put("is false", "isfalse");
     opToFuncTable.put("is not false", "isnotfalse");
-    
+
     opToFuncTable.put("!", "not");
     opToFuncTable.put("u-", "negative");
   }
@@ -77,7 +71,7 @@ public class FunctionCallFactory {
     String opName  = replaceOpWithFuncName(funcName);
     return opName.equals("booleanAnd") || opName.equals("booleanOr");
   }
-  
+
   /*
    * create a cast function.
    * arguments : type -- targetType
@@ -98,10 +92,11 @@ public class FunctionCallFactory {
 
   public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
     String name = replaceOpWithFuncName(functionName);
-    if (isBooleanOperator(name))
+    if (isBooleanOperator(name)) {
       return new BooleanOperator(name, args, ep);
-    else
+    } else {
       return new FunctionCall(name, args, ep);
+    }
   }
 
   public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, LogicalExpression... e){
@@ -121,8 +116,9 @@ public class FunctionCallFactory {
       return args.get(0);
     }
 
-    if (args.size() - 1 != opTypes.size())
+    if (args.size() - 1 != opTypes.size()) {
       throw new DrillRuntimeException("Must receive one more expression then the provided number of operators.");
+    }
 
     LogicalExpression first = args.get(0);
     for (int i = 0; i < opTypes.size(); i++) {
@@ -133,4 +129,5 @@ public class FunctionCallFactory {
     }
     return first;
   }
+
 }

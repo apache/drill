@@ -23,23 +23,23 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import com.google.common.collect.Lists;
 import com.carrotsearch.hppc.ObjectFloatOpenHashMap;
 import com.carrotsearch.hppc.cursors.ObjectFloatCursor;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 
 public class AffinityCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AffinityCreator.class);
-  
+
   public static <T extends CompleteWork> List<EndpointAffinity> getAffinityMap(List<T> work){
     Stopwatch watch = new Stopwatch();
-    
+
     long totalBytes = 0;
     for (CompleteWork entry : work) {
       totalBytes += entry.getTotalBytes();
     }
-    
+
     ObjectFloatOpenHashMap<DrillbitEndpoint> affinities = new ObjectFloatOpenHashMap<DrillbitEndpoint>();
     for (CompleteWork entry : work) {
       for (ObjectLongCursor<DrillbitEndpoint> cursor : entry.getByteMap()) {
@@ -49,7 +49,7 @@ public class AffinityCreator {
         affinities.putOrAdd(cursor.key, affinity, affinity);
       }
     }
-    
+
     List<EndpointAffinity> affinityList = Lists.newLinkedList();
     for (ObjectFloatCursor<DrillbitEndpoint> d : affinities) {
       logger.debug("Endpoint {} has affinity {}", d.key.getAddress(), d.value);

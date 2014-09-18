@@ -30,7 +30,7 @@ import com.google.protobuf.MessageLite;
 
 public class DefaultInstanceHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultInstanceHandler.class);
-  
+
 
   public static MessageLite getResponseDefaultInstance(int rpcType) throws RpcException {
     switch (rpcType) {

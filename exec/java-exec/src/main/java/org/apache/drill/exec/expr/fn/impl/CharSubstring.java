@@ -38,11 +38,11 @@ import org.apache.drill.exec.record.RecordBatch;
  *    value's length will be used.
  *
  *  - If the substring is invalid, return an empty string.
- *  
+ *
  *  - NOTE: UTF-8 values range from 1 to 4 bytes per character, thus searching for the
  *          start, length, and negative length may result in 3 partial scans of the
  *          UTF-8 string.
- *  
+ *
  *  - TODO: implement optional length parameter
  */
 @FunctionTemplate(names = {"charsubstring", "substring2", "substr2"},
@@ -89,8 +89,9 @@ public class CharSubstring implements DrillSimpleFunc {
           break;
         }
 
-        if (currentByte < 128)
+        if (currentByte < 128) {
           ++charCount;
+        }
         ++byteCount;
       }
 
@@ -103,7 +104,7 @@ public class CharSubstring implements DrillSimpleFunc {
         int endCharPos = --charCount;
         while (byteCount >= 0) {
           currentByte = string.buffer.getByte(byteCount);
-  
+
           if (endCharPos - charCount == -(int)offset.value) {
             // matched the negative start offset
             out.start = byteCount;
@@ -112,8 +113,9 @@ public class CharSubstring implements DrillSimpleFunc {
             // search forward until we find <length> characters
             while (byteCount <= endBytePos) {
               currentByte = string.buffer.getByte(byteCount);
-              if (currentByte < 128)
+              if (currentByte < 128) {
                 ++charCount;
+              }
               ++byteCount;
               if (charCount == (int)length.value) {
                 out.end = byteCount;
@@ -122,8 +124,9 @@ public class CharSubstring implements DrillSimpleFunc {
             }
             break;
           }
-          if (currentByte < 128)
+          if (currentByte < 128) {
             --charCount;
+          }
           --byteCount;
         }
       }
@@ -134,4 +137,5 @@ public class CharSubstring implements DrillSimpleFunc {
       }
     }
   }
+
 }

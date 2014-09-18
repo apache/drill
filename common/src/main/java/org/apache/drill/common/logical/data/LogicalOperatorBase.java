@@ -19,7 +19,6 @@ package org.apache.drill.common.logical.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.config.CommonConstants;
@@ -35,17 +34,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public abstract class LogicalOperatorBase implements LogicalOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogicalOperatorBase.class);
 
-    private List<LogicalOperator> children = new ArrayList<LogicalOperator>();
-	private String memo;
-	
-	public final int hashCode(){
-	  return super.hashCode();
-	}
-	
-	@Override
-	public void setupAndValidate(List<LogicalOperator> operators, Collection<ValidationError> errors) {
-	  // TODO: remove this and implement individually.
-	}
+  private List<LogicalOperator> children = new ArrayList<LogicalOperator>();
+
+  private String memo;
+
+  @Override
+  public final int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
+  public void setupAndValidate(List<LogicalOperator> operators, Collection<ValidationError> errors) {
+    // TODO: remove this and implement individually.
+  }
 
   @Override
   public NodeBuilder nodeBuilder() {
@@ -55,37 +56,38 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
 
   @Override
   public void accept(GraphVisitor<LogicalOperator> visitor) {
-    if(visitor.enter(this)) visitor.leave(this);
+    if (visitor.enter(this)) {
+      visitor.leave(this);
+    }
   }
 
-    @Override
-    public void registerAsSubscriber(LogicalOperator operator) {
-        if(operator == null) throw new IllegalArgumentException("You attempted to register a null operators.");
-        children.add(operator);
+  @Override
+  public void registerAsSubscriber(LogicalOperator operator) {
+    if (operator == null) {
+      throw new IllegalArgumentException("You attempted to register a null operators.");
     }
+    children.add(operator);
+  }
 
   @Override
   public String toString() {
     return this.getClass().getSimpleName() + " [memo=" + memo + "]";
   }
 
-  @JsonInclude(Include.NON_EMPTY) 
+  @JsonInclude(Include.NON_EMPTY)
   @JsonProperty("memo")
-  public String getMemo(){
+  public String getMemo() {
     return memo;
   }
 
   public void setMemo(String memo) {
     this.memo = memo;
   }
- 
-  public synchronized static Class<?>[] getSubTypes(DrillConfig config){
+
+  public synchronized static Class<?>[] getSubTypes(DrillConfig config) {
     Class<?>[] ops = PathScanner.scanForImplementationsArr(LogicalOperator.class, config.getStringList(CommonConstants.LOGICAL_OPERATOR_SCAN_PACKAGES));
     logger.debug("Adding Logical Operator sub types: {}", ((Object) ops) );
     return ops;
   }
-  
-  
-  
 
 }

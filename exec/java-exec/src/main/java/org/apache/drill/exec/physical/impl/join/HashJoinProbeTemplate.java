@@ -17,22 +17,20 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.common.HashTable;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.AbstractRecordBatch;
-
+import org.apache.drill.exec.record.VectorWrapper;
 import org.eigenbase.rel.JoinRelType;
-
-import java.io.IOException;
-import java.util.List;
 
 public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
@@ -96,11 +94,13 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     boolean success = true;
     while (outputRecords < TARGET_RECORDS_PER_BATCH && recordsProcessed < recordsToProcess) {
       success = projectBuildRecord(unmatchedBuildIndexes.get(recordsProcessed), outputRecords);
-      if(success){
+      if (success) {
         recordsProcessed++;
         outputRecords++;
-      }else{
-        if(outputRecords == 0) throw new IllegalStateException("Too big to fail.");
+      } else {
+        if (outputRecords == 0) {
+          throw new IllegalStateException("Too big to fail.");
+        }
         break;
       }
     }
@@ -168,11 +168,11 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
             boolean success = projectBuildRecord(currentCompositeIdx, outputRecords) //
                 &&  projectProbeRecord(recordsProcessed, outputRecords);
-            if(!success){
+            if (!success) {
               // we failed to project.  redo this record.
               getNextRecord = false;
               return;
-            }else{
+            } else {
               outputRecords++;
 
               /* Projected single row from the build side with matching key but there
@@ -184,8 +184,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
                  * from the probe side. Drain the next row in the probe side.
                  */
                 recordsProcessed++;
-              }
-              else {
+              } else {
                 /* There is more than one row with the same key on the build side
                  * don't drain more records from the probe side till we have projected
                  * all the rows with this key
@@ -199,10 +198,10 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
             // If we have a left outer join, project the keys
             if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
               boolean success = projectProbeRecord(recordsProcessed, outputRecords);
-              if(!success){
-                if(outputRecords == 0){
+              if (!success) {
+                if (outputRecords == 0) {
                   throw new IllegalStateException("Record larger than single batch.");
-                }else{
+                } else {
                   // we've output some records but failed to output this one.  return and wait for next call.
                   return;
                 }
@@ -216,10 +215,10 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
         hjHelper.setRecordMatched(currentCompositeIdx);
         boolean success = projectBuildRecord(currentCompositeIdx, outputRecords) //
             && projectProbeRecord(recordsProcessed, outputRecords);
-        if(!success){
-          if(outputRecords == 0){
+        if (!success) {
+          if (outputRecords == 0) {
             throw new IllegalStateException("Record larger than single batch.");
-          }else{
+          } else {
             // we've output some records but failed to output this one.  return and wait for next call.
             return;
           }
@@ -266,5 +265,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("buildBatch") VectorContainer buildBatch, @Named("probeBatch") RecordBatch probeBatch,
                                @Named("outgoing") RecordBatch outgoing);
   public abstract boolean projectBuildRecord(@Named("buildIndex") int buildIndex, @Named("outIndex") int outIndex);
+
   public abstract boolean projectProbeRecord(@Named("probeIndex") int probeIndex, @Named("outIndex") int outIndex);
+
 }

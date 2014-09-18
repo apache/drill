@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.orderedpartitioner;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
+
+import javax.inject.Named;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -30,8 +33,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.IntVector;
 
-import javax.inject.Named;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 public abstract class OrderedPartitionProjectorTemplate implements OrderedPartitionProjector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionProjectorTemplate.class);

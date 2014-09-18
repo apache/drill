@@ -63,8 +63,8 @@ public class TableStatsCalculator {
    * Computes size of each region for table.
    *
    * @param table
-   * @param hbaseScanSpec 
-   * @param drillConfig 
+   * @param hbaseScanSpec
+   * @param drillConfig
    * @throws IOException
    */
   public TableStatsCalculator(HTable table, HBaseScanSpec hbaseScanSpec, DrillConfig config) throws IOException {

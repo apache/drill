@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.graph.Graph;
 import org.apache.drill.common.graph.GraphAlgos;
@@ -46,8 +45,8 @@ public class LogicalPlan {
   private final PlanProperties properties;
   private final Map<String, StoragePluginConfig> storageEngineMap;
   private final Graph<LogicalOperator, SinkOperator, SourceOperator> graph;
-  
-  
+
+
   @JsonCreator
   public LogicalPlan(@JsonProperty("head") PlanProperties head,
       @JsonProperty("storage") Map<String, StoragePluginConfig> storageEngineMap,
@@ -101,7 +100,7 @@ public class LogicalPlan {
       LogicalPlan plan = mapper.readValue(planString, LogicalPlan.class);
       return plan;
     } catch (IOException e) {
-      
+
       throw new RuntimeException(String.format("Failure while parsing plan: \n %s}", planString), e);
     }
   }

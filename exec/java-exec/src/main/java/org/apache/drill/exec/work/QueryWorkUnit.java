@@ -26,17 +26,17 @@ import com.google.common.base.Preconditions;
 
 public class QueryWorkUnit {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWorkUnit.class);
-  
+
   private final PlanFragment rootFragment; // for local
   private final FragmentRoot rootOperator; // for local
   private final List<PlanFragment> fragments;
-  
+
   public QueryWorkUnit(FragmentRoot rootOperator, PlanFragment rootFragment, List<PlanFragment> fragments) {
     super();
     Preconditions.checkNotNull(rootFragment);
     Preconditions.checkNotNull(fragments);
     Preconditions.checkNotNull(rootOperator);
-    
+
     this.rootFragment = rootFragment;
     this.fragments = fragments;
     this.rootOperator = rootOperator;
@@ -53,11 +53,11 @@ public class QueryWorkUnit {
   public FragmentRoot getRootOperator() {
     return rootOperator;
   }
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
 }

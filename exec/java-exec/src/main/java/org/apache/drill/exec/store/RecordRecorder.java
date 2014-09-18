@@ -23,14 +23,14 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public interface RecordRecorder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordRecorder.class);
-  
+
   public void setup() throws IOException;
-  
+
   /**
-   * 
+   *
    * @param batch
    * @return
    */
   public boolean record(RecordBatch batch);
-  
+
 }

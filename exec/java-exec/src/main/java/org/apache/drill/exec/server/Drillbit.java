@@ -19,8 +19,6 @@ package org.apache.drill.exec.server;
 
 import java.io.Closeable;
 
-import javax.servlet.Servlet;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
@@ -120,7 +118,9 @@ public class Drillbit implements Closeable{
   }
 
   private void startJetty() throws Exception{
-    if(embeddedJetty == null) return;
+    if (embeddedJetty == null) {
+      return;
+    }
 
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
 
@@ -157,7 +157,9 @@ public class Drillbit implements Closeable{
   }
 
   public void close() {
-    if (coord != null && handle != null) coord.unregister(handle);
+    if (coord != null && handle != null) {
+      coord.unregister(handle);
+    }
 
     try {
       Thread.sleep(context.getConfig().getInt(ExecConstants.ZK_REFRESH) * 2);
@@ -165,7 +167,9 @@ public class Drillbit implements Closeable{
       logger.warn("Interrupted while sleeping during coordination deregistration.");
     }
     try {
-      if(embeddedJetty != null) embeddedJetty.stop();
+      if (embeddedJetty != null) {
+        embeddedJetty.stop();
+      }
     } catch (Exception e) {
       logger.warn("Failure while shutting down embedded jetty server.");
     }
@@ -194,11 +198,12 @@ public class Drillbit implements Closeable{
     }
 
   }
-  public ClusterCoordinator getCoordinator(){
+  public ClusterCoordinator getCoordinator() {
     return coord;
   }
 
-  public DrillbitContext getContext(){
+  public DrillbitContext getContext() {
     return this.manager.getContext();
   }
+
 }

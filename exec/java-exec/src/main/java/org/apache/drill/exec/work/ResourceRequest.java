@@ -19,10 +19,10 @@ package org.apache.drill.exec.work;
 
 public class ResourceRequest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourceRequest.class);
-  
+
   public long memoryMin;
   public long memoryDesired;
-  
+
 
   public static class ResourceAllocation {
     public long memory;

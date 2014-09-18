@@ -31,29 +31,29 @@ import com.google.common.io.Closeables;
 import com.google.protobuf.MessageLite;
 
 public class DataClientConnection extends RemoteConnection{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClientConnection.class); 
-  
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClientConnection.class);
+
   private final DataClient client;
   private final UUID id;
-  
-  public DataClientConnection(Channel channel, DataClient client){
+
+  public DataClientConnection(Channel channel, DataClient client) {
     super(channel);
     this.client = client;
     // we use a local listener pool unless a global one is provided.
     this.id = UUID.randomUUID();
   }
-  
+
   @Override
   public BufferAllocator getAllocator() {
     return client.getAllocator();
   }
 
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> outcomeListener, RpcType rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies){
-    client.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);  
-    
+      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+    client.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);
+
   }
-  
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -64,17 +64,28 @@ public class DataClientConnection extends RemoteConnection{
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
     DataClientConnection other = (DataClientConnection) obj;
     if (id == null) {
-      if (other.id != null) return false;
-    } else if (!id.equals(other.id)) return false;
+      if (other.id != null) {
+        return false;
+      }
+    } else if (!id.equals(other.id)) {
+      return false;
+    }
     return true;
   }
 
-  public void shutdownIfClient(){
-    Closeables.closeQuietly(client);    
+  public void shutdownIfClient() {
+    Closeables.closeQuietly(client);
   }
+
 }

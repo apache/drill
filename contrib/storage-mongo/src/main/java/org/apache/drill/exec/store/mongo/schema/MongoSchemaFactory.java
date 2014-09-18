@@ -64,10 +64,10 @@ public class MongoSchemaFactory implements SchemaFactory {
   private LoadingCache<String, List<String>> tableNameLoader;
   private final String schemaName;
   private final MongoStoragePlugin plugin;
-  
+
   private final List<ServerAddress> addresses;
   private final MongoClientOptions options;
-  
+
   public MongoSchemaFactory(MongoStoragePlugin schema, String schemaName)
       throws ExecutionSetupException, UnknownHostException {
     String connection = schema.getConfig().getConnection();
@@ -98,8 +98,9 @@ public class MongoSchemaFactory implements SchemaFactory {
 
     @Override
     public List<String> load(String key) throws Exception {
-      if (!DATABASES.equals(key))
+      if (!DATABASES.equals(key)) {
         throw new UnsupportedOperationException();
+      }
       return MongoCnxnManager.getClient(addresses, options).getDatabaseNames();
     }
 

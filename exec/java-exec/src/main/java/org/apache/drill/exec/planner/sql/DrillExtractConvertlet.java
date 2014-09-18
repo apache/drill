@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexBuilder;
@@ -26,9 +29,6 @@ import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql2rel.SqlRexContext;
 import org.eigenbase.sql2rel.SqlRexConvertlet;
-
-import java.util.LinkedList;
-import java.util.List;
 
 public class DrillExtractConvertlet implements SqlRexConvertlet {
 

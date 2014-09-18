@@ -25,7 +25,6 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCost;
 
 import com.google.common.collect.Lists;
 
@@ -34,11 +33,11 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
   private final long targetSliceSize;
 
-  public ExcessiveExchangeIdentifier(long targetSliceSize){
+  public ExcessiveExchangeIdentifier(long targetSliceSize) {
     this.targetSliceSize = targetSliceSize;
   }
 
-  public static Prel removeExcessiveEchanges(Prel prel, long targetSliceSize){
+  public static Prel removeExcessiveEchanges(Prel prel, long targetSliceSize) {
     ExcessiveExchangeIdentifier exchange = new ExcessiveExchangeIdentifier(targetSliceSize);
     return prel.accept(exchange, exchange.getNewStat());
   }
@@ -49,9 +48,9 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     MajorFragmentStat newFrag = new MajorFragmentStat();
     Prel newChild = ((Prel) prel.getChild()).accept(this, newFrag);
 
-    if(newFrag.isSingular() && parent.isSingular()){
+    if (newFrag.isSingular() && parent.isSingular()) {
       return newChild;
-    }else{
+    } else {
       return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode) newChild));
     }
   }
@@ -69,44 +68,46 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     return prel;
   }
 
-
   @Override
   public Prel visitPrel(Prel prel, MajorFragmentStat s) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
     s.add(prel);
-    for(Prel p : prel){
+    for(Prel p : prel) {
       children.add(p.accept(this, s));
     }
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 
-  public MajorFragmentStat getNewStat(){
+  public MajorFragmentStat getNewStat() {
     return new MajorFragmentStat();
   }
 
-  class MajorFragmentStat{
+  class MajorFragmentStat {
     private double maxRows = 0d;
     private int maxWidth = Integer.MAX_VALUE;
 
-    public void add(Prel prel){
+    public void add(Prel prel) {
       maxRows = Math.max(prel.getRows(), maxRows);
     }
 
-    public void setSingular(){
+    public void setSingular() {
       maxWidth = 1;
     }
 
-    public void addScan(ScanPrel prel){
+    public void addScan(ScanPrel prel) {
       maxWidth = Math.min(maxWidth, prel.getGroupScan().getMaxParallelizationWidth());
       add(prel);
     }
 
-    public boolean isSingular(){
+    public boolean isSingular() {
       int suggestedWidth = (int) Math.ceil((maxRows+1)/targetSliceSize);
 
       int w = Math.min(maxWidth, suggestedWidth);
-      if(w < 1) w = 1;
+      if (w < 1) {
+        w = 1;
+      }
       return w == 1;
     }
   }
+
 }

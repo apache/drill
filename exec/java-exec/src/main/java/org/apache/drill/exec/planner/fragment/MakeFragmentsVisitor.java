@@ -29,14 +29,16 @@ import org.apache.drill.exec.physical.base.SubScan;
 public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Fragment, FragmentSetupException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MakeFragmentsVisitor.class);
 
-  
-  public MakeFragmentsVisitor(){
+
+  public MakeFragmentsVisitor() {
   }
-  
+
   @Override
   public Fragment visitExchange(Exchange exchange, Fragment value) throws FragmentSetupException {
 //    logger.debug("Visiting Exchange {}", exchange);
-    if(value == null) throw new FragmentSetupException("The simple fragmenter was called without a FragmentBuilder value.  This will only happen if the initial call to SimpleFragmenter is by a Exchange node.  This should never happen since an Exchange node should never be the root node of a plan.");
+    if (value == null) {
+      throw new FragmentSetupException("The simple fragmenter was called without a FragmentBuilder value.  This will only happen if the initial call to SimpleFragmenter is by a Exchange node.  This should never happen since an Exchange node should never be the root node of a plan.");
+    }
     Fragment next = getNextBuilder();
     value.addReceiveExchange(exchange, next);
     next.addSendExchange(exchange);
@@ -55,21 +57,21 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
 //    logger.debug("Visiting Other {}", op);
     value = ensureBuilder(value);
     value.addOperator(op);
-    for(PhysicalOperator child : op){
+    for (PhysicalOperator child : op) {
       child.accept(this, value);
     }
     return value;
   }
-  
+
   private Fragment ensureBuilder(Fragment value) throws FragmentSetupException{
-    if(value != null){
+    if (value != null) {
       return value;
-    }else{
+    } else {
       return getNextBuilder();
     }
   }
-  
-  public Fragment getNextBuilder(){
+
+  public Fragment getNextBuilder() {
     return new Fragment();
   }
 

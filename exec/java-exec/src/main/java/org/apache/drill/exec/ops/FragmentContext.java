@@ -26,6 +26,7 @@ import java.util.Map;
 
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.compile.ClassTransformer;
@@ -48,10 +49,6 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import com.carrotsearch.hppc.LongObjectOpenHashMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -96,15 +93,15 @@ public class FragmentContext implements Closeable {
     this.rootFragmentTimeZone = fragment.getTimeZone();
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
     logger.debug("Fragment max allocation: {}", fragment.getMemMax());
-    try{
+    try {
       OptionList list;
-      if(!fragment.hasOptionsJson() || fragment.getOptionsJson().isEmpty()){
+      if (!fragment.hasOptionsJson() || fragment.getOptionsJson().isEmpty()) {
         list = new OptionList();
-      }else{
+      } else {
         list = dbContext.getConfig().getMapper().readValue(fragment.getOptionsJson(), OptionList.class);
       }
       this.fragmentOptions = new FragmentOptionManager(context.getOptionManager(), list);
-    }catch(Exception e){
+    } catch (Exception e) {
       throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
@@ -133,7 +130,7 @@ public class FragmentContext implements Closeable {
     return context;
   }
 
-  public SchemaPlus getRootSchema(){
+  public SchemaPlus getRootSchema() {
     if (connection == null) {
       fail(new UnsupportedOperationException("Schema tree can only be created in root fragment. " +
           "This is a non-root fragment."));
@@ -153,7 +150,7 @@ public class FragmentContext implements Closeable {
     return context.getEndpoint();
   }
 
-  public FragmentStats getStats(){
+  public FragmentStats getStats() {
     return this.stats;
   }
 
@@ -257,12 +254,14 @@ public class FragmentContext implements Closeable {
 
   @Override
   public void close() {
-    for(Thread thread: daemonThreads){
+    for (Thread thread: daemonThreads) {
      thread.interrupt();
     }
     Object[] mbuffers = ((LongObjectOpenHashMap<Object>)(Object)managedBuffers).values;
-    for(int i =0; i < mbuffers.length; i++){
-      if(managedBuffers.allocated[i]) ((DrillBuf)mbuffers[i]).release();
+    for (int i =0; i < mbuffers.length; i++) {
+      if (managedBuffers.allocated[i]) {
+        ((DrillBuf)mbuffers[i]).release();
+      }
     }
 
     if (buffers != null) {
@@ -271,17 +270,19 @@ public class FragmentContext implements Closeable {
     allocator.close();
   }
 
-  public DrillBuf replace(DrillBuf old, int newSize){
-    if(managedBuffers.remove(old.memoryAddress()) == null) throw new IllegalStateException("Tried to remove unmanaged buffer.");
+  public DrillBuf replace(DrillBuf old, int newSize) {
+    if (managedBuffers.remove(old.memoryAddress()) == null) {
+      throw new IllegalStateException("Tried to remove unmanaged buffer.");
+    }
     old.release();
     return getManagedBuffer(newSize);
   }
 
-  public DrillBuf getManagedBuffer(){
+  public DrillBuf getManagedBuffer() {
     return getManagedBuffer(256);
   }
 
-  public DrillBuf getManagedBuffer(int size){
+  public DrillBuf getManagedBuffer(int size) {
     DrillBuf newBuf = allocator.buffer(size);
     managedBuffers.put(newBuf.memoryAddress(), newBuf);
     newBuf.setFragmentContext(this);

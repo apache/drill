@@ -48,50 +48,54 @@ public class PathScanner {
   private static final Object SYNC = new Object();
   static volatile Reflections REFLECTIONS = null;
 
-  public static <A extends Annotation, T> Map<A, Class<? extends T>> scanForAnnotatedImplementations(Class<A> annotationClass, Class<T> baseClass, final List<String> scanPackages){
+  public static <A extends Annotation, T> Map<A, Class<? extends T>> scanForAnnotatedImplementations(Class<A> annotationClass, Class<T> baseClass, final List<String> scanPackages) {
     Collection<Class<? extends T>> providerClasses = scanForImplementations(baseClass, scanPackages);
 
     Map<A, Class<? extends T>> map = new HashMap<A, Class<? extends T>>();
 
     for (Class<? extends T> c : providerClasses) {
       A annotation = (A) c.getAnnotation(annotationClass);
-      if(annotation == null) continue;
+      if (annotation == null) {
+        continue;
+      }
       map.put(annotation, c);
     }
 
     return map;
   }
 
-  private static Reflections getReflections(){
-    if(REFLECTIONS == null){
+  private static Reflections getReflections() {
+    if (REFLECTIONS == null) {
       REFLECTIONS = new Reflections(new ConfigurationBuilder().setUrls(getMarkedPaths()).setScanners(subTypeScanner, annotationsScanner, resourcesScanner));
     }
     return REFLECTIONS;
   }
 
-  public static <T> Class<?>[] scanForImplementationsArr(Class<T> baseClass, final List<String> scanPackages){
+  public static <T> Class<?>[] scanForImplementationsArr(Class<T> baseClass, final List<String> scanPackages) {
     Collection<Class<? extends T>> imps = scanForImplementations(baseClass, scanPackages);
     return imps.toArray(new Class<?>[imps.size()]);
   }
 
-  public static <T> Set<Class<? extends T>> scanForImplementations(Class<T> baseClass, final List<String> scanPackages){
-    synchronized(SYNC){
+  public static <T> Set<Class<? extends T>> scanForImplementations(Class<T> baseClass, final List<String> scanPackages) {
+    synchronized(SYNC) {
       Set<Class<? extends T>> classes = getReflections().getSubTypesOf(baseClass);
-      for(Iterator<Class<? extends T>> i = classes.iterator(); i.hasNext();){
+      for (Iterator<Class<? extends T>> i = classes.iterator(); i.hasNext();) {
         Class<? extends T> c = i.next();
         assert baseClass.isAssignableFrom(c);
-        if(Modifier.isAbstract(c.getModifiers())) i.remove();
+        if (Modifier.isAbstract(c.getModifiers())) {
+          i.remove();
+        }
       }
       return classes;
     }
   }
 
-  private static Collection<URL> getMarkedPaths(){
+  private static Collection<URL> getMarkedPaths() {
     Collection<URL> urls = forResource(CommonConstants.DRILL_JAR_MARKER_FILE, true);
     return urls;
   }
 
-  public static Collection<URL> getConfigURLs(){
+  public static Collection<URL> getConfigURLs() {
     return forResource(CommonConstants.DRILL_JAR_MARKER_FILE, false);
   }
 
@@ -122,7 +126,6 @@ public class PathScanner {
     }
 
     return result;
-}
-
+  }
 
 }

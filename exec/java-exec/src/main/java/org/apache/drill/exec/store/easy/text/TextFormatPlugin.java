@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.store.easy.text;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Maps;
-import com.google.common.base.Preconditions;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -45,10 +46,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig> {
 
@@ -117,15 +117,18 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      } else if (obj == null) {
         return false;
-      if (!(obj instanceof TextFormatConfig))
+      } else if (!(obj instanceof TextFormatConfig)) {
         return false;
+      }
+
       TextFormatConfig that = (TextFormatConfig) obj;
-      if (this.delimiter.equals(that.delimiter))
+      if (this.delimiter.equals(that.delimiter)) {
         return true;
+      }
       return false;
     }
 
@@ -145,4 +148,5 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   public boolean supportsPushDown() {
     return true;
   }
+
 }

@@ -24,7 +24,7 @@ import com.mongodb.BasicDBObject;
 public class MongoScanSpec {
   private String dbName;
   private String collectionName;
-  
+
   private BasicDBObject filters;
 
   @JsonCreator
@@ -34,7 +34,7 @@ public class MongoScanSpec {
     this.dbName = dbName;
     this.collectionName = collectionName;
   }
-  
+
   public MongoScanSpec(String dbName, String collectionName, BasicDBObject filters){
     this.dbName = dbName;
     this.collectionName = collectionName;
@@ -48,8 +48,8 @@ public class MongoScanSpec {
   public String getCollectionName() {
     return collectionName;
   }
-  
-  
+
+
 
   public BasicDBObject getFilters() {
     return filters;
@@ -60,5 +60,5 @@ public class MongoScanSpec {
     return "MongoScanSpec [dbName=" + dbName + ", collectionName="
         + collectionName + ", filters=" + filters + "]";
   }
-  
+
 }

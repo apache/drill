@@ -23,56 +23,61 @@ import org.eigenbase.relopt.RelTraitDef;
 
 public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrait>{
   public static final DrillDistributionTraitDef INSTANCE = new DrillDistributionTraitDef();
-  
+
   private DrillDistributionTraitDef() {
     super();
   }
-  
+
+  @Override
   public boolean canConvert(
       RelOptPlanner planner, DrillDistributionTrait fromTrait, DrillDistributionTrait toTrait) {
     return true;
-  }  
+  }
 
+  @Override
   public Class<DrillDistributionTrait> getTraitClass(){
     return DrillDistributionTrait.class;
   }
-  
+
+  @Override
   public DrillDistributionTrait getDefault() {
     return DrillDistributionTrait.DEFAULT;
   }
 
+  @Override
   public String getSimpleName() {
     return this.getClass().getSimpleName();
   }
-  
+
   // implement RelTraitDef
+  @Override
   public RelNode convert(
       RelOptPlanner planner,
       RelNode rel,
       DrillDistributionTrait toDist,
       boolean allowInfiniteCostConverters) {
-    
+
     DrillDistributionTrait currentDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
-    
+
     // Source and Target have the same trait.
     if (currentDist.equals(toDist)) {
       return rel;
     }
-    
+
     // Source trait is "ANY", which is abstract type of distribution.
-    // We do not want to convert from "ANY", since it's abstract. 
+    // We do not want to convert from "ANY", since it's abstract.
     // Source trait should be concrete type: SINGLETON, HASH_DISTRIBUTED, etc.
     if (currentDist.equals(DrillDistributionTrait.DEFAULT)) {
         return null;
     }
-    
+
     switch(toDist.getType()){
       // UnionExchange, HashToRandomExchange, OrderedPartitionExchange and BroadcastExchange destroy the ordering property,
       // therefore RelCollation is set to default, which is EMPTY.
-      case SINGLETON:         
+      case SINGLETON:
         return new UnionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       case HASH_DISTRIBUTED:
-        return new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel, 
+        return new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel,
                                             toDist.getFields());
       case RANGE_DISTRIBUTED:
         return new OrderedPartitionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);

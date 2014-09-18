@@ -17,11 +17,7 @@
  */
 package org.apache.drill.exec.record;
 
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.ValueVector;
-
-import java.util.Iterator;
 
 public class ExpandableHyperContainer extends VectorContainer {
 

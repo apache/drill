@@ -19,9 +19,9 @@ package org.apache.drill.exec.rpc;
 
 public class RpcConstants {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcConstants.class);
-  
+
   private RpcConstants(){}
-  
+
   public static final boolean SOME_DEBUGGING = false;
   public static final boolean EXTRA_DEBUGGING = false;
 }

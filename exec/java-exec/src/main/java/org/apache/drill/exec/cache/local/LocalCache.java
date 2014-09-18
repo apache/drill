@@ -115,12 +115,11 @@ public class LocalCache implements DistributedCache {
   }
 
   private static BytesHolder serialize(Object obj, SerializationMode mode) {
-    if(obj instanceof String){
+    if (obj instanceof String) {
       return new BytesHolder( ((String)obj).getBytes(Charsets.UTF_8));
     }
-      try{
-      switch(mode){
-
+    try{
+      switch (mode) {
       case DRILL_SERIALIZIABLE: {
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         OutputStream outputStream = DataOutputOutputStream.constructOutputStream(out);
@@ -139,7 +138,7 @@ public class LocalCache implements DistributedCache {
         return new BytesHolder(( (Message) obj).toByteArray());
 
       }
-    }catch(Exception e){
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
 
@@ -148,14 +147,13 @@ public class LocalCache implements DistributedCache {
 
   private static <V> V deserialize(BytesHolder b, SerializationMode mode, Class<V> clazz) {
     byte[] bytes = b.bytes;
-    try{
+    try {
 
       if (clazz == String.class) {
         return (V) new String(bytes, Charsets.UTF_8);
       }
 
       switch (mode) {
-
       case DRILL_SERIALIZIABLE: {
         InputStream inputStream = new ByteArrayInputStream(bytes);
         V obj = clazz.getConstructor(BufferAllocator.class).newInstance(allocator);
@@ -174,13 +172,15 @@ public class LocalCache implements DistributedCache {
             parser = (Parser<V>) f.get(null);
           }
         }
-        if (parser == null) throw new UnsupportedOperationException(String.format("Unable to find parser for class %s.", clazz.getName()));
+        if (parser == null) {
+          throw new UnsupportedOperationException(String.format("Unable to find parser for class %s.", clazz.getName()));
+        }
         InputStream inputStream = new ByteArrayInputStream(bytes);
         return parser.parseFrom(inputStream);
       }
 
       }
-    }catch(Exception e){
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
 
@@ -189,9 +189,10 @@ public class LocalCache implements DistributedCache {
 
   private static class BytesHolder {
     final byte[] bytes;
-    public BytesHolder(byte[] bytes){
+    public BytesHolder(byte[] bytes) {
       this.bytes = bytes;
     }
+
     @Override
     public int hashCode() {
       final int prime = 31;
@@ -199,20 +200,24 @@ public class LocalCache implements DistributedCache {
       result = prime * result + Arrays.hashCode(bytes);
       return result;
     }
+
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       BytesHolder other = (BytesHolder) obj;
-      if (!Arrays.equals(bytes, other.bytes))
+      if (!Arrays.equals(bytes, other.bytes)) {
         return false;
+      }
       return true;
     }
-
 
   }
 
@@ -288,13 +293,15 @@ public class LocalCache implements DistributedCache {
     @Override
     public V get(K key) {
       BytesHolder b = m.get(serialize(key, config.getMode()));
-      if(b == null) return null;
+      if (b == null) {
+        return null;
+      }
       return (V) deserialize(b, config.getMode(), config.getValueClass());
     }
 
     @Override
     public Iterable<Entry<K, V>> getLocalEntries() {
-      return new Iterable<Entry<K, V>>(){
+      return new Iterable<Entry<K, V>>() {
         @Override
         public Iterator<Entry<K, V>> iterator() {
           return new DeserializingTransformer(m.entrySet().iterator());
@@ -376,7 +383,6 @@ public class LocalCache implements DistributedCache {
 
     }
 
-
   }
 
   public static class LocalCounterImpl implements Counter {
@@ -397,4 +403,5 @@ public class LocalCache implements DistributedCache {
       return al.decrementAndGet();
     }
   }
+
 }

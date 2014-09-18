@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
@@ -35,8 +37,6 @@ import org.joda.time.DateTimeUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
-
-import java.math.BigDecimal;
 
 class FixedByteAlignedReader extends ColumnReader {
 
@@ -79,6 +79,7 @@ class FixedByteAlignedReader extends ColumnReader {
       castedVector = v;
     }
 
+    @Override
     protected void readField(long recordsToReadInThisPass) {
       // we can use the standard read method to transfer the data
       super.readField(recordsToReadInThisPass);
@@ -101,6 +102,7 @@ class FixedByteAlignedReader extends ColumnReader {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
+    @Override
     public void writeData() {
       dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
       for (int i = 0; i < recordsReadInThisIteration; i++) {

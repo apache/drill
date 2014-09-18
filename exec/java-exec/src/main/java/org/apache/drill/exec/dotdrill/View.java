@@ -19,7 +19,6 @@ package org.apache.drill.exec.dotdrill;
 
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
@@ -34,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @JsonTypeName("view")
@@ -139,8 +139,9 @@ public class View {
   @JsonIgnore
   public boolean hasStar() {
     for (FieldType field : fields) {
-      if (StarColumnHelper.isNonPrefixedStarColumn(field.name))
+      if (StarColumnHelper.isNonPrefixedStarColumn(field.name)) {
         return true;
+      }
     }
     return false;
   }
@@ -164,7 +165,5 @@ public class View {
   public List<String> getWorkspaceSchemaPath() {
     return workspaceSchemaPath;
   }
-
-
 
 }

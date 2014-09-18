@@ -26,13 +26,13 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
  */
 public interface RootExec {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootExec.class);
-  
+
   /**
-   * Do the next batch of work.  
+   * Do the next batch of work.
    * @return Whether or not additional batches of work are necessary.  False means that this fragment is done.
    */
   public boolean next();
-  
+
   /**
    * Inform all children to clean up and go away.
    */
@@ -43,5 +43,5 @@ public interface RootExec {
    * @param handle
    */
   public void receivingFragmentFinished(FragmentHandle handle);
-  
+
 }

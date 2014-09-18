@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
-import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
-import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.SchemaUserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
@@ -31,17 +29,12 @@ import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
-import org.apache.drill.exec.work.foreman.Foreman.ForemanManagerListener;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.carrotsearch.hppc.IntObjectOpenHashMap;
+import com.google.common.collect.Lists;
 
 public class QueryStatus {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryStatus.class);
@@ -66,7 +59,7 @@ public class QueryStatus {
 
   private final PStore<QueryProfile> profileCache;
 
-  public QueryStatus(RunQuery query, QueryId id, PStoreProvider provider, Foreman foreman){
+  public QueryStatus(RunQuery query, QueryId id, PStoreProvider provider, Foreman foreman) {
     this.id = id;
     this.query = query;
     this.queryId = QueryIdHelper.getQueryId(id);
@@ -82,7 +75,7 @@ public class QueryStatus {
     return fragmentDataSet;
   }
 
-  public void setPlanText(String planText){
+  public void setPlanText(String planText) {
     this.planText = planText;
     updateCache();
 
@@ -105,11 +98,11 @@ public class QueryStatus {
     assert finishedFragments <= totalFragments;
   }
 
-  void add(FragmentData data){
+  void add(FragmentData data) {
     int majorFragmentId = data.getHandle().getMajorFragmentId();
     int minorFragmentId = data.getHandle().getMinorFragmentId();
     IntObjectOpenHashMap<FragmentData> minorMap = fragmentDataMap.get(majorFragmentId);
-    if(minorMap == null){
+    if (minorMap == null) {
       minorMap = new IntObjectOpenHashMap<FragmentData>();
       fragmentDataMap.put(majorFragmentId, minorMap);
     }
@@ -118,7 +111,7 @@ public class QueryStatus {
     fragmentDataSet.add(data);
   }
 
-  void update(FragmentStatus status, boolean updateCache){
+  void update(FragmentStatus status, boolean updateCache) {
     int majorFragmentId = status.getHandle().getMajorFragmentId();
     int minorFragmentId = status.getHandle().getMinorFragmentId();
     fragmentDataMap.get(majorFragmentId).get(minorFragmentId).setStatus(status);
@@ -127,13 +120,14 @@ public class QueryStatus {
     }
   }
 
-  public void updateCache(){
+  public void updateCache() {
     QueryState queryState = foreman.getQueryState();
     boolean fullStatus = queryState == QueryState.COMPLETED || queryState == QueryState.FAILED;
     profileCache.put(queryId, getAsProfile(fullStatus));
   }
 
-  public String toString(){
+  @Override
+  public String toString() {
     return fragmentDataMap.toString();
   }
 
@@ -141,12 +135,12 @@ public class QueryStatus {
     int major;
     int minor;
 
-    public FragmentId(FragmentStatus status){
+    public FragmentId(FragmentStatus status) {
       this.major = status.getHandle().getMajorFragmentId();
       this.minor = status.getHandle().getMinorFragmentId();
     }
 
-    public FragmentId(FragmentData data){
+    public FragmentId(FragmentData data) {
       this.major = data.getHandle().getMajorFragmentId();
       this.minor = data.getHandle().getMinorFragmentId();
     }
@@ -168,41 +162,49 @@ public class QueryStatus {
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
+      }
       FragmentId other = (FragmentId) obj;
-      if (major != other.major)
+      if (major != other.major) {
         return false;
-      if (minor != other.minor)
+      }
+      if (minor != other.minor) {
         return false;
+      }
       return true;
     }
 
-    public String toString(){
+    @Override
+    public String toString() {
       return major + ":" + minor;
     }
   }
 
-  public QueryProfile getAsProfile(boolean fullStatus){
+  public QueryProfile getAsProfile(boolean fullStatus) {
     QueryProfile.Builder b = QueryProfile.newBuilder();
     b.setQuery(query.getPlan());
     b.setType(query.getType());
-    if(planText != null) b.setPlan(planText);
+    if (planText != null) {
+      b.setPlan(planText);
+    }
     b.setId(id);
     if (fullStatus) {
-      for(int i = 0; i < fragmentDataMap.allocated.length; i++){
-        if(fragmentDataMap.allocated[i]){
+      for (int i = 0; i < fragmentDataMap.allocated.length; i++) {
+        if (fragmentDataMap.allocated[i]) {
           int majorFragmentId = fragmentDataMap.keys[i];
           IntObjectOpenHashMap<FragmentData> minorMap = (IntObjectOpenHashMap<FragmentData>) ((Object[]) fragmentDataMap.values)[i];
 
           MajorFragmentProfile.Builder fb = MajorFragmentProfile.newBuilder();
           fb.setMajorFragmentId(majorFragmentId);
-          for(int v = 0; v < minorMap.allocated.length; v++){
-            if(minorMap.allocated[v]){
+          for (int v = 0; v < minorMap.allocated.length; v++) {
+            if (minorMap.allocated[v]) {
               FragmentData data = (FragmentData) ((Object[]) minorMap.values)[v];
               fb.addMinorFragmentProfile(data.getStatus().getProfile());
             }
@@ -220,4 +222,5 @@ public class QueryStatus {
     b.setFinishedFragments(finishedFragments);
     return b.build();
   }
+
 }

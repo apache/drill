@@ -34,8 +34,8 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
+import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -139,7 +139,7 @@ public class HiveScan extends AbstractGroupScan {
         for (Object obj : properties.keySet()) {
           job.set((String) obj, (String) properties.get(obj));
         }
-        for(Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
+        for (Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
           job.set(entry.getKey(), entry.getValue());
         }
         InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
@@ -216,9 +216,11 @@ public class HiveScan extends AbstractGroupScan {
       for (InputSplit split : splits) {
         parts.add(new HiveTable.HivePartition(partitionMap.get(split)));
         encodedInputSplits.add(serializeInputSplit(split));
-        splitTypes.add(split.getClass().getCanonicalName());
+        splitTypes.add(split.getClass().getName());
       }
-      if (parts.contains(null)) parts = null;
+      if (parts.contains(null)) {
+        parts = null;
+      }
       HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.table, parts, hiveReadEntry.hiveConfigOverride);
       return new HiveSubScan(encodedInputSplits, subEntry, splitTypes, columns);
     } catch (IOException | ReflectiveOperationException e) {
@@ -274,7 +276,7 @@ public class HiveScan extends AbstractGroupScan {
   public ScanStats getScanStats() {
     try {
       long data =0;
-      for(InputSplit split : inputSplits){
+      for (InputSplit split : inputSplits) {
           data += split.getLength();
       }
 
@@ -313,4 +315,5 @@ public class HiveScan extends AbstractGroupScan {
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
   }
+
 }

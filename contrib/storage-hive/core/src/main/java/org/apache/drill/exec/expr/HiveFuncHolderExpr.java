@@ -24,9 +24,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.fn.FuncHolder;
-import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 
 public class HiveFuncHolderExpr extends FunctionHolderExpression implements Iterable<LogicalExpression>{
@@ -48,6 +46,7 @@ public class HiveFuncHolderExpr extends FunctionHolderExpression implements Iter
     return args.iterator();
   }
 
+  @Override
   public FuncHolder getHolder() {
     return holder;
   }
@@ -67,10 +66,10 @@ public class HiveFuncHolderExpr extends FunctionHolderExpression implements Iter
   public boolean isRandom() {
     return holder.isRandom();
   }
-  
+
   @Override
   public HiveFuncHolderExpr copy(List<LogicalExpression> args) {
     return new HiveFuncHolderExpr(this.nameUsed, this.holder, args, this.getPosition());
   }
-  
+
 }

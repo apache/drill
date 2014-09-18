@@ -17,19 +17,14 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import java.io.EOFException;
+import io.netty.buffer.ByteBuf;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 import parquet.bytes.BytesInput;
 import parquet.format.PageHeader;
@@ -38,16 +33,16 @@ import parquet.hadoop.util.CompatibilityUtil;
 
 public class ColumnDataReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnDataReader.class);
-  
+
   private final long endPosition;
   public final FSDataInputStream input;
-  
+
   public ColumnDataReader(FSDataInputStream input, long start, long length) throws IOException{
     this.input = input;
     this.input.seek(start);
     this.endPosition = start + length;
   }
-  
+
   public PageHeader readPageHeader() throws IOException{
     return Util.readPageHeader(input);
   }
@@ -82,11 +77,11 @@ public class ColumnDataReader {
   public boolean hasRemainder() throws IOException{
     return input.getPos() < endPosition;
   }
-  
+
   public class HadoopBytesInput extends BytesInput{
 
     private final byte[] pageBytes;
-    
+
     public HadoopBytesInput(byte[] pageBytes) {
       super();
       this.pageBytes = pageBytes;
@@ -106,7 +101,7 @@ public class ColumnDataReader {
     public void writeAllTo(OutputStream out) throws IOException {
       out.write(pageBytes);
     }
-    
+
   }
 
 }

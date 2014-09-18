@@ -30,19 +30,19 @@ public class PlanProperties {
 
   public PlanType type;
   public int version;
-	public Generator generator;
-	public ResultMode resultMode;
+  public Generator generator;
+  public ResultMode resultMode;
   public JSONOptions options;
   public int queue;
 
-//	@JsonInclude(Include.NON_NULL)
-	public static class Generator{
-		public String type;
-		public String info;
+//  @JsonInclude(Include.NON_NULL)
+  public static class Generator {
+    public String type;
+    public String info;
 
-		public static enum ResultMode{
-	    EXEC, LOGICAL, PHYSICAL;
-	  }
+    public static enum ResultMode {
+      EXEC, LOGICAL, PHYSICAL;
+    }
 
     private Generator(@JsonProperty("type") String type, @JsonProperty("info") String info) {
       this.type = type;
@@ -92,17 +92,17 @@ public class PlanProperties {
       return this;
     }
 
-    public PlanPropertiesBuilder resultMode(ResultMode mode){
+    public PlanPropertiesBuilder resultMode(ResultMode mode) {
       this.mode = mode;
       return this;
     }
 
-    public PlanPropertiesBuilder queue(int queueNumber){
+    public PlanPropertiesBuilder queue(int queueNumber) {
       this.queueNumber = queueNumber;
       return this;
     }
 
-    public PlanPropertiesBuilder options(JSONOptions options){
+    public PlanPropertiesBuilder options(JSONOptions options) {
       this.options = options;
       return this;
     }
@@ -115,5 +115,7 @@ public class PlanProperties {
     public PlanProperties build() {
       return new PlanProperties(version, generator, type, mode, options, queueNumber);
     }
+
   }
+
 }

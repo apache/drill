@@ -48,7 +48,9 @@ public class UnionExchange extends AbstractExchange{
 
   @Override
   protected void setupReceivers(List<DrillbitEndpoint> receiverLocations) throws PhysicalOperatorSetupException {
-    if(receiverLocations.size() != 1) throw new PhysicalOperatorSetupException("A Union Exchange only supports a single receiver endpoint.");
+    if (receiverLocations.size() != 1) {
+      throw new PhysicalOperatorSetupException("A Union Exchange only supports a single receiver endpoint.");
+    }
     this.destinationLocation = receiverLocations.iterator().next();
   }
 

@@ -17,84 +17,75 @@
  */
 package org.apache.drill.common.expression;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.UnmodifiableIterator;
 
-public class IfExpression extends LogicalExpressionBase{
-	static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
-	
-	public final IfCondition ifCondition;
-	public final LogicalExpression elseExpression;
-	
-	private IfExpression(ExpressionPosition pos, IfCondition conditions, LogicalExpression elseExpression){
-	  super(pos);
-		this.ifCondition = conditions;
-		this.elseExpression = elseExpression;
-	}
-	
-	public static class IfCondition{
-		public final LogicalExpression condition;
-		public final LogicalExpression expression;
-		
-		public IfCondition(LogicalExpression condition, LogicalExpression expression) {
-			//logger.debug("Generating IfCondition {}, {}", condition, expression);
-			
-			this.condition = condition;
-			this.expression = expression;
-		}
+public class IfExpression extends LogicalExpressionBase {
+  static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
 
-	}
-	
-	@Override
-  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E{
+  public final IfCondition ifCondition;
+  public final LogicalExpression elseExpression;
+
+  private IfExpression(ExpressionPosition pos, IfCondition conditions, LogicalExpression elseExpression) {
+    super(pos);
+    this.ifCondition = conditions;
+    this.elseExpression = elseExpression;
+  }
+
+  public static class IfCondition{
+    public final LogicalExpression condition;
+    public final LogicalExpression expression;
+
+    public IfCondition(LogicalExpression condition, LogicalExpression expression) {
+      //logger.debug("Generating IfCondition {}, {}", condition, expression);
+
+      this.condition = condition;
+      this.expression = expression;
+    }
+
+  }
+
+  @Override
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
     return visitor.visitIfExpression(this, value);
   }
 
-  public static class Builder{
-		IfCondition conditions;
-		private LogicalExpression elseExpression;
-		private ExpressionPosition pos = ExpressionPosition.UNKNOWN;
-		
-		public Builder setPosition(ExpressionPosition pos){
-		  this.pos = pos;
-		  return this;
-		}
-		
-		public Builder setElse(LogicalExpression elseExpression) {
-			this.elseExpression = elseExpression;
+  public static class Builder {
+    IfCondition conditions;
+    private LogicalExpression elseExpression;
+    private ExpressionPosition pos = ExpressionPosition.UNKNOWN;
+
+    public Builder setPosition(ExpressionPosition pos) {
+      this.pos = pos;
+      return this;
+    }
+
+    public Builder setElse(LogicalExpression elseExpression) {
+      this.elseExpression = elseExpression;
             return this;
-		}
+    }
 
     public Builder setIfCondition(IfCondition conditions) {
       this.conditions = conditions;
       return this;
     }
-		
-		public IfExpression build(){
-		  Preconditions.checkNotNull(pos);
-		  Preconditions.checkNotNull(conditions);
-			return new IfExpression(pos, conditions, elseExpression);
-		}
-		
-	}
+
+    public IfExpression build(){
+      Preconditions.checkNotNull(pos);
+      Preconditions.checkNotNull(conditions);
+      return new IfExpression(pos, conditions, elseExpression);
+    }
+
+  }
 
   @Override
   public MajorType getMajorType() {
@@ -114,14 +105,14 @@ public class IfExpression extends LogicalExpressionBase{
     return majorType;
   }
 
-  public static Builder newBuilder(){
-		return new Builder();
-	}
+  public static Builder newBuilder() {
+    return new Builder();
+  }
 
   @Override
   public Iterator<LogicalExpression> iterator() {
     List<LogicalExpression> children = Lists.newLinkedList();
-    
+
     children.add(ifCondition.condition);
     children.add(ifCondition.expression);
     children.add(this.elseExpression);
@@ -129,10 +120,10 @@ public class IfExpression extends LogicalExpressionBase{
   }
 
   @Override
-  public int getSelfCost() { 
-    return 0;  // TODO 
+  public int getSelfCost() {
+    return 0;  // TODO
   }
-  
+
   @Override
   public int getCumulativeCost() {
     // return the average cost of operands for a boolean "and" | "or"
@@ -143,7 +134,7 @@ public class IfExpression extends LogicalExpressionBase{
       cost += e.getCumulativeCost();
       i++;
     }
-  
+
     return (int) (cost / i) ;
   }
 

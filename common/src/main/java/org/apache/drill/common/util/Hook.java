@@ -17,10 +17,10 @@
  */
 package org.apache.drill.common.util;
 
-import com.google.common.base.Function;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import com.google.common.base.Function;
 
 /**
  * Collection of hooks that can be set by observers and are executed at various

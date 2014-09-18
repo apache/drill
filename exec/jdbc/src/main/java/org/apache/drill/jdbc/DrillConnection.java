@@ -36,6 +36,6 @@ public interface DrillConnection extends Connection{
    * within Optiq should use this view rather than calling
    * {@link java.util.Properties#getProperty(String)}. */
   DrillConnectionConfig config();
-  
+
   public DrillClient getClient();
 }

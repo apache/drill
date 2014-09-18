@@ -17,17 +17,6 @@
  */
 package org.apache.drill.jdbc.test;
 
-import com.google.common.base.Stopwatch;
-import org.apache.commons.io.FileUtils;
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
-import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TestRule;
-
-import java.io.File;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -35,6 +24,14 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.drill.common.util.TestTools;
+import org.apache.drill.jdbc.Driver;
+import org.apache.drill.jdbc.JdbcTest;
+import org.junit.Rule;
+import org.junit.rules.TestRule;
+
+import com.google.common.base.Stopwatch;
 
 public class JdbcTestQueryBase extends JdbcTest {
   // Set a timeout unless we're debugging.
@@ -79,8 +76,10 @@ public class JdbcTestQueryBase extends JdbcTest {
 
       System.out.println("\n\n\n");
       success = true;
-    }finally{
-      if(!success) Thread.sleep(2000);
+    } finally {
+      if (!success) {
+        Thread.sleep(2000);
+      }
     }
   }
 }

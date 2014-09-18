@@ -85,9 +85,9 @@ public class MongoRecordReader extends AbstractRecordReader {
   private MongoClientOptions clientOptions;
   private FragmentContext fragmentContext;
   private OperatorContext operatorContext;
-  
+
   private Boolean enableAllTextMode;
-  
+
   private boolean firstTime = true;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
@@ -109,22 +109,22 @@ public class MongoRecordReader extends AbstractRecordReader {
   }
 
 
-	@Override
-	protected Collection<SchemaPath> transformColumns(
-			Collection<SchemaPath> projectedColumns) {
-		Set<SchemaPath> transformed = Sets.newLinkedHashSet();
-		if (!isStarQuery()) {
-			Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
-			while (columnIterator.hasNext()) {
-				SchemaPath column = columnIterator.next();
-				NameSegment root = column.getRootSegment();
-				String fieldName = root.getPath();
-				transformed.add(SchemaPath.getSimplePath(fieldName));
-				this.fields.put(fieldName, Integer.valueOf(1));
-			}
-		}
-		return transformed;
-	}
+  @Override
+  protected Collection<SchemaPath> transformColumns(
+      Collection<SchemaPath> projectedColumns) {
+    Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    if (!isStarQuery()) {
+      Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
+      while (columnIterator.hasNext()) {
+        SchemaPath column = columnIterator.next();
+        NameSegment root = column.getRootSegment();
+        String fieldName = root.getPath();
+        transformed.add(SchemaPath.getSimplePath(fieldName));
+        this.fields.put(fieldName, Integer.valueOf(1));
+      }
+    }
+    return transformed;
+  }
 
   private void buildFilters(BasicDBObject pushdownFilters, Map<String, List<BasicDBObject>> mergedFilters) {
     for(Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {
@@ -161,7 +161,7 @@ public class MongoRecordReader extends AbstractRecordReader {
       throw new DrillRuntimeException(e.getMessage(), e);
     }
   }
-  
+
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try {
@@ -186,7 +186,7 @@ public class MongoRecordReader extends AbstractRecordReader {
       }
     }
   }
-  
+
   private boolean handleStarQueryWithEmptyResults() {
     return fields.toMap().size() == 1 && fields.containsField(DrillMongoConstants.ID);
   }
@@ -200,7 +200,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     Stopwatch watch = new Stopwatch();
     watch.start();
     int rowCount = 0;
-    
+
     if (firstTime && !cursor.hasNext() && handleStarQueryWithEmptyResults()) {
       firstTime = false;
       MapWriter mapVector = writer.rootAsMap();
@@ -255,7 +255,7 @@ public class MongoRecordReader extends AbstractRecordReader {
           }
         }
       }
-      
+
       for (SchemaPath sp :jsonReaderWithState.getNullColumns() ) {
         PathSegment root = sp.getRootSegment();
         BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
@@ -270,7 +270,7 @@ public class MongoRecordReader extends AbstractRecordReader {
           fieldWriter.integer(root.getNameSegment().getPath());
         }
       }
-      
+
       writer.setValueCount(docCount);
       setOutputDocCount(docCount);
       logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);

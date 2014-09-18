@@ -50,9 +50,11 @@ public class DrillPushProjIntoScan extends RelOptRule {
     try {
       ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
 
-      if(columnInfo == null || columnInfo.isStarQuery() //
+      if (columnInfo == null || columnInfo.isStarQuery() //
           || !scan.getTable().unwrap(DrillTable.class) //
-          .getGroupScan().canPushdownProjects(columnInfo.columns)) return;
+          .getGroupScan().canPushdownProjects(columnInfo.columns)) {
+        return;
+      }
 
       final DrillScanRel newScan =
           new DrillScanRel(scan.getCluster(),
@@ -63,7 +65,7 @@ public class DrillPushProjIntoScan extends RelOptRule {
 
 
       List<RexNode> newProjects = Lists.newArrayList();
-      for(RexNode n : proj.getChildExps()){
+      for (RexNode n : proj.getChildExps()) {
         newProjects.add(n.accept(columnInfo.getInputRewriter()));
       }
 

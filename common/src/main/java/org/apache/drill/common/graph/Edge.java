@@ -37,6 +37,6 @@ class Edge<N> implements Comparable<Edge<N>> {
   public String toString() {
     return "Edge [from=" + from + ", to=" + to + "]";
   }
-  
-  
+
+
 }

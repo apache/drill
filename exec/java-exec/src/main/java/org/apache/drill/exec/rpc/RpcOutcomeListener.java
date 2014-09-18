@@ -20,10 +20,10 @@ package org.apache.drill.exec.rpc;
 import io.netty.buffer.ByteBuf;
 
 public interface RpcOutcomeListener<V> {
-  
+
   public void failed(RpcException ex);
   public void success(V value, ByteBuf buffer);
-  
-  
+
+
 
 }

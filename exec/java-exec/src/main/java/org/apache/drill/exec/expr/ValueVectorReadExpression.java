@@ -23,9 +23,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.collect.Iterators;
@@ -78,15 +76,15 @@ public class ValueVectorReadExpression implements LogicalExpression{
   public Iterator<LogicalExpression> iterator() {
     return Iterators.emptyIterator();
   }
-  
+
   @Override
-  public int getSelfCost() { 
-    return 0;  // TODO 
+  public int getSelfCost() {
+    return 0;  // TODO
   }
-  
+
   @Override
-  public int getCumulativeCost() { 
+  public int getCumulativeCost() {
     return 0; // TODO
   }
-  
+
 }

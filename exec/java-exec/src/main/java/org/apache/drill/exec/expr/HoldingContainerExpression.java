@@ -25,14 +25,13 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Iterators;
 
 public class HoldingContainerExpression implements LogicalExpression{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HoldingContainerExpression.class);
 
   final HoldingContainer container;
-  
+
   public HoldingContainerExpression(HoldingContainer container) {
     this.container = container;
   }
@@ -52,7 +51,7 @@ public class HoldingContainerExpression implements LogicalExpression{
     return visitor.visitUnknown(this, value);
   }
 
-  
+
   public HoldingContainer getContainer() {
     return container;
   }
@@ -61,15 +60,15 @@ public class HoldingContainerExpression implements LogicalExpression{
   public ExpressionPosition getPosition() {
     return ExpressionPosition.UNKNOWN;
   }
-  
+
   @Override
-  public int getSelfCost() { 
-    return 0;  // TODO 
+  public int getSelfCost() {
+    return 0;  // TODO
   }
-  
+
   @Override
-  public int getCumulativeCost() { 
+  public int getCumulativeCost() {
     return 0; // TODO
   }
-    
+
 }

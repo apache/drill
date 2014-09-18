@@ -33,14 +33,16 @@ public abstract class AbstractClassCompiler {
 
   public byte[][] getClassByteCode(ClassNames className, String sourceCode)
       throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
-    if(getLogger().isDebugEnabled()){
+    if (getLogger().isDebugEnabled()) {
       getLogger().debug("Compiling (source size={}):\n{}", DrillStringUtils.readable(sourceCode.length()), prefixLineNumbers(sourceCode));
     }
     return getByteCode(className, sourceCode);
   }
 
   protected String prefixLineNumbers(String code) {
-    if (!debug) return code;
+    if (!debug) {
+      return code;
+    }
 
     StringBuilder out = new StringBuilder();
     int i = 1;
@@ -49,7 +51,7 @@ public abstract class AbstractClassCompiler {
       out.append(i++);
       int numLength = out.length() - start;
       out.append(":");
-      for (int spaces = 0; spaces < 7 - numLength; ++spaces){
+      for (int spaces = 0; spaces < 7 - numLength; ++spaces) {
         out.append(" ");
       }
       out.append(line);

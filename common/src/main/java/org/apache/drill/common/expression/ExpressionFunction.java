@@ -74,7 +74,6 @@ public class ExpressionFunction {
                 "Failure while attempting to retrieve Logical Expression list constructor on class [{}].  Functions must have one of these.",
                 c, e);
       }
-
     }
 
     FUNCTION_MAP = builder.build();
@@ -84,12 +83,14 @@ public class ExpressionFunction {
       throws ExpressionValidationException {
     // logger.debug("Requesting generation of new function with name {}.",
     // functionName);
-    if (!FUNCTION_MAP.containsKey(functionName))
+    if (!FUNCTION_MAP.containsKey(functionName)) {
       throw new ExpressionValidationException(String.format("Unknown function with name '%s'", functionName));
+    }
     try {
       return FUNCTION_MAP.get(functionName).newInstance(expressions);
     } catch (Exception e) {
       throw new ExpressionValidationException("Failure while attempting to build type of " + functionName, e);
     }
   }
+
 }

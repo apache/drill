@@ -25,7 +25,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -40,37 +39,37 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
 
   private RecordBatch incoming;
   private ScreenRoot screenRoot;
-  public SimpleRootExec(RootExec e){
-    if(e instanceof ScreenRoot){
+  public SimpleRootExec(RootExec e) {
+    if (e instanceof ScreenRoot) {
       incoming = ((ScreenRoot)e).getIncoming();
       screenRoot = (ScreenRoot) e;
-    }else{
+    } else {
       throw new UnsupportedOperationException();
     }
 
   }
 
-  public FragmentContext getContext(){
+  public FragmentContext getContext() {
     return incoming.getContext();
   }
 
-  public SelectionVector2 getSelectionVector2(){
+  public SelectionVector2 getSelectionVector2() {
     return incoming.getSelectionVector2();
   }
 
-  public SelectionVector4 getSelectionVector4(){
+  public SelectionVector4 getSelectionVector4() {
     return incoming.getSelectionVector4();
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends ValueVector> T getValueVectorById(SchemaPath path, Class<?> vvClass){
+  public <T extends ValueVector> T getValueVectorById(SchemaPath path, Class<?> vvClass) {
     TypedFieldId tfid = incoming.getValueVectorId(path);
     return (T) incoming.getValueAccessorById(vvClass, tfid.getFieldIds()).getValueVector();
   }
 
   @Override
   public boolean next() {
-    switch(incoming.next()){
+    switch (incoming.next()) {
     case NONE:
     case STOP:
       incoming.cleanup();
@@ -93,19 +92,19 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   @Override
   public Iterator<ValueVector> iterator() {
     List<ValueVector> vv = Lists.newArrayList();
-    for(VectorWrapper<?> vw : incoming){
+    for (VectorWrapper<?> vw : incoming) {
       vv.add(vw.getValueVector());
     }
     return vv.iterator();
   }
 
-  public int getRecordCount(){
+  public int getRecordCount() {
     return incoming.getRecordCount();
   }
 
   /// Temporary: for exposing the incoming batch to TestHashTable
   public RecordBatch getIncoming() {
-	  return incoming;
+    return incoming;
   }
 
 }

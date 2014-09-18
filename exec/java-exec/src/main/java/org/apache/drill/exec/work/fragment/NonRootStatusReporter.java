@@ -23,22 +23,22 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
 
 /**
- * For all non root fragments, status will be reported back to the foreman through a control tunnel.  
+ * For all non root fragments, status will be reported back to the foreman through a control tunnel.
  */
 public class NonRootStatusReporter extends AbstractStatusReporter{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NonRootStatusReporter.class);
-  
+
   private final ControlTunnel tunnel;
 
   public NonRootStatusReporter(FragmentContext context, ControlTunnel tunnel) {
     super(context);
     this.tunnel = tunnel;
   }
-  
+
   @Override
   protected void statusChange(FragmentHandle handle, FragmentStatus status) {
     logger.debug("Sending status change message message to remote node: " + status);
     tunnel.sendFragmentStatus(status);
   }
-  
+
 }

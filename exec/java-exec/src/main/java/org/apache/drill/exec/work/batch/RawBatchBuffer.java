@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.record.RawFragmentBatchProvider;
-import org.apache.drill.exec.rpc.ResponseSender;
 
 /**
  * A batch buffer is responsible for queuing incoming batches until a consumer is ready to receive them. It will also

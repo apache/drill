@@ -36,7 +36,6 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
-import org.junit.AfterClass;
 import org.junit.Test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -68,7 +67,7 @@ public class TestImplicitCastFunctions extends ExecTest {
   public void runTest(@Injectable final DrillbitContext bitContext,
                       @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
 
-    new NonStrictExpectations(){{
+    new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
@@ -77,14 +76,20 @@ public class TestImplicitCastFunctions extends ExecTest {
     }};
 
     String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
-    if(reader == null) reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    if(registry == null) registry = new FunctionImplementationRegistry(c);
-    if(context == null) context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    if (reader == null) {
+      reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    }
+    if (registry == null) {
+      registry = new FunctionImplementationRegistry(c);
+    }
+    if (context == null) {
+      context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    }
     PhysicalPlan plan = reader.readPhysicalPlan(planString);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
 
-    while(exec.next()){
+    while (exec.next()) {
       Object [] res = getRunResult(exec);
       assertEquals("return count does not match", res.length, expectedResults.length);
 
@@ -93,7 +98,7 @@ public class TestImplicitCastFunctions extends ExecTest {
       }
     }
 
-    if(context.getFailureCause() != null){
+    if (context.getFailureCause() != null) {
       throw context.getFailureCause();
     }
 
@@ -145,24 +150,24 @@ public class TestImplicitCastFunctions extends ExecTest {
     runTest(bitContext, connection, expected, "functions/cast/testICastMockCol.json");
   }
 
-    @Test
-    public void testImplicitCastWithNullExpression(@Injectable final DrillbitContext bitContext,
-                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-      Object [] expected = new Object[10];
+  @Test
+  public void testImplicitCastWithNullExpression(@Injectable final DrillbitContext bitContext,
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+    Object [] expected = new Object[10];
 
-      expected [0] = Boolean.TRUE;
-      expected [1] = Boolean.FALSE;
-      expected [2] = Boolean.FALSE;
-      expected [3] = Boolean.TRUE;
+    expected [0] = Boolean.TRUE;
+    expected [1] = Boolean.FALSE;
+    expected [2] = Boolean.FALSE;
+    expected [3] = Boolean.TRUE;
 
-      expected [4] = null;
-      expected [5] = null;
-      expected [6] = null;
-      expected [7] = null;
-      expected [8] = null;
-      expected [9] = null;
+    expected [4] = null;
+    expected [5] = null;
+    expected [6] = null;
+    expected [7] = null;
+    expected [8] = null;
+    expected [9] = null;
 
-      runTest(bitContext, connection, expected, "functions/cast/testICastNullExp.json");
-    }
+    runTest(bitContext, connection, expected, "functions/cast/testICastNullExp.json");
+  }
 
 }

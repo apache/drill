@@ -25,11 +25,11 @@ public class ChunkInfo {
   private List<String> chunkLocList;
 
   private String chunkId;
-  
+
   private Map<String, Object> minFilters;
-  
+
   private Map<String, Object> maxFilters;
-  
+
   public ChunkInfo(List<String> chunkLocList, String chunkId) {
     this.chunkLocList = chunkLocList;
     this.chunkId = chunkId;
@@ -42,7 +42,7 @@ public class ChunkInfo {
   public String getChunkId() {
     return chunkId;
   }
-  
+
   public void setMinFilters(Map<String, Object> minFilters) {
     this.minFilters = minFilters;
   }
@@ -50,7 +50,7 @@ public class ChunkInfo {
   public Map<String, Object> getMinFilters() {
     return minFilters;
   }
-  
+
   public void setMaxFilters(Map<String, Object> maxFilters) {
     this.maxFilters = maxFilters;
   }

@@ -17,9 +17,9 @@
  */
 package org.apache.drill.common.util;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-
 import io.netty.buffer.ByteBuf;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class DrillStringUtils {
 
@@ -29,7 +29,9 @@ public class DrillStringUtils {
   public static String readable(long bytes) {
     int unit = 1024;
     long absBytes = Math.abs(bytes);
-    if (absBytes < unit) return bytes + " B";
+    if (absBytes < unit) {
+      return bytes + " B";
+    }
     int exp = (int) (Math.log(absBytes) / Math.log(unit));
     char pre = ("KMGTPE").charAt(exp-1);
     return String.format("%s%.1f %ciB", (bytes == absBytes ? "" : "-"), absBytes / Math.pow(unit, exp), pre);
@@ -176,10 +178,11 @@ public class DrillStringUtils {
    * @return The converted hex value as a byte.
    */
   private static byte toBinaryFromHex(byte ch) {
-    if ( ch >= 'A' && ch <= 'F' )
+    if ( ch >= 'A' && ch <= 'F' ) {
       return (byte) ((byte)10 + (byte) (ch - 'A'));
-    else if ( ch >= 'a' && ch <= 'f' )
+    } else if ( ch >= 'a' && ch <= 'f' ) {
       return (byte) ((byte)10 + (byte) (ch - 'a'));
+    }
     return (byte) (ch - '0');
   }
 

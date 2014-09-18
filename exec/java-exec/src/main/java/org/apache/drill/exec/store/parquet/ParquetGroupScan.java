@@ -126,7 +126,9 @@ public class ParquetGroupScan extends AbstractGroupScan {
       @JsonProperty("selectionRoot") String selectionRoot //
       ) throws IOException, ExecutionSetupException {
     this.columns = columns;
-    if(formatConfig == null) formatConfig = new ParquetFormatConfig();
+    if (formatConfig == null) {
+      formatConfig = new ParquetFormatConfig();
+    }
     Preconditions.checkNotNull(storageConfig);
     Preconditions.checkNotNull(formatConfig);
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
@@ -154,7 +156,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.fs = formatPlugin.getFileSystem().getUnderlying();
 
     this.entries = Lists.newArrayList();
-    for(FileStatus file : files){
+    for (FileStatus file : files) {
       entries.add(new ReadEntryWithPath(file.getPath().toString()));
     }
 
@@ -166,7 +168,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   /*
    * This is used to clone another copy of the group scan.
    */
-  private ParquetGroupScan(ParquetGroupScan that){
+  private ParquetGroupScan(ParquetGroupScan that) {
     this.columns = that.columns;
     this.endpointAffinities = that.endpointAffinities;
     this.entries = that.entries;
@@ -182,7 +184,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
   private void readFooterFromEntries()  throws IOException {
     List<FileStatus> files = Lists.newArrayList();
-    for(ReadEntryWithPath e : entries){
+    for (ReadEntryWithPath e : entries) {
       files.add(fs.getFileStatus(new Path(e.getPath())));
     }
     readFooter(files);
@@ -299,7 +301,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
     if (this.endpointAffinities == null) {
       BlockMapBuilder bmb = new BlockMapBuilder(fs, formatPlugin.getContext().getBits());
-      try{
+      try {
         for (RowGroupInfo rgi : rowGroupInfos) {
           EndpointByteMap ebm = bmb.getEndpointByteMap(rgi);
           rgi.setEndpointByteMap(ebm);
@@ -318,7 +320,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) throws PhysicalOperatorSetupException {
 
     this.mappings = AssignmentCreator.getMappings(incomingEndpoints, rowGroupInfos);
-
   }
 
   @Override
@@ -335,9 +336,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return new ParquetRowGroupScan(formatPlugin, convertToReadEntries(rowGroupsForMinor), columns, selectionRoot);
   }
 
-
-
-  private List<RowGroupReadEntry> convertToReadEntries(List<RowGroupInfo> rowGroups){
+  private List<RowGroupReadEntry> convertToReadEntries(List<RowGroupInfo> rowGroups) {
     List<RowGroupReadEntry> entries = Lists.newArrayList();
     for (RowGroupInfo rgi : rowGroups) {
       RowGroupReadEntry rgre = new RowGroupReadEntry(rgi.getPath(), rgi.getStart(), rgi.getLength(),
@@ -347,7 +346,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return entries;
   }
 
-
   @Override
   public int getMaxParallelizationWidth() {
     return rowGroupInfos.size();
@@ -356,7 +354,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
   public List<SchemaPath> getColumns() {
     return columns;
   }
-
 
   @Override
   public ScanStats getScanStats() {
@@ -390,6 +387,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return newScan;
   }
 
+  @Override
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
@@ -402,4 +400,5 @@ public class ParquetGroupScan extends AbstractGroupScan {
   public long getColumnValueCount(SchemaPath column) {
     return columnValueCounts.containsKey(column) ? columnValueCounts.get(column) : 0;
   }
+
 }

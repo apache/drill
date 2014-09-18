@@ -17,21 +17,21 @@
  */
 package org.apache.drill.common.logical.data;
 
-import com.google.common.collect.Iterators;
+import java.util.Iterator;
+
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-
-import java.util.Iterator;
+import com.google.common.collect.Iterators;
 
 @JsonTypeName("filter")
-public class Filter extends SingleInputOperator{
-	private final LogicalExpression expr;
+public class Filter extends SingleInputOperator {
+  private final LogicalExpression expr;
 
-	@JsonCreator
+  @JsonCreator
   public Filter(@JsonProperty("expr") LogicalExpression expr) {
     this.expr = expr;
   }
@@ -50,6 +50,4 @@ public class Filter extends SingleInputOperator{
         return Iterators.singletonIterator(getInput());
     }
 
-  
-	
 }

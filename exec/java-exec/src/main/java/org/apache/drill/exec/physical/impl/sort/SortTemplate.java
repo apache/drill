@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Named;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
@@ -29,21 +29,22 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 
 public abstract class SortTemplate implements Sorter, IndexedSortable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortTemplate.class);
-  
+
   private SelectionVector4 vector4;
 
-  
+
   public void setup(FragmentContext context, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException{
     // we pass in the local hyperBatch since that is where we'll be reading data.
     Preconditions.checkNotNull(vector4);
     this.vector4 = vector4;
     doSetup(context, hyperBatch, null);
   }
-  
+
   @Override
   public void sort(SelectionVector4 vector4, VectorContainer container){
     Stopwatch watch = new Stopwatch();
@@ -59,7 +60,7 @@ public abstract class SortTemplate implements Sorter, IndexedSortable{
     vector4.set(sv0, vector4.get(sv1));
     vector4.set(sv1, tmp);
   }
-  
+
   @Override
   public int compare(int leftIndex, int rightIndex) {
     int sv1 = vector4.get(leftIndex);

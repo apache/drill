@@ -20,14 +20,9 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -40,30 +35,28 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.column.ColumnDescriptor;
-import parquet.format.ConvertedType;
 import parquet.format.FileMetaData;
 import parquet.format.SchemaElement;
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
-import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.PrimitiveType;
+
+import com.google.common.collect.Lists;
 
 public class ParquetRecordReader extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
@@ -187,7 +180,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     }
   }
 
-  private boolean fieldSelected(MaterializedField field){
+  private boolean fieldSelected(MaterializedField field) {
     // TODO - not sure if this is how we want to represent this
     // for now it makes the existing tests pass, simply selecting
     // all available data if no columns are provided
@@ -196,8 +189,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
     }
 
     int i = 0;
-    for (SchemaPath expr : getColumns()){
-      if ( field.matches(expr)){
+    for (SchemaPath expr : getColumns()) {
+      if ( field.matches(expr)) {
         columnsFound[i] = true;
         return true;
       }
@@ -244,7 +237,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       SchemaElement se = schemaElements.get(column.getPath()[0]);
       MajorType mt = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(), getDataMode(column), se);
       field = MaterializedField.create(toFieldName(column.getPath()),mt);
-      if ( ! fieldSelected(field)){
+      if ( ! fieldSelected(field)) {
         continue;
       }
       columnsToScan++;
@@ -253,7 +246,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
         if (column.getMaxRepetitionLevel() > 0) {
           allFieldsFixedLength = false;
         }
-        if (column.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY){
+        if (column.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
             bitWidthAllFixedFields += se.getType_length() * 8;
         } else {
           bitWidthAllFixedFields += getTypeLengthInBits(column.getType());
@@ -285,7 +278,9 @@ public class ParquetRecordReader extends AbstractRecordReader {
         MajorType type = ParquetToDrillTypeConverter.toMajorType(column.getType(), schemaElement.getType_length(), getDataMode(column), schemaElement);
         field = MaterializedField.create(toFieldName(column.getPath()), type);
         // the field was not requested to be read
-        if ( ! fieldSelected(field)) continue;
+        if ( ! fieldSelected(field)) {
+          continue;
+        }
 
         fieldFixedLength = column.getType() != PrimitiveType.PrimitiveTypeName.BINARY;
         v = output.addField(field, (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
@@ -360,14 +355,14 @@ public class ParquetRecordReader extends AbstractRecordReader {
     for (ColumnReader column : columnStatuses) {
       column.valuesReadInCurrentPass = 0;
     }
-    for (VarLengthColumn r : varLengthReader.columns){
+    for (VarLengthColumn r : varLengthReader.columns) {
       r.valuesReadInCurrentPass = 0;
     }
   }
 
  public void readAllFixedFields(long recordsToRead) throws IOException {
 
-   for (ColumnReader crs : columnStatuses){
+   for (ColumnReader crs : columnStatuses) {
      crs.processPages(recordsToRead);
    }
  }
@@ -378,11 +373,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
     long recordsToRead = 0;
     try {
       ColumnReader firstColumnStatus;
-      if (columnStatuses.size() > 0){
+      if (columnStatuses.size() > 0) {
         firstColumnStatus = columnStatuses.iterator().next();
       }
       else{
-        if (varLengthReader.columns.size() > 0){
+        if (varLengthReader.columns.size() > 0) {
           firstColumnStatus = varLengthReader.columns.iterator().next();
         }
         else{
@@ -425,7 +420,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
         }
       }
 
-
+//      logger.debug("So far read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex, hadoopPath.toUri().getPath());
       totalRecordsRead += firstColumnStatus.getRecordsReadInCurrentPass();
       return firstColumnStatus.getRecordsReadInCurrentPass();
     } catch (IOException e) {
@@ -444,9 +439,10 @@ public class ParquetRecordReader extends AbstractRecordReader {
     }
     columnStatuses.clear();
 
-    for (VarLengthColumn r : varLengthReader.columns){
+    for (VarLengthColumn r : varLengthReader.columns) {
       r.clear();
     }
     varLengthReader.columns.clear();
   }
+
 }

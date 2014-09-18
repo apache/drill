@@ -16,14 +16,15 @@
  limitations under the License.
 -->
 <configuration>
-  <appender name="SOCKET"
+  <!--  <appender name="SOCKET"
     class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
     <Compressing>true</Compressing>
     <ReconnectionDelay>10000</ReconnectionDelay>
     <IncludeCallerData>true</IncludeCallerData>
     <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
   </appender>
-
+   -->
+   
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
@@ -52,10 +53,12 @@
     <appender-ref ref="FILE" />
   </logger>
 
+  <!-- 
   <logger name="org.apache.drill" additivity="false">
     <level value="debug" />
     <appender-ref ref="SOCKET" />
   </logger>
+   -->
 
   <root>
     <level value="error" />

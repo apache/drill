@@ -24,7 +24,7 @@ import org.eigenbase.relopt.RelTrait;
 
 public class RelOptHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RelOptHelper.class);
-  
+
   public static RelOptRuleOperand any(Class<? extends RelNode> first, RelTrait trait){
     return RelOptRule.operand(first, trait, RelOptRule.any());
   }
@@ -36,7 +36,7 @@ public class RelOptHelper {
   public static RelOptRuleOperand any(Class<? extends RelNode> first, Class<? extends RelNode> second) {
     return RelOptRule.operand(first, RelOptRule.operand(second, RelOptRule.any()));
   }
-  
+
   public static RelOptRuleOperand some(Class<? extends RelNode> rel, RelOptRuleOperand first, RelOptRuleOperand... rest){
     return RelOptRule.operand(rel, RelOptRule.some(first, rest));
   }

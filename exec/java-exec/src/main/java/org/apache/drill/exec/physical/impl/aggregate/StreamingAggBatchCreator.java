@@ -35,6 +35,6 @@ public class StreamingAggBatchCreator implements BatchCreator<StreamingAggregate
     Preconditions.checkArgument(children.size() == 1);
     return new StreamingAggBatch(config, children.iterator().next(), context);
   }
-  
-  
+
+
 }

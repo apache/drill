@@ -63,8 +63,9 @@ public class SingleMergeExchange extends AbstractExchange {
   protected void setupReceivers(List<CoordinationProtos.DrillbitEndpoint> receiverLocations)
       throws PhysicalOperatorSetupException {
 
-    if (receiverLocations.size() != 1)
+    if (receiverLocations.size() != 1) {
       throw new PhysicalOperatorSetupException("SingleMergeExchange only supports a single receiver endpoint");
+    }
     receiverLocation = receiverLocations.iterator().next();
 
   }

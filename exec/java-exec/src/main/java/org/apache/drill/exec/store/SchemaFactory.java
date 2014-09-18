@@ -19,7 +19,6 @@ package org.apache.drill.exec.store;
 
 import net.hydromatic.optiq.SchemaPlus;
 
-import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.rpc.user.UserSession;
 
 public interface SchemaFactory {

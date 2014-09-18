@@ -17,15 +17,16 @@
  */
 package parquet.hadoop;
 
+import java.io.IOException;
+
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.hadoop.conf.Configuration;
+
 import parquet.column.page.PageWriteStore;
 import parquet.hadoop.CodecFactory.BytesCompressor;
 import parquet.hadoop.metadata.CompressionCodecName;
 import parquet.schema.MessageType;
-
-import java.io.IOException;
 
 public class ColumnChunkPageWriteStoreExposer {
 

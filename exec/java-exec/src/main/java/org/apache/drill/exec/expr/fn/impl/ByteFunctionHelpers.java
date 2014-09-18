@@ -18,10 +18,11 @@
  ******************************************************************************/
 package org.apache.drill.exec.expr.fn.impl;
 
-import com.google.common.primitives.UnsignedLongs;
-
 import io.netty.util.internal.PlatformDependent;
+
 import org.apache.drill.exec.util.DecimalUtility;
+
+import com.google.common.primitives.UnsignedLongs;
 
 public class ByteFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteFunctionHelpers.class);
@@ -91,7 +92,7 @@ public class ByteFunctionHelpers {
     while (n > 7) {
       long leftLong = PlatformDependent.getLong(lPos);
       long rightLong = PlatformDependent.getLong(rPos);
-      if(leftLong != rightLong){
+      if (leftLong != rightLong) {
         return UnsignedLongs.compare(Long.reverseBytes(leftLong), Long.reverseBytes(rightLong));
       }
       lPos += 8;
@@ -109,7 +110,9 @@ public class ByteFunctionHelpers {
       rPos++;
     }
 
-    if (lLen == rLen) return 0;
+    if (lLen == rLen) {
+      return 0;
+    }
 
     return lLen > rLen ? 1 : -1;
 
@@ -133,8 +136,6 @@ public class ByteFunctionHelpers {
     long lPos = laddr + lStart;
     int rPos = rStart;
 
-
-
     while (n-- != 0) {
       byte leftByte = PlatformDependent.getByte(lPos);
       byte rightByte = right[rPos];
@@ -145,10 +146,11 @@ public class ByteFunctionHelpers {
       rPos++;
     }
 
-    if (lLen == rLen) return 0;
+    if (lLen == rLen) {
+      return 0;
+    }
 
     return lLen > rLen ? 1 : -1;
-
   }
 
   /*
@@ -200,4 +202,5 @@ public class ByteFunctionHelpers {
   public static boolean getSign(byte[] b) {
     return ((getInteger(b, 0, false) & 0x80000000) != 0);
   }
+
 }

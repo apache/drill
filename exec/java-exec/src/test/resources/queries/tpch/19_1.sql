@@ -5,7 +5,7 @@ from
   cp.`tpch/lineitem.parquet` l,
   cp.`tpch/part.parquet` p
 where
-    p.p_partkey = l.l_partkey 
+    p.p_partkey = l.l_partkey
     and (
   (
     p.p_brand = 'Brand#41'

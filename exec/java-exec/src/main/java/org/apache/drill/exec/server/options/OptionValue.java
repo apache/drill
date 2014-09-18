@@ -57,7 +57,7 @@ public class OptionValue{
     return new OptionValue(Kind.DOUBLE, type, name, null, null, null, val);
   }
 
-  public OptionValue(){}
+  public OptionValue() {}
 
   public static OptionValue createOption(Kind kind, OptionType type, String name, String val) {
     switch (kind) {
@@ -118,44 +118,58 @@ public class OptionValue{
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     OptionValue other = (OptionValue) obj;
     if (bool_val == null) {
-      if (other.bool_val != null)
+      if (other.bool_val != null) {
         return false;
-    } else if (!bool_val.equals(other.bool_val))
+      }
+    } else if (!bool_val.equals(other.bool_val)) {
       return false;
+    }
     if (float_val == null) {
-      if (other.float_val != null)
+      if (other.float_val != null) {
         return false;
-    } else if (!float_val.equals(other.float_val))
+      }
+    } else if (!float_val.equals(other.float_val)) {
       return false;
-    if (kind != other.kind)
+    }
+    if (kind != other.kind) {
       return false;
+    }
     if (name == null) {
-      if (other.name != null)
+      if (other.name != null) {
         return false;
-    } else if (!name.equals(other.name))
+      }
+    } else if (!name.equals(other.name)) {
       return false;
+    }
     if (num_val == null) {
-      if (other.num_val != null)
+      if (other.num_val != null) {
         return false;
-    } else if (!num_val.equals(other.num_val))
+      }
+    } else if (!num_val.equals(other.num_val)) {
       return false;
+    }
     if (string_val == null) {
-      if (other.string_val != null)
+      if (other.string_val != null) {
         return false;
-    } else if (!string_val.equals(other.string_val))
+      }
+    } else if (!string_val.equals(other.string_val)) {
       return false;
-    if (type != other.type)
+    }
+    if (type != other.type) {
       return false;
+    }
     return true;
   }
-
 
 }

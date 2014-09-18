@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.fragment;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.collect.Maps;

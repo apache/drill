@@ -24,11 +24,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-@JsonPropertyOrder({"ref", "expr"}) 
+@JsonPropertyOrder({"ref", "expr"})
 public class NamedExpression {
   private final LogicalExpression expr;
   private final FieldReference ref;
-  
+
   @JsonCreator
   public NamedExpression( @JsonProperty("expr") LogicalExpression expr, @JsonProperty("ref") FieldReference ref) {
     super();

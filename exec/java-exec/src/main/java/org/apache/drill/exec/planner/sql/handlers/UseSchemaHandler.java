@@ -28,7 +28,7 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlUseSchema;
 import org.eigenbase.sql.SqlNode;
 
-public class UseSchemaHandler extends AbstractSqlHandler{
+public class UseSchemaHandler extends AbstractSqlHandler {
   QueryContext context;
 
   public UseSchemaHandler(QueryContext context) {
@@ -43,8 +43,11 @@ public class UseSchemaHandler extends AbstractSqlHandler{
     boolean status = context.getSession().setDefaultSchemaPath(defaultSchema, context.getRootSchema());
 
     String msg;
-    if (status) msg = String.format("Default schema changed to '%s'", defaultSchema);
-    else msg = String.format("Failed to change default schema to '%s'", defaultSchema);
+    if (status) {
+      msg = String.format("Default schema changed to '%s'", defaultSchema);
+    } else {
+      msg = String.format("Failed to change default schema to '%s'", defaultSchema);
+    }
 
     return DirectPlan.createDirectPlan(context, status, msg);
   }

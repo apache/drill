@@ -25,11 +25,10 @@ import java.util.Map;
 
   private Map<V, AdjacencyList<V>.Node> ops = new HashMap<V, AdjacencyList<V>.Node>();
   private final AdjacencyList<V> parent;
-  
+
   public AdjacencyListBuilder(AdjacencyList<V> parent) {
     this.parent = parent;
   }
-
 
   protected boolean requireDirected() {
     return true;
@@ -46,7 +45,9 @@ import java.util.Map;
 
   @Override
   public boolean visit(V o) {
-    if (o == null) throw new IllegalArgumentException("Null operator.");
+    if (o == null) {
+      throw new IllegalArgumentException("Null operator.");
+    }
 
     if (!ops.containsKey(o)) {
       ops.put(o, parent.getNewNode(o));
