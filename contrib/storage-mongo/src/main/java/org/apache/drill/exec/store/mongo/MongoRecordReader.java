@@ -32,11 +32,17 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
@@ -65,6 +71,9 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   private DBCollection collection;
   private DBCursor cursor;
+
+  private OutputMutator outputMutator;
+  private NullableVarCharVector valueVector;
 
   private JsonReaderWithState jsonReaderWithState;
   private VectorContainerWriter writer;
@@ -161,9 +170,21 @@ public class MongoRecordReader extends AbstractRecordReader {
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure in Mongo JsonReader initialization.", e);
     }
+    this.outputMutator = output;
     logger.info("Filters Applied : " + filters);
     logger.info("Fields Selected :" + fields);
     cursor = collection.find(filters, fields);
+    if (isStarQuery()) {
+      try {
+      SchemaPath startColumn = SchemaPath.getSimplePath("*");
+      MaterializedField field = MaterializedField.create(startColumn,
+          Types.optional(MinorType.VARCHAR));
+        valueVector = outputMutator
+            .addField(field, NullableVarCharVector.class);
+      } catch (SchemaChangeException e) {
+        throw new ExecutionSetupException(e);
+      }
+    }
   }
   
   private boolean handleStarQueryWithEmptyResults() {
@@ -189,24 +210,49 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
      firstTime = false;
 
+    if (isStarQuery()) {
+      if (valueVector != null) {
+        valueVector.clear();
+        valueVector.allocateNew();
+      }
+    }
     try {
       done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         writer.setPosition(docCount);
         DBObject record = cursor.next();
-        switch (jsonReaderWithState.write(record.toString().getBytes(Charsets.UTF_8), writer)) {
-        case WRITE_SUCCEED:
-          docCount++;
-          break;
-
-        case WRITE_FAILED:
-          if (docCount == 0) {
-            throw new DrillRuntimeException("Record is too big to fit into allocated ValueVector");
+        if (isStarQuery()) {
+          if (valueVector != null) {
+            byte[] bytes = record.toString().getBytes();
+            if (!valueVector.getMutator().setSafe(rowCount, bytes, 0,
+                bytes.length)) {
+              break done;
+            }
+            docCount++;
+          } else {
+            logger.debug("valueVector is null");
+            break done;
           }
-          logger.warn("Record {} is too big to fit into allocated ValueVector", record);
-          break done;
+          continue;
+        } else {
+          switch (jsonReaderWithState.write(
+              record.toString().getBytes(Charsets.UTF_8), writer)) {
+          case WRITE_SUCCEED:
+            docCount++;
+            break;
 
-        default:
-          break done;
+          case WRITE_FAILED:
+            if (docCount == 0) {
+              throw new DrillRuntimeException(
+                  "Record is too big to fit into allocated ValueVector");
+            }
+            logger.warn(
+                "Record {} is too big to fit into allocated ValueVector",
+                record);
+            break done;
+
+          default:
+            break done;
+          }
         }
       }
       
@@ -226,11 +272,18 @@ public class MongoRecordReader extends AbstractRecordReader {
       }
       
       writer.setValueCount(docCount);
+      setOutputDocCount(docCount);
       logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
       return docCount;
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       throw new DrillRuntimeException("Failure while reading Mongo Record.", e);
+    }
+  }
+
+  private void setOutputDocCount(int docCount) {
+    if (isStarQuery() && valueVector != null) {
+      valueVector.getMutator().setValueCount(docCount);
     }
   }
 
