@@ -71,7 +71,6 @@ public class MongoRecordReader extends AbstractRecordReader {
   private DBCollection collection;
   private DBCursor cursor;
 
-  private OutputMutator outputMutator;
   private NullableVarCharVector valueVector;
 
   private JsonReaderWithState jsonReaderWithState;
@@ -169,7 +168,6 @@ public class MongoRecordReader extends AbstractRecordReader {
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure in Mongo JsonReader initialization.", e);
     }
-    this.outputMutator = output;
     logger.info("Filters Applied : " + filters);
     logger.info("Fields Selected :" + fields);
     cursor = collection.find(filters, fields);
@@ -178,8 +176,7 @@ public class MongoRecordReader extends AbstractRecordReader {
       SchemaPath startColumn = SchemaPath.getSimplePath("*");
       MaterializedField field = MaterializedField.create(startColumn,
           Types.optional(MinorType.VARCHAR));
-        valueVector = outputMutator
-            .addField(field, NullableVarCharVector.class);
+        valueVector = output.addField(field, NullableVarCharVector.class);
       } catch (SchemaChangeException e) {
         throw new ExecutionSetupException(e);
       }
@@ -203,45 +200,39 @@ public class MongoRecordReader extends AbstractRecordReader {
       writer.setValueCount(0);
       return 0;
     }
-     firstTime = false;
+    firstTime = false;
 
-    if (isStarQuery()) {
-      if (valueVector != null) {
-        valueVector.clear();
-        valueVector.allocateNew();
-      }
+    if (isStarQuery() && valueVector != null) {
+      valueVector.clear();
+      valueVector.allocateNew(4 * 1024 * TARGET_RECORD_COUNT ,TARGET_RECORD_COUNT);
     }
     try {
+      String errMsg = "Document {} is too big to fit into allocated ValueVector";
       done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         writer.setPosition(docCount);
-        DBObject record = cursor.next();
+        String doc = cursor.next().toString();
+        byte[] record = doc.getBytes(Charsets.UTF_8);
         if (isStarQuery()) {
           if (valueVector != null) {
-            byte[] bytes = record.toString().getBytes();
-            if (!valueVector.getMutator().setSafe(rowCount, bytes, 0,
-                bytes.length)) {
+            boolean writeStatus = valueVector.getMutator().setSafe(rowCount,
+                record, 0, record.length);
+            if (!writeStatus) {
+              logger.warn(errMsg, doc);
               break done;
             }
             docCount++;
-          } else {
-            logger.debug("valueVector is null");
-            break done;
           }
         } else {
-          switch (jsonReaderWithState.write(
-              record.toString().getBytes(Charsets.UTF_8), writer)) {
+          switch (jsonReaderWithState.write(record, writer)) {
           case WRITE_SUCCEED:
             docCount++;
             break;
 
           case WRITE_FAILED:
             if (docCount == 0) {
-              throw new DrillRuntimeException(
-                  "Record is too big to fit into allocated ValueVector");
+              throw new DrillRuntimeException(errMsg);
             }
-            logger.warn(
-                "Record {} is too big to fit into allocated ValueVector",
-                record);
+            logger.warn(errMsg, doc);
             break done;
 
           default:
