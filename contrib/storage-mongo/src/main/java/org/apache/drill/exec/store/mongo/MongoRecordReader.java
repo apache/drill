@@ -42,7 +42,6 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
@@ -187,10 +186,6 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
   }
 
-  private boolean handleStarQueryWithEmptyResults() {
-    return fields.toMap().size() == 1 && fields.containsField(DrillMongoConstants.ID);
-  }
-
   @Override
   public int next() {
     writer.allocate();
@@ -201,7 +196,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     watch.start();
     int rowCount = 0;
 
-    if (firstTime && !cursor.hasNext() && handleStarQueryWithEmptyResults()) {
+    if (firstTime && !cursor.hasNext() && isStarQuery()) {
       firstTime = false;
       MapWriter mapVector = writer.rootAsMap();
       mapVector.varChar("*");
@@ -232,7 +227,6 @@ public class MongoRecordReader extends AbstractRecordReader {
             logger.debug("valueVector is null");
             break done;
           }
-          continue;
         } else {
           switch (jsonReaderWithState.write(
               record.toString().getBytes(Charsets.UTF_8), writer)) {
