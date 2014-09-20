@@ -45,7 +45,6 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,8 +84,6 @@ public class MongoRecordReader extends AbstractRecordReader {
   private OperatorContext operatorContext;
 
   private Boolean enableAllTextMode;
-
-  private boolean firstTime = true;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
       FragmentContext context, MongoClientOptions clientOptions) {
@@ -162,29 +159,31 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
-    try {
-      this.writer = new VectorContainerWriter(output);
-      this.jsonReaderWithState = new JsonReaderWithState(fragmentContext.getManagedBuffer(), columns, enableAllTextMode);
-    } catch (IOException e) {
-      throw new ExecutionSetupException("Failure in Mongo JsonReader initialization.", e);
-    }
-    logger.info("Filters Applied : " + filters);
-    logger.info("Fields Selected :" + fields);
-    cursor = collection.find(filters, fields);
     if (isStarQuery()) {
       try {
-      SchemaPath startColumn = SchemaPath.getSimplePath("*");
-      MaterializedField field = MaterializedField.create(startColumn,
-          Types.optional(MinorType.VARCHAR));
+        SchemaPath startColumn = SchemaPath.getSimplePath("*");
+        MaterializedField field = MaterializedField.create(startColumn,
+            Types.optional(MinorType.VARCHAR));
         valueVector = output.addField(field, NullableVarCharVector.class);
       } catch (SchemaChangeException e) {
         throw new ExecutionSetupException(e);
       }
+    } else {
+      try {
+        this.writer = new VectorContainerWriter(output);
+        this.jsonReaderWithState = new JsonReaderWithState(
+            fragmentContext.getManagedBuffer(), columns, enableAllTextMode);
+      } catch (IOException e) {
+        throw new ExecutionSetupException(
+            "Failure in Mongo JsonReader initialization.", e);
+      }
     }
+    logger.info("Filters Applied : " + filters);
+    logger.info("Fields Selected :" + fields);
+    cursor = collection.find(filters, fields);
   }
 
-  @Override
-  public int next() {
+  private int handleNonStarQuery() {
     writer.allocate();
     writer.reset();
 
@@ -193,71 +192,47 @@ public class MongoRecordReader extends AbstractRecordReader {
     watch.start();
     int rowCount = 0;
 
-    if (firstTime && !cursor.hasNext() && isStarQuery()) {
-      firstTime = false;
-      MapWriter mapVector = writer.rootAsMap();
-      mapVector.varChar("*");
-      writer.setValueCount(0);
-      return 0;
-    }
-    firstTime = false;
-
-    if (isStarQuery() && valueVector != null) {
-      valueVector.clear();
-      valueVector.allocateNew(4 * 1024 * TARGET_RECORD_COUNT ,TARGET_RECORD_COUNT);
-    }
     try {
       String errMsg = "Document {} is too big to fit into allocated ValueVector";
       done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         writer.setPosition(docCount);
         String doc = cursor.next().toString();
         byte[] record = doc.getBytes(Charsets.UTF_8);
-        if (isStarQuery()) {
-          if (valueVector != null) {
-            boolean writeStatus = valueVector.getMutator().setSafe(rowCount,
-                record, 0, record.length);
-            if (!writeStatus) {
-              logger.warn(errMsg, doc);
-              break done;
-            }
-            docCount++;
-          }
-        } else {
-          switch (jsonReaderWithState.write(record, writer)) {
-          case WRITE_SUCCEED:
-            docCount++;
-            break;
+        switch (jsonReaderWithState.write(record, writer)) {
+        case WRITE_SUCCEED:
+          docCount++;
+          break;
 
-          case WRITE_FAILED:
-            if (docCount == 0) {
-              throw new DrillRuntimeException(errMsg);
-            }
-            logger.warn(errMsg, doc);
-            break done;
-
-          default:
-            break done;
+        case WRITE_FAILED:
+          if (docCount == 0) {
+            throw new DrillRuntimeException(errMsg);
           }
+          logger.warn(errMsg, doc);
+          break done;
+
+        default:
+          break done;
         }
       }
 
-      for (SchemaPath sp :jsonReaderWithState.getNullColumns() ) {
+      for (SchemaPath sp : jsonReaderWithState.getNullColumns()) {
         PathSegment root = sp.getRootSegment();
         BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
-        if (root.getChild() != null && ! root.getChild().isArray()) {
+        if (root.getChild() != null && !root.getChild().isArray()) {
           fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
-          while ( root.getChild().getChild() != null && ! root.getChild().isArray() ) {
-            fieldWriter = fieldWriter.map(root.getChild().getNameSegment().getPath());
+          while (root.getChild().getChild() != null
+              && !root.getChild().isArray()) {
+            fieldWriter = fieldWriter.map(root.getChild().getNameSegment()
+                .getPath());
             root = root.getChild();
           }
           fieldWriter.integer(root.getChild().getNameSegment().getPath());
-        } else  {
+        } else {
           fieldWriter.integer(root.getNameSegment().getPath());
         }
       }
 
       writer.setValueCount(docCount);
-      setOutputDocCount(docCount);
       logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
       return docCount;
     } catch (Exception e) {
@@ -266,10 +241,43 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
   }
 
-  private void setOutputDocCount(int docCount) {
-    if (isStarQuery() && valueVector != null) {
-      valueVector.getMutator().setValueCount(docCount);
+  private int handleStarQuery() {
+    Stopwatch watch = new Stopwatch();
+    watch.start();
+    int rowCount = 0;
+
+    if(valueVector == null) {
+      throw new DrillRuntimeException("Value vector is not initialized!!!");
     }
+    valueVector.clear();
+    valueVector.allocateNew(4 * 1024 * TARGET_RECORD_COUNT ,TARGET_RECORD_COUNT);
+
+    String errMsg = "Document {} is too big to fit into allocated ValueVector";
+
+    try {
+      for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
+        String doc = cursor.next().toString();
+        byte[] record = doc.getBytes(Charsets.UTF_8);
+        if (!valueVector.getMutator().setSafe(rowCount, record, 0,
+            record.length)) {
+          logger.warn(errMsg, doc);
+          if (rowCount == 0) {
+            break;
+          }
+        }
+      }
+      valueVector.getMutator().setValueCount(rowCount);
+      logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
+      return rowCount;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      throw new DrillRuntimeException("Failure while reading Mongo Record.", e);
+    }
+  }
+
+  @Override
+  public int next() {
+    return isStarQuery() ? handleStarQuery() : handleNonStarQuery();
   }
 
   @Override
