@@ -1,6 +1,6 @@
 # Apache Drill
 
-Apache Drill is a distributed mpp query layer that supports SQL and alternative query languages against NoSQL and Hadoop data storage systems.  It was inspired in part by the [Google's Dremel](http://research.google.com/pubs/pub36632.html).  It is currently incubating under the Apache Foundation.
+Apache Drill is a distributed MPP query layer that supports SQL and alternative query languages against NoSQL and Hadoop data storage systems.  It was inspired in part by the [Google's Dremel](http://research.google.com/pubs/pub36632.html).  It is currently incubating under the Apache Foundation.
 
 ## Quickstart
 
