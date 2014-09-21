@@ -35,7 +35,8 @@ import com.mongodb.BasicDBObject;
 public class MongoFilterBuilder extends
     AbstractExprVisitor<MongoScanSpec, Void, RuntimeException> implements
     DrillMongoConstants {
-  static final Logger logger = LoggerFactory.getLogger(MongoFilterBuilder.class);
+  static final Logger logger = LoggerFactory
+      .getLogger(MongoFilterBuilder.class);
   final MongoGroupScan groupScan;
   final LogicalExpression le;
   private boolean allExpressionsConverted = true;
@@ -55,24 +56,28 @@ public class MongoFilterBuilder extends
     return parsedSpec;
   }
 
-  private MongoScanSpec mergeScanSpecs(String functionName, MongoScanSpec leftScanSpec,
-      MongoScanSpec rightScanSpec) {
+  private MongoScanSpec mergeScanSpecs(String functionName,
+      MongoScanSpec leftScanSpec, MongoScanSpec rightScanSpec) {
     BasicDBObject newFilter = null;
 
     switch (functionName) {
     case "booleanAnd":
-      if(leftScanSpec.getFilters() != null && rightScanSpec.getFilters() != null){
-        newFilter = MongoUtils.andFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
-      }else if(leftScanSpec.getFilters() != null){
+      if (leftScanSpec.getFilters() != null
+          && rightScanSpec.getFilters() != null) {
+        newFilter = MongoUtils.andFilterAtIndex(leftScanSpec.getFilters(),
+            rightScanSpec.getFilters());
+      } else if (leftScanSpec.getFilters() != null) {
         newFilter = leftScanSpec.getFilters();
-      }else{
+      } else {
         newFilter = rightScanSpec.getFilters();
       }
       break;
     case "booleanOr":
-      newFilter = MongoUtils.orFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
+      newFilter = MongoUtils.orFilterAtIndex(leftScanSpec.getFilters(),
+          rightScanSpec.getFilters());
     }
-    return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan.getScanSpec().getCollectionName(), newFilter);
+    return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan
+        .getScanSpec().getCollectionName(), newFilter);
   }
 
   public boolean isAllExpressionsConverted() {
@@ -122,12 +127,12 @@ public class MongoFilterBuilder extends
       MongoCompareFunctionProcessor processor = MongoCompareFunctionProcessor
           .process(call);
       if (processor.isSuccess()) {
-        try{
+        try {
           nodeScanSpec = createMongoScanSpec(processor.getFunctionName(),
               processor.getPath(), processor.getValue());
-        }catch(Exception e){
+        } catch (Exception e) {
           logger.error(" Failed to creare Filter ", e);
-//          throw new RuntimeException(e.getMessage(), e);
+          // throw new RuntimeException(e.getMessage(), e);
         }
       }
     } else {
@@ -157,7 +162,8 @@ public class MongoFilterBuilder extends
   }
 
   private MongoScanSpec createMongoScanSpec(String functionName,
-      SchemaPath field, Object fieldValue) throws ClassNotFoundException, IOException {
+      SchemaPath field, Object fieldValue) throws ClassNotFoundException,
+      IOException {
     // extract the field name
     String fieldName = field.getAsUnescapedPath();
     MongoCompareOp compareOp = null;
@@ -192,18 +198,22 @@ public class MongoFilterBuilder extends
       break;
     }
 
-    if(compareOp != null){
+    if (compareOp != null) {
       BasicDBObject queryFilter = new BasicDBObject();
-      if(compareOp == MongoCompareOp.IFNULL){
-        queryFilter.put(fieldName, new BasicDBObject(MongoCompareOp.EQUAL.getCompareOp(), null));
-      } else if(compareOp == MongoCompareOp.IFNOTNULL){
-        queryFilter.put(fieldName, new BasicDBObject(MongoCompareOp.NOT_EQUAL.getCompareOp(), null));
-      } else{
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(), fieldValue));
+      if (compareOp == MongoCompareOp.IFNULL) {
+        queryFilter.put(fieldName,
+            new BasicDBObject(MongoCompareOp.EQUAL.getCompareOp(), null));
+      } else if (compareOp == MongoCompareOp.IFNOTNULL) {
+        queryFilter.put(fieldName,
+            new BasicDBObject(MongoCompareOp.NOT_EQUAL.getCompareOp(), null));
+      } else {
+        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(),
+            fieldValue));
       }
-      return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan.getScanSpec().getCollectionName(), queryFilter);
+      return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan
+          .getScanSpec().getCollectionName(), queryFilter);
     }
-     return null;
+    return null;
   }
 
 }

@@ -45,7 +45,8 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
   private final DBCollection collection;
 
-  public MongoPStore(PStoreConfig<V> config, DBCollection collection) throws IOException {
+  public MongoPStore(PStoreConfig<V> config, DBCollection collection)
+      throws IOException {
     this.config = config;
     this.collection = collection;
   }

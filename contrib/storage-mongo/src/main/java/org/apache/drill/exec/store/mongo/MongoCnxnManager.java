@@ -49,7 +49,8 @@ public class MongoCnxnManager {
     @Override
     public synchronized void onRemoval(
         RemovalNotification<ServerAddress, MongoClient> removal) {
-      removal.getValue().close();;
+      removal.getValue().close();
+      ;
       logger.debug("Closed connection to {}.", removal.getKey().toString());
     }
   }
@@ -64,7 +65,8 @@ public class MongoCnxnManager {
       client = new MongoClient(addresses, clientOptions);
       addressClientMap.put(serverAddress, client);
       logger.debug("Created connection to {}.", serverAddress.toString());
-      logger.debug("Number of connections opened are {}.", addressClientMap.size());
+      logger.debug("Number of connections opened are {}.",
+          addressClientMap.size());
     }
     return client;
   }

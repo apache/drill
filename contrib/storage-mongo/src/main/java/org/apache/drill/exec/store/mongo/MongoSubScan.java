@@ -55,17 +55,21 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   private final List<MongoSubScanSpec> chunkScanSpecList;
 
   @JsonCreator
-  public MongoSubScan(@JacksonInject StoragePluginRegistry registry,
+  public MongoSubScan(
+      @JacksonInject StoragePluginRegistry registry,
       @JsonProperty("mongoPluginConfig") StoragePluginConfig mongoPluginConfig,
       @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
-      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+      @JsonProperty("columns") List<SchemaPath> columns)
+      throws ExecutionSetupException {
     this.columns = columns;
     this.mongoPluginConfig = (MongoStoragePluginConfig) mongoPluginConfig;
-    this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(mongoPluginConfig);
+    this.mongoStoragePlugin = (MongoStoragePlugin) registry
+        .getPlugin(mongoPluginConfig);
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
-  public MongoSubScan(MongoStoragePlugin storagePlugin, MongoStoragePluginConfig storagePluginConfig,
+  public MongoSubScan(MongoStoragePlugin storagePlugin,
+      MongoStoragePluginConfig storagePluginConfig,
       List<MongoSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
     this.mongoStoragePlugin = storagePlugin;
     this.mongoPluginConfig = storagePluginConfig;
@@ -74,7 +78,8 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+  public <T, X, E extends Throwable> T accept(
+      PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitSubScan(this, value);
   }
 
@@ -97,9 +102,11 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new MongoSubScan(mongoStoragePlugin, mongoPluginConfig, chunkScanSpecList, columns);
+    return new MongoSubScan(mongoStoragePlugin, mongoPluginConfig,
+        chunkScanSpecList, columns);
   }
 
   @Override
@@ -124,7 +131,8 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
     @parquet.org.codehaus.jackson.annotate.JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
-        @JsonProperty("collectionName") String collectionName, @JsonProperty("hosts") List<String> hosts,
+        @JsonProperty("collectionName") String collectionName,
+        @JsonProperty("hosts") List<String> hosts,
         @JsonProperty("minFilters") Map<String, Object> minFilters,
         @JsonProperty("maxFilters") Map<String, Object> maxFilters,
         @JsonProperty("filters") BasicDBObject filters) {

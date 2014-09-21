@@ -38,14 +38,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 
 public class MongoStoragePlugin extends AbstractStoragePlugin {
-  static final Logger logger = LoggerFactory.getLogger(MongoStoragePlugin.class);
+  static final Logger logger = LoggerFactory
+      .getLogger(MongoStoragePlugin.class);
 
   private DrillbitContext context;
   private MongoStoragePluginConfig mongoConfig;
   private MongoSchemaFactory schemaFactory;
 
-  public MongoStoragePlugin(MongoStoragePluginConfig mongoConfig, DrillbitContext context, String name)
-      throws IOException, ExecutionSetupException {
+  public MongoStoragePlugin(MongoStoragePluginConfig mongoConfig,
+      DrillbitContext context, String name) throws IOException,
+      ExecutionSetupException {
     this.context = context;
     this.mongoConfig = mongoConfig;
     this.schemaFactory = new MongoSchemaFactory(this, name);
@@ -71,8 +73,11 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
-    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>(){});
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection)
+      throws IOException {
+    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(),
+        new TypeReference<MongoScanSpec>() {
+        });
     return new MongoGroupScan(this, mongoScanSpec, null);
   }
 

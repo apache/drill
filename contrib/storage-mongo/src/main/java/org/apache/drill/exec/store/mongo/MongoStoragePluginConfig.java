@@ -28,7 +28,8 @@ import com.mongodb.MongoClientURI;
 
 @JsonTypeName(MongoStoragePluginConfig.NAME)
 public class MongoStoragePluginConfig extends StoragePluginConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoStoragePluginConfig.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
+      .getLogger(MongoStoragePluginConfig.class);
 
   public static final String NAME = "mongo";
 
@@ -41,7 +42,6 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
   public MongoStoragePluginConfig(@JsonProperty("connection") String connection) {
     this.connection = connection;
   }
-
 
   @Override
   public boolean equals(Object that) {

@@ -85,8 +85,9 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   private Boolean enableAllTextMode;
 
-  public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
-      FragmentContext context, MongoClientOptions clientOptions) {
+  public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec,
+      List<SchemaPath> projectedColumns, FragmentContext context,
+      MongoClientOptions clientOptions) {
     this.clientOptions = clientOptions;
     this.fields = new BasicDBObject();
     // exclude _id field, if not mentioned by user.
@@ -99,10 +100,10 @@ public class MongoRecordReader extends AbstractRecordReader {
     Map<String, List<BasicDBObject>> mergedFilters = MongoUtils.mergeFilters(
         subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
     buildFilters(subScanSpec.getFilter(), mergedFilters);
-    enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
+    enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager()
+        .getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
     init(subScanSpec);
   }
-
 
   @Override
   protected Collection<SchemaPath> transformColumns(
@@ -121,10 +122,11 @@ public class MongoRecordReader extends AbstractRecordReader {
     return transformed;
   }
 
-  private void buildFilters(BasicDBObject pushdownFilters, Map<String, List<BasicDBObject>> mergedFilters) {
-    for(Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {
+  private void buildFilters(BasicDBObject pushdownFilters,
+      Map<String, List<BasicDBObject>> mergedFilters) {
+    for (Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {
       List<BasicDBObject> list = entry.getValue();
-      if(list.size() == 1) {
+      if (list.size() == 1) {
         this.filters.putAll(list.get(0).toMap());
       } else {
         BasicDBObject andQueryFilter = new BasicDBObject();
@@ -134,7 +136,8 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
     if (pushdownFilters != null && !pushdownFilters.toMap().isEmpty()) {
       if (!mergedFilters.isEmpty()) {
-        this.filters = MongoUtils.andFilterAtIndex(this.filters, pushdownFilters);
+        this.filters = MongoUtils.andFilterAtIndex(this.filters,
+            pushdownFilters);
       } else {
         this.filters = pushdownFilters;
       }
@@ -233,7 +236,8 @@ public class MongoRecordReader extends AbstractRecordReader {
       }
 
       writer.setValueCount(docCount);
-      logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
+      logger.debug("Took {} ms to get {} records",
+          watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
       return docCount;
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
@@ -246,11 +250,12 @@ public class MongoRecordReader extends AbstractRecordReader {
     watch.start();
     int rowCount = 0;
 
-    if(valueVector == null) {
+    if (valueVector == null) {
       throw new DrillRuntimeException("Value vector is not initialized!!!");
     }
     valueVector.clear();
-    valueVector.allocateNew(4 * 1024 * TARGET_RECORD_COUNT ,TARGET_RECORD_COUNT);
+    valueVector
+        .allocateNew(4 * 1024 * TARGET_RECORD_COUNT, TARGET_RECORD_COUNT);
 
     String errMsg = "Document {} is too big to fit into allocated ValueVector";
 
@@ -267,7 +272,8 @@ public class MongoRecordReader extends AbstractRecordReader {
         }
       }
       valueVector.getMutator().setValueCount(rowCount);
-      logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
+      logger.debug("Took {} ms to get {} records",
+          watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
       return rowCount;
     } catch (Exception e) {
       logger.error(e.getMessage(), e);

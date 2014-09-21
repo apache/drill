@@ -35,7 +35,8 @@ import com.mongodb.WriteConcern;
 
 public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoPStoreProvider.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
+      .getLogger(MongoPStoreProvider.class);
 
   static final String pKey = "pKey";
 

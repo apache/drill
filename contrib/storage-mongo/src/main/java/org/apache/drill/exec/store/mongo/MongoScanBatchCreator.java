@@ -35,23 +35,28 @@ import com.google.common.collect.Lists;
 import com.mongodb.MongoClientOptions;
 
 public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
-  static final Logger logger = LoggerFactory.getLogger(MongoScanBatchCreator.class);
+  static final Logger logger = LoggerFactory
+      .getLogger(MongoScanBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan, List<RecordBatch> children)
-      throws ExecutionSetupException {
+  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan,
+      List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
     List<SchemaPath> columns = null;
-    for (MongoSubScan.MongoSubScanSpec scanSpec : subScan.getChunkScanSpecList()) {
+    for (MongoSubScan.MongoSubScanSpec scanSpec : subScan
+        .getChunkScanSpecList()) {
       try {
         if ((columns = subScan.getColumns()) == null) {
           columns = GroupScan.ALL_COLUMNS;
         }
-        MongoClientOptions clientOptions = subScan.getMongoPluginConfig().getMongoOptions();
-        readers.add(new MongoRecordReader(scanSpec, columns, context, clientOptions));
+        MongoClientOptions clientOptions = subScan.getMongoPluginConfig()
+            .getMongoOptions();
+        readers.add(new MongoRecordReader(scanSpec, columns, context,
+            clientOptions));
       } catch (Exception e) {
-        logger.error("MongoRecordReader creation failed for subScan:  " + subScan + ".");
+        logger.error("MongoRecordReader creation failed for subScan:  "
+            + subScan + ".");
         logger.error(e.getMessage(), e);
         throw new ExecutionSetupException(e);
       }

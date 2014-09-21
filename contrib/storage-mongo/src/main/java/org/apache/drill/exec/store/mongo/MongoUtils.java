@@ -53,7 +53,8 @@ public class MongoUtils {
   }
 
   public static BasicDBObject deserializeFilter(byte[] filterBytes) {
-    DBObject dbo = new LazyWriteableDBObject(filterBytes, new LazyBSONCallback());
+    DBObject dbo = new LazyWriteableDBObject(filterBytes,
+        new LazyBSONCallback());
     BasicDBObject result = new BasicDBObject();
     result.putAll(dbo);
     return result;

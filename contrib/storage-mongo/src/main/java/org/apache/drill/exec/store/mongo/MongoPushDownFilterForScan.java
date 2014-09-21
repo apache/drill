@@ -36,7 +36,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 
 public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
-  private static final Logger logger = LoggerFactory.getLogger(MongoPushDownFilterForScan.class);
+  private static final Logger logger = LoggerFactory
+      .getLogger(MongoPushDownFilterForScan.class);
   public static final StoragePluginOptimizerRule INSTANCE = new MongoPushDownFilterForScan();
 
   private MongoPushDownFilterForScan() {
@@ -67,8 +68,8 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
 
     MongoGroupScan newGroupsScan = null;
     try {
-      newGroupsScan = new MongoGroupScan(
-          groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
+      newGroupsScan = new MongoGroupScan(groupScan.getStoragePlugin(),
+          newScanSpec, groupScan.getColumns());
     } catch (IOException e) {
       logger.error(e.getMessage(), e);
       throw new DrillRuntimeException(e.getMessage(), e);
