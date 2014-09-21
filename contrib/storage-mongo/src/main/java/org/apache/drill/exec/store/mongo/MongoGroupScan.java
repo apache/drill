@@ -136,7 +136,6 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   /**
    * Private constructor, used for cloning.
-   * 
    * @param that
    *          The MongoGroupScan to clone
    */
