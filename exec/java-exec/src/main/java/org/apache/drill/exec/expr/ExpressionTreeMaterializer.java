@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -298,8 +299,10 @@ public class ExpressionTreeMaterializer {
           // Implicitly cast the else expression
           newElseExpr = addCastExpression(newElseExpr, conditions.expression.getMajorType(), registry);
         } else {
-          assert false: "Incorrect least restrictive type computed, leastRestrictive: " +
-              leastRestrictive.toString() + " thenType: " + thenType.toString() + " elseType: " + elseType;
+          /* Cannot cast one of the two expressions to make the output type of if and else expression
+           * to be the same. Raise error.
+           */
+          throw new DrillRuntimeException("Case expression should have similar output type on all its branches");
         }
       }
 

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -806,7 +805,7 @@ public class TypeCastRules {
         result = next;
         resultPrec = nextPrec;
       } else {
-        throw new DrillRuntimeException("Case expression branches have different output types ");
+        return null;
       }
     }
 

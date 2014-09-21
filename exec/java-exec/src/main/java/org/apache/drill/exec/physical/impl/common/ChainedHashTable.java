@@ -18,11 +18,17 @@
 package org.apache.drill.exec.physical.impl.common;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
@@ -43,6 +49,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.sun.codemodel.JConditional;
@@ -183,8 +190,17 @@ public class ChainedHashTable {
     }
     setupOutputRecordKeys(cgInner, htKeyFieldIds, outKeyFieldIds);
 
-    setupGetHash(cg /* use top level code generator for getHash */,  GetHashIncomingBuildMapping, keyExprsBuild);
-    setupGetHash(cg /* use top level code generator for getHash */,  GetHashIncomingProbeMapping, keyExprsProbe);
+    /* Before generating the code for hashing the build and probe expressions
+     * examine the expressions to make sure they are of the same type, add casts if necessary.
+     * If they are not of the same type, hashing the same value of different types will yield different hash values.
+     * NOTE: We add the cast only for the hash function, comparator function can handle the case
+     * when expressions are different (for eg we have comparator functions that compare bigint and float8)
+     * However for the hash to work correctly we would need to apply the cast.
+     */
+    addLeastRestrictiveCasts(keyExprsBuild, keyExprsProbe);
+
+    setupGetHash(cg /* use top level code generator for getHash */,  GetHashIncomingBuildMapping, keyExprsBuild, false);
+    setupGetHash(cg /* use top level code generator for getHash */,  GetHashIncomingProbeMapping, keyExprsProbe, true);
 
     HashTable ht = context.getImplementationClass(top);
     ht.setup(htConfig, context, allocator, incomingBuild, incomingProbe, outgoing, htContainerOrig);
@@ -261,7 +277,46 @@ public class ChainedHashTable {
     }
   }
 
-  private void setupGetHash(ClassGenerator<HashTable> cg, MappingSet incomingMapping, LogicalExpression[] keyExprs) throws SchemaChangeException {
+  private void addLeastRestrictiveCasts(LogicalExpression[] keyExprsBuild, LogicalExpression[] keyExprsProbe) {
+
+    // If we don't have probe expressions then nothing to do get out
+    if (keyExprsProbe == null) {
+      return;
+    }
+
+    assert keyExprsBuild.length == keyExprsProbe.length;
+
+    for (int i = 0; i < keyExprsBuild.length; i++) {
+      MinorType buildType = keyExprsBuild[i].getMajorType().getMinorType();
+      MinorType probeType = keyExprsProbe[i].getMajorType().getMinorType();
+
+      if (buildType != probeType) {
+        // We need to add a cast to one of the expressions
+        List<MinorType> types = new LinkedList<>();
+        types.add(buildType);
+        types.add(probeType);
+        MinorType result = TypeCastRules.getLeastRestrictiveType(types);
+
+        // Add the cast
+        List<LogicalExpression> args = new LinkedList<>();
+        if (result == null) {
+          throw new DrillRuntimeException(String.format("Join conditions cannot be compared failing build expression: %s failing probe expression: %s",
+              keyExprsBuild[i].getMajorType().toString(), keyExprsProbe[i].getMajorType().toString()));
+        }
+        else if (result != buildType) {
+          // Add a cast expression on top of the build expression
+          args.add(keyExprsBuild[i]);
+          FunctionCall castCall = new FunctionCall("cast" + result.toString().toUpperCase(), args, ExpressionPosition.UNKNOWN);
+          keyExprsBuild[i] = ExpressionTreeMaterializer.materialize(castCall, incomingBuild, new ErrorCollectorImpl(), context.getFunctionRegistry());
+        } else if (result != probeType) {
+          args.add(keyExprsProbe[i]);
+          FunctionCall castCall = new FunctionCall("cast" + result.toString().toUpperCase(), args, ExpressionPosition.UNKNOWN);
+          keyExprsProbe[i] = ExpressionTreeMaterializer.materialize(castCall, incomingProbe, new ErrorCollectorImpl(), context.getFunctionRegistry());
+        }
+      }
+    }
+  }
+  private void setupGetHash(ClassGenerator<HashTable> cg, MappingSet incomingMapping, LogicalExpression[] keyExprs, boolean isProbe) throws SchemaChangeException {
 
     cg.setMappingSet(incomingMapping);
 
