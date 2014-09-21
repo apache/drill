@@ -127,9 +127,21 @@ public class JsonReader {
     while (!parser.hasCurrentToken()) {
       t = parser.nextToken();
     }
+    return writeToVector(writer, t);
+  }
 
+ public boolean write(byte[] jsonString, ComplexWriter writer) throws JsonParseException, IOException {
+    parser = factory.createJsonParser(jsonString);
+    JsonToken t = parser.nextToken();
+    while(!parser.hasCurrentToken()) {
+      t = parser.nextToken();
+    }
+    return writeToVector(writer, t);
+ }
 
-    switch (t) {
+private boolean writeToVector(ComplexWriter writer, JsonToken t)
+    throws JsonParseException, IOException {
+  switch (t) {
     case START_OBJECT:
       writeData(writer.rootAsMap());
       break;
@@ -147,7 +159,7 @@ public class JsonReader {
     }
 
     return true;
-  }
+}
 
   private void consumeEntireNextValue(JsonParser parser) throws IOException {
     switch (parser.nextToken()) {

@@ -46,6 +46,14 @@ public class JsonReaderWithState {
     jsonReader = new JsonReader(workspace, columns, allTextMode);
   }
 
+  public JsonReaderWithState(DrillBuf workspace, boolean allTextMode) throws IOException {
+    jsonReader = new JsonReader(workspace, GroupScan.ALL_COLUMNS, allTextMode);
+  }
+
+  public JsonReaderWithState(DrillBuf workspace, List<SchemaPath> columns, boolean allTextMode) throws IOException {
+    jsonReader = new JsonReader(workspace, columns, allTextMode);
+  }
+
   public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException{
     this(splitter, null, GroupScan.ALL_COLUMNS, false);
   }
@@ -73,4 +81,18 @@ public class JsonReaderWithState {
     }
   }
 
+  public WriteState write(byte[] bytes, ComplexWriter writer)
+      throws JsonParseException, IOException {
+    if (bytes.length == 0) {
+      return WriteState.NO_MORE;
+    }
+
+    jsonReader.write(bytes, writer);
+
+    if (!writer.ok()) {
+      return WriteState.WRITE_FAILED;
+    } else {
+      return WriteState.WRITE_SUCCEED;
+    }
+  }
 }
