@@ -24,6 +24,8 @@ import net.hydromatic.optiq.tools.Planner;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ShowSchemasHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
+import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlLiteral;
@@ -85,8 +87,8 @@ public class SqlShowSchemas extends DrillSqlCall {
   }
 
   @Override
-  public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
-    return new ShowSchemasHandler(planner, context);
+  public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
+    return new ShowSchemasHandler(config);
   }
 
   public SqlNode getLikePattern() { return likePattern; }

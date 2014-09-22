@@ -17,12 +17,7 @@
  */
 package org.apache.drill.exec.opt;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -40,6 +35,7 @@ import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.common.logical.data.SinkOperator;
 import org.apache.drill.common.logical.data.Store;
+import org.apache.drill.common.logical.data.Window;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -54,13 +50,18 @@ import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
+import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 public class BasicOptimizer extends Optimizer{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicOptimizer.class);
@@ -183,13 +184,22 @@ public class BasicOptimizer extends Optimizer{
       return sa;
     }
 
+    @Override
+    public PhysicalOperator visitWindow(Window window, Object value) throws OptimizerException {
+      PhysicalOperator input = window.getInput().accept(this, value);
 
+      List<Ordering> ods = Lists.newArrayList();
+
+      input = new Sort(input, ods, false);
+
+      return new WindowPOP(input, window.getWithins(), window.getAggregations(), window.getStart(), window.getEnd());
+    }
 
     @Override
     public PhysicalOperator visitOrder(Order order, Object value) throws OptimizerException {
       PhysicalOperator input = order.getInput().accept(this, value);
       List<Ordering> ods = Lists.newArrayList();
-      for(Ordering o : order.getOrderings()){
+      for (Ordering o : order.getOrderings()){
         ods.add(o);
       }
       return new SelectionVectorRemover(new Sort(input, ods, false));
@@ -250,7 +260,6 @@ public class BasicOptimizer extends Optimizer{
 
     @Override
     public PhysicalOperator visitProject(Project project, Object obj) throws OptimizerException {
-//      return project.getInput().accept(this, obj);
       return new org.apache.drill.exec.physical.config.Project(Arrays.asList(project.getSelections()), project.iterator().next().accept(this, obj));
     }
 

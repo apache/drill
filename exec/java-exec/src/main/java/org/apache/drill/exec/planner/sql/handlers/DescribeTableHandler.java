@@ -30,6 +30,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
@@ -43,7 +44,7 @@ import com.google.common.collect.ImmutableList;
 
 public class DescribeTableHandler extends DefaultSqlHandler {
 
-  public DescribeTableHandler(Planner planner, QueryContext context) { super(planner, context); }
+  public DescribeTableHandler(SqlHandlerConfig config) { super(config); }
 
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.COLUMNS ... */
   @Override
@@ -104,4 +105,3 @@ public class DescribeTableHandler extends DefaultSqlHandler {
     }
   }
 }
-

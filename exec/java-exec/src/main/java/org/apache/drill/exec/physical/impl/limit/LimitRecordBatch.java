@@ -122,7 +122,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   @Override
-  protected void doWork() {
+  protected IterOutcome doWork() {
     for(TransferPair tp : transfers) {
       tp.transfer();
     }
@@ -139,6 +139,8 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
        limitWithNoSV(recordCount);
       }
     }
+
+    return IterOutcome.OK;
   }
 
   private IterOutcome produceEmptyFirstBatch() {

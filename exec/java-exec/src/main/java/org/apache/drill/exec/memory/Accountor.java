@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.memory;
 
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
@@ -31,9 +34,9 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.util.AssertionUtil;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentMap;
 
 public class Accountor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Accountor.class);

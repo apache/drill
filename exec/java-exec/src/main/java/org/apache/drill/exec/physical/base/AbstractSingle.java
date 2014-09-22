@@ -28,7 +28,7 @@ import com.google.common.collect.Iterators;
  * Describes an operator that expects a single child operator as its input.
  * @param <T> The type of Exec model supported.
  */
-public abstract class AbstractSingle extends AbstractBase{
+public abstract class AbstractSingle extends AbstractBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSingle.class);
 
   protected final PhysicalOperator child;

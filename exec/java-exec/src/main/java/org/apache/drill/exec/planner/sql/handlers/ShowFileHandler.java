@@ -35,6 +35,7 @@ import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlNode;
 
@@ -42,8 +43,8 @@ import org.eigenbase.sql.SqlNode;
 public class ShowFileHandler extends DefaultSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
 
-  public ShowFileHandler(Planner planner, QueryContext context) {
-    super(planner, context);
+  public ShowFileHandler(SqlHandlerConfig config) {
+    super(config);
   }
 
   @Override

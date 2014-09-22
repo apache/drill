@@ -24,6 +24,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.physical.config.Limit;
+import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.planner.AbstractOpWrapperVisitor;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 
@@ -111,6 +112,11 @@ public class StatsCollector {
         child.accept(this, wrapper);
       }
       return null;
+    }
+
+    @Override
+    public Void visitWindowFrame(WindowPOP window, Wrapper value) throws RuntimeException {
+      return visitOp(window, value);
     }
 
   }

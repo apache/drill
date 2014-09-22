@@ -25,6 +25,8 @@ import net.hydromatic.optiq.tools.Planner;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ShowFileHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
+import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlKind;
@@ -76,8 +78,8 @@ public class SqlShowFiles extends DrillSqlCall {
   }
 
   @Override
-  public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
-    return new ShowFileHandler(planner, context);
+  public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
+    return new ShowFileHandler(config);
   }
 
   public SqlIdentifier getDb() { return db; }

@@ -27,7 +27,7 @@ import org.eigenbase.relopt.Convention;
 public interface DrillRel extends DrillRelNode {
   /** Calling convention for relational expressions that are "implemented" by
    * generating Drill logical plans. */
-  Convention DRILL_LOGICAL = new Convention.Impl("LOGICAL", DrillRel.class);
+  public static final Convention DRILL_LOGICAL = new Convention.Impl("LOGICAL", DrillRel.class);
 
   LogicalOperator implement(DrillImplementor implementor);
 }

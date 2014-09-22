@@ -26,6 +26,7 @@ import net.hydromatic.optiq.tools.RelConversionException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
+import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlNodeList;
@@ -37,7 +38,7 @@ import com.google.common.collect.ImmutableList;
 
 public class ShowSchemasHandler extends DefaultSqlHandler {
 
-  public ShowSchemasHandler(Planner planner, QueryContext context) { super(planner, context); }
+  public ShowSchemasHandler(SqlHandlerConfig config) { super(config); }
 
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.SCHEMATA ... */
   @Override
@@ -61,4 +62,3 @@ public class ShowSchemasHandler extends DefaultSqlHandler {
         fromClause, where, null, null, null, null, null, null);
   }
 }
-

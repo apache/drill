@@ -19,6 +19,7 @@ package org.apache.drill.common.logical.data;
 
 import java.util.List;
 
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 
 public abstract class AbstractBuilder<T extends LogicalOperator> {
@@ -28,6 +29,10 @@ public abstract class AbstractBuilder<T extends LogicalOperator> {
 
   protected LogicalExpression[] aL(List<LogicalExpression> exprs){
     return exprs.toArray(new LogicalExpression[exprs.size()]);
+  }
+
+  protected FieldReference[] aF(List<FieldReference> exprs){
+    return exprs.toArray(new FieldReference[exprs.size()]);
   }
 
   protected NamedExpression[] aN(List<NamedExpression> exprs){

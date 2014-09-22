@@ -17,13 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import java.util.Collections;
-import java.util.List;
-
-import net.hydromatic.optiq.tools.Planner;
-
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.UseSchemaHandler;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlIdentifier;
@@ -34,6 +29,9 @@ import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlSpecialOperator;
 import org.eigenbase.sql.SqlWriter;
 import org.eigenbase.sql.parser.SqlParserPos;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Sql parser tree node to represent <code>USE SCHEMA</code> statement.
@@ -73,8 +71,8 @@ public class SqlUseSchema extends DrillSqlCall {
   }
 
   @Override
-  public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
-    return new UseSchemaHandler(context);
+  public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
+    return new UseSchemaHandler(config.getContext());
   }
 
   /**

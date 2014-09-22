@@ -23,6 +23,8 @@ import java.util.Iterator;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class CastExpression extends LogicalExpressionBase implements Iterable<LogicalExpression>{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CastExpression.class);
@@ -33,7 +35,7 @@ public class CastExpression extends LogicalExpressionBase implements Iterable<Lo
   public CastExpression(LogicalExpression input, MajorType type, ExpressionPosition pos) {
     super(pos);
     this.input = input;
-    this.type = type;
+    this.type = checkNotNull(type, "Major type cannot be null");
   }
 
   @Override

@@ -1,0 +1,72 @@
+{
+  "head" : {
+    "version" : 1,
+    "generator" : {
+      "type" : "DefaultSqlHandler",
+      "info" : ""
+    },
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "options" : [ ],
+    "resultMode" : "EXEC"
+  },
+  "graph" : [{
+                @id:1,
+                pop:"fs-scan",
+                format: {type: "json"},
+                storage:{type: "file", connection: "file:///"},
+                files:["#{DATA_FILE}"]
+             },
+             {
+                @id:2,
+                child: 1,
+                pop:"sort",
+                orderings: [
+                    {expr: "group"},
+                    {expr: "a"}
+                ]
+             },
+             {
+                "pop" : "window",
+                "@id" : 3,
+                "child" : 2,
+                "aggregations" : [ {
+                "ref" : "`w0$o0`",
+                "expr" : "count(`a`) "
+             }, {
+                "ref" : "`w0$o1`",
+                "expr" : "$sum0(`a`) "
+             } ],
+                "start" : -9223372036854775808,
+                "end" : -9223372036854775808,
+                "initialAllocation" : 1000000,
+                "maxAllocation" : 10000000000,
+                "withins" : [ {
+                    "ref" : "`group`",
+                    "expr" : "`group`"
+             } ]
+             }, {
+                "pop" : "project",
+                "@id" : 4,
+                "exprs" : [ {
+                    "ref" : "`output`",
+                    "expr" : " ( if (greater_than(`w0$o0`, 0)  ) then (`w0$o1` )  else (NULL)  end  ) "
+                },
+                {
+                    "ref" : "cnt",
+                    "expr": "w0$o0"
+                },
+                {
+                    "ref" : "sum",
+                    "expr": "w0$o1"
+                }],
+                "child" : 3,
+                "initialAllocation" : 1000000,
+                "maxAllocation" : 10000000000
+            }, {
+                "pop" : "screen",
+                "@id" : 5,
+                "child" : 4,
+                "initialAllocation" : 1000000,
+                "maxAllocation" : 10000000000
+            } ]
+}

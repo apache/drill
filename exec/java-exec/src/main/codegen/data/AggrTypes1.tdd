@@ -78,7 +78,7 @@
       {inputType: "NullableVarBinary", outputType: "VarBinary", runningType: "VarBinary", major: "VarBytes"}
      ]
    },
-   {className: "Sum", funcName: "sum", types: [   
+   {className: "Sum", funcName: "sum", types: [
       {inputType: "Bit", outputType: "Bit", runningType: "Bit", major: "Numeric"},
       {inputType: "Int", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
@@ -96,7 +96,7 @@
       {inputType: "Interval", outputType: "Interval", runningType: "Interval", major: "Date", initialValue: "0"},
       {inputType: "NullableInterval", outputType: "Interval", runningType: "Interval", major: "Date", initialValue: "0"}
      ]
-   }, 
+   },
    {className: "Count", funcName: "count", types: [
       {inputType: "Bit", outputType: "Bit", runningType: "Bit", major: "Numeric"},
       {inputType: "Int", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
@@ -129,4 +129,4 @@
      ]
    }
   ]
-} 
+}

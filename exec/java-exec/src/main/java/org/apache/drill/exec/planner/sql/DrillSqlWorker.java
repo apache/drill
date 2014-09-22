@@ -28,7 +28,6 @@ import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.RuleSet;
 import net.hydromatic.optiq.tools.ValidationException;
-
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
@@ -38,14 +37,19 @@ import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.rel.RelCollationTraitDef;
+import org.eigenbase.rel.rules.ReduceExpressionsRule;
+import org.eigenbase.rel.rules.WindowedAggSplitterRule;
 import org.eigenbase.relopt.ConventionTraitDef;
 import org.eigenbase.relopt.RelOptCostFactory;
 import org.eigenbase.relopt.RelTraitDef;
+import org.eigenbase.relopt.hep.HepPlanner;
+import org.eigenbase.relopt.hep.HepProgramBuilder;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlParseException;
 
@@ -53,6 +57,7 @@ public class DrillSqlWorker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
 
   private final Planner planner;
+  private final HepPlanner hepPlanner;
   public final static int LOGICAL_RULES = 0;
   public final static int PHYSICAL_MEM_RULES = 1;
   private final QueryContext context;
@@ -79,7 +84,12 @@ public class DrillSqlWorker {
         .costFactory(costFactory) //
         .build();
     this.planner = Frameworks.getPlanner(config);
-
+    HepProgramBuilder builder = new HepProgramBuilder();
+    builder.addRuleClass(ReduceExpressionsRule.class);
+    builder.addRuleClass(WindowedAggSplitterRule.class);
+    this.hepPlanner = new HepPlanner(builder.build());
+    hepPlanner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
+    hepPlanner.addRule(WindowedAggSplitterRule.PROJECT);
   }
 
   private RuleSet[] getRules(QueryContext context) {
@@ -99,23 +109,24 @@ public class DrillSqlWorker {
     SqlNode sqlNode = planner.parse(sql);
 
     AbstractSqlHandler handler;
+    SqlHandlerConfig config = new SqlHandlerConfig(hepPlanner, planner, context);
 
     // TODO: make this use path scanning or something similar.
     switch(sqlNode.getKind()){
     case EXPLAIN:
-      handler = new ExplainHandler(planner, context);
+      handler = new ExplainHandler(config);
       break;
     case SET_OPTION:
       handler = new SetOptionHandler(context);
       break;
     case OTHER:
       if (sqlNode instanceof DrillSqlCall) {
-        handler = ((DrillSqlCall)sqlNode).getSqlHandler(planner, context);
+        handler = ((DrillSqlCall)sqlNode).getSqlHandler(config);
         break;
       }
       // fallthrough
     default:
-      handler = new DefaultSqlHandler(planner, context, textPlan);
+      handler = new DefaultSqlHandler(config, textPlan);
     }
 
     return handler.getPlan(sqlNode);

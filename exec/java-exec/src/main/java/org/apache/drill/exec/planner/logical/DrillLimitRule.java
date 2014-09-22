@@ -25,7 +25,7 @@ import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 
 /**
- * This rule converts a SortRel that has either a offset and fetch into a Drill Sort and Limit Rel
+ * This rule converts a SortRel that has either a offset and fetch into a Drill Sort and LimitPOP Rel
  */
 public class DrillLimitRule extends RelOptRule {
   public static DrillLimitRule INSTANCE = new DrillLimitRule();

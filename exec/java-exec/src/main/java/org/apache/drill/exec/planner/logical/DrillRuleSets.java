@@ -38,6 +38,8 @@ import org.apache.drill.exec.planner.physical.ScreenPrule;
 import org.apache.drill.exec.planner.physical.SortConvertPrule;
 import org.apache.drill.exec.planner.physical.SortPrule;
 import org.apache.drill.exec.planner.physical.StreamAggPrule;
+import org.apache.drill.exec.planner.physical.StreamingWindowPrule;
+import org.apache.drill.exec.planner.physical.StreamingWindowPrule;
 import org.apache.drill.exec.planner.physical.UnionAllPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
 import org.eigenbase.rel.RelFactories;
@@ -100,6 +102,7 @@ public class DrillRuleSets {
       DrillScanRule.INSTANCE,
       DrillFilterRule.INSTANCE,
       DrillProjectRule.INSTANCE,
+      DrillWindowRule.INSTANCE,
       DrillAggregateRule.INSTANCE,
 
       DrillLimitRule.INSTANCE,
@@ -139,6 +142,8 @@ public class DrillRuleSets {
       HashJoinPrule.INSTANCE,
       FilterPrule.INSTANCE,
       LimitPrule.INSTANCE,
+      WindowPrule.INSTANCE,
+
       WriterPrule.INSTANCE,
       PushLimitToTopN.INSTANCE
 
@@ -182,6 +187,7 @@ public class DrillRuleSets {
     ruleList.add(FilterPrule.INSTANCE);
     ruleList.add(LimitPrule.INSTANCE);
     ruleList.add(WriterPrule.INSTANCE);
+    ruleList.add(StreamingWindowPrule.INSTANCE);
     ruleList.add(PushLimitToTopN.INSTANCE);
     ruleList.add(UnionAllPrule.INSTANCE);
     // ruleList.add(UnionDistinctPrule.INSTANCE);

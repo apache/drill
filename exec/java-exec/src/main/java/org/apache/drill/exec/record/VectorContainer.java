@@ -105,6 +105,23 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     return vc;
   }
 
+  public static VectorContainer getTransferClone(VectorAccessible incoming, VectorWrapper[] ignoreWrappers) {
+    VectorContainer vc = new VectorContainer();
+    for (VectorWrapper<?> w : incoming) {
+      if(ignoreWrappers != null) {
+        for(VectorWrapper wrapper : ignoreWrappers) {
+          if (w == wrapper) {
+            continue;
+          }
+        }
+      }
+
+      vc.cloneAndTransfer(w);
+    }
+
+    return vc;
+  }
+
   public static VectorContainer canonicalize(VectorContainer original) {
     VectorContainer vc = new VectorContainer();
     List<VectorWrapper<?>> canonicalWrappers = new ArrayList<VectorWrapper<?>>(original.wrappers);

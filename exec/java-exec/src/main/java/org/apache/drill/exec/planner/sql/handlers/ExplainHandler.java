@@ -17,12 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import java.io.IOException;
-
-import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
-
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ops.QueryContext;
@@ -41,13 +37,15 @@ import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 
+import java.io.IOException;
+
 public class ExplainHandler extends DefaultSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplainHandler.class);
 
   private ResultMode mode;
   private SqlExplainLevel level = SqlExplainLevel.ALL_ATTRIBUTES;
-  public ExplainHandler(Planner planner, QueryContext context) {
-    super(planner, context);
+  public ExplainHandler(SqlHandlerConfig config) {
+    super(config);
   }
 
   @Override

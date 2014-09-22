@@ -17,21 +17,16 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import net.hydromatic.linq4j.Ord;
 import net.hydromatic.optiq.util.BitSets;
-
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
@@ -48,8 +43,10 @@ import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.type.OperandTypes;
 import org.eigenbase.sql.type.ReturnTypes;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 public abstract class AggPrelBase extends AggregateRelBase implements Prel {
 
@@ -130,7 +127,7 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel {
     for (Ord<AggregateCall> aggCall : Ord.zip(aggCalls)) {
       int aggExprOrdinal = groupSet.cardinality() + aggCall.i;
       FieldReference ref = new FieldReference(fields.get(aggExprOrdinal));
-      LogicalExpression expr = toDrill(aggCall.e, childFields, new DrillParseContext());
+      LogicalExpression expr = toDrill(aggCall.e, childFields);
       NamedExpression ne = new NamedExpression(expr, ref);
       aggExprs.add(ne);
 
@@ -162,7 +159,7 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel {
     }
   }
 
-  protected LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillParseContext pContext) {
+  protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
     List<LogicalExpression> args = Lists.newArrayList();
     for (Integer i : call.getArgList()) {
       args.add(new FieldReference(fn.get(i)));

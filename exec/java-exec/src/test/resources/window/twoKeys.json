@@ -1,0 +1,44 @@
+{
+    head:{
+        type:"APACHE_DRILL_PHYSICAL",
+        version:"1",
+        generator:{
+            type:"manual"
+        }
+    },
+	graph:[
+        {
+                  @id:1,
+                  pop:"fs-scan",
+                  format: {type: "json"},
+                  storage:{type: "file", connection: "file:///"},
+                  files:["#{DATA_FILE}"]
+         },
+        {
+            @id:2,
+            child: 1,
+            pop:"sort",
+            orderings: [
+              {expr: "a"}
+            ]
+        },
+        {
+            @id:3,
+            child: 2,
+            pop:"window",
+            within: [
+              { ref: "a", expr: "a" },
+              { ref: "b", expr: "b" }
+            ],
+            aggregations: [
+              { ref: "cnt", expr:"count(1)" },
+              { ref: "sum", expr:"sum(c)" }
+            ]
+        },
+        {
+            @id: 4,
+            child: 3,
+            pop: "screen"
+        }
+    ]
+}

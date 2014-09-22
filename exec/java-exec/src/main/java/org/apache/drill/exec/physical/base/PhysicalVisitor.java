@@ -39,6 +39,7 @@ import org.apache.drill.exec.physical.config.Trace;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.physical.config.UnionExchange;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
+import org.apache.drill.exec.physical.config.WindowPOP;
 
 /**
  * Visitor class designed to traversal of a operator tree.  Basis for a number of operator manipulations including fragmentation and materialization.
@@ -80,6 +81,7 @@ public interface PhysicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   public RETURN visitScreen(Screen op, EXTRA value) throws EXCEP;
   public RETURN visitSingleSender(SingleSender op, EXTRA value) throws EXCEP;
   public RETURN visitUnionExchange(UnionExchange op, EXTRA value) throws EXCEP;
+  public RETURN visitWindowFrame(WindowPOP op, EXTRA value) throws EXCEP;
   public RETURN visitProducerConsumer(ProducerConsumer op, EXTRA value) throws EXCEP;
 
   public RETURN visitIteratorValidator(IteratorValidator op, EXTRA value) throws EXCEP;

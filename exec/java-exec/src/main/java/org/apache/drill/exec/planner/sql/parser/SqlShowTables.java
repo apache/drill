@@ -17,13 +17,10 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import java.util.List;
-
-import net.hydromatic.optiq.tools.Planner;
-
-import org.apache.drill.exec.ops.QueryContext;
+import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ShowTablesHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlKind;
@@ -34,7 +31,7 @@ import org.eigenbase.sql.SqlSpecialOperator;
 import org.eigenbase.sql.SqlWriter;
 import org.eigenbase.sql.parser.SqlParserPos;
 
-import com.google.common.collect.Lists;
+import java.util.List;
 
 /**
  * Sql parse tree node to represent statement:
@@ -92,8 +89,8 @@ public class SqlShowTables extends DrillSqlCall {
   }
 
   @Override
-  public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
-    return new ShowTablesHandler(planner, context);
+  public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
+    return new ShowTablesHandler(config);
   }
 
   public SqlIdentifier getDb() { return db; }

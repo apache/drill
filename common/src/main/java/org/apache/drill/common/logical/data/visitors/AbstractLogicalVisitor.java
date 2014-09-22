@@ -32,7 +32,7 @@ import org.apache.drill.common.logical.data.Sequence;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Transform;
 import org.apache.drill.common.logical.data.Union;
-import org.apache.drill.common.logical.data.WindowFrame;
+import org.apache.drill.common.logical.data.Window;
 import org.apache.drill.common.logical.data.Writer;
 
 
@@ -110,8 +110,8 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     }
 
     @Override
-    public T visitWindowFrame(WindowFrame windowFrame, X value) throws E {
-        return visitOp(windowFrame, value);
+    public T visitWindow(Window window, X value) throws E {
+        return visitOp(window, value);
     }
 
     @Override

@@ -35,6 +35,7 @@ import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.sql.SqlSelect;
+import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -43,7 +44,7 @@ import com.google.common.collect.Lists;
 
 public class ShowTablesHandler extends DefaultSqlHandler {
 
-  public ShowTablesHandler(Planner planner, QueryContext context) { super(planner, context); }
+  public ShowTablesHandler(SqlHandlerConfig config) { super(config); }
 
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.`TABLES` ... */
   @Override
@@ -105,4 +106,3 @@ public class ShowTablesHandler extends DefaultSqlHandler {
         fromClause, where, null, null, null, null, null, null);
   }
 }
-

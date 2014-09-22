@@ -71,6 +71,9 @@ import com.sun.codemodel.JLabel;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
+/**
+ * Visitor that generates code for eval
+ */
 public class EvaluationVisitor {
 
   private final FunctionImplementationRegistry registry;

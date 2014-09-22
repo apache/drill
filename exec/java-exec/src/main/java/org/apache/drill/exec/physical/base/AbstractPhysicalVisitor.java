@@ -39,6 +39,7 @@ import org.apache.drill.exec.physical.config.Trace;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.physical.config.UnionExchange;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
+import org.apache.drill.exec.physical.config.WindowPOP;
 
 public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> implements PhysicalVisitor<T, X, E> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractPhysicalVisitor.class);
@@ -61,6 +62,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   @Override
   public T visitFilter(Filter filter, X value) throws E{
     return visitOp(filter, value);
+  }
+
+  @Override
+  public T visitWindowFrame(WindowPOP windowFrame, X value) throws E {
+    return visitOp(windowFrame, value);
   }
 
   @Override

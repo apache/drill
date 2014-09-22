@@ -325,9 +325,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
 
     default:
       throw new IllegalStateException();
-
     }
-
   }
 
   @Override

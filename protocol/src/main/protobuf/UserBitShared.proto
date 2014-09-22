@@ -32,7 +32,7 @@ message QueryId {
 message DrillPBError{
   optional string error_id = 1; // for debug tracing purposes
   optional DrillbitEndpoint endpoint = 2;
-  optional int32 error_type = 3; 
+  optional int32 error_type = 3;
   optional string message = 4;
   repeated ParsingError parsing_error = 5; //optional, used when providing location of error within a piece of text.
 }
@@ -120,13 +120,13 @@ message QueryProfile {
 message MajorFragmentProfile {
   optional int32 major_fragment_id = 1;
   repeated MinorFragmentProfile minor_fragment_profile = 2;
-} 
+}
 
 message MinorFragmentProfile {
   optional FragmentState state = 1;
-  optional DrillPBError error = 2; 
+  optional DrillPBError error = 2;
   optional int32 minor_fragment_id = 3;
-  repeated OperatorProfile operator_profile = 4; 
+  repeated OperatorProfile operator_profile = 4;
   optional int64 start_time = 5;
   optional int64 end_time = 6;
   optional int64 memory_used = 7;
@@ -140,7 +140,7 @@ message OperatorProfile {
   optional int32 operator_type = 4;
   optional int64 setup_nanos = 5;
   optional int64 process_nanos = 6;
-  optional int64 local_memory_allocated = 7;  
+  optional int64 local_memory_allocated = 7;
   repeated MetricValue metric = 8;
   optional int64 wait_nanos = 9;
 }
@@ -200,4 +200,5 @@ enum CoreOperatorType {
   INFO_SCHEMA_SUB_SCAN = 30;
   COMPLEX_TO_JSON = 31;
   PRODUCER_CONSUMER = 32;
+  WINDOW = 33;
 }

@@ -70,7 +70,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.sun.codemodel.JExpr;
 
-public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
+public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectRecordBatch.class);
 
   private Projector projector;
@@ -133,13 +133,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   }
 
   @Override
-  protected void doWork() {
+  protected IterOutcome doWork() {
 //    VectorUtil.showVectorAccessibleContent(incoming, ",");
     int incomingRecordCount = incoming.getRecordCount();
 
     if (!doAlloc()) {
       outOfMemory = true;
-      return;
+      return IterOutcome.OUT_OF_MEMORY;
     }
 
     int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
@@ -160,6 +160,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     if (complexWriters != null) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
+
+    return IterOutcome.OK;
   }
 
   private void handleRemainder() {
@@ -177,7 +179,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       setValueCount(remainingRecordCount);
       hasRemainder = false;
       remainderIndex = 0;
-      for(VectorWrapper<?> v: incoming) {
+      for (VectorWrapper<?> v : incoming) {
         v.clear();
       }
       this.recordCount = remainingRecordCount;
@@ -259,7 +261,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   }
 
   @Override
-  protected void setupNewSchema() throws SchemaChangeException{
+  protected void setupNewSchema() throws SchemaChangeException {
     this.allocationVectors = Lists.newArrayList();
     container.clear();
     final List<NamedExpression> exprs = getExpressionList();

@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
@@ -31,6 +27,10 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 public class LimitPrel extends DrillLimitRelBase implements Prel {
 

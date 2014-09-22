@@ -89,5 +89,4 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
     logger.debug("Adding Logical Operator sub types: {}", ((Object) ops) );
     return ops;
   }
-
 }

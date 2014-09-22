@@ -207,7 +207,7 @@ public class TestJdbcDistQuery extends JdbcTest{
           System.out.println();
         }
 
-        System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
+        System.out.println(String.format("Query completed in %d millis.", watch.elapsedMillis()));
       }
 
       System.out.println("\n\n\n");

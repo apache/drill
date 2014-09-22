@@ -35,7 +35,11 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
   private final SelectionVector4 sv4;
 
   public InternalBatch(RecordBatch incoming) {
-    switch(incoming.getSchema().getSelectionVectorMode()) {
+    this(incoming, null);
+  }
+
+  public InternalBatch(RecordBatch incoming, VectorWrapper[] ignoreWrappers){
+    switch(incoming.getSchema().getSelectionVectorMode()){
     case FOUR_BYTE:
       this.sv4 = incoming.getSelectionVector4().createNewWrapperCurrent();
       this.sv2 = null;
@@ -49,7 +53,7 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
       this.sv2 = null;
     }
     this.schema = incoming.getSchema();
-    this.container = VectorContainer.getTransferClone(incoming);
+    this.container = VectorContainer.getTransferClone(incoming, ignoreWrappers);
   }
 
   public BatchSchema getSchema() {

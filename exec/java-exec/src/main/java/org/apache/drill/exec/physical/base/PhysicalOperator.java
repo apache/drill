@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 @JsonPropertyOrder({ "@id" })
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "@id")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "pop")
-public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
+public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
 
   /**
    * Describes whether or not a particular physical operator can actually be executed. Most physical operators can be
