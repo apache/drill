@@ -66,7 +66,7 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test
   public void testSelStarOrderByLimit() throws Exception{
-    test("select * from cp.`employee.json` order by employee_id limit 2;");
+    test("select * from cp.`employee.json` order by last_name limit 2;");
   }
 
   @Test
@@ -76,7 +76,7 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test
   public void testSelStarWhereOrderBy() throws Exception{
-    test("select * from cp.`employee.json` where first_name = 'James' order by employee_id");
+    test("select * from cp.`employee.json` where first_name = 'James' order by last_name");
   }
 
   @Test
