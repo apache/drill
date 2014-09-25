@@ -104,31 +104,50 @@ public class WorkEventBus {
       logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
       return null;
     }
-    FragmentManager manager = managers.get(handle);
+    // We need to synchronize this part. Without that, multiple bit servers will be creating a Fragment manager and the
+    // corresponding FragmentContext object. Each FragmentContext object registers with the TopLevelAllocator so that
+    // the allocator can manage fragment resources across all fragments. So we need to make sure only one
+    // FragmentManager is actually created and used for a given FragmentHandle.
+    FragmentManager newManager;
+    FragmentManager manager;
+
+    manager = managers.get(handle);
     if (manager != null) {
       return manager;
     }
+    if (logger.isDebugEnabled()) {
+      String fragHandles = "Looking for Fragment handle: " + handle.toString() + "(Hash Code:" + handle.hashCode()
+        + ")\n Fragment Handles in Fragment manager: ";
+      for (FragmentHandle h : managers.keySet()) {
+        fragHandles += h.toString() + "\n";
+        fragHandles += "[Hash Code: " + h.hashCode() + "]\n";
+      }
+      logger.debug(fragHandles);
+    }
     DistributedMap<FragmentHandle, PlanFragment> planCache = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE);
-    for (Map.Entry<FragmentHandle, PlanFragment> e : planCache.getLocalEntries()) {
+//      for (Map.Entry<FragmentHandle, PlanFragment> e : planCache.getLocalEntries()) {
 //      logger.debug("Key: {}", e.getKey());
 //      logger.debug("Value: {}", e.getValue());
-    }
+//      }
     PlanFragment fragment = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE).get(handle);
 
     if (fragment == null) {
       throw new FragmentSetupException("Received batch where fragment was not in cache.");
     }
+    logger.debug("Allocating new non root fragment manager: " + handle.toString());
+    newManager = new NonRootFragmentManager(fragment, bee);
+    logger.debug("Allocated new non root fragment manager: " + handle.toString());
 
-    FragmentManager newManager = new NonRootFragmentManager(fragment, bee);
-
-    // since their could be a race condition on the check, we'll use putIfAbsent so we don't have two competing
-    // handlers.
     manager = managers.putIfAbsent(fragment.getHandle(), newManager);
-
     if (manager == null) {
       // we added a handler, inform the bee that we did so. This way, the foreman can track status.
       bee.addFragmentPendingRemote(newManager);
       manager = newManager;
+    }else{
+      // prevent a leak of the initial allocation.
+      // Also the fragment context is registered with the top level allocator.
+      // This will unregister the unused fragment context as well.
+      newManager.getFragmentContext().close();
     }
 
     return manager;

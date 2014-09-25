@@ -53,7 +53,7 @@ public class TestAllocators {
     {
       put(ExecConstants.TOP_LEVEL_MAX_ALLOC, "14000000");
       put(ExecConstants.ENABLE_FRAGMENT_MEMORY_LIMIT, "true");
-      put(ExecConstants.FRAGMENT_MEM_OVERCOMMIT_FACTOR, "1.0");
+      put(ExecConstants.FRAGMENT_MEM_OVERCOMMIT_FACTOR, "1.1");
     }
   };
 
@@ -148,7 +148,7 @@ public class TestAllocators {
     // Fragment 3 asks for more and fails
     boolean outOfMem=false;
     try {
-      DrillBuf b31b = oContext31.getAllocator().buffer(4000000);
+      DrillBuf b31b = oContext31.getAllocator().buffer(4400000);
       if(b31b!=null) {
         b31b.release();
       }else{
@@ -164,7 +164,7 @@ public class TestAllocators {
     OperatorContext oContext32 = new OperatorContext(physicalOperator6, fragmentContext3, false);
     DrillBuf b32=null;
     try {
-      b32=oContext32.getAllocator().buffer(4000000);
+      b32=oContext32.getAllocator().buffer(4400000);
     }catch(Exception e){
       outOfMem=true;
     }finally{

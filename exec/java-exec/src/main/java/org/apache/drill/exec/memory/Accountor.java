@@ -193,7 +193,25 @@ public class Accountor {
     if (parent != null){
       parent.addFragmentContext(c);
     }else {
-      logger.debug("Fragment "+fragmentStr+" added to root accountor");
+      if(logger.isDebugEnabled()) {
+        FragmentHandle hndle;
+        String fragStr;
+        if(c!=null) {
+          hndle = c.getHandle();
+          fragStr = (hndle != null) ? (hndle.getMajorFragmentId() + ":" + hndle.getMinorFragmentId()) : "[Null Fragment Handle]";
+        }else{
+          fragStr = "[Null Context]";
+        }
+        fragStr+=" (Object Id: "+System.identityHashCode(c)+")";
+        StackTraceElement[] ste = (new Throwable()).getStackTrace();
+        StringBuffer sb = new StringBuffer();
+        for (StackTraceElement s : ste) {
+          sb.append(s.toString());
+          sb.append("\n");
+        }
+
+        logger.debug("Fragment " + fragStr + " added to root accountor.\n"+sb.toString());
+      }
       synchronized(this) {
         fragmentContexts.add(c);
       }
@@ -207,7 +225,18 @@ public class Accountor {
         parent.removeFragmentContext(c);
       }
     }else{
-      logger.debug("Fragment "+fragmentStr+" removed from root accountor");
+      if(logger.isDebugEnabled()) {
+        FragmentHandle hndle;
+        String fragStr;
+        if (c != null) {
+          hndle = c.getHandle();
+          fragStr = (hndle != null) ? (hndle.getMajorFragmentId() + ":" + hndle.getMinorFragmentId()) : "[Null Fragment Handle]";
+        } else {
+          fragStr = "[Null Context]";
+        }
+        fragStr += " (Object Id: " + System.identityHashCode(c) + ")";
+        logger.debug("Fragment " + fragStr + " removed from root accountor");
+      }
       synchronized(this) {
         fragmentContexts.remove(c);
       }
@@ -230,9 +259,6 @@ public class Accountor {
       //quickly. If they are long running, then we want to favour them with larger limits anyway.
       synchronized (this) {
         int nFragments=fragmentContexts.size();
-        if(nFragments==0) {
-          nFragments = 1;
-        }
         long allocatedMemory=0;
         for(FragmentContext fragment: fragmentContexts){
           BufferAllocator a = fragment.getAllocator();
@@ -240,16 +266,26 @@ public class Accountor {
             allocatedMemory += fragment.getAllocator().getAllocatedMemory();
           }
         }
-        long rem=(total-allocatedMemory)/nFragments;
-        for(FragmentContext fragment: fragmentContexts){
-          fragment.setFragmentLimit((long)(rem*fragmentMemOvercommitFactor));
+        if(logger.isDebugEnabled()) {
+          logger.info("Resetting Fragment Memory Limit: total Available memory== "+total
+            +" Total Allocated Memory :"+allocatedMemory
+            +" Number of fragments: "+nFragments
+            + " fragmentMemOvercommitFactor: "+fragmentMemOvercommitFactor
+            + " Root fragment limit: "+this.fragmentLimit + "(Root obj: "+System.identityHashCode(this)+")"
+          );
         }
-        if(logger.isDebugEnabled()){
+        if(nFragments>0) {
+          long rem = (total - allocatedMemory) / nFragments;
+          for (FragmentContext fragment : fragmentContexts) {
+            fragment.setFragmentLimit((long) (rem * fragmentMemOvercommitFactor));
+          }
+        }
+        if(logger.isDebugEnabled() && false){
           StringBuffer sb= new StringBuffer();
           sb.append("[root](0:0)");
           sb.append("Allocated memory: ");
           sb.append(this.getAllocation());
-          sb.append("Fragment Limit  : ");
+          sb.append(" Fragment Limit: ");
           sb.append(this.getFragmentLimit());
           logger.debug(sb.toString());
           for(FragmentContext fragment: fragmentContexts){
@@ -263,14 +299,15 @@ public class Accountor {
               sb.append(handle.getMinorFragmentId());
               sb.append(")");
             }else{
-              sb.append("[root](0:0)");
+              sb.append("[fragment](0:0)");
             }
             sb.append("Allocated memory: ");
             sb.append(fragment.getAllocator().getAllocatedMemory());
-            sb.append("Fragment Limit  : ");
+            sb.append(" Fragment Limit: ");
             sb.append(fragment.getAllocator().getFragmentLimit());
             logger.debug(sb.toString());
           }
+          logger.debug("Resetting Complete");
         }
       }
     }
