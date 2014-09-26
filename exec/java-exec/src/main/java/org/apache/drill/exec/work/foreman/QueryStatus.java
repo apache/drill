@@ -122,8 +122,10 @@ public class QueryStatus {
 
   public void updateCache() {
     QueryState queryState = foreman.getQueryState();
-    boolean fullStatus = queryState == QueryState.COMPLETED || queryState == QueryState.FAILED;
-    profileCache.put(queryId, getAsProfile(fullStatus));
+    profileCache.put(queryId, getAsProfile(false));
+    if (queryState == QueryState.COMPLETED || queryState == QueryState.FAILED) {
+      profileCache.putBlob(queryId, getAsProfile(true));
+    }
   }
 
   @Override

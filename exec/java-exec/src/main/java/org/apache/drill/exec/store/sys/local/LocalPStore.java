@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.store.sys.local;
 
+import static org.apache.drill.exec.ExecConstants.DRILL_SYS_FILE_SUFFIX;
+
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,18 +38,20 @@ import org.apache.drill.exec.store.sys.PStoreConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class LocalPStore<V> implements PStore<V>{
+public class LocalPStore<V> implements PStore<V> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalPStore.class);
 
-  private final File basePath;
-  private final PStoreConfig<V> config;
-  private static final String SUFFIX = ".sys.drill";
+  private static final String BLOB_QUALIFIER = "blob";
 
+  private final File basePath;
+  private final File blobPath;
+  private final PStoreConfig<V> config;
   public LocalPStore(File base, PStoreConfig<V> config) {
     super();
     this.basePath = new File(base, config.getName());
-    if (!basePath.exists()) {
-      basePath.mkdirs();
+    this.blobPath = new File(basePath, BLOB_QUALIFIER);
+    if (!blobPath.exists()) {
+      blobPath.mkdirs();
     }
     this.config = config;
   }
@@ -59,31 +64,38 @@ public class LocalPStore<V> implements PStore<V>{
     }
     List<String> files = Lists.newArrayList();
     for (String s : f) {
-      if (s.endsWith(SUFFIX)) {
-        files.add(s.substring(0, s.length() - SUFFIX.length()));
+      if (s.endsWith(DRILL_SYS_FILE_SUFFIX)) {
+        files.add(s.substring(0, s.length() - DRILL_SYS_FILE_SUFFIX.length()));
       }
     }
 
     return new Iter(files.iterator());
   }
 
-  private File p(String name) throws IOException {
+  private File p(String name, boolean blob) throws IOException {
     Preconditions.checkArgument(
         !name.contains("/") &&
         !name.contains(":") &&
         !name.contains(".."));
 
-    File f = new File(basePath, name + SUFFIX);
+    File f = new File(blob ? blobPath : basePath, name + DRILL_SYS_FILE_SUFFIX);
     // do this to check file name.
     f.getCanonicalPath();
     return f;
   }
 
-
-
   @Override
   public V get(String key) {
-    try (InputStream is = new FileInputStream(p(key))) {
+    return get(key, false);
+  }
+
+  @Override
+  public V getBlob(String key) {
+    return get(key, true);
+  }
+
+  protected V get(String key, boolean blob) {
+    try (InputStream is = new FileInputStream(p(key, blob))) {
       return config.getSerializer().deserialize(IOUtils.toByteArray(is));
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -92,7 +104,16 @@ public class LocalPStore<V> implements PStore<V>{
 
   @Override
   public void put(String key, V value) {
-    try (OutputStream os = new FileOutputStream(p(key))) {
+    put(key, false, value);
+  }
+
+  @Override
+  public void putBlob(String key, V value) {
+    put(key, true, value);
+  }
+
+  protected void put(String key, boolean blob, V value) {
+    try (OutputStream os = new FileOutputStream(p(key, blob))) {
       IOUtils.write(config.getSerializer().serialize(value), os);
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -102,7 +123,7 @@ public class LocalPStore<V> implements PStore<V>{
   @Override
   public boolean putIfAbsent(String key, V value) {
     try {
-      File f = p(key);
+      File f = p(key, false);
       if (f.exists()) {
         return false;
       } else {
@@ -117,10 +138,17 @@ public class LocalPStore<V> implements PStore<V>{
   @Override
   public void delete(String key) {
     try {
-      p(key).delete();
+      delete(key, false);
+      delete(key, true);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  protected void delete(String key, boolean blob) throws IOException {
+    try {
+      p(key, blob).delete();
+    } catch (FileNotFoundException e) { /* ignored */ }
   }
 
   private class Iter implements Iterator<Entry<String, V>>{

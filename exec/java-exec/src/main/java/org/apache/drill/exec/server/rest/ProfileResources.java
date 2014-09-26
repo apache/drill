@@ -47,7 +47,8 @@ import com.google.common.collect.Lists;
 public class ProfileResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileResources.class);
 
-  @Inject WorkManager work;
+  @Inject
+  WorkManager work;
 
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
@@ -55,10 +56,12 @@ public class ProfileResources {
     private String queryId;
     private Date time;
     private String location;
+    private String foreman;
 
-    public ProfileInfo(String queryId, long time) {
+    public ProfileInfo(String queryId, long time, String foreman) {
       this.queryId = queryId;
       this.time = new Date(time);
+      this.foreman = foreman;
       this.location = "http://localhost:8047/profile/" + queryId + ".json";
     }
 
@@ -78,6 +81,11 @@ public class ProfileResources {
     public int compareTo(ProfileInfo other) {
       return time.compareTo(other.time);
     }
+
+    public String getForeman() {
+      return foreman;
+    }
+
   }
 
   @XmlRootElement
@@ -95,7 +103,7 @@ public class ProfileResources {
     }
 
     public List<ProfileInfo> getFinishedQueries() {
-      return  finishedQueries;
+      return finishedQueries;
     }
   }
 
@@ -114,12 +122,12 @@ public class ProfileResources {
     List<ProfileInfo> runningQueries = Lists.newArrayList();
     List<ProfileInfo> finishedQueries = Lists.newArrayList();
 
-    for(Map.Entry<String, QueryProfile> entry : store){
+    for (Map.Entry<String, QueryProfile> entry : store) {
       QueryProfile profile = entry.getValue();
       if (profile.getState() == QueryState.RUNNING || profile.getState() == QueryState.PENDING) {
-        runningQueries.add(new ProfileInfo(entry.getKey(), profile.getStart()));
+        runningQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress()));
       } else {
-        finishedQueries.add(new ProfileInfo(entry.getKey(), profile.getStart()));
+        finishedQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress()));
       }
     }
 
@@ -145,8 +153,12 @@ public class ProfileResources {
       logger.debug("Failed to get profile for: " + queryId);
       return QueryProfile.getDefaultInstance();
     }
-    QueryProfile profile = store.get(queryId);
-    return profile == null ?  QueryProfile.getDefaultInstance() : profile;
+    // the complete profile is now stored as blob in the PStore
+    QueryProfile profile = store.getBlob(queryId);
+    if (profile == null) {
+      profile = store.get(queryId); // this is to load profile data from older builds.
+    }
+    return profile == null ? QueryProfile.getDefaultInstance() : profile;
   }
 
   @GET
@@ -186,4 +198,5 @@ public class ProfileResources {
     }
     return "Query " + queryId + " not running";
   }
+
 }

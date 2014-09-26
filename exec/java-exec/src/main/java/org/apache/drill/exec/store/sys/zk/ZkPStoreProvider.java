@@ -17,21 +17,35 @@
  */
 package org.apache.drill.exec.store.sys.zk;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.shim.FileSystemCreator;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class ZkPStoreProvider implements PStoreProvider{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZkPStoreProvider.class);
 
+  private static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
+
   private final CuratorFramework curator;
+
+  private final DrillFileSystem fs;
+
+  private final Path blobRoot;
 
   public ZkPStoreProvider(PStoreRegistry registry) throws DrillbitStartupException {
     ClusterCoordinator coord = registry.getClusterCoordinator();
@@ -39,10 +53,36 @@ public class ZkPStoreProvider implements PStoreProvider{
       throw new DrillbitStartupException("A ZkPStoreProvider was created without a ZKClusterCoordinator.");
     }
     this.curator = ((ZKClusterCoordinator)registry.getClusterCoordinator()).getCurator();
+
+    if (registry.getConfig().hasPath(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT)) {
+      blobRoot = new Path(registry.getConfig().getString(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT));
+    } else {
+      String drillLogDir = System.getenv("DRILL_LOG_DIR");
+      if (drillLogDir == null) {
+        drillLogDir = "/var/log/drill";
+      }
+      blobRoot = new Path(new File(drillLogDir).getAbsoluteFile().toURI());
+    }
+    Configuration fsConf = new Configuration();
+    fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, blobRoot.toUri().toString());
+    try {
+      fs = FileSystemCreator.getFileSystem(registry.getConfig(), fsConf);
+      fs.mkdirs(blobRoot);
+    } catch (IOException e) {
+      throw new DrillbitStartupException("Unable to initialize blob storage.", e);
+    }
+
   }
 
+  @VisibleForTesting
   public ZkPStoreProvider(CuratorFramework curator) {
     this.curator = curator;
+    this.fs = null;
+    String drillLogDir = System.getenv("DRILL_LOG_DIR");
+    if (drillLogDir == null) {
+      drillLogDir = "/var/log/drill";
+    }
+    blobRoot = new Path(new File(drillLogDir).getAbsoluteFile().toURI());
   }
 
   @Override
@@ -51,7 +91,7 @@ public class ZkPStoreProvider implements PStoreProvider{
 
   @Override
   public <V> PStore<V> getPStore(PStoreConfig<V> store) throws IOException {
-    return new ZkPStore<V>(curator, store);
+    return new ZkPStore<V>(curator, fs, blobRoot, store);
   }
 
   @Override

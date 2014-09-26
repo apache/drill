@@ -30,6 +30,8 @@ public class NoWriteLocalPStore<V> implements PStore<V>{
 
   private ConcurrentMap<String, V> map = Maps.newConcurrentMap();
 
+  private ConcurrentMap<String, V> blobMap = Maps.newConcurrentMap();
+
   public NoWriteLocalPStore() {
     super();
   }
@@ -45,8 +47,18 @@ public class NoWriteLocalPStore<V> implements PStore<V>{
   }
 
   @Override
+  public V getBlob(String key) {
+    return blobMap.get(key);
+  }
+
+  @Override
   public void put(String key, V value) {
-    map.put(key,  value);
+    map.put(key, value);
+  }
+
+  @Override
+  public void putBlob(String key, V value) {
+    blobMap.put(key, value);
   }
 
   @Override
@@ -57,6 +69,7 @@ public class NoWriteLocalPStore<V> implements PStore<V>{
   @Override
   public void delete(String key) {
     map.remove(key);
+    blobMap.remove(key);
   }
 
 }

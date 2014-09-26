@@ -44,6 +44,8 @@ public class HBasePStoreProvider implements PStoreProvider {
 
   static final byte[] FAMILY = Bytes.toBytes("s");
 
+  static final byte[] FAMILY_BLOB = Bytes.toBytes("t");
+
   static final byte[] QUALIFIER = Bytes.toBytes("d");
 
   private final String storeTableName;
@@ -86,12 +88,14 @@ public class HBasePStoreProvider implements PStoreProvider {
       if (!admin.tableExists(storeTableName)) {
         HTableDescriptor desc = new HTableDescriptor(storeTableName);
         desc.addFamily(new HColumnDescriptor(FAMILY).setMaxVersions(1));
+        desc.addFamily(new HColumnDescriptor(FAMILY_BLOB).setMaxVersions(1));
         admin.createTable(desc);
       } else {
         HTableDescriptor desc = admin.getTableDescriptor(Bytes.toBytes(storeTableName));
-        if (!desc.hasFamily(FAMILY)) {
+        if (!desc.hasFamily(FAMILY) || !desc.hasFamily(FAMILY_BLOB)) {
           throw new DrillRuntimeException("The HBase table " + storeTableName
-              + " specified as persistent store exists but does not contain column family: " + Bytes.toString(FAMILY));
+              + " specified as persistent store exists but does not contain column family: "
+              + (desc.hasFamily(FAMILY) ? Bytes.toString(FAMILY_BLOB) : Bytes.toString(FAMILY)));
         }
       }
     }

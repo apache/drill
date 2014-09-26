@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hbase.config;
 
 import static org.apache.drill.exec.store.hbase.config.HBasePStoreProvider.FAMILY;
+import static org.apache.drill.exec.store.hbase.config.HBasePStoreProvider.FAMILY_BLOB;
 import static org.apache.drill.exec.store.hbase.config.HBasePStoreProvider.QUALIFIER;
 
 import java.io.IOException;
@@ -58,10 +59,19 @@ public class HBasePStore<V> implements PStore<V> {
   }
 
   @Override
-  public synchronized V get(String key) {
+  public V get(String key) {
+    return get(key, FAMILY);
+  }
+
+  @Override
+  public V getBlob(String key) {
+    return get(key, FAMILY_BLOB);
+  }
+
+  protected synchronized V get(String key, byte[] family) {
     try {
       Get get = new Get(row(key));
-      get.addColumn(FAMILY, QUALIFIER);
+      get.addColumn(family, QUALIFIER);
       return value(table.get(get));
     } catch (IOException e) {
       throw new DrillRuntimeException("Caught error while getting row '" + key + "' from for table:" + Bytes.toString(table.getTableName()), e);
@@ -69,10 +79,19 @@ public class HBasePStore<V> implements PStore<V> {
   }
 
   @Override
-  public synchronized void put(String key, V value) {
+  public void put(String key, V value) {
+    put(key, FAMILY, value);
+  }
+
+  @Override
+  public void putBlob(String key, V value) {
+    put(key, FAMILY_BLOB, value);
+  }
+
+  protected synchronized void put(String key, byte[] family, V value) {
     try {
       Put put = new Put(row(key));
-      put.add(FAMILY, QUALIFIER, bytes(value));
+      put.add(family, QUALIFIER, bytes(value));
       table.put(put);
     } catch (IOException e) {
       throw new DrillRuntimeException("Caught error while putting row '" + key + "' from for table:" + Bytes.toString(table.getTableName()), e);
@@ -123,7 +142,6 @@ public class HBasePStore<V> implements PStore<V> {
   private void delete(byte[] row) {
     try {
       Delete del = new Delete(row);
-      del.deleteColumns(FAMILY, QUALIFIER);
       table.delete(del);
     } catch (IOException e) {
       throw new DrillRuntimeException("Caught error while deleting row '" + Bytes.toStringBinary(row)

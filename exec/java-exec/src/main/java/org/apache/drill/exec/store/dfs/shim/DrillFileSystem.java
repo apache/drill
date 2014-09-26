@@ -39,5 +39,6 @@ public abstract class DrillFileSystem implements AutoCloseable{
   public abstract FileStatus getFileStatus(Path p) throws IOException;
   public abstract DrillOutputStream create(Path p) throws IOException;
   public abstract DrillInputStream open(Path p) throws IOException;
+  public abstract boolean mkdirs(Path f) throws IOException;
 
 }

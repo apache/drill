@@ -23,7 +23,8 @@
       <table class="table table-hover">
         <thead>
            <td>Time</td>
-           <td>Query</td>
+           <td>Query Id</td>
+           <td>Foreman</td>
         </thead>
         <tbody>
           <#list model.getRunningQueries() as query>
@@ -33,6 +34,13 @@
               <a href="/profiles/${query.getQueryId()}">
                 <div style="height:100%;width:100%">
                   ${query.getQueryId()}
+                </div>
+              </a>
+            </td>
+            <td>
+              <a href="http://${query.getForeman()}:8047/profiles/${query.getQueryId()}" target="_blank">
+                <div style="height:100%;width:100%">
+                  ${query.getForeman()}
                 </div>
               </a>
             </td>
@@ -54,7 +62,8 @@
     <table class="table table-hover">
       <thead>
          <td>Time</td>
-         <td>Query</td>
+         <td>Query Id</td>
+         <td>Foreman</td>
       </thead>
       <tbody>
         <#list model.getFinishedQueries() as query>
@@ -64,6 +73,13 @@
             <a href="/profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%">
                 ${query.getQueryId()}
+              </div>
+            </a>
+          </td>
+          <td>
+            <a href="http://${query.getForeman()}:8047/profiles/${query.getQueryId()}" target="_blank">
+              <div style="height:100%;width:100%">
+                ${query.getForeman()}
               </div>
             </a>
           </td>

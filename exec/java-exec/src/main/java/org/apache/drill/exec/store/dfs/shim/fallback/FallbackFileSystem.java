@@ -146,6 +146,14 @@ public class FallbackFileSystem extends DrillFileSystem {
 
   }
 
-
+  @Override
+  public boolean mkdirs(Path folderPath) throws IOException {
+    if (!fs.exists(folderPath)) {
+      return fs.mkdirs(folderPath);
+    } else if (!fs.getFileStatus(folderPath).isDirectory()) {
+      throw new IOException("The specified folder path exists and is not a folder.");
+    }
+    return false;
+  }
 
 }

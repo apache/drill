@@ -21,7 +21,9 @@ import java.util.Map;
 
 public interface PStore<V> extends Iterable<Map.Entry<String, V>> {
   public V get(String key);
+  public V getBlob(String key);
   public void put(String key, V value);
+  public void putBlob(String key, V value);
   public boolean putIfAbsent(String key, V value);
   public void delete(String key);
 }
