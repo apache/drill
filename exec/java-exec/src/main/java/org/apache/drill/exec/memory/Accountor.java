@@ -20,6 +20,7 @@ package org.apache.drill.exec.memory;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.typesafe.config.ConfigException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
@@ -29,9 +30,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.AssertionUtil;
 
 import java.util.Arrays;
@@ -48,7 +52,16 @@ public class Accountor {
   private final FragmentHandle handle;
   private String fragmentStr;
   private Accountor parent;
+
   private final boolean errorOnLeak;
+  // some operators are no subject to the fragment limit. They set the applyFragmentLimit to false
+
+  private final boolean enableFragmentLimit;
+  private final double  fragmentMemOvercommitFactor;
+
+  private final boolean  DEFAULT_ENABLE_FRAGMENT_LIMIT=false;
+  private final double   DEFAULT_FRAGMENT_MEM_OVERCOMMIT_FACTOR=1.5;
+
   private final boolean applyFragmentLimit;
 
   private final FragmentContext fragmentContext;
@@ -58,12 +71,28 @@ public class Accountor {
   // This enables the top level accountor to calculate a new fragment limit whenever necessary.
   private final List<FragmentContext> fragmentContexts;
 
-  public Accountor(boolean errorOnLeak, FragmentContext context, Accountor parent, long max, long preAllocated, boolean applyFragLimit) {
+  public Accountor(DrillConfig config, boolean errorOnLeak, FragmentContext context, Accountor parent, long max, long preAllocated, boolean applyFragLimit) {
     // TODO: fix preallocation stuff
     this.errorOnLeak = errorOnLeak;
     AtomicRemainder parentRemainder = parent != null ? parent.remainder : null;
     this.parent = parent;
+
+    boolean enableFragmentLimit;
+    double  fragmentMemOvercommitFactor;
+
+    try {
+      enableFragmentLimit = config.getBoolean(ExecConstants.ENABLE_FRAGMENT_MEMORY_LIMIT);
+      fragmentMemOvercommitFactor = config.getDouble(ExecConstants.FRAGMENT_MEM_OVERCOMMIT_FACTOR);
+    }catch(Exception e){
+      enableFragmentLimit = DEFAULT_ENABLE_FRAGMENT_LIMIT;
+      fragmentMemOvercommitFactor = DEFAULT_FRAGMENT_MEM_OVERCOMMIT_FACTOR;
+    }
+    this.enableFragmentLimit = enableFragmentLimit;
+    this.fragmentMemOvercommitFactor = fragmentMemOvercommitFactor;
+
+
     this.applyFragmentLimit=applyFragLimit;
+
     this.remainder = new AtomicRemainder(errorOnLeak, parentRemainder, max, preAllocated, applyFragmentLimit);
     this.total = max;
     this.fragmentContext=context;
@@ -187,6 +216,10 @@ public class Accountor {
 
   public long resetFragmentLimits(){
     // returns the new capacity
+    if(!this.enableFragmentLimit){
+      return getCapacity();
+    }
+
     if(parent!=null){
       parent.resetFragmentLimits();
     }else {
@@ -209,7 +242,35 @@ public class Accountor {
         }
         long rem=(total-allocatedMemory)/nFragments;
         for(FragmentContext fragment: fragmentContexts){
-          fragment.setFragmentLimit(rem);
+          fragment.setFragmentLimit((long)(rem*fragmentMemOvercommitFactor));
+        }
+        if(logger.isDebugEnabled()){
+          StringBuffer sb= new StringBuffer();
+          sb.append("[root](0:0)");
+          sb.append("Allocated memory: ");
+          sb.append(this.getAllocation());
+          sb.append("Fragment Limit  : ");
+          sb.append(this.getFragmentLimit());
+          logger.debug(sb.toString());
+          for(FragmentContext fragment: fragmentContexts){
+            sb= new StringBuffer();
+            if (handle != null) {
+              sb.append("[");
+              sb.append(QueryIdHelper.getQueryId(handle.getQueryId()));
+              sb.append("](");
+              sb.append(handle.getMajorFragmentId());
+              sb.append(":");
+              sb.append(handle.getMinorFragmentId());
+              sb.append(")");
+            }else{
+              sb.append("[root](0:0)");
+            }
+            sb.append("Allocated memory: ");
+            sb.append(fragment.getAllocator().getAllocatedMemory());
+            sb.append("Fragment Limit  : ");
+            sb.append(fragment.getAllocator().getFragmentLimit());
+            logger.debug(sb.toString());
+          }
         }
       }
     }

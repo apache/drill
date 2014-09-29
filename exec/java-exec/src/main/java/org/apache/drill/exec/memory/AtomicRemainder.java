@@ -104,8 +104,17 @@ public class AtomicRemainder {
 
       // If we need to allocate memory beyond the allowed Fragment Limit
       if(applyFragmentLimitForChild && this.applyFragmentLimit && this.hasLimit && (getUsed()+size > this.limit)){
-        logger.debug("No more memory. Fragment limit ("+this.limit +
-          " bytes) reached. Trying to allocate "+size+ " bytes. "+getUsed()+" bytes already allocated.");
+        if (parent != null) {
+          parent.returnAllocation(size);
+        }
+        StackTraceElement[] ste = (new Throwable()).getStackTrace();
+        StringBuffer sb = new StringBuffer();
+        for (StackTraceElement s : ste) {
+          sb.append(s.toString());
+          sb.append("\n");
+        }
+        logger.error("No more memory. Fragment limit ("+this.limit +
+          " bytes) reached. Trying to allocate "+size+ " bytes. "+getUsed()+" bytes already allocated.\n"+sb.toString());
         return false;
       }
 

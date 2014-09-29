@@ -94,7 +94,7 @@ class FakeAllocator implements BufferAllocator {
   static class FakeAccountor extends Accountor {
 
     public FakeAccountor() {
-      super(false, null, null, 0, 0, true);
+      super(null, false, null, null, 0, 0, true);
     }
 
     @Override

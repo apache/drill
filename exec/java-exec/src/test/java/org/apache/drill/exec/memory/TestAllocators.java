@@ -52,6 +52,8 @@ public class TestAllocators {
   private static final Properties TEST_CONFIGURATIONS = new Properties() {
     {
       put(ExecConstants.TOP_LEVEL_MAX_ALLOC, "14000000");
+      put(ExecConstants.ENABLE_FRAGMENT_MEMORY_LIMIT, "true");
+      put(ExecConstants.FRAGMENT_MEM_OVERCOMMIT_FACTOR, "1.0");
     }
   };
 

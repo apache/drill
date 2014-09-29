@@ -44,6 +44,7 @@ public class TopLevelAllocator implements BufferAllocator {
   private final Accountor acct;
   private final boolean errorOnLeak;
   private final DrillBuf empty;
+  private final DrillConfig config;
 
   @Deprecated
   public TopLevelAllocator() {
@@ -52,18 +53,19 @@ public class TopLevelAllocator implements BufferAllocator {
 
   @Deprecated
   public TopLevelAllocator(long maximumAllocation) {
-    this(maximumAllocation, true);
+    this(null, maximumAllocation, true);
   }
 
-  private TopLevelAllocator(long maximumAllocation, boolean errorOnLeak){
+  private TopLevelAllocator(DrillConfig config, long maximumAllocation, boolean errorOnLeak){
+    this.config=(config!=null) ? config : DrillConfig.create();
     this.errorOnLeak = errorOnLeak;
-    this.acct = new Accountor(errorOnLeak, null, null, maximumAllocation, 0, true);
+    this.acct = new Accountor(config, errorOnLeak, null, null, maximumAllocation, 0, true);
     this.empty = DrillBuf.getEmpty(this, acct);
     this.childrenMap = ENABLE_ACCOUNTING ? new IdentityHashMap<ChildAllocator, StackTraceElement[]>() : null;
   }
 
   public TopLevelAllocator(DrillConfig config) {
-    this(Math.min(DrillConfig.getMaxDirectMemory(), config.getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC)),
+    this(config, Math.min(DrillConfig.getMaxDirectMemory(), config.getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC)),
         config.getBoolean(ExecConstants.ERROR_ON_MEMORY_LEAK)
         );
   }
@@ -178,7 +180,7 @@ public class TopLevelAllocator implements BufferAllocator {
                           boolean applyFragmentLimit) throws OutOfMemoryException{
       assert max >= pre;
       this.applyFragmentLimit=applyFragmentLimit;
-      childAcct = new Accountor(errorOnLeak, context, parentAccountor, max, pre, applyFragmentLimit);
+      childAcct = new Accountor(context.getConfig(), errorOnLeak, context, parentAccountor, max, pre, applyFragmentLimit);
       this.fragmentContext=context;
       this.handle = context.getHandle();
       thisMap = map;
