@@ -161,14 +161,18 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       }
 
       Map<String, StoragePlugin> activePlugins = new HashMap<String, StoragePlugin>();
-      for (Map.Entry<String, StoragePluginConfig> config : pluginSystemTable) {
-        try {
-          if (config.getValue().isEnabled()) {
-            StoragePlugin plugin = create(config.getKey(), config.getValue());
-            activePlugins.put(config.getKey(), plugin);
+      for (Map.Entry<String, StoragePluginConfig> entry : pluginSystemTable) {
+        String name = entry.getKey();
+        StoragePluginConfig config = entry.getValue();
+        if (config.isEnabled()) {
+          try {
+            StoragePlugin plugin = create(name, config);
+            activePlugins.put(name, plugin);
+          } catch (ExecutionSetupException e) {
+            logger.error("Failure while setting up StoragePlugin with name: '{}', disabling.", name, e);
+            config.setEnabled(false);
+            pluginSystemTable.put(name, config);
           }
-        } catch (ExecutionSetupException e) {
-          logger.error("Failure while setting up StoragePlugin with name: '{}'.", config.getKey(), e);
         }
       }
 
