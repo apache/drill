@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexBuilder;
@@ -49,7 +48,7 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
   static final String EMPTY_STRING = "";
 
   final private DrillFilterRel filterRel;
-  final private DrillScanRelBase scanRel;
+  final private DrillRel inputRel;
   final private RexBuilder builder;
   final private String dirLabel;
 
@@ -60,10 +59,10 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
   private RexNode finalCondition = null;     // placeholder for the final filter condition
   private boolean dirMatch = false;
 
-  DirPathBuilder(DrillFilterRel filterRel, DrillScanRelBase scanRel, RexBuilder builder, String dirLabel) {
+  DirPathBuilder(DrillFilterRel filterRel, DrillRel inputRel, RexBuilder builder, String dirLabel) {
     super(true);
     this.filterRel = filterRel;
-    this.scanRel = scanRel;
+    this.inputRel = inputRel;
     this.builder = builder;
     this.dirLabel = dirLabel;
     this.finalCondition = filterRel.getCondition();
@@ -153,7 +152,7 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
   @Override
   public SchemaPath visitInputRef(RexInputRef inputRef) {
     final int index = inputRef.getIndex();
-    final RelDataTypeField field = scanRel.getRowType().getFieldList().get(index);
+    final RelDataTypeField field = inputRel.getRowType().getFieldList().get(index);
     return FieldReference.getWithQuotedRef(field.getName());
   }
 

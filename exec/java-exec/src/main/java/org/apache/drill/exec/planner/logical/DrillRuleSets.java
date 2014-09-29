@@ -39,7 +39,6 @@ import org.apache.drill.exec.planner.physical.SortConvertPrule;
 import org.apache.drill.exec.planner.physical.SortPrule;
 import org.apache.drill.exec.planner.physical.StreamAggPrule;
 import org.apache.drill.exec.planner.physical.StreamingWindowPrule;
-import org.apache.drill.exec.planner.physical.StreamingWindowPrule;
 import org.apache.drill.exec.planner.physical.UnionAllPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
 import org.eigenbase.rel.RelFactories;
@@ -97,7 +96,8 @@ public class DrillRuleSets {
 //      PushSortPastProjectRule.INSTANCE, //
 
       DrillPushProjIntoScan.INSTANCE,
-      DrillPushPartitionFilterIntoScan.INSTANCE,
+      DrillPushPartitionFilterIntoScan.FILTER_ON_PROJECT,
+      DrillPushPartitionFilterIntoScan.FILTER_ON_SCAN,
 
       ////////////////////////////////
       DrillScanRule.INSTANCE,

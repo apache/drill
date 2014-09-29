@@ -180,8 +180,19 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
   }
 
+  private void createMappings(List<EndpointAffinity> affinities) {
+    List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    for (EndpointAffinity e : affinities) {
+      endpoints.add(e.getEndpoint());
+    }
+    this.applyAssignments(endpoints);
+  }
+
   @Override
   public EasySubScan getSpecificScan(int minorFragmentId) {
+    if (mappings == null) {
+      createMappings(this.endpointAffinities);
+    }
     assert minorFragmentId < mappings.size() : String.format(
         "Mappings length [%d] should be longer than minor fragment id [%d] but it isn't.", mappings.size(),
         minorFragmentId);
@@ -214,7 +225,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
   @Override
   public String toString() {
-    return "EasyGroupScan [selectionRoot=" + selectionRoot + ", columns = " + columns + "]";
+    return "EasyGroupScan [selectionRoot=" + selectionRoot + ", numFiles=" + getFiles().size() + ", columns = " + columns + "]";
   }
 
   @Override
@@ -236,6 +247,8 @@ public class EasyGroupScan extends AbstractFileGroupScan{
   public FileGroupScan clone(FileSelection selection) throws IOException {
     EasyGroupScan newScan = new EasyGroupScan(this);
     newScan.initFromSelection(selection, formatPlugin);
+    newScan.mappings = null; /* the mapping will be created later when we get specific scan
+                                since the end-point affinities are not known at this time */
     return newScan;
   }
 

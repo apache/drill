@@ -387,6 +387,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   public String toString() {
     return "ParquetGroupScan [entries=" + entries
         + ", selectionRoot=" + selectionRoot
+        + ", numFiles=" + getEntries().size()
         + ", columns=" + columns + "]";
   }
 
