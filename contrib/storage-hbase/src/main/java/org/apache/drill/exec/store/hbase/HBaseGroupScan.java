@@ -293,7 +293,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
       for (Entry<HRegionInfo, ServerName> regionEntry : regionsToAssignSet) {
         List<HBaseSubScanSpec> smallestList = minHeap.poll();
         smallestList.add(regionInfoToSubScanSpec(regionEntry.getKey()));
-        if (smallestList.size() < minPerEndpointSlot) {
+        if (smallestList.size() < maxPerEndpointSlot) {
           minHeap.offer(smallestList);
         }
       }
