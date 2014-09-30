@@ -105,6 +105,24 @@ public class TestJsonReader extends BaseTestQuery {
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
   }
 
+  @Test
+  public void testRepeatedCount() throws Exception {
+    test("select repeated_count(str_list) from cp.`/store/json/json_basic_repeated_varchar.json`");
+    test("select repeated_count(INT_col) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_count(FLOAT4_col) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_count(VARCHAR_col) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_count(BIT_col) from cp.`/parquet/alltypes_repeated.json`");
+  }
+
+  @Test
+  public void testRepeatedContains() throws Exception {
+    test("select repeated_contains(str_list, 'asdf') from cp.`/store/json/json_basic_repeated_varchar.json`");
+    test("select repeated_contains(INT_col, -2147483648) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_contains(FLOAT4_col, -1000000000000.0) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_contains(VARCHAR_col, 'qwerty' ) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_contains(BIT_col, true) from cp.`/parquet/alltypes_repeated.json`");
+    test("select repeated_contains(BIT_col, false) from cp.`/parquet/alltypes_repeated.json`");
+  }
 
   @Test
   public void testSingleColumnRead_vector_fill_bug() throws Exception {
@@ -122,12 +140,14 @@ public class TestJsonReader extends BaseTestQuery {
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
   }
 
+  @Test
   public void testAllTextMode() throws Exception {
     test("alter system set `store.json.all_text_mode` = true");
     String[] queries = {"select * from cp.`/store/json/schema_change_int_to_string.json`"};
     long[] rowCounts = {3};
     String filename = "/store/json/schema_change_int_to_string.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+    test("alter system set `store.json.all_text_mode` = false");
   }
 
   @Test
@@ -153,6 +173,7 @@ public class TestJsonReader extends BaseTestQuery {
     long[] rowCounts = {3};
     String filename = "/store/json/null_where_list_expected.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+    test("alter system set `store.json.all_text_mode` = false");
   }
 
   @Test
@@ -162,6 +183,7 @@ public class TestJsonReader extends BaseTestQuery {
     long[] rowCounts = {3};
     String filename = "/store/json/null_where_map_expected.json";
     runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+    test("alter system set `store.json.all_text_mode` = false");
   }
 
   // The project pushdown rule is correctly adding the projected columns to the scan, however it is not removing
