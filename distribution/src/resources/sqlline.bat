@@ -161,11 +161,11 @@ echo Calculating Drill classpath...
 set DRILL_CP=%DRILL_CONF_DIR%
 if NOT "test%DRILL_CLASSPATH_PREFIX%"=="test" set DRILL_CP=!DRILL_CP!;%DRILL_CLASSPATH_PREFIX%
 set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\jars\*
-set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\extlib\*
+set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\jars\ext\*
 if "test%USE_HADOOP_CP%"=="test1" set DRILL_CP=!DRILL_CP!;%HADOOP_CLASSPATH%
 if "test%USE_HBASE_CP%"=="test1" set DRILL_CP=!DRILL_CP!;%HBASE_CLASSPATH%
-set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\lib\*
-set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\contrib\*
+set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\jars\3rdparty\*
+set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\jars\classb\*
 if NOT "test%DRILL_CLASSPATH%"=="test" set DRILL_CP=!DRILL_CP!;%DRILL_CLASSPATH%
 
 set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path="%DRILL_LOG_DIR%\sqlline.log"
