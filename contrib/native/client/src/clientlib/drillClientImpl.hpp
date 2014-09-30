@@ -266,8 +266,8 @@ class DrillClientImpl{
                 DrillClientQueryResult* pQueryResult);
         void broadcastError(DrillClientError* pErr);
         void clearMapEntries(DrillClientQueryResult* pQueryResult);
-        void sendAck(InBoundRpcMessage& msg);
-        void sendCancel(InBoundRpcMessage& msg);
+        void sendAck(InBoundRpcMessage& msg, bool isOk);
+        void sendCancel(exec::shared::QueryId* pQueryId);
 
 
         static RpcEncoder s_encoder;

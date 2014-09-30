@@ -22,6 +22,28 @@
 #include <stdlib.h>
 #include "drill/drillc.hpp"
 
+int nOptions=8;
+
+struct Option{
+    char name[32];
+    char desc[128];
+    bool required;
+}qsOptions[]= {
+    {"plan", "Plan files separated by semicolons", false},
+    {"query", "Query strings, separated by semicolons", false},
+    {"type", "Query type [physical|logical|sql]", true},
+    {"connectStr", "Connect string", true},
+    {"schema", "Default schema", false},
+    {"api", "API type [sync|async]", true},
+    {"logLevel", "Logging level [trace|debug|info|warn|error|fatal]", false},
+    {"testCancel", "Cancel the query afterthe first record batch.", false}
+};
+
+std::map<std::string, std::string> qsOptionValues;
+
+bool bTestCancel=false;
+
+
 Drill::status_t SchemaListener(void* ctx, Drill::FieldDefPtr fields, Drill::DrillClientError* err){
     if(!err){
         printf("SCHEMA CHANGE DETECTED:\n");
@@ -41,7 +63,11 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
     if(!err){
         b->print(std::cout, 0); // print all rows
         delete b; // we're done with this batch, we can delete it
-        return Drill::QRY_SUCCESS ;
+        if(bTestCancel){
+            return Drill::QRY_FAILURE;
+        }else{
+            return Drill::QRY_SUCCESS ;
+        }
     }else{
         std::cerr<< "ERROR: " << err->msg << std::endl;
         return Drill::QRY_FAILURE;
@@ -92,24 +118,6 @@ void print(const Drill::FieldMetadata* pFieldMetadata, void* buf, size_t sz){
     printf("%s\t", (char*)printBuffer);
     return;
 }
-
-int nOptions=6;
-
-struct Option{
-    char name[32];
-    char desc[128];
-    bool required;
-}qsOptions[]= {
-    {"plan", "Plan files separated by semicolons", false},
-    {"query", "Query strings, separated by semicolons", false},
-    {"type", "Query type [physical|logical|sql]", true},
-    {"connectStr", "Connect string", true},
-    {"schema", "Default schema", false},
-    {"api", "API type [sync|async]", true},
-    {"logLevel", "Logging level [trace|debug|info|warn|error|fatal]", false}
-};
-
-std::map<std::string, std::string> qsOptionValues;
 
 void printUsage(){
     std::cerr<<"Usage: querySubmitter ";
@@ -243,6 +251,7 @@ int main(int argc, char* argv[]) {
         std::string api=qsOptionValues["api"];
         std::string type_str=qsOptionValues["type"];
         std::string logLevel=qsOptionValues["logLevel"];
+        std::string testCancel=qsOptionValues["testCancel"];
 
         exec::shared::QueryType type;
 
@@ -266,6 +275,8 @@ int main(int argc, char* argv[]) {
             readQueries(queryList, queryInputs);
             type=exec::shared::SQL;
         }
+
+        bTestCancel = !strcmp(testCancel.c_str(), "true")?true:false;
 
         std::vector<std::string>::iterator queryInpIter;
 
@@ -320,8 +331,12 @@ int main(int argc, char* argv[]) {
                         print(fields->at(i), pBuf, sz);
                     }
                     printf("\n");
+                    if(bTestCancel && row%100==1){
+                        pRecIter->cancel();
+                        printf("Application canceled the query.\n");
+                    }
                 }
-                if(ret!=Drill::QRY_NO_MORE_DATA){
+                if(ret!=Drill::QRY_NO_MORE_DATA && ret!=Drill::QRY_CANCEL){
                     std::cerr<< pRecIter->getError() << std::endl;
                 }
                 client.freeQueryIterator(&pRecIter);
