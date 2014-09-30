@@ -18,9 +18,14 @@
 package org.apache.drill.exec.store.text;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
@@ -100,6 +105,17 @@ public class DrillTextRecordReader extends AbstractRecordReader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  public boolean isStarQuery() {
+    return super.isStarQuery() || Iterables.tryFind(getColumns(), new Predicate<SchemaPath>() {
+      private final SchemaPath COLUMNS = SchemaPath.getSimplePath("columns");
+      @Override
+      public boolean apply(@Nullable SchemaPath path) {
+        return path.equals(COLUMNS);
+      }
+    }).isPresent();
   }
 
   public OperatorContext getOperatorContext() {
