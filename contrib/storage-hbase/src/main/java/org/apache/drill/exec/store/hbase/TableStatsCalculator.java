@@ -53,9 +53,9 @@ public class TableStatsCalculator {
    */
   private Map<byte[], Long> sizeMap = null;
 
-  private int avgRowSizeInBytes;
+  private int avgRowSizeInBytes = 1;
 
-  private int colsPerRow;
+  private int colsPerRow = 1;
 
   /**
    * Computes size of each region for table.
@@ -83,8 +83,10 @@ public class TableStatsCalculator {
           numColumnsSum += row.size();
           rowSizeSum += row.getBytes().getLength();
         }
-        avgRowSizeInBytes = rowSizeSum/rowCount;
-        colsPerRow = numColumnsSum/rowCount;
+        if (rowCount > 0) {
+          avgRowSizeInBytes = rowSizeSum/rowCount;
+          colsPerRow = numColumnsSum/rowCount;
+        }
         scanner.close();
       }
 
