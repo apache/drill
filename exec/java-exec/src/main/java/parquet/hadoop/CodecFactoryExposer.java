@@ -31,12 +31,15 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.DirectDecompressionCodec;
+import org.apache.hadoop.io.compress.DirectDecompressor;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import parquet.bytes.BytesInput;
 import parquet.hadoop.metadata.CompressionCodecName;
 
 public class CodecFactoryExposer{
+
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodecFactoryExposer.class);
 
   private CodecFactory codecFactory;
   private final Map<String, org.apache.hadoop.io.compress.DirectDecompressionCodec> codecByName = new HashMap<String, org.apache.hadoop.io.compress.DirectDecompressionCodec>();
@@ -67,17 +70,35 @@ public class CodecFactoryExposer{
     ByteBuffer inpBuffer=compressedByteBuf.nioBuffer(0, compressedSize);
     ByteBuffer outBuffer=uncompressedByteBuf.nioBuffer(0, uncompressedSize);
     CompressionCodec c = getCodec(codecName);
-
+    //TODO: Create the decompressor only once at init time.
     Class<?> cx = c.getClass();
-    ClassLoader l = cx.getClassLoader();
-    Class<?>[] inf = cx.getInterfaces();
 
-    DirectDecompressionCodec d = (DirectDecompressionCodec)c;
+    DirectDecompressionCodec d=null;
+    DirectDecompressor decompr=null;
+
+    if (DirectDecompressionCodec.class.isAssignableFrom(cx)) {
+      d=(DirectDecompressionCodec)c;
+    }
 
     if(d!=null) {
-      d.createDirectDecompressor().decompress(inpBuffer, outBuffer);
+      decompr = d.createDirectDecompressor();
+    }
+
+    if(d!=null && decompr!=null){
+      decompr.decompress(inpBuffer, outBuffer);
     }else{
-      throw new DrillRuntimeException("Cannot create a decompression codec for codec "+codecName.name());
+      logger.warn("This Hadoop implementation does not support a " + codecName +
+        " direct decompression codec interface. "+
+        "Direct decompression is available only on *nix systems with Hadoop 2.3 or greater. "+
+        "Read operations will be a little slower. ");
+      BytesInput outBytesInp = this.decompress(
+        new HadoopByteBufBytesInput(inpBuffer, 0, inpBuffer.limit()),
+        uncompressedSize,
+        codecName);
+      // COPY the data back into the output buffer.
+      // (DrillBufs can only refer to direct memory, so we cannot pass back a BytesInput backed
+      // by a byte array).
+      outBuffer.put(outBytesInp.toByteArray());
     }
     return new HadoopByteBufBytesInput(outBuffer, 0, outBuffer.limit());
   }
