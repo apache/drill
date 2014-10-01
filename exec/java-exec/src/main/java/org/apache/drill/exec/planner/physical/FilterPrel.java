@@ -28,10 +28,10 @@ import org.apache.drill.exec.planner.common.DrillFilterRelBase;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexNode;
 
 
 public class FilterPrel extends DrillFilterRelBase implements Prel {
@@ -40,14 +40,14 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
   }
 
   @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new FilterPrel(getCluster(), traitSet, sole(inputs), getCondition());
+  public org.apache.calcite.rel.core.Filter copy(RelTraitSet traitSet, RelNode input, RexNode condition) {
+    return new FilterPrel(getCluster(), traitSet, input, condition);
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
 
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
@@ -57,7 +57,7 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
 
   @Override
   public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+    return PrelUtil.iter(getInput());
   }
 
   @Override

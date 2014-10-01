@@ -29,7 +29,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
-import org.eigenbase.rel.RelFieldCollation.NullDirection;
+import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 public class FunctionGenerationHelper {
   public static final String COMPARE_TO_NULLS_HIGH = "compare_to_nulls_high";

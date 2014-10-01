@@ -23,7 +23,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.optiq.SchemaPlus;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.jdbc.SimpleCalciteSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;

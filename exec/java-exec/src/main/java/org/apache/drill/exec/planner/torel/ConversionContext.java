@@ -20,8 +20,7 @@ package org.apache.drill.exec.planner.torel;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.prepare.Prepare;
+import org.apache.calcite.prepare.Prepare;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -43,16 +42,16 @@ import org.apache.drill.exec.planner.logical.DrillSortRel;
 import org.apache.drill.exec.planner.logical.DrillUnionRel;
 import org.apache.drill.exec.planner.logical.ScanFieldDeterminer;
 import org.apache.drill.exec.planner.logical.ScanFieldDeterminer.FieldList;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelOptTable.ToRelContext;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelOptTable.ToRelContext;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
 
 public class ConversionContext implements ToRelContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConversionContext.class);

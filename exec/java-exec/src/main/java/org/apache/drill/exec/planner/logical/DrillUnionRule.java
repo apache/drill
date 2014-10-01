@@ -22,29 +22,29 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.drill.exec.planner.common.DrillUnionRelBase;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UnionRel;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.trace.EigenbaseTrace;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.util.trace.CalciteTrace;
 
 /**
- * Rule that converts a {@link UnionRel} to a {@link DrillUnionRelBase}, implemented by a "union" operation.
+ * Rule that converts a {@link LogicalUnion} to a {@link DrillUnionRelBase}, implemented by a "union" operation.
  */
 public class DrillUnionRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillUnionRule();
-  protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+  protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private DrillUnionRule() {
-    super(RelOptHelper.any(UnionRel.class, Convention.NONE), "DrillUnionRule");
+    super(RelOptHelper.any(LogicalUnion.class, Convention.NONE), "DrillUnionRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final UnionRel union = (UnionRel) call.rel(0);
+    final LogicalUnion union = (LogicalUnion) call.rel(0);
     final RelTraitSet traits = union.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final List<RelNode> convertedInputs = new ArrayList<>();
     for (RelNode input : union.getInputs()) {

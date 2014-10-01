@@ -19,15 +19,15 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.List;
 
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillFilterRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.rex.RexNode;
 
 
 public class DrillFilterRel extends DrillFilterRelBase implements DrillRel {
@@ -36,19 +36,19 @@ public class DrillFilterRel extends DrillFilterRelBase implements DrillRel {
   }
 
   @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new DrillFilterRel(getCluster(), traitSet, sole(inputs), getCondition());
+  public org.apache.calcite.rel.core.Filter copy(RelTraitSet traitSet, RelNode input, RexNode condition) {
+    return new DrillFilterRel(getCluster(), traitSet, input, condition);
   }
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    final LogicalOperator input = implementor.visitChild(this, 0, getChild());
-    Filter f = new Filter(getFilterExpression(implementor.getContext()));
+    final LogicalOperator input = implementor.visitChild(this, 0, getInput());
+    org.apache.drill.common.logical.data.Filter f = new org.apache.drill.common.logical.data.Filter(getFilterExpression(implementor.getContext()));
     f.setInput(input);
     return f;
   }
 
-  public static DrillFilterRel convert(Filter filter, ConversionContext context) throws InvalidRelException{
+  public static DrillFilterRel convert(org.apache.drill.common.logical.data.Filter filter, ConversionContext context) throws InvalidRelException{
     RelNode input = context.toRel(filter.getInput());
     return new DrillFilterRel(context.getCluster(), context.getLogicalTraits(), input, context.toRex(filter.getExpr()));
   }

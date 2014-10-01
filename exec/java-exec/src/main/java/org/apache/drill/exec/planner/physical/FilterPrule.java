@@ -19,10 +19,10 @@ package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
 
 public class FilterPrule extends Prule {
   public static final RelOptRule INSTANCE = new FilterPrule();
@@ -34,7 +34,7 @@ public class FilterPrule extends Prule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillFilterRel  filter = (DrillFilterRel) call.rel(0);
-    final RelNode input = filter.getChild();
+    final RelNode input = filter.getInput();
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);

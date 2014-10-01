@@ -21,24 +21,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.linq4j.Ord;
+import org.apache.calcite.linq4j.Ord;
 
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionType;
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelCollationImpl;
-import org.eigenbase.rel.RelCollationTraitDef;
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.SqlKind;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelCollationTraitDef;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -53,7 +53,7 @@ public class ProjectPrule extends Prule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillProjectRel project = (DrillProjectRel) call.rel(0);
-    final RelNode input = project.getChild();
+    final RelNode input = project.getInput();
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);
@@ -120,7 +120,7 @@ public class ProjectPrule extends Prule {
     }
 
     if (newFields.isEmpty()) {
-      return RelCollationImpl.EMPTY;
+      return RelCollationImpl.of();
     } else {
       return RelCollationImpl.of(newFields);
     }

@@ -18,8 +18,8 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rex.RexNode;
 
 public class PartitionPruningUtil {
   public static void rewritePlan(RelOptRuleCall call, DrillFilterRel filterRel, DrillProjectRel projectRel, DrillScanRel scanRel, GroupScan newScan, DirPathBuilder builder) {

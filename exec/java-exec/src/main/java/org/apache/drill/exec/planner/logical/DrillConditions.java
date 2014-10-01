@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.rules.PushProjector;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.rules.PushProjector;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexNode;
 
 public final class DrillConditions {
 

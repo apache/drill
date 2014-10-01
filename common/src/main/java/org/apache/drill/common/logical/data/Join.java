@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-import org.eigenbase.rel.JoinRelType;
+import org.apache.calcite.rel.core.JoinRelType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

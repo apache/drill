@@ -22,19 +22,19 @@ import java.util.logging.Logger;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.trace.EigenbaseTrace;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.ImmutableList;
 
 public class HashAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new HashAggPrule();
-  protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+  protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private HashAggPrule() {
     super(RelOptHelper.some(DrillAggregateRel.class, RelOptHelper.any(RelNode.class)), "HashAggPrule");
@@ -112,8 +112,13 @@ public class HashAggPrule extends AggPruleBase {
       RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, input.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE));
       RelNode newInput = convert(input, traits);
 
-      HashAggPrel phase1Agg = new HashAggPrel(aggregate.getCluster(), traits, newInput,
+      HashAggPrel phase1Agg = new HashAggPrel(
+          aggregate.getCluster(),
+          traits,
+          newInput,
+          aggregate.indicator,
           aggregate.getGroupSet(),
+          aggregate.getGroupSets(),
           aggregate.getAggCallList(),
           OperatorPhase.PHASE_1of2);
 
@@ -121,10 +126,15 @@ public class HashAggPrule extends AggPruleBase {
           new HashToRandomExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
               phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)));
 
-      HashAggPrel phase2Agg =  new HashAggPrel(aggregate.getCluster(), exch.getTraitSet(), exch,
-                                               aggregate.getGroupSet(),
-                                               phase1Agg.getPhase2AggCalls(),
-                                               OperatorPhase.PHASE_2of2);
+      HashAggPrel phase2Agg =  new HashAggPrel(
+          aggregate.getCluster(),
+          exch.getTraitSet(),
+          exch,
+          aggregate.indicator,
+          aggregate.getGroupSet(),
+          aggregate.getGroupSets(),
+          phase1Agg.getPhase2AggCalls(),
+          OperatorPhase.PHASE_2of2);
       return phase2Agg;
     }
 
@@ -135,8 +145,15 @@ public class HashAggPrule extends AggPruleBase {
 
     final RelNode convertedInput = convert(input, PrelUtil.fixTraits(call, traits));
 
-    HashAggPrel newAgg = new HashAggPrel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
-                                         aggregate.getAggCallList(), OperatorPhase.PHASE_1of1);
+    HashAggPrel newAgg = new HashAggPrel(
+        aggregate.getCluster(),
+        traits,
+        convertedInput,
+        aggregate.indicator,
+        aggregate.getGroupSet(),
+        aggregate.getGroupSets(),
+        aggregate.getAggCallList(),
+        OperatorPhase.PHASE_1of1);
 
     call.transformTo(newAgg);
   }

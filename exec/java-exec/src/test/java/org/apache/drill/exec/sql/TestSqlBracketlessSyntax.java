@@ -17,19 +17,19 @@
  */
 package org.apache.drill.exec.sql;
 
-import net.hydromatic.optiq.config.Lex;
-import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
-import net.hydromatic.optiq.tools.FrameworkConfig;
-import net.hydromatic.optiq.tools.Frameworks;
-import net.hydromatic.optiq.tools.Planner;
+import org.apache.calcite.config.Lex;
+import org.apache.calcite.jdbc.SimpleCalciteSchema;
+import org.apache.calcite.tools.FrameworkConfig;
+import org.apache.calcite.tools.Frameworks;
+import org.apache.calcite.tools.Planner;
 
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillConvertletTable;
 import org.apache.drill.exec.planner.sql.parser.CompoundIdentifierConverter;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
 import org.apache.drill.test.DrillAssert;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.parser.SqlParser;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.parser.SqlParser;
 import org.junit.Test;
 
 public class TestSqlBracketlessSyntax {
@@ -38,9 +38,12 @@ public class TestSqlBracketlessSyntax {
   @Test
   public void checkComplexExpressionParsing() throws Exception{
     FrameworkConfig config = Frameworks.newConfigBuilder() //
-        .parserConfig(new SqlParser.ParserConfigImpl(Lex.MYSQL, PlannerSettings.DEFAULT_IDENTIFIER_MAX_LENGTH))
-        .parserFactory(DrillParserImpl.FACTORY) //
-        .defaultSchema(SimpleOptiqSchema.createRootSchema(false)) //
+        .parserConfig(SqlParser.configBuilder()
+            .setLex(Lex.MYSQL)
+            .setIdentifierMaxLength(PlannerSettings.DEFAULT_IDENTIFIER_MAX_LENGTH)
+            .setParserFactory(DrillParserImpl.FACTORY)
+            .build()) //
+        .defaultSchema(SimpleCalciteSchema.createRootSchema(false)) //
         .convertletTable(new DrillConvertletTable()) //
         .build();
     Planner planner = Frameworks.getPlanner(config);

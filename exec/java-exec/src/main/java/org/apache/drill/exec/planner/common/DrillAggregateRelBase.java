@@ -21,24 +21,25 @@ import java.util.BitSet;
 import java.util.List;
 
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
-import org.eigenbase.rel.AggregateCall;
-import org.eigenbase.rel.AggregateRelBase;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelTraitSet;
 
 
 /**
  * Base class for logical and physical Aggregations implemented in Drill
  */
-public abstract class DrillAggregateRelBase extends AggregateRelBase implements DrillRelNode {
+public abstract class DrillAggregateRelBase extends Aggregate implements DrillRelNode {
 
-  public DrillAggregateRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
-      List<AggregateCall> aggCalls) throws InvalidRelException {
-    super(cluster, traits, child, groupSet, aggCalls);
+  public DrillAggregateRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
+      ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) throws InvalidRelException {
+    super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
   }
 
   @Override

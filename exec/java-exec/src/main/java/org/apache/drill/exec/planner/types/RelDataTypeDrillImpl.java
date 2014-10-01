@@ -20,13 +20,13 @@ package org.apache.drill.exec.planner.types;
 import java.util.Collections;
 import java.util.List;
 
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFamily;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelDataTypeImpl;
-import org.eigenbase.reltype.RelDataTypePrecedenceList;
-import org.eigenbase.sql.type.SqlTypeExplicitPrecedenceList;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeFamily;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeImpl;
+import org.apache.calcite.rel.type.RelDataTypePrecedenceList;
+import org.apache.calcite.sql.type.SqlTypeExplicitPrecedenceList;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 /* We use an instance of this class as the row type for
  * Drill table. Since we don't know the schema before hand
@@ -57,7 +57,7 @@ public class RelDataTypeDrillImpl extends RelDataTypeImpl {
     }
 
     @Override
-    public RelDataTypeField getField(String fieldName, boolean caseSensitive) {
+    public RelDataTypeField getField(String fieldName, boolean caseSensitive, boolean elideRecord) {
       return holder.getField(typeFactory, fieldName);
     }
 

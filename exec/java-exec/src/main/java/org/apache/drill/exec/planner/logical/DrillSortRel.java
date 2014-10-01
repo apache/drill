@@ -25,15 +25,15 @@ import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelCollationImpl;
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SortRel;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -41,7 +41,7 @@ import com.google.common.collect.Maps;
 /**
  * Sort implemented in Drill.
  */
-public class DrillSortRel extends SortRel implements DrillRel {
+public class DrillSortRel extends Sort implements DrillRel {
 
   /** Creates a DrillSortRel. */
   public DrillSortRel(RelOptCluster cluster, RelTraitSet traits, RelNode input, RelCollation collation) {
@@ -61,9 +61,9 @@ public class DrillSortRel extends SortRel implements DrillRel {
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
     final Order.Builder builder = Order.builder();
-    builder.setInput(implementor.visitChild(this, 0, getChild()));
+    builder.setInput(implementor.visitChild(this, 0, getInput()));
 
-    final List<String> childFields = getChild().getRowType().getFieldNames();
+    final List<String> childFields = getInput().getRowType().getFieldNames();
     for(RelFieldCollation fieldCollation : this.collation.getFieldCollations()){
       builder.addOrdering(fieldCollation.getDirection(),
           new FieldReference(childFields.get(fieldCollation.getFieldIndex())),

@@ -22,6 +22,10 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.options.DrillConfigIterator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.store.RecordDataType;
+import org.apache.drill.exec.store.pojo.PojoDataType;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 
 import java.util.Iterator;
 

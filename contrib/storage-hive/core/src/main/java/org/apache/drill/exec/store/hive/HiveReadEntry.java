@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.optiq.Schema.TableType;
+import org.apache.calcite.schema.Schema.TableType;
 
 import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;

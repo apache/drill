@@ -19,15 +19,15 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
-import net.hydromatic.optiq.tools.RelConversionException;
-import net.hydromatic.optiq.tools.ValidationException;
+import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.tools.ValidationException;
 
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlUseSchema;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.eigenbase.sql.SqlNode;
+import org.apache.calcite.sql.SqlNode;
 
 public class UseSchemaHandler extends AbstractSqlHandler {
   QueryContext context;

@@ -17,40 +17,45 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexProgram;
-import org.eigenbase.rex.RexProgramBuilder;
-import org.eigenbase.rex.RexUtil;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.RelFactories;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexProgram;
+import org.apache.calcite.rex.RexProgramBuilder;
+import org.apache.calcite.rex.RexUtil;
 
 /**
- * MergeFilterRule implements the rule for combining two {@link FilterRel}s
+ * MergeFilterRule implements the rule for combining two {@link Filter}s
  */
 public class DrillMergeFilterRule extends RelOptRule {
-  public static final DrillMergeFilterRule INSTANCE = new DrillMergeFilterRule();
+  public static final DrillMergeFilterRule INSTANCE =
+      new DrillMergeFilterRule(RelFactories.DEFAULT_FILTER_FACTORY);
+
+  private final RelFactories.FilterFactory filterFactory;
+
 
   //~ Constructors -----------------------------------------------------------
 
   /**
    * Creates a MergeFilterRule.
    */
-  private DrillMergeFilterRule() {
+  private DrillMergeFilterRule(RelFactories.FilterFactory filterFactory) {
     super(
-        operand(
-            FilterRel.class,
-            operand(FilterRel.class, any())));
+        operand(Filter.class,
+            operand(Filter.class, any())));
+    this.filterFactory = filterFactory;
   }
 
   //~ Methods ----------------------------------------------------------------
 
   // implement RelOptRule
   public void onMatch(RelOptRuleCall call) {
-    FilterRel topFilter = call.rel(0);
-    FilterRel bottomFilter = call.rel(1);
+    Filter topFilter = call.rel(0);
+    Filter bottomFilter = call.rel(1);
 
     // use RexPrograms to merge the two FilterRels into a single program
     // so we can convert the two FilterRel conditions to directly
@@ -69,27 +74,26 @@ public class DrillMergeFilterRule extends RelOptRule {
         mergedProgram.expandLocalRef(
             mergedProgram.getCondition());
 
-    if(!RexUtil.isFlat(newCondition)){
-      RexCall newCall = (RexCall) newCondition;
-      newCondition = rexBuilder.makeFlatCall( newCall.getOperator(), newCall.getOperands());
-    }
+//    if(!RexUtil.isFlat(newCondition)){
+//      RexCall newCall = (RexCall) newCondition;
+//      newCondition = rexBuilder.makeFlatCall( newCall.getOperator(), newCall.getOperands());
+//    }
 
-    FilterRel newFilterRel =
-        new FilterRel(
-            topFilter.getCluster(),
-            bottomFilter.getChild(),
-            newCondition);
+    Filter newFilterRel =
+        (Filter) filterFactory.createFilter(
+            bottomFilter.getInput(),
+            RexUtil.flatten(rexBuilder, newCondition));
 
     call.transformTo(newFilterRel);
   }
 
   /**
-   * Creates a RexProgram corresponding to a FilterRel
+   * Creates a RexProgram corresponding to a LogicalFilter
    *
-   * @param filterRel the FilterRel
+   * @param filterRel the LogicalFilter
    * @return created RexProgram
    */
-  private RexProgram createProgram(FilterRel filterRel) {
+  private RexProgram createProgram(Filter filterRel) {
     RexProgramBuilder programBuilder =
         new RexProgramBuilder(
             filterRel.getRowType(),

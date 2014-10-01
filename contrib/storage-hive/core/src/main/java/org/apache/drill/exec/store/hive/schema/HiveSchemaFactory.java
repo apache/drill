@@ -25,8 +25,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import net.hydromatic.optiq.Schema;
-import net.hydromatic.optiq.SchemaPlus;
+import org.apache.calcite.schema.Schema;
+import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -248,7 +248,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     }
 
     @Override
-    public net.hydromatic.optiq.Table getTable(String name) {
+    public org.apache.calcite.schema.Table getTable(String name) {
       if (defaultSchema == null) {
         return super.getTable(name);
       }

@@ -23,23 +23,23 @@ import java.util.List;
 
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.JoinRelBase;
-import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.Lists;
 
 /**
  * Base class for logical and physical Joins implemented in Drill.
  */
-public abstract class DrillJoinRelBase extends JoinRelBase implements DrillRelNode {
+public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
   protected List<Integer> leftKeys = Lists.newArrayList();
   protected List<Integer> rightKeys = Lists.newArrayList() ;
   private final double joinRowFactor;

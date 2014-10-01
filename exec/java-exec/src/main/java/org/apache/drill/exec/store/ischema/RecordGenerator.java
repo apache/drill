@@ -21,18 +21,18 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
-import net.hydromatic.optiq.Schema.TableType;
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.Table;
-import net.hydromatic.optiq.jdbc.JavaTypeFactoryImpl;
+import org.apache.calcite.schema.Schema.TableType;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
+import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.Result;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

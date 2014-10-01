@@ -24,13 +24,13 @@ import org.apache.drill.common.logical.data.Limit;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 public class DrillLimitRel extends DrillLimitRelBase implements DrillRel {
 
@@ -45,7 +45,7 @@ public class DrillLimitRel extends DrillLimitRelBase implements DrillRel {
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    LogicalOperator inputOp = implementor.visitChild(this, 0, getChild());
+    LogicalOperator inputOp = implementor.visitChild(this, 0, getInput());
 
     // First offset to include into results (inclusive). Null implies it is starting from offset 0
     int first = offset != null ? Math.max(0, RexLiteral.intValue(offset)) : 0;

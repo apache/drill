@@ -31,8 +31,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.RuleSet;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.tools.RuleSet;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -56,7 +56,7 @@ import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.SystemTablePlugin;
 import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
-import org.eigenbase.relopt.RelOptRule;
+import org.apache.calcite.plan.RelOptRule;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;

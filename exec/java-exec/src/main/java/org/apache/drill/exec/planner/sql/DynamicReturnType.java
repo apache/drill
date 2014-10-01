@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import org.eigenbase.sql.type.ExplicitReturnTypeInference;
+import org.apache.calcite.sql.type.ExplicitReturnTypeInference;
 
 class DynamicReturnType extends ExplicitReturnTypeInference {
 

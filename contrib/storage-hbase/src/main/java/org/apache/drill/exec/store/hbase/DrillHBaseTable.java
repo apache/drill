@@ -25,9 +25,9 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 public class DrillHBaseTable extends DrillTable implements DrillHBaseConstants {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHBaseTable.class);

@@ -24,23 +24,23 @@ import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
-import org.eigenbase.rel.AggregateCall;
-import org.eigenbase.rel.AggregateRel;
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelShuttleImpl;
-import org.eigenbase.rel.UnionRel;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.SqlFunction;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.fun.SqlSingleValueAggFunction;
-import org.eigenbase.util.NlsString;
+import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttleImpl;
+import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlFunction;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlSingleValueAggFunction;
+import org.apache.calcite.util.NlsString;
 
 /**
  * This class rewrites all the project expression that contain convert_to/ convert_from
@@ -67,7 +67,7 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
   }
 
   @Override
-  public RelNode visit(AggregateRel aggregate) {
+  public RelNode visit(LogicalAggregate aggregate) {
     for(AggregateCall aggregateCall : aggregate.getAggCallList()) {
       if(aggregateCall.getAggregation() instanceof SqlSingleValueAggFunction) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
@@ -77,11 +77,11 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
       }
     }
 
-    return visitChild(aggregate, 0, aggregate.getChild());
+    return visitChild(aggregate, 0, aggregate.getInput());
   }
 
   @Override
-  public RelNode visit(ProjectRel project) {
+  public RelNode visit(LogicalProject project) {
     List<RexNode> exprList = new ArrayList<>();
     boolean rewrite = false;
 
@@ -124,15 +124,15 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
     }
 
     if (rewrite == true) {
-      ProjectRel newProject = project.copy(project.getTraitSet(), project.getInput(0), exprList, project.getRowType());
-      return visitChild(newProject, 0, project.getChild());
+      LogicalProject newProject = project.copy(project.getTraitSet(), project.getInput(0), exprList, project.getRowType());
+      return visitChild(newProject, 0, project.getInput());
     }
 
-    return visitChild(project, 0, project.getChild());
+    return visitChild(project, 0, project.getInput());
   }
 
   @Override
-  public RelNode visit(UnionRel union) {
+  public RelNode visit(LogicalUnion union) {
     for(RelNode child : union.getInputs()) {
       for(RelDataTypeField dataField : child.getRowType().getFieldList()) {
         if(dataField.getName().contains(StarColumnHelper.STAR_COLUMN)) {

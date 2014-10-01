@@ -22,7 +22,7 @@
   # List of import statements.
   imports: [
     "org.apache.drill.exec.planner.sql.parser.*",
-    "org.eigenbase.util.*",
+    "org.apache.calcite.util.*",
     "java.util.*"
   ]
 

@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.hive.schema;
 import java.util.List;
 import java.util.Set;
 
-import net.hydromatic.optiq.Table;
+import org.apache.calcite.schema.Table;
 
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;

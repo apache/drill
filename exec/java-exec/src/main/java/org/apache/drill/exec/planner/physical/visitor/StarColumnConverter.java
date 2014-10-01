@@ -24,23 +24,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.base.Preconditions;
+import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.drill.exec.planner.StarColumnHelper;
-import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectAllowDupPrel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.util.Pair;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.util.Pair;
 
 import com.google.common.collect.Lists;
 
@@ -81,7 +79,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     if (prefixedForStar) {
       if (!prefixedForWriter) {
         // Prefix is added for SELECT only, not for CTAS writer.
-        return insertProjUnderScreenOrWriter(prel, prel.getChild().getRowType(), child);
+        return insertProjUnderScreenOrWriter(prel, prel.getInput().getRowType(), child);
       } else {
         // Prefix is added under CTAS Writer. We need create a new Screen with the converted child.
         return (Prel) prel.copy(prel.getTraitSet(), Collections.<RelNode>singletonList(child));
@@ -97,7 +95,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     Prel child = ((Prel) prel.getInput(0)).accept(this, null);
     if (prefixedForStar) {
       prefixedForWriter = true;
-      return insertProjUnderScreenOrWriter(prel, prel.getChild().getRowType(), child);
+      return insertProjUnderScreenOrWriter(prel, prel.getInput().getRowType(), child);
     } else {
       return prel;
     }
@@ -135,7 +133,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
     // Require prefix rename : there exists other expression, in addition to a star column.
     if (!prefixedForStar  // not set yet.
-        && StarColumnHelper.containsStarColumnInProject(prel.getChild().getRowType(), proj.getProjects())
+        && StarColumnHelper.containsStarColumnInProject(prel.getInput().getRowType(), proj.getProjects())
         && prel.getRowType().getFieldNames().size() > 1) {
       prefixedForStar = true;
     }
@@ -164,7 +162,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
     ProjectPrel newProj = (ProjectPrel) proj.copy(proj.getTraitSet(), child, proj.getProjects(), rowType);
 
-    if (RemoveTrivialProjectRule.isTrivial(newProj)) {
+    if (ProjectRemoveRule.isTrivial(newProj)) {
       return (Prel) child;
     } else {
       return newProj;

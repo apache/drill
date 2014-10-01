@@ -19,9 +19,9 @@
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rex.RexLiteral;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rex.RexLiteral;
 
 public class PushLimitToTopN  extends Prule{
 
@@ -41,7 +41,7 @@ public class PushLimitToTopN  extends Prule{
     int offset = limit.getOffset() != null ? Math.max(0, RexLiteral.intValue(limit.getOffset())) : 0;
     int fetch = limit.getFetch() != null?  Math.max(0, RexLiteral.intValue(limit.getFetch())) : 0;
 
-    final TopNPrel topN = new TopNPrel(limit.getCluster(), sort.getTraitSet(), sort.getChild(), offset + fetch, sort.getCollation());
+    final TopNPrel topN = new TopNPrel(limit.getCluster(), sort.getTraitSet(), sort.getInput(), offset + fetch, sort.getCollation());
     final LimitPrel newLimit = new LimitPrel(limit.getCluster(), limit.getTraitSet(),
         new SingleMergeExchangePrel(smex.getCluster(), smex.getTraitSet(), topN, sort.getCollation()),
         limit.getOffset(), limit.getFetch());

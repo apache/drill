@@ -19,24 +19,24 @@
 package org.apache.drill.exec.planner.logical;
 
 import com.google.common.collect.Lists;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.WindowRel;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexLiteral;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Window;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexLiteral;
 
 public class DrillWindowRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillWindowRule();
 
   private DrillWindowRule() {
-    super(RelOptHelper.some(WindowRel.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillWindowRule");
+    super(RelOptHelper.some(Window.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillWindowRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final WindowRel window = call.rel(0);
+    final Window window = call.rel(0);
     final RelNode input = call.rel(1);
     final RelTraitSet traits = window.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, traits);
@@ -47,6 +47,6 @@ public class DrillWindowRule extends RelOptRule {
             convertedInput,
             Lists.<RexLiteral>newArrayList(),
             window.getRowType(),
-            window.windows));
+            window.groups));
   }
 }

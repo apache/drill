@@ -15,32 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.sql;
 
-import org.apache.calcite.sql.SqlOperandCountRange;
+package org.apache.drill.exec.planner.types;
 
-class FixedRange implements SqlOperandCountRange{
+import org.apache.calcite.rel.type.RelDataTypeSystem;
+import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
+import org.apache.calcite.sql.type.SqlTypeName;
 
-  private final int size;
+public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
 
-  public FixedRange(int size) {
-    super();
-    this.size = size;
+  public static final RelDataTypeSystem DRILL_REL_DATATYPE_SYSTEM = new DrillRelDataTypeSystem();
+
+  @Override
+  public int getMaxNumericScale() {
+    return 38;
   }
 
   @Override
-  public boolean isValidCount(int count) {
-    return count == size;
-  }
-
-  @Override
-  public int getMin() {
-    return size;
-  }
-
-  @Override
-  public int getMax() {
-    return size;
+  public int getMaxNumericPrecision() {
+    return 38;
   }
 
 }

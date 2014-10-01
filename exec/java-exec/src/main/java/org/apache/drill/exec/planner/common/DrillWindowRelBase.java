@@ -18,16 +18,16 @@
 
 package org.apache.drill.exec.planner.common;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.WindowRelBase;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexLiteral;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Window;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexLiteral;
 
 import java.util.List;
 
-public class DrillWindowRelBase extends WindowRelBase implements DrillRelNode {
+public class DrillWindowRelBase extends Window implements DrillRelNode {
 
   public DrillWindowRelBase(
       RelOptCluster cluster,
@@ -35,7 +35,7 @@ public class DrillWindowRelBase extends WindowRelBase implements DrillRelNode {
       RelNode child,
       List<RexLiteral> constants,
       RelDataType rowType,
-      List<Window> windows) {
+      List<Group> windows) {
     super(cluster, traits, child, constants, rowType, windows);
   }
 }

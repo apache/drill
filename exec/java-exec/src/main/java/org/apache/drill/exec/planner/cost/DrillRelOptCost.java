@@ -18,7 +18,8 @@
 
 package org.apache.drill.exec.planner.cost;
 
-import org.eigenbase.relopt.RelOptCost;
+import org.apache.calcite.plan.RelOptCost;
+
 
 public interface DrillRelOptCost extends RelOptCost {
 

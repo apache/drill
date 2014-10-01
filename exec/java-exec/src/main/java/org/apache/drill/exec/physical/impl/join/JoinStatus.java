@@ -23,7 +23,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.eigenbase.rel.JoinRelType;
+import org.apache.calcite.rel.core.JoinRelType;
 
 /**
  * The status of the current join.  Maintained outside the individually compiled join templates so that we can carry status across multiple schemas.

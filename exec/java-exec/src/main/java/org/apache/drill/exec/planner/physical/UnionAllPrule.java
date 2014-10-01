@@ -22,18 +22,18 @@ import java.util.logging.Logger;
 
 import org.apache.drill.exec.planner.logical.DrillUnionRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.trace.EigenbaseTrace;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.Lists;
 
 public class UnionAllPrule extends Prule {
   public static final RelOptRule INSTANCE = new UnionAllPrule();
-  protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+  protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private UnionAllPrule() {
     super(

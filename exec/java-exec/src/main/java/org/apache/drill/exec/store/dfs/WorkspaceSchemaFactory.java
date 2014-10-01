@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import net.hydromatic.optiq.Table;
+import org.apache.calcite.schema.Table;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;

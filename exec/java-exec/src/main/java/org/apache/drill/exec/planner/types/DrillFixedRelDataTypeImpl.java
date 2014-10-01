@@ -20,13 +20,13 @@ package org.apache.drill.exec.planner.types;
 import java.util.Collections;
 import java.util.List;
 
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelDataTypeFieldImpl;
-import org.eigenbase.reltype.RelDataTypeImpl;
-import org.eigenbase.reltype.RelDataTypePrecedenceList;
-import org.eigenbase.sql.type.SqlTypeExplicitPrecedenceList;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelDataTypeImpl;
+import org.apache.calcite.rel.type.RelDataTypePrecedenceList;
+import org.apache.calcite.sql.type.SqlTypeExplicitPrecedenceList;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.Lists;
 
@@ -54,17 +54,7 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
   }
 
   @Override
-  public List<RelDataTypeField> getFieldList() {
-    return fields;
-  }
-
-  @Override
-  public int getFieldCount() {
-    return fields.size();
-  }
-
-  @Override
-  public RelDataTypeField getField(String fieldName, boolean caseSensitive) {
+  public RelDataTypeField getField(String fieldName, boolean caseSensitive, boolean elideRecord) {
     // return the field with given name if available.
     for (RelDataTypeField f : fields) {
       if (fieldName.equalsIgnoreCase(f.getName())) {
@@ -72,6 +62,16 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
       }
     }
     return null;
+  }
+
+  @Override
+  public List<RelDataTypeField> getFieldList() {
+    return fields;
+  }
+
+  @Override
+  public int getFieldCount() {
+    return fields.size();
   }
 
   @Override

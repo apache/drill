@@ -22,8 +22,8 @@ import java.net.URL;
 
 import mockit.Mocked;
 import mockit.NonStrictExpectations;
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.jdbc.SimpleCalciteSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;

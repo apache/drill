@@ -18,15 +18,15 @@
 package org.apache.drill.exec.planner.logical;
 
 
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.rules.ProjectMergeRule;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.eigenbase.rel.ProjectRelBase;
-import org.eigenbase.rel.RelFactories.ProjectFactory;
-import org.eigenbase.rel.rules.MergeProjectRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.core.RelFactories.ProjectFactory;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexNode;
 
-public class DrillMergeProjectRule extends MergeProjectRule {
+public class DrillMergeProjectRule extends ProjectMergeRule {
 
   private FunctionImplementationRegistry functionRegistry;
   private static DrillMergeProjectRule INSTANCE = null;
@@ -45,8 +45,8 @@ public class DrillMergeProjectRule extends MergeProjectRule {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    ProjectRelBase topProject = call.rel(0);
-    ProjectRelBase bottomProject = call.rel(1);
+    Project topProject = call.rel(0);
+    Project bottomProject = call.rel(1);
 
     // We have a complex output type do not fire the merge project rule
     if (checkComplexOutput(topProject) || checkComplexOutput(bottomProject)) {
@@ -56,7 +56,7 @@ public class DrillMergeProjectRule extends MergeProjectRule {
     return true;
   }
 
-  private boolean checkComplexOutput(ProjectRelBase project) {
+  private boolean checkComplexOutput(Project project) {
     for (RexNode expr: project.getChildExps()) {
       if (expr instanceof RexCall) {
         if (functionRegistry.isFunctionComplexOutput(((RexCall) expr).getOperator().getName())) {

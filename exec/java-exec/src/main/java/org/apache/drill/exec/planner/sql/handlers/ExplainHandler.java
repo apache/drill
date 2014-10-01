@@ -19,8 +19,8 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
-import net.hydromatic.optiq.tools.RelConversionException;
-import net.hydromatic.optiq.tools.ValidationException;
+import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.tools.ValidationException;
 
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
@@ -34,12 +34,12 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.sql.SqlExplain;
-import org.eigenbase.sql.SqlExplainLevel;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.SqlNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.sql.SqlExplain;
+import org.apache.calcite.sql.SqlExplainLevel;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNode;
 
 public class ExplainHandler extends DefaultSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplainHandler.class);

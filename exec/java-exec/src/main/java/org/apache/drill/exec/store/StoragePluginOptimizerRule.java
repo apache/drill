@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleOperand;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleOperand;
 
 public abstract class StoragePluginOptimizerRule extends RelOptRule {
 

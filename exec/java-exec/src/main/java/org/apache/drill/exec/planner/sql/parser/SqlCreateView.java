@@ -22,16 +22,16 @@ import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.ViewHandler;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlNodeList;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlSpecialOperator;
-import org.eigenbase.sql.SqlWriter;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlSpecialOperator;
+import org.apache.calcite.sql.SqlWriter;
+import org.apache.calcite.sql.parser.SqlParserPos;
 
 import java.util.List;
 

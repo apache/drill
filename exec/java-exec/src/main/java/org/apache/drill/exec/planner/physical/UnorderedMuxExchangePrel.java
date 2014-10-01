@@ -24,9 +24,9 @@ import java.util.List;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.UnorderedMuxExchange;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 
 public class UnorderedMuxExchangePrel extends ExchangePrel {
 
@@ -41,7 +41,7 @@ public class UnorderedMuxExchangePrel extends ExchangePrel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 

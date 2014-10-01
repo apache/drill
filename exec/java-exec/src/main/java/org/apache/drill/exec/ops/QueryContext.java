@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.Collection;
 
 import io.netty.buffer.DrillBuf;
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.jdbc.SimpleCalciteSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;

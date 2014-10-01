@@ -56,8 +56,9 @@ import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.eigenbase.rel.RelFieldCollation.Direction;
-import org.eigenbase.rel.RelFieldCollation.NullDirection;
+import org.apache.drill.exec.work.foreman.ForemanException;
+import org.apache.calcite.rel.RelFieldCollation.Direction;
+import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import java.io.IOException;
 import java.util.ArrayList;

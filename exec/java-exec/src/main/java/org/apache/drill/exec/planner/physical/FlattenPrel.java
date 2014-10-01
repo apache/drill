@@ -27,11 +27,11 @@ import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelWriter;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexNode;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -53,12 +53,12 @@ public class FlattenPrel extends SinglePrel implements Prel {
 
   @Override
   public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+    return PrelUtil.iter(getInput());
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
     FlattenPOP f = new FlattenPOP(childPOP, (SchemaPath) getFlattenExpression(new DrillParseContext()));
@@ -75,6 +75,6 @@ public class FlattenPrel extends SinglePrel implements Prel {
   }
 
   protected LogicalExpression getFlattenExpression(DrillParseContext context){
-    return DrillOptiq.toDrill(context, getChild(), toFlatten);
+    return DrillOptiq.toDrill(context, getInput(), toFlatten);
   }
 }

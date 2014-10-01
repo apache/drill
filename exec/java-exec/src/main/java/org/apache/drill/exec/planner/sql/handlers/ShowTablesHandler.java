@@ -22,21 +22,21 @@ import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
 
 import java.util.List;
 
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.RelConversionException;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.tools.RelConversionException;
 
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlNodeList;
-import org.eigenbase.sql.SqlSelect;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

@@ -21,19 +21,16 @@ package org.apache.drill.exec.planner.logical;
 import java.io.IOException;
 import java.util.List;
 
-import net.hydromatic.optiq.rules.java.JavaRules.EnumerableTableAccessRel;
-
+import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.PrelUtil.ProjectPushInfo;
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.rel.ProjectRelBase;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.rules.PushProjector;
-import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.Lists;
 
@@ -41,14 +38,14 @@ public class DrillPushProjIntoScan extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillPushProjIntoScan();
 
   private DrillPushProjIntoScan() {
-    super(RelOptHelper.some(ProjectRel.class, RelOptHelper.any(EnumerableTableAccessRel.class)), "DrillPushProjIntoScan");
+    super(RelOptHelper.some(LogicalProject.class, RelOptHelper.any(EnumerableTableScan.class)), "DrillPushProjIntoScan");
   }
 
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final ProjectRel proj = (ProjectRel) call.rel(0);
-    final EnumerableTableAccessRel scan = (EnumerableTableAccessRel) call.rel(1);
+    final Project proj = (Project) call.rel(0);
+    final EnumerableTableScan scan = (EnumerableTableScan) call.rel(1);
 
     try {
       ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
@@ -63,7 +60,7 @@ public class DrillPushProjIntoScan extends RelOptRule {
           new DrillScanRel(scan.getCluster(),
               scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
               scan.getTable(),
-              columnInfo.createNewRowType(proj.getChild().getCluster().getTypeFactory()),
+              columnInfo.createNewRowType(proj.getInput().getCluster().getTypeFactory()),
               columnInfo.columns);
 
 
@@ -79,7 +76,7 @@ public class DrillPushProjIntoScan extends RelOptRule {
               newProjects,
               proj.getRowType());
 
-      if (RemoveTrivialProjectRule.isTrivial(newProj)) {
+      if (ProjectRemoveRule.isTrivial(newProj)) {
         call.transformTo(newScan);
       } else {
         call.transformTo(newProj);

@@ -17,35 +17,35 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SortRel;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
 
 /**
- * Rule that converts an {@link SortRel} to a {@link DrillSortRel}, implemented by a Drill "order" operation.
+ * Rule that converts an {@link Sort} to a {@link DrillSortRel}, implemented by a Drill "order" operation.
  */
 public class DrillSortRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillSortRule();
 
   private DrillSortRule() {
-    super(RelOptHelper.any(SortRel.class, Convention.NONE), "DrillSortRule");
+    super(RelOptHelper.any(Sort.class, Convention.NONE), "DrillSortRule");
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final SortRel sort = call.rel(0);
+    final Sort sort = call.rel(0);
     return sort.offset == null && sort.fetch == null;
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
 
-    final SortRel sort = call.rel(0);
+    final Sort sort = call.rel(0);
 
-    final RelNode input = sort.getChild();
+    final RelNode input = sort.getInput();
     final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));

@@ -19,17 +19,17 @@ package org.apache.drill.exec.planner.sql;
 
 import java.util.List;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.SqlAggFunction;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlFunctionCategory;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlFunctionCategory;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql.validate.SqlValidatorScope;
 
 import com.google.common.collect.ImmutableList;
 
@@ -51,13 +51,13 @@ public class DrillSqlAggOperator extends SqlAggFunction {
 //    return new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory);
   }
 
-  @Override
-  public List<RelDataType> getParameterTypes(RelDataTypeFactory typeFactory) {
-    return ImmutableList.of(typeFactory.createSqlType(SqlTypeName.ANY));
-  }
-
-  @Override
-  public RelDataType getReturnType(RelDataTypeFactory typeFactory) {
-    return getAny(typeFactory);
-  }
+//  @Override
+//  public List<RelDataType> getParameterTypes(RelDataTypeFactory typeFactory) {
+//    return ImmutableList.of(typeFactory.createSqlType(SqlTypeName.ANY));
+//  }
+//
+//  @Override
+//  public RelDataType getReturnType(RelDataTypeFactory typeFactory) {
+//    return getAny(typeFactory);
+//  }
 }

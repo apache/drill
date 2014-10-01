@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.planner.common;
 
-import org.eigenbase.rel.RelNode;
+import org.apache.calcite.rel.RelNode;
 
 public interface DrillRelNode extends RelNode {
 

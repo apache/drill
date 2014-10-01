@@ -21,10 +21,10 @@ import java.util.Iterator;
 
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 
 public abstract class SinglePrel extends SingleRel implements Prel{
 
@@ -39,7 +39,7 @@ public abstract class SinglePrel extends SingleRel implements Prel{
 
   @Override
   public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+    return PrelUtil.iter(getInput());
   }
 
   @Override

@@ -32,7 +32,7 @@ import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
-import org.eigenbase.sql.SqlOperator;
+import org.apache.calcite.sql.SqlOperator;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Sets;

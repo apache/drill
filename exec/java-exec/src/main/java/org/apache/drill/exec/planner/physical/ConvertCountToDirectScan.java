@@ -29,18 +29,18 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.store.direct.DirectGroupScan;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
-import org.eigenbase.rel.AggregateCall;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelDataTypeFieldImpl;
-import org.eigenbase.reltype.RelRecordType;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.Lists;
 
@@ -111,7 +111,7 @@ public class ConvertCountToDirectScan extends Prule {
       //  count(Not-null-input) ==> rowCount
       if (aggCall.getArgList().isEmpty() ||
           (aggCall.getArgList().size() == 1 &&
-           ! agg.getChild().getRowType().getFieldList().get(aggCall.getArgList().get(0).intValue()).getType().isNullable())) {
+           ! agg.getInput().getRowType().getFieldList().get(aggCall.getArgList().get(0).intValue()).getType().isNullable())) {
         cnt = (long) oldGrpScan.getScanStats().getRecordCount();
       } else if (aggCall.getArgList().size() == 1) {
       // count(columnName) ==> Agg ( Scan )) ==> columnValueCount

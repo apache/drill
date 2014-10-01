@@ -19,7 +19,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import com.google.common.collect.Lists;
-import net.hydromatic.optiq.util.BitSets;
+
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
@@ -32,13 +32,14 @@ import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.planner.common.DrillWindowRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
-import org.eigenbase.rel.AggregateCall;
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexLiteral;
+import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.util.BitSets;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -53,32 +54,32 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
                     RelNode child,
                     List<RexLiteral> constants,
                     RelDataType rowType,
-                    Window window) {
+                    Group window) {
     super(cluster, traits, child, constants, rowType, Collections.singletonList(window));
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new WindowPrel(getCluster(), traitSet, sole(inputs), constants, getRowType(), windows.get(0));
+    return new WindowPrel(getCluster(), traitSet, sole(inputs), constants, getRowType(), groups.get(0));
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    final List<String> childFields = getChild().getRowType().getFieldNames();
+    final List<String> childFields = getInput().getRowType().getFieldNames();
 
     // We don't support distinct partitions
-    checkState(windows.size() == 1, "Only one window is expected in WindowPrel");
+    checkState(groups.size() == 1, "Only one window is expected in WindowPrel");
 
-    Window window = windows.get(0);
+    Group window = groups.get(0);
     List<NamedExpression> withins = Lists.newArrayList();
     List<NamedExpression> aggs = Lists.newArrayList();
     List<Order.Ordering> orderings = Lists.newArrayList();
 
-    for (int group : BitSets.toIter(window.groupSet)) {
+    for (int group : BitSets.toIter(window.keys)) {
       FieldReference fr = new FieldReference(childFields.get(group), ExpressionPosition.UNKNOWN);
       withins.add(new NamedExpression(fr, fr));
     }
@@ -141,6 +142,6 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
 
   @Override
   public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+    return PrelUtil.iter(getInput());
   }
 }

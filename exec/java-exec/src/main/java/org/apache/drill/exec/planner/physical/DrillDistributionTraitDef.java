@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitDef;
-import org.eigenbase.relopt.volcano.RelSubset;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTraitDef;
+import org.apache.calcite.plan.volcano.RelSubset;
 
 public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrait>{
   public static final DrillDistributionTraitDef INSTANCE = new DrillDistributionTraitDef();
@@ -72,22 +72,30 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
         return null;
     }
 
+    RelNode newRel = null;
     switch(toDist.getType()){
       // UnionExchange, HashToRandomExchange, OrderedPartitionExchange and BroadcastExchange destroy the ordering property,
       // therefore RelCollation is set to default, which is EMPTY.
       case SINGLETON:
-        return new UnionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+        newRel = new UnionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+        break;
       case HASH_DISTRIBUTED:
-        return new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel,
+        newRel = new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel,
                                             toDist.getFields());
+        break;
       case RANGE_DISTRIBUTED:
-        return new OrderedPartitionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+        newRel = new OrderedPartitionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+        break;
       case BROADCAST_DISTRIBUTED:
-        return new BroadcastExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+        newRel = new BroadcastExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+        break;
       default:
-        return null;
+        newRel = null;
     }
 
+    // planner.register(newRel, rel);
+
+    return newRel;
   }
 
 }

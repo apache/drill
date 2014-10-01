@@ -23,11 +23,11 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillSortRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -48,7 +48,7 @@ public class SortPrule extends Prule{
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillSortRel sort = (DrillSortRel) call.rel(0);
-    final RelNode input = sort.getChild();
+    final RelNode input = sort.getInput();
 
     // Keep the collation in logical sort. Convert input into a RelNode with 1) this collation, 2) Physical, 3) hash distributed on
 

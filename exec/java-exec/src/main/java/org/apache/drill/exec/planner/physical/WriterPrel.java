@@ -26,9 +26,9 @@ import org.apache.drill.exec.planner.common.DrillWriterRelBase;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 
 public class WriterPrel extends DrillWriterRelBase implements Prel {
 
@@ -46,7 +46,7 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
     PhysicalOperator g = getCreateTableEntry().getWriter(child.getPhysicalOperator(creator));
     return creator.addMetadata(this, g);
   }
@@ -54,7 +54,7 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
 
   @Override
   public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+    return PrelUtil.iter(getInput());
   }
 
   @Override

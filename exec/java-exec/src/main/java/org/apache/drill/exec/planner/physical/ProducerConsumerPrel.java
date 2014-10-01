@@ -26,9 +26,9 @@ import org.apache.drill.exec.physical.config.ProducerConsumer;
 import org.apache.drill.exec.planner.common.DrillRelNode;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.plan.RelTraitSet;
 
 public class ProducerConsumerPrel extends SingleRel implements DrillRelNode, Prel {
 
@@ -46,7 +46,7 @@ public class ProducerConsumerPrel extends SingleRel implements DrillRelNode, Pre
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
@@ -57,7 +57,7 @@ public class ProducerConsumerPrel extends SingleRel implements DrillRelNode, Pre
 
   @Override
   public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+    return PrelUtil.iter(getInput());
   }
 
   @Override

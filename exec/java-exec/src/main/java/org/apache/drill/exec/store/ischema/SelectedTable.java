@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import net.hydromatic.optiq.SchemaPlus;
+import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Catalogs;
@@ -25,8 +25,8 @@ import org.apache.drill.exec.store.ischema.InfoSchemaTable.Columns;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Schemata;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Tables;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Views;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 
 public enum SelectedTable{
   CATALOGS(new Catalogs()),

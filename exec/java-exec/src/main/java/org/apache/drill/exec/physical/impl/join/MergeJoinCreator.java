@@ -24,7 +24,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
-import org.eigenbase.rel.JoinRelType;
+import org.apache.calcite.rel.core.JoinRelType;
 
 import com.google.common.base.Preconditions;
 

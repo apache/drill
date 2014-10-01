@@ -20,10 +20,10 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.parser.SqlParserUtil;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.parser.SqlParserUtil;
 
 import com.google.common.collect.Lists;
 

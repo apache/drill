@@ -20,12 +20,12 @@ package org.apache.drill.exec.planner.sql.parser;
 import java.util.Collections;
 import java.util.List;
 
-import org.eigenbase.sql.SqlBasicCall;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.SqlBasicCall;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

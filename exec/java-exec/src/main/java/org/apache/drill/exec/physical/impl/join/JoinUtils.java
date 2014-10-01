@@ -18,13 +18,12 @@
 
 package org.apache.drill.exec.physical.impl.join;
 
+import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.eigenbase.rel.JoinRelBase;
-import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptUtil;
 
 import java.util.List;
 
@@ -74,11 +73,11 @@ public class JoinUtils {
      *                  Otherwise, return false
      */
   public static boolean checkCartesianJoin(RelNode relNode, List<Integer> leftKeys, List<Integer> rightKeys) {
-    if (relNode instanceof JoinRelBase) {
+    if (relNode instanceof Join) {
       leftKeys.clear();
       rightKeys.clear();
 
-      JoinRelBase joinRel = (JoinRelBase) relNode;
+      Join joinRel = (Join) relNode;
       RelNode left = joinRel.getLeft();
       RelNode right = joinRel.getRight();
 

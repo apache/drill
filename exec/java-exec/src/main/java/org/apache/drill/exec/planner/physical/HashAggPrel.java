@@ -18,9 +18,9 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.BitSet;
 import java.util.List;
 
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.IntHolder;
@@ -29,29 +29,35 @@ import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.AggregateCall;
-import org.eigenbase.rel.AggregateRelBase;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTraitSet;
 
 public class HashAggPrel extends AggPrelBase implements Prel{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggPrel.class);
 
-  public HashAggPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
-      List<AggregateCall> aggCalls, OperatorPhase phase) throws InvalidRelException {
-    super(cluster, traits, child, groupSet, aggCalls, phase);
+  public HashAggPrel(RelOptCluster cluster,
+                     RelTraitSet traits,
+                     RelNode child,
+                     boolean indicator,
+                     ImmutableBitSet groupSet,
+                     List<ImmutableBitSet> groupSets,
+                     List<AggregateCall> aggCalls,
+                     OperatorPhase phase) throws InvalidRelException {
+    super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls, phase);
   }
 
   @Override
-  public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
+  public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
     try {
-      return new HashAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls,
+      return new HashAggPrel(getCluster(), traitSet, input, indicator, groupSet, groupSets, aggCalls,
           this.getOperatorPhase());
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
@@ -63,7 +69,7 @@ public class HashAggPrel extends AggPrelBase implements Prel{
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
-    RelNode child = this.getChild();
+    RelNode child = this.getInput();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
     int numGroupByFields = this.getGroupCount();
@@ -96,7 +102,7 @@ public class HashAggPrel extends AggPrelBase implements Prel{
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
 
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
     HashAggregate g = new HashAggregate(child.getPhysicalOperator(creator),
         keys.toArray(new NamedExpression[keys.size()]),
         aggExprs.toArray(new NamedExpression[aggExprs.size()]),

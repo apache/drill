@@ -24,10 +24,10 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.physical.config.Values;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
+import org.apache.calcite.rel.AbstractRelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
 
 import com.google.common.collect.Iterators;
 

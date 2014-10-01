@@ -22,9 +22,9 @@ import java.util.List;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.exec.planner.common.DrillScreenRelBase;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class DrillScreenRel extends DrillScreenRelBase implements DrillRel {
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    LogicalOperator childOp = implementor.visitChild(this, 0, getChild());
+    LogicalOperator childOp = implementor.visitChild(this, 0, getInput());
     return Store.builder().setInput(childOp).storageEngine("--SCREEN--").build();
   }
 

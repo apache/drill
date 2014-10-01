@@ -19,18 +19,17 @@ package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
 
-import net.hydromatic.optiq.Schema.TableType;
-import net.hydromatic.optiq.Statistic;
-import net.hydromatic.optiq.Statistics;
-import net.hydromatic.optiq.Table;
+import org.apache.calcite.schema.Schema.TableType;
+import org.apache.calcite.schema.Statistic;
+import org.apache.calcite.schema.Statistics;
+import org.apache.calcite.schema.Table;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.drill.exec.util.ImpersonationUtil;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptTable;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptTable;
 
 public abstract class DrillTable implements Table {
 

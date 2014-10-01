@@ -22,12 +22,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import net.hydromatic.linq4j.expressions.DefaultExpression;
-import net.hydromatic.linq4j.expressions.Expression;
-import net.hydromatic.optiq.Function;
-import net.hydromatic.optiq.Schema;
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.Table;
+import org.apache.calcite.linq4j.tree.DefaultExpression;
+import org.apache.calcite.linq4j.tree.Expression;
+import org.apache.calcite.schema.Function;
+import org.apache.calcite.schema.Schema;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 

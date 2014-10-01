@@ -25,18 +25,18 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.util.Pair;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.util.Pair;
 
 import com.google.common.collect.Lists;
 
@@ -111,7 +111,7 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
    * A join condition is built only for equality and IS NOT DISTINCT FROM comparisons. The difference is:
    * null == null is FALSE whereas null IS NOT DISTINCT FROM null is TRUE
    * For a use case of the IS NOT DISTINCT FROM comparison, see
-   * {@link org.eigenbase.rel.rules.RemoveDistinctAggregateRule}
+   * {@link org.apache.calcite.rel.rules.RemoveDistinctAggregateRule}
    * @param conditions populated list of join conditions
    * @param leftFields join fields from the left input
    * @param rightFields join fields from the right input

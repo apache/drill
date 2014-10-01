@@ -19,30 +19,31 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.logging.Logger;
 
-import org.eigenbase.rel.AggregateRel;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.trace.EigenbaseTrace;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.util.trace.CalciteTrace;
 
 /**
- * Rule that converts an {@link AggregateRel} to a {@link DrillAggregateRel}, implemented by a Drill "segment" operation
+ * Rule that converts an {@link LogicalAggregate} to a {@link DrillAggregateRel}, implemented by a Drill "segment" operation
  * followed by a "collapseaggregate" operation.
  */
 public class DrillAggregateRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillAggregateRule();
-  protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+  protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private DrillAggregateRule() {
-    super(RelOptHelper.some(AggregateRel.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillAggregateRule");
+    super(RelOptHelper.some(LogicalAggregate.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillAggregateRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final AggregateRel aggregate = (AggregateRel) call.rel(0);
+    final LogicalAggregate aggregate = (LogicalAggregate) call.rel(0);
     final RelNode input = call.rel(1);
 
     if (aggregate.containsDistinctCall()) {
@@ -53,8 +54,8 @@ public class DrillAggregateRule extends RelOptRule {
     final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
     try {
-      call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
-          aggregate.getAggCallList()));
+      call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.indicator,
+          aggregate.getGroupSet(), aggregate.getGroupSets(), aggregate.getAggCallList()));
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }

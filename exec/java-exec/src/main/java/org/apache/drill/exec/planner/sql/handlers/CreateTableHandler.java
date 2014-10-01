@@ -19,9 +19,10 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.RelConversionException;
-import net.hydromatic.optiq.tools.ValidationException;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.tools.Planner;
+import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.tools.ValidationException;
 
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -36,8 +37,11 @@ import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.sql.SqlNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.SqlNode;
 
 public class CreateTableHandler extends DefaultSqlHandler {
   public CreateTableHandler(SqlHandlerConfig config, Pointer<String> textPlan) {

@@ -20,7 +20,7 @@ package org.apache.drill.exec.server.options;
 import java.util.Iterator;
 
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.eigenbase.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlLiteral;
 
 import com.google.common.collect.Iterables;
 

@@ -27,7 +27,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
-import org.eigenbase.rel.JoinRelType;
+import org.apache.calcite.rel.core.JoinRelType;
 
 public interface HashJoinProbe {
   public static TemplateClassDefinition<HashJoinProbe> TEMPLATE_DEFINITION = new TemplateClassDefinition<HashJoinProbe>(HashJoinProbe.class, HashJoinProbeTemplate.class);

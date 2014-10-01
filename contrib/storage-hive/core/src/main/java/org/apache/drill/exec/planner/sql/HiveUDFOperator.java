@@ -19,22 +19,22 @@
 package org.apache.drill.exec.planner.sql;
 
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlCallBinding;
-import org.eigenbase.sql.SqlFunction;
-import org.eigenbase.sql.SqlFunctionCategory;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlOperandCountRange;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlOperatorBinding;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlOperandCountRanges;
-import org.eigenbase.sql.type.SqlOperandTypeChecker;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlCallBinding;
+import org.apache.calcite.sql.SqlFunction;
+import org.apache.calcite.sql.SqlFunctionCategory;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlOperandCountRange;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlOperandCountRanges;
+import org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql.validate.SqlValidatorScope;
 
 public class HiveUDFOperator extends SqlFunction {
 

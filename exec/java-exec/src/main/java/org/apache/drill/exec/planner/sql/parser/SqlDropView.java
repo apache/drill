@@ -20,22 +20,22 @@ package org.apache.drill.exec.planner.sql.parser;
 import java.util.Collections;
 import java.util.List;
 
-import net.hydromatic.optiq.tools.Planner;
+import org.apache.calcite.tools.Planner;
 
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.ViewHandler.DropView;
-import org.eigenbase.relopt.hep.HepPlanner;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlSpecialOperator;
-import org.eigenbase.sql.SqlWriter;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlSpecialOperator;
+import org.apache.calcite.sql.SqlWriter;
+import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.google.common.collect.ImmutableList;
 

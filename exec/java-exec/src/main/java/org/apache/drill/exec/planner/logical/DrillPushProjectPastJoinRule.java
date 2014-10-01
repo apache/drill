@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.rules.PushProjectPastJoinRule;
-import org.eigenbase.rel.rules.PushProjector;
-import org.eigenbase.relopt.RelOptRule;
+import org.apache.calcite.rel.rules.ProjectJoinTransposeRule;
+import org.apache.calcite.rel.rules.PushProjector;
+import org.apache.calcite.plan.RelOptRule;
 
-public class DrillPushProjectPastJoinRule extends PushProjectPastJoinRule {
+public class DrillPushProjectPastJoinRule extends ProjectJoinTransposeRule {
 
   public static final RelOptRule INSTANCE = new DrillPushProjectPastJoinRule(DrillConditions.PRESERVE_ITEM);
 

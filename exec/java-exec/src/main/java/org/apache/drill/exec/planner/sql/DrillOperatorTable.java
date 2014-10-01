@@ -20,12 +20,12 @@ package org.apache.drill.exec.planner.sql;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.eigenbase.sql.SqlFunctionCategory;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlOperatorTable;
-import org.eigenbase.sql.SqlSyntax;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.SqlFunctionCategory;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlOperatorTable;
+import org.apache.calcite.sql.SqlSyntax;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
 import java.util.List;
 

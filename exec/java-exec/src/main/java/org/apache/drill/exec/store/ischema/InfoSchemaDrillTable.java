@@ -19,8 +19,8 @@ package org.apache.drill.exec.store.ischema;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 
 public class InfoSchemaDrillTable extends DrillTable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaDrillTable.class);

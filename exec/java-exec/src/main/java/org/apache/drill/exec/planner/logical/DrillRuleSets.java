@@ -21,8 +21,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import net.hydromatic.optiq.tools.RuleSet;
+import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
+import org.apache.calcite.rel.rules.AggregateRemoveRule;
+import org.apache.calcite.rel.rules.FilterJoinRule;
+import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
+import org.apache.calcite.rel.rules.ProjectRemoveRule;
+import org.apache.calcite.rel.rules.ReduceExpressionsRule;
+import org.apache.calcite.rel.rules.SortRemoveRule;
+import org.apache.calcite.tools.RuleSet;
 
+import org.apache.calcite.rel.rules.FilterMergeRule;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.ConvertCountToDirectScan;
@@ -43,18 +51,9 @@ import org.apache.drill.exec.planner.physical.ValuesPrule;
 import org.apache.drill.exec.planner.physical.WindowPrule;
 import org.apache.drill.exec.planner.physical.UnionAllPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
-import org.eigenbase.rel.RelFactories;
-import org.eigenbase.rel.rules.MergeFilterRule;
-import org.eigenbase.rel.rules.MergeProjectRule;
-import org.eigenbase.rel.rules.PushFilterPastJoinRule;
-import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
-import org.eigenbase.rel.rules.ReduceExpressionsRule;
-import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
-import org.eigenbase.rel.rules.RemoveDistinctRule;
-import org.eigenbase.rel.rules.RemoveSortRule;
-import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
+import org.apache.calcite.rel.core.RelFactories;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.volcano.AbstractConverter.ExpandConversionRule;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
@@ -121,26 +120,26 @@ public class DrillRuleSets {
         // Add support for WHERE style joins.
 //      PushFilterPastProjectRule.INSTANCE, // Replaced by DrillPushFilterPastProjectRule
       DrillPushFilterPastProjectRule.INSTANCE,
-      PushFilterPastJoinRule.FILTER_ON_JOIN,
-      PushFilterPastJoinRule.JOIN,
-      PushJoinThroughJoinRule.RIGHT,
-      PushJoinThroughJoinRule.LEFT,
+      FilterJoinRule.FILTER_ON_JOIN,   // PushFilterPastJoinRule
+      FilterJoinRule.JOIN,             // PushFilterPastJoinRule
+      JoinPushThroughJoinRule.RIGHT,   // PushJoinThroughJoinRule
+      JoinPushThroughJoinRule.LEFT,    // PushJoinThroughJoinRule
       // End support for WHERE style joins.
 
       //Add back rules
-      DrillMergeFilterRule.INSTANCE,
+      FilterMergeRule.INSTANCE,   // MergeFilterRule. TODO: NO NEED OF DRILL'S version?
       ExpandConversionRule.INSTANCE,
 //      SwapJoinRule.INSTANCE,
-      RemoveDistinctRule.INSTANCE,
+      AggregateRemoveRule.INSTANCE,   // RemoveDistinctRule
 //      UnionToDistinctRule.INSTANCE,
-      RemoveTrivialProjectRule.INSTANCE,
+      ProjectRemoveRule.INSTANCE,     // RemoveTrivialProjectRule
 //      RemoveTrivialCalcRule.INSTANCE,
-      RemoveSortRule.INSTANCE,
+      SortRemoveRule.INSTANCE,      //RemoveSortRule.INSTANCE,
 
 //      TableAccessRule.INSTANCE, //
       //MergeProjectRule.INSTANCE, //
       DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
-      RemoveDistinctAggregateRule.INSTANCE, //
+      AggregateExpandDistinctAggregatesRule.INSTANCE, //RemoveDistinctAggregateRule.INSTANCE, //
       // ReduceAggregatesRule.INSTANCE, // replaced by DrillReduceAggregatesRule
       DrillValuesRule.INSTANCE,
 
@@ -149,7 +148,7 @@ public class DrillRuleSets {
       */
 //      PushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastFilterRule.INSTANCE,
-//      PushProjectPastJoinRule.INSTANCE,
+//      ProjectJoinTransposeRule.INSTANCE,
       DrillPushProjectPastJoinRule.INSTANCE,
 
 //      SwapJoinRule.INSTANCE, //

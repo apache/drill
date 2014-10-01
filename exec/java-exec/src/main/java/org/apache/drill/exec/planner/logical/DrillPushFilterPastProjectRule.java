@@ -19,22 +19,19 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.List;
 
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.SchemaPath;
-import org.eigenbase.rel.CalcRel;
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexVisitor;
-import org.eigenbase.rex.RexVisitorImpl;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.util.Util;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexVisitor;
+import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.util.Util;
 
 public class DrillPushFilterPastProjectRule extends RelOptRule {
 
@@ -78,16 +75,16 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
   protected DrillPushFilterPastProjectRule() {
     super(
         operand(
-            FilterRel.class,
-            operand(ProjectRel.class, any())));
+            LogicalFilter.class,
+            operand(LogicalProject.class, any())));
   }
 
   //~ Methods ----------------------------------------------------------------
 
   // implement RelOptRule
   public void onMatch(RelOptRuleCall call) {
-    FilterRel filterRel = call.rel(0);
-    ProjectRel projRel = call.rel(1);
+    Filter filterRel = call.rel(0);
+    Project projRel = call.rel(1);
 
     // Don't push Filter past Project if the Filter is referencing an ITEM expression
     // from the Project.
@@ -101,15 +98,10 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     RexNode newCondition =
         RelOptUtil.pushFilterPastProject(filterRel.getCondition(), projRel);
 
-    FilterRel newFilterRel =
-        new FilterRel(
-            filterRel.getCluster(),
-            projRel.getChild(),
-            newCondition);
+    Filter newFilterRel = LogicalFilter.create(projRel.getInput(), newCondition);
 
-
-    ProjectRel newProjRel =
-        (ProjectRel) CalcRel.createProject(
+    Project newProjRel =
+        (Project) RelOptUtil.createProject(
             newFilterRel,
             projRel.getNamedProjects(),
             false);

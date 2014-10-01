@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
-import net.hydromatic.optiq.SchemaPlus;
+import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.exec.ops.QueryContext;
 

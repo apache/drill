@@ -26,9 +26,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.NlsString;
+
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.util.NlsString;
 
 public class TypeValidators {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);

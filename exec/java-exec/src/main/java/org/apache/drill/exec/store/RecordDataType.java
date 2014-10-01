@@ -18,9 +18,9 @@
 package org.apache.drill.exec.store;
 
 import com.google.common.collect.Lists;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ import java.util.List;
 public abstract class RecordDataType {
 
   /**
-   * @return the {@link org.eigenbase.sql.type.SqlTypeName} of columns in the table
+   * @return the {@link org.apache.calcite.sql.type.SqlTypeName} of columns in the table
    */
   public abstract List<SqlTypeName> getFieldSqlTypeNames();
 
@@ -40,10 +40,10 @@ public abstract class RecordDataType {
   public abstract List<String> getFieldNames();
 
   /**
-   * This method constructs a {@link org.eigenbase.reltype.RelDataType} based on the
+   * This method constructs a {@link org.apache.calcite.rel.type.RelDataType} based on the
    * {@link org.apache.drill.exec.store.RecordDataType}'s field sql types and field names.
    *
-   * @param factory helps construct a {@link org.eigenbase.reltype.RelDataType}
+   * @param factory helps construct a {@link org.apache.calcite.rel.type.RelDataType}
    * @return the constructed type
    */
   public final RelDataType getRowType(RelDataTypeFactory factory) {

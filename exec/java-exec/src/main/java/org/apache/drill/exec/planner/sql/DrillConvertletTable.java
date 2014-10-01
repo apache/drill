@@ -19,12 +19,12 @@ package org.apache.drill.exec.planner.sql;
 
 import java.util.HashMap;
 
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql2rel.SqlRexConvertlet;
-import org.eigenbase.sql2rel.SqlRexConvertletTable;
-import org.eigenbase.sql2rel.StandardConvertletTable;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql2rel.SqlRexConvertlet;
+import org.apache.calcite.sql2rel.SqlRexConvertletTable;
+import org.apache.calcite.sql2rel.StandardConvertletTable;
 
 public class DrillConvertletTable implements SqlRexConvertletTable{
 

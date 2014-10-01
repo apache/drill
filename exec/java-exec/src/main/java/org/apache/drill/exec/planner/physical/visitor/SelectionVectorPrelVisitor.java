@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.SelectionVectorRemoverPrel;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
+import org.apache.calcite.rel.RelNode;
 
 import com.google.common.collect.Lists;
 

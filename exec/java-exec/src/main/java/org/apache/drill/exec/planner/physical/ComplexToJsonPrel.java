@@ -25,9 +25,9 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ComplexToJson;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.plan.RelTraitSet;
 
 public class ComplexToJsonPrel extends SingleRel implements Prel {
 
@@ -42,13 +42,13 @@ public class ComplexToJsonPrel extends SingleRel implements Prel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    ComplexToJson p = new ComplexToJson(((Prel) getChild()).getPhysicalOperator(creator));
+    ComplexToJson p = new ComplexToJson(((Prel) getInput()).getPhysicalOperator(creator));
     return creator.addMetadata(this, p);
   }
 
   @Override
   public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+    return PrelUtil.iter(getInput());
   }
 
   @Override

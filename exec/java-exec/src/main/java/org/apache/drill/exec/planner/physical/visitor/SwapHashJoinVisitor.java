@@ -23,9 +23,9 @@ import org.apache.drill.exec.planner.physical.HashJoinPrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexNode;
 
 import java.util.List;
 

@@ -24,9 +24,9 @@ import java.sql.SQLException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Order.Ordering;
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelFieldCollation.Direction;
-import org.eigenbase.rel.RelFieldCollation.NullDirection;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelFieldCollation.Direction;
+import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.*;

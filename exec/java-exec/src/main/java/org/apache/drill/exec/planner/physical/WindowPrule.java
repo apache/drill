@@ -22,23 +22,24 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import net.hydromatic.linq4j.Ord;
-import net.hydromatic.optiq.util.BitSets;
+import com.sun.java.swing.plaf.windows.resources.windows;
+import org.apache.calcite.linq4j.Ord;
+import org.apache.calcite.rel.core.Window;
+import org.apache.calcite.util.BitSets;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillWindowRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelCollationImpl;
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.WindowRelBase;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelRecordType;
-import org.eigenbase.sql.SqlAggFunction;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.sql.SqlAggFunction;
 
 import java.util.List;
 
@@ -57,8 +58,8 @@ public class WindowPrule extends RelOptRule {
     // TODO: Order window based on existing partition by
     //input.getTraitSet().subsumes()
 
-    for (final Ord<WindowRelBase.Window> w : Ord.zip(window.windows)) {
-      WindowRelBase.Window windowBase = w.getValue();
+    for (final Ord<Window.Group> w : Ord.zip(window.groups)) {
+      Window.Group windowBase = w.getValue();
       DrillDistributionTrait distOnAllKeys =
           new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
               ImmutableList.copyOf(getDistributionFields(windowBase)));
@@ -85,16 +86,16 @@ public class WindowPrule extends RelOptRule {
 
       RelDataType rowType = new RelRecordType(newRowFields);
 
-      List<WindowRelBase.RexWinAggCall> newWinAggCalls = Lists.newArrayList();
-      for(Ord<WindowRelBase.RexWinAggCall> aggOrd : Ord.zip(windowBase.aggCalls)) {
-        WindowRelBase.RexWinAggCall aggCall = aggOrd.getValue();
-        newWinAggCalls.add(new WindowRelBase.RexWinAggCall(
+      List<Window.RexWinAggCall> newWinAggCalls = Lists.newArrayList();
+      for(Ord<Window.RexWinAggCall> aggOrd : Ord.zip(windowBase.aggCalls)) {
+        Window.RexWinAggCall aggCall = aggOrd.getValue();
+        newWinAggCalls.add(new Window.RexWinAggCall(
             (SqlAggFunction)aggCall.getOperator(), aggCall.getType(), aggCall.getOperands(), aggOrd.i)
         );
       }
 
-      windowBase = new WindowRelBase.Window(
-          windowBase.groupSet,
+      windowBase = new Window.Group(
+          windowBase.keys,
           windowBase.isRows,
           windowBase.lowerBound,
           windowBase.upperBound,
@@ -114,9 +115,9 @@ public class WindowPrule extends RelOptRule {
     call.transformTo(input);
   }
 
-  private RelCollation getCollation(WindowRelBase.Window window) {
+  private RelCollation getCollation(Window.Group window) {
     List<RelFieldCollation> fields = Lists.newArrayList();
-    for (int group : BitSets.toIter(window.groupSet)) {
+    for (int group : BitSets.toIter(window.keys)) {
       fields.add(new RelFieldCollation(group));
     }
 
@@ -127,9 +128,9 @@ public class WindowPrule extends RelOptRule {
     return RelCollationImpl.of(fields);
   }
 
-  private List<DrillDistributionTrait.DistributionField> getDistributionFields(WindowRelBase.Window window) {
+  private List<DrillDistributionTrait.DistributionField> getDistributionFields(Window.Group window) {
     List<DrillDistributionTrait.DistributionField> groupByFields = Lists.newArrayList();
-    for (int group : BitSets.toIter(window.groupSet)) {
+    for (int group : BitSets.toIter(window.keys)) {
       DrillDistributionTrait.DistributionField field = new DrillDistributionTrait.DistributionField(group);
       groupByFields.add(field);
     }

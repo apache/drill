@@ -20,40 +20,40 @@ package org.apache.drill.exec.planner.logical;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.trace.EigenbaseTrace;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.Lists;
 
 /**
- * Rule that converts a {@link JoinRel} to a {@link DrillJoinRel}, which is implemented by Drill "join" operation.
+ * Rule that converts a {@link org.apache.calcite.rel.logical.LogicalJoin} to a {@link DrillJoinRel}, which is implemented by Drill "join" operation.
  */
 public class DrillJoinRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillJoinRule();
-  protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+  protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private DrillJoinRule() {
     super(
-        RelOptHelper.any(JoinRel.class, Convention.NONE),
+        RelOptHelper.any(LogicalJoin.class, Convention.NONE),
         "DrillJoinRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final JoinRel join = (JoinRel) call.rel(0);
+    final LogicalJoin join = (LogicalJoin) call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
     final RelTraitSet traits = join.getTraitSet().plus(DrillRel.DRILL_LOGICAL);

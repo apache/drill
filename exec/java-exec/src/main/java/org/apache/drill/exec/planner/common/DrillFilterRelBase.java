@@ -23,24 +23,25 @@ import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.eigenbase.rel.FilterRelBase;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
+
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
 
 import java.util.List;
 
 /**
  * Base class for logical and physical Filters implemented in Drill
  */
-public abstract class DrillFilterRelBase extends FilterRelBase implements DrillRelNode {
+public abstract class DrillFilterRelBase extends Filter implements DrillRelNode {
   private final int numConjuncts;
   private final List<RexNode> conjunctions;
 
@@ -52,7 +53,7 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
     // that repeated calls to the costing function can use the saved copy
     conjunctions = RelOptUtil.conjunctions(condition);
     numConjuncts = conjunctions.size();
-    assert numConjuncts >= 1;
+    // assert numConjuncts >= 1;
 
   }
 
@@ -61,7 +62,7 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
-    RelNode child = this.getChild();
+    RelNode child = this.getInput();
     double inputRows = RelMetadataQuery.getRowCount(child);
     double cpuCost = estimateCpuCost();
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
@@ -69,7 +70,7 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
   }
 
   protected LogicalExpression getFilterExpression(DrillParseContext context){
-    return DrillOptiq.toDrill(context, getChild(), getCondition());
+    return DrillOptiq.toDrill(context, getInput(), getCondition());
   }
 
   /* Given the condition (C1 and C2 and C3 and ... C_n), here is how to estimate cpu cost of FILTER :
@@ -78,12 +79,12 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
   *  cpu_cost = #_of_comparison * DrillCostBase_COMPARE_CPU_COST;
   */
   private double estimateCpuCost() {
-    RelNode child = this.getChild();
+    RelNode child = this.getInput();
     double compNum = RelMetadataQuery.getRowCount(child);
 
     for (int i = 0; i< numConjuncts; i++) {
       RexNode conjFilter = RexUtil.composeConjunction(this.getCluster().getRexBuilder(), conjunctions.subList(0, i + 1), false);
-      compNum += FilterRelBase.estimateFilteredRows(child, conjFilter);
+      compNum += Filter.estimateFilteredRows(child, conjFilter);
     }
 
     return compNum * DrillCostBase.COMPARE_CPU_COST;

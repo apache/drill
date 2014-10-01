@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.physical;
 import java.io.IOException;
 import java.util.List;
 
-import net.hydromatic.linq4j.Ord;
+import org.apache.calcite.linq4j.Ord;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashToRandomExchange;
@@ -28,13 +28,13 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelWriter;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTraitSet;
 
 
 public class HashToRandomExchangePrel extends ExchangePrel {
@@ -68,7 +68,7 @@ public class HashToRandomExchangePrel extends ExchangePrel {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
 
-    RelNode child = this.getChild();
+    RelNode child = this.getInput();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
     int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
@@ -86,7 +86,7 @@ public class HashToRandomExchangePrel extends ExchangePrel {
   }
 
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
@@ -95,7 +95,7 @@ public class HashToRandomExchangePrel extends ExchangePrel {
     }
 
     // TODO - refactor to different exchange name
-    HashToRandomExchange g = new HashToRandomExchange(childPOP, PrelUtil.getHashExpression(this.fields, getChild().getRowType()));
+    HashToRandomExchange g = new HashToRandomExchange(childPOP, PrelUtil.getHashExpression(this.fields, getInput().getRowType()));
     return creator.addMetadata(this, g);
   }
 

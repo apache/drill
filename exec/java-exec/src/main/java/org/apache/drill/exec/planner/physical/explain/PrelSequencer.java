@@ -27,8 +27,8 @@ import java.util.Queue;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.BasePrelVisitor;
-import org.eigenbase.rel.RelWriter;
-import org.eigenbase.sql.SqlExplainLevel;
+import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.sql.SqlExplainLevel;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

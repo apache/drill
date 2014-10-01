@@ -31,8 +31,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.eigenbase.sql.SqlExplain.Depth;
-import org.eigenbase.sql.SqlExplainLevel;
+import org.apache.calcite.sql.SqlExplain.Depth;
+import org.apache.calcite.sql.SqlExplainLevel;
 
 import com.google.common.base.Strings;
 

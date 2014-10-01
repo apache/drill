@@ -66,7 +66,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.eigenbase.rel.RelFieldCollation.Direction;
+import org.apache.calcite.rel.RelFieldCollation.Direction;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterators;

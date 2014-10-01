@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.rules.PushProjectPastFilterRule;
-import org.eigenbase.rel.rules.PushProjector;
-import org.eigenbase.relopt.RelOptRule;
+import org.apache.calcite.rel.rules.ProjectFilterTransposeRule;
+import org.apache.calcite.rel.rules.PushProjector;
+import org.apache.calcite.plan.RelOptRule;
 
-public class DrillPushProjectPastFilterRule extends PushProjectPastFilterRule {
+public class DrillPushProjectPastFilterRule extends ProjectFilterTransposeRule {
 
   public final static RelOptRule INSTANCE = new DrillPushProjectPastFilterRule(DrillConditions.PRESERVE_ITEM);
 

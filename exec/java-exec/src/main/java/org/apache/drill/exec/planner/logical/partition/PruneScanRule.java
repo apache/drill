@@ -23,7 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.optiq.util.BitSets;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.util.BitSets;
 
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -31,7 +32,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.FileGroupScan;
@@ -52,13 +52,12 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rex.RexNode;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;

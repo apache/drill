@@ -37,7 +37,7 @@ import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.jdbc.JdbcTest;
 import org.apache.drill.jdbc.test.JdbcAssert.TestDataConnection;
-import org.eigenbase.rel.JoinRelType;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;

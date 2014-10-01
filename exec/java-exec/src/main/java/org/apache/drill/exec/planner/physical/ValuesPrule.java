@@ -19,10 +19,11 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.drill.exec.planner.logical.DrillValuesRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
 
 public class ValuesPrule extends RelOptRule {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValuesPrule.class);

@@ -22,10 +22,12 @@ import java.lang.reflect.Modifier;
 import java.sql.Timestamp;
 import java.util.List;
 
-import org.apache.drill.exec.store.RecordDataType;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.store.RecordDataType;
 
 /**
  * This class uses reflection of a Java class to construct a {@link org.apache.drill.exec.store.RecordDataType}.

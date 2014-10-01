@@ -19,18 +19,18 @@ package org.apache.drill.exec.planner.common;
 
 import java.util.List;
 
-import net.hydromatic.optiq.prepare.Prepare.CatalogReader;
+import org.apache.calcite.prepare.Prepare.CatalogReader;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.TableModificationRelBase;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.TableModify;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelTraitSet;
 
 /**
  * Base class for logical and physical Store implemented in Drill
  */
-public abstract class DrillStoreRelBase extends TableModificationRelBase implements DrillRelNode {
+public abstract class DrillStoreRelBase extends TableModify implements DrillRelNode {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillStoreRelBase.class);
 
   protected DrillStoreRelBase(RelOptCluster cluster, RelTraitSet traits, RelOptTable table, CatalogReader catalogReader,

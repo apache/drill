@@ -23,10 +23,10 @@ import java.util.List;
 
 import org.apache.drill.exec.planner.common.DrillUnionRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 
 public abstract class UnionPrel extends DrillUnionRelBase implements Prel{
 

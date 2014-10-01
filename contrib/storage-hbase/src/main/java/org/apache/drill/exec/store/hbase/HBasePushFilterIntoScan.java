@@ -25,9 +25,9 @@ import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.ImmutableList;
 

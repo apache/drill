@@ -17,26 +17,28 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rel.logical.LogicalFilter;
 
 /**
- * Rule that converts a {@link org.eigenbase.rel.FilterRel} to a Drill "filter" operation.
+ * Rule that converts a {@link org.apache.calcite.rel.FilterRel} to a Drill "filter" operation.
  */
 public class DrillFilterRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillFilterRule();
 
   private DrillFilterRule() {
-    super(RelOptHelper.any(FilterRel.class, Convention.NONE), "DrillFilterRule");
+    super(RelOptHelper.any(LogicalFilter.class, Convention.NONE), "DrillFilterRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final FilterRel filter = (FilterRel) call.rel(0);
-    final RelNode input = filter.getChild();
+    final LogicalFilter filter = (LogicalFilter) call.rel(0);
+    final RelNode input = filter.getInput();
     //final RelTraitSet traits = filter.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
     call.transformTo(new DrillFilterRel(filter.getCluster(), convertedInput.getTraitSet(), convertedInput, filter.getCondition()));

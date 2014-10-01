@@ -19,9 +19,9 @@
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 
 public abstract class ExchangePrel extends SinglePrel{
 

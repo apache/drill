@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.Table;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;

@@ -19,13 +19,14 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.Set;
 
+import org.apache.calcite.rel.RelNode;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.LogicalPlanBuilder;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.logical.PlanProperties.PlanType;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
-import org.eigenbase.rel.RelNode;
+import org.apache.calcite.rel.RelNode;
 
 import com.google.common.collect.Sets;
 

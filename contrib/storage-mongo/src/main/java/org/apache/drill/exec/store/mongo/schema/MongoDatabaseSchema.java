@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Maps;
-import net.hydromatic.optiq.Table;
+import org.apache.calcite.schema.Table;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;

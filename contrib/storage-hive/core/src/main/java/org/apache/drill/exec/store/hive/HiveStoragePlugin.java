@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Set;
 import com.google.common.collect.ImmutableSet;
 
-import net.hydromatic.optiq.Schema.TableType;
-import net.hydromatic.optiq.SchemaPlus;
+import org.apache.calcite.schema.Schema.TableType;
+import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;

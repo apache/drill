@@ -19,17 +19,17 @@ package org.apache.drill.exec.planner.common;
 
 import java.util.List;
 
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UnionRelBase;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Union;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
 
 /**
  * Base class for logical and physical Union implemented in Drill
  */
-public abstract class DrillUnionRelBase extends UnionRelBase implements DrillRelNode {
+public abstract class DrillUnionRelBase extends Union implements DrillRelNode {
 
   public DrillUnionRelBase(RelOptCluster cluster, RelTraitSet traits,
       List<RelNode> inputs, boolean all, boolean checkCompatibility) throws InvalidRelException {

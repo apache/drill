@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.plan.RelTraitSet;
 
 public abstract class Prule extends RelOptRule{
   public Prule(RelOptRuleOperand operand, String description) {
@@ -34,6 +34,7 @@ public abstract class Prule extends RelOptRule{
 
 
   public static RelNode convert(RelNode rel, RelTraitSet toTraits){
+    toTraits = toTraits.simplify();
 
     PlannerSettings settings = PrelUtil.getSettings(rel.getCluster());
     if(settings.isSingleMode()){

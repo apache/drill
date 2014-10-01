@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.eigenbase.rel.RelNode;
+import org.apache.calcite.rel.RelNode;
 
 import com.google.common.collect.Lists;
 

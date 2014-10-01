@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.hbase;
 import java.io.IOException;
 import java.util.Set;
 
-import net.hydromatic.optiq.SchemaPlus;
+import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.server.DrillbitContext;

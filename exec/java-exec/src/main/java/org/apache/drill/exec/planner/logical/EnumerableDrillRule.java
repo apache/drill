@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 
 import org.apache.drill.exec.planner.common.DrillScreenRelBase;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRule;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
 
 /**
  * Rule that converts any Drill relational expression to enumerable format by adding a {@link DrillScreenRelBase}.

@@ -24,17 +24,16 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.ProjectRelBase;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelDataTypeFieldImpl;
-import org.eigenbase.reltype.RelRecordType;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.Lists;
 
@@ -49,14 +48,14 @@ public class DrillProjectRel extends DrillProjectRelBase implements DrillRel {
 
 
   @Override
-  public ProjectRelBase copy(RelTraitSet traitSet, RelNode input, List<RexNode> exps, RelDataType rowType) {
+  public org.apache.calcite.rel.core.Project copy(RelTraitSet traitSet, RelNode input, List<RexNode> exps, RelDataType rowType) {
     return new DrillProjectRel(getCluster(), traitSet, input, exps, rowType);
   }
 
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    LogicalOperator inputOp = implementor.visitChild(this, 0, getChild());
+    LogicalOperator inputOp = implementor.visitChild(this, 0, getInput());
     Project.Builder builder = Project.builder();
     builder.setInput(inputOp);
     for (NamedExpression e: this.getProjectExpressions(implementor.getContext())) {

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.exec.planner.physical.Prel;
-import org.eigenbase.rel.RelNode;
+import org.apache.calcite.rel.RelNode;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

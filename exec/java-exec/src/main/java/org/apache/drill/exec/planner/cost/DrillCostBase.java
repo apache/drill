@@ -18,9 +18,9 @@
 
 package org.apache.drill.exec.planner.cost;
 
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.util.Util;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.util.Util;
 
 /**
  * Implementation of the DrillRelOptCost, modeled similar to VolcanoCost

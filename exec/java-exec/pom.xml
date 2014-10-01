@@ -529,7 +529,7 @@
                   <type>jar</type>
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.build.directory}/</outputDirectory>
-                  <includes>**/CombinedParser.jj</includes>
+                  <includes>**/Parser.jj</includes>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -631,7 +631,7 @@
             <configuration>
               <sourceDirectory>${project.build.directory}/generated-sources/</sourceDirectory>
               <includes>
-                <include>**/CombinedParser.jj</include>
+                <include>**/Parser.jj</include>
               </includes>
               <lookAhead>2</lookAhead>
               <isStatic>false</isStatic>

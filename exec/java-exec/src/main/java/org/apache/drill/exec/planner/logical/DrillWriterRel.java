@@ -22,9 +22,9 @@ import java.util.List;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Writer;
 import org.apache.drill.exec.planner.common.DrillWriterRelBase;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 
 public class DrillWriterRel extends DrillWriterRelBase implements DrillRel {
 
@@ -40,7 +40,7 @@ public class DrillWriterRel extends DrillWriterRelBase implements DrillRel {
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    LogicalOperator childOp = implementor.visitChild(this, 0, getChild());
+    LogicalOperator childOp = implementor.visitChild(this, 0, getInput());
     return Writer
         .builder()
         .setInput(childOp)

@@ -20,12 +20,12 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 import java.util.List;
 
-import net.hydromatic.optiq.Schema.TableType;
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.Table;
-import net.hydromatic.optiq.tools.Planner;
-import net.hydromatic.optiq.tools.RelConversionException;
-import net.hydromatic.optiq.tools.ValidationException;
+import org.apache.calcite.schema.Schema;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
+import org.apache.calcite.tools.Planner;
+import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.tools.ValidationException;
 
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.ops.QueryContext;
@@ -36,8 +36,8 @@ import org.apache.drill.exec.planner.sql.parser.SqlDropView;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.sql.SqlNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.SqlNode;
 
 import com.google.common.collect.ImmutableList;
 
@@ -92,14 +92,14 @@ public abstract class ViewHandler extends AbstractSqlHandler {
         final Table existingTable = SqlHandlerUtil.getTableFromSchema(drillSchema, viewName);
 
         if (existingTable != null) {
-          if (existingTable.getJdbcTableType() != TableType.VIEW) {
+          if (existingTable.getJdbcTableType() != Schema.TableType.VIEW) {
             // existing table is not a view
             throw new ValidationException(
                 String.format("A non-view table with given name [%s] already exists in schema [%s]",
                     viewName, schemaPath));
           }
 
-          if (existingTable.getJdbcTableType() == TableType.VIEW && !createView.getReplace()) {
+          if (existingTable.getJdbcTableType() == Schema.TableType.VIEW && !createView.getReplace()) {
             // existing table is a view and create view has no "REPLACE" clause
             throw new ValidationException(
                 String.format("A view with given name [%s] already exists in schema [%s]",

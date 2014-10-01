@@ -20,9 +20,9 @@ package org.apache.drill.exec.planner.logical;
 import java.util.BitSet;
 import java.util.List;
 
-import net.hydromatic.linq4j.Ord;
-import net.hydromatic.optiq.util.BitSets;
-
+import org.apache.calcite.linq4j.Ord;
+import org.apache.calcite.util.BitSets;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCallFactory;
@@ -32,12 +32,12 @@ import org.apache.drill.common.logical.data.GroupingAggregate;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.eigenbase.rel.AggregateCall;
-import org.eigenbase.rel.AggregateRelBase;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 
 import com.google.common.collect.Lists;
 
@@ -46,15 +46,15 @@ import com.google.common.collect.Lists;
  */
 public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel {
   /** Creates a DrillAggregateRel. */
-  public DrillAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
-      List<AggregateCall> aggCalls) throws InvalidRelException {
-    super(cluster, traits, child, groupSet, aggCalls);
+  public DrillAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator, ImmutableBitSet groupSet,
+      List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) throws InvalidRelException {
+    super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
   }
 
   @Override
-  public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
+  public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
     try {
-      return new DrillAggregateRel(getCluster(), traitSet, input, getGroupSet(), aggCalls);
+      return new DrillAggregateRel(getCluster(), traitSet, input, indicator, groupSet, groupSets, aggCalls);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
@@ -64,8 +64,8 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
   public LogicalOperator implement(DrillImplementor implementor) {
 
     GroupingAggregate.Builder builder = GroupingAggregate.builder();
-    builder.setInput(implementor.visitChild(this, 0, getChild()));
-    final List<String> childFields = getChild().getRowType().getFieldNames();
+    builder.setInput(implementor.visitChild(this, 0, getInput()));
+    final List<String> childFields = getInput().getRowType().getFieldNames();
     final List<String> fields = getRowType().getFieldNames();
 
     for (int group : BitSets.toIter(groupSet)) {

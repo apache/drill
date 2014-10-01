@@ -20,15 +20,15 @@ package org.apache.drill.exec.planner.sql;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql2rel.SqlRexContext;
-import org.eigenbase.sql2rel.SqlRexConvertlet;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql2rel.SqlRexContext;
+import org.apache.calcite.sql2rel.SqlRexConvertlet;
 
 public class DrillExtractConvertlet implements SqlRexConvertlet {
 

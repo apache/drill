@@ -19,7 +19,7 @@ package org.apache.drill.exec.planner.logical;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.hydromatic.avatica.ByteString;
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
@@ -46,19 +46,17 @@ import org.apache.drill.exec.expr.holders.IntervalYearHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
-import org.apache.drill.exec.vector.VarCharVector;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.SqlIntervalQualifier;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.NlsString;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlIntervalQualifier;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.NlsString;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -137,14 +135,14 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
     if (sqlTypeName == SqlTypeName.INTERVAL_DAY_TIME) {
       type = typeFactory.createSqlIntervalType(
           new SqlIntervalQualifier(
-              SqlIntervalQualifier.TimeUnit.DAY,
-              SqlIntervalQualifier.TimeUnit.MINUTE,
+              TimeUnit.DAY,
+              TimeUnit.MINUTE,
               SqlParserPos.ZERO));
     } else if (sqlTypeName == SqlTypeName.INTERVAL_YEAR_MONTH) {
       type = typeFactory.createSqlIntervalType(
           new SqlIntervalQualifier(
-              SqlIntervalQualifier.TimeUnit.YEAR,
-              SqlIntervalQualifier.TimeUnit.MONTH,
+              TimeUnit.YEAR,
+              TimeUnit.MONTH,
              SqlParserPos.ZERO));
     } else if (sqlTypeName == SqlTypeName.VARCHAR) {
       type = typeFactory.createSqlType(sqlTypeName, TypeHelper.VARCHAR_DEFAULT_CAST_LEN);

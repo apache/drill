@@ -17,34 +17,35 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SortRel;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.logical.LogicalSort;
 
 /**
- * This rule converts a SortRel that has either a offset and fetch into a Drill Sort and LimitPOP Rel
+ * This rule converts a Sort that has either a offset and fetch into a Drill Sort and LimitPOP Rel
  */
 public class DrillLimitRule extends RelOptRule {
   public static DrillLimitRule INSTANCE = new DrillLimitRule();
 
   private DrillLimitRule() {
-    super(RelOptHelper.any(SortRel.class, Convention.NONE), "DrillLimitRule");
+    super(RelOptHelper.any(LogicalSort.class, Convention.NONE), "DrillLimitRule");
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final SortRel sort = call.rel(0);
+    final Sort sort = call.rel(0);
     return sort.offset != null || sort.fetch != null;
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final SortRel incomingSort = call.rel(0);
+    final Sort incomingSort = call.rel(0);
     final RelTraitSet incomingTraits = incomingSort.getTraitSet();
-    RelNode input = incomingSort.getChild();
+    RelNode input = incomingSort.getInput();
 
     // if the Optiq sort rel includes a collation and a limit, we need to create a copy the sort rel that excludes the
     // limit information.

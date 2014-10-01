@@ -20,14 +20,14 @@ package org.apache.drill.exec.planner.sql.parser;
 import java.util.List;
 import java.util.Map;
 
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlJoin;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOrderBy;
-import org.eigenbase.sql.SqlSelect;
-import org.eigenbase.sql.util.SqlShuttle;
-import org.eigenbase.sql.util.SqlVisitor;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOrderBy;
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.util.SqlShuttle;
+import org.apache.calcite.sql.util.SqlVisitor;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

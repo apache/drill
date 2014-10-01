@@ -22,11 +22,11 @@ import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -45,7 +45,7 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
+    Prel child = (Prel) this.getInput();
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
@@ -62,7 +62,7 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
 
   @Override
   public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+    return PrelUtil.iter(getInput());
   }
 
   @Override
@@ -87,7 +87,7 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
 
 //  @Override
 //  public LogicalOperator implement(DrillImplementor implementor) {
-//    LogicalOperator inputOp = implementor.visitChild(this, 0, getChild());
+//    LogicalOperator inputOp = implementor.visitChild(this, 0, getInput());
 //
 //    // First offset to include into results (inclusive). Null implies it is starting from offset 0
 //    int first = offset != null ? Math.max(0, RexLiteral.intValue(offset)) : 0;

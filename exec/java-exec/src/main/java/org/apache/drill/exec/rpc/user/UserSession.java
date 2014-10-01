@@ -20,7 +20,7 @@ package org.apache.drill.exec.rpc.user;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.hydromatic.optiq.SchemaPlus;
+import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.Property;
@@ -145,7 +145,7 @@ public class UserSession {
   /**
    * Get default schema from current default schema path and given schema tree.
    * @param rootSchema
-   * @return A {@link net.hydromatic.optiq.SchemaPlus} object.
+   * @return A {@link org.apache.calcite.schema.SchemaPlus} object.
    */
   public SchemaPlus getDefaultSchema(SchemaPlus rootSchema) {
     return findSchema(rootSchema, getProp(SCHEMA));

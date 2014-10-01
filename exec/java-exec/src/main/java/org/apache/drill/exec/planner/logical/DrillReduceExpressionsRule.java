@@ -17,13 +17,15 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.CalcRel;
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.RelCollationImpl;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
-import org.eigenbase.rel.SortRel;
-import org.eigenbase.rel.rules.ReduceExpressionsRule;
+import org.apache.calcite.rel.core.Calc;
+import org.apache.calcite.rel.logical.LogicalCalc;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.logical.LogicalSort;
+import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 
 import java.math.BigDecimal;
 
@@ -48,7 +50,7 @@ public class DrillReduceExpressionsRule {
      * expose the planning time known schema. Instead we have to insert a limit 0.
      */
     @Override
-    protected RelNode createEmptyRelOrEquivalent(FilterRel filter) {
+    protected RelNode createEmptyRelOrEquivalent(Filter filter) {
       return createEmptyEmptyRelHelper(filter);
     }
 
@@ -67,16 +69,14 @@ public class DrillReduceExpressionsRule {
      * expose the planning time known schema. Instead we have to insert a limit 0.
      */
     @Override
-    protected RelNode createEmptyRelOrEquivalent(CalcRel calc) {
+    protected RelNode createEmptyRelOrEquivalent(Calc calc) {
       return createEmptyEmptyRelHelper(calc);
     }
 
   }
 
   private static RelNode createEmptyEmptyRelHelper(SingleRel input) {
-    return new SortRel(input.getCluster(), input.getTraitSet(),
-        input.getChild(),
-        RelCollationImpl.EMPTY,
+    return LogicalSort.create(input.getInput(), RelCollationImpl.EMPTY,
         input.getCluster().getRexBuilder().makeExactLiteral(BigDecimal.valueOf(0)),
         input.getCluster().getRexBuilder().makeExactLiteral(BigDecimal.valueOf(0)));
   }

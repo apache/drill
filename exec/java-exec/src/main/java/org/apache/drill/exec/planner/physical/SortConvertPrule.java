@@ -17,17 +17,17 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SortRel;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
 
 /**
- * Rule that converts an {@link SortRel} to a physical {@link SortPrel}, implemented by a Drill "order" operation.
+ * Rule that converts an {@link Sort} to a physical {@link SortPrel}, implemented by a Drill "order" operation.
  *
- * The {@link SortRel} is added in optiq's AbstractConvert call, when it enforces certain "order" to the input stream.
+ * The {@link Sort} is added in optiq's AbstractConvert call, when it enforces certain "order" to the input stream.
  * Drill uses this rule to convert such sort enforcer into physical {@link SortPrel}.
  */
 public class SortConvertPrule extends ConverterRule {
@@ -35,21 +35,21 @@ public class SortConvertPrule extends ConverterRule {
   //public static final RelOptRule INSTANCE_SRC_LOGICAL = new SortPrule("SortPrule:Src_Logical", DrillRel.DRILL_LOGICAL);
 
   private SortConvertPrule(String description, Convention srcConvention) {
-    super(SortRel.class, srcConvention, Prel.DRILL_PHYSICAL, description);
+    super(Sort.class, srcConvention, Prel.DRILL_PHYSICAL, description);
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final SortRel sort = call.rel(0);
+    final Sort sort = call.rel(0);
     return sort.offset == null && sort.fetch == null;
   }
 
   @Override
   public RelNode convert(RelNode r) {
-    SortRel rel = (SortRel) r;
+    Sort rel = (Sort) r;
     return new SortPrel(rel.getCluster(),
-                        rel.getChild().getTraitSet().replace(Prel.DRILL_PHYSICAL).plus(rel.getCollation()),
-                        convert(rel.getChild(), rel.getChild().getTraitSet().replace(Prel.DRILL_PHYSICAL)),
+                        rel.getInput().getTraitSet().replace(Prel.DRILL_PHYSICAL).plus(rel.getCollation()),
+                        convert(rel.getInput(), rel.getInput().getTraitSet().replace(Prel.DRILL_PHYSICAL)),
                         rel.getCollation());
   }
 }

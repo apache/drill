@@ -37,23 +37,22 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.StarColumnHelper;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexCorrelVariable;
-import org.eigenbase.rex.RexDynamicParam;
-import org.eigenbase.rex.RexFieldAccess;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexLocalRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexOver;
-import org.eigenbase.rex.RexRangeRef;
-import org.eigenbase.rex.RexVisitorImpl;
-import org.eigenbase.sql.SqlSyntax;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.NlsString;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexCorrelVariable;
+import org.apache.calcite.rex.RexDynamicParam;
+import org.apache.calcite.rex.RexFieldAccess;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexLocalRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexOver;
+import org.apache.calcite.rex.RexRangeRef;
+import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.sql.SqlSyntax;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.util.NlsString;
 
 import com.google.common.collect.Lists;
 
@@ -96,23 +95,7 @@ public class DrillOptiq {
       case BINARY:
         logger.debug("Binary");
         final String funcName = call.getOperator().getName().toLowerCase();
-        List<LogicalExpression> args = Lists.newArrayList();
-        for(RexNode r : call.getOperands()){
-          args.add(r.accept(this));
-        }
-
-        if (FunctionCallFactory.isBooleanOperator(funcName)) {
-          LogicalExpression func = FunctionCallFactory.createBooleanOperator(funcName, args);
-          return func;
-        } else {
-          args = Lists.reverse(args);
-          LogicalExpression lastArg = args.get(0);
-          for(int i = 1; i < args.size(); i++){
-            lastArg = FunctionCallFactory.createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
-          }
-
-          return lastArg;
-        }
+        return doFunction(call, funcName);
       case FUNCTION:
       case FUNCTION_ID:
         logger.debug("Function");
@@ -190,12 +173,36 @@ public class DrillOptiq {
           }
         }
 
+        if (call.getOperator() == SqlStdOperatorTable.DATETIME_PLUS) {
+          return doFunction(call, "+");
+        }
+
         // fall through
       default:
         throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       }
     }
 
+    private LogicalExpression doFunction(RexCall call, String funcName) {
+      List<LogicalExpression> args = Lists.newArrayList();
+      for(RexNode r : call.getOperands()){
+        args.add(r.accept(this));
+      }
+
+      if (FunctionCallFactory.isBooleanOperator(funcName)) {
+        LogicalExpression func = FunctionCallFactory.createBooleanOperator(funcName, args);
+        return func;
+      } else {
+        args = Lists.reverse(args);
+        LogicalExpression lastArg = args.get(0);
+        for(int i = 1; i < args.size(); i++){
+          lastArg = FunctionCallFactory.createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
+        }
+
+        return lastArg;
+      }
+
+    }
     private LogicalExpression doUnknown(Object o){
       logger.warn("Doesn't currently support consumption of {}.", o);
       return NullExpression.INSTANCE;

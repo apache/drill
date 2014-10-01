@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
 
 public class StarColumnHelper {
 

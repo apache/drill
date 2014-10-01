@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import org.eigenbase.sql.SqlCallBinding;
-import org.eigenbase.sql.SqlOperandCountRange;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.type.SqlOperandTypeChecker;
+import org.apache.calcite.sql.SqlCallBinding;
+import org.apache.calcite.sql.SqlOperandCountRange;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 
 class Checker implements SqlOperandTypeChecker {
   private SqlOperandCountRange range;

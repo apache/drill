@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import org.eigenbase.sql.SqlDataTypeSpec;
+import org.apache.calcite.sql.SqlDataTypeSpec;
 
 public class UnsupportedDataTypeException extends SqlUnsupportedException {
   public UnsupportedDataTypeException(String drillJiraNumber, String message) {

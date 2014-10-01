@@ -18,18 +18,18 @@
 package org.apache.drill.exec.planner.common;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.eigenbase.rel.TableAccessRelBase;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelTraitSet;
 
 /**
  * Base class for logical scan rel implemented in Drill.
  * NOTE: we should eventually make this class independent of TableAccessRelBase and then
  * make it the base class for logical and physical scan rels.
  */
-public abstract class DrillScanRelBase extends TableAccessRelBase implements DrillRelNode {
+public abstract class DrillScanRelBase extends TableScan implements DrillRelNode {
   protected final DrillTable drillTable;
 
   public DrillScanRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
