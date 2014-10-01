@@ -94,15 +94,12 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
       String fullPath = pathPrefix + dirPath;
       // check containment of this path in the list of files
       for (String origFilePath : origFiles) {
-        String[] components = origFilePath.split(":"); // some paths are of the form 'file:<path>', so we need to split
-        assert (components.length <= 2);
+        String[] components = origFilePath.split(":", 2); // some paths are of the form 'file:<path>', so we need to split
         String origFileName = "";
         if (components.length == 1) {
           origFileName = components[0];
-        } else if (components.length == 2) {
-          origFileName = components[1];
         } else {
-          assert false ;
+          origFileName = components[1];
         }
         if (origFileName.startsWith(fullPath)) {
           newFiles.add(origFileName);
