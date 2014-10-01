@@ -113,7 +113,7 @@ public class AtomicRemainder {
           sb.append(s.toString());
           sb.append("\n");
         }
-        logger.error("No more memory. Fragment limit ("+this.limit +
+        logger.warn("No more memory. Fragment limit ("+this.limit +
           " bytes) reached. Trying to allocate "+size+ " bytes. "+getUsed()+" bytes already allocated.\n"+sb.toString());
         return false;
       }
