@@ -81,7 +81,8 @@ public class SimpleRepeatedFunctions {
     }
   }
 
-  // TODO - need to confirm that these work
+  /*
+  // TODO - need to confirm that these work   SMP: They do not
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class RepeatedLengthMap implements DrillSimpleFunc {
 
@@ -98,7 +99,7 @@ public class SimpleRepeatedFunctions {
     }
   }
 
-  // TODO - need to confirm that these work
+  // TODO - need to confirm that these work   SMP: They do not
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class RepeatedLengthList implements DrillSimpleFunc {
 
@@ -114,6 +115,7 @@ public class SimpleRepeatedFunctions {
       out.value = input.end - input.start;
     }
   }
+  */
 
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class RepeatedLengthBit implements DrillSimpleFunc {
