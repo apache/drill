@@ -60,6 +60,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   @Override
   protected void setupNewSchema() throws SchemaChangeException {
     container.clear();
+    transfers.clear();
 
 
     for(VectorWrapper<?> v : incoming){
