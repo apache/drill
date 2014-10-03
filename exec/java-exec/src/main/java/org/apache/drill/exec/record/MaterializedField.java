@@ -17,9 +17,11 @@
  */
 package org.apache.drill.exec.record;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -29,11 +31,11 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
-import com.google.common.collect.Lists;
 
 public class MaterializedField {
   private Key key;
-  private List<MaterializedField> children = Lists.newArrayList();
+  // use an ordered set as existing code relies on order (e,g. parquet writer)
+  private Set<MaterializedField> children = Sets.newLinkedHashSet();
 
   private MaterializedField(SchemaPath path, MajorType type) {
     super();
@@ -41,7 +43,11 @@ public class MaterializedField {
   }
 
   public static MaterializedField create(SerializedField serField){
-    return new MaterializedField(SchemaPath.create(serField.getNamePart()), serField.getMajorType());
+    MaterializedField field = new MaterializedField(SchemaPath.create(serField.getNamePart()), serField.getMajorType());
+    for (SerializedField sf:serField.getChildList()) {
+      field.addChild(MaterializedField.create(sf));
+    }
+    return field;
   }
 
   public SerializedField.Builder getAsBuilder(){
@@ -50,7 +56,7 @@ public class MaterializedField {
         .setNamePart(key.path.getAsNamePart());
   }
 
-  public List<MaterializedField> getChildren() {
+  public Collection<MaterializedField> getChildren() {
     return children;
   }
 

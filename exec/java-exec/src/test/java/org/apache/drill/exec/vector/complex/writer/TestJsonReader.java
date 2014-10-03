@@ -227,9 +227,6 @@ public class TestJsonReader extends BaseTestQuery {
   }
 
   private void testExistentColumns(RecordBatchLoader batchLoader, QueryResultBatch batch) throws SchemaChangeException {
-
-    assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-
     VectorWrapper<?> vw = batchLoader.getValueAccessorById(
         RepeatedBigIntVector.class, //
         batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_1")).getFieldIds() //
