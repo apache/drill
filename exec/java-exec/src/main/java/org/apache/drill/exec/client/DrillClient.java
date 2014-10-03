@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
+import io.netty.channel.EventLoopGroup;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -76,6 +77,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   private boolean supportComplexTypes;
   private final boolean ownsZkConnection;
   private final boolean ownsAllocator;
+  private EventLoopGroup eventLoopGroup;
 
   public DrillClient() {
     this(DrillConfig.create());
@@ -167,13 +169,16 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     // just use the first endpoint for now
     DrillbitEndpoint endpoint = endpoints.iterator().next();
 
-    this.client = new UserClient(supportComplexTypes, allocator,
-                                 TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-"));
+    eventLoopGroup = createEventLoop(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-");
+    client = new UserClient(supportComplexTypes, allocator, eventLoopGroup);
     logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
     connect(endpoint);
     connected = true;
   }
 
+  protected EventLoopGroup createEventLoop(int size, String prefix) {
+    return TransportCheck.createEventLoopGroup(size, prefix);
+  }
 
   public synchronized boolean reconnect() {
     if (client.isActive()) {
@@ -227,6 +232,9 @@ public class DrillClient implements Closeable, ConnectionThrottle{
       } catch (IOException e) {
         logger.warn("Error while closing Cluster Coordinator.", e);
       }
+    }
+    if (eventLoopGroup != null) {
+      eventLoopGroup.shutdownGracefully();
     }
 
     // TODO: fix tests that fail when this is called.
