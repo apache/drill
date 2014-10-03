@@ -3,8 +3,8 @@
 ## Prerequisites
 
 Currently, the Apache Drill build process is known to work on Linux, Windows and OSX.  To build, you need to have the following software installed on your system to successfully complete a build. 
-  * Java 7+
-  * Maven 3.0+
+  * Java 7
+  * Maven 3.x
 
 ## Confirm settings
     # java -version
