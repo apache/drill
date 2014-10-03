@@ -457,7 +457,12 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test(expected = RpcException.class)  // Should get "At line 1, column 8: Column 'n_nationkey' is ambiguous"
   public void testSelStarAmbiguousJoin() throws Exception {
-    test("select x.n_nationkey, x.n_name, x.n_regionkey, x.r_name from (select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey) x " ) ;
+    try {
+      test("select x.n_nationkey, x.n_name, x.n_regionkey, x.r_name from (select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey) x " ) ;
+    } catch (RpcException e) {
+      logger.info("***** Test resulted in expected failure: " + e.getMessage());
+      throw e;
+    }
   }
 
   @Test  // select star for a SchemaTable.
