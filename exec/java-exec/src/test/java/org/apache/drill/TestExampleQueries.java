@@ -20,6 +20,7 @@ package org.apache.drill;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.rpc.RpcException;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
@@ -485,5 +486,13 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select t1.department_description from cp.`department.json` t1, cp.`employee.json` t2 where (cast(t1.department_id as double)) = t2.department_id");
     test("select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 where cast(t1.department_id as double) = t2.department_id and cast(t1.position_id as bigint) = t2.department_id");
     test("select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 where t1.department_id = t2.department_id and t1.position_id = t2.department_id");
+  }
+
+  @Test
+  public void testTopNWithSV2() throws Exception {
+    int actualRecordCount = testSql("select N_NATIONKEY from cp.`tpch/nation.parquet` where N_NATIONKEY < 10 order by N_NATIONKEY limit 5");
+    int expectedRecordCount = 5;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 }

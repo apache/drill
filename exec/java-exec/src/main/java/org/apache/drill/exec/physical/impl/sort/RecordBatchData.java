@@ -42,6 +42,8 @@ public class RecordBatchData {
 
   public RecordBatchData(VectorAccessible batch) {
     List<ValueVector> vectors = Lists.newArrayList();
+    recordCount = batch.getRecordCount();
+
     if (batch instanceof RecordBatch && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) {
       this.sv2 = ((RecordBatch)batch).getSelectionVector2().clone();
     } else {
@@ -58,7 +60,6 @@ public class RecordBatchData {
     }
 
     container.addCollection(vectors);
-    recordCount = batch.getRecordCount();
     container.setRecordCount(recordCount);
     container.buildSchema(batch.getSchema().getSelectionVectorMode());
   }
