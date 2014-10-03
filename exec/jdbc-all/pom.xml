@@ -203,12 +203,12 @@
           <dependency>
             <groupId>net.sf.proguard</groupId>
             <artifactId>proguard-base</artifactId>
-            <version>4.11</version>
+            <version>5.0</version>
             <scope>runtime</scope>
           </dependency>
         </dependencies>
         <configuration>
-          <proguardVersion>4.11</proguardVersion>
+          <proguardVersion>5.0</proguardVersion>
           <obfuscate>false</obfuscate>
           <includeDependencyInjar>true</includeDependencyInjar>
           <outjar>${project.build.finalName}-dirty.jar</outjar>
