@@ -253,6 +253,8 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
             return new DrillViewTable(schemaPath, getView(f));
           }
         }
+      } catch (UnsupportedOperationException e) {
+        logger.debug("The filesystem for this workspace does not support this operation.", e);
       } catch (Exception e) {
         logger.warn("Failure while trying to load .drill file.", e);
       }
