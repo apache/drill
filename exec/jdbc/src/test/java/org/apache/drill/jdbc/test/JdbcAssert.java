@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -39,6 +40,8 @@ import org.junit.Assert;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Iterables;
 
 /**
@@ -93,6 +96,19 @@ public class JdbcAssert {
     return buf.toString();
   }
 
+  static Set<String> toStringSet(ResultSet resultSet) throws SQLException {
+    Builder<String> builder = ImmutableSet.builder();
+    final List<Ord<String>> columns = columnLabels(resultSet);
+    while (resultSet.next()) {
+      StringBuilder buf = new StringBuilder();
+      for (Ord<String> column : columns) {
+        buf.append(column.i == 1 ? "" : "; ").append(column.e).append("=").append(resultSet.getObject(column.i));
+      }
+      builder.add(buf.toString());
+      buf.setLength(0);
+    }
+    return builder.build();
+  }
 
   static List<String> toStrings(ResultSet resultSet) throws SQLException {
     final List<String> list = new ArrayList<>();
@@ -173,10 +189,35 @@ public class JdbcAssert {
         ResultSet resultSet = statement.executeQuery(sql);
         expected = expected.trim();
         String result = JdbcAssert.toString(resultSet).trim();
-
-        Assert.assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
-        Assert.assertEquals(expected, result);
         resultSet.close();
+
+        if (!expected.equals(result)) {
+          Assert.fail(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected));
+        }
+        return this;
+      } finally {
+        if (statement != null) {
+          statement.close();
+        }
+        if (connection != null) {
+          connection.close();
+        }
+      }
+    }
+
+    public TestDataConnection returnsSet(Set<String> expected) throws Exception {
+      Connection connection = null;
+      Statement statement = null;
+      try {
+        connection = connectionFactory.createConnection();
+        statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        Set<String> result = JdbcAssert.toStringSet(resultSet);
+        resultSet.close();
+
+        if (!expected.equals(result)) {
+          Assert.fail(String.format("Generated set:\n%s\ndoes not match:\n%s", result, expected));
+        }
         return this;
       } finally {
         if (statement != null) {
