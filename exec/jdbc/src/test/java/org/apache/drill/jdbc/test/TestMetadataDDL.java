@@ -22,12 +22,14 @@ import static org.junit.Assert.assertTrue;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Set;
 
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Contains tests for
@@ -56,18 +58,18 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   public void testSchemata() throws Exception{
     JdbcAssert.withNoDefaultSchema()
         .sql("SELECT * FROM INFORMATION_SCHEMA.SCHEMATA")
-        .returns(
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.root; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.tmp; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=YES\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=sys; SCHEMA_OWNER=<owner>; TYPE=system-tables; IS_MUTABLE=NO\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.home; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.tmp; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=YES\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=cp.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=hive_test.default; SCHEMA_OWNER=<owner>; TYPE=hive; IS_MUTABLE=NO\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=hive_test.db1; SCHEMA_OWNER=<owner>; TYPE=hive; IS_MUTABLE=NO\n" +
-            "CATALOG_NAME=DRILL; SCHEMA_NAME=INFORMATION_SCHEMA; SCHEMA_OWNER=<owner>; TYPE=ischema; IS_MUTABLE=NO\n"
+        .returnsSet(ImmutableSet.of(
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.root; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.tmp; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=YES",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=sys; SCHEMA_OWNER=<owner>; TYPE=system-tables; IS_MUTABLE=NO",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.home; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.tmp; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=YES",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=cp.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=hive_test.default; SCHEMA_OWNER=<owner>; TYPE=hive; IS_MUTABLE=NO",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=hive_test.db1; SCHEMA_OWNER=<owner>; TYPE=hive; IS_MUTABLE=NO",
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=INFORMATION_SCHEMA; SCHEMA_OWNER=<owner>; TYPE=ischema; IS_MUTABLE=NO")
         );
   }
 
@@ -75,13 +77,13 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   public void testShowTables() throws Exception{
     JdbcAssert.withFull("hive_test.default")
         .sql("SHOW TABLES")
-        .returns(
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=readtest\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=empty_table\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=infoschematest\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=kv\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate\n"
+        .returnsSet(ImmutableSet.of(
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=readtest",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=empty_table",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=infoschematest",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=kv",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate")
         );
   }
 
@@ -89,23 +91,22 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   public void testShowTablesFromDb() throws Exception{
     JdbcAssert.withNoDefaultSchema()
         .sql("SHOW TABLES FROM INFORMATION_SCHEMA")
-        .returns(
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=COLUMNS\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=TABLES\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=CATALOGS\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA\n"
-        );
+        .returnsSet(ImmutableSet.of(
+            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS",
+            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=COLUMNS",
+            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=TABLES",
+            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=CATALOGS",
+            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA"));
 
     JdbcAssert.withFull("dfs_test.tmp")
         .sql("SHOW TABLES IN hive_test.`default`")
-        .returns(
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=readtest\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=empty_table\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=infoschematest\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=kv\n" +
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate\n");
+        .returnsSet(ImmutableSet.of(
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=readtest",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=empty_table",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=infoschematest",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=kv",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate"));
   }
 
   @Test
@@ -124,21 +125,21 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
 
   @Test
   public void testShowDatabases() throws Exception{
-    String expected =
-        "SCHEMA_NAME=dfs.default\n" +
-        "SCHEMA_NAME=dfs.root\n" +
-        "SCHEMA_NAME=dfs.tmp\n" +
-        "SCHEMA_NAME=sys\n" +
-        "SCHEMA_NAME=dfs_test.home\n" +
-        "SCHEMA_NAME=dfs_test.default\n" +
-        "SCHEMA_NAME=dfs_test.tmp\n" +
-        "SCHEMA_NAME=cp.default\n" +
-        "SCHEMA_NAME=hive_test.default\n" +
-        "SCHEMA_NAME=hive_test.db1\n" +
-        "SCHEMA_NAME=INFORMATION_SCHEMA\n";
+    Set<String> expected = ImmutableSet.of(
+        "SCHEMA_NAME=dfs.default",
+        "SCHEMA_NAME=dfs.root",
+        "SCHEMA_NAME=dfs.tmp",
+        "SCHEMA_NAME=sys",
+        "SCHEMA_NAME=dfs_test.home",
+        "SCHEMA_NAME=dfs_test.default",
+        "SCHEMA_NAME=dfs_test.tmp",
+        "SCHEMA_NAME=cp.default",
+        "SCHEMA_NAME=hive_test.default",
+        "SCHEMA_NAME=hive_test.db1",
+        "SCHEMA_NAME=INFORMATION_SCHEMA");
 
-    JdbcAssert.withNoDefaultSchema().sql("SHOW DATABASES").returns(expected);
-    JdbcAssert.withNoDefaultSchema().sql("SHOW SCHEMAS").returns(expected);
+    JdbcAssert.withNoDefaultSchema().sql("SHOW DATABASES").returnsSet(expected);
+    JdbcAssert.withNoDefaultSchema().sql("SHOW SCHEMAS").returnsSet(expected);
   }
 
   @Test
@@ -152,19 +153,19 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   public void testShowDatabasesLike() throws Exception{
     JdbcAssert.withNoDefaultSchema()
         .sql("SHOW DATABASES LIKE '%i%'")
-        .returns(
-            "SCHEMA_NAME=hive_test.default\n"+
-            "SCHEMA_NAME=hive_test.db1");
+        .returnsSet(ImmutableSet.of(
+            "SCHEMA_NAME=hive_test.default",
+            "SCHEMA_NAME=hive_test.db1"));
   }
 
   @Test
   public void testDescribeTable() throws Exception{
     JdbcAssert.withFull("INFORMATION_SCHEMA")
         .sql("DESCRIBE CATALOGS")
-        .returns(
-            "COLUMN_NAME=CATALOG_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
-            "COLUMN_NAME=CATALOG_DESCRIPTION; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
-            "COLUMN_NAME=CATALOG_CONNECT; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n");
+        .returnsSet(ImmutableSet.of(
+            "COLUMN_NAME=CATALOG_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+            "COLUMN_NAME=CATALOG_DESCRIPTION; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+            "COLUMN_NAME=CATALOG_CONNECT; DATA_TYPE=VARCHAR; IS_NULLABLE=NO"));
   }
 
 
@@ -172,21 +173,20 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   public void testDescribeTableNullableColumns() throws Exception{
     JdbcAssert.withNoDefaultSchema()
         .sql("DESCRIBE hive_test.`default`.kv")
-        .returns(
-            "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=YES\n" +
-            "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=YES\n"
-        );
+        .returnsSet(ImmutableSet.of(
+            "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=YES",
+            "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=YES"));
   }
 
   @Test
   public void testDescribeTableWithSchema() throws Exception{
     JdbcAssert.withNoDefaultSchema()
         .sql("DESCRIBE INFORMATION_SCHEMA.`TABLES`")
-        .returns(
-            "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
-            "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
-            "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
-            "COLUMN_NAME=TABLE_TYPE; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n");
+        .returnsSet(ImmutableSet.of(
+            "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+            "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+            "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+            "COLUMN_NAME=TABLE_TYPE; DATA_TYPE=VARCHAR; IS_NULLABLE=NO"));
   }
 
   @Test
@@ -202,20 +202,20 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
 
           // Test describe of `TABLES` with no schema qualifier
           ResultSet resultSet = statement.executeQuery("DESCRIBE `TABLES`");
-          String result = JdbcAssert.toString(resultSet).trim();
+          Set<String> result = JdbcAssert.toStringSet(resultSet);
           resultSet.close();
-          String expected = "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO";
+          ImmutableSet<String> expected = ImmutableSet.of("COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO");
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
           // Test describe of `TABLES` with a schema qualifier which is not in default schema
           resultSet = statement.executeQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES`");
-          result = JdbcAssert.toString(resultSet).trim();
+          result = JdbcAssert.toStringSet(resultSet);
           resultSet.close();
-          expected =
-              "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n" +
-              "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n" +
-              "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n" +
-              "COLUMN_NAME=TABLE_TYPE; DATA_TYPE=VARCHAR; IS_NULLABLE=NO";
+          expected = ImmutableSet.of(
+              "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+              "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+              "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+              "COLUMN_NAME=TABLE_TYPE; DATA_TYPE=VARCHAR; IS_NULLABLE=NO");
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
           // drop created view
@@ -248,19 +248,19 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   public void testDescribeTableWithColQualifier() throws Exception{
     JdbcAssert.withFull("INFORMATION_SCHEMA")
         .sql("DESCRIBE COLUMNS 'TABLE%'")
-        .returns(
-            "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
-            "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
-            "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n");
+        .returnsSet(ImmutableSet.of(
+            "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+            "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+            "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO"));
   }
 
   @Test
   public void testDescribeTableWithSchemaAndColQualifier() throws Exception{
     JdbcAssert.withNoDefaultSchema()
         .sql("DESCRIBE INFORMATION_SCHEMA.SCHEMATA 'SCHEMA%'")
-        .returns(
-            "COLUMN_NAME=SCHEMA_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
-            "COLUMN_NAME=SCHEMA_OWNER; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n");
+        .returnsSet(ImmutableSet.of(
+            "COLUMN_NAME=SCHEMA_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO",
+            "COLUMN_NAME=SCHEMA_OWNER; DATA_TYPE=VARCHAR; IS_NULLABLE=NO"));
   }
 
   @Test
@@ -271,11 +271,11 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
             "WHERE TABLE_SCHEMA = 'hive_test.default' AND TABLE_NAME = 'infoschematest' AND " +
             "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR " +
             "COLUMN_NAME = 'inttype' OR COLUMN_NAME = 'decimaltype')")
-        .returns(
-            "COLUMN_NAME=inttype; DATA_TYPE=INTEGER; CHARACTER_MAXIMUM_LENGTH=-1; NUMERIC_PRECISION=-1\n" +
-            "COLUMN_NAME=decimaltype; DATA_TYPE=DECIMAL; CHARACTER_MAXIMUM_LENGTH=-1; NUMERIC_PRECISION=38\n" +
-            "COLUMN_NAME=stringtype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=65535; NUMERIC_PRECISION=-1\n" +
-            "COLUMN_NAME=varchartype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=20; NUMERIC_PRECISION=-1");
+        .returnsSet(ImmutableSet.of(
+            "COLUMN_NAME=inttype; DATA_TYPE=INTEGER; CHARACTER_MAXIMUM_LENGTH=-1; NUMERIC_PRECISION=-1",
+            "COLUMN_NAME=decimaltype; DATA_TYPE=DECIMAL; CHARACTER_MAXIMUM_LENGTH=-1; NUMERIC_PRECISION=38",
+            "COLUMN_NAME=stringtype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=65535; NUMERIC_PRECISION=-1",
+            "COLUMN_NAME=varchartype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=20; NUMERIC_PRECISION=-1"));
   }
 
   @Test
