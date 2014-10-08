@@ -15,7 +15,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>0.7.0-incubating</version>
+    <version>0.7.0-incubating-SNAPSHOT</version>
   </parent>
   <artifactId>drill-interpreter</artifactId>
   <name>exec/Drill expression interpreter</name>
