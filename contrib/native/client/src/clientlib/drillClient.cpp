@@ -278,7 +278,7 @@ void DrillClient::close() {
 
 status_t DrillClient::submitQuery(Drill::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle){
 
-    ::exec::shared::QueryType castedType = static_cast<::exec::shared::QueryType> (t);
+    ::exec::shared::QueryType castedType = static_cast< ::exec::shared::QueryType> (t);
     DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(castedType, plan, listener, listenerCtx);
     *qHandle=(QueryHandle_t)pResult;
     return QRY_SUCCESS;
@@ -286,7 +286,7 @@ status_t DrillClient::submitQuery(Drill::QueryType t, const std::string& plan, p
 
 RecordIterator* DrillClient::submitQuery(Drill::QueryType t, const std::string& plan, DrillClientError* err){
     RecordIterator* pIter=NULL;
-    ::exec::shared::QueryType castedType = static_cast<::exec::shared::QueryType> (t);
+    ::exec::shared::QueryType castedType = static_cast< ::exec::shared::QueryType> (t);
     DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(castedType, plan, NULL, NULL);
     if(pResult){
         pIter=new RecordIterator(pResult);

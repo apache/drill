@@ -47,7 +47,6 @@
 namespace exec{
     namespace shared{
         class DrillPBError;
-        enum QueryType;
     };
 };
 
