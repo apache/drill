@@ -85,9 +85,8 @@ public class QueryOptionManager implements OptionManager {
   @Override
   public OptionList getOptionList() {
     OptionList list = new OptionList();
-    for (OptionValue o : options.values()) {
-      list.add(o);
-    }
+    list.addAll(sessionOptions.getOptionList());
+    list.addAll(options.values());
     return list;
   }
 

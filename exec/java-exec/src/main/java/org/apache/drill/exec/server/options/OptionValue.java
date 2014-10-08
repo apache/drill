@@ -172,4 +172,9 @@ public class OptionValue{
     return true;
   }
 
+  @Override
+  public String toString() {
+    return "OptionValue [type=" + type + ", name=" + name + ", value=" + getValue() + "]";
+  }
+
 }
