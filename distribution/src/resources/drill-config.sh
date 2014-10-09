@@ -160,7 +160,7 @@ if $is_cygwin; then
 else
   JAVA_BIN="java"
 fi
-JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN | head -n 1`
+JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN -type f | head -n 1`
 if [ ! -e "$JAVA" ]; then
   echo "Java not found at JAVA_HOME=$JAVA_HOME."
   exit 1
