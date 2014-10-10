@@ -38,6 +38,9 @@
         "txt" : {
           type : "text",
           extensions: [ "txt" ]
+        },
+        "avro" : {
+          type: "avro"
         }
       }
     }

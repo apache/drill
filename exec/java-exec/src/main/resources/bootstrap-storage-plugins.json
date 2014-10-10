@@ -34,6 +34,9 @@
         },
         "json" : {
           type: "json"
+        },
+        "avro" : {
+          type: "avro"
         }
       }
     },
@@ -57,6 +60,9 @@
         },
         "parquet" : {
           type: "parquet"
+        },
+        "avro" : {
+          type: "avro"
         }
       }
     }

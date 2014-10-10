@@ -474,6 +474,10 @@ public final class UserBitShared {
      * <code>NESTED_LOOP_JOIN = 35;</code>
      */
     NESTED_LOOP_JOIN(35, 35),
+    /**
+     * <code>AVRO_SUB_SCAN = 36;</code>
+     */
+    AVRO_SUB_SCAN(36, 36),
     ;
 
     /**
@@ -620,6 +624,10 @@ public final class UserBitShared {
      * <code>NESTED_LOOP_JOIN = 35;</code>
      */
     public static final int NESTED_LOOP_JOIN_VALUE = 35;
+    /**
+     * <code>AVRO_SUB_SCAN = 36;</code>
+     */
+    public static final int AVRO_SUB_SCAN_VALUE = 36;
 
 
     public final int getNumber() { return value; }
@@ -662,6 +670,7 @@ public final class UserBitShared {
         case 33: return HBASE_SUB_SCAN;
         case 34: return WINDOW;
         case 35: return NESTED_LOOP_JOIN;
+        case 36: return AVRO_SUB_SCAN;
         default: return null;
       }
     }
@@ -19856,7 +19865,7 @@ public final class UserBitShared {
       "yType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020" +
       "\003*k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAIT" +
       "ING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHE" +
-      "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005*\312\005\n\020CoreO" +
+      "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005*\335\005\n\020CoreO" +
       "peratorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADC" +
       "AST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGA" +
       "TE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025H",
@@ -19874,8 +19883,9 @@ public final class UserBitShared {
       "AN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_S" +
       "UB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUC" +
       "ER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WIN" +
-      "DOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#B.\n\033org.apach" +
-      "e.drill.exec.protoB\rUserBitSharedH\001"
+      "DOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_" +
+      "SCAN\020$B.\n\033org.apache.drill.exec.protoB\rU" +
+      "serBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
