@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
@@ -48,9 +49,11 @@ public class PlannerSettings implements Context{
   public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key", true);
 
   public OptionManager options = null;
+  public FunctionImplementationRegistry functionImplementationRegistry = null;
 
-  public PlannerSettings(OptionManager options){
+  public PlannerSettings(OptionManager options, FunctionImplementationRegistry functionImplementationRegistry){
     this.options = options;
+    this.functionImplementationRegistry = functionImplementationRegistry;
   }
 
   public OptionManager getOptions() {

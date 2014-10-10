@@ -66,7 +66,7 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
 
   @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
-    return logicalVisitor.visitPrel(this, value);
+    return logicalVisitor.visitProject(this, value);
   }
 
   @Override

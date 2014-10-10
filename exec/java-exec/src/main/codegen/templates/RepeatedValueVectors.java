@@ -45,7 +45,7 @@ package org.apache.drill.exec.vector;
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 
- public final class Repeated${minor.class}Vector extends BaseValueVector implements Repeated<#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
+public final class Repeated${minor.class}Vector extends BaseValueVector implements Repeated<#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
 
   private int parentValueCount;
   private int childValueCount;
@@ -59,7 +59,8 @@ package org.apache.drill.exec.vector;
   public Repeated${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
     this.offsets = new UInt4Vector(null, allocator);
-    this.values = new ${minor.class}Vector(null, allocator);
+    MaterializedField mf = MaterializedField.create(field.getPath(), Types.required(field.getType().getMinorType()));
+    this.values = new ${minor.class}Vector(mf, allocator);
   }
 
   public int getValueCapacity(){
@@ -106,7 +107,7 @@ package org.apache.drill.exec.vector;
     int endPos = offsets.getAccessor().get(startIndex+length);
     values.splitAndTransferTo(startIndex, endPos-startPos, target.values);
     target.offsets.clear();
-    target.offsets.allocateNew(length+1);
+    target.offsets.allocateNew(endPos - startPos + 1);
     int normalizedPos = 0;
     for (int i=0; i<length+1;i++) {
       normalizedPos = offsets.getAccessor().get(startIndex+i) - startPos;
@@ -303,7 +304,11 @@ package org.apache.drill.exec.vector;
     public int getCount(int index) {
       return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
     }
-    
+
+    public ValueVector getAllChildValues() {
+      return values;
+    }
+
     public List<${friendlyType}> getObject(int index) {
       List<${friendlyType}> vals = new JsonStringArrayList();
       int start = offsets.getAccessor().get(index);
@@ -312,6 +317,10 @@ package org.apache.drill.exec.vector;
         vals.add(values.getAccessor().getObject(i));
       }
       return vals;
+    }
+
+    public int getGroupSizeAtIndex(int index){
+      return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
     }
     
     public ${friendlyType} getSingleObject(int index, int arrayIndex){

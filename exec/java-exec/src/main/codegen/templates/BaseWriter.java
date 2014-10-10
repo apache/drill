@@ -32,7 +32,8 @@ public interface BaseWriter extends Positionable{
   boolean ok();
   WriteState getState();
   int getValueCapacity();
-  
+  void resetState();
+
   public interface MapWriter extends BaseWriter{
 
     MaterializedField getField();

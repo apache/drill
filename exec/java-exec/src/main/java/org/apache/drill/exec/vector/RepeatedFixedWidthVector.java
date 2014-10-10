@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector;
 
 import io.netty.buffer.DrillBuf;
 
-public interface RepeatedFixedWidthVector extends ValueVector{
+public interface RepeatedFixedWidthVector extends ValueVector, RepeatedVector {
   /**
    * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
    *
@@ -37,12 +37,13 @@ public interface RepeatedFixedWidthVector extends ValueVector{
    */
   public int load(int parentValueCount, int childValueCount, DrillBuf buf);
 
-  public abstract RepeatedAccessor getAccessor();
-
   public abstract RepeatedMutator getMutator();
 
   public interface RepeatedAccessor extends Accessor {
     public int getGroupCount();
+    public int getValueCount();
+    public int getGroupSizeAtIndex(int index);
+    public ValueVector getAllChildValues();
   }
   public interface RepeatedMutator extends Mutator {
     public void setValueCounts(int parentValueCount, int childValueCount);

@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector;
 
 import io.netty.buffer.DrillBuf;
 
-public interface RepeatedVariableWidthVector extends ValueVector{
+public interface RepeatedVariableWidthVector extends ValueVector, RepeatedVector {
   /**
    * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
    *
@@ -34,8 +34,6 @@ public interface RepeatedVariableWidthVector extends ValueVector{
    * @return
    */
   public int getByteCapacity();
-
-  public abstract RepeatedFixedWidthVector.RepeatedAccessor getAccessor();
 
   /**
    * Load the records in the provided buffer based on the given number of values.

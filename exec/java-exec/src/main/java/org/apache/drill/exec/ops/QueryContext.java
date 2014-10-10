@@ -58,7 +58,7 @@ public class QueryContext{
     this.session = session;
     this.timer = new Multitimer<>(QuerySetup.class);
     this.queryOptions = new QueryOptionManager(session.getOptions());
-    this.plannerSettings = new PlannerSettings(queryOptions);
+    this.plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
     this.plannerSettings.setNumEndPoints(this.getActiveEndpoints().size());
     this.table = new DrillOperatorTable(getFunctionRegistry());
   }

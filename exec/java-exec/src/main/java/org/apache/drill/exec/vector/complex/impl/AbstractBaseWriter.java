@@ -49,7 +49,8 @@ abstract class AbstractBaseWriter implements FieldWriter{
   int idx(){
     return index;
   }
-  protected void resetState(){
+
+  public void resetState(){
     state.reset();
   }
 

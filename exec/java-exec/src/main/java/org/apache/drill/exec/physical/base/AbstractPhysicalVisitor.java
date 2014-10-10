@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 import org.apache.drill.exec.physical.config.BroadcastSender;
 import org.apache.drill.exec.physical.config.Filter;
+import org.apache.drill.exec.physical.config.FlattenPOP;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
@@ -102,6 +103,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   @Override
   public T visitSender(Sender sender, X value) throws E {
     return visitOp(sender, value);
+  }
+
+  @Override
+  public T visitFlatten(FlattenPOP flatten, X value) throws E {
+    return visitOp(flatten, value);
   }
 
   @Override
