@@ -19,9 +19,19 @@ package org.apache.drill.exec.store.hive;
 
 import java.util.Map;
 
+import org.apache.drill.exec.expr.holders.Decimal18Holder;
+import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
+import org.apache.drill.exec.expr.holders.Decimal9Holder;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableDateVector;
+import org.apache.drill.exec.vector.NullableDecimal18Vector;
+import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal9Vector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
@@ -31,7 +41,6 @@ import org.apache.drill.exec.vector.NullableTinyIntVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BinaryObjectInspector;
@@ -47,6 +56,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.LongObjectInspect
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.ShortObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.TimestampObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.Text;
@@ -65,7 +75,6 @@ public abstract class HiveFieldConverter {
     primMap.put(PrimitiveCategory.BINARY, Binary.class);
     primMap.put(PrimitiveCategory.BOOLEAN, Boolean.class);
     primMap.put(PrimitiveCategory.BYTE, Byte.class);
-    primMap.put(PrimitiveCategory.DECIMAL, Decimal.class);
     primMap.put(PrimitiveCategory.DOUBLE, Double.class);
     primMap.put(PrimitiveCategory.FLOAT, Float.class);
     primMap.put(PrimitiveCategory.INT, Int.class);
@@ -78,13 +87,30 @@ public abstract class HiveFieldConverter {
   }
 
 
-  public static HiveFieldConverter create(TypeInfo typeInfo) throws IllegalAccessException, InstantiationException {
+  public static HiveFieldConverter create(TypeInfo typeInfo, FragmentContext fragmentContext)
+      throws IllegalAccessException, InstantiationException {
     switch (typeInfo.getCategory()) {
       case PRIMITIVE:
         final PrimitiveCategory pCat = ((PrimitiveTypeInfo) typeInfo).getPrimitiveCategory();
-        Class< ? extends HiveFieldConverter> clazz = primMap.get(pCat);
-        if (clazz != null) {
-          return clazz.newInstance();
+        if (pCat != PrimitiveCategory.DECIMAL) {
+          Class<? extends HiveFieldConverter> clazz = primMap.get(pCat);
+          if (clazz != null) {
+            return clazz.newInstance();
+          }
+        } else {
+          // For decimal, based on precision return appropriate converter.
+          DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) typeInfo;
+          int precision = decimalTypeInfo.precision();
+          int scale = decimalTypeInfo.scale();
+          if (precision <= 9) {
+            return new Decimal9(precision, scale);
+          } else if (precision <= 18) {
+            return new Decimal18(precision, scale);
+          } else if (precision <= 28) {
+            return new Decimal28(precision, scale, fragmentContext);
+          } else {
+            return new Decimal38(precision, scale, fragmentContext);
+          }
         }
 
         HiveRecordReader.throwUnsupportedHiveDataTypeError(pCat.toString());
@@ -125,12 +151,75 @@ public abstract class HiveFieldConverter {
     }
   }
 
-  public static class Decimal extends HiveFieldConverter {
+  public static class Decimal9 extends HiveFieldConverter {
+    private final Decimal9Holder holder = new Decimal9Holder();
+
+    public Decimal9(int precision, int scale) {
+      holder.scale = scale;
+      holder.precision = precision;
+    }
+
     @Override
     public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
-      final HiveDecimal value = ((HiveDecimalObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
-      final byte[] strBytes = value.toString().getBytes();
-      return ((NullableVarCharVector) outputVV).getMutator().setSafe(outputIndex, strBytes, 0, strBytes.length);
+      holder.value = DecimalUtility.getDecimal9FromBigDecimal(
+          ((HiveDecimalObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue).bigDecimalValue(),
+          holder.scale, holder.precision);
+      return ((NullableDecimal9Vector) outputVV).getMutator().setSafe(outputIndex, holder);
+    }
+  }
+
+  public static class Decimal18 extends HiveFieldConverter {
+    private final Decimal18Holder holder = new Decimal18Holder();
+
+    public Decimal18(int precision, int scale) {
+      holder.scale = scale;
+      holder.precision = precision;
+    }
+
+    @Override
+    public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
+      holder.value = DecimalUtility.getDecimal18FromBigDecimal(
+          ((HiveDecimalObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue).bigDecimalValue(),
+          holder.scale, holder.precision);
+      return ((NullableDecimal18Vector) outputVV).getMutator().setSafe(outputIndex, holder);
+    }
+  }
+
+  public static class Decimal28 extends HiveFieldConverter {
+    private final Decimal28SparseHolder holder = new Decimal28SparseHolder();
+
+    public Decimal28(int precision, int scale, FragmentContext context) {
+      holder.scale = scale;
+      holder.precision = precision;
+      holder.buffer = context.getManagedBuffer(Decimal28SparseHolder.nDecimalDigits * DecimalUtility.integerSize);
+      holder.start = 0;
+    }
+
+    @Override
+    public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
+      DecimalUtility.getSparseFromBigDecimal(
+          ((HiveDecimalObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue).bigDecimalValue(),
+          holder.buffer, holder.start, holder.scale, holder.precision, Decimal28SparseHolder.nDecimalDigits);
+      return ((NullableDecimal28SparseVector) outputVV).getMutator().setSafe(outputIndex, holder);
+    }
+  }
+
+  public static class Decimal38 extends HiveFieldConverter {
+    private final Decimal38SparseHolder holder = new Decimal38SparseHolder();
+
+    public Decimal38(int precision, int scale, FragmentContext context) {
+      holder.scale = scale;
+      holder.precision = precision;
+      holder.buffer = context.getManagedBuffer(Decimal38SparseHolder.nDecimalDigits * DecimalUtility.integerSize);
+      holder.start = 0;
+    }
+
+    @Override
+    public boolean setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
+      DecimalUtility.getSparseFromBigDecimal(
+          ((HiveDecimalObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue).bigDecimalValue(),
+          holder.buffer, holder.start, holder.scale, holder.precision, Decimal38SparseHolder.nDecimalDigits);
+      return ((NullableDecimal38SparseVector) outputVV).getMutator().setSafe(outputIndex, holder);
     }
   }
 

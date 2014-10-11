@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
@@ -28,19 +29,28 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.holders.Decimal18Holder;
+import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
+import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.DateVector;
+import org.apache.drill.exec.vector.Decimal18Vector;
+import org.apache.drill.exec.vector.Decimal28SparseVector;
+import org.apache.drill.exec.vector.Decimal38SparseVector;
+import org.apache.drill.exec.vector.Decimal9Vector;
 import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
@@ -63,6 +73,8 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.HiveDecimalUtils;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
@@ -198,7 +210,7 @@ public class HiveRecordReader extends AbstractRecordReader {
 
         selectedColumnObjInspectors.add(fieldOI);
         selectedColumnTypes.add(typeInfo);
-        selectedColumnFieldConverters.add(HiveFieldConverter.create(typeInfo));
+        selectedColumnFieldConverters.add(HiveFieldConverter.create(typeInfo, fragmentContext));
       }
 
       if (isStarQuery()) {
@@ -243,14 +255,14 @@ public class HiveRecordReader extends AbstractRecordReader {
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try {
       for (int i = 0; i < selectedColumnNames.size(); i++) {
-        MajorType type = Types.optional(getMinorTypeFromHiveTypeInfo(selectedColumnTypes.get(i)));
+        MajorType type = getMajorTypeFromHiveTypeInfo(selectedColumnTypes.get(i), true);
         MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(selectedColumnNames.get(i)), type);
         Class vvClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
         vectors.add(output.addField(field, vvClass));
       }
 
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
-        MajorType type = Types.required(getMinorTypeFromHiveTypeInfo(selectedPartitionTypes.get(i)));
+        MajorType type = getMajorTypeFromHiveTypeInfo(selectedPartitionTypes.get(i), false);
         MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(selectedPartitionNames.get(i)), type);
         Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         pVectors.add(output.addField(field, vvClass));
@@ -340,38 +352,52 @@ public class HiveRecordReader extends AbstractRecordReader {
       case BINARY:
         return TypeProtos.MinorType.VARBINARY;
       case BOOLEAN:
-        return TypeProtos.MinorType.BIT;
+        return MinorType.BIT;
       case BYTE:
-        return TypeProtos.MinorType.TINYINT;
-      case DECIMAL:
-        return TypeProtos.MinorType.VARCHAR;
+        return MinorType.TINYINT;
+      case DECIMAL: {
+        DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
+        return DecimalUtility.getDecimalDataType(decimalTypeInfo.precision());
+      }
       case DOUBLE:
-        return TypeProtos.MinorType.FLOAT8;
+        return MinorType.FLOAT8;
       case FLOAT:
-        return TypeProtos.MinorType.FLOAT4;
+        return MinorType.FLOAT4;
       case INT:
-        return TypeProtos.MinorType.INT;
+        return MinorType.INT;
       case LONG:
-        return TypeProtos.MinorType.BIGINT;
+        return MinorType.BIGINT;
       case SHORT:
-        return TypeProtos.MinorType.SMALLINT;
+        return MinorType.SMALLINT;
       case STRING:
       case VARCHAR:
-        return TypeProtos.MinorType.VARCHAR;
+        return MinorType.VARCHAR;
       case TIMESTAMP:
-        return TypeProtos.MinorType.TIMESTAMP;
+        return MinorType.TIMESTAMP;
       case DATE:
-        return TypeProtos.MinorType.DATE;
+        return MinorType.DATE;
     }
 
     throwUnsupportedHiveDataTypeError(primitiveTypeInfo.getPrimitiveCategory().toString());
     return null;
   }
 
-  public static MinorType getMinorTypeFromHiveTypeInfo(TypeInfo typeInfo) {
+  public static MajorType getMajorTypeFromHiveTypeInfo(TypeInfo typeInfo, boolean nullable) {
     switch (typeInfo.getCategory()) {
-      case PRIMITIVE:
-        return getMinorTypeFromHivePrimitiveTypeInfo(((PrimitiveTypeInfo) typeInfo));
+      case PRIMITIVE: {
+        PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) typeInfo;
+        MinorType minorType = getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo);
+        MajorType.Builder typeBuilder = MajorType.newBuilder().setMinorType(minorType)
+            .setMode((nullable ? DataMode.OPTIONAL : DataMode.REQUIRED));
+
+        if (primitiveTypeInfo.getPrimitiveCategory() == PrimitiveCategory.DECIMAL) {
+          DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
+          typeBuilder.setPrecision(decimalTypeInfo.precision())
+              .setScale(decimalTypeInfo.scale()).build();
+        }
+
+        return typeBuilder.build();
+      }
 
       case LIST:
       case MAP:
@@ -489,17 +515,65 @@ public class HiveRecordReader extends AbstractRecordReader {
           break;
         }
         case DECIMAL: {
-          VarCharVector v = (VarCharVector) vector;
-          byte[] value = ((HiveDecimal) val).toString().getBytes();
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
+          populateDecimalPartitionVector((DecimalTypeInfo)selectedPartitionTypes.get(i), vector,
+              ((HiveDecimal)val).bigDecimalValue(), recordCount);
           break;
         }
         default:
           throwUnsupportedHiveDataTypeError(pCat.toString());
       }
       vector.getMutator().setValueCount(recordCount);
+    }
+  }
+
+  private void populateDecimalPartitionVector(DecimalTypeInfo typeInfo, ValueVector vector, BigDecimal bigDecimal,
+      int recordCount) {
+    int precision = typeInfo.precision();
+    int scale = typeInfo.scale();
+    if (precision <= 9) {
+      Decimal9Holder holder = new Decimal9Holder();
+      holder.scale = scale;
+      holder.precision = precision;
+      holder.value = DecimalUtility.getDecimal9FromBigDecimal(bigDecimal, precision, scale);
+      Decimal9Vector v = (Decimal9Vector) vector;
+      for (int j = 0; j < recordCount; j++) {
+        v.getMutator().setSafe(j, holder);
+      }
+    } else if (precision <= 18) {
+      Decimal18Holder holder = new Decimal18Holder();
+      holder.scale = scale;
+      holder.precision = precision;
+      holder.value = DecimalUtility.getDecimal18FromBigDecimal(bigDecimal, precision, scale);
+      Decimal18Vector v = (Decimal18Vector) vector;
+      for (int j = 0; j < recordCount; j++) {
+        v.getMutator().setSafe(j, holder);
+      }
+    } else if (precision <= 28) {
+      Decimal28SparseHolder holder = new Decimal28SparseHolder();
+      holder.scale = scale;
+      holder.precision = precision;
+      holder.buffer = fragmentContext.getManagedBuffer(
+          Decimal28SparseHolder.nDecimalDigits * DecimalUtility.integerSize);
+      holder.start = 0;
+      DecimalUtility.getSparseFromBigDecimal(bigDecimal, holder.buffer, 0, scale, precision,
+          Decimal28SparseHolder.nDecimalDigits);
+      Decimal28SparseVector v = (Decimal28SparseVector) vector;
+      for (int j = 0; j < recordCount; j++) {
+        v.getMutator().setSafe(j, holder);
+      }
+    } else {
+      Decimal38SparseHolder holder = new Decimal38SparseHolder();
+      holder.scale = scale;
+      holder.precision = precision;
+      holder.buffer = fragmentContext.getManagedBuffer(
+          Decimal38SparseHolder.nDecimalDigits * DecimalUtility.integerSize);
+      holder.start = 0;
+      DecimalUtility.getSparseFromBigDecimal(bigDecimal, holder.buffer, 0, scale, precision,
+          Decimal38SparseHolder.nDecimalDigits);
+      Decimal38SparseVector v = (Decimal38SparseVector) vector;
+      for (int j = 0; j < recordCount; j++) {
+        v.getMutator().setSafe(j, holder);
+      }
     }
   }
 
@@ -519,8 +593,11 @@ public class HiveRecordReader extends AbstractRecordReader {
         return Boolean.parseBoolean(value);
       case BYTE:
         return Byte.parseByte(value);
-      case DECIMAL:
-        return HiveDecimal.create(value);
+      case DECIMAL: {
+        DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) typeInfo;
+        return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value),
+            decimalTypeInfo.precision(), decimalTypeInfo.scale());
+      }
       case DOUBLE:
         return Double.parseDouble(value);
       case FLOAT:

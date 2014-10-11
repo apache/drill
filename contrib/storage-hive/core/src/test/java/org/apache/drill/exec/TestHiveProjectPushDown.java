@@ -65,8 +65,8 @@ public class TestHiveProjectPushDown extends PlanTestBase {
 
   @Test
   public void testMultiplePartitionColumnsProject() throws Exception {
-    String query = "SELECT double_part as dbl_p, decimal_part as dec_p FROM hive.`default`.readtest";
-    String expectedColNames = " \"columns\" : [ \"`double_part`\", \"`decimal_part`\" ]";
+    String query = "SELECT double_part as dbl_p, decimal0_part as dec_p FROM hive.`default`.readtest";
+    String expectedColNames = " \"columns\" : [ \"`double_part`\", \"`decimal0_part`\" ]";
 
     testHelper(query, expectedColNames, 2);
   }
@@ -74,9 +74,9 @@ public class TestHiveProjectPushDown extends PlanTestBase {
   @Test
   public void testPartitionAndRegularColumnProjectColumn() throws Exception {
     String query = "SELECT boolean_field as b_f, tinyint_field as ti_f, " +
-        "double_part as dbl_p, decimal_part as dec_p FROM hive.`default`.readtest";
+        "double_part as dbl_p, decimal0_part as dec_p FROM hive.`default`.readtest";
     String expectedColNames = " \"columns\" : [ \"`boolean_field`\", \"`tinyint_field`\", " +
-        "\"`double_part`\", \"`decimal_part`\" ]";
+        "\"`double_part`\", \"`decimal0_part`\" ]";
 
     testHelper(query, expectedColNames, 2);
   }

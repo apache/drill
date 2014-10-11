@@ -120,7 +120,11 @@ public class HiveTestDataGenerator {
         "  binary_field BINARY," +
         "  boolean_field BOOLEAN," +
         "  tinyint_field TINYINT," +
-        "  decimal_field DECIMAL(38, 3)," +
+        "  decimal0_field DECIMAL," +
+        "  decimal9_field DECIMAL(6, 2)," +
+        "  decimal18_field DECIMAL(15, 5)," +
+        "  decimal28_field DECIMAL(23, 1)," +
+        "  decimal38_field DECIMAL(30, 3)," +
         "  double_field DOUBLE," +
         "  float_field FLOAT," +
         "  int_field INT," +
@@ -134,7 +138,11 @@ public class HiveTestDataGenerator {
         "  binary_part BINARY," +
         "  boolean_part BOOLEAN," +
         "  tinyint_part TINYINT," +
-        "  decimal_part DECIMAL(38, 3)," +
+        "  decimal0_part DECIMAL," +
+        "  decimal9_part DECIMAL(6, 2)," +
+        "  decimal18_part DECIMAL(15, 5)," +
+        "  decimal28_part DECIMAL(23, 1)," +
+        "  decimal38_part DECIMAL(30, 3)," +
         "  double_part DOUBLE," +
         "  float_part FLOAT," +
         "  int_part INT," +
@@ -153,7 +161,11 @@ public class HiveTestDataGenerator {
         "  binary_part='binary', " +
         "  boolean_part='true', " +
         "  tinyint_part='64', " +
-        "  decimal_part='3489423929323435243', " +
+        "  decimal0_part='36.9', " +
+        "  decimal9_part='36.9', " +
+        "  decimal18_part='3289379872.945645', " +
+        "  decimal28_part='39579334534534.35345', " +
+        "  decimal38_part='363945093845093890.9', " +
         "  double_part='8.345', " +
         "  float_part='4.67', " +
         "  int_part='123456', " +
@@ -170,7 +182,11 @@ public class HiveTestDataGenerator {
         "  binary_part='binary', " +
         "  boolean_part='true', " +
         "  tinyint_part='64', " +
-        "  decimal_part='3489423929323435243', " +
+        "  decimal0_part='36.9', " +
+        "  decimal9_part='36.9', " +
+        "  decimal18_part='3289379872.945645', " +
+        "  decimal28_part='39579334534534.35345', " +
+        "  decimal38_part='363945093845093890.9', " +
         "  double_part='8.345', " +
         "  float_part='4.67', " +
         "  int_part='123456', " +
@@ -275,8 +291,10 @@ public class HiveTestDataGenerator {
     File file = getTempFile();
 
     PrintWriter printWriter = new PrintWriter(file);
-    printWriter.println("YmluYXJ5ZmllbGQ=,false,34,3489423929323435243,8.345,4.67,123456,234235,3455,stringfield,varcharfield,2013-07-05 17:01:00,2013-07-05");
-    printWriter.println(",,,,,,,,,,,,");
+    printWriter.println("YmluYXJ5ZmllbGQ=,false,34,65.99,2347.923,2758725827.9999,29375892739852.7689," +
+        "89853749534593985.7834783,8.345,4.67,123456,234235,3455,stringfield,varcharfield," +
+        "2013-07-05 17:01:00,2013-07-05");
+    printWriter.println(",,,,,,,,,,,,,,,,");
     printWriter.close();
 
     return file.getPath();
