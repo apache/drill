@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -120,7 +121,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       );
 
       // look at records
-      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
+      RecordBatchLoader batchLoader = new RecordBatchLoader(new TopLevelAllocator(CONFIG));
       int recordCount = 0;
 
       //int expectedBatchCount = 2;
@@ -129,11 +130,12 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
 
       for (int i = 0; i < results.size(); ++i) {
         QueryResultBatch batch = results.get(i);
-        if (i == 0) {
+        if (i == 1) {
           assertTrue(batch.hasData());
         } else {
           assertFalse(batch.hasData());
-          return;
+          batch.release();
+          continue;
         }
 
         assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));

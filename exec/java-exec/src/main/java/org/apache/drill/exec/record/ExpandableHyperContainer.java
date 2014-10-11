@@ -41,6 +41,20 @@ public class ExpandableHyperContainer extends VectorContainer {
   }
 
   public void addBatch(VectorAccessible batch) {
+    if (wrappers.size() == 0) {
+      if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
+        for (VectorWrapper w : batch) {
+          ValueVector[] hyperVector = w.getValueVectors();
+          this.add(hyperVector, true);
+        }
+      } else {
+        for (VectorWrapper w : batch) {
+          ValueVector[] hyperVector = { w.getValueVector() };
+          this.add(hyperVector, true);
+        }
+      }
+      return;
+    }
     if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
       int i = 0;
       for (VectorWrapper w : batch) {

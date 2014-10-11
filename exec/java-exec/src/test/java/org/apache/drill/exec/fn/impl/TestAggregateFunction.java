@@ -53,7 +53,7 @@ public class TestAggregateFunction extends PopUnitTestBase {
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-      QueryResultBatch batch = results.get(0);
+      QueryResultBatch batch = results.get(1);
       assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
       int i = 0;

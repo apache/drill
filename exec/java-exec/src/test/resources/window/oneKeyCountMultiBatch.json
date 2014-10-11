@@ -19,7 +19,7 @@
              {
                 @id:2,
                 child: 1,
-                pop:"sort",
+                pop:"external-sort",
                 orderings: [
                     {expr: "group"},
                     {expr: "a"}

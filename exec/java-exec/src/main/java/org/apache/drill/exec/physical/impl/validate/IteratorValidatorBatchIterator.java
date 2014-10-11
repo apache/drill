@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.validate;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
@@ -75,6 +76,12 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
   }
 
   @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    state = incoming.buildSchema();
+    return state;
+  }
+
+  @Override
   public int getRecordCount() {
     validateReadState();
     return incoming.getRecordCount();
@@ -105,7 +112,7 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
 
   @Override
   public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
-    validateReadState();
+//    validateReadState(); TODO fix this
     return incoming.getValueAccessorById(clazz, ids);
   }
 
@@ -115,12 +122,6 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
       throw new IllegalStateException("The incoming iterator has previously moved to a state of NONE. You should not be attempting to call next() again.");
     }
     state = incoming.next();
-    if (first && state == IterOutcome.NONE) {
-      throw new IllegalStateException("The incoming iterator returned a state of NONE on the first batch. There should always be at least one batch output before returning NONE");
-    }
-    if (first && state == IterOutcome.OK) {
-      throw new IllegalStateException("The incoming iterator returned a state of OK on the first batch. There should always be a new schema on the first batch. Incoming: " + incoming.getClass().getName());
-    }
     if (first) {
       first = !first;
     }
@@ -137,10 +138,6 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
       if (VALIDATE_VECTORS) {
         VectorValidator.validate(incoming);
       }
-//      int valueCount = incoming.getRecordCount();
-//      for (VectorWrapper vw : incoming) {
-//        assert valueCount == vw.getValueVector().getAccessor().getValueCount() : "Count of values in each vector within this batch does not match.";
-//      }
     }
 
     return state;

@@ -71,7 +71,7 @@ public class TestSimpleTopN extends PopUnitTestBase {
 
       for (QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() == 0) {
-          break;
+          continue;
         }
         batchCount++;
         RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());

@@ -196,6 +196,7 @@ public class TestJdbcQuery extends JdbcTestQueryBase{
                                                        "date_add(date '2010-2-23', 1) " +
                                                        "from cp.`employee.json` limit 1");
 
+          resultSet.next();
           java.sql.Date date = resultSet.getDate(1);
           java.sql.Time time = resultSet.getTime(2);
           java.sql.Timestamp ts = resultSet.getTimestamp(3);

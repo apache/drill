@@ -62,6 +62,7 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.carrotsearch.hppc.IntOpenHashSet;
@@ -79,6 +80,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private boolean hasRemainder = false;
   private int remainderIndex = 0;
   private int recordCount;
+  private boolean buildingSchema = true;
 
   private static final String EMPTY_STRING = "";
 
@@ -136,6 +138,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   protected IterOutcome doWork() {
 //    VectorUtil.showVectorAccessibleContent(incoming, ",");
     int incomingRecordCount = incoming.getRecordCount();
+
+    container.zeroVectors();
 
     if (!doAlloc()) {
       outOfMemory = true;
@@ -261,9 +265,25 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   }
 
   @Override
-  protected void setupNewSchema() throws SchemaChangeException {
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    incoming.buildSchema();
+    setupNewSchema();
+    return IterOutcome.OK_NEW_SCHEMA;
+  }
+
+  @Override
+  protected boolean setupNewSchema() throws SchemaChangeException {
+    if (allocationVectors != null) {
+      for (ValueVector v : allocationVectors) {
+        v.clear();
+      }
+    }
     this.allocationVectors = Lists.newArrayList();
-    container.clear();
+    if (complexWriters != null) {
+      container.clear();
+    } else {
+      container.zeroVectors();
+    }
     final List<NamedExpression> exprs = getExpressionList();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
@@ -300,9 +320,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
                 continue;
               }
               FieldReference ref = new FieldReference(name);
-              TransferPair tp = wrapper.getValueVector().getTransferPair(ref);
+              ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vvIn.getField().getType()));
+              TransferPair tp = vvIn.makeTransferPair(vvOut);
               transfers.add(tp);
-              container.add(tp.getTo());
             }
           } else if (value != null && value.intValue() > 1) { // subsequent wildcards should do a copy of incoming valuevectors
             int k = 0;
@@ -323,9 +343,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
               }
 
               MaterializedField outputField = MaterializedField.create(name, expr.getMajorType());
-              ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+              ValueVector vv = container.addOrGet(outputField);
               allocationVectors.add(vv);
-              TypedFieldId fid = container.add(vv);
+              TypedFieldId fid = container.getValueVectorId(outputField.getPath());
               ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
               HoldingContainer hc = cg.addExpr(write);
 
@@ -363,9 +383,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         ValueVector vvIn = incoming.getValueAccessorById(id.getIntermediateClass(), id.getFieldIds()).getValueVector();
         Preconditions.checkNotNull(incoming);
 
-        TransferPair tp = vvIn.getTransferPair(getRef(namedExpression));
+        FieldReference ref = getRef(namedExpression);
+        ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vectorRead.getMajorType()));
+        TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
-        container.add(tp.getTo());
         transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
         logger.debug("Added transfer for project expression.");
       } else if (expr instanceof DrillFuncHolderExpr &&
@@ -379,11 +400,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
         ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
         cg.addExpr(expr);
+        if (buildingSchema) {
+          buildingSchema = false;
+          MaterializedField f = MaterializedField.create(outputField.getPath().getAsUnescapedPath(), Types.required(MinorType.MAP));
+          container.addOrGet(f);
+        }
       } else{
         // need to do evaluation.
-        ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+        ValueVector vector = container.addOrGet(outputField);
         allocationVectors.add(vector);
-        TypedFieldId fid = container.add(vector);
+        TypedFieldId fid = container.getValueVectorId(outputField.getPath());
         ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
         HoldingContainer hc = cg.addExpr(write);
 
@@ -395,13 +421,18 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     cg.rotateBlock();
     cg.getEvalBlock()._return(JExpr.TRUE);
 
-    container.buildSchema(SelectionVectorMode.NONE);
 
     try {
       this.projector = context.getImplementationClass(cg.getCodeGenerator());
       projector.setup(context, incoming, this, transfers);
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
+    }
+    if (container.isSchemaChanged()) {
+      container.buildSchema(SelectionVectorMode.NONE);
+      return true;
+    } else {
+      return false;
     }
   }
 

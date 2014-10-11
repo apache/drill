@@ -67,6 +67,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private final AtomicIntegerArray remainingReceivers;
   private final AtomicInteger remaingReceiverCount;
   private volatile boolean done = false;
+  private boolean first = true;
 
   long minReceiverRecordCount = Long.MAX_VALUE;
   long maxReceiverRecordCount = Long.MIN_VALUE;
@@ -110,6 +111,22 @@ public class PartitionSenderRootExec extends BaseRootExec {
   }
 
   @Override
+  public void buildSchema() throws SchemaChangeException {
+    incoming.buildSchema();
+    stats.startProcessing();
+    try {
+      createPartitioner();
+      try {
+        partitioner.flushOutgoingBatches(false, true);
+      } catch (IOException e) {
+        throw new SchemaChangeException(e);
+      }
+    } finally {
+      stats.stopProcessing();
+    }
+  }
+
+  @Override
   public boolean innerNext() {
     boolean newSchema = false;
 
@@ -128,6 +145,10 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
 
     logger.debug("Partitioner.next(): got next record batch with status {}", out);
+    if (first && out == IterOutcome.OK) {
+      first = false;
+      out = IterOutcome.OK_NEW_SCHEMA;
+    }
     switch(out){
       case NONE:
         try {

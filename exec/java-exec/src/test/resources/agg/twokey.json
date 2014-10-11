@@ -30,7 +30,7 @@
         {
             @id:3,
             child: 2,
-            pop:"sort",
+            pop:"external-sort",
             orderings: [
               {expr: "key1"},
               {expr: "alt"}

@@ -97,7 +97,7 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test
   public void testSelStarRegColConstJoin() throws Exception {
-    test("select *, n.n_nationkey, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+    test("select *, n.n_nationkey as n_nationkey0, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
 
   @Test

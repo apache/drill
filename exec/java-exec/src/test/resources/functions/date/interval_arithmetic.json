@@ -30,7 +30,7 @@
               { ref: "IntervalYear4", expr: "cast('P1Y2M' as intervalyear) / 2"},
               { ref: "IntervalDay4", expr: " cast('PT1H0M3S' as intervalday) / 2"},
               { ref: "IntervalYear5", expr: "cast('P1Y2M' as intervalyear) * 2.4"},
-              { ref: "IntervalDay6", expr: " 2.4 * cast('PT1H0M3S' as intervalday)"},
+              { ref: "IntervalDay5", expr: " 2.4 * cast('PT1H0M3S' as intervalday)"},
               { ref: "IntervalYear6", expr: "cast('P1Y2M' as intervalyear) / 2.1"},
               { ref: "IntervalDay6", expr: " cast('PT1H0M3S' as intervalday) / 2.1"}
             ]

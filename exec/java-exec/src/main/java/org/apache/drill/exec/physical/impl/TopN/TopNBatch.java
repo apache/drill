@@ -110,15 +110,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   @Override
-  public BatchSchema getSchema() {
-    List<MaterializedField> fields = Lists.newArrayList();
-    for (MaterializedField field : incoming.getSchema()) {
-      fields.add(field);
-    }
-    return BatchSchema.newBuilder().addFields(fields).setSelectionVectorMode(SelectionVectorMode.FOUR_BYTE).build();
-  }
-
-  @Override
   public void cleanup() {
     if (sv4 != null) {
       sv4.clear();
@@ -128,6 +119,32 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     }
     super.cleanup();
     incoming.cleanup();
+  }
+
+  @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    VectorContainer c = new VectorContainer(oContext);
+    stats.startProcessing();
+    try {
+      stats.stopProcessing();
+      try {
+        incoming.buildSchema();
+      } finally {
+        stats.startProcessing();
+      }
+      for (VectorWrapper w : incoming) {
+        c.addOrGet(w.getField());
+      }
+      c = VectorContainer.canonicalize(c);
+      for (VectorWrapper w : c) {
+        container.add(w.getValueVector());
+      }
+      container.buildSchema(SelectionVectorMode.NONE);
+      container.setRecordCount(0);
+      return IterOutcome.OK_NEW_SCHEMA;
+    } finally {
+      stats.stopProcessing();
+    }
   }
 
   @Override
@@ -146,6 +163,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         Stopwatch watch = new Stopwatch();
         watch.start();
         IterOutcome upstream = incoming.next();
+        if (upstream == IterOutcome.OK && schema == null) {
+          upstream = IterOutcome.OK_NEW_SCHEMA;
+          container.clear();
+        }
         logger.debug("Took {} us to get next", watch.elapsed(TimeUnit.MICROSECONDS));
         switch (upstream) {
         case NONE:
@@ -191,6 +212,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       priorityQueue.generate();
 
       this.sv4 = priorityQueue.getFinalSv4();
+      container.clear();
       for (VectorWrapper w : priorityQueue.getHyperBatch()) {
         container.add(w.getValueVectors());
       }
@@ -210,7 +232,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     Stopwatch watch = new Stopwatch();
     watch.start();
     VectorContainer c = priorityQueue.getHyperBatch();
-    VectorContainer newContainer = new VectorContainer();
+    VectorContainer newContainer = new VectorContainer(oContext);
     SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();
     SimpleRecordBatch batch = new SimpleRecordBatch(c, selectionVector4, context);
     SimpleRecordBatch newBatch = new SimpleRecordBatch(newContainer, null, context);
@@ -320,6 +342,11 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     @Override
     public BatchSchema getSchema() {
       return container.getSchema();
+    }
+
+    @Override
+    public IterOutcome buildSchema() throws SchemaChangeException {
+      return null;
     }
 
     @Override

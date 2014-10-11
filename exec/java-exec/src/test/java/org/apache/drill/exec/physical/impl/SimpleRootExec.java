@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -39,6 +40,7 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
 
   private RecordBatch incoming;
   private ScreenRoot screenRoot;
+  private boolean schemaBuilt = false;
   public SimpleRootExec(RootExec e) {
     if (e instanceof ScreenRoot) {
       incoming = ((ScreenRoot)e).getIncoming();
@@ -68,7 +70,20 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   }
 
   @Override
+  public void buildSchema() throws SchemaChangeException {
+    incoming.buildSchema();
+    schemaBuilt = true;
+  }
+
+  @Override
   public boolean next() {
+    if (!schemaBuilt) {
+      try {
+        buildSchema();
+      } catch (SchemaChangeException e) {
+        throw new RuntimeException(e);
+      }
+    }
     switch (incoming.next()) {
     case NONE:
     case STOP:

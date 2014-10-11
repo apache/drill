@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -30,6 +31,7 @@ import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -47,7 +49,6 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   private RecordWriter recordWriter;
   private int counter = 0;
   private final RecordBatch incoming;
-  private boolean first = true;
   private boolean processed = false;
   private String fragmentUniqueId;
 
@@ -71,8 +72,23 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   }
 
   @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    incoming.buildSchema();
+    try {
+      stats.startProcessing();
+      setupNewSchema();
+    } catch (Exception e) {
+      throw new SchemaChangeException(e);
+    } finally {
+      stats.stopProcessing();
+    }
+    return IterOutcome.OK_NEW_SCHEMA;
+  }
+
+  @Override
   public IterOutcome innerNext() {
     if(processed) {
+      cleanup();
       // if the upstream record batch is already processed and next() is called by
       // downstream then return NONE to indicate completion
       return IterOutcome.NONE;
@@ -82,16 +98,11 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     IterOutcome upstream;
     do {
       upstream = next(incoming);
-      if(first && upstream == IterOutcome.OK) {
-        upstream = IterOutcome.OK_NEW_SCHEMA;
-      }
-      first = false;
 
       switch(upstream) {
         case NOT_YET:
         case NONE:
         case STOP:
-          cleanup();
           if (upstream == IterOutcome.STOP) {
             return upstream;
           }
@@ -125,22 +136,12 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       }
     } while(upstream != IterOutcome.NONE);
 
-    // Create two vectors for:
-    //   1. Fragment unique id.
-    //   2. Summary: currently contains number of records written.
-    MaterializedField fragmentIdField = MaterializedField.create(SchemaPath.getSimplePath("Fragment"), Types.required(MinorType.VARCHAR));
-    MaterializedField summaryField = MaterializedField.create(SchemaPath.getSimplePath("Number of records written"), Types.required(MinorType.BIGINT));
 
-    VarCharVector fragmentIdVector = (VarCharVector) TypeHelper.getNewVector(fragmentIdField, context.getAllocator());
-    AllocationHelper.allocate(fragmentIdVector, 1, TypeHelper.getSize(Types.required(MinorType.VARCHAR)));
-    BigIntVector summaryVector = (BigIntVector) TypeHelper.getNewVector(summaryField, context.getAllocator());
-    AllocationHelper.allocate(summaryVector, 1, TypeHelper.getSize(Types.required(MinorType.VARCHAR)));
-
-
-    container.add(fragmentIdVector);
-    container.add(summaryVector);
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-
+    VarCharVector fragmentIdVector = (VarCharVector) container.getValueAccessorById(VarCharVector.class, container.getValueVectorId(SchemaPath.getSimplePath("Fragment")).getFieldIds()).getValueVector();
+    AllocationHelper.allocate(fragmentIdVector, 1, 50);
+    BigIntVector summaryVector = (BigIntVector) container.getValueAccessorById(BigIntVector.class,
+            container.getValueVectorId(SchemaPath.getSimplePath("Number of records written")).getFieldIds()).getValueVector();
+    AllocationHelper.allocate(summaryVector, 1, 8);
     fragmentIdVector.getMutator().setSafe(0, fragmentUniqueId.getBytes());
     fragmentIdVector.getMutator().setValueCount(1);
     summaryVector.getMutator().setSafe(0, counter);
@@ -157,6 +158,15 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       // update the schema in RecordWriter
       stats.startSetup();
       recordWriter.updateSchema(incoming.getSchema());
+      // Create two vectors for:
+      //   1. Fragment unique id.
+      //   2. Summary: currently contains number of records written.
+      MaterializedField fragmentIdField = MaterializedField.create(SchemaPath.getSimplePath("Fragment"), Types.required(MinorType.VARCHAR));
+      MaterializedField summaryField = MaterializedField.create(SchemaPath.getSimplePath("Number of records written"), Types.required(MinorType.BIGINT));
+
+      container.addOrGet(fragmentIdField);
+      container.addOrGet(summaryField);
+      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     } catch(IOException ex) {
       throw new RuntimeException("Failed to update schema in RecordWriter", ex);
     } finally{
@@ -164,6 +174,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     }
 
     eventBasedRecordWriter = new EventBasedRecordWriter(incoming, recordWriter);
+    container.buildSchema(SelectionVectorMode.NONE);
   }
 
   @Override

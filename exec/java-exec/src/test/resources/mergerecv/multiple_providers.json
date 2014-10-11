@@ -42,7 +42,7 @@
     {
       @id: 2,
       child: 1,
-      pop: "sort",
+      pop: "external-sort",
       orderings: [ {expr: "blue", order:"ASC"},  {expr: "red", order:"ASC"} ]
     },
     {

@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -85,6 +86,30 @@ public class ScreenCreator implements RootCreator<Screen>{
       this.connection = context.getConnection();
     }
 
+    @Override
+    public void buildSchema() throws SchemaChangeException {
+      stats.startProcessing();
+      try {
+        stats.stopProcessing();
+        try {
+          incoming.buildSchema();
+        } finally {
+          stats.startProcessing();
+        }
+
+        QueryWritableBatch batch = QueryWritableBatch.getEmptyBatchWithSchema(context.getHandle().getQueryId(), 0, false, incoming.getSchema());
+        stats.startWait();
+        try {
+          connection.sendResult(listener, batch);
+        } finally {
+          stats.stopWait();
+        }
+        sendCount.increment();
+      } finally {
+        stats.stopProcessing();
+      }
+      materializer = new VectorRecordMaterializer(context, incoming);
+    }
 
     @Override
     public boolean innerNext() {
@@ -123,17 +148,13 @@ public class ScreenCreator implements RootCreator<Screen>{
       case NONE: {
         this.internalStop();
         QueryWritableBatch batch;
-        if (!first) {
-          QueryResult header = QueryResult.newBuilder() //
-              .setQueryId(context.getHandle().getQueryId()) //
-              .setRowCount(0) //
-              .setDef(RecordBatchDef.getDefaultInstance()) //
-              .setIsLastChunk(true) //
-              .build();
-          batch = new QueryWritableBatch(header);
-        } else {
-          batch = QueryWritableBatch.getEmptyBatchWithSchema(context.getHandle().getQueryId(), 0, true, incoming.getSchema());
-        }
+        QueryResult header = QueryResult.newBuilder() //
+            .setQueryId(context.getHandle().getQueryId()) //
+            .setRowCount(0) //
+            .setDef(RecordBatchDef.getDefaultInstance()) //
+            .setIsLastChunk(true) //
+            .build();
+        batch = new QueryWritableBatch(header);
         stats.startWait();
         try {
           connection.sendResult(listener, batch);

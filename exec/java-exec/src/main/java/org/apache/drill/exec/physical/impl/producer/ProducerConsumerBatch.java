@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -53,6 +54,30 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
     super(popConfig, context);
     this.incoming = incoming;
     this.queue = new LinkedBlockingDeque<>(popConfig.getSize());
+  }
+
+  @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    stats.startProcessing();
+    try {
+      stats.stopProcessing();
+      try {
+        incoming.buildSchema();
+      } finally {
+        stats.startProcessing();
+      }
+      stats.startSetup();
+      try {
+        for (VectorWrapper w : incoming) {
+          container.addOrGet(w.getField());
+        }
+      } finally {
+        stats.stopSetup();
+      }
+    } finally {
+      stats.stopProcessing();
+    }
+    return IterOutcome.OK_NEW_SCHEMA;
   }
 
   @Override

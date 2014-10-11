@@ -89,17 +89,45 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    stats.startProcessing();
+    try {
+      stats.stopProcessing();
+      try {
+        incoming.buildSchema();
+      } finally {
+        stats.startProcessing();
+      }
+      if (!createAggregator()) {
+        done = true;
+        return IterOutcome.STOP;
+      }
+      return IterOutcome.OK_NEW_SCHEMA;
+    } finally {
+      stats.stopProcessing();
+    }
+  }
+
+  @Override
   public IterOutcome innerNext() {
     if (done) {
       return IterOutcome.NONE;
     }
     // this is only called on the first batch. Beyond this, the aggregator manages batches.
-    if (aggregator == null) {
+    if (aggregator == null || first) {
+      first = false;
+      if (aggregator != null) {
+        aggregator.cleanup();
+      }
       IterOutcome outcome = next(incoming);
+      if (outcome == IterOutcome.OK) {
+        outcome = IterOutcome.OK_NEW_SCHEMA;
+      }
       logger.debug("Next outcome of {}", outcome);
       switch (outcome) {
       case NONE:
-        throw new UnsupportedOperationException("Received NONE on first batch");
+//        throw new UnsupportedOperationException("Received NONE on first batch");
+        return outcome;
       case NOT_YET:
       case STOP:
         return outcome;
@@ -110,7 +138,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         }
         break;
       case OK:
-        throw new IllegalStateException("You should never get a first batch without a new schema");
+        break;
       default:
         throw new IllegalStateException(String.format("unknown outcome %s", outcome));
       }
@@ -123,11 +151,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   if (aggregator.buildComplete() && ! aggregator.allFlushed()) {
     // aggregation is complete and not all records have been output yet
     IterOutcome outcome = aggregator.outputCurrentBatch();
-    if (outcome == IterOutcome.NONE && first) {
-      first = false;
-      done = true;
-      return IterOutcome.OK_NEW_SCHEMA;
-    }
     return outcome;
   }
 
@@ -144,11 +167,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         // fall through
       case RETURN_OUTCOME:
         IterOutcome outcome = aggregator.getOutcome();
-        if (outcome == IterOutcome.NONE && first) {
-          first = false;
-          done = true;
-          return IterOutcome.OK_NEW_SCHEMA;
-        }
         return aggregator.getOutcome();
       case UPDATE_AGGREGATOR:
         aggregator = null;

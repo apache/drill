@@ -356,13 +356,14 @@ public class Accountor {
         sb.append("at stack location:\n");
         entry.addToString(sb);
       }
-      IllegalStateException e = new IllegalStateException(sb.toString());
-      if (errorOnLeak) {
-        throw e;
-      } else {
-        logger.warn("Memory leaked.", e);
+      if (!buffers.isEmpty()) {
+        IllegalStateException e = new IllegalStateException(sb.toString());
+        if (errorOnLeak) {
+          throw e;
+        } else {
+          logger.warn("Memory leaked.", e);
+        }
       }
-
     }
 
     remainder.close();

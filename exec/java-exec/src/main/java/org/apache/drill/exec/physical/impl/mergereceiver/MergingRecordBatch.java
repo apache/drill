@@ -50,10 +50,12 @@ import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.record.RawFragmentBatchProvider;
 import org.apache.drill.exec.record.RecordBatch;
@@ -125,7 +127,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     //super(config, context);
     this.fragProviders = fragProviders;
     this.context = context;
-    this.outgoingContainer = new VectorContainer();
+    this.outgoingContainer = new VectorContainer(oContext);
     this.stats.setLongStat(Metric.NUM_SENDERS, config.getNumSenders());
     this.config = config;
   }
@@ -212,23 +214,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
       // allocate the incoming record batch loaders
       senderCount = rawBatches.size();
-      if (senderCount == 0) {
-        if (firstBatch) {
-          RecordBatchLoader loader = new RecordBatchLoader(oContext.getAllocator());
-          try {
-            loader.load(emptyBatch.getHeader().getDef(), emptyBatch.getBody());
-          } catch (SchemaChangeException e) {
-            throw new RuntimeException(e);
-          }
-          for (VectorWrapper w : loader) {
-            outgoingContainer.add(w.getValueVector());
-          }
-          outgoingContainer.buildSchema(SelectionVectorMode.NONE);
-          done = true;
-          return IterOutcome.OK_NEW_SCHEMA;
-        }
-        return IterOutcome.NONE;
-      }
       incomingBatches = new RawFragmentBatch[senderCount];
       batchOffsets = new int[senderCount];
       batchLoaders = new RecordBatchLoader[senderCount];
@@ -274,9 +259,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         bldr.addField(v.getField());
 
         // allocate a new value vector
-        ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), oContext.getAllocator());
+        ValueVector outgoingVector = outgoingContainer.addOrGet(v.getField());
         outgoingVector.allocateNew();
-        outgoingContainer.add(outgoingVector);
         ++vectorCount;
       }
 
@@ -443,6 +427,24 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   @Override
   public BatchSchema getSchema() {
     return outgoingContainer.getSchema();
+  }
+
+  @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    stats.startProcessing();
+    try {
+      RawFragmentBatch batch = getNext(fragProviders[0]);
+      for (SerializedField field : batch.getHeader().getDef().getFieldList()) {
+        outgoingContainer.addOrGet(MaterializedField.create(field));
+      }
+    } catch (IOException e) {
+      throw new SchemaChangeException(e);
+    } finally {
+      stats.stopProcessing();
+    }
+    outgoingContainer = VectorContainer.canonicalize(outgoingContainer);
+    outgoingContainer.buildSchema(SelectionVectorMode.NONE);
+    return IterOutcome.OK_NEW_SCHEMA;
   }
 
   @Override

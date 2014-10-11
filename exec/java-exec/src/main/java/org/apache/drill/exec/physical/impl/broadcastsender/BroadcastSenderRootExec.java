@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.List;
 
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -80,6 +81,34 @@ public class BroadcastSenderRootExec extends BaseRootExec {
     for(int i = 0; i < destinations.size(); ++i) {
       FragmentHandle opp = handle.toBuilder().setMajorFragmentId(config.getOppositeMajorFragmentId()).setMinorFragmentId(i).build();
       tunnels[i] = context.getDataTunnel(destinations.get(i), opp);
+    }
+  }
+
+  @Override
+  public void buildSchema() throws SchemaChangeException {
+    stats.startProcessing();
+    try {
+      stats.stopProcessing();
+      try {
+        incoming.buildSchema();
+      } finally {
+        stats.startProcessing();
+      }
+
+      FragmentWritableBatch batch = FragmentWritableBatch.getEmptyBatchWithSchema(handle.getQueryId(),
+              handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), 0, incoming.getSchema());
+
+      stats.startWait();
+      for (int i = 0; i < tunnels.length; i++) {
+        try {
+          tunnels[i].sendRecordBatch(this.statusHandler, batch);
+        } finally {
+          stats.stopWait();
+        }
+        statusHandler.sendCount.increment();
+      }
+    } finally {
+      stats.stopProcessing();
     }
   }
 

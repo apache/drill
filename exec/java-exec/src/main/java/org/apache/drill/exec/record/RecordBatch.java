@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -66,6 +67,14 @@ public interface RecordBatch extends VectorAccessible {
    * @return
    */
   public BatchSchema getSchema();
+
+
+  /**
+   * To be called out the beginning of fragment execution. This will build the schema to return downstream, and to the client
+   *
+   * @return OK_NEW_SCHEMA if succesful.
+   */
+  public IterOutcome buildSchema() throws SchemaChangeException;
 
   /**
    * Provide the number of records that are within this record count

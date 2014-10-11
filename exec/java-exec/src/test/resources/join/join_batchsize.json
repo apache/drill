@@ -20,7 +20,7 @@
       ]
     },
     {
-    pop : "sort",
+    pop : "external-sort",
     @id : 2,
     child : 1,
     orderings : [ {
@@ -47,7 +47,7 @@
         ]
     },
     {
-    pop : "sort",
+    pop : "external-sort",
     @id : 5,
     child : 4,
     orderings : [ {

@@ -75,6 +75,17 @@ public class FragmentWritableBatch{
     return new FragmentWritableBatch(true, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentId, def);
   }
 
+  public static FragmentWritableBatch getEmptyBatchWithSchema(QueryId queryId, int sendMajorFragmentId, int sendMinorFragmentId,
+                                                             int receiveMajorFragmentId, int receiveMinorFragmentId, BatchSchema schema){
+
+    List<SerializedField> fields = Lists.newArrayList();
+    for (MaterializedField field : schema) {
+      fields.add(field.getAsBuilder().build());
+    }
+    RecordBatchDef def = RecordBatchDef.newBuilder().addAllField(fields).build();
+    return new FragmentWritableBatch(false, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentId, def);
+  }
+
   public ByteBuf[] getBuffers(){
     return buffers;
   }

@@ -77,6 +77,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
   @Override
   protected IterOutcome doWork() {
+    container.zeroVectors();
     int recordCount = incoming.getRecordCount();
     filter.filterBatch(recordCount);
 //    for (VectorWrapper<?> v : container) {
@@ -100,15 +101,16 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   }
 
   @Override
-  protected void setupNewSchema() throws SchemaChangeException {
-    container.clear();
+  protected boolean setupNewSchema() throws SchemaChangeException {
     if (sv2 != null) {
       sv2.clear();
     }
 
     switch (incoming.getSchema().getSelectionVectorMode()) {
       case NONE:
-        sv2 = new SelectionVector2(oContext.getAllocator());
+        if (sv2 == null) {
+          sv2 = new SelectionVector2(oContext.getAllocator());
+        }
         this.filter = generateSV2Filterer();
         break;
       case TWO_BYTE:
@@ -135,6 +137,11 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
         throw new UnsupportedOperationException();
     }
 
+    if (container.isSchemaChanged()) {
+      container.buildSchema(SelectionVectorMode.TWO_BYTE);
+      return true;
+    }
+    return false;
   }
 
   protected Filterer generateSV4Filterer() throws SchemaChangeException {
@@ -190,12 +197,10 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     cg.addExpr(new ReturnValueExpression(expr));
 
     for (VectorWrapper<?> v : incoming) {
-      TransferPair pair = v.getValueVector().getTransferPair();
-      container.add(pair.getTo());
+      TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField()));
       transfers.add(pair);
     }
 
-    container.buildSchema(SelectionVectorMode.TWO_BYTE);
 
     try {
       TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);

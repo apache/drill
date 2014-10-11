@@ -46,6 +46,8 @@ public interface HashTable {
                     RecordBatch incomingBuild, RecordBatch incomingProbe,
                     RecordBatch outgoing, VectorContainer htContainerOrig);
 
+  public void updateBatches();
+
   public PutStatus put(int incomingRowIdx, IndexPointer htIdxHolder, int retryCount);
 
   public int containsKey(int incomingRowIdx, boolean isProbe);

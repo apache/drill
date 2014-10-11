@@ -66,7 +66,7 @@ public class TestWriter extends BaseTestQuery {
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
 
-    QueryResultBatch batch = results.get(0);
+    QueryResultBatch batch = results.get(1);
     assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
     VarCharVector fragmentIdV = (VarCharVector) batchLoader.getValueAccessorById(VarCharVector.class, 0).getValueVector();

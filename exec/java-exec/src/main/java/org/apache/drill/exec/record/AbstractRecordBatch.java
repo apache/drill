@@ -20,6 +20,7 @@ package org.apache.drill.exec.record;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -113,6 +114,11 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   @Override
   public BatchSchema getSchema() {
     return container.getSchema();
+  }
+
+  @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    throw new UnsupportedOperationException("buildSchema() not yet implemented");
   }
 
   @Override

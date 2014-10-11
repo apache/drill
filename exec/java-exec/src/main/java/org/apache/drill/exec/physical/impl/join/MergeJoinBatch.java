@@ -51,6 +51,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.eigenbase.rel.JoinRelType;
@@ -136,6 +137,19 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    left.buildSchema();
+    right.buildSchema();
+    try {
+      allocateBatch(true);
+      worker = generateNewWorker();
+    } catch (IOException | ClassTransformationException e) {
+      throw new SchemaChangeException(e);
+    }
+    return IterOutcome.OK_NEW_SCHEMA;
+  }
+
+  @Override
   public IterOutcome innerNext() {
     if (done) {
       return IterOutcome.NONE;
@@ -148,9 +162,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
       JoinOutcome outcome = status.getOutcome();
       // if the previous outcome was a change in schema or we sent a batch, we have to set up a new batch.
-      if (outcome == JoinOutcome.BATCH_RETURNED ||
-          outcome == JoinOutcome.SCHEMA_CHANGED) {
-        allocateBatch();
+      if (outcome == JoinOutcome.SCHEMA_CHANGED) {
+        allocateBatch(true);
+      } else if (outcome == JoinOutcome.BATCH_RETURNED) {
+        allocateBatch(false);
       }
 
       // reset the output position to zero after our parent iterates this RecordBatch
@@ -388,7 +403,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     cg.setMappingSet(copyRightMappping);
 
     int rightVectorBase = vectorId;
-    if (worker == null || status.isRightPositionAllowed()) {
+    if (status.getLastRight() != IterOutcome.NONE && (worker == null || status.isRightPositionAllowed())) {
       for (VectorWrapper<?> vw : right) {
         MajorType inputType = vw.getField().getType();
         MajorType outputType;
@@ -418,18 +433,17 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     return w;
   }
 
-  private void allocateBatch() {
+  private void allocateBatch(boolean newSchema) {
     // allocate new batch space.
-    container.clear();
+    container.zeroVectors();
 
     //estimation of joinBatchSize : max of left/right size, expanded by a factor of 16, which is then bounded by MAX_BATCH_SIZE.
     int leftCount = worker == null ? left.getRecordCount() : (status.isLeftPositionAllowed() ? left.getRecordCount() : 0);
     int rightCount = worker == null ? left.getRecordCount() : (status.isRightPositionAllowed() ? right.getRecordCount() : 0);
     int joinBatchSize = Math.min(Math.max(leftCount, rightCount) * 16, MAX_BATCH_SIZE);
 
+    if (newSchema) {
     // add fields from both batches
-    if (worker == null || leftCount > 0) {
-
       for (VectorWrapper<?> w : left) {
         MajorType inputType = w.getField().getType();
         MajorType outputType;
@@ -438,13 +452,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         } else {
           outputType = inputType;
         }
-        ValueVector outgoingVector = TypeHelper.getNewVector(MaterializedField.create(w.getField().getPath(), outputType), oContext.getAllocator());
-        VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / Math.max(1, left.getRecordCount()))).alloc(joinBatchSize);
-        container.add(outgoingVector);
+        MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+       container.addOrGet(newField);
       }
-    }
 
-    if (worker == null || rightCount > 0) {
       for (VectorWrapper<?> w : right) {
         MajorType inputType = w.getField().getType();
         MajorType outputType;
@@ -453,10 +464,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         } else {
           outputType = inputType;
         }
-        ValueVector outgoingVector = TypeHelper.getNewVector(MaterializedField.create(w.getField().getPath(), outputType), oContext.getAllocator());
-        VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / Math.max(1, right.getRecordCount()))).alloc(joinBatchSize);
-        container.add(outgoingVector);
+        MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+        container.addOrGet(newField);
       }
+    }
+
+    for (VectorWrapper w : container) {
+      AllocationHelper.allocate(w.getValueVector(), 5000, 50);
     }
 
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
@@ -467,58 +481,60 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       JVar incomingLeftRecordBatch, JVar incomingRightRecordBatch, ErrorCollector collector) throws ClassTransformationException {
 
     cg.setMappingSet(compareMapping);
+    if (status.getLastRight() != IterOutcome.NONE) {
 
-    for (JoinCondition condition : conditions) {
-      final LogicalExpression leftFieldExpr = condition.getLeft();
-      final LogicalExpression rightFieldExpr = condition.getRight();
+      for (JoinCondition condition : conditions) {
+        final LogicalExpression leftFieldExpr = condition.getLeft();
+        final LogicalExpression rightFieldExpr = condition.getRight();
 
-      // materialize value vector readers from join expression
-      LogicalExpression materializedLeftExpr;
-      if (worker == null || status.isLeftPositionAllowed()) {
-        materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector, context.getFunctionRegistry());
-      } else {
-        materializedLeftExpr = new TypedNullConstant(Types.optional(MinorType.INT));
-      }
-      if (collector.hasErrors()) {
-        throw new ClassTransformationException(String.format(
-            "Failure while trying to materialize incoming left field.  Errors:\n %s.", collector.toErrorString()));
-      }
+        // materialize value vector readers from join expression
+        LogicalExpression materializedLeftExpr;
+        if (worker == null || status.isLeftPositionAllowed()) {
+          materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector, context.getFunctionRegistry());
+        } else {
+          materializedLeftExpr = new TypedNullConstant(Types.optional(MinorType.INT));
+        }
+        if (collector.hasErrors()) {
+          throw new ClassTransformationException(String.format(
+              "Failure while trying to materialize incoming left field.  Errors:\n %s.", collector.toErrorString()));
+        }
 
-      LogicalExpression materializedRightExpr;
-      if (worker == null || status.isRightPositionAllowed()) {
-        materializedRightExpr = ExpressionTreeMaterializer.materialize(rightFieldExpr, right, collector, context.getFunctionRegistry());
-      } else {
-        materializedRightExpr = new TypedNullConstant(Types.optional(MinorType.INT));
-      }
-      if (collector.hasErrors()) {
-        throw new ClassTransformationException(String.format(
-            "Failure while trying to materialize incoming right field.  Errors:\n %s.", collector.toErrorString()));
-      }
+        LogicalExpression materializedRightExpr;
+        if (worker == null || status.isRightPositionAllowed()) {
+          materializedRightExpr = ExpressionTreeMaterializer.materialize(rightFieldExpr, right, collector, context.getFunctionRegistry());
+        } else {
+          materializedRightExpr = new TypedNullConstant(Types.optional(MinorType.INT));
+        }
+        if (collector.hasErrors()) {
+          throw new ClassTransformationException(String.format(
+              "Failure while trying to materialize incoming right field.  Errors:\n %s.", collector.toErrorString()));
+        }
 
-      // generate compare()
-      ////////////////////////
-      cg.setMappingSet(compareMapping);
-      cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
-      ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
+        // generate compare()
+        ////////////////////////
+        cg.setMappingSet(compareMapping);
+        cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
+        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
 
-      cg.setMappingSet(compareRightMapping);
-      cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
-      ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(materializedRightExpr, false);
+        cg.setMappingSet(compareRightMapping);
+        cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
+        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(materializedRightExpr, false);
 
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(compareLeftExprHolder,
-        compareRightExprHolder,
-        context.getFunctionRegistry());
-      HoldingContainer out = cg.addExpr(fh, false);
+        LogicalExpression fh = FunctionGenerationHelper.getComparator(compareLeftExprHolder,
+          compareRightExprHolder,
+          context.getFunctionRegistry());
+        HoldingContainer out = cg.addExpr(fh, false);
 
-      // If not 0, it means not equal. We return this out value.
-      // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.
-      if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()) {
-        JConditional jc = cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)).
-                                    cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))));
-        jc._then()._return(JExpr.lit(1));
-        jc._elseif(out.getValue().ne(JExpr.lit(0)))._then()._return(out.getValue());
-      } else {
-        cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(out.getValue());
+        // If not 0, it means not equal. We return this out value.
+        // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.
+        if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()) {
+          JConditional jc = cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)).
+                                      cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))));
+          jc._then()._return(JExpr.lit(1));
+          jc._elseif(out.getValue().ne(JExpr.lit(0)))._then()._return(out.getValue());
+        } else {
+          cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(out.getValue());
+        }
       }
     }
 

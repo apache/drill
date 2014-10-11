@@ -24,8 +24,8 @@
             pop:"project",
             exprs: [
               { ref: "col1", expr: "regexp_replace('Thomas', '.[mN]a.', 'M')" },
-              { ref: "col1", expr: "regexp_replace('Thomas', '.[mN]a.', '')" },
-              { ref: "col1", expr: "regexp_replace('Thomas', 'ef', 'AB')" }
+              { ref: "col2", expr: "regexp_replace('Thomas', '.[mN]a.', '')" },
+              { ref: "col3", expr: "regexp_replace('Thomas', 'ef', 'AB')" }
             ]
         },
         {

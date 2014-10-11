@@ -22,11 +22,14 @@ import io.netty.buffer.ByteBuf;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.SingleSender;
+import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
+import org.apache.drill.exec.physical.impl.materialize.VectorRecordMaterializer;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
@@ -52,6 +55,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     private RecordBatch incoming;
     private DataTunnel tunnel;
     private FragmentHandle handle;
+    private SingleSender config;
     private int recMajor;
     private FragmentContext context;
     private volatile boolean ok = true;
@@ -73,10 +77,37 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       this.incoming = batch;
       assert(incoming != null);
       this.handle = context.getHandle();
+      this.config = config;
       this.recMajor = config.getOppositeMajorFragmentId();
       FragmentHandle opposite = handle.toBuilder().setMajorFragmentId(config.getOppositeMajorFragmentId()).setMinorFragmentId(0).build();
       this.tunnel = context.getDataTunnel(config.getDestination(), opposite);
       this.context = context;
+    }
+
+    @Override
+    public void buildSchema() throws SchemaChangeException {
+      stats.startProcessing();
+      try {
+        stats.stopProcessing();
+        try {
+          incoming.buildSchema();
+        } finally {
+          stats.startProcessing();
+        }
+
+        FragmentWritableBatch batch = FragmentWritableBatch.getEmptyBatchWithSchema(handle.getQueryId(),
+                handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), 0, incoming.getSchema());
+
+        stats.startWait();
+        try {
+          tunnel.sendRecordBatch(new RecordSendFailure(), batch);
+        } finally {
+          stats.stopWait();
+        }
+        sendCount.increment();
+      } finally {
+        stats.stopProcessing();
+      }
     }
 
     @Override

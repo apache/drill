@@ -100,9 +100,10 @@ public class TestNewMathFunctions {
     PhysicalPlan plan = reader.readPhysicalPlan(planString);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
+    exec.next(); // skip schema batch
     while (exec.next()) {
       Object [] res = getRunResult(exec);
-      assertEquals("return count does not match", res.length, expectedResults.length);
+      assertEquals("return count does not match", expectedResults.length, res.length);
 
       for (int i = 0; i<res.length; i++) {
         assertEquals(String.format("column %s does not match", i),  res[i], expectedResults[i]);

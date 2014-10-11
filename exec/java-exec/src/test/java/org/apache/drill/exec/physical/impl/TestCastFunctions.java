@@ -453,7 +453,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastVarCharNull.json"), Charsets.UTF_8).replace("#{TEST_FILE}", "/jsoninput/input1.json"));
 
-      QueryResultBatch batch = results.get(0);
+      QueryResultBatch batch = results.get(1);
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
       batchLoader.load(batch.getHeader().getDef(), batch.getData());

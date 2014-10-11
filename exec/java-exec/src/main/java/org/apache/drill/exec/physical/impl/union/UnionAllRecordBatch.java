@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.UnionAll;
@@ -77,6 +78,12 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     }
   }
 
+  @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    incoming.get(0).buildSchema();
+    setupSchema();
+    return IterOutcome.OK_NEW_SCHEMA;
+  }
 
   @Override
   public SelectionVector2 getSelectionVector2() {
@@ -96,7 +103,15 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         return IterOutcome.NONE;
       }
       current = incomingIterator.next();
+      try {
+        current.buildSchema();
+      } catch (SchemaChangeException e) {
+        throw new RuntimeException(e);
+      }
       upstream = current.next();
+      if (upstream == IterOutcome.OK) {
+        upstream = IterOutcome.OK_NEW_SCHEMA;
+      }
     }
     switch (upstream) {
       case NONE:

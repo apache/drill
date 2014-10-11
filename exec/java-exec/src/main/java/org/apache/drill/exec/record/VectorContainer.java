@@ -29,6 +29,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 
@@ -41,7 +42,8 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private BatchSchema schema;
   private int recordCount = -1;
-  private final OperatorContext oContext;
+  private OperatorContext oContext;
+  private boolean schemaChanged = true; // Schema has changed since last built. Must rebuild schema
 
   public VectorContainer() {
     this.oContext = null;
@@ -61,6 +63,10 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
   // }
   // }
 
+  public boolean isSchemaChanged() {
+    return schemaChanged;
+  }
+
   public void addHyperList(List<ValueVector> vectors) {
     addHyperList(vectors, true);
   }
@@ -72,6 +78,24 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
       vv[i] = vectors.get(i);
     }
     add(vv, releasable);
+  }
+
+  public <T extends ValueVector> T addOrGet(MaterializedField field) {
+    TypedFieldId id = getValueVectorId(field.getPath());
+    ValueVector v = null;
+    Class clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
+    if (id != null) {
+      v = getValueAccessorById(id.getFieldIds()).getValueVector();
+      if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(v.getClass())) {
+        ValueVector newVector = TypeHelper.getNewVector(field, this.oContext.getAllocator());
+        replace(v, newVector);
+        return (T) newVector;
+      }
+    } else {
+      v = TypeHelper.getNewVector(field, this.oContext.getAllocator());
+      add(v);
+    }
+    return (T) v;
   }
 
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
@@ -135,6 +159,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     for (VectorWrapper<?> w : canonicalWrappers) {
       vc.add(w.getValueVector());
     }
+    vc.oContext = original.oContext;
     return vc;
   }
 
@@ -150,6 +175,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
   }
 
   public TypedFieldId add(ValueVector vv) {
+    schemaChanged = true;
     schema = null;
     int i = wrappers.size();
     wrappers.add(SimpleVectorWrapper.create(vv));
@@ -162,6 +188,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
 
   public void add(ValueVector[] hyperVector, boolean releasable) {
     assert hyperVector.length != 0;
+    schemaChanged = true;
     schema = null;
     Class<?> clazz = hyperVector[0].getClass();
     ValueVector[] c = (ValueVector[]) Array.newInstance(clazz, hyperVector.length);
@@ -174,6 +201,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
 
   public void remove(ValueVector v) {
     schema = null;
+    schemaChanged = true;
     for (Iterator<VectorWrapper<?>> iter = wrappers.iterator(); iter.hasNext();) {
       VectorWrapper<?> w = iter.next();
       if (!w.isHyper() && v == w.getValueVector()) {
@@ -181,6 +209,21 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
         iter.remove();
         return;
       }
+    }
+    throw new IllegalStateException("You attempted to remove a vector that didn't exist.");
+  }
+
+  private void replace(ValueVector old, ValueVector newVector) {
+    schema = null;
+    schemaChanged = true;
+    int i = 0;
+    for (VectorWrapper w : wrappers){
+      if (!w.isHyper() && old == w.getValueVector()) {
+        w.clear();
+        wrappers.set(i, new SimpleVectorWrapper<ValueVector>(newVector));
+        return;
+      }
+      i++;
     }
     throw new IllegalStateException("You attempted to remove a vector that didn't exist.");
   }
@@ -216,6 +259,16 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
 
   }
 
+  private VectorWrapper<?> getValueAccessorById(int... fieldIds) {
+    Preconditions.checkArgument(fieldIds.length >= 1);
+    VectorWrapper<?> va = wrappers.get(fieldIds[0]);
+
+    if (va == null) {
+      return null;
+    }
+    return va.getChildWrapper(fieldIds);
+  }
+
   public BatchSchema getSchema() {
     Preconditions
         .checkNotNull(schema,
@@ -229,6 +282,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
       bldr.addField(v.getField());
     }
     this.schema = bldr.build();
+    this.schemaChanged = false;
   }
 
   @Override

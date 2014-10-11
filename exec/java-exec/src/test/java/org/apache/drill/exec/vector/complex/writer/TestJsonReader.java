@@ -151,10 +151,10 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   public void readComplexWithStar() throws Exception {
     List<QueryResultBatch> results = testSqlWithResults("select * from cp.`/store/json/test_complex_read_with_star.json`");
-    assertEquals(2, results.size());
+    assertEquals(3, results.size());
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-    QueryResultBatch batch = results.get(0);
+    QueryResultBatch batch = results.get(1);
 
     assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
     assertEquals(3, batchLoader.getSchema().getFieldCount());
@@ -196,11 +196,11 @@ public class TestJsonReader extends BaseTestQuery {
     runTestsOnFile(filename, UserBitShared.QueryType.PHYSICAL, queries, rowCounts);
 
     List<QueryResultBatch> results = testPhysicalWithResults(queries[0]);
-    assertEquals(2, results.size());
+    assertEquals(3, results.size());
     // "`field_1`", "`field_3`.`inner_1`", "`field_3`.`inner_2`", "`field_4`.`inner_1`"
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-    QueryResultBatch batch = results.get(0);
+    QueryResultBatch batch = results.get(1);
     assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
     assertEquals(5, batchLoader.getSchema().getFieldCount());
     testExistentColumns(batchLoader, batch);

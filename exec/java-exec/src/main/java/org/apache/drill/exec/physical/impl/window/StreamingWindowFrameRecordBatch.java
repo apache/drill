@@ -60,7 +60,7 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
   }
 
   @Override
-  protected void setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() throws SchemaChangeException {
     container.clear();
 
     try {
@@ -68,6 +68,11 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
     } catch (ClassTransformationException | IOException ex) {
       throw new SchemaChangeException("Failed to create framer: " + ex);
     }
+    if (container.isSchemaChanged()) {
+      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+      return true;
+    }
+    return false;
   }
 
   private void getIndex(ClassGenerator<StreamingWindowFramer> g) {
@@ -109,8 +114,9 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
       }
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
-      TypedFieldId id = container.add(vector);
+      container.addOrGet(outputField);
+      TypedFieldId id = container.getValueVectorId(outputField.getPath());
+      assert id != null : "Got null TypedFieldId";
       valueExprs.add(new ValueVectorWriteExpression(id, expr, true));
     }
 
@@ -120,8 +126,8 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
     // we are not processing one entire batch in one iteration, so cannot simply transfer.
     for (VectorWrapper wrapper : incoming) {
       ValueVector vv = wrapper.isHyper() ? wrapper.getValueVectors()[0] : wrapper.getValueVector();
-      ValueVector vector = TypeHelper.getNewVector(vv.getField(), oContext.getAllocator());
-      TypedFieldId id = container.add(vector);
+      container.addOrGet(vv.getField());
+      TypedFieldId id = container.getValueVectorId(vv.getField().getPath());
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(
           new ValueVectorReadExpression(new TypedFieldId(vv.getField().getType(), wrapper.isHyper(), j)),
           incoming,
@@ -154,7 +160,6 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
 
     cg.getBlock("resetValues")._return(JExpr.TRUE);
 
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     getIndex(cg);
     StreamingWindowFramer agg = context.getImplementationClass(cg);
     agg.setup(

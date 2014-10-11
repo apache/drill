@@ -21,6 +21,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.Project;
 
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
@@ -60,7 +61,6 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     }
     switch (upstream) {
     case NONE:
-      assert !first;
     case NOT_YET:
     case STOP:
       return upstream;
@@ -70,7 +70,9 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       first = false;
       try {
         stats.startSetup();
-        setupNewSchema();
+        if (!setupNewSchema()) {
+          upstream = IterOutcome.OK;
+        }
       } catch (SchemaChangeException ex) {
         kill(false);
         logger.error("Failure during query", ex);
@@ -82,6 +84,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       // fall through.
     case OK:
       assert !first : "First batch should be OK_NEW_SCHEMA";
+      container.zeroVectors();
       doWork();
       if (outOfMemory) {
         outOfMemory = false;
@@ -91,6 +94,13 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     default:
       throw new UnsupportedOperationException();
     }
+  }
+
+  @Override
+  public IterOutcome buildSchema() throws SchemaChangeException {
+    incoming.buildSchema();
+    setupNewSchema();
+    return IterOutcome.OK_NEW_SCHEMA;
   }
 
   @Override
@@ -105,6 +115,6 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     return container.getSchema();
   }
 
-  protected abstract void setupNewSchema() throws SchemaChangeException;
+  protected abstract boolean setupNewSchema() throws SchemaChangeException;
   protected abstract IterOutcome doWork();
 }

@@ -65,6 +65,7 @@ public class ScanBatch implements RecordBatch {
   private final Map<MaterializedField.Key, ValueVector> fieldVectorMap = Maps.newHashMap();
 
   private final VectorContainer container = new VectorContainer();
+  private VectorContainer tempContainer;
   private int recordCount;
   private final FragmentContext context;
   private final OperatorContext oContext;
@@ -77,7 +78,7 @@ public class ScanBatch implements RecordBatch {
   private List<ValueVector> partitionVectors;
   private List<Integer> selectedPartitionColumns;
   private String partitionColumnDesignator;
-  private boolean first = true;
+  private boolean first = false;
   private boolean done = false;
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
@@ -117,6 +118,22 @@ public class ScanBatch implements RecordBatch {
   }
 
   @Override
+  public IterOutcome buildSchema() {
+    IterOutcome outcome = next();
+    if (outcome == IterOutcome.NONE) {
+      container.buildSchema(SelectionVectorMode.NONE);
+      schema = container.getSchema();
+      done = true;
+    }
+    first = true;
+    tempContainer = VectorContainer.getTransferClone(container);
+    for (VectorWrapper w : container) {
+      w.getValueVector().allocateNew();
+    }
+    return IterOutcome.OK_NEW_SCHEMA;
+  }
+
+  @Override
   public int getRecordCount() {
     return recordCount;
   }
@@ -138,10 +155,23 @@ public class ScanBatch implements RecordBatch {
     container.zeroVectors();
   }
 
+  private void transfer() {
+    container.zeroVectors();
+    for (VectorWrapper w : tempContainer) {
+      MaterializedField field = w.getField();
+      w.getValueVector().makeTransferPair(container.addOrGet(field)).transfer();
+    }
+  }
+
   @Override
   public IterOutcome next() {
     if (done) {
       return IterOutcome.NONE;
+    }
+    if (first) {
+      first = false;
+      transfer();
+      return IterOutcome.OK;
     }
     long t1 = System.nanoTime();
     oContext.getStats().startProcessing();
@@ -159,14 +189,6 @@ public class ScanBatch implements RecordBatch {
         try {
           if (!readers.hasNext()) {
             currentReader.cleanup();
-            if (first) {
-              first = false;
-              done = true;
-              populatePartitionVectors();
-              container.buildSchema(SelectionVectorMode.NONE);
-              schema = container.getSchema();
-              return IterOutcome.OK_NEW_SCHEMA;
-            }
             releaseAssets();
             return IterOutcome.NONE;
           }
@@ -196,7 +218,6 @@ public class ScanBatch implements RecordBatch {
           return IterOutcome.STOP;
         }
       }
-      first = false;
 
       populatePartitionVectors();
       if (mutator.isNewSchema()) {
@@ -349,6 +370,9 @@ public class ScanBatch implements RecordBatch {
 
   public void cleanup() {
     container.clear();
+    if (tempContainer != null) {
+      tempContainer.clear();
+    }
     for (ValueVector v : partitionVectors) {
       v.clear();
     }

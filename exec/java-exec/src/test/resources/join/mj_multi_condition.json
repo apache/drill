@@ -24,7 +24,7 @@
       "type" : "parquet"
     }
   }, {
-    "pop" : "sort",
+    "pop" : "external-sort",
     "@id" : 2,
     "child" : 1,
     "orderings" : [ {
@@ -68,7 +68,7 @@
     } ],
     "child" : 4
   }, {
-    "pop" : "sort",
+    "pop" : "external-sort",
     "@id" : 6,
     "child" : 5,
     "orderings" : [ {
