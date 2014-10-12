@@ -183,4 +183,9 @@ public class TestComplexTypeReader extends BaseTestQuery{
     test("select l, l from cp.`jsoninput/input2.json`;");
   }
 
+  @Test
+  public void testKeyValueGen() throws Exception {
+    test("select kvgen(x) from cp.`jsoninput/input2.json`");
+    test("select kvgen(bigintegercol), kvgen(float8col) from cp.`jsoninput/input3.json`");
+  }
 }
