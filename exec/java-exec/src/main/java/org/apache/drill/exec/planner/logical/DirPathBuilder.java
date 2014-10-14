@@ -153,6 +153,9 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
   public SchemaPath visitInputRef(RexInputRef inputRef) {
     final int index = inputRef.getIndex();
     final RelDataTypeField field = inputRel.getRowType().getFieldList().get(index);
+    if (field.getName().matches(dirLabel+"[0-9]")) {
+      dirMatch = true;
+    }
     return FieldReference.getWithQuotedRef(field.getName());
   }
 
@@ -210,11 +213,10 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
 
   private SchemaPath getInputFromCast(RexCall call){
     SchemaPath arg = call.getOperands().get(0).accept(this);
-
-    if (arg != null && arg.getRootSegment().getPath().matches(dirLabel+"[0-9]")) {
-      dirMatch = true;
+    if (dirMatch) {
       return arg;
     }
+
     return null;
   }
 

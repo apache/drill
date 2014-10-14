@@ -110,4 +110,22 @@ public class TestPartitionFilter extends BaseTestQuery{
     test(query1);
   }
 
+  @Test // Parquet: IN filter
+  public void testPartitionFilter5_Parquet() throws Exception {
+    String query1 = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/parquet` where dir0 in (1995, 1996)", TEST_RES_PATH);
+    test(query1);
+  }
+
+  @Test // Json: IN filter
+  public void testPartitionFilter5_Json() throws Exception {
+    String query1 = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/json` where dir0 in (1995, 1996)", TEST_RES_PATH);
+    test(query1);
+  }
+
+  @Test // CSV: IN filter
+  public void testPartitionFilter5_Csv() throws Exception {
+    String query1 = String.format("select * from dfs_test.`%s/multilevel/csv` where dir0 in (1995, 1996)", TEST_RES_PATH);
+    test(query1);
+  }
+
 }
