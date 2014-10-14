@@ -19,8 +19,11 @@ package org.apache.drill.exec.coord;
 
 import java.io.Closeable;
 import java.util.Collection;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 
 /**
  * Pluggable interface built to manage cluster coordination. Allows Drillbit or DrillClient to register its capabilities
@@ -28,6 +31,9 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
  **/
 public abstract class ClusterCoordinator implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClusterCoordinator.class);
+
+  protected ConcurrentHashMap<DrillbitStatusListener, DrillbitStatusListener> listeners = new ConcurrentHashMap<>(
+      16, 0.75f, 16);
 
   /**
    * Start the cluster coordinator.  Millis to wait is
@@ -53,5 +59,37 @@ public abstract class ClusterCoordinator implements Closeable {
 
   public abstract DistributedSemaphore getSemaphore(String name, int maximumLeases);
 
+  /**
+   * Actions to take when there are a set of new de-active drillbits.
+   * @param unregisteredBits
+   */
+  public void drillbitUnregistered(Set<DrillbitEndpoint> unregisteredBits) {
+    for (DrillbitStatusListener listener : listeners.keySet()) {
+      listener.drillbitUnregistered(unregisteredBits);
+    }
+  }
+
+  public void drillbitRegistered(Set<DrillbitEndpoint> registeredBits) {
+    for (DrillbitStatusListener listener : listeners.keySet()) {
+      listener.drillbitRegistered(registeredBits);
+    }
+  }
+
+  /**
+   * Register a DrillbitStatusListener.
+   * Note : the listeners are not guaranteed to be called in the order in which they call this method, since all the listeners are in a ConcurrentHashMap.
+   * @param listener
+   */
+  public void addDrillbitStatusListener(DrillbitStatusListener listener) {
+    listeners.putIfAbsent(listener, listener);
+  }
+
+  /**
+   * Unregister a DrillbitStatusListener.
+   * @param listener
+   */
+  public void removeDrillbitStatusListener(DrillbitStatusListener listener) {
+    listeners.remove(listener);
+  }
 
 }

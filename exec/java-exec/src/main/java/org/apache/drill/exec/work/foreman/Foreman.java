@@ -158,12 +158,10 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     if (isFinished()) {
       return;
     }
+    state.updateState(QueryState.RUNNING, QueryState.CANCELED);
 
     // cancel remote fragments.
     fragmentManager.cancel();
-
-    QueryResult result = QueryResult.newBuilder().setQueryState(QueryState.CANCELED).setIsLastChunk(true).setQueryId(queryId).build();
-    cleanupAndSendResult(result);
   }
 
   void cleanupAndSendResult(QueryResult result) {
@@ -361,6 +359,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
           queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, planningSet, initiatingClient.getSession());
 
       this.context.getWorkBus().setFragmentStatusListener(work.getRootFragment().getHandle().getQueryId(), fragmentManager);
+      this.context.getClusterCoordinator().addDrillbitStatusListener(fragmentManager);
 
       int totalFragments = 1 + work.getFragments().size();;
       fragmentManager.getStatus().setTotalFragments(totalFragments);

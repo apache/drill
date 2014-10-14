@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.fragment;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,7 +25,9 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
+import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
@@ -32,6 +35,7 @@ import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.work.CancelableQuery;
 import org.apache.drill.exec.work.StatusProvider;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
+import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 
 /**
  * Responsible for running a single fragment on a single Drillbit. Listens/responds to status request and cancellation
@@ -48,6 +52,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   private final StatusReporter listener;
   private Thread executionThread;
   private AtomicBoolean closed = new AtomicBoolean(false);
+  private final DrillbitStatusListener drillbitStatusListener = new FragmentDrillbitStatusListener();
 
   public FragmentExecutor(FragmentContext context, WorkerBee bee, FragmentRoot rootOperator, StatusReporter listener) {
     this.context = context;
@@ -66,6 +71,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     updateState(FragmentState.CANCELLED);
     logger.debug("Cancelled Fragment {}", context.getHandle());
     context.cancel();
+
     if (executionThread != null) {
       executionThread.interrupt();
     }
@@ -92,6 +98,8 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       executionThread = Thread.currentThread();
 
       root = ImplCreator.getExec(context, rootOperator);
+
+      context.getDrillbitContext().getClusterCoordinator().addDrillbitStatusListener(drillbitStatusListener);
 
       logger.debug("Starting fragment runner. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
       if (!updateState(FragmentState.AWAITING_ALLOCATION, FragmentState.RUNNING, false)) {
@@ -120,8 +128,8 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       internalFail(e);
     } finally {
       bee.removeFragment(context.getHandle());
+      context.getDrillbitContext().getClusterCoordinator().removeDrillbitStatusListener(drillbitStatusListener);
 
-      logger.debug("Fragment runner complete. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
       Thread.currentThread().setName(originalThread);
     }
   }
@@ -183,4 +191,22 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     return context;
   }
 
+  private class FragmentDrillbitStatusListener implements DrillbitStatusListener {
+
+    @Override
+    public void drillbitRegistered(Set<CoordinationProtos.DrillbitEndpoint> registeredDrillbits) {
+      // Do nothing.
+    }
+
+    @Override
+    public void drillbitUnregistered(Set<CoordinationProtos.DrillbitEndpoint> unregisteredDrillbits) {
+      if (unregisteredDrillbits.contains(FragmentExecutor.this.context.getForemanDrillbitEndPoint())) {
+        logger.warn("Forman : {} seems not responding or not work properly. Cancel this fragment {}:{}",
+            FragmentExecutor.this.context.getForemanDrillbitEndPoint(),
+            FragmentExecutor.this.context.getHandle().getMajorFragmentId(),
+            FragmentExecutor.this.context.getHandle().getMinorFragmentId());
+        FragmentExecutor.this.cancel();
+      }
+    }
+  }
 }
