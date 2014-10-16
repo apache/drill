@@ -512,4 +512,22 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testTextQueries() throws Exception {
     test("select cast('285572516' as int) from cp.`tpch/nation.parquet` limit 1");
   }
+
+  @Test // DRILL-1544
+  public void testLikeEscape() throws Exception {
+    int actualRecordCount = testSql("select id, name from cp.`jsoninput/specialchar.json` where name like '%#_%' ESCAPE '#'");
+    int expectedRecordCount = 1;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+  }
+
+  @Test
+  public void testSimilarEscape() throws Exception {
+    int actualRecordCount = testSql("select id, name from cp.`jsoninput/specialchar.json` where name similar to '(N|S)%#_%' ESCAPE '#'");
+    int expectedRecordCount = 1;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+  }
+
 }

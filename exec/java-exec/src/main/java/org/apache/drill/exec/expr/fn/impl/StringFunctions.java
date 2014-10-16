@@ -69,6 +69,28 @@ public class StringFunctions{
     }
   }
 
+  @FunctionTemplate(name = "like", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class LikeWithEscape implements DrillSimpleFunc{
+
+    @Param VarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Param(constant=true) VarCharHolder escape;
+    @Output BitHolder out;
+    @Workspace java.util.regex.Matcher matcher;
+
+    public void setup(RecordBatch incoming) {
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer),
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(escape.start,  escape.end,  escape.buffer))).matcher("");
+    }
+
+    public void eval() {
+      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      matcher.reset(i);
+      out.value = matcher.matches()? 1:0;
+    }
+  }
+
   @FunctionTemplate(names = {"similar", "similar to"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Similar implements DrillSimpleFunc{
     @Param VarCharHolder input;
@@ -79,6 +101,28 @@ public class StringFunctions{
     public void setup(RecordBatch incoming) {
 
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))).matcher("");
+    }
+
+    public void eval() {
+      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      matcher.reset(i);
+      out.value = matcher.matches()? 1:0;
+    }
+  }
+
+  @FunctionTemplate(names = {"similar", "similar to"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class SimilarWithEscape implements DrillSimpleFunc{
+    @Param VarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Param(constant=true) VarCharHolder escape;
+    @Output BitHolder out;
+    @Workspace java.util.regex.Matcher matcher;
+
+    public void setup(RecordBatch incoming) {
+
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer),
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(escape.start,  escape.end,  escape.buffer))).matcher("");
     }
 
     public void eval() {
