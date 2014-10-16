@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +52,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemPlugin.class);
 
   private final FileSystemSchemaFactory schemaFactory;
-  private Map<String, FormatPlugin> formatsByName;
+  private Map<String, FormatPlugin> formatPluginsByName;
   private Map<FormatPluginConfig, FormatPlugin> formatPluginsByConfig;
   private FileSystemConfig config;
   private DrillbitContext context;
@@ -68,30 +67,28 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.connection);
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
-      this.fs = FileSystemCreator.getFileSystem(context.getConfig(), fsConf);
-      this.formatsByName = FormatCreator.getFormatPlugins(context, fs, config);
+      fs = FileSystemCreator.getFileSystem(context.getConfig(), fsConf);
+      formatPluginsByName = FormatCreator.getFormatPlugins(context, fs, config);
       List<FormatMatcher> matchers = Lists.newArrayList();
       formatPluginsByConfig = Maps.newHashMap();
-      for (FormatPlugin p : formatsByName.values()) {
+      for (FormatPlugin p : formatPluginsByName.values()) {
         matchers.add(p.getMatcher());
         formatPluginsByConfig.put(p.getConfig(), p);
       }
 
-      List<WorkspaceSchemaFactory> factories;
-      if (config.workspaces == null || config.workspaces.isEmpty()) {
-        factories = Collections.singletonList(
-            new WorkspaceSchemaFactory(context.getConfig(), context.getPersistentStoreProvider(), this, "default", name, fs, WorkspaceConfig.DEFAULT, matchers));
-      } else {
-        factories = Lists.newArrayList();
+      boolean noWorkspace = config.workspaces == null || config.workspaces.isEmpty();
+      List<WorkspaceSchemaFactory> factories = Lists.newArrayList();
+      if (!noWorkspace) {
         for (Map.Entry<String, WorkspaceConfig> space : config.workspaces.entrySet()) {
           factories.add(new WorkspaceSchemaFactory(context.getConfig(), context.getPersistentStoreProvider(), this, space.getKey(), name, fs, space.getValue(), matchers));
         }
-
-        // if the "default" workspace is not given add one.
-        if (!config.workspaces.containsKey("default")) {
-          factories.add(new WorkspaceSchemaFactory(context.getConfig(), context.getPersistentStoreProvider(), this, "default", name, fs, WorkspaceConfig.DEFAULT, matchers));
-        }
       }
+
+      // if the "default" workspace is not given add one.
+      if (noWorkspace || !config.workspaces.containsKey("default")) {
+        factories.add(new WorkspaceSchemaFactory(context.getConfig(), context.getPersistentStoreProvider(), this, "default", name, fs, WorkspaceConfig.DEFAULT, matchers));
+      }
+
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure setting up file system plugin.", e);
@@ -113,7 +110,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
     FormatSelection formatSelection = selection.getWith(context.getConfig(), FormatSelection.class);
     FormatPlugin plugin;
     if (formatSelection.getFormat() instanceof NamedFormatPluginConfig) {
-      plugin = formatsByName.get( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
+      plugin = formatPluginsByName.get( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
     } else {
       plugin = formatPluginsByConfig.get(formatSelection.getFormat());
     }
@@ -129,12 +126,12 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   }
 
   public FormatPlugin getFormatPlugin(String name) {
-    return formatsByName.get(name);
+    return formatPluginsByName.get(name);
   }
 
   public FormatPlugin getFormatPlugin(FormatPluginConfig config) {
     if (config instanceof NamedFormatPluginConfig) {
-      return formatsByName.get(((NamedFormatPluginConfig) config).name);
+      return formatPluginsByName.get(((NamedFormatPluginConfig) config).name);
     } else {
       return formatPluginsByConfig.get(config);
     }

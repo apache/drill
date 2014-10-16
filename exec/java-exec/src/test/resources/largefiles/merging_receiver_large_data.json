@@ -16,13 +16,11 @@
       "workspaces" : {
         "root" : {
           "location" : "/",
-          "writable" : false,
-          "storageformat" : null
+          "writable" : false
         },
         "tmp" : {
           "location" : "/tmp",
-          "writable" : true,
-          "storageformat" : "csv"
+          "writable" : true
         }
       },
       "formats" : {

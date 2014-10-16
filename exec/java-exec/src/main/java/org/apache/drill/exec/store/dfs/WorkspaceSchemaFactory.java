@@ -21,10 +21,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.Table;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
@@ -63,7 +67,6 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   private final String storageEngineName;
   private final String schemaName;
   private final FileSystemPlugin plugin;
-//  private final PTable<String> knownPaths;
 
   private final PStore<String> knownViews;
   private final ObjectMapper mapper;
@@ -84,17 +87,11 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     // setup cache
     if (storageEngineName == null) {
       this.knownViews = null;
-//      this.knownPaths = null;
     } else {
       this.knownViews = provider.getPStore(PStoreConfig //
           .newJacksonBuilder(drillConfig.getMapper(), String.class) //
           .name(Joiner.on('.').join("storage.views", storageEngineName, schemaName)) //
           .build());
-
-//      this.knownPaths = provider.getPTable(PTableConfig //
-//          .newJacksonBuilder(drillConfig.getMapper(), String.class) //
-//          .name(Joiner.on('.').join("storage.cache", storageEngineName, schemaName)) //
-//          .build());
     }
 
 
@@ -105,6 +102,19 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       fileMatchers.add(m);
     }
 
+    // NOTE: Add fallback format matcher if given in the configuration. Make sure fileMatchers is an order-preserving list.
+    final String defaultInputFormat = config.getDefaultInputFormat();
+    if (!Strings.isNullOrEmpty(defaultInputFormat)) {
+      final FormatPlugin formatPlugin = plugin.getFormatPlugin(defaultInputFormat);
+      if (formatPlugin == null) {
+        final String message = String.format("Unable to find default input format[%s] for workspace[%s.%s]",
+            defaultInputFormat, storageEngineName, schemaName);
+        throw new ExecutionSetupException(message);
+      }
+      final FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin, fs,
+          ImmutableList.of(Pattern.compile(".*")), ImmutableList.<MagicString>of());
+      fileMatchers.add(fallbackMatcher);
+    }
   }
 
   private Path getViewPath(String name) {
@@ -283,7 +293,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       FormatPlugin formatPlugin = plugin.getFormatPlugin(storage);
       if (formatPlugin == null) {
         throw new UnsupportedOperationException(
-          String.format("Unsupported format '%s' in workspace '%s'", config.getStorageFormat(),
+          String.format("Unsupported format '%s' in workspace '%s'", config.getDefaultInputFormat(),
               Joiner.on(".").join(getSchemaPath())));
       }
 

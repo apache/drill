@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *  - writable flag to indicate whether the location supports creating new tables.
  *  - default storage format for new tables created in this workspace.
  */
+@JsonIgnoreProperties(value = {"storageformat"})
 public class WorkspaceConfig {
 
   /** Default workspace is a root directory which supports read, but not write. */
@@ -32,14 +34,14 @@ public class WorkspaceConfig {
 
   private final String location;
   private final boolean writable;
-  private final String storageformat;
+  private final String defaultInputFormat;
 
   public WorkspaceConfig(@JsonProperty("location") String location,
                          @JsonProperty("writable") boolean writable,
-                         @JsonProperty("storageformat") String storageformat) {
+                         @JsonProperty("defaultInputFormat") String defaultInputFormat) {
     this.location = location;
     this.writable = writable;
-    this.storageformat = storageformat;
+    this.defaultInputFormat = defaultInputFormat;
   }
 
   public String getLocation() {
@@ -50,9 +52,8 @@ public class WorkspaceConfig {
     return writable;
   }
 
-  @JsonProperty("storageformat")
-  public String getStorageFormat() {
-    return storageformat;
+  public String getDefaultInputFormat() {
+    return defaultInputFormat;
   }
 
   @Override
@@ -68,6 +69,6 @@ public class WorkspaceConfig {
     WorkspaceConfig that = (WorkspaceConfig) obj;
     return ((this.location == null && that.location == null) || this.location.equals(that.location)) &&
         this.writable == that.writable &&
-        ((this.storageformat == null && that.storageformat == null) || this.storageformat.equals(that.storageformat));
+        ((this.defaultInputFormat == null && that.defaultInputFormat == null) || this.defaultInputFormat.equals(that.defaultInputFormat));
   }
 }

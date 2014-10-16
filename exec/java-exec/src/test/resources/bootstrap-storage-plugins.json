@@ -10,8 +10,7 @@
         },
         "tmp" : {
           location: "/tmp/drilltest",
-          writable: true,
-          storageformat: "csv"
+          writable: true
         }
       },
       formats: {
