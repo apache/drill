@@ -268,6 +268,11 @@ public class TestConvertFunctions extends BaseTestQuery {
   }
 
   @Test
+  public void testFloats2be() throws Throwable {
+    verifyPhysicalPlan("convert_from(convert_to(cast(77 as float4), 'FLOAT_BE'), 'FLOAT_BE')", new Float(77.0));
+  }
+
+  @Test
   public void testFloats3() throws Throwable {
     verifyPhysicalPlan("convert_to(cast(1.4e-45 as float4), 'FLOAT')", new byte[] {1, 0, 0, 0});
   }
@@ -281,6 +286,12 @@ public class TestConvertFunctions extends BaseTestQuery {
   public void testFloats5(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
     verifyPhysicalPlan("convert_from(convert_to(cast(77 as float8), 'DOUBLE'), 'DOUBLE')", 77.0);
+  }
+
+  @Test
+  public void testFloats5be(@Injectable final DrillbitContext bitContext,
+                          @Injectable UserServer.UserClientConnection connection) throws Throwable {
+    verifyPhysicalPlan("convert_from(convert_to(cast(77 as float8), 'DOUBLE_BE'), 'DOUBLE_BE')", 77.0);
   }
 
   @Test
