@@ -43,6 +43,7 @@ import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -109,6 +110,7 @@ public class HiveScan extends AbstractGroupScan {
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
     this.partitions = hiveReadEntry.getPartitions();
+    this.storagePlugin = storagePlugin;
     getSplits();
     endpoints = storagePlugin.getContext().getBits();
     this.storagePluginName = storagePlugin.getName();
@@ -305,7 +307,8 @@ public class HiveScan extends AbstractGroupScan {
   public String toString() {
     return "HiveScan [table=" + table
         + ", inputSplits=" + inputSplits
-        + ", columns=" + columns + "]";
+        + ", columns=" + columns
+        + ", partitions= " + partitions +"]";
   }
 
   @Override
@@ -320,4 +323,12 @@ public class HiveScan extends AbstractGroupScan {
     return true;
   }
 
+  // Return true if the current table is partitioned false otherwise
+  public boolean supportsPartitionFilterPushdown() {
+    List<FieldSchema> partitionKeys = table.getPartitionKeys();
+    if (partitionKeys == null || partitionKeys.size() == 0) {
+      return false;
+    }
+    return true;
+  }
 }

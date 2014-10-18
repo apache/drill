@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.physical.base.FileGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.FileSystemPartitionDescriptor;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -44,7 +46,9 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
     @Override
       public boolean matches(RelOptRuleCall call) {
         final DrillScanRel scan = (DrillScanRel) call.rel(2);
-        return scan.getGroupScan().supportsPartitionFilterPushdown();
+        GroupScan groupScan = scan.getGroupScan();
+        // this rule is applicable only for dfs based partition pruning
+        return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
       }
 
     @Override
@@ -64,7 +68,9 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
       @Override
         public boolean matches(RelOptRuleCall call) {
           final DrillScanRel scan = (DrillScanRel) call.rel(1);
-          return scan.getGroupScan().supportsPartitionFilterPushdown();
+          GroupScan groupScan = scan.getGroupScan();
+          // this rule is applicable only for dfs based partition pruning
+          return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
         }
 
       @Override
@@ -94,13 +100,8 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
       String fullPath = pathPrefix + dirPath;
       // check containment of this path in the list of files
       for (String origFilePath : origFiles) {
-        String[] components = origFilePath.split(":", 2); // some paths are of the form 'file:<path>', so we need to split
-        String origFileName = "";
-        if (components.length == 1) {
-          origFileName = components[0];
-        } else {
-          origFileName = components[1];
-        }
+        String origFileName = PartitionPruningUtil.truncatePrefixFromPath(origFilePath);
+
         if (origFileName.startsWith(fullPath)) {
           newFiles.add(origFileName);
         }
@@ -120,7 +121,7 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
     DrillRel inputRel = projectRel != null ? projectRel : scanRel;
 
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
-    DirPathBuilder builder = new DirPathBuilder(filterRel, inputRel, filterRel.getCluster().getRexBuilder(), settings.getFsPartitionColumnLabel());
+    DirPathBuilder builder = new DirPathBuilder(filterRel, inputRel, filterRel.getCluster().getRexBuilder(), new FileSystemPartitionDescriptor(settings.getFsPartitionColumnLabel()));
 
     FormatSelection origSelection = (FormatSelection)scanRel.getDrillTable().getSelection();
     FormatSelection newSelection = splitFilter(origSelection, builder);
@@ -129,55 +130,11 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
       return; // no directory filter was pushed down
     }
 
-    RexNode origFilterCondition = filterRel.getCondition();
-    RexNode newFilterCondition = builder.getFinalCondition();
-
     try {
       FileGroupScan fgscan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection.getSelection());
-
-      if (newFilterCondition.isAlwaysTrue()) {
-
-        final DrillScanRel newScanRel =
-            new DrillScanRel(scanRel.getCluster(),
-                scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-                scanRel.getTable(),
-                fgscan,
-                scanRel.getRowType(),
-                scanRel.getColumns());
-
-        if (projectRel != null) {
-          DrillProjectRel newProjectRel = new DrillProjectRel(projectRel.getCluster(), projectRel.getTraitSet(),
-              newScanRel, projectRel.getProjects(), filterRel.getRowType());
-
-          call.transformTo(newProjectRel);
-        } else {
-          call.transformTo(newScanRel);
-        }
-      } else {
-
-      final DrillScanRel newScanRel =
-          new DrillScanRel(scanRel.getCluster(),
-              scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-              scanRel.getTable(),
-              fgscan,
-              scanRel.getRowType(),
-              scanRel.getColumns());
-      if (projectRel != null) {
-        DrillProjectRel newProjectRel = new DrillProjectRel(projectRel.getCluster(), projectRel.getTraitSet(),
-            newScanRel, projectRel.getProjects(), projectRel.getRowType());
-        inputRel = newProjectRel;
-      } else {
-        inputRel = newScanRel;
-      }
-      final DrillFilterRel newFilterRel = new DrillFilterRel(filterRel.getCluster(), filterRel.getTraitSet(),
-          inputRel, origFilterCondition /* for now keep the original condition until we add more test coverage */);
-
-      call.transformTo(newFilterRel);
-      }
+      PartitionPruningUtil.rewritePlan(call, filterRel, projectRel, scanRel, fgscan, builder);
     } catch (IOException e) {
       throw new DrillRuntimeException(e) ;
     }
-
   }
-
 }

@@ -17,11 +17,14 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import net.hydromatic.optiq.Schema.TableType;
 
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 
@@ -73,6 +76,16 @@ public class HiveReadEntry {
     }
 
     return TableType.TABLE;
+  }
+
+  public String getPartitionLocation(HiveTable.HivePartition partition) {
+    String partitionPath = table.getTable().getSd().getLocation();
+
+    for (String value: partition.values) {
+      partitionPath += "/" + value;
+    }
+
+    return partitionPath;
   }
 }
 

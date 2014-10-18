@@ -193,7 +193,7 @@ public class PlanTestBase extends BaseTestQuery {
    * This will submit an "EXPLAIN" statement, and return the column value which
    * contains the plan's string.
    */
-  private String getPlanInString(String sql, String columnName)
+  protected String getPlanInString(String sql, String columnName)
       throws Exception {
     List<QueryResultBatch> results = testSqlWithResults(sql);
 

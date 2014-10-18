@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.planner.PartitionDescriptor;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexBuilder;
@@ -44,32 +45,34 @@ import com.google.common.collect.Lists;
 public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirPathBuilder.class);
 
-  static final int MAX_NESTED_SUBDIRS = 10;          // allow up to 10 nested sub-directories
   static final String EMPTY_STRING = "";
 
   final private DrillFilterRel filterRel;
   final private DrillRel inputRel;
   final private RexBuilder builder;
-  final private String dirLabel;
+  final private PartitionDescriptor partitionDescriptor;
 
-  private List<String> dirNameList = Lists.newArrayListWithExpectedSize(MAX_NESTED_SUBDIRS);
-  private List<RexNode> conjunctList = Lists.newArrayListWithExpectedSize(MAX_NESTED_SUBDIRS);
+  private List<String> dirNameList;
+  private List<RexNode> conjunctList;
   private List<String> dirPathList = Lists.newArrayList();
   private RexNode currentConjunct = null;    // the current conjunct are we evaluating during visitor traversal
   private RexNode finalCondition = null;     // placeholder for the final filter condition
   private boolean dirMatch = false;
 
-  DirPathBuilder(DrillFilterRel filterRel, DrillRel inputRel, RexBuilder builder, String dirLabel) {
+  public DirPathBuilder(DrillFilterRel filterRel, DrillRel inputRel, RexBuilder builder, PartitionDescriptor partitionDescriptor) {
     super(true);
     this.filterRel = filterRel;
     this.inputRel = inputRel;
     this.builder = builder;
-    this.dirLabel = dirLabel;
     this.finalCondition = filterRel.getCondition();
+    this.partitionDescriptor = partitionDescriptor;
   }
 
   private void initPathComponents() {
-    for (int i=0; i < MAX_NESTED_SUBDIRS; i++) {
+    int maxHierarchy = partitionDescriptor.getMaxHierarchyLevel();
+    dirNameList = Lists.newArrayListWithExpectedSize(maxHierarchy);
+    conjunctList = Lists.newArrayListWithExpectedSize(maxHierarchy);
+    for (int i=0; i < maxHierarchy; i++) {
       dirNameList.add(EMPTY_STRING);
       conjunctList.add(null);
     }
@@ -153,7 +156,7 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
   public SchemaPath visitInputRef(RexInputRef inputRef) {
     final int index = inputRef.getIndex();
     final RelDataTypeField field = inputRel.getRowType().getFieldList().get(index);
-    if (field.getName().matches(dirLabel+"[0-9]")) {
+    if (partitionDescriptor.isPartitionName(field.getName())) {
       dirMatch = true;
     }
     return FieldReference.getWithQuotedRef(field.getName());
@@ -175,19 +178,18 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
         if (dirMatch && e1 != null) {
           // get the index for the 'dir<N>' filter
           String dirName = e1.getRootSegment().getPath();
-          String suffix = dirName.substring(dirLabel.length()); // get the numeric suffix from 'dir<N>'
-          int suffixIndex = Integer.parseInt(suffix);
+          int hierarychyIndex = partitionDescriptor.getPartitionHierarchyIndex(dirName);
 
-          if (suffixIndex >= MAX_NESTED_SUBDIRS) {
+          if (hierarychyIndex >= partitionDescriptor.getMaxHierarchyLevel()) {
             return null;
           }
 
           // SchemaPath e2 = call.getOperands().get(1).accept(this);
           if (call.getOperands().get(1).getKind() == SqlKind.LITERAL) {
             String e2 = ((RexLiteral)call.getOperands().get(1)).getValue2().toString();
-            dirNameList.set(suffixIndex, e2);
+            dirNameList.set(hierarychyIndex, e2);
             // dirNameList.set(suffixIndex, e2.getRootSegment().getPath());
-            conjunctList.set(suffixIndex, currentConjunct);
+            conjunctList.set(hierarychyIndex, currentConjunct);
             return e1;
           }
         }
@@ -216,7 +218,6 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
     if (dirMatch) {
       return arg;
     }
-
     return null;
   }
 
