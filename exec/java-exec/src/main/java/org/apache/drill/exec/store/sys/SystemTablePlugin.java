@@ -66,6 +66,8 @@ public class SystemTablePlugin extends AbstractStoragePlugin{
 
   public Iterator<Object> getRecordIterator(FragmentContext context, SystemTable table){
     switch(table){
+    case VERSION:
+      return new VersionIterator();
     case DRILLBITS:
       return new DrillbitIterator(context);
     case OPTION:

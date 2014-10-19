@@ -26,7 +26,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -73,27 +72,27 @@ public class TestOptiqPlans extends ExecTest {
 
   @Test
   public void orderBy(@Injectable final BootStrapContext ctxt, @Injectable UserClientConnection connection,
-      @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com, @Injectable DistributedCache cache,
+      @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
       @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_order.json", coord, com, cache, controller, workBus);
+    SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_order.json", coord, com, controller, workBus);
   }
 
   @Test
   public void stringFilter(@Injectable final BootStrapContext ctxt, @Injectable UserClientConnection connection,
-      @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com, @Injectable DistributedCache cache,
+      @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
       @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_string_filter.json", coord, com, cache, controller, workBus);
+    SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_string_filter.json", coord, com, controller, workBus);
   }
 
   @Test
   public void groupBy(@Injectable final BootStrapContext bitContext, @Injectable UserClientConnection connection,
-      @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com, @Injectable DistributedCache cache,
+      @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
       @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    SimpleRootExec exec = doLogicalTest(bitContext, connection, "/logical_group.json", coord, com, cache, controller, workBus);
+    SimpleRootExec exec = doLogicalTest(bitContext, connection, "/logical_group.json", coord, com, controller, workBus);
   }
 
   private SimpleRootExec doLogicalTest(final BootStrapContext context, UserClientConnection connection, String file,
-      ClusterCoordinator coord, DataConnectionCreator com, DistributedCache cache, Controller controller, WorkEventBus workBus) throws Exception {
+      ClusterCoordinator coord, DataConnectionCreator com, Controller controller, WorkEventBus workBus) throws Exception {
     new NonStrictExpectations() {
       {
         context.getMetrics();
@@ -105,7 +104,7 @@ public class TestOptiqPlans extends ExecTest {
       }
     };
     RemoteServiceSet lss = RemoteServiceSet.getLocalServiceSet();
-    DrillbitContext bitContext = new DrillbitContext(DrillbitEndpoint.getDefaultInstance(), context, coord, controller, com, cache, workBus, new LocalPStoreProvider(DrillConfig.create()));
+    DrillbitContext bitContext = new DrillbitContext(DrillbitEndpoint.getDefaultInstance(), context, coord, controller, com, workBus, new LocalPStoreProvider(DrillConfig.create()));
     QueryContext qc = new QueryContext(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(), QueryId.getDefaultInstance(), bitContext);
     PhysicalPlanReader reader = bitContext.getPlanReader();
     LogicalPlan plan = reader.readLogicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));

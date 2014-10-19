@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -37,14 +35,12 @@ public class CodeCompiler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeCompiler.class);
 
   private final ClassTransformer transformer;
-  private final DistributedCache distributedCache;
   private final LoadingCache<CodeGenerator<?>, GeneratedClassEntry>  cache;
   private final DrillConfig config;
   private final OptionManager systemOptionManager;
 
-  public CodeCompiler(DrillConfig config, DistributedCache distributedCache, OptionManager systemOptionManager){
-    this.transformer = new ClassTransformer(distributedCache);
-    this.distributedCache = distributedCache;
+  public CodeCompiler(DrillConfig config, OptionManager systemOptionManager){
+    this.transformer = new ClassTransformer();
     this.cache = CacheBuilder //
         .newBuilder() //
         .maximumSize(1000) //
@@ -87,6 +83,6 @@ public class CodeCompiler {
   }
 
   public static CodeCompiler getTestCompiler(DrillConfig c) throws IOException{
-    return new CodeCompiler(c, new LocalCache(), new SystemOptionManager(c, new LocalPStoreProvider(c)).init());
+    return new CodeCompiler(c, new SystemOptionManager(c, new LocalPStoreProvider(c)).init());
   }
 }

@@ -58,6 +58,7 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
     if (!ctx.channel().isOpen()) {
       //output.add(ctx.alloc().buffer(0));
       logger.debug("Channel closed, skipping encode.");
+      msg.release();
       return;
     }
 

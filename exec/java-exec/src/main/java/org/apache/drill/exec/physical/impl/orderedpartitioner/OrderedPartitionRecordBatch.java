@@ -141,7 +141,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     this.samplingFactor = pop.getSamplingFactor();
     this.completionFactor = pop.getCompletionFactor();
 
-    DistributedCache cache = context.getDrillbitContext().getCache();
+    DistributedCache cache = null;
     this.mmap = cache.getMultiMap(MULTI_CACHE_CONFIG);
     this.tableMap = cache.getMap(SINGLE_CACHE_CONFIG);
     Preconditions.checkNotNull(tableMap);

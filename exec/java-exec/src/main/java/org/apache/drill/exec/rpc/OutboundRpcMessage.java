@@ -34,8 +34,15 @@ public class OutboundRpcMessage extends RpcMessage {
   final MessageLite pBody;
   public ByteBuf[] dBodies;
 
+
+
   public OutboundRpcMessage(RpcMode mode, EnumLite rpcType, int coordinationId, MessageLite pBody, ByteBuf... dBodies) {
-    super(mode, rpcType.getNumber(), coordinationId);
+      this(mode, rpcType.getNumber(), coordinationId, pBody, dBodies);
+  }
+
+
+  OutboundRpcMessage(RpcMode mode, int rpcTypeNumber, int coordinationId, MessageLite pBody, ByteBuf... dBodies) {
+    super(mode, rpcTypeNumber, coordinationId);
     this.pBody = pBody;
 
     // Netty doesn't traditionally release the reference on an unreadable buffer.  However, we need to so that if we send a empty or unwritable buffer, we still release.  otherwise we get weird memory leaks when sending empty vectors.

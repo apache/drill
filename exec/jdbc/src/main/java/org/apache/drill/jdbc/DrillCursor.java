@@ -110,7 +110,7 @@ public class DrillCursor implements Cursor{
           return true;
         }
       } catch (RpcException | InterruptedException | SchemaChangeException e) {
-        throw new SQLException("Failure while trying to get next result batch.", e);
+        throw new SQLException("Failure while executing query.", e);
       }
 
     }

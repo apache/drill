@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.common.exceptions.DrillIOException;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 /**
  * Parent class for all rpc exceptions.
@@ -66,4 +67,11 @@ public class RpcException extends DrillIOException{
     return new RpcException(message, t);
   }
 
+  public boolean isRemote(){
+    return false;
+  }
+
+  public DrillPBError getRemoteError(){
+    throw new UnsupportedOperationException();
+  }
 }

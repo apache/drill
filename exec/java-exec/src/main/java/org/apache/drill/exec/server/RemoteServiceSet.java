@@ -21,9 +21,6 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.infinispan.ICache;
-import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.local.LocalClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -31,18 +28,13 @@ import org.apache.drill.exec.memory.BufferAllocator;
 public class RemoteServiceSet implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteServiceSet.class);
 
-  private final DistributedCache cache;
   private final ClusterCoordinator coordinator;
 
-  public RemoteServiceSet(DistributedCache cache, ClusterCoordinator coordinator) {
+  public RemoteServiceSet(ClusterCoordinator coordinator) {
     super();
-    this.cache = cache;
     this.coordinator = coordinator;
   }
 
-  public DistributedCache getCache() {
-    return cache;
-  }
 
   public ClusterCoordinator getCoordinator() {
     return coordinator;
@@ -50,24 +42,15 @@ public class RemoteServiceSet implements Closeable {
 
   @Override
   public void close() throws IOException {
-    try {
-      cache.close();
-    } catch(Exception e) {
-      if (e instanceof IOException) {
-        throw (IOException) e;
-      }
-      throw new IOException("Failure while closing cache", e);
-    }
     coordinator.close();
   }
 
   public static RemoteServiceSet getLocalServiceSet() {
-    return new RemoteServiceSet(new LocalCache(), new LocalClusterCoordinator());
+    return new RemoteServiceSet(new LocalClusterCoordinator());
   }
 
   public static RemoteServiceSet getServiceSetWithFullCache(DrillConfig config, BufferAllocator allocator) throws Exception{
-    ICache c = new ICache(config, allocator, true);
-    return new RemoteServiceSet(c, new LocalClusterCoordinator());
+    return new RemoteServiceSet(new LocalClusterCoordinator());
   }
 
 }

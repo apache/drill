@@ -21,8 +21,6 @@ import java.io.Closeable;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.infinispan.ICache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
@@ -84,7 +82,6 @@ public class Drillbit implements Closeable{
 
   final ClusterCoordinator coord;
   final ServiceEngine engine;
-  final DistributedCache cache;
   final PStoreProvider storeProvider;
   final WorkManager manager;
   final BootStrapContext context;
@@ -107,13 +104,11 @@ public class Drillbit implements Closeable{
 
     if(serviceSet != null) {
       this.coord = serviceSet.getCoordinator();
-      this.cache = serviceSet.getCache();
       this.storeProvider = new LocalPStoreProvider(config);
     } else {
       Runtime.getRuntime().addShutdownHook(new ShutdownThread(config));
       this.coord = new ZKClusterCoordinator(config);
       this.storeProvider = new PStoreRegistry(this.coord, config).newPStoreProvider();
-      this.cache = new ICache(config, context.getAllocator(), false);
     }
   }
 
@@ -148,8 +143,7 @@ public class Drillbit implements Closeable{
     coord.start(10000);
     storeProvider.start();
     DrillbitEndpoint md = engine.start();
-    manager.start(md, cache, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider);
-    cache.run();
+    manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider);
     manager.getContext().getStorage().init();
     manager.getContext().getOptionManager().init();
     handle = coord.register(md);
@@ -172,11 +166,6 @@ public class Drillbit implements Closeable{
       }
     } catch (Exception e) {
       logger.warn("Failure while shutting down embedded jetty server.");
-    }
-    try {
-      cache.close();
-    } catch (Exception e) {
-      e.printStackTrace();
     }
     Closeables.closeQuietly(engine);
     Closeables.closeQuietly(storeProvider);

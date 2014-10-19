@@ -38,6 +38,7 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -47,6 +48,7 @@ import com.google.common.io.Files;
 /**
  * Tests the OrderedPartitionExchange Operator
  */
+@Ignore("Disabled until alternative to distributed cache provided.")
 public class TestOrderedPartitionExchange extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOrderedPartitionExchange.class);
 

@@ -30,8 +30,10 @@ import java.io.Closeable;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.drill.exec.proto.GeneralRPCProtos.RpcFailure;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.apache.drill.exec.work.ErrorHelper;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Internal.EnumLite;
@@ -188,7 +190,16 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       case REQUEST: {
         // handle message and ack.
         ResponseSender sender = new ResponseSenderImpl(connection, msg.coordinationId);
-        handle(connection, msg.rpcType, msg.pBody, msg.dBody, sender);
+        try {
+          handle(connection, msg.rpcType, msg.pBody, msg.dBody, sender);
+        } catch(UserRpcException e){
+          DrillPBError error = ErrorHelper.logAndConvertError(e.getEndpoint(), e.getUserMessage(), e, logger);
+          OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE_FAILURE, 0, msg.coordinationId, error);
+          if (RpcConstants.EXTRA_DEBUGGING) {
+            logger.debug("Adding message to outbound buffer. {}", outMessage);
+          }
+          connection.getChannel().writeAndFlush(outMessage);
+        }
         msg.release();  // we release our ownership.  Handle could have taken over ownership.
         break;
       }
@@ -212,7 +223,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         break;
 
       case RESPONSE_FAILURE:
-        RpcFailure failure = RpcFailure.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
+        DrillPBError failure = DrillPBError.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
         queue.updateFailedFuture(msg.coordinationId, failure);
         msg.release();
         if (RpcConstants.EXTRA_DEBUGGING) {
@@ -226,40 +237,6 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     }
 
   }
-
-//  private class Listener implements GenericFutureListener<ChannelFuture> {
-//
-//    private int coordinationId;
-//    private Class<?> clazz;
-//
-//    public Listener(int coordinationId, Class<?> clazz) {
-//      this.coordinationId = coordinationId;
-//      this.clazz = clazz;
-//    }
-//
-//    @Override
-//    public void operationComplete(ChannelFuture channelFuture) throws Exception {
-//      // logger.debug("Completed channel write.");
-//
-//      if (channelFuture.isCancelled()) {
-//        RpcOutcome<?> rpcFuture = queue.getFuture(-1, coordinationId, clazz);
-//        rpcFuture.setException(new CancellationException("Socket operation was canceled."));
-//      } else if (!channelFuture.isSuccess()) {
-//        try {
-//          channelFuture.get();
-//          throw new IllegalStateException("Future was described as completed and not succesful but did not throw an exception.");
-//        } catch (Exception e) {
-//          logger.error("Error occurred during Rpc", e);
-//          RpcOutcome<?> rpcFuture = queue.getFuture(-1, coordinationId, clazz);
-//          rpcFuture.setException(e);
-//        }
-//      } else {
-//        // send was successful. No need to modify DrillRpcFuture.
-//        return;
-//      }
-//    }
-//
-//  }
 
   public static <T> T get(ByteBuf pBody, Parser<T> parser) throws RpcException{
     try {

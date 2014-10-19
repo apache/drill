@@ -28,6 +28,7 @@ import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -82,78 +83,73 @@ public class WorkEventBus {
     }
   }
 
-  public void setRootFragmentManager(RootFragmentManager fragmentManager) {
-    FragmentManager old = managers.putIfAbsent(fragmentManager.getHandle(), fragmentManager);
-    if (old != null) {
-      throw new IllegalStateException(
-          "Tried to set fragment manager when has already been set for the provided fragment handle.");
+  public void setFragmentManager(FragmentManager fragmentManager) {
+    logger.debug("Manager created: {}", QueryIdHelper.getQueryIdentifier(fragmentManager.getHandle()));
+
+    synchronized (managers) {
+      FragmentManager old = managers.putIfAbsent(fragmentManager.getHandle(), fragmentManager);
+      managers.notifyAll();
+      if (old != null) {
+        throw new IllegalStateException(
+            "Tried to set fragment manager when has already been set for the provided fragment handle.");
+      }
     }
   }
 
-  public FragmentManager getFragmentManager(FragmentHandle handle) {
+  public FragmentManager getFragmentManagerIfExists(FragmentHandle handle){
     return managers.get(handle);
+
   }
 
-  public void cancelFragment(FragmentHandle handle) {
-    cancelledFragments.put(handle, null);
-    removeFragmentManager(handle);
-  }
+  public FragmentManager getFragmentManager(FragmentHandle handle) throws FragmentSetupException {
 
-  public FragmentManager getOrCreateFragmentManager(FragmentHandle handle) throws FragmentSetupException{
+    // check if this was a recently canceled fragment.  If so, throw away message.
     if (cancelledFragments.asMap().containsKey(handle)) {
       logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
       return null;
     }
-    // We need to synchronize this part. Without that, multiple bit servers will be creating a Fragment manager and the
-    // corresponding FragmentContext object. Each FragmentContext object registers with the TopLevelAllocator so that
-    // the allocator can manage fragment resources across all fragments. So we need to make sure only one
-    // FragmentManager is actually created and used for a given FragmentHandle.
-    FragmentManager newManager;
-    FragmentManager manager;
 
-    manager = managers.get(handle);
-    if (manager != null) {
-      return manager;
+    // chm manages concurrency better then everyone fighting for the same lock so we'll do a double check.
+    FragmentManager m = managers.get(handle);
+    if(m != null){
+      return m;
     }
-    if (logger.isDebugEnabled()) {
-      String fragHandles = "Looking for Fragment handle: " + handle.toString() + "(Hash Code:" + handle.hashCode()
-        + ")\n Fragment Handles in Fragment manager: ";
-      for (FragmentHandle h : managers.keySet()) {
-        fragHandles += h.toString() + "\n";
-        fragHandles += "[Hash Code: " + h.hashCode() + "]\n";
+
+    logger.debug("Fragment was requested but no manager exists.  Waiting for manager for fragment: {}", QueryIdHelper.getQueryIdentifier(handle));
+    try{
+    // We need to handle the race condition between the fragments being sent to leaf nodes and intermediate nodes.  It is possible that a leaf node would send a data batch to a intermediate node before the intermediate node received the associated plan.  As such, we will wait here for a bit to see if the appropriate fragment shows up.
+    long expire = System.currentTimeMillis() + 30*1000;
+    synchronized(managers){
+
+      // we loop because we may be woken up by some other, unrelated manager insertion.
+      while(true){
+        m = managers.get(handle);
+        if(m != null) {
+          return m;
+        }
+        long timeToWait = expire - System.currentTimeMillis();
+        if(timeToWait <= 0){
+          break;
+        }
+
+        managers.wait(timeToWait);
       }
-      logger.debug(fragHandles);
-    }
-    DistributedMap<FragmentHandle, PlanFragment> planCache = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE);
-//      for (Map.Entry<FragmentHandle, PlanFragment> e : planCache.getLocalEntries()) {
-//      logger.debug("Key: {}", e.getKey());
-//      logger.debug("Value: {}", e.getValue());
-//      }
-    PlanFragment fragment = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE).get(handle);
 
-    if (fragment == null) {
-      throw new FragmentSetupException("Received batch where fragment was not in cache.");
+      throw new FragmentSetupException("Failed to receive plan fragment that was required for id: " + QueryIdHelper.getQueryIdentifier(handle));
     }
-    logger.debug("Allocating new non root fragment manager: " + handle.toString());
-    newManager = new NonRootFragmentManager(fragment, bee);
-    logger.debug("Allocated new non root fragment manager: " + handle.toString());
-
-    manager = managers.putIfAbsent(fragment.getHandle(), newManager);
-    if (manager == null) {
-      // we added a handler, inform the bee that we did so. This way, the foreman can track status.
-      bee.addFragmentPendingRemote(newManager);
-      manager = newManager;
-    }else{
-      // prevent a leak of the initial allocation.
-      // Also the fragment context is registered with the top level allocator.
-      // This will unregister the unused fragment context as well.
-      newManager.getFragmentContext().close();
+    }catch(InterruptedException e){
+      throw new FragmentSetupException("Interrupted while waiting to receive plan fragment..");
     }
+  }
 
-    return manager;
+  public void cancelFragment(FragmentHandle handle) {
+    logger.debug("Fragment canceled: {}", QueryIdHelper.getQueryIdentifier(handle));
+    cancelledFragments.put(handle, null);
+    removeFragmentManager(handle);
   }
 
   public void removeFragmentManager(FragmentHandle handle) {
+    logger.debug("Removing fragment manager: {}", QueryIdHelper.getQueryIdentifier(handle));
     managers.remove(handle);
   }
 

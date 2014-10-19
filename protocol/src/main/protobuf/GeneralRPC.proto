@@ -28,12 +28,6 @@ message CompleteRpcMessage {
     optional bytes raw_body = 3; // optional
 }
 
-// Class to be used when an unexpected exception occurs while a rpc call is being evaluated.
-message RpcFailure {
-  optional int64 error_id = 1; // for server trackback.
-  optional int32 error_code = 2; // system defined error code.
-  optional string short_error = 3;
-  optional string long_error = 4;
-}
+
 
 

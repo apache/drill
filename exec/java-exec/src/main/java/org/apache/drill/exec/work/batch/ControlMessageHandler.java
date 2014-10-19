@@ -19,13 +19,12 @@ package org.apache.drill.exec.work.batch;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.UserRpcException;
 import org.apache.drill.exec.rpc.control.ControlConnection;
 
 public interface ControlMessageHandler {
@@ -33,7 +32,7 @@ public interface ControlMessageHandler {
   public abstract Response handle(ControlConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody)
       throws RpcException;
 
-  public abstract void startNewRemoteFragment(PlanFragment fragment) throws OutOfMemoryException, ExecutionSetupException;
+  public abstract void startNewRemoteFragment(PlanFragment fragment) throws UserRpcException;
 
   public abstract Ack cancelFragment(FragmentHandle handle);
 

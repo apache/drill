@@ -28,8 +28,6 @@ import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.QueryContext;
@@ -70,8 +68,6 @@ public class PlanningBase extends ExecTest{
   protected void testSqlPlan(String sqlCommands) throws Exception {
     String[] sqlStrings = sqlCommands.split(";");
 
-    final DistributedCache cache = new LocalCache();
-    cache.run();
 
     final LocalPStoreProvider provider = new LocalPStoreProvider(config);
     provider.start();
@@ -91,8 +87,6 @@ public class PlanningBase extends ExecTest{
         result = config;
         dbContext.getOptionManager();
         result = systemOptions;
-        dbContext.getCache();
-        result = cache;
         dbContext.getPersistentStoreProvider();
         result = provider;
       }
@@ -126,8 +120,6 @@ public class PlanningBase extends ExecTest{
         result = queryOptions;
         context.getConfig();
         result = config;
-        context.getCache();
-        result = cache;
         context.getDrillOperatorTable();
         result = table;
       }

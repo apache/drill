@@ -108,7 +108,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
     FragmentHandle handle = fragmentBatch.getHandle();
 
     try {
-      FragmentManager manager = workBus.getOrCreateFragmentManager(fragmentBatch.getHandle());
+      FragmentManager manager = workBus.getFragmentManager(fragmentBatch.getHandle());
       if (manager == null) {
         if (body != null) {
           body.release();

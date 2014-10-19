@@ -24,7 +24,6 @@ import java.util.Set;
 
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.codehaus.commons.compiler.CompileException;
@@ -40,10 +39,8 @@ public class ClassTransformer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassTransformer.class);
 
   private final ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
-  private final DistributedCache cache;
 
-  public ClassTransformer(DistributedCache cache) {
-    this.cache = cache;
+  public ClassTransformer() {
   }
 
   public static class ClassSet{

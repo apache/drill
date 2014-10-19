@@ -17,27 +17,33 @@
  */
 package org.apache.drill.exec.rpc;
 
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
-import org.apache.drill.exec.work.ErrorHelper;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-public class RemoteRpcException extends RpcException{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteRpcException.class);
+public class UserRpcException extends RpcException {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserRpcException.class);
 
-  private final DrillPBError failure;
+  private final String message;
+  private final DrillbitEndpoint endpoint;
+  private final Throwable t;
 
-  public RemoteRpcException(DrillPBError failure) {
-    super(ErrorHelper.getErrorMessage(failure, false));
-    this.failure = failure;
+  public UserRpcException(DrillbitEndpoint endpoint, String message, Throwable t) {
+    super(t);
+    this.message = message;
+    this.endpoint = endpoint;
+    this.t = t;
   }
 
-  @Override
-  public DrillPBError getRemoteError() {
-    return failure;
+  public String getUserMessage() {
+    return message;
   }
 
-  @Override
-  public boolean isRemote() {
-    return true;
+  public DrillbitEndpoint getEndpoint() {
+    return endpoint;
   }
+
+  public Throwable getUserException() {
+    return t;
+  }
+
 
 }

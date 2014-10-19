@@ -45,8 +45,7 @@ public abstract class AbstractStatusReporter implements StatusReporter{
     context.getStats().addMetricsToStatus(b);
     b.setState(state);
     if(t != null){
-      boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-      b.setError(ErrorHelper.logAndConvertError(context.getIdentity(), message, t, logger, verbose));
+      b.setError(ErrorHelper.logAndConvertError(context.getIdentity(), message, t, logger));
     }
     status.setHandle(context.getHandle());
     b.setMemoryUsed(context.getAllocator().getAllocatedMemory());

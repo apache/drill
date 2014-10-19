@@ -23,7 +23,7 @@ import io.netty.channel.ChannelFuture;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.drill.exec.proto.GeneralRPCProtos.RpcFailure;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 /**
  * Manages the creation of rpc futures for a particular socket.
@@ -146,7 +146,7 @@ public class CoordinationQueue {
     return crpc;
   }
 
-  public void updateFailedFuture(int coordinationId, RpcFailure failure) {
+  public void updateFailedFuture(int coordinationId, DrillPBError failure) {
     // logger.debug("Updating failed future.");
     try {
       RpcOutcome<?> rpc = removeFromMap(coordinationId);

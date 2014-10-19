@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
@@ -39,12 +38,6 @@ import com.google.common.collect.Maps;
 public class SystemOptionManager implements OptionManager {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
-
-  public static final CacheConfig<String, OptionValue> OPTION_CACHE = CacheConfig //
-      .newBuilder(OptionValue.class) //
-      .name("sys.options") //
-      .jackson()
-      .build();
 
   private final OptionValidator[] VALIDATORS = {
       PlannerSettings.EXCHANGE,

@@ -273,8 +273,11 @@ public final class SchemaUserBitShared
                     output.writeInt32(3, message.getErrorType(), false);
                 if(message.hasMessage())
                     output.writeString(4, message.getMessage(), false);
+                if(message.hasException())
+                    output.writeObject(5, message.getException(), org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.WRITE, false);
+
                 for(org.apache.drill.exec.proto.UserBitShared.ParsingError parsingError : message.getParsingErrorList())
-                    output.writeObject(5, parsingError, org.apache.drill.exec.proto.SchemaUserBitShared.ParsingError.WRITE, true);
+                    output.writeObject(6, parsingError, org.apache.drill.exec.proto.SchemaUserBitShared.ParsingError.WRITE, true);
 
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.DrillPBError message)
@@ -329,6 +332,10 @@ public final class SchemaUserBitShared
                             builder.setMessage(input.readString());
                             break;
                         case 5:
+                            builder.setException(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.MERGE));
+
+                            break;
+                        case 6:
                             builder.addParsingError(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.ParsingError.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.ParsingError.MERGE));
 
                             break;
@@ -376,7 +383,8 @@ public final class SchemaUserBitShared
                 case 2: return "endpoint";
                 case 3: return "errorType";
                 case 4: return "message";
-                case 5: return "parsingError";
+                case 5: return "exception";
+                case 6: return "parsingError";
                 default: return null;
             }
         }
@@ -392,7 +400,283 @@ public final class SchemaUserBitShared
             fieldMap.put("endpoint", 2);
             fieldMap.put("errorType", 3);
             fieldMap.put("message", 4);
-            fieldMap.put("parsingError", 5);
+            fieldMap.put("exception", 5);
+            fieldMap.put("parsingError", 6);
+        }
+    }
+
+    public static final class ExceptionWrapper
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper message) throws java.io.IOException
+            {
+                if(message.hasExceptionClass())
+                    output.writeString(1, message.getExceptionClass(), false);
+                if(message.hasMessage())
+                    output.writeString(2, message.getMessage(), false);
+                for(org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper stackTrace : message.getStackTraceList())
+                    output.writeObject(3, stackTrace, org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.WRITE, true);
+
+                if(message.hasCause())
+                    output.writeObject(4, message.getCause(), org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setExceptionClass(input.readString());
+                            break;
+                        case 2:
+                            builder.setMessage(input.readString());
+                            break;
+                        case 3:
+                            builder.addStackTrace(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.MERGE));
+
+                            break;
+                        case 4:
+                            builder.setCause(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "exceptionClass";
+                case 2: return "message";
+                case 3: return "stackTrace";
+                case 4: return "cause";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("exceptionClass", 1);
+            fieldMap.put("message", 2);
+            fieldMap.put("stackTrace", 3);
+            fieldMap.put("cause", 4);
+        }
+    }
+
+    public static final class StackTraceElementWrapper
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper message) throws java.io.IOException
+            {
+                if(message.hasClassName())
+                    output.writeString(1, message.getClassName(), false);
+                if(message.hasFileName())
+                    output.writeString(2, message.getFileName(), false);
+                if(message.hasLineNumber())
+                    output.writeInt32(3, message.getLineNumber(), false);
+                if(message.hasMethodName())
+                    output.writeString(4, message.getMethodName(), false);
+                if(message.hasIsNativeMethod())
+                    output.writeBool(5, message.getIsNativeMethod(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setClassName(input.readString());
+                            break;
+                        case 2:
+                            builder.setFileName(input.readString());
+                            break;
+                        case 3:
+                            builder.setLineNumber(input.readInt32());
+                            break;
+                        case 4:
+                            builder.setMethodName(input.readString());
+                            break;
+                        case 5:
+                            builder.setIsNativeMethod(input.readBool());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "className";
+                case 2: return "fileName";
+                case 3: return "lineNumber";
+                case 4: return "methodName";
+                case 5: return "isNativeMethod";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("className", 1);
+            fieldMap.put("fileName", 2);
+            fieldMap.put("lineNumber", 3);
+            fieldMap.put("methodName", 4);
+            fieldMap.put("isNativeMethod", 5);
         }
     }
 

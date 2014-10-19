@@ -104,7 +104,7 @@ public class ScreenCreator implements RootCreator<Screen>{
               .setQueryId(context.getHandle().getQueryId()) //
               .setRowCount(0) //
               .setQueryState(QueryState.FAILED)
-              .addError(ErrorHelper.logAndConvertError(context.getIdentity(), "Screen received stop request sent.",
+              .addError(ErrorHelper.logAndConvertMessageError(context.getIdentity(), "Query stopeed.",
                 context.getFailureCause(), logger, verbose))
               .setDef(RecordBatchDef.getDefaultInstance()) //
               .setIsLastChunk(true) //
@@ -203,7 +203,7 @@ public class ScreenCreator implements RootCreator<Screen>{
         sendCount.decrement();
         logger.error("Failure while sending data to user.", ex);
         boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-        ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger,
+        ErrorHelper.logAndConvertMessageError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger,
           verbose);
         ok = false;
         this.ex = ex;

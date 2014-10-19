@@ -1721,9 +1721,23 @@ public final class UserBitShared {
     com.google.protobuf.ByteString
         getMessageBytes();
 
-    // repeated .exec.shared.ParsingError parsing_error = 5;
+    // optional .exec.shared.ExceptionWrapper exception = 5;
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     */
+    boolean hasException();
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getException();
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder getExceptionOrBuilder();
+
+    // repeated .exec.shared.ParsingError parsing_error = 6;
+    /**
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -1732,7 +1746,7 @@ public final class UserBitShared {
     java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError> 
         getParsingErrorList();
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -1740,7 +1754,7 @@ public final class UserBitShared {
      */
     org.apache.drill.exec.proto.UserBitShared.ParsingError getParsingError(int index);
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -1748,7 +1762,7 @@ public final class UserBitShared {
      */
     int getParsingErrorCount();
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -1757,7 +1771,7 @@ public final class UserBitShared {
     java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder> 
         getParsingErrorOrBuilderList();
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -1846,9 +1860,22 @@ public final class UserBitShared {
               break;
             }
             case 42: {
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+              org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+                subBuilder = exception_.toBuilder();
+              }
+              exception_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(exception_);
+                exception_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000010;
+              break;
+            }
+            case 50: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
                 parsingError_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.ParsingError>();
-                mutable_bitField0_ |= 0x00000010;
+                mutable_bitField0_ |= 0x00000020;
               }
               parsingError_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.ParsingError.PARSER, extensionRegistry));
               break;
@@ -1861,7 +1888,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
           parsingError_ = java.util.Collections.unmodifiableList(parsingError_);
         }
         this.unknownFields = unknownFields.build();
@@ -2032,11 +2059,33 @@ public final class UserBitShared {
       }
     }
 
-    // repeated .exec.shared.ParsingError parsing_error = 5;
-    public static final int PARSING_ERROR_FIELD_NUMBER = 5;
+    // optional .exec.shared.ExceptionWrapper exception = 5;
+    public static final int EXCEPTION_FIELD_NUMBER = 5;
+    private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper exception_;
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     */
+    public boolean hasException() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getException() {
+      return exception_;
+    }
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder getExceptionOrBuilder() {
+      return exception_;
+    }
+
+    // repeated .exec.shared.ParsingError parsing_error = 6;
+    public static final int PARSING_ERROR_FIELD_NUMBER = 6;
     private java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError> parsingError_;
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -2046,7 +2095,7 @@ public final class UserBitShared {
       return parsingError_;
     }
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -2057,7 +2106,7 @@ public final class UserBitShared {
       return parsingError_;
     }
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -2067,7 +2116,7 @@ public final class UserBitShared {
       return parsingError_.size();
     }
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -2077,7 +2126,7 @@ public final class UserBitShared {
       return parsingError_.get(index);
     }
     /**
-     * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+     * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      *
      * <pre>
      *optional, used when providing location of error within a piece of text.
@@ -2093,6 +2142,7 @@ public final class UserBitShared {
       endpoint_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
       errorType_ = 0;
       message_ = "";
+      exception_ = org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
       parsingError_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
@@ -2119,8 +2169,11 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(4, getMessageBytes());
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeMessage(5, exception_);
+      }
       for (int i = 0; i < parsingError_.size(); i++) {
-        output.writeMessage(5, parsingError_.get(i));
+        output.writeMessage(6, parsingError_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -2147,9 +2200,13 @@ public final class UserBitShared {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, getMessageBytes());
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, exception_);
+      }
       for (int i = 0; i < parsingError_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, parsingError_.get(i));
+          .computeMessageSize(6, parsingError_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2260,6 +2317,7 @@ public final class UserBitShared {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getEndpointFieldBuilder();
+          getExceptionFieldBuilder();
           getParsingErrorFieldBuilder();
         }
       }
@@ -2281,9 +2339,15 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00000004);
         message_ = "";
         bitField0_ = (bitField0_ & ~0x00000008);
+        if (exceptionBuilder_ == null) {
+          exception_ = org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
+        } else {
+          exceptionBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
         if (parsingErrorBuilder_ == null) {
           parsingError_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000010);
+          bitField0_ = (bitField0_ & ~0x00000020);
         } else {
           parsingErrorBuilder_.clear();
         }
@@ -2335,10 +2399,18 @@ public final class UserBitShared {
           to_bitField0_ |= 0x00000008;
         }
         result.message_ = message_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        if (exceptionBuilder_ == null) {
+          result.exception_ = exception_;
+        } else {
+          result.exception_ = exceptionBuilder_.build();
+        }
         if (parsingErrorBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          if (((bitField0_ & 0x00000020) == 0x00000020)) {
             parsingError_ = java.util.Collections.unmodifiableList(parsingError_);
-            bitField0_ = (bitField0_ & ~0x00000010);
+            bitField0_ = (bitField0_ & ~0x00000020);
           }
           result.parsingError_ = parsingError_;
         } else {
@@ -2376,11 +2448,14 @@ public final class UserBitShared {
           message_ = other.message_;
           onChanged();
         }
+        if (other.hasException()) {
+          mergeException(other.getException());
+        }
         if (parsingErrorBuilder_ == null) {
           if (!other.parsingError_.isEmpty()) {
             if (parsingError_.isEmpty()) {
               parsingError_ = other.parsingError_;
-              bitField0_ = (bitField0_ & ~0x00000010);
+              bitField0_ = (bitField0_ & ~0x00000020);
             } else {
               ensureParsingErrorIsMutable();
               parsingError_.addAll(other.parsingError_);
@@ -2393,7 +2468,7 @@ public final class UserBitShared {
               parsingErrorBuilder_.dispose();
               parsingErrorBuilder_ = null;
               parsingError_ = other.parsingError_;
-              bitField0_ = (bitField0_ & ~0x00000010);
+              bitField0_ = (bitField0_ & ~0x00000020);
               parsingErrorBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getParsingErrorFieldBuilder() : null;
@@ -2751,13 +2826,130 @@ public final class UserBitShared {
         return this;
       }
 
-      // repeated .exec.shared.ParsingError parsing_error = 5;
+      // optional .exec.shared.ExceptionWrapper exception = 5;
+      private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper exception_ = org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder> exceptionBuilder_;
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      public boolean hasException() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getException() {
+        if (exceptionBuilder_ == null) {
+          return exception_;
+        } else {
+          return exceptionBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      public Builder setException(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper value) {
+        if (exceptionBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          exception_ = value;
+          onChanged();
+        } else {
+          exceptionBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      public Builder setException(
+          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builderForValue) {
+        if (exceptionBuilder_ == null) {
+          exception_ = builderForValue.build();
+          onChanged();
+        } else {
+          exceptionBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      public Builder mergeException(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper value) {
+        if (exceptionBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+              exception_ != org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance()) {
+            exception_ =
+              org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.newBuilder(exception_).mergeFrom(value).buildPartial();
+          } else {
+            exception_ = value;
+          }
+          onChanged();
+        } else {
+          exceptionBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      public Builder clearException() {
+        if (exceptionBuilder_ == null) {
+          exception_ = org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
+          onChanged();
+        } else {
+          exceptionBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder getExceptionBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return getExceptionFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder getExceptionOrBuilder() {
+        if (exceptionBuilder_ != null) {
+          return exceptionBuilder_.getMessageOrBuilder();
+        } else {
+          return exception_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder> 
+          getExceptionFieldBuilder() {
+        if (exceptionBuilder_ == null) {
+          exceptionBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder>(
+                  exception_,
+                  getParentForChildren(),
+                  isClean());
+          exception_ = null;
+        }
+        return exceptionBuilder_;
+      }
+
+      // repeated .exec.shared.ParsingError parsing_error = 6;
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError> parsingError_ =
         java.util.Collections.emptyList();
       private void ensureParsingErrorIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
           parsingError_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.ParsingError>(parsingError_);
-          bitField0_ |= 0x00000010;
+          bitField0_ |= 0x00000020;
          }
       }
 
@@ -2765,7 +2957,7 @@ public final class UserBitShared {
           org.apache.drill.exec.proto.UserBitShared.ParsingError, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder, org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder> parsingErrorBuilder_;
 
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2779,7 +2971,7 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2793,7 +2985,7 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2807,7 +2999,7 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2828,7 +3020,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2846,7 +3038,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2866,7 +3058,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2887,7 +3079,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2905,7 +3097,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2923,7 +3115,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2941,7 +3133,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2950,7 +3142,7 @@ public final class UserBitShared {
       public Builder clearParsingError() {
         if (parsingErrorBuilder_ == null) {
           parsingError_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000010);
+          bitField0_ = (bitField0_ & ~0x00000020);
           onChanged();
         } else {
           parsingErrorBuilder_.clear();
@@ -2958,7 +3150,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2975,7 +3167,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -2986,7 +3178,7 @@ public final class UserBitShared {
         return getParsingErrorFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -3000,7 +3192,7 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -3015,7 +3207,7 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -3026,7 +3218,7 @@ public final class UserBitShared {
             org.apache.drill.exec.proto.UserBitShared.ParsingError.getDefaultInstance());
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -3038,7 +3230,7 @@ public final class UserBitShared {
             index, org.apache.drill.exec.proto.UserBitShared.ParsingError.getDefaultInstance());
       }
       /**
-       * <code>repeated .exec.shared.ParsingError parsing_error = 5;</code>
+       * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        *
        * <pre>
        *optional, used when providing location of error within a piece of text.
@@ -3055,7 +3247,7 @@ public final class UserBitShared {
           parsingErrorBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               org.apache.drill.exec.proto.UserBitShared.ParsingError, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder, org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder>(
                   parsingError_,
-                  ((bitField0_ & 0x00000010) == 0x00000010),
+                  ((bitField0_ & 0x00000020) == 0x00000020),
                   getParentForChildren(),
                   isClean());
           parsingError_ = null;
@@ -3072,6 +3264,2132 @@ public final class UserBitShared {
     }
 
     // @@protoc_insertion_point(class_scope:exec.shared.DrillPBError)
+  }
+
+  public interface ExceptionWrapperOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string exception_class = 1;
+    /**
+     * <code>optional string exception_class = 1;</code>
+     */
+    boolean hasExceptionClass();
+    /**
+     * <code>optional string exception_class = 1;</code>
+     */
+    java.lang.String getExceptionClass();
+    /**
+     * <code>optional string exception_class = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getExceptionClassBytes();
+
+    // optional string message = 2;
+    /**
+     * <code>optional string message = 2;</code>
+     */
+    boolean hasMessage();
+    /**
+     * <code>optional string message = 2;</code>
+     */
+    java.lang.String getMessage();
+    /**
+     * <code>optional string message = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getMessageBytes();
+
+    // repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> 
+        getStackTraceList();
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper getStackTrace(int index);
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    int getStackTraceCount();
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
+        getStackTraceOrBuilderList();
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder getStackTraceOrBuilder(
+        int index);
+
+    // optional .exec.shared.ExceptionWrapper cause = 4;
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     */
+    boolean hasCause();
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getCause();
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder getCauseOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.shared.ExceptionWrapper}
+   */
+  public static final class ExceptionWrapper extends
+      com.google.protobuf.GeneratedMessage
+      implements ExceptionWrapperOrBuilder {
+    // Use ExceptionWrapper.newBuilder() to construct.
+    private ExceptionWrapper(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ExceptionWrapper(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ExceptionWrapper defaultInstance;
+    public static ExceptionWrapper getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ExceptionWrapper getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ExceptionWrapper(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              exceptionClass_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              message_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                stackTrace_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              stackTrace_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.PARSER, extensionRegistry));
+              break;
+            }
+            case 34: {
+              org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = cause_.toBuilder();
+              }
+              cause_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(cause_);
+                cause_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          stackTrace_ = java.util.Collections.unmodifiableList(stackTrace_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_ExceptionWrapper_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_ExceptionWrapper_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ExceptionWrapper> PARSER =
+        new com.google.protobuf.AbstractParser<ExceptionWrapper>() {
+      public ExceptionWrapper parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ExceptionWrapper(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ExceptionWrapper> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string exception_class = 1;
+    public static final int EXCEPTION_CLASS_FIELD_NUMBER = 1;
+    private java.lang.Object exceptionClass_;
+    /**
+     * <code>optional string exception_class = 1;</code>
+     */
+    public boolean hasExceptionClass() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string exception_class = 1;</code>
+     */
+    public java.lang.String getExceptionClass() {
+      java.lang.Object ref = exceptionClass_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          exceptionClass_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string exception_class = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getExceptionClassBytes() {
+      java.lang.Object ref = exceptionClass_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        exceptionClass_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string message = 2;
+    public static final int MESSAGE_FIELD_NUMBER = 2;
+    private java.lang.Object message_;
+    /**
+     * <code>optional string message = 2;</code>
+     */
+    public boolean hasMessage() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string message = 2;</code>
+     */
+    public java.lang.String getMessage() {
+      java.lang.Object ref = message_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          message_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string message = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMessageBytes() {
+      java.lang.Object ref = message_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        message_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+    public static final int STACK_TRACE_FIELD_NUMBER = 3;
+    private java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> stackTrace_;
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> getStackTraceList() {
+      return stackTrace_;
+    }
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
+        getStackTraceOrBuilderList() {
+      return stackTrace_;
+    }
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    public int getStackTraceCount() {
+      return stackTrace_.size();
+    }
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper getStackTrace(int index) {
+      return stackTrace_.get(index);
+    }
+    /**
+     * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder getStackTraceOrBuilder(
+        int index) {
+      return stackTrace_.get(index);
+    }
+
+    // optional .exec.shared.ExceptionWrapper cause = 4;
+    public static final int CAUSE_FIELD_NUMBER = 4;
+    private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper cause_;
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     */
+    public boolean hasCause() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getCause() {
+      return cause_;
+    }
+    /**
+     * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder getCauseOrBuilder() {
+      return cause_;
+    }
+
+    private void initFields() {
+      exceptionClass_ = "";
+      message_ = "";
+      stackTrace_ = java.util.Collections.emptyList();
+      cause_ = org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getExceptionClassBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getMessageBytes());
+      }
+      for (int i = 0; i < stackTrace_.size(); i++) {
+        output.writeMessage(3, stackTrace_.get(i));
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(4, cause_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getExceptionClassBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getMessageBytes());
+      }
+      for (int i = 0; i < stackTrace_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, stackTrace_.get(i));
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, cause_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.shared.ExceptionWrapper}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_ExceptionWrapper_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_ExceptionWrapper_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getStackTraceFieldBuilder();
+          getCauseFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        exceptionClass_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        message_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (stackTraceBuilder_ == null) {
+          stackTrace_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          stackTraceBuilder_.clear();
+        }
+        if (causeBuilder_ == null) {
+          cause_ = org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
+        } else {
+          causeBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_ExceptionWrapper_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper build() {
+        org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper buildPartial() {
+        org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper result = new org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.exceptionClass_ = exceptionClass_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.message_ = message_;
+        if (stackTraceBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            stackTrace_ = java.util.Collections.unmodifiableList(stackTrace_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.stackTrace_ = stackTrace_;
+        } else {
+          result.stackTrace_ = stackTraceBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (causeBuilder_ == null) {
+          result.cause_ = cause_;
+        } else {
+          result.cause_ = causeBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper) {
+          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper other) {
+        if (other == org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance()) return this;
+        if (other.hasExceptionClass()) {
+          bitField0_ |= 0x00000001;
+          exceptionClass_ = other.exceptionClass_;
+          onChanged();
+        }
+        if (other.hasMessage()) {
+          bitField0_ |= 0x00000002;
+          message_ = other.message_;
+          onChanged();
+        }
+        if (stackTraceBuilder_ == null) {
+          if (!other.stackTrace_.isEmpty()) {
+            if (stackTrace_.isEmpty()) {
+              stackTrace_ = other.stackTrace_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureStackTraceIsMutable();
+              stackTrace_.addAll(other.stackTrace_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.stackTrace_.isEmpty()) {
+            if (stackTraceBuilder_.isEmpty()) {
+              stackTraceBuilder_.dispose();
+              stackTraceBuilder_ = null;
+              stackTrace_ = other.stackTrace_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              stackTraceBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getStackTraceFieldBuilder() : null;
+            } else {
+              stackTraceBuilder_.addAllMessages(other.stackTrace_);
+            }
+          }
+        }
+        if (other.hasCause()) {
+          mergeCause(other.getCause());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string exception_class = 1;
+      private java.lang.Object exceptionClass_ = "";
+      /**
+       * <code>optional string exception_class = 1;</code>
+       */
+      public boolean hasExceptionClass() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string exception_class = 1;</code>
+       */
+      public java.lang.String getExceptionClass() {
+        java.lang.Object ref = exceptionClass_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          exceptionClass_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string exception_class = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getExceptionClassBytes() {
+        java.lang.Object ref = exceptionClass_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          exceptionClass_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string exception_class = 1;</code>
+       */
+      public Builder setExceptionClass(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        exceptionClass_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string exception_class = 1;</code>
+       */
+      public Builder clearExceptionClass() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        exceptionClass_ = getDefaultInstance().getExceptionClass();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string exception_class = 1;</code>
+       */
+      public Builder setExceptionClassBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        exceptionClass_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string message = 2;
+      private java.lang.Object message_ = "";
+      /**
+       * <code>optional string message = 2;</code>
+       */
+      public boolean hasMessage() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string message = 2;</code>
+       */
+      public java.lang.String getMessage() {
+        java.lang.Object ref = message_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          message_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string message = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMessageBytes() {
+        java.lang.Object ref = message_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          message_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string message = 2;</code>
+       */
+      public Builder setMessage(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        message_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string message = 2;</code>
+       */
+      public Builder clearMessage() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        message_ = getDefaultInstance().getMessage();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string message = 2;</code>
+       */
+      public Builder setMessageBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        message_ = value;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+      private java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> stackTrace_ =
+        java.util.Collections.emptyList();
+      private void ensureStackTraceIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          stackTrace_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper>(stackTrace_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> stackTraceBuilder_;
+
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> getStackTraceList() {
+        if (stackTraceBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(stackTrace_);
+        } else {
+          return stackTraceBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public int getStackTraceCount() {
+        if (stackTraceBuilder_ == null) {
+          return stackTrace_.size();
+        } else {
+          return stackTraceBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper getStackTrace(int index) {
+        if (stackTraceBuilder_ == null) {
+          return stackTrace_.get(index);
+        } else {
+          return stackTraceBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder setStackTrace(
+          int index, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper value) {
+        if (stackTraceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStackTraceIsMutable();
+          stackTrace_.set(index, value);
+          onChanged();
+        } else {
+          stackTraceBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder setStackTrace(
+          int index, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builderForValue) {
+        if (stackTraceBuilder_ == null) {
+          ensureStackTraceIsMutable();
+          stackTrace_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          stackTraceBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder addStackTrace(org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper value) {
+        if (stackTraceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStackTraceIsMutable();
+          stackTrace_.add(value);
+          onChanged();
+        } else {
+          stackTraceBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder addStackTrace(
+          int index, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper value) {
+        if (stackTraceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStackTraceIsMutable();
+          stackTrace_.add(index, value);
+          onChanged();
+        } else {
+          stackTraceBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder addStackTrace(
+          org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builderForValue) {
+        if (stackTraceBuilder_ == null) {
+          ensureStackTraceIsMutable();
+          stackTrace_.add(builderForValue.build());
+          onChanged();
+        } else {
+          stackTraceBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder addStackTrace(
+          int index, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builderForValue) {
+        if (stackTraceBuilder_ == null) {
+          ensureStackTraceIsMutable();
+          stackTrace_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          stackTraceBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder addAllStackTrace(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> values) {
+        if (stackTraceBuilder_ == null) {
+          ensureStackTraceIsMutable();
+          super.addAll(values, stackTrace_);
+          onChanged();
+        } else {
+          stackTraceBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder clearStackTrace() {
+        if (stackTraceBuilder_ == null) {
+          stackTrace_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          stackTraceBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public Builder removeStackTrace(int index) {
+        if (stackTraceBuilder_ == null) {
+          ensureStackTraceIsMutable();
+          stackTrace_.remove(index);
+          onChanged();
+        } else {
+          stackTraceBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder getStackTraceBuilder(
+          int index) {
+        return getStackTraceFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder getStackTraceOrBuilder(
+          int index) {
+        if (stackTraceBuilder_ == null) {
+          return stackTrace_.get(index);  } else {
+          return stackTraceBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
+           getStackTraceOrBuilderList() {
+        if (stackTraceBuilder_ != null) {
+          return stackTraceBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(stackTrace_);
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder addStackTraceBuilder() {
+        return getStackTraceFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder addStackTraceBuilder(
+          int index) {
+        return getStackTraceFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder> 
+           getStackTraceBuilderList() {
+        return getStackTraceFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
+          getStackTraceFieldBuilder() {
+        if (stackTraceBuilder_ == null) {
+          stackTraceBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder>(
+                  stackTrace_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          stackTrace_ = null;
+        }
+        return stackTraceBuilder_;
+      }
+
+      // optional .exec.shared.ExceptionWrapper cause = 4;
+      private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper cause_ = org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder> causeBuilder_;
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      public boolean hasCause() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getCause() {
+        if (causeBuilder_ == null) {
+          return cause_;
+        } else {
+          return causeBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      public Builder setCause(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper value) {
+        if (causeBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          cause_ = value;
+          onChanged();
+        } else {
+          causeBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      public Builder setCause(
+          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builderForValue) {
+        if (causeBuilder_ == null) {
+          cause_ = builderForValue.build();
+          onChanged();
+        } else {
+          causeBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      public Builder mergeCause(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper value) {
+        if (causeBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+              cause_ != org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance()) {
+            cause_ =
+              org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.newBuilder(cause_).mergeFrom(value).buildPartial();
+          } else {
+            cause_ = value;
+          }
+          onChanged();
+        } else {
+          causeBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      public Builder clearCause() {
+        if (causeBuilder_ == null) {
+          cause_ = org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance();
+          onChanged();
+        } else {
+          causeBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder getCauseBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getCauseFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder getCauseOrBuilder() {
+        if (causeBuilder_ != null) {
+          return causeBuilder_.getMessageOrBuilder();
+        } else {
+          return cause_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder> 
+          getCauseFieldBuilder() {
+        if (causeBuilder_ == null) {
+          causeBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder>(
+                  cause_,
+                  getParentForChildren(),
+                  isClean());
+          cause_ = null;
+        }
+        return causeBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.shared.ExceptionWrapper)
+    }
+
+    static {
+      defaultInstance = new ExceptionWrapper(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.shared.ExceptionWrapper)
+  }
+
+  public interface StackTraceElementWrapperOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string class_name = 1;
+    /**
+     * <code>optional string class_name = 1;</code>
+     */
+    boolean hasClassName();
+    /**
+     * <code>optional string class_name = 1;</code>
+     */
+    java.lang.String getClassName();
+    /**
+     * <code>optional string class_name = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getClassNameBytes();
+
+    // optional string file_name = 2;
+    /**
+     * <code>optional string file_name = 2;</code>
+     */
+    boolean hasFileName();
+    /**
+     * <code>optional string file_name = 2;</code>
+     */
+    java.lang.String getFileName();
+    /**
+     * <code>optional string file_name = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getFileNameBytes();
+
+    // optional int32 line_number = 3;
+    /**
+     * <code>optional int32 line_number = 3;</code>
+     */
+    boolean hasLineNumber();
+    /**
+     * <code>optional int32 line_number = 3;</code>
+     */
+    int getLineNumber();
+
+    // optional string method_name = 4;
+    /**
+     * <code>optional string method_name = 4;</code>
+     */
+    boolean hasMethodName();
+    /**
+     * <code>optional string method_name = 4;</code>
+     */
+    java.lang.String getMethodName();
+    /**
+     * <code>optional string method_name = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getMethodNameBytes();
+
+    // optional bool is_native_method = 5;
+    /**
+     * <code>optional bool is_native_method = 5;</code>
+     */
+    boolean hasIsNativeMethod();
+    /**
+     * <code>optional bool is_native_method = 5;</code>
+     */
+    boolean getIsNativeMethod();
+  }
+  /**
+   * Protobuf type {@code exec.shared.StackTraceElementWrapper}
+   */
+  public static final class StackTraceElementWrapper extends
+      com.google.protobuf.GeneratedMessage
+      implements StackTraceElementWrapperOrBuilder {
+    // Use StackTraceElementWrapper.newBuilder() to construct.
+    private StackTraceElementWrapper(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private StackTraceElementWrapper(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final StackTraceElementWrapper defaultInstance;
+    public static StackTraceElementWrapper getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public StackTraceElementWrapper getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StackTraceElementWrapper(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              className_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              fileName_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              lineNumber_ = input.readInt32();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              methodName_ = input.readBytes();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              isNativeMethod_ = input.readBool();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_StackTraceElementWrapper_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_StackTraceElementWrapper_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<StackTraceElementWrapper> PARSER =
+        new com.google.protobuf.AbstractParser<StackTraceElementWrapper>() {
+      public StackTraceElementWrapper parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new StackTraceElementWrapper(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StackTraceElementWrapper> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string class_name = 1;
+    public static final int CLASS_NAME_FIELD_NUMBER = 1;
+    private java.lang.Object className_;
+    /**
+     * <code>optional string class_name = 1;</code>
+     */
+    public boolean hasClassName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string class_name = 1;</code>
+     */
+    public java.lang.String getClassName() {
+      java.lang.Object ref = className_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          className_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string class_name = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getClassNameBytes() {
+      java.lang.Object ref = className_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        className_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string file_name = 2;
+    public static final int FILE_NAME_FIELD_NUMBER = 2;
+    private java.lang.Object fileName_;
+    /**
+     * <code>optional string file_name = 2;</code>
+     */
+    public boolean hasFileName() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string file_name = 2;</code>
+     */
+    public java.lang.String getFileName() {
+      java.lang.Object ref = fileName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          fileName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string file_name = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getFileNameBytes() {
+      java.lang.Object ref = fileName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        fileName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int32 line_number = 3;
+    public static final int LINE_NUMBER_FIELD_NUMBER = 3;
+    private int lineNumber_;
+    /**
+     * <code>optional int32 line_number = 3;</code>
+     */
+    public boolean hasLineNumber() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int32 line_number = 3;</code>
+     */
+    public int getLineNumber() {
+      return lineNumber_;
+    }
+
+    // optional string method_name = 4;
+    public static final int METHOD_NAME_FIELD_NUMBER = 4;
+    private java.lang.Object methodName_;
+    /**
+     * <code>optional string method_name = 4;</code>
+     */
+    public boolean hasMethodName() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string method_name = 4;</code>
+     */
+    public java.lang.String getMethodName() {
+      java.lang.Object ref = methodName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          methodName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string method_name = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMethodNameBytes() {
+      java.lang.Object ref = methodName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        methodName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional bool is_native_method = 5;
+    public static final int IS_NATIVE_METHOD_FIELD_NUMBER = 5;
+    private boolean isNativeMethod_;
+    /**
+     * <code>optional bool is_native_method = 5;</code>
+     */
+    public boolean hasIsNativeMethod() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional bool is_native_method = 5;</code>
+     */
+    public boolean getIsNativeMethod() {
+      return isNativeMethod_;
+    }
+
+    private void initFields() {
+      className_ = "";
+      fileName_ = "";
+      lineNumber_ = 0;
+      methodName_ = "";
+      isNativeMethod_ = false;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getClassNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getFileNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(3, lineNumber_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getMethodNameBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBool(5, isNativeMethod_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getClassNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getFileNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(3, lineNumber_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getMethodNameBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(5, isNativeMethod_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.shared.StackTraceElementWrapper}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_StackTraceElementWrapper_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_StackTraceElementWrapper_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        className_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        fileName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        lineNumber_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        methodName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        isNativeMethod_ = false;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_StackTraceElementWrapper_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper build() {
+        org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper buildPartial() {
+        org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper result = new org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.className_ = className_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.fileName_ = fileName_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.lineNumber_ = lineNumber_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.methodName_ = methodName_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.isNativeMethod_ = isNativeMethod_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper) {
+          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper other) {
+        if (other == org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.getDefaultInstance()) return this;
+        if (other.hasClassName()) {
+          bitField0_ |= 0x00000001;
+          className_ = other.className_;
+          onChanged();
+        }
+        if (other.hasFileName()) {
+          bitField0_ |= 0x00000002;
+          fileName_ = other.fileName_;
+          onChanged();
+        }
+        if (other.hasLineNumber()) {
+          setLineNumber(other.getLineNumber());
+        }
+        if (other.hasMethodName()) {
+          bitField0_ |= 0x00000008;
+          methodName_ = other.methodName_;
+          onChanged();
+        }
+        if (other.hasIsNativeMethod()) {
+          setIsNativeMethod(other.getIsNativeMethod());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string class_name = 1;
+      private java.lang.Object className_ = "";
+      /**
+       * <code>optional string class_name = 1;</code>
+       */
+      public boolean hasClassName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string class_name = 1;</code>
+       */
+      public java.lang.String getClassName() {
+        java.lang.Object ref = className_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          className_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string class_name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getClassNameBytes() {
+        java.lang.Object ref = className_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          className_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string class_name = 1;</code>
+       */
+      public Builder setClassName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        className_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string class_name = 1;</code>
+       */
+      public Builder clearClassName() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        className_ = getDefaultInstance().getClassName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string class_name = 1;</code>
+       */
+      public Builder setClassNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        className_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string file_name = 2;
+      private java.lang.Object fileName_ = "";
+      /**
+       * <code>optional string file_name = 2;</code>
+       */
+      public boolean hasFileName() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string file_name = 2;</code>
+       */
+      public java.lang.String getFileName() {
+        java.lang.Object ref = fileName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          fileName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string file_name = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getFileNameBytes() {
+        java.lang.Object ref = fileName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          fileName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string file_name = 2;</code>
+       */
+      public Builder setFileName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        fileName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string file_name = 2;</code>
+       */
+      public Builder clearFileName() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        fileName_ = getDefaultInstance().getFileName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string file_name = 2;</code>
+       */
+      public Builder setFileNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        fileName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 line_number = 3;
+      private int lineNumber_ ;
+      /**
+       * <code>optional int32 line_number = 3;</code>
+       */
+      public boolean hasLineNumber() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int32 line_number = 3;</code>
+       */
+      public int getLineNumber() {
+        return lineNumber_;
+      }
+      /**
+       * <code>optional int32 line_number = 3;</code>
+       */
+      public Builder setLineNumber(int value) {
+        bitField0_ |= 0x00000004;
+        lineNumber_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 line_number = 3;</code>
+       */
+      public Builder clearLineNumber() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        lineNumber_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string method_name = 4;
+      private java.lang.Object methodName_ = "";
+      /**
+       * <code>optional string method_name = 4;</code>
+       */
+      public boolean hasMethodName() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string method_name = 4;</code>
+       */
+      public java.lang.String getMethodName() {
+        java.lang.Object ref = methodName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          methodName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string method_name = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMethodNameBytes() {
+        java.lang.Object ref = methodName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          methodName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string method_name = 4;</code>
+       */
+      public Builder setMethodName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        methodName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string method_name = 4;</code>
+       */
+      public Builder clearMethodName() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        methodName_ = getDefaultInstance().getMethodName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string method_name = 4;</code>
+       */
+      public Builder setMethodNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        methodName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional bool is_native_method = 5;
+      private boolean isNativeMethod_ ;
+      /**
+       * <code>optional bool is_native_method = 5;</code>
+       */
+      public boolean hasIsNativeMethod() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional bool is_native_method = 5;</code>
+       */
+      public boolean getIsNativeMethod() {
+        return isNativeMethod_;
+      }
+      /**
+       * <code>optional bool is_native_method = 5;</code>
+       */
+      public Builder setIsNativeMethod(boolean value) {
+        bitField0_ |= 0x00000010;
+        isNativeMethod_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool is_native_method = 5;</code>
+       */
+      public Builder clearIsNativeMethod() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        isNativeMethod_ = false;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.shared.StackTraceElementWrapper)
+    }
+
+    static {
+      defaultInstance = new StackTraceElementWrapper(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.shared.StackTraceElementWrapper)
   }
 
   public interface ParsingErrorOrBuilder
@@ -16418,6 +18736,16 @@ public final class UserBitShared {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_shared_DrillPBError_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_shared_ExceptionWrapper_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_shared_ExceptionWrapper_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_shared_StackTraceElementWrapper_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_shared_StackTraceElementWrapper_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_ParsingError_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -16490,93 +18818,101 @@ public final class UserBitShared {
       "s.proto\032\022Coordination.proto\032\017SchemaDef.p" +
       "roto\"$\n\017UserCredentials\022\021\n\tuser_name\030\001 \001" +
       "(\t\"\'\n\007QueryId\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 " +
-      "\001(\020\"\241\001\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022(" +
+      "\001(\020\"\323\001\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022(" +
       "\n\010endpoint\030\002 \001(\0132\026.exec.DrillbitEndpoint" +
       "\022\022\n\nerror_type\030\003 \001(\005\022\017\n\007message\030\004 \001(\t\0220\n" +
-      "\rparsing_error\030\005 \003(\0132\031.exec.shared.Parsi" +
-      "ngError\"\\\n\014ParsingError\022\024\n\014start_column\030" +
-      "\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004",
-      " \001(\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022" +
-      "\024\n\014record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.e" +
-      "xec.shared.SerializedField\022)\n!carries_tw" +
-      "o_byte_selection_vector\030\003 \001(\010\"\205\001\n\010NamePa" +
-      "rt\022(\n\004type\030\001 \001(\0162\032.exec.shared.NamePart." +
-      "Type\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec" +
-      ".shared.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005AR" +
-      "RAY\020\001\"\351\001\n\017SerializedField\022%\n\nmajor_type\030" +
-      "\001 \001(\0132\021.common.MajorType\022(\n\tname_part\030\002 " +
-      "\001(\0132\025.exec.shared.NamePart\022+\n\005child\030\003 \003(",
-      "\0132\034.exec.shared.SerializedField\022\023\n\013value" +
-      "_count\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\023\n" +
-      "\013group_count\030\006 \001(\005\022\025\n\rbuffer_length\030\007 \001(" +
-      "\005\"7\n\nNodeStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memo" +
-      "ry_footprint\030\002 \001(\003\"\335\003\n\013QueryResult\0228\n\013qu" +
-      "ery_state\030\001 \001(\0162#.exec.shared.QueryResul" +
-      "t.QueryState\022&\n\010query_id\030\002 \001(\0132\024.exec.sh" +
-      "ared.QueryId\022\025\n\ris_last_chunk\030\003 \001(\010\022\021\n\tr" +
-      "ow_count\030\004 \001(\005\022\024\n\014records_scan\030\005 \001(\003\022\025\n\r" +
-      "records_error\030\006 \001(\003\022\027\n\017submission_time\030\007",
-      " \001(\003\022,\n\013node_status\030\010 \003(\0132\027.exec.shared." +
-      "NodeStatus\022(\n\005error\030\t \003(\0132\031.exec.shared." +
-      "DrillPBError\022(\n\003def\030\n \001(\0132\033.exec.shared." +
-      "RecordBatchDef\022\026\n\016schema_changed\030\013 \001(\010\"b" +
-      "\n\nQueryState\022\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r" +
-      "\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022" +
-      "\021\n\rUNKNOWN_QUERY\020\005\"\336\002\n\014QueryProfile\022 \n\002i" +
-      "d\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 " +
-      "\001(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003 \001" +
-      "(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006",
-      " \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitEnd" +
-      "point\0222\n\005state\030\010 \001(\0162#.exec.shared.Query" +
-      "Result.QueryState\022\027\n\017total_fragments\030\t \001" +
-      "(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020fragme" +
-      "nt_profile\030\013 \003(\0132!.exec.shared.MajorFrag" +
-      "mentProfile\"t\n\024MajorFragmentProfile\022\031\n\021m" +
-      "ajor_fragment_id\030\001 \001(\005\022A\n\026minor_fragment" +
-      "_profile\030\002 \003(\0132!.exec.shared.MinorFragme" +
-      "ntProfile\"\274\002\n\024MinorFragmentProfile\022)\n\005st" +
-      "ate\030\001 \001(\0162\032.exec.shared.FragmentState\022(\n",
-      "\005error\030\002 \001(\0132\031.exec.shared.DrillPBError\022" +
-      "\031\n\021minor_fragment_id\030\003 \001(\005\0226\n\020operator_p" +
-      "rofile\030\004 \003(\0132\034.exec.shared.OperatorProfi" +
-      "le\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003" +
-      "\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max_memory_used" +
-      "\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.Drillbit" +
-      "Endpoint\"\372\001\n\017OperatorProfile\0221\n\rinput_pr" +
-      "ofile\030\001 \003(\0132\032.exec.shared.StreamProfile\022" +
-      "\023\n\013operator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 " +
-      "\001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nano",
-      "s\030\006 \001(\003\022\036\n\026local_memory_allocated\030\007 \001(\003\022" +
-      "(\n\006metric\030\010 \003(\0132\030.exec.shared.MetricValu" +
-      "e\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017" +
-      "\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007sche" +
-      "mas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 " +
-      "\001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_value\030" +
-      "\003 \001(\001*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010" +
-      "BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\tQueryType\022\007\n\003SQL" +
-      "\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*k\n\rFragmen" +
-      "tState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATI",
-      "ON\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCE" +
-      "LLED\020\004\022\n\n\006FAILED\020\005*\264\005\n\020CoreOperatorType\022" +
-      "\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001" +
-      "\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH" +
-      "_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITIO" +
-      "N_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVE" +
-      "R\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PRO" +
-      "JECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_" +
-      "SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR" +
-      "_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nT",
-      "OP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020" +
-      "\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_RO" +
-      "W_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYS" +
-      "TEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016P" +
-      "ARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013" +
-      "TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON" +
-      "_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n" +
-      "\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020" +
-      " \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"B.\n\033org" +
-      ".apache.drill.exec.protoB\rUserBitSharedH",
-      "\001"
+      "\texception\030\005 \001(\0132\035.exec.shared.Exception" +
+      "Wrapper\0220\n\rparsing_error\030\006 \003(\0132\031.exec.sh" +
+      "ared.ParsingError\"\246\001\n\020ExceptionWrapper\022\027",
+      "\n\017exception_class\030\001 \001(\t\022\017\n\007message\030\002 \001(\t" +
+      "\022:\n\013stack_trace\030\003 \003(\0132%.exec.shared.Stac" +
+      "kTraceElementWrapper\022,\n\005cause\030\004 \001(\0132\035.ex" +
+      "ec.shared.ExceptionWrapper\"\205\001\n\030StackTrac" +
+      "eElementWrapper\022\022\n\nclass_name\030\001 \001(\t\022\021\n\tf" +
+      "ile_name\030\002 \001(\t\022\023\n\013line_number\030\003 \001(\005\022\023\n\013m" +
+      "ethod_name\030\004 \001(\t\022\030\n\020is_native_method\030\005 \001" +
+      "(\010\"\\\n\014ParsingError\022\024\n\014start_column\030\002 \001(\005" +
+      "\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(\005\022" +
+      "\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022\024\n\014re",
+      "cord_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.exec.s" +
+      "hared.SerializedField\022)\n!carries_two_byt" +
+      "e_selection_vector\030\003 \001(\010\"\205\001\n\010NamePart\022(\n" +
+      "\004type\030\001 \001(\0162\032.exec.shared.NamePart.Type\022" +
+      "\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.shar" +
+      "ed.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY\020\001" +
+      "\"\351\001\n\017SerializedField\022%\n\nmajor_type\030\001 \001(\013" +
+      "2\021.common.MajorType\022(\n\tname_part\030\002 \001(\0132\025" +
+      ".exec.shared.NamePart\022+\n\005child\030\003 \003(\0132\034.e" +
+      "xec.shared.SerializedField\022\023\n\013value_coun",
+      "t\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\023\n\013grou" +
+      "p_count\030\006 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005\"7\n\n" +
+      "NodeStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_fo" +
+      "otprint\030\002 \001(\003\"\335\003\n\013QueryResult\0228\n\013query_s" +
+      "tate\030\001 \001(\0162#.exec.shared.QueryResult.Que" +
+      "ryState\022&\n\010query_id\030\002 \001(\0132\024.exec.shared." +
+      "QueryId\022\025\n\ris_last_chunk\030\003 \001(\010\022\021\n\trow_co" +
+      "unt\030\004 \001(\005\022\024\n\014records_scan\030\005 \001(\003\022\025\n\rrecor" +
+      "ds_error\030\006 \001(\003\022\027\n\017submission_time\030\007 \001(\003\022" +
+      ",\n\013node_status\030\010 \003(\0132\027.exec.shared.NodeS",
+      "tatus\022(\n\005error\030\t \003(\0132\031.exec.shared.Drill" +
+      "PBError\022(\n\003def\030\n \001(\0132\033.exec.shared.Recor" +
+      "dBatchDef\022\026\n\016schema_changed\030\013 \001(\010\"b\n\nQue" +
+      "ryState\022\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOM" +
+      "PLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\021\n\rUN" +
+      "KNOWN_QUERY\020\005\"\336\002\n\014QueryProfile\022 \n\002id\030\001 \001" +
+      "(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001(\0162\026" +
+      ".exec.shared.QueryType\022\r\n\005start\030\003 \001(\003\022\013\n" +
+      "\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022" +
+      "\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitEndpoint",
+      "\0222\n\005state\030\010 \001(\0162#.exec.shared.QueryResul" +
+      "t.QueryState\022\027\n\017total_fragments\030\t \001(\005\022\032\n" +
+      "\022finished_fragments\030\n \001(\005\022;\n\020fragment_pr" +
+      "ofile\030\013 \003(\0132!.exec.shared.MajorFragmentP" +
+      "rofile\"t\n\024MajorFragmentProfile\022\031\n\021major_" +
+      "fragment_id\030\001 \001(\005\022A\n\026minor_fragment_prof" +
+      "ile\030\002 \003(\0132!.exec.shared.MinorFragmentPro" +
+      "file\"\274\002\n\024MinorFragmentProfile\022)\n\005state\030\001" +
+      " \001(\0162\032.exec.shared.FragmentState\022(\n\005erro" +
+      "r\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n\021mi",
+      "nor_fragment_id\030\003 \001(\005\0226\n\020operator_profil" +
+      "e\030\004 \003(\0132\034.exec.shared.OperatorProfile\022\022\n" +
+      "\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013m" +
+      "emory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(" +
+      "\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpo" +
+      "int\"\372\001\n\017OperatorProfile\0221\n\rinput_profile" +
+      "\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013op" +
+      "erator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023" +
+      "\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001" +
+      "(\003\022\036\n\026local_memory_allocated\030\007 \001(\003\022(\n\006me",
+      "tric\030\010 \003(\0132\030.exec.shared.MetricValue\022\022\n\n" +
+      "wait_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007rec" +
+      "ords\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003" +
+      " \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022" +
+      "\n\nlong_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001" +
+      "*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_D" +
+      "ATA\020\001\022\010\n\004USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n" +
+      "\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*k\n\rFragmentStat" +
+      "e\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022" +
+      "\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020",
+      "\004\022\n\n\006FAILED\020\005*\264\005\n\020CoreOperatorType\022\021\n\rSI" +
+      "NGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006F" +
+      "ILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN" +
+      "\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SEN" +
+      "DER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034" +
+      "\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020" +
+      "\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SENDE" +
+      "R\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_REMO" +
+      "VER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N_" +
+      "SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005",
+      "UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GRO" +
+      "UP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_T" +
+      "ABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQUE" +
+      "T_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT_" +
+      "WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB_" +
+      "SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COMP" +
+      "LEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n\016" +
+      "HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"B.\n\033org.apac" +
+      "he.drill.exec.protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -16600,75 +18936,87 @@ public final class UserBitShared {
           internal_static_exec_shared_DrillPBError_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_DrillPBError_descriptor,
-              new java.lang.String[] { "ErrorId", "Endpoint", "ErrorType", "Message", "ParsingError", });
-          internal_static_exec_shared_ParsingError_descriptor =
+              new java.lang.String[] { "ErrorId", "Endpoint", "ErrorType", "Message", "Exception", "ParsingError", });
+          internal_static_exec_shared_ExceptionWrapper_descriptor =
             getDescriptor().getMessageTypes().get(3);
+          internal_static_exec_shared_ExceptionWrapper_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_shared_ExceptionWrapper_descriptor,
+              new java.lang.String[] { "ExceptionClass", "Message", "StackTrace", "Cause", });
+          internal_static_exec_shared_StackTraceElementWrapper_descriptor =
+            getDescriptor().getMessageTypes().get(4);
+          internal_static_exec_shared_StackTraceElementWrapper_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_shared_StackTraceElementWrapper_descriptor,
+              new java.lang.String[] { "ClassName", "FileName", "LineNumber", "MethodName", "IsNativeMethod", });
+          internal_static_exec_shared_ParsingError_descriptor =
+            getDescriptor().getMessageTypes().get(5);
           internal_static_exec_shared_ParsingError_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_ParsingError_descriptor,
               new java.lang.String[] { "StartColumn", "StartRow", "EndColumn", "EndRow", });
           internal_static_exec_shared_RecordBatchDef_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_exec_shared_RecordBatchDef_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_RecordBatchDef_descriptor,
               new java.lang.String[] { "RecordCount", "Field", "CarriesTwoByteSelectionVector", });
           internal_static_exec_shared_NamePart_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_exec_shared_NamePart_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_NamePart_descriptor,
               new java.lang.String[] { "Type", "Name", "Child", });
           internal_static_exec_shared_SerializedField_descriptor =
-            getDescriptor().getMessageTypes().get(6);
+            getDescriptor().getMessageTypes().get(8);
           internal_static_exec_shared_SerializedField_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_SerializedField_descriptor,
               new java.lang.String[] { "MajorType", "NamePart", "Child", "ValueCount", "VarByteLength", "GroupCount", "BufferLength", });
           internal_static_exec_shared_NodeStatus_descriptor =
-            getDescriptor().getMessageTypes().get(7);
+            getDescriptor().getMessageTypes().get(9);
           internal_static_exec_shared_NodeStatus_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_NodeStatus_descriptor,
               new java.lang.String[] { "NodeId", "MemoryFootprint", });
           internal_static_exec_shared_QueryResult_descriptor =
-            getDescriptor().getMessageTypes().get(8);
+            getDescriptor().getMessageTypes().get(10);
           internal_static_exec_shared_QueryResult_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryResult_descriptor,
               new java.lang.String[] { "QueryState", "QueryId", "IsLastChunk", "RowCount", "RecordsScan", "RecordsError", "SubmissionTime", "NodeStatus", "Error", "Def", "SchemaChanged", });
           internal_static_exec_shared_QueryProfile_descriptor =
-            getDescriptor().getMessageTypes().get(9);
+            getDescriptor().getMessageTypes().get(11);
           internal_static_exec_shared_QueryProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryProfile_descriptor,
               new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", });
           internal_static_exec_shared_MajorFragmentProfile_descriptor =
-            getDescriptor().getMessageTypes().get(10);
+            getDescriptor().getMessageTypes().get(12);
           internal_static_exec_shared_MajorFragmentProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MajorFragmentProfile_descriptor,
               new java.lang.String[] { "MajorFragmentId", "MinorFragmentProfile", });
           internal_static_exec_shared_MinorFragmentProfile_descriptor =
-            getDescriptor().getMessageTypes().get(11);
+            getDescriptor().getMessageTypes().get(13);
           internal_static_exec_shared_MinorFragmentProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MinorFragmentProfile_descriptor,
               new java.lang.String[] { "State", "Error", "MinorFragmentId", "OperatorProfile", "StartTime", "EndTime", "MemoryUsed", "MaxMemoryUsed", "Endpoint", });
           internal_static_exec_shared_OperatorProfile_descriptor =
-            getDescriptor().getMessageTypes().get(12);
+            getDescriptor().getMessageTypes().get(14);
           internal_static_exec_shared_OperatorProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_OperatorProfile_descriptor,
               new java.lang.String[] { "InputProfile", "OperatorId", "OperatorType", "SetupNanos", "ProcessNanos", "LocalMemoryAllocated", "Metric", "WaitNanos", });
           internal_static_exec_shared_StreamProfile_descriptor =
-            getDescriptor().getMessageTypes().get(13);
+            getDescriptor().getMessageTypes().get(15);
           internal_static_exec_shared_StreamProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_StreamProfile_descriptor,
               new java.lang.String[] { "Records", "Batches", "Schemas", });
           internal_static_exec_shared_MetricValue_descriptor =
-            getDescriptor().getMessageTypes().get(14);
+            getDescriptor().getMessageTypes().get(16);
           internal_static_exec_shared_MetricValue_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MetricValue_descriptor,

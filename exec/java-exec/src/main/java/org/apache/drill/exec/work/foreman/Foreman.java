@@ -21,20 +21,12 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
-import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
 import org.apache.drill.exec.coord.DistributedSemaphore;
 import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.FragmentSetupException;
@@ -53,8 +45,6 @@ import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.fragment.StatsCollector;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
-import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -74,19 +64,11 @@ import org.apache.drill.exec.work.ErrorHelper;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 
-import com.google.common.collect.Lists;
-
 /**
  * Foreman manages all queries where this is the driving/root node.
  */
 public class Foreman implements Runnable, Closeable, Comparable<Object>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Foreman.class);
-
-
-  public static final CacheConfig<FragmentHandle, PlanFragment> FRAGMENT_CACHE = CacheConfig //
-      .newBuilder(FragmentHandle.class, PlanFragment.class) //
-      .mode(SerializationMode.PROTOBUF) //
-      .build();
 
   private QueryId queryId;
   private RunQuery queryRequest;
@@ -159,8 +141,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       }
     }
 
-    boolean verbose = getContext().getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-    DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(), message, t, logger, verbose);
+    DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(), message, t, logger);
     QueryResult result = QueryResult //
         .newBuilder() //
         .addError(error) //
@@ -376,38 +357,13 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
           queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, planningSet, initiatingClient.getSession());
 
       this.context.getWorkBus().setFragmentStatusListener(work.getRootFragment().getHandle().getQueryId(), fragmentManager);
-      List<PlanFragment> leafFragments = Lists.newArrayList();
-      List<PlanFragment> intermediateFragments = Lists.newArrayList();
 
-      // store fragments in distributed grid.
-      logger.debug("Storing fragments");
-      List<Future<PlanFragment>> queue = new LinkedList<>();
-      for (PlanFragment f : work.getFragments()) {
-        // store all fragments in grid since they are part of handshake.
-
-        queue.add(context.getCache().getMap(FRAGMENT_CACHE).put(f.getHandle(), f));
-        if (f.getLeafFragment()) {
-          leafFragments.add(f);
-        } else {
-          intermediateFragments.add(f);
-        }
-      }
-
-      for (Future<PlanFragment> f : queue) {
-        try {
-          f.get(10, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-          throw new ExecutionSetupException("failure while storing plan fragments", e);
-        }
-      }
-
-      int totalFragments = 1 + intermediateFragments.size() + leafFragments.size();
+      int totalFragments = 1 + work.getFragments().size();;
       fragmentManager.getStatus().setTotalFragments(totalFragments);
       fragmentManager.getStatus().updateCache();
-      logger.debug("Fragments stored.");
 
       logger.debug("Submitting fragments to run.");
-      fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, leafFragments, intermediateFragments);
+      fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, work.getFragments());
 
       logger.debug("Fragments running.");
       state.updateState(QueryState.PENDING, QueryState.RUNNING);

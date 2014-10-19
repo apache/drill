@@ -74,7 +74,7 @@ public class TestBitRpc extends ExecTest {
     BootStrapContext c2 = new BootStrapContext(DrillConfig.create());
 
     new NonStrictExpectations() {{
-      workBus.getOrCreateFragmentManager((FragmentHandle) any); result = fman;
+      workBus.getFragmentManagerIfExists((FragmentHandle) any); result = fman;
       workBus.getFragmentManager( (FragmentHandle) any); result = fman;
       fman.getFragmentContext(); result = fcon;
       fcon.getAllocator(); result = c.getAllocator();

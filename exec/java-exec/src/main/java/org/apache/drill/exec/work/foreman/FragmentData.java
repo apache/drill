@@ -31,7 +31,11 @@ public class FragmentData {
 
   public FragmentData(FragmentHandle handle, DrillbitEndpoint endpoint, boolean isLocal) {
     super();
-    MinorFragmentProfile f = MinorFragmentProfile.newBuilder().setState(FragmentState.SENDING).setMinorFragmentId(handle.getMinorFragmentId()).build();
+    MinorFragmentProfile f = MinorFragmentProfile.newBuilder() //
+        .setState(FragmentState.SENDING) //
+        .setMinorFragmentId(handle.getMinorFragmentId()) //
+        .setEndpoint(endpoint) //
+        .build();
     this.status = FragmentStatus.newBuilder().setHandle(handle).setProfile(f).build();
     this.endpoint = endpoint;
     this.isLocal = isLocal;

@@ -16,7 +16,7 @@ enum RpcType {
   GOODBYE = 2;
     
   // bit requests
-  REQ_INIATILIZE_FRAGMENT = 3; // Returns Handle
+  REQ_INIATILIZE_FRAGMENTS = 3; // Returns Handle
     
   REQ_CANCEL_FRAGMENT = 6; // send a cancellation message for a fragment, returns Ack
   REQ_RECEIVER_FINISHED = 7;
@@ -45,6 +45,10 @@ message BitStatus {
 message FragmentStatus {
   optional exec.shared.MinorFragmentProfile profile = 1;
   optional FragmentHandle handle = 2;
+}
+
+message InitializeFragments {
+  repeated PlanFragment fragment = 1;
 }
 
 message PlanFragment {

@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl.partitionsender;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -50,9 +49,7 @@ public class StatusHandler extends BaseRpcOutcomeListener<Ack> {
   public void failed(RpcException ex) {
     sendCount.decrement();
     logger.error("Failure while sending data to user.", ex);
-    boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-    ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger,
-      verbose);
+    ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
     ok = false;
     this.ex = ex;
   }

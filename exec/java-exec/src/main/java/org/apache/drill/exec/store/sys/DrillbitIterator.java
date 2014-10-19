@@ -26,9 +26,11 @@ public class DrillbitIterator implements Iterator<Object> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitIterator.class);
 
   private Iterator<DrillbitEndpoint> endpoints;
+  private DrillbitEndpoint current;
 
   public DrillbitIterator(FragmentContext c) {
     this.endpoints = c.getDrillbitContext().getBits().iterator();
+    this.current = c.getIdentity();
   }
 
   public static class DrillbitInstance {
@@ -36,6 +38,7 @@ public class DrillbitIterator implements Iterator<Object> {
     public int user_port;
     public int control_port;
     public int data_port;
+    public boolean current;
   }
 
   @Override
@@ -47,6 +50,7 @@ public class DrillbitIterator implements Iterator<Object> {
   public Object next() {
     DrillbitEndpoint ep = endpoints.next();
     DrillbitInstance i = new DrillbitInstance();
+    i.current = ep.equals(current);
     i.host = ep.getAddress();
     i.user_port = ep.getUserPort();
     i.control_port = ep.getControlPort();

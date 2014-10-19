@@ -28,7 +28,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -91,9 +90,9 @@ public class WorkManager implements Closeable {
     this.dataHandler = new DataResponseHandlerImpl(bee);
   }
 
-  public void start(DrillbitEndpoint endpoint, DistributedCache cache, Controller controller,
+  public void start(DrillbitEndpoint endpoint, Controller controller,
       DataConnectionCreator data, ClusterCoordinator coord, PStoreProvider provider) {
-    this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, cache, workBus, provider);
+    this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider);
     // executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
     executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
     eventThread.start();

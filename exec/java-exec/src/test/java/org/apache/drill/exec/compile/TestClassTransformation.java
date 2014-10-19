@@ -20,7 +20,6 @@ package org.apache.drill.exec.compile;
 import java.io.IOException;
 
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.compile.ClassTransformer.ClassSet;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -105,7 +104,7 @@ public class TestClassTransformation extends BaseTestQuery {
   private void compilationInnerClass(QueryClassLoader loader) throws Exception{
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
 
-    ClassTransformer ct = new ClassTransformer(new LocalCache());
+    ClassTransformer ct = new ClassTransformer();
     Class<? extends ExampleInner> c = (Class<? extends ExampleInner>) ct.getImplementationClass(loader, cg.getDefinition(), cg.generateAndGet(), cg.getMaterializedClassName());
     ExampleInner t = (ExampleInner) c.newInstance();
     t.doOutside();

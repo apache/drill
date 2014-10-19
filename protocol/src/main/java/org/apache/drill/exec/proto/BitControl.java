@@ -47,13 +47,13 @@ public final class BitControl {
      */
     GOODBYE(2, 2),
     /**
-     * <code>REQ_INIATILIZE_FRAGMENT = 3;</code>
+     * <code>REQ_INIATILIZE_FRAGMENTS = 3;</code>
      *
      * <pre>
      * bit requests
      * </pre>
      */
-    REQ_INIATILIZE_FRAGMENT(3, 3),
+    REQ_INIATILIZE_FRAGMENTS(3, 3),
     /**
      * <code>REQ_CANCEL_FRAGMENT = 6;</code>
      *
@@ -121,13 +121,13 @@ public final class BitControl {
      */
     public static final int GOODBYE_VALUE = 2;
     /**
-     * <code>REQ_INIATILIZE_FRAGMENT = 3;</code>
+     * <code>REQ_INIATILIZE_FRAGMENTS = 3;</code>
      *
      * <pre>
      * bit requests
      * </pre>
      */
-    public static final int REQ_INIATILIZE_FRAGMENT_VALUE = 3;
+    public static final int REQ_INIATILIZE_FRAGMENTS_VALUE = 3;
     /**
      * <code>REQ_CANCEL_FRAGMENT = 6;</code>
      *
@@ -189,7 +189,7 @@ public final class BitControl {
         case 0: return HANDSHAKE;
         case 1: return ACK;
         case 2: return GOODBYE;
-        case 3: return REQ_INIATILIZE_FRAGMENT;
+        case 3: return REQ_INIATILIZE_FRAGMENTS;
         case 6: return REQ_CANCEL_FRAGMENT;
         case 7: return REQ_RECEIVER_FINISHED;
         case 8: return REQ_FRAGMENT_STATUS;
@@ -2299,6 +2299,680 @@ public final class BitControl {
     }
 
     // @@protoc_insertion_point(class_scope:exec.bit.control.FragmentStatus)
+  }
+
+  public interface InitializeFragmentsOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // repeated .exec.bit.control.PlanFragment fragment = 1;
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> 
+        getFragmentList();
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    org.apache.drill.exec.proto.BitControl.PlanFragment getFragment(int index);
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    int getFragmentCount();
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder> 
+        getFragmentOrBuilderList();
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder getFragmentOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code exec.bit.control.InitializeFragments}
+   */
+  public static final class InitializeFragments extends
+      com.google.protobuf.GeneratedMessage
+      implements InitializeFragmentsOrBuilder {
+    // Use InitializeFragments.newBuilder() to construct.
+    private InitializeFragments(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private InitializeFragments(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final InitializeFragments defaultInstance;
+    public static InitializeFragments getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public InitializeFragments getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private InitializeFragments(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                fragment_ = new java.util.ArrayList<org.apache.drill.exec.proto.BitControl.PlanFragment>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              fragment_.add(input.readMessage(org.apache.drill.exec.proto.BitControl.PlanFragment.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          fragment_ = java.util.Collections.unmodifiableList(fragment_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_InitializeFragments_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_InitializeFragments_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.BitControl.InitializeFragments.class, org.apache.drill.exec.proto.BitControl.InitializeFragments.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<InitializeFragments> PARSER =
+        new com.google.protobuf.AbstractParser<InitializeFragments>() {
+      public InitializeFragments parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new InitializeFragments(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<InitializeFragments> getParserForType() {
+      return PARSER;
+    }
+
+    // repeated .exec.bit.control.PlanFragment fragment = 1;
+    public static final int FRAGMENT_FIELD_NUMBER = 1;
+    private java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> fragment_;
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> getFragmentList() {
+      return fragment_;
+    }
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder> 
+        getFragmentOrBuilderList() {
+      return fragment_;
+    }
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    public int getFragmentCount() {
+      return fragment_.size();
+    }
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    public org.apache.drill.exec.proto.BitControl.PlanFragment getFragment(int index) {
+      return fragment_.get(index);
+    }
+    /**
+     * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+     */
+    public org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder getFragmentOrBuilder(
+        int index) {
+      return fragment_.get(index);
+    }
+
+    private void initFields() {
+      fragment_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < fragment_.size(); i++) {
+        output.writeMessage(1, fragment_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < fragment_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, fragment_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.InitializeFragments parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.BitControl.InitializeFragments prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.bit.control.InitializeFragments}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.InitializeFragmentsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_InitializeFragments_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_InitializeFragments_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.BitControl.InitializeFragments.class, org.apache.drill.exec.proto.BitControl.InitializeFragments.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.BitControl.InitializeFragments.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getFragmentFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (fragmentBuilder_ == null) {
+          fragment_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          fragmentBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_InitializeFragments_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.BitControl.InitializeFragments getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.BitControl.InitializeFragments.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.BitControl.InitializeFragments build() {
+        org.apache.drill.exec.proto.BitControl.InitializeFragments result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.BitControl.InitializeFragments buildPartial() {
+        org.apache.drill.exec.proto.BitControl.InitializeFragments result = new org.apache.drill.exec.proto.BitControl.InitializeFragments(this);
+        int from_bitField0_ = bitField0_;
+        if (fragmentBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            fragment_ = java.util.Collections.unmodifiableList(fragment_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.fragment_ = fragment_;
+        } else {
+          result.fragment_ = fragmentBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.BitControl.InitializeFragments) {
+          return mergeFrom((org.apache.drill.exec.proto.BitControl.InitializeFragments)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.BitControl.InitializeFragments other) {
+        if (other == org.apache.drill.exec.proto.BitControl.InitializeFragments.getDefaultInstance()) return this;
+        if (fragmentBuilder_ == null) {
+          if (!other.fragment_.isEmpty()) {
+            if (fragment_.isEmpty()) {
+              fragment_ = other.fragment_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureFragmentIsMutable();
+              fragment_.addAll(other.fragment_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.fragment_.isEmpty()) {
+            if (fragmentBuilder_.isEmpty()) {
+              fragmentBuilder_.dispose();
+              fragmentBuilder_ = null;
+              fragment_ = other.fragment_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              fragmentBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getFragmentFieldBuilder() : null;
+            } else {
+              fragmentBuilder_.addAllMessages(other.fragment_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.BitControl.InitializeFragments parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.BitControl.InitializeFragments) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .exec.bit.control.PlanFragment fragment = 1;
+      private java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> fragment_ =
+        java.util.Collections.emptyList();
+      private void ensureFragmentIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          fragment_ = new java.util.ArrayList<org.apache.drill.exec.proto.BitControl.PlanFragment>(fragment_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.BitControl.PlanFragment, org.apache.drill.exec.proto.BitControl.PlanFragment.Builder, org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder> fragmentBuilder_;
+
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> getFragmentList() {
+        if (fragmentBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(fragment_);
+        } else {
+          return fragmentBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public int getFragmentCount() {
+        if (fragmentBuilder_ == null) {
+          return fragment_.size();
+        } else {
+          return fragmentBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.PlanFragment getFragment(int index) {
+        if (fragmentBuilder_ == null) {
+          return fragment_.get(index);
+        } else {
+          return fragmentBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder setFragment(
+          int index, org.apache.drill.exec.proto.BitControl.PlanFragment value) {
+        if (fragmentBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFragmentIsMutable();
+          fragment_.set(index, value);
+          onChanged();
+        } else {
+          fragmentBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder setFragment(
+          int index, org.apache.drill.exec.proto.BitControl.PlanFragment.Builder builderForValue) {
+        if (fragmentBuilder_ == null) {
+          ensureFragmentIsMutable();
+          fragment_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          fragmentBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder addFragment(org.apache.drill.exec.proto.BitControl.PlanFragment value) {
+        if (fragmentBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFragmentIsMutable();
+          fragment_.add(value);
+          onChanged();
+        } else {
+          fragmentBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder addFragment(
+          int index, org.apache.drill.exec.proto.BitControl.PlanFragment value) {
+        if (fragmentBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFragmentIsMutable();
+          fragment_.add(index, value);
+          onChanged();
+        } else {
+          fragmentBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder addFragment(
+          org.apache.drill.exec.proto.BitControl.PlanFragment.Builder builderForValue) {
+        if (fragmentBuilder_ == null) {
+          ensureFragmentIsMutable();
+          fragment_.add(builderForValue.build());
+          onChanged();
+        } else {
+          fragmentBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder addFragment(
+          int index, org.apache.drill.exec.proto.BitControl.PlanFragment.Builder builderForValue) {
+        if (fragmentBuilder_ == null) {
+          ensureFragmentIsMutable();
+          fragment_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          fragmentBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder addAllFragment(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.BitControl.PlanFragment> values) {
+        if (fragmentBuilder_ == null) {
+          ensureFragmentIsMutable();
+          super.addAll(values, fragment_);
+          onChanged();
+        } else {
+          fragmentBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder clearFragment() {
+        if (fragmentBuilder_ == null) {
+          fragment_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          fragmentBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public Builder removeFragment(int index) {
+        if (fragmentBuilder_ == null) {
+          ensureFragmentIsMutable();
+          fragment_.remove(index);
+          onChanged();
+        } else {
+          fragmentBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.PlanFragment.Builder getFragmentBuilder(
+          int index) {
+        return getFragmentFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder getFragmentOrBuilder(
+          int index) {
+        if (fragmentBuilder_ == null) {
+          return fragment_.get(index);  } else {
+          return fragmentBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder> 
+           getFragmentOrBuilderList() {
+        if (fragmentBuilder_ != null) {
+          return fragmentBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(fragment_);
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.PlanFragment.Builder addFragmentBuilder() {
+        return getFragmentFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.BitControl.PlanFragment.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.PlanFragment.Builder addFragmentBuilder(
+          int index) {
+        return getFragmentFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.BitControl.PlanFragment.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment.Builder> 
+           getFragmentBuilderList() {
+        return getFragmentFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.BitControl.PlanFragment, org.apache.drill.exec.proto.BitControl.PlanFragment.Builder, org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder> 
+          getFragmentFieldBuilder() {
+        if (fragmentBuilder_ == null) {
+          fragmentBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.BitControl.PlanFragment, org.apache.drill.exec.proto.BitControl.PlanFragment.Builder, org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder>(
+                  fragment_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          fragment_ = null;
+        }
+        return fragmentBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.bit.control.InitializeFragments)
+    }
+
+    static {
+      defaultInstance = new InitializeFragments(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.bit.control.InitializeFragments)
   }
 
   public interface PlanFragmentOrBuilder
@@ -5905,6 +6579,11 @@ public final class BitControl {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_FragmentStatus_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_bit_control_InitializeFragments_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_bit_control_InitializeFragments_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_PlanFragment_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -5938,32 +6617,34 @@ public final class BitControl {
       "2 .exec.bit.control.FragmentStatus\"n\n\016Fr" +
       "agmentStatus\0222\n\007profile\030\001 \001(\0132!.exec.sha" +
       "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013",
-      "2\030.exec.bit.FragmentHandle\"\275\003\n\014PlanFragm" +
-      "ent\022(\n\006handle\030\001 \001(\0132\030.exec.bit.FragmentH" +
-      "andle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030" +
-      "\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030" +
-      "\007 \001(\002\022\025\n\rfragment_json\030\010 \001(\t\022*\n\nassignme" +
-      "nt\030\n \001(\0132\026.exec.DrillbitEndpoint\022\025\n\rleaf" +
-      "_fragment\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.exec." +
-      "DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\0102" +
-      "0000000\022\033\n\007mem_max\030\r \001(\003:\n2000000000\022\030\n\020" +
-      "query_start_time\030\016 \001(\003\0221\n\013credentials\030\017 ",
-      "\001(\0132\034.exec.shared.UserCredentials\022\021\n\ttim" +
-      "e_zone\030\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"f\n\017Wo" +
-      "rkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec.D" +
-      "rillbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n" +
-      "\013report_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*" +
-      "\n\010receiver\030\001 \001(\0132\030.exec.bit.FragmentHand" +
-      "le\022(\n\006sender\030\002 \001(\0132\030.exec.bit.FragmentHa" +
-      "ndle*\242\002\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001" +
-      "\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_INIATILIZE_FRAGMENT" +
-      "\020\003\022\027\n\023REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEI",
-      "VER_FINISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022" +
-      "\022\n\016REQ_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020" +
-      "\n\022\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAG" +
-      "MENT_STATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RE" +
-      "SP_QUERY_STATUS\020\016B+\n\033org.apache.drill.ex" +
-      "ec.protoB\nBitControlH\001"
+      "2\030.exec.bit.FragmentHandle\"G\n\023Initialize" +
+      "Fragments\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.c" +
+      "ontrol.PlanFragment\"\275\003\n\014PlanFragment\022(\n\006" +
+      "handle\030\001 \001(\0132\030.exec.bit.FragmentHandle\022\024" +
+      "\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002\022\021" +
+      "\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002\022\025" +
+      "\n\rfragment_json\030\010 \001(\t\022*\n\nassignment\030\n \001(" +
+      "\0132\026.exec.DrillbitEndpoint\022\025\n\rleaf_fragme" +
+      "nt\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.exec.Drillbi" +
+      "tEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\01020000000",
+      "\022\033\n\007mem_max\030\r \001(\003:\n2000000000\022\030\n\020query_s" +
+      "tart_time\030\016 \001(\003\0221\n\013credentials\030\017 \001(\0132\034.e" +
+      "xec.shared.UserCredentials\022\021\n\ttime_zone\030" +
+      "\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"f\n\017WorkQueue" +
+      "Status\022(\n\010endpoint\030\001 \001(\0132\026.exec.Drillbit" +
+      "Endpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report" +
+      "_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010recei" +
+      "ver\030\001 \001(\0132\030.exec.bit.FragmentHandle\022(\n\006s" +
+      "ender\030\002 \001(\0132\030.exec.bit.FragmentHandle*\243\002" +
+      "\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOO",
+      "DBYE\020\002\022\034\n\030REQ_INIATILIZE_FRAGMENTS\020\003\022\027\n\023" +
+      "REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FI" +
+      "NISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ" +
+      "_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\030\n\024R" +
+      "ESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_S" +
+      "TATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUE" +
+      "RY_STATUS\020\016B+\n\033org.apache.drill.exec.pro" +
+      "toB\nBitControlH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5988,20 +6669,26 @@ public final class BitControl {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_FragmentStatus_descriptor,
               new java.lang.String[] { "Profile", "Handle", });
-          internal_static_exec_bit_control_PlanFragment_descriptor =
+          internal_static_exec_bit_control_InitializeFragments_descriptor =
             getDescriptor().getMessageTypes().get(3);
+          internal_static_exec_bit_control_InitializeFragments_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_InitializeFragments_descriptor,
+              new java.lang.String[] { "Fragment", });
+          internal_static_exec_bit_control_PlanFragment_descriptor =
+            getDescriptor().getMessageTypes().get(4);
           internal_static_exec_bit_control_PlanFragment_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_PlanFragment_descriptor,
               new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "Assignment", "LeafFragment", "Foreman", "MemInitial", "MemMax", "QueryStartTime", "Credentials", "TimeZone", "OptionsJson", });
           internal_static_exec_bit_control_WorkQueueStatus_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(5);
           internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_WorkQueueStatus_descriptor,
               new java.lang.String[] { "Endpoint", "QueueLength", "ReportTime", });
           internal_static_exec_bit_control_FinishedReceiver_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_exec_bit_control_FinishedReceiver_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_FinishedReceiver_descriptor,

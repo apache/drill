@@ -20,6 +20,7 @@ package org.apache.drill.exec.ops;
 import java.util.List;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 
 import com.codahale.metrics.MetricRegistry;
@@ -28,19 +29,19 @@ import com.google.common.collect.Lists;
 public class FragmentStats {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStats.class);
 
-
   private List<OperatorStats> operators = Lists.newArrayList();
   private final long startTime;
+  private final DrillbitEndpoint endpoint;
 
-  public FragmentStats(MetricRegistry metrics) {
+  public FragmentStats(MetricRegistry metrics, DrillbitEndpoint endpoint) {
     this.startTime = System.currentTimeMillis();
+    this.endpoint = endpoint;
   }
 
   public void addMetricsToStatus(MinorFragmentProfile.Builder prfB) {
-
     prfB.setStartTime(startTime);
     prfB.setEndTime(System.currentTimeMillis());
-
+    prfB.setEndpoint(endpoint);
     for(OperatorStats o : operators){
       prfB.addOperatorProfile(o.getProfile());
     }

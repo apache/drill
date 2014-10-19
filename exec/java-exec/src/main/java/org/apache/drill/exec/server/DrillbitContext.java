@@ -22,7 +22,6 @@ import io.netty.channel.EventLoopGroup;
 import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -49,7 +48,6 @@ public class DrillbitContext {
   private PhysicalPlanReader reader;
   private final ClusterCoordinator coord;
   private final DataConnectionCreator connectionsPool;
-  private final DistributedCache cache;
   private final DrillbitEndpoint endpoint;
   private final StoragePluginRegistry storagePlugins;
   private final OperatorCreatorRegistry operatorCreatorRegistry;
@@ -60,7 +58,7 @@ public class DrillbitContext {
   private final PStoreProvider provider;
   private final CodeCompiler compiler;
 
-  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus, PStoreProvider provider) {
+  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, WorkEventBus workBus, PStoreProvider provider) {
     super();
     Preconditions.checkNotNull(endpoint);
     Preconditions.checkNotNull(context);
@@ -71,7 +69,6 @@ public class DrillbitContext {
     this.context = context;
     this.coord = coord;
     this.connectionsPool = connectionsPool;
-    this.cache = cache;
     this.endpoint = endpoint;
     this.provider = provider;
     this.storagePlugins = new StoragePluginRegistry(this);
@@ -79,7 +76,7 @@ public class DrillbitContext {
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
     this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
     this.systemOptions = new SystemOptionManager(context.getConfig(), provider);
-    this.compiler = new CodeCompiler(context.getConfig(), cache, systemOptions);
+    this.compiler = new CodeCompiler(context.getConfig(), systemOptions);
   }
 
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
@@ -132,10 +129,6 @@ public class DrillbitContext {
 
   public MetricRegistry getMetrics(){
     return context.getMetrics();
-  }
-
-  public DistributedCache getCache(){
-    return cache;
   }
 
   public PhysicalPlanReader getPlanReader(){
