@@ -181,12 +181,15 @@ public class HiveRecordReader extends AbstractRecordReader {
       }
       sInspector = (StructObjectInspector) oi;
       StructTypeInfo sTypeInfo = (StructTypeInfo) TypeInfoUtils.getTypeInfoFromObjectInspector(sInspector);
+      List<Integer> columnIds = Lists.newArrayList();
       if (isStarQuery()) {
         selectedColumnNames = sTypeInfo.getAllStructFieldNames();
         tableColumns = selectedColumnNames;
+        for(int i=0; i<selectedColumnNames.size(); i++) {
+          columnIds.add(i);
+        }
       } else {
         tableColumns = sTypeInfo.getAllStructFieldNames();
-        List<Integer> columnIds = Lists.newArrayList();
         selectedColumnNames = Lists.newArrayList();
         for (SchemaPath field : getColumns()) {
           String columnName = field.getRootSegment().getPath();
@@ -201,8 +204,8 @@ public class HiveRecordReader extends AbstractRecordReader {
             selectedColumnNames.add(columnName);
           }
         }
-        ColumnProjectionUtils.appendReadColumns(job, columnIds, selectedColumnNames);
       }
+      ColumnProjectionUtils.appendReadColumns(job, columnIds, selectedColumnNames);
 
       for (String columnName : selectedColumnNames) {
         ObjectInspector fieldOI = sInspector.getStructFieldRef(columnName).getFieldObjectInspector();
