@@ -127,7 +127,7 @@
       <dependency>
           <groupId>com.mapr.fs</groupId>
           <artifactId>mapr-hbase</artifactId>
-          <version>4.0.2-mapr-SNAPSHOT</version>
+          <version>4.0.1.28318-mapr</version>
       </dependency>
   </dependencies>
     <repositories>

@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.store.maprdb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -39,7 +41,8 @@ import java.util.List;
 import java.util.Set;
 
 public class MapRDBFormatPlugin implements FormatPlugin{
-
+    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBFormatPlugin.class);
+	
     private final StoragePluginConfig storageConfig;
     private final MapRDBFormatPluginConfig config;
     private final MapRDBFormatMatcher matcher;
@@ -82,13 +85,14 @@ public class MapRDBFormatPlugin implements FormatPlugin{
 
 	@Override
 	public AbstractGroupScan getGroupScan(FileSelection selection)
-            throws IOException {
-        return getGroupScan(selection, null);
+      throws IOException {
+    return getGroupScan(selection, null);
 	}
 
 	@Override
+  @JsonIgnore
 	public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-        return ImmutableSet.of();
+    return ImmutableSet.of(MapRDBPushFilterIntoScan.INSTANCE);
 	}
 
 	@Override

@@ -404,6 +404,11 @@ public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseCons
     return (FileSystemConfig) storagePlugin.getConfig();
   }
 
+  @JsonIgnore
+  public FileSystemPlugin getStoragePlugin(){
+	  return storagePlugin;
+  }
+
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
