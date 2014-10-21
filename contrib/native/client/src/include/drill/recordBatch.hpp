@@ -804,8 +804,10 @@ class FieldBatch{
     public:
         FieldBatch(const Drill::FieldMetadata& fmd, const ByteBuf_t data, size_t start, size_t length):
             m_fieldMetadata(fmd){
-                m_pValueVector=NULL;
-                m_pFieldData=new SlicedByteBuf(data, start, length);
+                m_pValueVector=NULL;m_pFieldData=NULL;
+                if(length>0){
+                    m_pFieldData=new SlicedByteBuf(data, start, length);
+                }
             }
 
         ~FieldBatch(){

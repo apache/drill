@@ -71,7 +71,7 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
         if(bTestCancel){
             return Drill::QRY_FAILURE;
         }else{
-        return Drill::QRY_SUCCESS ;
+            return Drill::QRY_SUCCESS ;
         }
     }else{
         assert(b==NULL);

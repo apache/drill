@@ -346,7 +346,10 @@ ret_t RecordBatch::build(){
         size_t len=pFmd->getBufferLength();
         FieldBatch* pField = new FieldBatch(*pFmd, this->m_buffer, startOffset, len) ;
         startOffset+=len;
-        pField->load(); // set up the value vectors
+        // We may get an empty record batch. All the fields will be empty, except for metadata.
+        if(len>0){
+            pField->load(); // set up the value vectors
+        }
         this->m_fields.push_back(pField);
         this->m_fieldDefs->push_back(pFmd);
     }

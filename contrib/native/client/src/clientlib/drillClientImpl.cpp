@@ -509,8 +509,10 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
                     // Ignore these state messages since they means the query is not completed.
                     // I have not observed those messages in testing though.
                     break;
+                    
                 // m_pendingRequests should be decremented when the query is
-                // canncelled or completed
+                // canceled or completed
+                // in both cases, fall back to free mememory
                 case exec::shared::QueryResult_QueryState_CANCELED:
                     ret=handleTerminatedQryState(ret,
                             getMessage(ERR_QRY_CANCELED),
@@ -519,7 +521,6 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
                     ret=handleTerminatedQryState(ret,
                             getMessage(ERR_QRY_COMPLETED),
                             pDrillClientQueryResult);
-                    // in both case, fall back to free mememory
                     delete allocatedBuffer;
                     delete qr;
                     break;
@@ -534,6 +535,8 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
                     break;
             }
             return ret;
+        }else{
+            DRILL_LOG(LOG_WARNING) << "DrillClientImpl::processQueryResult: Query State was not set (assuming a query with no result set.\n";
         }
 
         //Validate the RPC message
@@ -562,7 +565,9 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
             << pRecordBatch->isLastChunk()  << std::endl;
 
         ret=pDrillClientQueryResult->setupColumnDefs(qr);
-        if(ret==QRY_SUCCESS_WITH_INFO)pRecordBatch->schemaChanged(true);
+        if(ret==QRY_SUCCESS_WITH_INFO){
+            pRecordBatch->schemaChanged(true);
+        }
 
         pDrillClientQueryResult->m_bIsQueryPending=true;
         pDrillClientQueryResult->m_bIsLastChunk=qr->is_last_chunk();
@@ -781,6 +786,7 @@ void DrillClientImpl::broadcastError(DrillClientError* pErr){
     }
     return;
 }
+
 // The implementation is similar to handleQryError
 status_t DrillClientImpl::handleTerminatedQryState(
         status_t status,
