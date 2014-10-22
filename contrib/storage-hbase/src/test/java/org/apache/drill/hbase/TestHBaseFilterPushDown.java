@@ -34,6 +34,42 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   }
 
   @Test
+  public void testFilterPushDownRowKeyLike() throws Exception {
+    setColumnWidths(new int[] {8, 22});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + "  row_key, convert_from(tableName.f.c, 'UTF8') `f.c`\n"
+        + "FROM\n"
+        + "  hbase.`TestTable3` tableName\n"
+        + "WHERE\n"
+        + "  row_key LIKE '08%0' OR row_key LIKE '%70'"
+        , 21);
+  }
+
+  @Test
+  public void testFilterPushDownRowKeyLikeWithEscape() throws Exception {
+    setColumnWidths(new int[] {8, 22});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + "  row_key, convert_from(tableName.f.c, 'UTF8') `f.c`\n"
+        + "FROM\n"
+        + "  hbase.`TestTable3` tableName\n"
+        + "WHERE\n"
+        + "  row_key LIKE '!%!_AS!_PREFIX!_%' ESCAPE '!'"
+        , 2);
+  }
+
+  @Test
+  public void testFilterPushDownRowKeyRangeAndColumnValueLike() throws Exception {
+    setColumnWidths(new int[] {8, 22});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + "  row_key, convert_from(tableName.f.c, 'UTF8') `f.c`\n"
+        + "FROM\n"
+        + "  hbase.`TestTable3` tableName\n"
+        + "WHERE\n"
+        + " row_key >= '07' AND row_key < '09' AND tableName.f.c LIKE 'value 0%9'"
+        , 22);
+  }
+
+  @Test
   public void testFilterPushDownRowKeyGreaterThan() throws Exception {
     setColumnWidths(new int[] {8, 38, 38});
     runHBaseSQLVerifyCount("SELECT\n"

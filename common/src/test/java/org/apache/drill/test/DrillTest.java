@@ -25,8 +25,10 @@ import java.util.List;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.common.util.TestTools;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
+import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -50,6 +52,13 @@ public class DrillTest {
 
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(50000);
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
+
+  @Rule public TestName TEST_NAME = new TestName();
+
+  @Before
+  public void printID() throws Exception {
+    System.out.printf("Running %s#%s\n", getClass().getName(), TEST_NAME.getMethodName());
+  }
 
   @BeforeClass
   public static void initDrillTest() throws Exception {

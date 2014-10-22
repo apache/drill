@@ -34,6 +34,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+  TestHBaseRegexParser.class,
   HBaseRecordReaderTest.class,
   TestHBaseFilterPushDown.class,
   TestHBaseProjectPushDown.class,
@@ -47,6 +48,7 @@ public class HBaseTestsSuite {
   private static final boolean IS_DEBUG = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
   protected static final String TEST_TABLE_1 = "TestTable1";
+  protected static final String TEST_TABLE_3 = "TestTable3";
 
   private static Configuration conf;
 
@@ -128,7 +130,7 @@ public class HBaseTestsSuite {
   }
 
   private static boolean tablesExist() throws IOException {
-    return admin.tableExists(TEST_TABLE_1);
+    return admin.tableExists(TEST_TABLE_1) && admin.tableExists(TEST_TABLE_3);
   }
 
   private static void createTestTables() throws Exception {
@@ -138,11 +140,14 @@ public class HBaseTestsSuite {
      * Will revert to multiple region once the issue is resolved.
      */
     TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 1);
+    TestTableGenerator.generateHBaseDataset3(admin, TEST_TABLE_3, 1);
   }
 
   private static void cleanupTestTables() throws IOException {
     admin.disableTable(TEST_TABLE_1);
     admin.deleteTable(TEST_TABLE_1);
+    admin.disableTable(TEST_TABLE_3);
+    admin.deleteTable(TEST_TABLE_3);
   }
 
   public static int getZookeeperPort() {

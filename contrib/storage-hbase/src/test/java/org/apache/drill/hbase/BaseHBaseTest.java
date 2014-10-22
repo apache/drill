@@ -30,10 +30,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TestName;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -47,13 +44,6 @@ public class BaseHBaseTest extends BaseTestQuery {
   protected static HBaseStoragePlugin storagePlugin;
 
   protected static HBaseStoragePluginConfig storagePluginConfig;
-
-  @Rule public TestName TEST_NAME = new TestName();
-
-  @Before
-  public void printID() throws Exception {
-    System.out.printf("Running %s#%s\n", getClass().getName(), TEST_NAME.getMethodName());
-  }
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {

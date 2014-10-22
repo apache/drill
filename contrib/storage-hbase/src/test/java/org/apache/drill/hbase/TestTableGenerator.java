@@ -34,6 +34,9 @@ public class TestTableGenerator {
     {'r'}, {'s'}, {'t'}, {'u'}, {'v'}, {'w'}, {'x'}, {'y'}, {'z'}
   };
 
+  static final byte[] FAMILY_F = {'f'};
+  static final byte[] COLUMN_C = {'c'};
+
   public static void generateHBaseDataset1(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
@@ -145,6 +148,48 @@ public class TestTableGenerator {
       }
       ++iteration;
     }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDataset3(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    for (int i = 0; i <= 100; ++i) {
+      Put p = new Put((String.format("%03d", i)).getBytes());
+      p.add(FAMILY_F, COLUMN_C, String.format("value %03d", i).getBytes());
+      table.put(p);
+    }
+    for (int i = 0; i <= 1000; ++i) {
+      Put p = new Put((String.format("%04d", i)).getBytes());
+      p.add(FAMILY_F, COLUMN_C, String.format("value %04d", i).getBytes());
+      table.put(p);
+    }
+
+    Put p = new Put("%_AS_PREFIX_ROW1".getBytes());
+    p.add(FAMILY_F, COLUMN_C, "dummy".getBytes());
+    table.put(p);
+
+    p = new Put("%_AS_PREFIX_ROW2".getBytes());
+    p.add(FAMILY_F, COLUMN_C, "dummy".getBytes());
+    table.put(p);
 
     table.flushCommits();
     table.close();

@@ -37,6 +37,7 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -54,7 +55,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
   public static CompareFunctionsProcessor process(FunctionCall call, boolean nullComparatorSupported) {
     String functionName = call.getName();
     LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() == 2 ? call.args.get(1) : null;
+    LogicalExpression valueArg = call.args.size() >= 2 ? call.args.get(1) : null;
     CompareFunctionsProcessor evaluator = new CompareFunctionsProcessor(functionName);
 
     if (valueArg != null) { // binary function
@@ -186,7 +187,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
   @Override
   public Boolean visitSchemaPath(SchemaPath path, LogicalExpression valueArg) throws RuntimeException {
     if (valueArg instanceof QuotedString) {
-      this.value = ((QuotedString) valueArg).value.getBytes();
+      this.value = ((QuotedString) valueArg).value.getBytes(Charsets.UTF_8);
       this.path = path;
       return true;
     }
@@ -220,6 +221,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         .put("isNull", "isNull")
         .put("is null", "is null")
         // binary functions
+        .put("like", "like")
         .put("equal", "equal")
         .put("not_equal", "not_equal")
         .put("greater_than_or_equal_to", "less_than_or_equal_to")

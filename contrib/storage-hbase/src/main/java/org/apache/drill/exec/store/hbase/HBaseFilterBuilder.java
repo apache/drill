@@ -29,10 +29,12 @@ import org.apache.hadoop.hbase.filter.BinaryComparator;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.NullComparator;
+import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.WritableByteArrayComparable;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void, RuntimeException> implements DrillHBaseConstants {
@@ -42,6 +44,8 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
   final private LogicalExpression le;
 
   private boolean allExpressionsConverted = true;
+
+  private static Boolean nullComparatorSupported = null;
 
   HBaseFilterBuilder(HBaseGroupScan groupScan, LogicalExpression le) {
     this.groupScan = groupScan;
@@ -56,7 +60,8 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
        * If RowFilter is THE filter attached to the scan specification,
        * remove it since its effect is also achieved through startRow and stopRow.
        */
-      if (parsedSpec.filter instanceof RowFilter) {
+      if (parsedSpec.filter instanceof RowFilter &&
+          ((RowFilter)parsedSpec.filter).getComparator() instanceof BinaryComparator) {
         parsedSpec.filter = null;
       }
     }
@@ -90,11 +95,13 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
        * causes a filter with NullComparator to fail. Enable only if specified in
        * the configuration (after ensuring that the HBase cluster has the fix).
        */
-      boolean nullComparatorSupported = groupScan.getHBaseConf().getBoolean("drill.hbase.supports.null.comparator", false);
+      if (nullComparatorSupported == null) {
+        nullComparatorSupported = groupScan.getHBaseConf().getBoolean("drill.hbase.supports.null.comparator", false);
+      }
 
       CompareFunctionsProcessor processor = CompareFunctionsProcessor.process(call, nullComparatorSupported);
       if (processor.isSuccess()) {
-        nodeScanSpec = createHBaseScanSpec(processor.getFunctionName(), processor.getPath(), processor.getValue());
+        nodeScanSpec = createHBaseScanSpec(call, processor);
       }
     } else {
       switch (functionName) {
@@ -143,10 +150,17 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     return new HBaseScanSpec(groupScan.getTableName(), startRow, stopRow, newFilter);
   }
 
-  private HBaseScanSpec createHBaseScanSpec(String functionName, SchemaPath field, byte[] fieldValue) {
+  private HBaseScanSpec createHBaseScanSpec(FunctionCall call, CompareFunctionsProcessor processor) {
+    String functionName = processor.getFunctionName();
+    SchemaPath field = processor.getPath();
+    byte[] fieldValue = processor.getValue();
     boolean isRowKey = field.getAsUnescapedPath().equals(ROW_KEY);
     if (!(isRowKey
-        || (field.getRootSegment().getChild() != null && field.getRootSegment().getChild().isNamed()))) {
+        || (!field.getRootSegment().isLastPath()
+            && field.getRootSegment().getChild().isLastPath()
+            && field.getRootSegment().getChild().isNamed())
+           )
+        ) {
       /*
        * if the field in this function is neither the row_key nor a qualified HBase column, return.
        */
@@ -163,6 +177,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
       compareOp = CompareOp.EQUAL;
       if (isRowKey) {
         startRow = stopRow = fieldValue;
+        compareOp = null;
       }
       break;
     case "not_equal":
@@ -212,6 +227,49 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
       }
       compareOp = CompareOp.NOT_EQUAL;
       comparator = new NullComparator();
+      break;
+    case "like":
+      /*
+       * Convert the LIKE operand to Regular Expression pattern so that we can
+       * apply RegexStringComparator()
+       */
+      HBaseRegexParser parser = new HBaseRegexParser(call).parse();
+      compareOp = CompareOp.EQUAL;
+      comparator = new RegexStringComparator(parser.getRegexString());
+
+      /*
+       * We can possibly do better if the LIKE operator is on the row_key
+       */
+      if (isRowKey) {
+        String prefix = parser.getPrefixString();
+        if (prefix != null) { // group 3 is literal
+          /*
+           * If there is a literal prefix, it can help us prune the scan to a sub range
+           */
+          if (prefix.equals(parser.getLikeString())) {
+            /* The operand value is literal. This turns the LIKE operator to EQUAL operator */
+            startRow = stopRow = fieldValue;
+            compareOp = null;
+          } else {
+            startRow = prefix.getBytes(Charsets.UTF_8);
+            stopRow = startRow.clone();
+            boolean isMaxVal = true;
+            for (int i = stopRow.length - 1; i >= 0 ; --i) {
+              int nextByteValue = (0xff & stopRow[i]) + 1;
+              if (nextByteValue < 0xff) {
+                stopRow[i] = (byte) nextByteValue;
+                isMaxVal = false;
+                break;
+              } else {
+                stopRow[i] = 0;
+              }
+            }
+            if (isMaxVal) {
+              stopRow = HConstants.EMPTY_END_ROW;
+            }
+          }
+        }
+      }
       break;
     }
 
