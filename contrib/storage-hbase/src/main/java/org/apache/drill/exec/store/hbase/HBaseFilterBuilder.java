@@ -100,15 +100,18 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
       switch (functionName) {
       case "booleanAnd":
       case "booleanOr":
-        HBaseScanSpec leftScanSpec = args.get(0).accept(this, null);
-        HBaseScanSpec rightScanSpec = args.get(1).accept(this, null);
-        if (leftScanSpec != null && rightScanSpec != null) {
-          nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec, rightScanSpec);
-        } else {
-          allExpressionsConverted = false;
-          if ("booleanAnd".equals(functionName)) {
-            nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
+        HBaseScanSpec firstScanSpec = args.get(0).accept(this, null);
+        for (int i = 1; i < args.size(); ++i) {
+          HBaseScanSpec nextScanSpec = args.get(i).accept(this, null);
+          if (firstScanSpec != null && nextScanSpec != null) {
+            nodeScanSpec = mergeScanSpecs(functionName, firstScanSpec, nextScanSpec);
+          } else {
+            allExpressionsConverted = false;
+            if ("booleanAnd".equals(functionName)) {
+              nodeScanSpec = firstScanSpec == null ? nextScanSpec : firstScanSpec;
+            }
           }
+          firstScanSpec = nodeScanSpec;
         }
         break;
       }
