@@ -360,6 +360,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     public boolean copyValueSafe(int srcIndex, int destIndex) {
       RepeatedMapHolder holder = new RepeatedMapHolder();
       accessor.get(srcIndex, holder);
+      to.populateEmpties(destIndex+1);
       int newIndex = to.offsets.getAccessor().get(destIndex);
       //todo: make these bulk copies
       for (int i = holder.start; i < holder.end; i++, newIndex++) {
@@ -372,7 +373,6 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       if (!to.offsets.getMutator().setSafe(destIndex+1, newIndex)) {
         return false;
       }
-      to.lastPopulatedValueIndex = destIndex;
       return true;
     }
 
@@ -609,6 +609,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   @Override
   public void clear() {
     getMutator().reset();
+
     offsets.clear();
     for(ValueVector v : vectors.values()) {
       v.clear();;
