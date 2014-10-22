@@ -117,9 +117,6 @@ public class JSONRecordReader2 extends AbstractRecordReader {
           break outside;
 
         case WRITE_FAILED:
-          if (recordCount == 0) {
-            throw new DrillRuntimeException("Record is too big to fit into allocated ValueVector");
-          }
           break outside;
         };
       }

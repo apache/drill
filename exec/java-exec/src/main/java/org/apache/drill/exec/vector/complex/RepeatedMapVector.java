@@ -316,7 +316,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   @Override
   public int getValueCapacity() {
-    return offsets.getValueCapacity();
+    return offsets.getValueCapacity()-1;
   }
 
   @Override
@@ -414,7 +414,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     }
 
     public void get(int index, RepeatedMapHolder holder) {
-      assert index <= getValueCapacity();
+      assert index < getValueCapacity()-1;
       holder.start = offsets.getAccessor().get(index);
       holder.end = offsets.getAccessor().get(index+1);
     }

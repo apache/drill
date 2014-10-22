@@ -41,6 +41,17 @@ public class JsonStringHashMap<K, V> extends LinkedHashMap<K, V> {
   }
 
   @Override
+  public boolean equals(Object other) {
+    if (other instanceof JsonStringHashMap) {
+      return toString().equals(other.toString());
+    }
+    if (other instanceof String) {
+      return toString().equals(other);
+    }
+    return false;
+  }
+
+  @Override
   public final String toString() {
     try {
       return mapper.writeValueAsString(this);

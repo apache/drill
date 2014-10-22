@@ -71,7 +71,11 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   public void clear(){
     writer.clear();
   }
-  
+
+  public int getValueCapacity() {
+    return innerVector==null ? 0:innerVector.getValueCapacity();
+  }
+
   public void setValueCount(int count){
     if(innerVector != null) innerVector.getMutator().setValueCount(count);
   }
@@ -152,6 +156,8 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   <#if mode == "Repeated">
   public void start(){
     if(ok()){
+      checkValueCapacity();
+      if (!ok()) return;
       // update the repeated vector to state that there is current+1 objects.
       RepeatedListHolder h = new RepeatedListHolder();
       container.getAccessor().get(idx(), h);

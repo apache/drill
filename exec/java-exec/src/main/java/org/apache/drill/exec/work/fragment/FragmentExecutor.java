@@ -114,7 +114,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
         }
       }
     } catch (AssertionError | Exception e) {
-      logger.debug("Error while initializing or executing fragment", e);
+      logger.warn("Error while initializing or executing fragment", e);
       context.fail(e);
       internalFail(e);
     } finally {

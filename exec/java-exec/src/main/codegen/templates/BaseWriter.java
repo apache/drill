@@ -31,6 +31,7 @@ public interface BaseWriter extends Positionable{
   FieldWriter getParent();
   boolean ok();
   WriteState getState();
+  int getValueCapacity();
   
   public interface MapWriter extends BaseWriter{
 

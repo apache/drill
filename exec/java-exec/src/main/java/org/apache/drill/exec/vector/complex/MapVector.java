@@ -17,12 +17,16 @@
  */
 package org.apache.drill.exec.vector.complex;
 
+import com.google.common.collect.Ordering;
+import com.google.common.primitives.Ints;
 import io.netty.buffer.DrillBuf;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
@@ -280,7 +284,18 @@ public class MapVector extends AbstractContainerVector {
     if (this.vectors.isEmpty()) {
       return 0;
     }
-    return vectors.values().iterator().next().getValueCapacity();
+
+    final Ordering<ValueVector> natural = new Ordering<ValueVector>() {
+      @Override
+      public int compare(@Nullable ValueVector left, @Nullable ValueVector right) {
+        return Ints.compare(
+            Preconditions.checkNotNull(left).getValueCapacity(),
+            Preconditions.checkNotNull(right).getValueCapacity()
+        );
+      }
+    };
+
+    return natural.min(vectors.values()).getValueCapacity();
   }
 
   @Override

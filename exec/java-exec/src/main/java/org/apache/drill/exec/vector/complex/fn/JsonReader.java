@@ -139,8 +139,11 @@ public class JsonReader {
     return writeToVector(writer, t);
  }
 
-private boolean writeToVector(ComplexWriter writer, JsonToken t)
-    throws JsonParseException, IOException {
+private boolean writeToVector(ComplexWriter writer, JsonToken t) throws JsonParseException, IOException {
+  if (!writer.ok()) {
+    return false;
+  }
+
   switch (t) {
     case START_OBJECT:
       writeData(writer.rootAsMap());
@@ -193,6 +196,10 @@ private boolean writeToVector(ComplexWriter writer, JsonToken t)
     //
     map.start();
     outside: while(true) {
+      if (!map.ok()) {
+        logger.warn("Error reported. Quit writing");
+        break;
+      }
       JsonToken t = parser.nextToken();
       if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
         return;
@@ -243,11 +250,10 @@ private boolean writeToVector(ComplexWriter writer, JsonToken t)
         break;
       }
       case VALUE_NULL:
-        if (allTextMode) {
+        // do check value capacity only if vector is allocated.
+        if (map.getValueCapacity() > 0) {
           map.checkValueCapacity();
-          break;
         }
-        map.checkValueCapacity();
         // do nothing as we don't have a type.
         break;
       case VALUE_NUMBER_FLOAT:
@@ -313,6 +319,10 @@ private boolean writeToVector(ComplexWriter writer, JsonToken t)
   private void writeData(ListWriter list) throws JsonParseException, IOException {
     list.start();
     outside: while (true) {
+      if (!list.ok()) {
+        logger.warn("Error reported. Quit writing");
+        break;
+      }
 
       switch (parser.nextToken()) {
       case START_ARRAY:

@@ -37,6 +37,17 @@ public class JsonStringArrayList<E> extends ArrayList<E> {
   }
 
   @Override
+  public boolean equals(Object other) {
+    if (other instanceof JsonStringArrayList) {
+      return toString().equals(other.toString());
+    }
+    if (other instanceof String) {
+      return toString().equals(other);
+    }
+    return false;
+  }
+
+  @Override
   public final String toString() {
     try {
       return mapper.writeValueAsString(this);
