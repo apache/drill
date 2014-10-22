@@ -15,13 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys;
 
-import java.io.Closeable;
-import java.io.IOException;
+package org.apache.drill.exec.store.sys.local;
 
-public interface PStoreProvider extends AutoCloseable, Closeable{
-  public <V> PStore<V> getPStore(PStoreConfig<V> table) throws IOException;
-  public void start() throws IOException;
-  public <V> EStore<V> getEStore(PStoreConfig<V> table) throws IOException;
+import org.apache.drill.exec.store.sys.EStore;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Implementation of EStore using ConcurrentHashMap.
+ * @param <V>
+ */
+public class MapEStore <V> implements EStore<V> {
+  ConcurrentHashMap<String, V> store = new ConcurrentHashMap<>();
+
+  @Override
+  public V get(String key) {
+    return store.get(key);
+  }
+
+  @Override
+  public void put(String key, V value) {
+    store.put(key, value);
+  }
+
+  @Override
+  public void delete(String key) {
+    store.remove(key);
+  }
+
+  @Override
+  public Iterator<Map.Entry<String, V>> iterator() {
+    return store.entrySet().iterator();
+  }
 }

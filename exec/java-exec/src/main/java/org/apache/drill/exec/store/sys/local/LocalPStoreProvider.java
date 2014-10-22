@@ -23,22 +23,24 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 
 import com.google.common.collect.Maps;
 
 /**
  * A really simple provider that stores data in the local file system, one value per file.
  */
-public class LocalPStoreProvider implements PStoreProvider{
+public class LocalPStoreProvider implements PStoreProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalPStoreProvider.class);
 
   private File path;
   private final boolean enableWrite;
   private ConcurrentMap<PStoreConfig<?>, PStore<?>> pstores;
+  private final LocalEStoreProvider estoreProvider;
 
   public LocalPStoreProvider(DrillConfig config) {
     path = new File(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
@@ -46,6 +48,7 @@ public class LocalPStoreProvider implements PStoreProvider{
     if (!enableWrite) {
       pstores = Maps.newConcurrentMap();
     }
+    estoreProvider = new LocalEStoreProvider();
   }
 
   public LocalPStoreProvider(PStoreRegistry registry) {
@@ -54,6 +57,11 @@ public class LocalPStoreProvider implements PStoreProvider{
 
   @Override
   public void close() {
+  }
+
+  @Override
+  public <V> EStore<V> getEStore(PStoreConfig<V> storeConfig) throws IOException {
+    return estoreProvider.getEStore(storeConfig);
   }
 
   @Override

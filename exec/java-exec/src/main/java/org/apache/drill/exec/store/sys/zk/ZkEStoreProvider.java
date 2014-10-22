@@ -15,13 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys;
 
-import java.io.Closeable;
+package org.apache.drill.exec.store.sys.zk;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.drill.exec.store.sys.EStore;
+import org.apache.drill.exec.store.sys.EStoreProvider;
+import org.apache.drill.exec.store.sys.PStoreConfig;
+
 import java.io.IOException;
 
-public interface PStoreProvider extends AutoCloseable, Closeable{
-  public <V> PStore<V> getPStore(PStoreConfig<V> table) throws IOException;
-  public void start() throws IOException;
-  public <V> EStore<V> getEStore(PStoreConfig<V> table) throws IOException;
+public class ZkEStoreProvider implements EStoreProvider{
+  private final CuratorFramework curator;
+
+  public ZkEStoreProvider(CuratorFramework curator) {
+    this.curator = curator;
+  }
+
+  @Override
+  public <V> EStore<V> getEStore(PStoreConfig<V> store) throws IOException {
+    return new ZkEStore<V>(curator,store);
+  }
 }

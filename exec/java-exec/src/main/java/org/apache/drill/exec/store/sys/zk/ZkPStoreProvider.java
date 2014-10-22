@@ -26,17 +26,18 @@ import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.shim.FileSystemCreator;
+import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class ZkPStoreProvider implements PStoreProvider{
+public class ZkPStoreProvider implements PStoreProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZkPStoreProvider.class);
 
   private static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
@@ -46,6 +47,8 @@ public class ZkPStoreProvider implements PStoreProvider{
   private final DrillFileSystem fs;
 
   private final Path blobRoot;
+
+  private final ZkEStoreProvider zkEStoreProvider;
 
   public ZkPStoreProvider(PStoreRegistry registry) throws DrillbitStartupException {
     ClusterCoordinator coord = registry.getClusterCoordinator();
@@ -72,6 +75,7 @@ public class ZkPStoreProvider implements PStoreProvider{
       throw new DrillbitStartupException("Unable to initialize blob storage.", e);
     }
 
+    zkEStoreProvider = new ZkEStoreProvider(curator);
   }
 
   @VisibleForTesting
@@ -83,10 +87,16 @@ public class ZkPStoreProvider implements PStoreProvider{
       drillLogDir = "/var/log/drill";
     }
     blobRoot = new Path(new File(drillLogDir).getAbsoluteFile().toURI());
+    zkEStoreProvider = new ZkEStoreProvider(curator);
   }
 
   @Override
   public void close() {
+  }
+
+  @Override
+  public <V> EStore<V> getEStore(PStoreConfig<V> store) throws IOException {
+    return zkEStoreProvider.getEStore(store);
   }
 
   @Override

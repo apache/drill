@@ -114,6 +114,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
         return QueryState.valueOf(i);
       }
     };
+    this.fragmentManager.getStatus().updateQueryStateInStore();
   }
 
   public QueryContext getContext() {
@@ -167,7 +168,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   void cleanupAndSendResult(QueryResult result) {
     bee.retireForeman(this);
     initiatingClient.sendResult(new ResponseSendListener(), new QueryWritableBatch(result), true);
-    state.updateState(QueryState.RUNNING, QueryState.COMPLETED);
+    state.updateState(state.getState(), result.getQueryState());
+
+    this.fragmentManager.getStatus().updateQueryStateInStore();
   }
 
   private class ResponseSendListener extends BaseRpcOutcomeListener<Ack> {
@@ -360,14 +363,13 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
       int totalFragments = 1 + work.getFragments().size();;
       fragmentManager.getStatus().setTotalFragments(totalFragments);
-      fragmentManager.getStatus().updateCache();
 
       logger.debug("Submitting fragments to run.");
       fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, work.getFragments());
 
       logger.debug("Fragments running.");
       state.updateState(QueryState.PENDING, QueryState.RUNNING);
-
+      fragmentManager.getStatus().updateQueryStateInStore();
     } catch (Exception e) {
       fail("Failure while setting up query.", e);
     }

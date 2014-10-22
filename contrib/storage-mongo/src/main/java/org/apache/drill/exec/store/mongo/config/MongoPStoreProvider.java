@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.mongo.config;
 
 import java.io.IOException;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
+import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
@@ -32,6 +34,8 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.WriteConcern;
+import org.apache.drill.exec.store.sys.local.LocalEStoreProvider;
+import org.apache.drill.exec.store.sys.local.MapEStore;
 
 public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants {
 
@@ -45,9 +49,11 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
   private DBCollection collection;
 
   private final String mongoURL;
+  private final LocalEStoreProvider localEStoreProvider;
 
   public MongoPStoreProvider(PStoreRegistry registry) {
     mongoURL = registry.getConfig().getString(SYS_STORE_PROVIDER_MONGO_URL);
+    localEStoreProvider = new LocalEStoreProvider();
   }
 
   @Override
@@ -59,6 +65,11 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
     collection.setWriteConcern(WriteConcern.JOURNALED);
     DBObject index = new BasicDBObject(1).append(pKey, Integer.valueOf(1));
     collection.createIndex(index);
+  }
+
+  @Override
+  public <V> EStore<V> getEStore(PStoreConfig<V> storeConfig) throws IOException {
+    return localEStoreProvider.getEStore(storeConfig);
   }
 
   @Override

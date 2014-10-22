@@ -15,13 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.sys;
 
-import java.io.Closeable;
-import java.io.IOException;
+import java.util.Map;
 
-public interface PStoreProvider extends AutoCloseable, Closeable{
-  public <V> PStore<V> getPStore(PStoreConfig<V> table) throws IOException;
-  public void start() throws IOException;
-  public <V> EStore<V> getEStore(PStoreConfig<V> table) throws IOException;
+/**
+ * Interfaces to define EStore, which is keep track of status/information for running queries. The information
+ * would be gone, if the query is completed, or the foreman drillbit is not responding.
+ * @param <V>
+ */
+public interface EStore <V> extends Iterable<Map.Entry<String, V>> {
+  public V get(String key);
+  public void put(String key, V value);
+  public void delete(String key);
 }

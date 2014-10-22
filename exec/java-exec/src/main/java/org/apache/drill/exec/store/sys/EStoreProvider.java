@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.sys;
 
-import java.io.Closeable;
 import java.io.IOException;
 
-public interface PStoreProvider extends AutoCloseable, Closeable{
-  public <V> PStore<V> getPStore(PStoreConfig<V> table) throws IOException;
-  public void start() throws IOException;
+/**
+ * Interface to define the provider which return EStore.
+ */
+
+public interface EStoreProvider {
   public <V> EStore<V> getEStore(PStoreConfig<V> table) throws IOException;
 }

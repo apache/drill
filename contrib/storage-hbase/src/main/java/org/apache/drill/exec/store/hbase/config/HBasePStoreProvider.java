@@ -19,13 +19,23 @@ package org.apache.drill.exec.store.hbase.config;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
+import com.google.common.collect.Maps;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
+import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
+import org.apache.drill.exec.store.sys.local.LocalEStoreProvider;
+import org.apache.drill.exec.store.sys.local.MapEStore;
+import org.apache.drill.exec.store.sys.zk.ZkEStore;
+import org.apache.drill.exec.store.sys.zk.ZkEStoreProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -56,6 +66,10 @@ public class HBasePStoreProvider implements PStoreProvider {
 
   private HTableInterface table;
 
+  private final boolean zkAvailable;
+  private final LocalEStoreProvider localEStoreProvider;
+  private final ZkEStoreProvider zkEStoreProvider;
+
   public HBasePStoreProvider(PStoreRegistry registry) {
     @SuppressWarnings("unchecked")
     Map<String, Object> config = (Map<String, Object>) registry.getConfig().getAnyRef(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_CONFIG);
@@ -67,12 +81,27 @@ public class HBasePStoreProvider implements PStoreProvider {
       }
     }
     this.storeTableName = registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE);
+
+    ClusterCoordinator coord = registry.getClusterCoordinator();
+    if ((coord instanceof ZKClusterCoordinator)) {
+      this.localEStoreProvider = null;
+      this.zkEStoreProvider = new ZkEStoreProvider(((ZKClusterCoordinator)registry.getClusterCoordinator()).getCurator());
+      this.zkAvailable = true;
+    } else {
+      this.localEStoreProvider = new LocalEStoreProvider();
+      this.zkEStoreProvider = null;
+      this.zkAvailable = false;
+    }
+
   }
 
   @VisibleForTesting
   public HBasePStoreProvider(Configuration conf, String storeTableName) {
     this.hbaseConf = conf;
     this.storeTableName = storeTableName;
+    this.localEStoreProvider = new LocalEStoreProvider();
+    this.zkEStoreProvider = null;
+    this.zkAvailable = false;
   }
 
   @Override
@@ -102,6 +131,17 @@ public class HBasePStoreProvider implements PStoreProvider {
 
     this.table = connection.getTable(storeTableName);
     this.table.setAutoFlush(true);
+  }
+
+  @Override
+  public <V> EStore<V> getEStore(PStoreConfig<V> store) throws IOException {
+    // when ZK is available, use ZK as the Ephemeral store.
+    // when ZK is not available, use a Map as the Ephemeral store.
+    if (this.zkAvailable) {
+      return zkEStoreProvider.getEStore(store);
+    } else {
+      return localEStoreProvider.getEStore(store);
+    }
   }
 
   @Override

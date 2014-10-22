@@ -31,14 +31,14 @@
           <tr>
             <td>${query.getTime()}</td>
             <td>
-              <a href="/profiles/${query.getQueryId()}">
+              <a href="/running_profiles/${query.getQueryId()}">
                 <div style="height:100%;width:100%">
                   ${query.getQueryId()}
                 </div>
               </a>
             </td>
             <td>
-              <a href="http://${query.getForeman()}:8047/profiles/${query.getQueryId()}" target="_blank">
+              <a href="http://${query.getForeman()}:8047/running_profiles/${query.getQueryId()}" target="_blank">
                 <div style="height:100%;width:100%">
                   ${query.getForeman()}
                 </div>

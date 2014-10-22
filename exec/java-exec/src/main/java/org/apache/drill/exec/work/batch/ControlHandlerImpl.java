@@ -96,7 +96,7 @@ public class ControlHandlerImpl implements ControlMessageHandler {
       QueryProfile profile;
       if (foreman == null) {
         try {
-          profile = bee.getContext().getPersistentStoreProvider().getPStore(QueryStatus.QUERY_PROFILE).get(QueryIdHelper.getQueryId(queryId));
+          profile = bee.getContext().getPersistentStoreProvider().getEStore(QueryStatus.RUNNING_QUERY_PROFILE).get(QueryIdHelper.getQueryId(queryId));
         } catch (IOException e) {
           throw new RpcException("Failed to get persistent store", e);
         }

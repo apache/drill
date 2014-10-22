@@ -15,13 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys;
 
-import java.io.Closeable;
+package org.apache.drill.exec.store.sys.local;
+
+import com.google.common.collect.Maps;
+import org.apache.drill.exec.store.sys.EStore;
+import org.apache.drill.exec.store.sys.EStoreProvider;
+import org.apache.drill.exec.store.sys.PStoreConfig;
+
 import java.io.IOException;
+import java.util.concurrent.ConcurrentMap;
 
-public interface PStoreProvider extends AutoCloseable, Closeable{
-  public <V> PStore<V> getPStore(PStoreConfig<V> table) throws IOException;
-  public void start() throws IOException;
-  public <V> EStore<V> getEStore(PStoreConfig<V> table) throws IOException;
+public class LocalEStoreProvider implements EStoreProvider{
+  private ConcurrentMap<PStoreConfig<?>, EStore<?>> estores = Maps.newConcurrentMap();
+
+  @Override
+  public <V> EStore<V> getEStore(PStoreConfig<V> storeConfig) throws IOException {
+    if (! (estores.containsKey(storeConfig)) ) {
+      EStore<V> p = new MapEStore<V>();
+      EStore<?> p2 = estores.putIfAbsent(storeConfig, p);
+      if(p2 != null) {
+        return (EStore<V>) p2;
+      }
+      return p;
+    } else {
+      return (EStore<V>) estores.get(storeConfig);
+    }
+  }
 }
