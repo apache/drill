@@ -123,7 +123,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     List<Integer> selectedPartitionColumns = Lists.newArrayList();
     boolean selectAllColumns = false;
 
-    if (AbstractRecordReader.isStarQuery(columns) || columns == null || columns.size() == 0) {
+    if (columns == null || columns.size() == 0 || AbstractRecordReader.isStarQuery(columns)) {
       selectAllColumns = true;
     } else {
       List<SchemaPath> newColumns = Lists.newArrayList();
@@ -135,6 +135,12 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
         } else {
           newColumns.add(column);
         }
+      }
+
+      // We must make sure to pass a table column(not to be confused with partition column) to the underlying record
+      // reader.
+      if (newColumns.size()==0) {
+        newColumns.add(AbstractRecordReader.STAR_COLUMN);
       }
       // Create a new sub scan object with the new set of columns;
       scan = new EasySubScan(scan.getWorkUnits(), scan.getFormatPlugin(), newColumns, scan.getSelectionRoot());
