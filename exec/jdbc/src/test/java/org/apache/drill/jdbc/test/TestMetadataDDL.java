@@ -83,7 +83,9 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
             "TABLE_SCHEMA=hive_test.default; TABLE_NAME=infoschematest",
             "TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview",
             "TABLE_SCHEMA=hive_test.default; TABLE_NAME=kv",
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate")
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=partition_pruning_test"
+            )
         );
   }
 
@@ -106,7 +108,8 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
             "TABLE_SCHEMA=hive_test.default; TABLE_NAME=infoschematest",
             "TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview",
             "TABLE_SCHEMA=hive_test.default; TABLE_NAME=kv",
-            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate"));
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=foodate",
+            "TABLE_SCHEMA=hive_test.default; TABLE_NAME=partition_pruning_test"));
   }
 
   @Test
