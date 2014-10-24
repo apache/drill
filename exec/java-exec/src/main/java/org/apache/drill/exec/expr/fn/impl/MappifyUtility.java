@@ -40,7 +40,7 @@ public class MappifyUtility {
   public static void mappify(FieldReader reader, BaseWriter.ComplexWriter writer, DrillBuf buffer) {
     // Currently we expect single map as input
     if (!(reader instanceof SingleMapReaderImpl)) {
-      throw new DrillRuntimeException("Mappify function only supports Simple maps as input");
+      throw new DrillRuntimeException("kvgen function only supports Simple maps as input");
     }
     BaseWriter.ListWriter listWriter = writer.rootAsList();
     listWriter.start();
@@ -52,9 +52,15 @@ public class MappifyUtility {
       String str = fieldIterator.next();
       FieldReader fieldReader = reader.reader(str);
 
+      // Skip the field if its null
+      if (fieldReader.isSet() == false) {
+        mapWriter.end();
+        continue;
+      }
+
       // Check if the value field is not repeated
       if (fieldReader.getType().getMode() == TypeProtos.DataMode.REPEATED) {
-        throw new DrillRuntimeException("Mappify function does not support repeated type values");
+        throw new DrillRuntimeException("kvgen function does not support repeated type values");
       }
 
       // writing a new field, start a new map
@@ -69,12 +75,6 @@ public class MappifyUtility {
       vh.end = b.length;
       vh.buffer = buffer;
       mapWriter.varChar(fieldKey).write(vh);
-
-      // Skip the value field if its null
-      if (fieldReader.isSet() == false) {
-        mapWriter.end();
-        continue;
-      }
 
       // Write the value to the map
       MapUtility.writeToMapFromReader(fieldReader, mapWriter, buffer);
