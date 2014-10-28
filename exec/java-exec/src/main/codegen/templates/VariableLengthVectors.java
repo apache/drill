@@ -50,6 +50,9 @@ package org.apache.drill.exec.vector;
 public final class ${minor.class}Vector extends BaseDataValueVector implements VariableWidthVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${minor.class}Vector.class);
 
+  private static final int INITIAL_BYTE_COUNT = 32768;
+  private static final int MIN_BYTE_COUNT = 4096;
+  
   private final UInt${type.width}Vector offsetVector;
   private final Accessor accessor;
   private final Mutator mutator;
@@ -57,7 +60,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   private final UInt${type.width}Vector.Accessor oAccessor;
   
 
-  private int allocationTotalByteCount = 32768;
+  private int allocationTotalByteCount = INITIAL_BYTE_COUNT;
   private int allocationMonitor = 0;
 
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
@@ -252,12 +255,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   public boolean allocateNewSafe() {
     clear();
     if (allocationMonitor > 10) {
-      allocationTotalByteCount = Math.max(8, (int) (allocationTotalByteCount / 2));
+      allocationTotalByteCount = Math.max(MIN_BYTE_COUNT, (int) (allocationTotalByteCount / 2));
       allocationMonitor = 0;
     } else if (allocationMonitor < -2) {
       allocationTotalByteCount = (int) (allocationTotalByteCount * 2);
       allocationMonitor = 0;
     }
+
     data = allocator.buffer(allocationTotalByteCount);
     if(data == null){
       return false;

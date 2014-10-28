@@ -38,6 +38,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   private final AtomicBoolean outOfMemory = new AtomicBoolean(false);
   private final ResponseSenderQueue readController = new ResponseSenderQueue();
   private int streamCounter;
+  private int fragmentCount;
   private FragmentContext context;
 
   public UnlimitedRawBatchBuffer(FragmentContext context, int fragmentCount) {
@@ -46,6 +47,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     this.softlimit = bufferSizePerSocket * fragmentCount;
     this.startlimit = Math.max(softlimit/2, 1);
     this.buffer = Queues.newLinkedBlockingDeque();
+    this.fragmentCount = fragmentCount;
     this.streamCounter = fragmentCount;
     this.context = context;
   }
@@ -77,7 +79,9 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   @Override
   public void cleanup() {
     if (!finished && !context.isCancelled()) {
-      IllegalStateException e = new IllegalStateException("Cleanup before finished");
+      String msg = String.format("Cleanup before finished. " + (fragmentCount - streamCounter) + " out of " + fragmentCount + " streams have finished.");
+      logger.error(msg);
+      IllegalStateException e = new IllegalStateException(msg);
       context.fail(e);
       throw e;
     }

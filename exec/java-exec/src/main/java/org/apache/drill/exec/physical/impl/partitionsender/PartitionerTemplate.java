@@ -39,6 +39,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.FragmentWritableBatch;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaBuilder;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -73,6 +74,7 @@ public abstract class PartitionerTemplate implements Partitioner {
     return outgoingBatches;
   }
 
+  @Override
   public final void setup(FragmentContext context,
                           RecordBatch incoming,
                           HashPartitionSender popConfig,
@@ -122,6 +124,7 @@ public abstract class PartitionerTemplate implements Partitioner {
    * @param isLastBatch    true if this is the last incoming batch
    * @param schemaChanged  true if the schema has changed
    */
+  @Override
   public void flushOutgoingBatches(boolean isLastBatch, boolean schemaChanged) throws IOException {
     for (OutgoingRecordBatch batch : outgoingBatches) {
       logger.debug("Attempting to flush all outgoing batches");
@@ -149,8 +152,9 @@ public abstract class PartitionerTemplate implements Partitioner {
             logger.trace(REWRITE_MSG, recordId);
             outgoingBatch.flush();
             if (!outgoingBatch.copy(recordId)) {
-              logger.debug(RECORD_TOO_BIG_MSG, recordId);
-              throw new IOException(RECORD_TOO_BIG_MSG);
+              String msg = composeTooBigMsg(recordId, incoming);
+              logger.debug(msg);
+              throw new IOException(msg);
             }
           }
         }
@@ -164,8 +168,9 @@ public abstract class PartitionerTemplate implements Partitioner {
             logger.trace(REWRITE_MSG, svIndex);
             outgoingBatch.flush();
             if (!outgoingBatch.copy(svIndex)) {
-              logger.debug(RECORD_TOO_BIG_MSG, recordId);
-              throw new IOException(RECORD_TOO_BIG_MSG);
+              String msg = composeTooBigMsg(recordId, incoming);
+              logger.debug(msg);
+              throw new IOException(msg);
             }
           }
         }
@@ -179,8 +184,9 @@ public abstract class PartitionerTemplate implements Partitioner {
             logger.trace(REWRITE_MSG, svIndex);
             outgoingBatch.flush();
             if (!outgoingBatch.copy(svIndex)) {
-              logger.debug(RECORD_TOO_BIG_MSG, recordId);
-              throw new IOException(RECORD_TOO_BIG_MSG);
+              String msg = composeTooBigMsg(recordId, incoming);
+              logger.debug(msg);
+              throw new IOException(msg);
             }
           }
         }
@@ -196,6 +202,16 @@ public abstract class PartitionerTemplate implements Partitioner {
     for (OutgoingRecordBatch outgoingRecordBatch : outgoingBatches) {
       outgoingRecordBatch.clear();
     }
+  }
+
+  private String composeTooBigMsg(int recordId, RecordBatch incoming) {
+    String msg = String.format("Record " + recordId + " is too big to fit into the allocated memory of ValueVector.");
+    msg += " Schema: ";
+    for (int i = 0; i < incoming.getSchema().getFieldCount(); i++) {
+      MaterializedField f = incoming.getSchema().getColumn(i);
+      msg += f.getPath().getRootSegment().getPath() + " ";
+    }
+    return msg;
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") OutgoingRecordBatch[] outgoing) throws SchemaChangeException;

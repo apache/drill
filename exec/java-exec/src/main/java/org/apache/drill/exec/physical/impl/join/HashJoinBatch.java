@@ -514,8 +514,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             hashTable.clear();
         }
         super.cleanup();
-        left.cleanup();
         right.cleanup();
+        left.cleanup();
     }
 
 }
