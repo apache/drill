@@ -78,6 +78,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
     } finally {
       stats.stopProcessing();
     }
+    container.buildSchema(incoming.getSchema().getSelectionVectorMode());
     return IterOutcome.OK_NEW_SCHEMA;
   }
 
