@@ -51,6 +51,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   private final RecordBatch incoming;
   private boolean processed = false;
   private String fragmentUniqueId;
+  private BatchSchema schema;
 
   public WriterRecordBatch(Writer writer, RecordBatch incoming, FragmentContext context, RecordWriter recordWriter) throws OutOfMemoryException {
     super(writer, context);
@@ -69,6 +70,11 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   @Override
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
+  }
+
+  @Override
+  public BatchSchema getSchema() {
+    return schema;
   }
 
   @Override
@@ -174,6 +180,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
 
     eventBasedRecordWriter = new EventBasedRecordWriter(incoming, recordWriter);
     container.buildSchema(SelectionVectorMode.NONE);
+    schema = container.getSchema();
   }
 
   @Override
