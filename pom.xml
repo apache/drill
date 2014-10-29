@@ -353,7 +353,7 @@
             <argLine>-Xms512m -Xmx2g -Ddrill.exec.http.enabled=false
               -Ddrill.exec.sys.store.provider.local.write=false
               -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=3072M
-              -XX:+CMSClassUnloadingEnabled</argLine>
+              -XX:+CMSClassUnloadingEnabled -ea</argLine>
             <forkCount>4</forkCount>
             <reuseForks>true</reuseForks>
             <additionalClasspathElements>
