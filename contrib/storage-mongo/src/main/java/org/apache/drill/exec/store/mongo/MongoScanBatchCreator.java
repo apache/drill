@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCredential;
 
 public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
   static final Logger logger = LoggerFactory
@@ -52,8 +53,10 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
         }
         MongoClientOptions clientOptions = subScan.getMongoPluginConfig()
             .getMongoOptions();
+        MongoCredential mongoCrendials = subScan.getMongoPluginConfig()
+            .getMongoCrendials();
         readers.add(new MongoRecordReader(scanSpec, columns, context,
-            clientOptions));
+            clientOptions, mongoCrendials));
       } catch (Exception e) {
         logger.error("MongoRecordReader creation failed for subScan:  "
             + subScan + ".");

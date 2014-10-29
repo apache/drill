@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.util.List;
+
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -25,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import com.mongodb.MongoCredential;
 
 @JsonTypeName(MongoStoragePluginConfig.NAME)
 public class MongoStoragePluginConfig extends StoragePluginConfig {
@@ -41,6 +44,7 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
   @JsonCreator
   public MongoStoragePluginConfig(@JsonProperty("connection") String connection) {
     this.connection = connection;
+    this.clientURI = new MongoClientURI(connection);
   }
 
   @Override
@@ -61,9 +65,18 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
   }
 
   @JsonIgnore
+  public MongoCredential getMongoCrendials() {
+    return clientURI.getCredentials();
+  }
+
+  @JsonIgnore
   public MongoClientOptions getMongoOptions() {
-    MongoClientURI clientURI = new MongoClientURI(connection);
     return clientURI.getOptions();
+  }
+
+  @JsonIgnore
+  public List<String> getHosts() {
+    return clientURI.getHosts();
   }
 
   public String getConnection() {

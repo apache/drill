@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -30,13 +31,14 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
 public class MongoCnxnManager {
 
   private static final Logger logger = LoggerFactory
       .getLogger(MongoCnxnManager.class);
-  private static Cache<ServerAddress, MongoClient> addressClientMap;
+  private static Cache<MongoCnxnKey, MongoClient> addressClientMap;
 
   static {
     addressClientMap = CacheBuilder.newBuilder().maximumSize(5)
@@ -45,28 +47,33 @@ public class MongoCnxnManager {
   }
 
   private static class AddressCloser implements
-      RemovalListener<ServerAddress, MongoClient> {
+      RemovalListener<MongoCnxnKey, MongoClient> {
     @Override
     public synchronized void onRemoval(
-        RemovalNotification<ServerAddress, MongoClient> removal) {
+        RemovalNotification<MongoCnxnKey, MongoClient> removal) {
       removal.getValue().close();
-      ;
       logger.debug("Closed connection to {}.", removal.getKey().toString());
     }
   }
 
   public synchronized static MongoClient getClient(
-      List<ServerAddress> addresses, MongoClientOptions clientOptions)
-      throws UnknownHostException {
+      List<ServerAddress> addresses, MongoClientOptions clientOptions,
+      MongoCredential credential) throws UnknownHostException {
     // Take the first replica from the replicated servers
     ServerAddress serverAddress = addresses.get(0);
-    MongoClient client = addressClientMap.getIfPresent(serverAddress);
+    String userName = credential == null ? null : credential.getUserName();
+    MongoCnxnKey key = new MongoCnxnKey(serverAddress, userName);
+    MongoClient client = addressClientMap.getIfPresent(key);
     if (client == null) {
-      client = new MongoClient(addresses, clientOptions);
-      addressClientMap.put(serverAddress, client);
-      logger.debug("Created connection to {}.", serverAddress.toString());
-      logger.debug("Number of connections opened are {}.",
-          addressClientMap.size());
+      if (credential != null) {
+        List<MongoCredential> credentialList = Arrays.asList(credential);
+        client = new MongoClient(addresses, credentialList, clientOptions);
+      } else {
+        client = new MongoClient(addresses, clientOptions);
+      }
+      addressClientMap.put(key, client);
+      logger.debug("Created connection to {}.", key.toString());
+      logger.debug("Number of open connections {}.", addressClientMap.size());
     }
     return client;
   }

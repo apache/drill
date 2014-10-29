@@ -165,19 +165,22 @@ public class MongoGroupScan extends AbstractGroupScan implements
   }
 
   private boolean isShardedCluster(MongoClient client) {
-    // need to check better way of identifying
-    List<String> databaseNames = client.getDatabaseNames();
-    return databaseNames.contains(CONFIG);
+    DB db = client.getDB(scanSpec.getDbName());
+    String msg = db.command("isMaster").getString("msg");
+    return msg == null ? false : msg.equals("isdbgrid");
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   private void init() throws IOException {
-    MongoClient client = null;
     try {
-      MongoClientURI clientURI = new MongoClientURI(
-          this.storagePluginConfig.getConnection());
-      client = new MongoClient(clientURI);
-
+      List<String> h = storagePluginConfig.getHosts();
+      List<ServerAddress> addresses = Lists.newArrayList();
+      for (String host : h) {
+        addresses.add(new ServerAddress(host));
+      }
+      MongoClient client = MongoCnxnManager.getClient(addresses,
+          storagePluginConfig.getMongoOptions(),
+          storagePluginConfig.getMongoCrendials());
       chunksMapping = Maps.newHashMap();
       chunksInverseMapping = Maps.newLinkedHashMap();
       if (isShardedCluster(client)) {
@@ -268,7 +271,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
       } else {
         String chunkName = scanSpec.getDbName() + "."
             + scanSpec.getCollectionName();
-        List<String> hosts = clientURI.getHosts();
+        List<String> hosts = storagePluginConfig.getHosts();
         Set<ServerAddress> addressList = getPreferredHosts(client, hosts);
         if (addressList == null) {
           addressList = Sets.newHashSet();
@@ -289,10 +292,6 @@ public class MongoGroupScan extends AbstractGroupScan implements
       }
     } catch (UnknownHostException e) {
       throw new DrillRuntimeException(e.getMessage(), e);
-    } finally {
-      if (client != null) {
-        client.close();
-      }
     }
 
   }
@@ -475,7 +474,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
         addresses.add(new ServerAddress(host));
       }
       MongoClient client = MongoCnxnManager.getClient(addresses,
-          clientURI.getOptions());
+          clientURI.getOptions(), clientURI.getCredentials());
       DB db = client.getDB(scanSpec.getDbName());
       DBCollection collection = db.getCollectionFromString(scanSpec
           .getCollectionName());
