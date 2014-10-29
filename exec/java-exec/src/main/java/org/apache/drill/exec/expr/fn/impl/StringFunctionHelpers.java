@@ -108,23 +108,21 @@ public class StringFunctionHelpers {
       return nfeI(start, end, buffer);
     }
 
-    int radix = 10;
-    int max = MAX_INT / radix;
     int result = 0;
     int digit;
 
     while (readIndex < end) {
-      digit = Character.digit(buffer.getByte(readIndex++),radix);
+      digit = Character.digit(buffer.getByte(readIndex++), RADIX);
       //not valid digit.
       if (digit == -1) {
         return nfeI(start, end, buffer);
       }
       //overflow
-      if (max > result) {
+      if (MAX_INT > result) {
         return nfeI(start, end, buffer);
       }
 
-      int next = result * radix - digit;
+      int next = result * RADIX - digit;
 
       //overflow
       if (next > result) {
@@ -199,7 +197,6 @@ public class StringFunctionHelpers {
     long index = memoryAddress + start;
     final long endIndex = memoryAddress + end;
     int digit = 0;
-    int radix = 10; // Base 10 digits
 
     // Stores three fields (year, month, day)
     int[] dateFields = new int[3];
@@ -207,7 +204,7 @@ public class StringFunctionHelpers {
     int value = 0;
 
     while (dateIndex < 3 && index < endIndex) {
-      digit = Character.digit(PlatformDependent.getByte(index++), radix);
+      digit = Character.digit(PlatformDependent.getByte(index++), RADIX);
 
       if (digit == -1) {
         dateFields[dateIndex++] = value;

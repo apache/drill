@@ -507,4 +507,9 @@ public class TestExampleQueries extends BaseTestQuery{
     assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
+
+  @Test
+  public void testTextQueries() throws Exception {
+    test("select cast('285572516' as int) from cp.`tpch/nation.parquet` limit 1");
+  }
 }
