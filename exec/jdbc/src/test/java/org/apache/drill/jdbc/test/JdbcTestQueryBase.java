@@ -26,6 +26,7 @@ import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTest;
 import org.junit.Rule;
@@ -52,6 +53,7 @@ public class JdbcTestQueryBase extends JdbcTest {
         Stopwatch watch = new Stopwatch().start();
         Statement s = c.createStatement();
         ResultSet r = s.executeQuery(sql);
+        System.out.println(String.format("QueryId: %s", ((DrillResultSet) r).getQueryId()));
         boolean first = true;
         while (r.next()) {
           ResultSetMetaData md = r.getMetaData();
