@@ -102,7 +102,7 @@ $(window).load(function () {
         // nodes
         for (var i = 0; i < ps.length; i++) {
             g.addNode(ps[i][0], {
-                label: ps[i][2],
+                label: ps[i][2] + " " + ps[i][0],
                 fragment: parseInt(ps[i][0].split("-")[0])
             });
         }
@@ -138,7 +138,7 @@ $(window).load(function () {
             svgNodes.each(function(u) {
                 var fc = d3.rgb(globalconfig.majorcolorscale(graph.node(u).fragment));
                 d3.select(this).select("rect")
-                    .style("fill", graph.node(u).label.endsWith("Exchange") ? "white" : fc)
+                    .style("fill", graph.node(u).label.split(" ")[0].endsWith("Exchange") ? "white" : fc)
                     .style("stroke", "#000")
                     .style("stroke-width", "1px")
             });
