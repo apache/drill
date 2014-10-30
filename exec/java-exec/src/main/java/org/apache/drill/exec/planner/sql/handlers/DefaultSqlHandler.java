@@ -230,10 +230,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * Add ProducerConsumer after each scan if the option is set
      * Use the configured queueSize
      */
+    /* DRILL-1617 Disabling ProducerConsumer as it produces incorrect results
     if (context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER.getOptionName()).bool_val) {
       long queueSize = context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE.getOptionName()).num_val;
       phyRelNode = ProducerConsumerPrelVisitor.addProducerConsumerToScans(phyRelNode, (int) queueSize);
     }
+    */
 
 
     /* 6.)
