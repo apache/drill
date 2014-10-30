@@ -200,7 +200,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     // within a single query, it also breaks up all expressions with complex outputs into their own project operations.
     // It currently appears to be producing good plans, but for the flatten case it is revealing execution errors in the
     // project operator.
-//    phyRelNode = ((Prel) phyRelNode).accept(new SplitUpComplexExpressions(planner.getTypeFactory(), context.getDrillOperatorTable(), context.getPlannerSettings().functionImplementationRegistry), null);
+    phyRelNode = ((Prel) phyRelNode).accept(new SplitUpComplexExpressions(planner.getTypeFactory(), context.getDrillOperatorTable(), context.getPlannerSettings().functionImplementationRegistry), null);
     phyRelNode = ((Prel) phyRelNode).accept(new RewriteProjectToFlatten(planner.getTypeFactory(), context.getDrillOperatorTable()), null);
     // Definitely before this one
     /*

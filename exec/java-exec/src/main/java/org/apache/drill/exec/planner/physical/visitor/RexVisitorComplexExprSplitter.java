@@ -98,7 +98,7 @@ public class RexVisitorComplexExprSplitter extends RexVisitorImpl<RexNode> {
       complexExprs.add(call.clone(new RelDataTypeDrillImpl(new RelDataTypeHolder(),factory), newOps));
       return ret;
     }
-    return call.clone(new RelDataTypeDrillImpl(new RelDataTypeHolder(),factory), newOps);
+    return call.clone(call.getType(), newOps);
   }
 
   @Override
