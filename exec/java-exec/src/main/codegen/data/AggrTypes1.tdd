@@ -48,10 +48,8 @@
      ]
    },
    {className: "Max", funcName: "max", types: [
-      {inputType: "Bit", outputType: "Bit", runningType: "Bit", major: "Numeric"},
       {inputType: "Int", outputType: "Int", runningType: "Int", major: "Numeric"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableBit", outputType: "NullableBit", runningType: "Bit", major: "Numeric"},
       {inputType: "NullableInt", outputType: "NullableInt", runningType: "Int", major: "Numeric"},
       {inputType: "NullableBigInt", outputType: "NullableBigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "Float4", outputType: "Float4", runningType: "Float4", major: "Numeric"},
@@ -79,10 +77,8 @@
      ]
    },
    {className: "Sum", funcName: "sum", types: [
-      {inputType: "Bit", outputType: "Bit", runningType: "Bit", major: "Numeric"},
       {inputType: "Int", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableBit", outputType: "NullableBit", runningType: "Bit", major: "Numeric"},
       {inputType: "NullableInt", outputType: "NullableBigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "NullableBigInt", outputType: "NullableBigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "Float4", outputType: "Float8", runningType: "Float8", major: "Numeric"},
@@ -98,10 +94,10 @@
      ]
    },
    {className: "Count", funcName: "count", types: [
-      {inputType: "Bit", outputType: "Bit", runningType: "Bit", major: "Numeric"},
+      {inputType: "Bit", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "Int", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableBit", outputType: "Bit", runningType: "Bit", major: "Numeric"},
+      {inputType: "NullableBit", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "NullableInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "NullableBigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "Float4", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
