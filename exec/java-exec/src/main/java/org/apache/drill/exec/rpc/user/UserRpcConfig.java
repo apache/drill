@@ -36,5 +36,5 @@ public class UserRpcConfig {
       .add(RpcType.QUERY_RESULT, QueryResult.class, RpcType.ACK, Ack.class) //bit to user
       .build();
 
-  public static int RPC_VERSION = 2;
+  public static int RPC_VERSION = 3;
 }

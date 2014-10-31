@@ -35,7 +35,7 @@ public class DataRpcConfig {
       .add(RpcType.REQ_RECORD_BATCH, FragmentRecordBatch.class, RpcType.ACK, Ack.class)
       .build();
 
-  public static int RPC_VERSION = 2;
+  public static int RPC_VERSION = 3;
 
   public static final Response OK = new Response(RpcType.ACK, Acks.OK);
 }
