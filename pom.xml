@@ -100,6 +100,17 @@
       </snapshots>
     </repository>
 
+    <repository>
+      <id>mapr-drill-thirdparty</id>
+      <name>MapR Drill Third Party Artifacts</name>
+      <url>http://repository.mapr.com/nexus/content/repositories/drill/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
 
     <repository>
       <id>pentaho</id>
@@ -124,17 +135,6 @@
       </releases>
       <snapshots>
         <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>mapr-drill-thirdparty</id>
-      <name>MapR Drill Third Party Artifacts</name>
-      <url>http://repository.mapr.com/nexus/content/repositories/drill/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
       </snapshots>
     </repository>
   </repositories>
