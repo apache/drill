@@ -53,9 +53,11 @@ public class DotDrillUtil {
     return getDrillFiles(fs, fs.getUnderlying().globStatus(new Path(root, "*.drill")), types);
   }
 
-  public static List<DotDrillFile> getDotDrills(DrillFileSystem fs, Path root, String name, DotDrillType... types) throws IOException{
-    return getDrillFiles(fs, fs.getUnderlying().globStatus(new Path(root, name + DotDrillType.DOT_DRILL_GLOB)), types);
-  }
+    public static List<DotDrillFile> getDotDrills(DrillFileSystem fs, Path root, String name, DotDrillType... types) throws IOException{
+      if(!name.endsWith(".drill")) {
+        name = name + DotDrillType.DOT_DRILL_GLOB;
+      }
 
-
+      return getDrillFiles(fs, fs.getUnderlying().globStatus(new Path(root, name)), types);
+    }
 }

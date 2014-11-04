@@ -27,6 +27,14 @@ import org.junit.Test;
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
+  @Test // see DRILL-985
+  public void testViewFileName() throws Exception {
+    test("use dfs.tmp");
+    test("create view nation_view as select * from cp.`tpch/nation.parquet`;");
+    test("select * from dfs.tmp.`nation_view.view.drill`");
+    test("drop view nation_view");
+  }
+
   @Test
   public void testParquetComplex() throws Exception {
     test("select recipe from cp.`parquet/complex.parquet`");
