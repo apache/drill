@@ -47,22 +47,43 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder length;
-  @Workspace ByteBuf buffer;     
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
   }
 
   public void eval() {
+
+  <#if type.to == 'VarChar'>
+
+    //Do 1st scan to counter # of character in string.
+    int charCount = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(in.buffer, in.start, in.end);
+
     //if input length <= target_type length, do nothing
-    //else truncate based on target_type length.     
+    //else if target length = 0, it means cast wants all the characters in the input. Do nothing.
+    //else truncate based on target_type length.
     out.buffer = in.buffer;
     out.start =  in.start;
-    if (in.end - in.start <= length.value) {
+    if (charCount <= length.value || length.value == 0 ) {
+      out.end = in.end;
+    } else {
+      out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(in.buffer, in.start, in.end, (int)length.value);
+    }
+
+  <#elseif type.to == 'VarBinary'>
+
+    //if input length <= target_type length, do nothing
+    //else if target length = 0, it means cast wants all the bytes in the input. Do nothing.
+    //else truncate based on target_type length.
+    out.buffer = in.buffer;
+    out.start =  in.start;
+    if (in.end - in.start <= length.value || length.value == 0 ) {
       out.end = in.end;
     } else {
       out.end = out.start + (int) length.value;
     }
+  </#if>
+
   }      
 }
 

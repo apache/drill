@@ -542,4 +542,33 @@ public class TestExampleQueries extends BaseTestQuery{
     assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
+
+  @Test // DRILL-1470
+  public void testCastToVarcharWithLength() throws Exception {
+    // cast from varchar with unknown length to a fixed length.
+    int actualRecordCount = testSql("select first_name from cp.`employee.json` where cast(first_name as varchar(2)) = 'Sh'");
+    int expectedRecordCount = 27;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+    // cast from varchar with unknown length to varchar(5), then to varchar(10), then to varchar(2). Should produce the same result as the first query.
+    actualRecordCount = testSql("select first_name from cp.`employee.json` where cast(cast(cast(first_name as varchar(5)) as varchar(10)) as varchar(2)) = 'Sh'");
+    expectedRecordCount = 27;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+
+    // this long nested cast expression should be essentially equal to substr(), meaning the query should return every row in the table.
+    actualRecordCount = testSql("select first_name from cp.`employee.json` where cast(cast(cast(first_name as varchar(5)) as varchar(10)) as varchar(2)) = substr(first_name, 1, 2)");
+    expectedRecordCount = 1155;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+    // cast is applied to a column from parquet file.
+    actualRecordCount = testSql("select n_name from cp.`tpch/nation.parquet` where cast(n_name as varchar(2)) = 'UN'");
+    expectedRecordCount = 2;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+  }
+
 }

@@ -523,7 +523,7 @@ public class ExpressionTreeMaterializer {
       MajorType newMajor = e.getMajorType();
       MinorType newMinor = input.getMajorType().getMinorType();
 
-      if (castEqual(e.getPosition(), newMajor, input.getMajorType())) {
+      if (castEqual(e.getPosition(), input.getMajorType(), newMajor)) {
         return input; // don't do pointless cast.
       }
 
@@ -601,11 +601,15 @@ public class ExpressionTreeMaterializer {
       case VAR16CHAR:
       case VARBINARY:
       case VARCHAR:
-        if (to.getWidth() < from.getWidth() && to.getWidth() > 0) {
-          this.errorCollector.addGeneralError(pos, "Casting from a longer variable length type to a shorter variable length type is not currently supported.");
-          return false;
-        } else {
+        // We could avoid redundant cast:
+        // 1) when "to" length is no smaller than "from" length and "from" length is known (>0),
+        // 2) or "to" length is unknown (0 means unknown length?).
+        // Case 1 and case 2 mean that cast will do nothing.
+        // In other cases, cast is required to trim the "from" according to "to" length.
+        if ( (to.getWidth() >= from.getWidth() && from.getWidth() > 0) || to.getWidth() == 0) {
           return true;
+        } else {
+          return false;
         }
 
       default:

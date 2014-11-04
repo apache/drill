@@ -50,7 +50,9 @@
     {from: "Float8", to: "VarBinary", major: "TargetVarlen", javaType: "Double", bufferLength:"100"},     
     
     {from: "VarBinary", to: "VarChar", major: "SrcVarlenTargetVarlen"},
+    {from: "VarChar", to: "VarChar", major: "SrcVarlenTargetVarlen"},
     {from: "VarChar", to: "VarBinary", major: "SrcVarlenTargetVarlen"},
+    {from: "VarBinary", to: "VarBinary", major: "SrcVarlenTargetVarlen"},
 
     {from: "Date", to: "TimeStamp", major: "Date"},
     {from: "Date", to: "TimeStampTZ", major: "Date"},
