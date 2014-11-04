@@ -53,12 +53,15 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.RepeatedVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JExpr;
 
+// TODO - handle the case where a user tries to flatten a scalar, should just act as a project all of the columns exactly
+// as they come in
 public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenRecordBatch.class);
 
@@ -251,8 +254,19 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     incoming.buildSchema();
     if ( ! fastSchemaCalled ) {
       for (VectorWrapper vw : incoming) {
-        ValueVector vector = container.addOrGet(vw.getField());
-        container.add(vector);
+        if (vw.getField().getPath().equals(popConfig.getColumn())) {
+          if (vw.getValueVector() instanceof MapVector) {
+            // fast schema upstream did not report a repeated type
+            // assume it will be repeated in the actual results and it will fail in execution if it is not
+            ValueVector vector = container.addOrGet(vw.getField());
+            container.add(vector);
+          } else {
+            container.add(getFlattenFieldTransferPair().getTo());
+          }
+        } else {
+          ValueVector vector = container.addOrGet(vw.getField());
+          container.add(vector);
+        }
       }
       fastSchemaCalled = true;
       container.buildSchema(SelectionVectorMode.NONE);
@@ -262,6 +276,33 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       setupNewSchema();
       return IterOutcome.OK_NEW_SCHEMA;
     }
+  }
+
+  /**
+   * The data layout is the same for the actual data within a repeated field, as it is in a scalar vector for
+   * the same sql type. For example, a repeated int vector has a vector of offsets into a regular int vector to
+   * represent the lists. As the data layout for the actual values in the same in the repeated vector as in the
+   * scalar vector of the same type, we can avoid making individual copies for the column being flattened, and just
+   * use vector copies between the inner vector of the repeated field to the resulting scalar vector from the flatten
+   * operation. This is completed after we determine how many records will fit (as we will hit either a batch end, or
+   * the end of one of the other vectors while we are copying the data of the other vectors alongside each new flattened
+   * value coming out of the repeated field.)
+   */
+  private TransferPair getFlattenFieldTransferPair() {
+    ValueVector flattenField = incoming.getValueAccessorById(
+        incoming.getSchema().getColumn(
+            incoming.getValueVectorId(
+                popConfig.getColumn()).getFieldIds()[0]).getValueClass(),
+        incoming.getValueVectorId(popConfig.getColumn()).getFieldIds()).getValueVector();
+
+    TransferPair tp;
+    if (flattenField instanceof RepeatedMapVector) {
+      tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap();
+    } else {
+      ValueVector vvIn = ((RepeatedVector)flattenField).getAccessor().getAllChildValues();
+      tp = vvIn.getTransferPair();
+    }
+    return tp;
   }
 
   @Override
@@ -275,25 +316,14 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     final ClassGenerator<Flattener> cg = CodeGenerator.getRoot(Flattener.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     IntOpenHashSet transferFieldIds = new IntOpenHashSet();
 
-    RepeatedVector flattenField = ((RepeatedVector) incoming.getValueAccessorById(
-          incoming.getSchema().getColumn(
-              incoming.getValueVectorId(
-                  popConfig.getColumn()).getFieldIds()[0]).getValueClass(),
-          incoming.getValueVectorId(popConfig.getColumn()).getFieldIds()).getValueVector());
-
     NamedExpression namedExpression = new NamedExpression(popConfig.getColumn(), new FieldReference(popConfig.getColumn()));
     LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
     ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
     TypedFieldId id = vectorRead.getFieldId();
     Preconditions.checkNotNull(incoming);
 
-    TransferPair tp = null;
-    if (flattenField instanceof RepeatedMapVector) {
-      tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap();
-    } else {
-      ValueVector vvIn = flattenField.getAccessor().getAllChildValues();
-      tp = vvIn.getTransferPair();
-    }
+    TransferPair tp = getFlattenFieldTransferPair();
+
     transfers.add(tp);
     container.add(tp.getTo());
     transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
