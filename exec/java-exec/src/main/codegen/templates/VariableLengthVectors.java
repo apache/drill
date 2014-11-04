@@ -451,6 +451,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
 
     public boolean setValueLengthSafe(int index, int length) {
+      int offset = offsetVector.getAccessor().get(index);
+      if(data.capacity() < offset + length ) {
+        decrementAllocationMonitor();
+        return false;
+      }
       return offsetVector.getMutator().setSafe(index + 1, offsetVector.getAccessor().get(index) + length);
     }
 
