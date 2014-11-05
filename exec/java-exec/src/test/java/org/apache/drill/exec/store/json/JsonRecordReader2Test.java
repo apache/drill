@@ -44,4 +44,11 @@ public class JsonRecordReader2Test extends BaseTestQuery{
   public void trySimpleQueryWithLimit() throws Exception{
     test("select * from cp.`limit/test1.json` limit 10");
   }
+
+  @Test// DRILL-1634 : retrieve an element in a nested array in a repeated map.  RepeatedMap (Repeated List (Repeated varchar))
+  public void testNestedArrayInRepeatedMap() throws Exception {
+    test("select a[0].b[0] from cp.`jsoninput/nestedArray.json`");
+    test("select a[0].b[1] from cp.`jsoninput/nestedArray.json`");
+    test("select a[1].b[1] from cp.`jsoninput/nestedArray.json`");  // index out of the range. Should return empty list.
+  }
 }

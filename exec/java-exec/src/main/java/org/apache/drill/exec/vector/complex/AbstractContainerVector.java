@@ -55,11 +55,17 @@ public abstract class AbstractContainerVector implements ValueVector{
 
     if (seg.isArray()) {
       if (seg.isLastPath()) {
-        return builder //
-          .remainder(seg) //
+        builder //
           .withIndex() //
-          .finalType(getLastPathType()) //
-          .build();
+          .finalType(getLastPathType());
+
+        // remainder starts with the 1st array segment in SchemaPath.
+        // only set remainder when it's the only array segment.
+        if (addToBreadCrumb) {
+          addToBreadCrumb = false;
+          builder.remainder(seg);
+        }
+        return builder.build();
       } else {
         if (addToBreadCrumb) {
           addToBreadCrumb = false;
