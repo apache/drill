@@ -119,6 +119,21 @@ public class HiveTable {
     return table;
   }
 
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder("Table(");
+
+    sb.append("dbName:");
+    sb.append(this.dbName);
+    sb.append(", ");
+
+    sb.append("tableName:");
+    sb.append(this.tableName);
+    sb.append(")");
+
+    return sb.toString();
+  }
+
   public static class HivePartition {
 
     @JsonIgnore
@@ -173,6 +188,15 @@ public class HiveTable {
     @JsonIgnore
     public Partition getPartition() {
       return partition;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("Partition(");
+      sb.append("values:");
+      sb.append(this.values);
+      sb.append(")");
+      return sb.toString();
     }
   }
 

@@ -24,6 +24,7 @@ import java.util.Map;
 
 import net.hydromatic.optiq.Schema.TableType;
 
+import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -67,6 +68,16 @@ public class HiveReadEntry {
   @JsonIgnore
   public List<Partition> getPartitions() {
     return partitionsUnwrapped;
+  }
+
+  @JsonIgnore
+  public HiveTable getHiveTableWrapper() {
+    return table;
+  }
+
+  @JsonIgnore
+  public List<HivePartition> getHivePartitionWrappers() {
+    return partitions;
   }
 
   @JsonIgnore

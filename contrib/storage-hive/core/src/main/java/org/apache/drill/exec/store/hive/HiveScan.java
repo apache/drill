@@ -68,16 +68,12 @@ public class HiveScan extends AbstractGroupScan {
   @JsonProperty("hive-table")
   public HiveReadEntry hiveReadEntry;
   @JsonIgnore
-  private final Table table;
-  @JsonIgnore
   private List<InputSplit> inputSplits = Lists.newArrayList();
   @JsonIgnore
   public HiveStoragePlugin storagePlugin;
   @JsonProperty("storage-plugin")
   public String storagePluginName;
 
-  @JsonIgnore
-  public List<Partition> partitions;
   @JsonIgnore
   private final Collection<DrillbitEndpoint> endpoints;
 
@@ -96,20 +92,16 @@ public class HiveScan extends AbstractGroupScan {
                   @JsonProperty("columns") List<SchemaPath> columns,
                   @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this.hiveReadEntry = hiveReadEntry;
-    this.table = hiveReadEntry.getTable();
     this.storagePluginName = storagePluginName;
     this.storagePlugin = (HiveStoragePlugin) pluginRegistry.getPlugin(storagePluginName);
     this.columns = columns;
-    this.partitions = hiveReadEntry.getPartitions();
     getSplits();
     endpoints = storagePlugin.getContext().getBits();
   }
 
   public HiveScan(HiveReadEntry hiveReadEntry, HiveStoragePlugin storagePlugin, List<SchemaPath> columns) throws ExecutionSetupException {
-    this.table = hiveReadEntry.getTable();
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
-    this.partitions = hiveReadEntry.getPartitions();
     this.storagePlugin = storagePlugin;
     getSplits();
     endpoints = storagePlugin.getContext().getBits();
@@ -123,10 +115,8 @@ public class HiveScan extends AbstractGroupScan {
     this.inputSplits = that.inputSplits;
     this.mappings = that.mappings;
     this.partitionMap = that.partitionMap;
-    this.partitions = that.partitions;
     this.storagePlugin = that.storagePlugin;
     this.storagePluginName = that.storagePluginName;
-    this.table = that.table;
   }
 
   public List<SchemaPath> getColumns() {
@@ -135,6 +125,8 @@ public class HiveScan extends AbstractGroupScan {
 
   private void getSplits() throws ExecutionSetupException {
     try {
+      List<Partition> partitions = hiveReadEntry.getPartitions();
+      Table table = hiveReadEntry.getTable();
       if (partitions == null || partitions.size() == 0) {
         Properties properties = MetaStoreUtils.getTableMetadata(table);
         JobConf job = new JobConf();
@@ -144,7 +136,8 @@ public class HiveScan extends AbstractGroupScan {
         for (Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
           job.set(entry.getKey(), entry.getValue());
         }
-        InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
+        InputFormat<?, ?> format = (InputFormat<?, ?>)
+            Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
         job.setInputFormat(format.getClass());
         Path path = new Path(table.getSd().getLocation());
         FileSystem fs = FileSystem.get(job);
@@ -305,10 +298,10 @@ public class HiveScan extends AbstractGroupScan {
 
   @Override
   public String toString() {
-    return "HiveScan [table=" + table
+    return "HiveScan [table=" + hiveReadEntry.getHiveTableWrapper()
         + ", inputSplits=" + inputSplits
         + ", columns=" + columns
-        + ", partitions= " + partitions +"]";
+        + ", partitions= " + hiveReadEntry.getHivePartitionWrappers() +"]";
   }
 
   @Override
@@ -325,7 +318,7 @@ public class HiveScan extends AbstractGroupScan {
 
   // Return true if the current table is partitioned false otherwise
   public boolean supportsPartitionFilterPushdown() {
-    List<FieldSchema> partitionKeys = table.getPartitionKeys();
+    List<FieldSchema> partitionKeys = hiveReadEntry.getTable().getPartitionKeys();
     if (partitionKeys == null || partitionKeys.size() == 0) {
       return false;
     }
