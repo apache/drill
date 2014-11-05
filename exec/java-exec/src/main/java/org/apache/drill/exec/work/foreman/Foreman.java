@@ -63,6 +63,7 @@ import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.ErrorHelper;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
+import org.eigenbase.sql.parser.SqlParseException;
 
 /**
  * Foreman manages all queries where this is the driving/root node.
@@ -383,8 +384,10 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       PhysicalPlan plan = sqlWorker.getPlan(sql, textPlan);
       fragmentManager.getStatus().setPlanText(textPlan.value);
       runPhysicalPlan(plan);
+    } catch (SqlParseException ex) {
+      fail("Failure while parsing sql : " + ex.getMessage(), ex);
     } catch(Exception e) {
-      fail("Failure while parsing sql.", e);
+      fail("Failure while running sql.", e);
     }
   }
 
