@@ -25,19 +25,10 @@
 
   <dependencies>
     <dependency>
-      <groupId>sqlline</groupId>
-      <artifactId>sqlline</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-protocol</artifactId>
       <version>${project.version}</version>
       <classifier>rebuffed</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.drill.contrib.data</groupId>
-      <artifactId>tpch-sample-data</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -57,21 +48,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill.exec</groupId>
-      <artifactId>drill-jdbc-all</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.drill.contrib.storage-hive</groupId>
-      <artifactId>drill-storage-hive-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.drill.contrib</groupId>
-      <artifactId>drill-mongo-storage</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
     </dependency>
@@ -83,18 +59,6 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.drill.contrib</groupId>
-      <artifactId>drill-storage-hbase</artifactId>
-      <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
 
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
@@ -146,6 +110,80 @@
     </plugins>
   </build>
   <profiles>
+
+    <profile>
+      <id>build-jdbc-all</id>
+      <activation>
+        <property>
+          <name>!skipJdbcAll</name>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.drill.exec</groupId>
+          <artifactId>drill-jdbc-all</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>build-contrib</id>
+      <activation>
+        <property>
+          <name>!skipContrib</name>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>sqlline</groupId>
+          <artifactId>sqlline</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.drill.contrib.data</groupId>
+          <artifactId>tpch-sample-data</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.drill.contrib</groupId>
+          <artifactId>drill-mongo-storage</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.drill.contrib</groupId>
+          <artifactId>drill-storage-hbase</artifactId>
+          <version>${project.version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>org.apache.hadoop</groupId>
+              <artifactId>hadoop-core</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.drill.contrib.storage-hive</groupId>
+          <artifactId>drill-storage-hive-core</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>build-interpreter</id>
+      <activation>
+        <property>
+          <name>!skipInterpreter</name>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.drill.exec</groupId>
+          <artifactId>drill-interpreter</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
     <profile>
       <id>default-hadoop</id>
       <activation>
@@ -162,10 +200,6 @@
       <id>mapr</id>
       <dependencies>
 
-        <dependency>
-          <groupId>com.mapr.hadoop</groupId>
-          <artifactId>maprfs</artifactId>
-        </dependency>
         <dependency>
           <groupId>com.mapr.hadoop</groupId>
           <artifactId>maprfs</artifactId>

@@ -181,6 +181,8 @@
             <exclude>**/*.tdd</exclude>
             <exclude>**/*.project</exclude>
             <exclude>**/*.checkstyle</exclude>
+            <exclude>**/.classpath</exclude>
+            <exclude>**/.settings/**</exclude>
             <exclude>.*/**</exclude>
             <exclude>**/*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
@@ -1367,11 +1369,21 @@
         </repository>
       </repositories>
     </profile>
+    <profile>
+      <id>build-contrib</id>
+      <activation>
+        <property>
+          <name>!skipContrib</name>
+        </property>
+      </activation>
+      <modules>
+        <module>contrib</module>
+      </modules>
+    </profile>
   </profiles>
   <modules>
     <module>protocol</module>
     <module>common</module>
-    <module>contrib</module>
     <module>exec</module>
     <module>distribution</module>
   </modules>
