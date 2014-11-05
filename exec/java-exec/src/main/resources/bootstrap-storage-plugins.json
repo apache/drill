@@ -47,6 +47,11 @@
           extensions: [ "csv" ],
           delimiter: ","
         },
+        "tsv" : {
+                  type: "text",
+                  extensions: [ "tsv" ],
+                  delimiter: "\t"
+        },
         "json" : {
           type: "json"
         },

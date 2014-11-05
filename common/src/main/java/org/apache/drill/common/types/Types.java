@@ -18,7 +18,9 @@
 package org.apache.drill.common.types;
 
 import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
+import static org.apache.drill.common.types.TypeProtos.MinorType.*;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -367,6 +369,57 @@ public class Types {
       return withMode(MinorType.LATE, mode);
     default:
       throw new UnsupportedOperationException("Could not determine type: " + typeName);
+    }
+  }
+
+  public static String getNameOfMinorType(MinorType type) {
+    switch (type) {
+      case BIT:
+        return "bool";
+      case TINYINT:
+        return "tinyint";
+      case UINT1:
+        return "uint1";
+      case SMALLINT:
+        return "smallint";
+      case UINT2:
+        return "uint2";
+      case INT:
+        return "int";
+      case UINT4:
+        return "uint4";
+      case BIGINT:
+        return "bigint";
+      case UINT8:
+        return "uint8";
+      case FLOAT4:
+        return "float";
+      case FLOAT8:
+        return "double";
+      case DECIMAL9:
+        return "decimal";
+      case DECIMAL18:
+        return "decimal";
+      case DECIMAL28SPARSE:
+        return "decimal";
+      case DECIMAL38SPARSE:
+        return "decimal";
+      case VARCHAR:
+        return "varchar";
+      case VAR16CHAR:
+        return "utf16";
+      case DATE:
+        return "date";
+      case TIME:
+        return "time";
+      case TIMESTAMP:
+        return "timestamp";
+      case VARBINARY:
+        return "binary";
+      case LATE:
+        throw new DrillRuntimeException("The late type should never appear in execution or an SQL query, so it does not have a name to refer to it.");
+      default:
+        throw new DrillRuntimeException("Unrecognized type " + type);
     }
   }
 

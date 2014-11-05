@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.HyperVectorValueIterator;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.BatchSchema;
@@ -52,8 +53,6 @@ public class TestParquetWriter extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetWriter.class);
 
   static FileSystem fs;
-
-  private static final boolean VERBOSE_DEBUG = false;
 
   @BeforeClass
   public static void initFs() throws Exception {
@@ -90,17 +89,9 @@ public class TestParquetWriter extends BaseTestQuery {
         "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as COMMITDATE, cast(L_RECEIPTDATE as DATE) AS RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
     String validationSelection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
         "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE,COMMITDATE ,RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
+
     String inputTable = "cp.`tpch/lineitem.parquet`";
-    String query = String.format("SELECT %s FROM %s", selection, inputTable);
-    List<QueryResultBatch> expected = testSqlWithResults(query);
-    BatchSchema schema = null;
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    List<Map> expectedRecords = new ArrayList<>();
-    // read the data out of the results, the error manifested itself upon call of getObject on the vectors as they had contained deadbufs
-    addToMaterializedResults(expectedRecords, expected, loader, schema);
-    for (QueryResultBatch result : expected) {
-      result.release();
-    }
+    runTestAndValidate(selection, validationSelection, inputTable, "drill_929");
 }
 
   @Test
@@ -184,7 +175,6 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
-  @Ignore
   public void testRepeatedBool() throws Exception {
     String inputTable = "cp.`parquet/repeated_bool_data.json`";
     runTestAndValidate("*", "*", inputTable, "repeated_bool_parquet");
@@ -208,11 +198,9 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testMulipleRowGroups() throws Exception {
     try {
-      //test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 1*1024*1024));
+      test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 1*1024*1024));
       String selection = "mi";
       String inputTable = "cp.`customer.json`";
-      int count = testRunAndPrint(UserBitShared.QueryType.SQL, "select mi from cp.`customer.json`");
-      System.out.println(count);
       runTestAndValidate(selection, selection, inputTable, "foodmart_customer_parquet");
     } finally {
       test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 512*1024*1024));
@@ -228,77 +216,29 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate(selection, validateSelection, inputTable, "foodmart_employee_parquet");
   }
 
-  public void compareParquetReaders(String selection, String table) throws Exception {
-    test("alter system set `store.parquet.use_new_reader` = true");
-    List<QueryResultBatch> expected = testSqlWithResults("select " + selection + " from " + table);
-
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    BatchSchema schema = null;
-
-    List<Map> expectedRecords = new ArrayList<>();
-    addToMaterializedResults(expectedRecords, expected, loader, schema);
-
-    test("alter system set `store.parquet.use_new_reader` = false");
-    List<QueryResultBatch> results = testSqlWithResults("select " + selection + " from " + table);
-
-    List<Map> actualRecords = new ArrayList<>();
-    addToMaterializedResults(actualRecords, results, loader, schema);
-    compareResults(expectedRecords, actualRecords);
-    for (QueryResultBatch result : results) {
-      result.release();
-    }
-    for (QueryResultBatch result : expected) {
-      result.release();
-    }
-  }
-
   public void compareParquetReadersColumnar(String selection, String table) throws Exception {
-    test("alter system set `store.parquet.use_new_reader` = true");
-    List<QueryResultBatch> expected = testSqlWithResults("select " + selection + " from " + table);
+    String query = "select " + selection + " from " + table;
+    testBuilder()
+        .ordered()
+        .sqlQuery(query)
+        .optionSettingQueriesForTestQuery("alter system set `store.parquet.use_new_reader` = false")
+        .sqlBaselineQuery(query)
+        .optionSettingQueriesForBaseline("alter system set `store.parquet.use_new_reader` = true")
+        .build().run();
 
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    BatchSchema schema = null;
-
-    Map<String, List> expectedSuperVectors = addToCombinedVectorResults(expected, loader, schema);
-
-    test("alter system set `store.parquet.use_new_reader` = false");
-    List<QueryResultBatch> results = testSqlWithResults("select " + selection + " from " + table);
-
-    Map<String, List> actualSuperVectors = addToCombinedVectorResults(results, loader, schema);
-    compareMergedVectors(expectedSuperVectors, actualSuperVectors);
-    for (QueryResultBatch result : results) {
-      result.release();
-    }
-    for (QueryResultBatch result : expected) {
-      result.release();
-    }
   }
 
   public void compareParquetReadersHyperVector(String selection, String table) throws Exception {
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    BatchSchema schema = null;
 
-    // TODO - It didn't seem to respect the max width per node setting, so I went in and modified the SimpleParalellizer directly.
-    // I backed out the changes after the test passed.
-//    test("alter system set `planner.width.max_per_node` = 1");
-    test("alter system set `store.parquet.use_new_reader` = false");
     String query = "select " + selection + " from " + table;
-    List<QueryResultBatch> results = testSqlWithResults(query);
-
-    Map<String, HyperVectorValueIterator> actualSuperVectors = addToHyperVectorMap(results, loader, schema);
-
-    test("alter system set `store.parquet.use_new_reader` = true");
-    List<QueryResultBatch> expected = testSqlWithResults(query);
-
-    Map<String, HyperVectorValueIterator> expectedSuperVectors = addToHyperVectorMap(expected, loader, schema);
-
-    compareHyperVectors(expectedSuperVectors, actualSuperVectors);
-    for (QueryResultBatch result : results) {
-      result.release();
-    }
-    for (QueryResultBatch result : expected) {
-      result.release();
-    }
+    testBuilder()
+        .ordered()
+        .highPerformanceComparison()
+        .sqlQuery(query)
+        .optionSettingQueriesForTestQuery("alter system set `store.parquet.use_new_reader` = false")
+        .sqlBaselineQuery(query)
+        .optionSettingQueriesForBaseline("alter system set `store.parquet.use_new_reader` = true")
+        .build().run();
   }
 
   @Ignore
@@ -394,312 +334,10 @@ public class TestParquetWriter extends BaseTestQuery {
     String validateQuery = String.format("SELECT %s FROM " + outputFile, validationSelection);
     test(create);
 
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    BatchSchema schema = null;
-
-    List<QueryResultBatch> expected = testSqlWithResults(query);
-    List<Map> expectedRecords = new ArrayList<>();
-    addToMaterializedResults(expectedRecords, expected, loader, schema);
-
-    List<QueryResultBatch> results = testSqlWithResults(validateQuery);
-    List<Map> actualRecords = new ArrayList<>();
-    addToMaterializedResults(actualRecords, results, loader, schema);
-
-    compareResults(expectedRecords, actualRecords);
-    for (QueryResultBatch result : results) {
-      result.release();
-    }
-    for (QueryResultBatch result : expected) {
-      result.release();
-    }
-  }
-
-  public void compareHyperVectors(Map<String, HyperVectorValueIterator> expectedRecords,
-                                  Map<String, HyperVectorValueIterator> actualRecords) throws Exception {
-    for (String s : expectedRecords.keySet()) {
-      assertEquals(expectedRecords.get(s).getTotalRecords(), actualRecords.get(s).getTotalRecords());
-      HyperVectorValueIterator expectedValues = expectedRecords.get(s);
-      HyperVectorValueIterator actualValues = actualRecords.get(s);
-      int i = 0;
-      while (expectedValues.hasNext()) {
-        compareValues(expectedValues.next(), actualValues.next(), i, s);
-        i++;
-      }
-    }
-    for (HyperVectorValueIterator hvi : expectedRecords.values()) {
-      for (ValueVector vv : hvi.hyperVector.getValueVectors()) {
-        vv.clear();
-      }
-    }
-    for (HyperVectorValueIterator hvi : actualRecords.values()) {
-      for (ValueVector vv : hvi.hyperVector.getValueVectors()) {
-        vv.clear();
-      }
-    }
-  }
-
-  public void compareMergedVectors(Map<String, List> expectedRecords, Map<String, List> actualRecords) throws Exception {
-    for (String s : expectedRecords.keySet()) {
-      assertEquals(expectedRecords.get(s).size(), actualRecords.get(s).size());
-      List expectedValues = expectedRecords.get(s);
-      List actualValues = actualRecords.get(s);
-      for (int i = 0; i < expectedValues.size(); i++) {
-        compareValues(expectedValues.get(i), actualValues.get(i), i, s);
-      }
-    }
-  }
-
-  public Map<String, HyperVectorValueIterator> addToHyperVectorMap(List<QueryResultBatch> records, RecordBatchLoader loader,
-                                                      BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
-    // TODO - this does not handle schema changes
-    Map<String, HyperVectorValueIterator> combinedVectors = new HashMap();
-
-    long totalRecords = 0;
-    QueryResultBatch batch;
-    int size = records.size();
-    for (int i = 0; i < size; i++) {
-      batch = records.get(i);
-      loader = new RecordBatchLoader(getAllocator());
-      loader.load(batch.getHeader().getDef(), batch.getData());
-      logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
-      totalRecords += loader.getRecordCount();
-      for (VectorWrapper w : loader) {
-        String field = w.getField().toExpr();
-        if ( ! combinedVectors.containsKey(field)) {
-          MaterializedField mf = w.getField();
-          ValueVector[] vvList = (ValueVector[]) Array.newInstance(mf.getValueClass(), 1);
-          vvList[0] = w.getValueVector();
-          combinedVectors.put(mf.getPath().toExpr(), new HyperVectorValueIterator(mf, new HyperVectorWrapper(mf,
-              vvList)));
-        } else {
-          combinedVectors.get(field).hyperVector.addVector(w.getValueVector());
-        }
-
-      }
-    }
-    for (HyperVectorValueIterator hvi : combinedVectors.values()) {
-      hvi.determineTotalSize();
-    }
-    return combinedVectors;
-  }
-
-  public Map<String, List> addToCombinedVectorResults(List<QueryResultBatch> records, RecordBatchLoader loader,
-                                       BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
-    // TODO - this does not handle schema changes
-    Map<String, List> combinedVectors = new HashMap();
-
-    long totalRecords = 0;
-    QueryResultBatch batch;
-    int size = records.size();
-    for (int i = 0; i < size; i++) {
-      batch = records.get(0);
-      loader.load(batch.getHeader().getDef(), batch.getData());
-      if (schema == null) {
-        schema = loader.getSchema();
-        for (MaterializedField mf : schema) {
-          combinedVectors.put(mf.getPath().toExpr(), new ArrayList());
-        }
-      }
-      logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
-      totalRecords += loader.getRecordCount();
-      for (VectorWrapper w : loader) {
-        String field = w.getField().toExpr();
-        for (int j = 0; j < loader.getRecordCount(); j++) {
-          if (totalRecords - loader.getRecordCount() + j > 5000000) {
-            continue;
-          }
-          Object obj = w.getValueVector().getAccessor().getObject(j);
-          if (obj != null) {
-            if (obj instanceof Text) {
-              obj = obj.toString();
-              if (obj.equals("")) {
-                System.out.println(w.getField());
-              }
-            }
-            else if (obj instanceof byte[]) {
-              obj = new String((byte[]) obj, "UTF-8");
-            }
-          }
-          combinedVectors.get(field).add(obj);
-        }
-      }
-      records.remove(0);
-      batch.release();
-      loader.clear();
-    }
-    return combinedVectors;
-  }
-
-  public static class HyperVectorValueIterator implements Iterator<Object>{
-    private MaterializedField mf;
-    HyperVectorWrapper hyperVector;
-    private int indexInVectorList;
-    private int indexInCurrentVector;
-    private ValueVector currVec;
-    private long totalValues;
-    private long totalValuesRead;
-    // limit how many values will be read out of this iterator
-    private long recordLimit;
-
-    public HyperVectorValueIterator(MaterializedField mf, HyperVectorWrapper hyperVector) {
-      this.mf = mf;
-      this.hyperVector = hyperVector;
-      this.totalValues = 0;
-      this.indexInCurrentVector = 0;
-      this.indexInVectorList = 0;
-      this.recordLimit = -1;
-    }
-
-    public void setRecordLimit(long limit) {
-      this.recordLimit = limit;
-    }
-
-    public long getTotalRecords() {
-      if (recordLimit > 0) {
-        return recordLimit;
-      } else {
-        return totalValues;
-      }
-    }
-
-    public void determineTotalSize() {
-      for (ValueVector vv : hyperVector.getValueVectors()) {
-        this.totalValues += vv.getAccessor().getValueCount();
-      }
-    }
-
-    @Override
-    public boolean hasNext() {
-      if (totalValuesRead == recordLimit) {
-        return false;
-      }
-      if (indexInVectorList < hyperVector.getValueVectors().length) {
-        return true;
-      } else if ( indexInCurrentVector < currVec.getAccessor().getValueCount()) {
-       return true;
-      }
-      return false;
-    }
-
-    @Override
-    public Object next() {
-      if (currVec == null || indexInCurrentVector == currVec.getValueCapacity()) {
-        currVec = hyperVector.getValueVectors()[indexInVectorList];
-        indexInVectorList++;
-        indexInCurrentVector = 0;
-      }
-      Object obj = currVec.getAccessor().getObject(indexInCurrentVector);
-      indexInCurrentVector++;
-      totalValuesRead++;
-      return obj;
-    }
-
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException();
-    }
-  }
-
-  public void addToMaterializedResults(List<Map> materializedRecords,  List<QueryResultBatch> records, RecordBatchLoader loader,
-                                       BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
-    long totalRecords = 0;
-    QueryResultBatch batch;
-    int size = records.size();
-    for (int i = 0; i < size; i++) {
-      batch = records.get(0);
-      loader.load(batch.getHeader().getDef(), batch.getData());
-      if (schema == null) {
-        schema = loader.getSchema();
-      }
-      logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
-      totalRecords += loader.getRecordCount();
-      for (int j = 0; j < loader.getRecordCount(); j++) {
-        HashMap<String, Object> record = new HashMap<>();
-        for (VectorWrapper w : loader) {
-          Object obj = w.getValueVector().getAccessor().getObject(j);
-          if (obj != null) {
-            if (obj instanceof Text) {
-              obj = obj.toString();
-              if (obj.equals("")) {
-                System.out.println(w.getField());
-              }
-            }
-            else if (obj instanceof byte[]) {
-              obj = new String((byte[]) obj, "UTF-8");
-            }
-            record.put(w.getField().toExpr(), obj);
-          }
-          record.put(w.getField().toExpr(), obj);
-        }
-        materializedRecords.add(record);
-      }
-      records.remove(0);
-      batch.release();
-      loader.clear();
-    }
-  }
-
-  public void compareValues(Object expected, Object actual, int counter, String column) throws Exception {
-
-    if (expected == null) {
-      if (actual == null) {
-      if (VERBOSE_DEBUG) {
-        logger.debug("(1) at position " + counter + " column '" + column + "' matched value:  " + expected );
-      }
-        return;
-      } else {
-        throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: " + expected + " but received " + actual);
-      }
-    }
-    if (actual == null) {
-      throw new Exception("unexpected null at position " + counter + " column '" + column + "' should have been:  " + expected);
-    }
-    if (actual instanceof byte[]) {
-      if ( ! Arrays.equals((byte[]) expected, (byte[]) actual)) {
-        throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: "
-            + new String((byte[])expected, "UTF-8") + " but received " + new String((byte[])actual, "UTF-8"));
-      } else {
-        if (VERBOSE_DEBUG) {
-          logger.debug("at position " + counter + " column '" + column + "' matched value " + new String((byte[])expected, "UTF-8"));
-        }
-        return;
-      }
-    }
-    if (!expected.equals(actual)) {
-      throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: " + expected + " but received " + actual);
-    } else {
-      if (VERBOSE_DEBUG) {
-        logger.debug("at position " + counter + " column '" + column + "' matched value:  " + expected );
-      }
-    }
-  }
-
-  public void compareResults(List<Map> expectedRecords, List<Map> actualRecords) throws Exception {
-    Assert.assertEquals("Different number of records returned", expectedRecords.size(), actualRecords.size());
-
-    StringBuilder missing = new StringBuilder();
-    int i = 0;
-    int counter = 0;
-    int missmatch;
-    for (Map<String, Object> record : expectedRecords) {
-      missmatch = 0;
-      for (String column : record.keySet()) {
-        compareValues(record.get(column), actualRecords.get(i).get(column), counter, column );
-      }
-      if ( !actualRecords.get(i).equals(record)) {
-        System.out.println("mismatch at position " + counter );
-        missing.append(missmatch);
-        missing.append(",");
-      }
-
-      counter++;
-      if (counter % 100000 == 0 ) {
-        System.out.println("checked so far:" + counter);
-      }
-      i++;
-    }
-    logger.debug(missing.toString());
-    System.out.println(missing);
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(validateQuery);
   }
 
 }

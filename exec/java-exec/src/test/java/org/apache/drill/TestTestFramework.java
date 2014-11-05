@@ -1,0 +1,397 @@
+/*******************************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+package org.apache.drill;
+
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.MinorType;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.util.JsonStringHashMap;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+
+// TODO - update framework to remove any dependency on the Drill engine for reading baseline result sets
+// currently using it with the assumption that the csv and json readers are well tested, and handling diverse
+// types in the test framework would require doing some redundant work to enable casting outside of Drill or
+// some better tooling to generate parquet files that have all of the parquet types
+public class TestTestFramework extends BaseTestQuery{
+
+  private static String CSV_COLS = " cast(columns[0] as bigint) employee_id, columns[1] as first_name, columns[2] as last_name ";
+
+  @Test
+  public void testCSVVerification() throws Exception {
+    testBuilder()
+        .sqlQuery("select employee_id, first_name, last_name from cp.`testframework/small_test_data.json`")
+        .ordered()
+        .csvBaselineFile("testframework/small_test_data.tsv")
+        .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("employee_id", "first_name", "last_name")
+        .build().run();
+  }
+
+  @Test
+  public void testBaselineValsVerification() throws Exception {
+    testBuilder()
+        .sqlQuery("select employee_id, first_name, last_name from cp.`testframework/small_test_data.json` limit 1")
+        .ordered()
+        .baselineColumns("employee_id", "first_name", "last_name")
+        .baselineValues(12l, "Jewel", "Creek")
+        .build().run();
+
+    testBuilder()
+        .sqlQuery("select employee_id, first_name, last_name from cp.`testframework/small_test_data.json` limit 1")
+        .unOrdered()
+        .baselineColumns("employee_id", "first_name", "last_name")
+        .baselineValues(12l, "Jewel", "Creek")
+        .build().run();
+  }
+
+  @Ignore("Drill 1737")
+  @Test
+  public void testDecimalBaseline() throws  Exception {
+    // type information can be provided explicitly
+    testBuilder()
+        .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
+        .unOrdered()
+        .csvBaselineFile("testframework/decimal_test.tsv")
+        .baselineTypes(Types.withScaleAndPrecision(TypeProtos.MinorType.DECIMAL38SPARSE, TypeProtos.DataMode.REQUIRED, 38, 2))
+        .baselineColumns("dec_col")
+        .build().run();
+
+    // TODO - re-enable once DRILL-1737 is fixed
+    // type information can also be left out, this will prompt the result types of the test query to drive the
+    // interpretation of the test file
+//    testBuilder()
+//        .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
+//        .unOrdered()
+//        .csvBaselineFile("testframework/decimal_test.tsv")
+//        .baselineColumns("dec_col")
+//        .build().run();
+
+    // Or you can provide explicit values to the builder itself to avoid going through the drill engine at all to
+    // populate the baseline results
+    testBuilder()
+        .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
+        .unOrdered()
+        .baselineColumns("dec_col")
+        .baselineValues(new BigDecimal("3.70"))
+        .build().run();
+
+  }
+
+  @Test
+  public void testBaselineValsVerificationWithNulls() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from cp.`store/json/json_simple_with_null.json`")
+        .ordered()
+        .baselineColumns("a", "b")
+        .baselineValues(5l, 10l)
+        .baselineValues(7l, null)
+        .baselineValues(null, null)
+        .baselineValues(9l, 11l)
+        .build().run();
+
+    testBuilder()
+        .sqlQuery("select * from cp.`store/json/json_simple_with_null.json`")
+        .unOrdered()
+        .baselineColumns("a", "b")
+        .baselineValues(5l, 10l)
+        .baselineValues(9l, 11l)
+        .baselineValues(7l, null)
+        .baselineValues(null, null)
+        .build().run();
+  }
+
+  @Test
+  public void testBaselineValsVerificationWithComplexAndNulls() throws Exception {
+    JsonStringArrayList list = new JsonStringArrayList();
+    JsonStringArrayList innerList1 = new JsonStringArrayList();
+    innerList1.add(2l);
+    innerList1.add(1l);
+    JsonStringArrayList innerList2 = new JsonStringArrayList();
+    innerList2.add(4l);
+    innerList2.add(6l);
+    list.add(innerList1);
+    list.add(innerList2);
+
+    JsonStringArrayList l_list = new JsonStringArrayList();
+    l_list.add(4l);
+    l_list.add(2l);
+
+    JsonStringHashMap x = new JsonStringHashMap();
+    x.put("y", "kevin");
+    x.put("z", "paul");
+
+    // [{"orange":"yellow","pink":"red"},{"pink":"purple"}]
+    JsonStringArrayList z = new JsonStringArrayList();
+    JsonStringHashMap z_1 = new JsonStringHashMap();
+    z_1.put("orange", "yellow");
+    z_1.put("pink", "red");
+
+    JsonStringHashMap z_2 = new JsonStringHashMap();
+    z_2.put("pink", "purple");
+    z.add(z_1);
+    z.add(z_2);
+
+    testBuilder()
+        .sqlQuery("select * from cp.`/jsoninput/input2.json` limit 1")
+        .ordered()
+        .baselineColumns("integer", "float", "x", "z", "l", "rl")
+        .baselineValues(2010l, 17.4, x, z, l_list, list)
+        .build().run();
+  }
+
+  @Test
+  public void testCSVVerification_missing_records_fails() throws Exception {
+    try {
+    testBuilder()
+        .sqlQuery("select employee_id, first_name, last_name from cp.`testframework/small_test_data.json`")
+        .ordered()
+        .csvBaselineFile("testframework/small_test_data_extra.tsv")
+        .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("employee_id", "first_name", "last_name")
+        .build().run();
+    } catch (AssertionError ex) {
+      assertEquals("Incorrect number of rows returned by query. expected:<7> but was:<5>", ex.getMessage());
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure on missing records.");
+  }
+
+  @Test
+  public void testCSVVerification_extra_records_fails() throws Exception {
+    try {
+      testBuilder()
+          .sqlQuery("select " + CSV_COLS + " from cp.`testframework/small_test_data_extra.tsv`")
+          .ordered()
+          .csvBaselineFile("testframework/small_test_data.tsv")
+          .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+          .baselineColumns("employee_id", "first_name", "last_name")
+          .build().run();
+    } catch (AssertionError ex) {
+      assertEquals("Incorrect number of rows returned by query. expected:<5> but was:<7>", ex.getMessage());
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure for extra records.");
+  }
+
+  @Test
+  public void testCSVVerification_extra_column_fails() throws Exception {
+    try {
+      testBuilder()
+          .sqlQuery("select " + CSV_COLS + ", columns[3] as address from cp.`testframework/small_test_data_extra_col.tsv`")
+          .ordered()
+          .csvBaselineFile("testframework/small_test_data.tsv")
+          .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+          .baselineColumns("employee_id", "first_name", "last_name")
+          .build().run();
+    } catch (AssertionError ex) {
+      assertEquals("Unexpected extra column `address` returned by query.", ex.getMessage());
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure on extra column.");
+  }
+
+  @Test
+  public void testCSVVerification_missing_column_fails() throws Exception {
+    try {
+      testBuilder()
+          .sqlQuery("select employee_id, first_name, last_name from cp.`testframework/small_test_data.json`")
+          .ordered()
+          .csvBaselineFile("testframework/small_test_data_extra_col.tsv")
+          .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+          .baselineColumns("employee_id", "first_name", "last_name", "address")
+          .build().run();
+    } catch (Exception ex) {
+      assertEquals("Expected column(s) `address`,  not found in result set.", ex.getMessage());
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure on missing column.");
+  }
+
+  @Test
+  public void testCSVVerificationOfTypes() throws Throwable {
+    try {
+    testBuilder()
+        .sqlQuery("select employee_id, first_name, last_name from cp.`testframework/small_test_data.json`")
+        .ordered()
+        .csvBaselineFile("testframework/small_test_data.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("employee_id", "first_name", "last_name")
+        .build().run();
+    } catch (Exception ex) {
+      assertEquals("at position 0 column '`employee_id`' mismatched values, expected: 12(Integer) but received 12(Long)", ex.getMessage());
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure on type check.");
+  }
+
+  @Test
+  public void testCSVVerificationOfOrder_checkFailure() throws Throwable {
+    try {
+      testBuilder()
+          .sqlQuery("select columns[0] as employee_id, columns[1] as first_name, columns[2] as last_name from cp.`testframework/small_test_data_reordered.tsv`")
+          .ordered()
+          .csvBaselineFile("testframework/small_test_data.tsv")
+          .baselineColumns("employee_id", "first_name", "last_name")
+          .build().run();
+    } catch (Exception ex) {
+      assertEquals("at position 0 column '`first_name`' mismatched values, expected: Jewel(String) but received Peggy(String)", ex.getMessage());
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure on order check.");
+  }
+
+  @Test
+  public void testCSVVerificationOfUnorderedComparison() throws Throwable {
+    testBuilder()
+        .sqlQuery("select columns[0] as employee_id, columns[1] as first_name, columns[2] as last_name from cp.`testframework/small_test_data_reordered.tsv`")
+        .unOrdered()
+        .csvBaselineFile("testframework/small_test_data.tsv")
+        .baselineColumns("employee_id", "first_name", "last_name")
+        .build().run();
+  }
+
+  // TODO - enable more advanced type handling for JSON, currently basic support works
+  // add support for type information taken from test query, or explicit type expectations
+  @Test
+  public void testBasicJSON() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from cp.`scan_json_test_3.json`")
+        .ordered()
+        .jsonBaselineFile("/scan_json_test_3.json")
+        .build().run();
+
+    testBuilder()
+        .sqlQuery("select * from cp.`scan_json_test_3.json`")
+        .unOrdered() // Check other verification method with same files
+        .jsonBaselineFile("/scan_json_test_3.json")
+        .build().run();
+  }
+
+  @Test
+  public void testComplexJSON_all_text() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from cp.`store/json/schema_change_int_to_string.json`")
+        .optionSettingQueriesForTestQuery("alter system set `store.json.all_text_mode` = true")
+        .ordered()
+        .jsonBaselineFile("store/json/schema_change_int_to_string.json")
+        .optionSettingQueriesForBaseline("alter system set `store.json.all_text_mode` = true")
+        .build().run();
+
+    testBuilder()
+        .sqlQuery("select * from cp.`store/json/schema_change_int_to_string.json`")
+        .optionSettingQueriesForTestQuery("alter system set `store.json.all_text_mode` = true")
+        .unOrdered() // Check other verification method with same files
+        .jsonBaselineFile("store/json/schema_change_int_to_string.json")
+        .optionSettingQueriesForBaseline("alter system set `store.json.all_text_mode` = true")
+        .build().run();
+    test("alter system set `store.json.all_text_mode` = false");
+  }
+
+  @Test
+  public void testRepeatedColumnMatching() throws Exception {
+    try {
+      testBuilder()
+          .sqlQuery("select * from cp.`store/json/schema_change_int_to_string.json`")
+          .optionSettingQueriesForTestQuery("alter system set `store.json.all_text_mode` = true")
+          .ordered()
+          .jsonBaselineFile("testframework/schema_change_int_to_string_non-matching.json")
+          .optionSettingQueriesForBaseline("alter system set `store.json.all_text_mode` = true")
+          .build().run();
+    } catch (Exception ex) {
+      assertEquals("at position 1 column '`field_1`' mismatched values, " +
+          "expected: [\"5\",\"2\",\"3\",\"4\",\"1\",\"2\"](JsonStringArrayList) but received [\"5\"](JsonStringArrayList)",
+          ex.getMessage());
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure on order check.");
+  }
+
+  @Test
+  public void testEmptyResultSet() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from cp.`store/json/json_simple_with_null.json` where 1=0")
+        .expectsEmptyResultSet()
+        .build().run();
+    try {
+      testBuilder()
+          .sqlQuery("select * from cp.`store/json/json_simple_with_null.json`")
+          .expectsEmptyResultSet()
+          .build().run();
+    } catch (AssertionError ex) {
+      assertEquals("Different number of records returned expected:<4> but was:<0>", ex.getMessage());
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure on unexpected records.");
+  }
+
+  @Test
+  public void testCSVVerificationTypeMap() throws Throwable {
+    Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
+    typeMap.put(TestBuilder.parsePath("first_name"), Types.optional(TypeProtos.MinorType.VARCHAR));
+    typeMap.put(TestBuilder.parsePath("employee_id"), Types.optional(TypeProtos.MinorType.INT));
+    typeMap.put(TestBuilder.parsePath("last_name"), Types.optional(TypeProtos.MinorType.VARCHAR));
+    testBuilder()
+        .sqlQuery("select cast(columns[0] as int) employee_id, columns[1] as first_name, columns[2] as last_name from cp.`testframework/small_test_data_reordered.tsv`")
+        .unOrdered()
+        .csvBaselineFile("testframework/small_test_data.tsv")
+        .baselineColumns("employee_id", "first_name", "last_name")
+        // This should work without this line because of the default type casts added based on the types that come out of the test query.
+        // To write a test that enforces strict typing you must pass type information using a CSV with a list of types,
+        // or any format with a Map of types like is constructed above and include the call to pass it into the test, which is commented out below
+        //.baselineTypes(typeMap)
+        .build().run();
+
+    typeMap.clear();
+    typeMap.put(TestBuilder.parsePath("first_name"), Types.optional(TypeProtos.MinorType.VARCHAR));
+    // This is the wrong type intentionally to ensure failures happen when expected
+    typeMap.put(TestBuilder.parsePath("employee_id"), Types.optional(TypeProtos.MinorType.VARCHAR));
+    typeMap.put(TestBuilder.parsePath("last_name"), Types.optional(TypeProtos.MinorType.VARCHAR));
+
+    try {
+    testBuilder()
+        .sqlQuery("select cast(columns[0] as int) employee_id, columns[1] as first_name, columns[2] as last_name from cp.`testframework/small_test_data_reordered.tsv`")
+        .unOrdered()
+        .csvBaselineFile("testframework/small_test_data.tsv")
+        .baselineColumns("employee_id", "first_name", "last_name")
+        .baselineTypes(typeMap)
+        .build().run();
+    } catch (Exception ex) {
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Test framework verification failed, expected failure on type check.");
+  }
+
+}
