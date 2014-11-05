@@ -42,6 +42,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.BigIntVector;
@@ -90,6 +91,8 @@ import org.joda.time.DateTimeZone;
 import com.google.common.collect.Lists;
 
 public class HiveRecordReader extends AbstractRecordReader {
+
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveRecordReader.class);
 
   protected Table table;
   protected Partition partition;
@@ -348,6 +351,11 @@ public class HiveRecordReader extends AbstractRecordReader {
 
   @Override
   public void cleanup() {
+    try {
+      reader.close();
+    } catch (Exception e) {
+      logger.warn("Failure while closing Hive Record reader.", e);
+    }
   }
 
   public static MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo) {
