@@ -161,6 +161,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       this.recordCount = remainderIndex;
     } else {
       setValueCount(outputRecords);
+      flattener.resetGroupIndex();
       for(VectorWrapper<?> v: incoming) {
         v.clear();
       }
@@ -194,6 +195,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       for (VectorWrapper<?> v : incoming) {
         v.clear();
       }
+      flattener.resetGroupIndex();
       this.recordCount = remainingRecordCount;
     }
     // In case of complex writer expression, vectors would be added to batch run-time.

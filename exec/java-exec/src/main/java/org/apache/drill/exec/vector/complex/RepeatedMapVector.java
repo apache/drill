@@ -420,7 +420,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   public void load(SerializedField metadata, DrillBuf buf) {
     List<SerializedField> fields = metadata.getChildList();
 
-    int bufOffset = offsets.load(metadata.getValueCount()+1, buf);
+    int bufOffset = offsets.load(metadata.getGroupCount()+1, buf);
 
     for (SerializedField fmd : fields) {
       MaterializedField fieldDef = MaterializedField.create(fmd);
@@ -444,7 +444,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     SerializedField.Builder b = getField() //
         .getAsBuilder() //
         .setBufferLength(getBufferSize()) //
-        .setValueCount(accessor.getValueCount());
+        .setGroupCount(accessor.getGroupCount());
     for (ValueVector v : vectors.values()) {
       b.addChild(v.getMetadata());
     }
@@ -489,7 +489,8 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
     @Override
     public int getValueCount() {
-      return offsets.getAccessor().getValueCount() - 1;
+      return offsets.getAccessor().get(offsets.getAccessor().getValueCount() - 1);
+//      return offsets.getAccessor().getValueCount() - 1;
     }
 
     public int getGroupSizeAtIndex(int index) {
@@ -542,7 +543,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
     @Override
     public int getGroupCount() {
-      return size();
+      return offsets.getAccessor().getValueCount() - 1;
     }
   }
 

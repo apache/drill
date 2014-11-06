@@ -30,6 +30,8 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
 import com.google.common.collect.ImmutableList;
+
+import org.apache.drill.exec.vector.RepeatedFixedWidthVector.RepeatedAccessor;
 import org.apache.drill.exec.vector.RepeatedVector;
 
 public abstract class FlattenTemplate implements Flattener {
@@ -40,7 +42,9 @@ public abstract class FlattenTemplate implements Flattener {
   private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
   RepeatedVector fieldToFlatten;
+  RepeatedAccessor accessor;
   private int groupIndex;
+
   // this allows for groups to be written between batches if we run out of space, for cases where we have finished
   // a batch on the boundary it will be set to 0
   private int childIndexWithinCurrGroup;
@@ -56,6 +60,7 @@ public abstract class FlattenTemplate implements Flattener {
   @Override
   public void setFlattenField(RepeatedVector flattenField) {
     this.fieldToFlatten = flattenField;
+    this.accessor = flattenField.getAccessor();
   }
 
   public RepeatedVector getFlattenField() {
@@ -76,18 +81,26 @@ public abstract class FlattenTemplate implements Flattener {
         if (childIndexWithinCurrGroup == -1) {
           childIndexWithinCurrGroup = 0;
         }
-        outer:
-        for ( ; groupIndex < fieldToFlatten.getAccessor().getGroupCount(); groupIndex++) {
-          currGroupSize = fieldToFlatten.getAccessor().getGroupSizeAtIndex(groupIndex);
-          for ( ; childIndexWithinCurrGroup < currGroupSize; childIndexWithinCurrGroup++) {
-            if (!doEval(groupIndex, firstOutputIndex)) {
-              break outer;
+        outer: {
+          final int groupCount = accessor.getGroupCount();
+          for ( ; groupIndex < groupCount; groupIndex++) {
+            currGroupSize = accessor.getGroupSizeAtIndex(groupIndex);
+            for ( ; childIndexWithinCurrGroup < currGroupSize; childIndexWithinCurrGroup++) {
+              if (!doEval(groupIndex, firstOutputIndex)) {
+                break outer;
+              }
+              firstOutputIndex++;
+              childIndex++;
             }
-            firstOutputIndex++;
-            childIndex++;
+            childIndexWithinCurrGroup = 0;
           }
-          childIndexWithinCurrGroup = 0;
         }
+//        System.out.println(String.format("startIndex %d, recordCount %d, firstOutputIndex: %d, currGroupSize: %d, childIndexWithinCurrGroup: %d, groupIndex: %d", startIndex, recordCount, firstOutputIndex, currGroupSize, childIndexWithinCurrGroup, groupIndex));
+//        try{
+////          Thread.sleep(1000);
+//        }catch(Exception e){
+//
+//        }
 
         for (TransferPair t : transfers) {
           t.splitAndTransfer(startIndex, childIndex - startIndex);
@@ -111,6 +124,15 @@ public abstract class FlattenTemplate implements Flattener {
     }
     this.transfers = ImmutableList.copyOf(transfers);
     doSetup(context, incoming, outgoing);
+  }
+
+
+
+  @Override
+  public void resetGroupIndex() {
+    this.groupIndex = 0;
+    this.currGroupSize = 0;
+    this.childIndex = 0;
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);

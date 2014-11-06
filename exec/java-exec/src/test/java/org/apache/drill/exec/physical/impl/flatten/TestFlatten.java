@@ -22,21 +22,120 @@ import org.junit.Test;
 
 public class TestFlatten extends BaseTestQuery {
 
+  /**
+   *  enable this if you have the following files:
+   *    - /tmp/yelp_academic_dataset_business.json
+   *    - /tmp/mapkv.json
+   *    - /tmp/drill1665.json
+   */
+  public static boolean RUN_ADVANCED_TESTS = false;
+
+
+  @Test
+  public void testFlattenFailure() throws Exception {
+    test("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json`");
+//    test("select complex, rownum from cp.`/store/json/test_flatten_mappify2.json`");
+  }
+
   @Test
   public void testKVGenFlatten1() throws Exception {
+    // works - TODO and verify results
     test("select flatten(kvgen(f1)) as monkey, x " +
         "from cp.`/store/json/test_flatten_mapify.json`");
   }
 
   @Test
   public void testTwoFlattens() throws Exception {
+    // second re-write rule has been added to test the fixes together, this now runs
     test("select `integer`, `float`, x, flatten(z), flatten(l) from cp.`/jsoninput/input2_modified.json`");
   }
 
   @Test
+  public void testFlattenRepeatedMap() throws Exception {
+    test("select `integer`, `float`, x, flatten(z) from cp.`/jsoninput/input2.json`");
+  }
+
+  @Test
+  public void testFlattenKVGenFlatten() throws Exception {
+    // currently does not fail, but produces incorrect results, requires second re-write rule to split up expressions
+    // with complex outputs
+    test("select `integer`, `float`, x, flatten(kvgen(flatten(z))) from cp.`/jsoninput/input2.json`");
+  }
+
+  @Test
+  public void testKVGenFlatten2() throws Exception {
+    // currently runs
+    // TODO - re-verify results by hand
+    if(RUN_ADVANCED_TESTS){
+      test("select flatten(kvgen(visited_cellid_counts)) as mytb from dfs.`/tmp/mapkv.json`") ;
+    }
+  }
+
+  @Test
   public void testFilterFlattenedRecords() throws Exception {
+    // WORKS!!
+    // TODO - hand verify results
     test("select t2.key from (select t.monkey.`value` as val, t.monkey.key as key from (select flatten(kvgen(f1)) as monkey, x " +
         "from cp.`/store/json/test_flatten_mapify.json`) as t) as t2 where t2.val > 1");
   }
+
+  @Test
+  public void testFilterFlattenedRecords2() throws Exception {
+    // previously failed in generated code
+    //  "value" is neither a method, a field, nor a member class of "org.apache.drill.exec.expr.holders.RepeatedVarCharHolder" [ 42eb1fa1-0742-4e4f-8723-609215c18900 on 10.250.0.86:31010 ]
+    // appears to be resolving the data coming out of flatten as repeated, check fast schema stuff
+
+    // FIXED BY RETURNING PROPER SCHEMA DURING FAST SCHEMA STEP
+    // these types of problems are being solved more generally as we develp better support for chaning schema
+    if(RUN_ADVANCED_TESTS){
+      test("select celltbl.catl from (\n" +
+          "        select flatten(categories) catl from dfs.`/tmp/yelp_academic_dataset_business.json` b limit 100\n" +
+          "    )  celltbl where celltbl.catl = 'Doctors'");
+    }
+  }
+
+  @Test
+  public void countAggFlattened() throws Exception {
+    if(RUN_ADVANCED_TESTS){
+      test("select celltbl.catl, count(celltbl.catl) from ( " +
+          "select business_id, flatten(categories) catl from dfs.`/tmp/yelp_academic_dataset_business.json` b limit 100 " +
+          ")  celltbl group by celltbl.catl limit 10 ");
+    }
+  }
+
+
+  @Test
+  public void flattenAndAdditionalColumn() throws Exception {
+    if(RUN_ADVANCED_TESTS){
+      test("select business_id, flatten(categories) from dfs.`/tmp/yelp_academic_dataset_business.json` b");
+    }
+  }
+
+  @Test
+  public void testFailingFlattenAlone() throws Exception {
+    if(RUN_ADVANCED_TESTS){
+      test("select flatten(categories) from dfs.`/tmp/yelp_academic_dataset_business.json` b  ");
+    }
+  }
+
+  @Test
+  public void testDistinctAggrFlattened() throws Exception {
+    if(RUN_ADVANCED_TESTS){
+      test(" select distinct(celltbl.catl) from (\n" +
+          "        select flatten(categories) catl from dfs.`/tmp/yelp_academic_dataset_business.json` b\n" +
+          "    )  celltbl");
+    }
+
+  }
+
+  @Test
+  public void testDrill1665() throws Exception {
+    if(RUN_ADVANCED_TESTS){
+      test("select id, flatten(evnts) as rpt from dfs.`/tmp/drill1665.json`");
+    }
+
+  }
+
+
 
 }

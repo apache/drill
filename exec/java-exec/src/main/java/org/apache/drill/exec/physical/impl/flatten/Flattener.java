@@ -32,6 +32,7 @@ public interface Flattener {
   public abstract int flattenRecords(int startIndex, int recordCount, int firstOutputIndex);
   public void setFlattenField(RepeatedVector repeatedColumn);
   public RepeatedVector getFlattenField();
+  public void resetGroupIndex();
 
   public static TemplateClassDefinition<Flattener> TEMPLATE_DEFINITION = new TemplateClassDefinition<Flattener>(Flattener.class, FlattenTemplate.class);
 
