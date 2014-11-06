@@ -88,7 +88,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   @Override
   public IterOutcome innerNext() {
     if(processed) {
-      cleanup();
+//      cleanup();
       // if the upstream record batch is already processed and next() is called by
       // downstream then return NONE to indicate completion
       return IterOutcome.NONE;
@@ -96,48 +96,52 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
 
     // process the complete upstream in one next() call
     IterOutcome upstream;
-    do {
-      upstream = next(incoming);
+    try{
+      do {
+        upstream = next(incoming);
 
-      switch(upstream) {
-        case NOT_YET:
-        case NONE:
-        case STOP:
-          if (upstream == IterOutcome.STOP) {
-            return upstream;
-          }
-          break;
-
-        case OK_NEW_SCHEMA:
-          try{
-            setupNewSchema();
-          } catch(Exception ex) {
-            kill(false);
-            logger.error("Failure during query", ex);
-            context.fail(ex);
+        switch(upstream) {
+          case STOP:
             return IterOutcome.STOP;
-          }
-          // fall through.
-        case OK:
-          try {
+
+          case NOT_YET:
+          case NONE:
+            break;
+
+          case OK_NEW_SCHEMA:
+            setupNewSchema();
+            // fall through.
+          case OK:
             counter += eventBasedRecordWriter.write(incoming.getRecordCount());
             logger.debug("Total records written so far: {}", counter);
-          } catch(IOException ex) {
-            throw new RuntimeException(ex);
-          }
 
-          for(VectorWrapper v : incoming) {
-            v.getValueVector().clear();
-          }
-          break;
+            for(VectorWrapper<?> v : incoming) {
+              v.getValueVector().clear();
+            }
+            break;
 
-        default:
-          throw new UnsupportedOperationException();
-      }
-    } while(upstream != IterOutcome.NONE);
+          default:
+            throw new UnsupportedOperationException();
+        }
+      } while(upstream != IterOutcome.NONE);
+    }catch(Exception ex){
+      kill(false);
+      logger.error("Failure during query", ex);
+      context.fail(ex);
+      return IterOutcome.STOP;
+    }
 
+    addOutputContainerData();
+    processed = true;
 
-    VarCharVector fragmentIdVector = (VarCharVector) container.getValueAccessorById(VarCharVector.class, container.getValueVectorId(SchemaPath.getSimplePath("Fragment")).getFieldIds()).getValueVector();
+    return IterOutcome.OK_NEW_SCHEMA;
+  }
+
+  private void addOutputContainerData(){
+    VarCharVector fragmentIdVector = (VarCharVector) container.getValueAccessorById( //
+        VarCharVector.class, //
+        container.getValueVectorId(SchemaPath.getSimplePath("Fragment")).getFieldIds() //
+        ).getValueVector();
     AllocationHelper.allocate(fragmentIdVector, 1, 50);
     BigIntVector summaryVector = (BigIntVector) container.getValueAccessorById(BigIntVector.class,
             container.getValueVectorId(SchemaPath.getSimplePath("Number of records written")).getFieldIds()).getValueVector();
@@ -148,9 +152,6 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     summaryVector.getMutator().setValueCount(1);
 
     container.setRecordCount(1);
-    processed = true;
-
-    return IterOutcome.OK_NEW_SCHEMA;
   }
 
   protected void setupNewSchema() throws Exception {
@@ -167,8 +168,6 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       container.addOrGet(fragmentIdField);
       container.addOrGet(summaryField);
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-    } catch(IOException ex) {
-      throw new RuntimeException("Failed to update schema in RecordWriter", ex);
     } finally{
       stats.stopSetup();
     }
@@ -186,6 +185,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
         recordWriter.cleanup();
       }
     } catch(IOException ex) {
+      logger.error("Failure while closing record writer", ex);
       throw new RuntimeException("Failed to close RecordWriter", ex);
     }
   }
