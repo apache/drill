@@ -18,6 +18,11 @@
 package org.apache.drill.jdbc;
 
 import java.sql.ResultSetMetaData;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.ColumnMetaData.AvaticaType;
@@ -32,21 +37,21 @@ import org.apache.drill.exec.record.MaterializedField;
 public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillColumnMetaDataList.class);
 
-  private ColumnMetaData[] columns = new ColumnMetaData[0];
+  private List<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
 
   @Override
   public int size() {
-    return columns.length;
+    return (columns.size());
   }
 
   @Override
   public ColumnMetaData get(int index) {
-    return columns[index];
+    return columns.get(index);
   }
 
   public void updateColumnMetaData(String catalogName, String schemaName, String tableName, BatchSchema schema){
 
-    columns = new ColumnMetaData[schema.getFieldCount()];
+    columns = new ArrayList<ColumnMetaData>(schema.getFieldCount());
     for(int i = 0; i < schema.getFieldCount(); i++){
       MaterializedField f = schema.getColumn(i);
       MajorType t = f.getType();
@@ -71,8 +76,8 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
           false, // writable
           false, // definitely writable
           "none" // column class name
-          );
-      columns[i] =col;
+         );
+      columns.add(col);
     }
   }
 
@@ -159,4 +164,54 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
 
     return "?";
 }
+
+  @Override
+  public boolean contains(Object o) {
+    return columns.contains(o);
+  }
+
+  @Override
+  public Iterator<ColumnMetaData> iterator() {
+    return columns.iterator();
+  }
+
+  @Override
+  public Object[] toArray() {
+    return columns.toArray();
+  }
+
+  @Override
+  public <T> T[] toArray(T[] a) {
+    return columns.toArray(a);
+  }
+
+  @Override
+  public boolean containsAll(Collection<?> c) {
+    return columns.containsAll(c);
+  }
+
+  @Override
+  public int indexOf(Object o) {
+    return columns.indexOf(o);
+  }
+
+  @Override
+  public int lastIndexOf(Object o) {
+    return columns.lastIndexOf(o);
+  }
+
+  @Override
+  public ListIterator<ColumnMetaData> listIterator() {
+    return columns.listIterator();
+  }
+
+  @Override
+  public ListIterator<ColumnMetaData> listIterator(int index) {
+    return columns.listIterator(index);
+  }
+
+  @Override
+  public List<ColumnMetaData> subList(int fromIndex, int toIndex) {
+    return columns.subList(fromIndex, toIndex);
+  }
 }
