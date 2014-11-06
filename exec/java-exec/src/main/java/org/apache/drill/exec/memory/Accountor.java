@@ -133,7 +133,7 @@ public class Accountor {
   }
 
   public boolean reserve(long size) {
-    logger.debug("Fragment:"+fragmentStr+" Reserved "+size+" bytes. Total Allocated: "+getAllocation());
+    logger.trace("Fragment:"+fragmentStr+" Reserved "+size+" bytes. Total Allocated: "+getAllocation());
     return remainder.get(size, this.applyFragmentLimit);
   }
 
@@ -188,7 +188,7 @@ public class Accountor {
     if (parent != null){
       parent.addFragmentContext(c);
     }else {
-      if(logger.isDebugEnabled()) {
+      if(logger.isTraceEnabled()) {
         FragmentHandle hndle;
         String fragStr;
         if(c!=null) {
@@ -205,7 +205,7 @@ public class Accountor {
           sb.append("\n");
         }
 
-        logger.debug("Fragment " + fragStr + " added to root accountor.\n"+sb.toString());
+        logger.trace("Fragment " + fragStr + " added to root accountor.\n"+sb.toString());
       }
       synchronized(this) {
         fragmentContexts.add(c);
@@ -230,7 +230,7 @@ public class Accountor {
           fragStr = "[Null Context]";
         }
         fragStr += " (Object Id: " + System.identityHashCode(c) + ")";
-        logger.debug("Fragment " + fragStr + " removed from root accountor");
+        logger.trace("Fragment " + fragStr + " removed from root accountor");
       }
       synchronized(this) {
         fragmentContexts.remove(c);
@@ -261,8 +261,8 @@ public class Accountor {
             allocatedMemory += fragment.getAllocator().getAllocatedMemory();
           }
         }
-        if(logger.isDebugEnabled()) {
-          logger.info("Resetting Fragment Memory Limit: total Available memory== "+total
+        if(logger.isTraceEnabled()) {
+          logger.trace("Resetting Fragment Memory Limit: total Available memory== "+total
             +" Total Allocated Memory :"+allocatedMemory
             +" Number of fragments: "+nFragments
             + " fragmentMemOvercommitFactor: "+fragmentMemOvercommitFactor
@@ -275,14 +275,14 @@ public class Accountor {
             fragment.setFragmentLimit((long) (rem * fragmentMemOvercommitFactor));
           }
         }
-        if(logger.isDebugEnabled() && false){
+        if(logger.isTraceEnabled() && false){
           StringBuffer sb= new StringBuffer();
           sb.append("[root](0:0)");
           sb.append("Allocated memory: ");
           sb.append(this.getAllocation());
           sb.append(" Fragment Limit: ");
           sb.append(this.getFragmentLimit());
-          logger.debug(sb.toString());
+          logger.trace(sb.toString());
           for(FragmentContext fragment: fragmentContexts){
             sb= new StringBuffer();
             if (handle != null) {
@@ -300,9 +300,9 @@ public class Accountor {
             sb.append(fragment.getAllocator().getAllocatedMemory());
             sb.append(" Fragment Limit: ");
             sb.append(fragment.getAllocator().getFragmentLimit());
-            logger.debug(sb.toString());
+            logger.trace(sb.toString());
           }
-          logger.debug("Resetting Complete");
+          logger.trace("Resetting Complete");
         }
       }
     }
@@ -374,7 +374,7 @@ public class Accountor {
     if (parent != null && parent.parent==null) { // This is a fragment level accountor
       this.fragmentLimit=getAllocation()+add;
       this.remainder.setLimit(this.fragmentLimit);
-      logger.debug("Fragment "+fragmentStr+" memory limit set to "+this.fragmentLimit);
+      logger.trace("Fragment "+fragmentStr+" memory limit set to "+this.fragmentLimit);
     }
   }
 
