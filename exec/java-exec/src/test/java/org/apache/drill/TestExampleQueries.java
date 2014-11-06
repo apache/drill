@@ -530,4 +530,11 @@ public class TestExampleQueries extends BaseTestQuery{
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
+  @Test
+  public void testImplicitDownwardCast() throws Exception {
+    int actualRecordCount = testSql("select o_totalprice from cp.`tpch/orders.parquet` where o_orderkey=60000 and o_totalprice=299402");
+    int expectedRecordCount = 0;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+  }
 }
