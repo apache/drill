@@ -30,9 +30,6 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* CompleteRpcMessage_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   CompleteRpcMessage_reflection_ = NULL;
-const ::google::protobuf::Descriptor* RpcFailure_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  RpcFailure_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* RpcMode_descriptor_ = NULL;
 
 }  // namespace
@@ -93,24 +90,6 @@ void protobuf_AssignDesc_GeneralRPC_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(CompleteRpcMessage));
-  RpcFailure_descriptor_ = file->message_type(3);
-  static const int RpcFailure_offsets_[4] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RpcFailure, error_id_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RpcFailure, error_code_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RpcFailure, short_error_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RpcFailure, long_error_),
-  };
-  RpcFailure_reflection_ =
-    new ::google::protobuf::internal::GeneratedMessageReflection(
-      RpcFailure_descriptor_,
-      RpcFailure::default_instance_,
-      RpcFailure_offsets_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RpcFailure, _has_bits_[0]),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RpcFailure, _unknown_fields_),
-      -1,
-      ::google::protobuf::DescriptorPool::generated_pool(),
-      ::google::protobuf::MessageFactory::generated_factory(),
-      sizeof(RpcFailure));
   RpcMode_descriptor_ = file->enum_type(0);
 }
 
@@ -130,8 +109,6 @@ void protobuf_RegisterTypes(const ::std::string&) {
     RpcHeader_descriptor_, &RpcHeader::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     CompleteRpcMessage_descriptor_, &CompleteRpcMessage::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-    RpcFailure_descriptor_, &RpcFailure::default_instance());
 }
 
 }  // namespace
@@ -143,8 +120,6 @@ void protobuf_ShutdownFile_GeneralRPC_2eproto() {
   delete RpcHeader_reflection_;
   delete CompleteRpcMessage::default_instance_;
   delete CompleteRpcMessage_reflection_;
-  delete RpcFailure::default_instance_;
-  delete RpcFailure_reflection_;
 }
 
 void protobuf_AddDesc_GeneralRPC_2eproto() {
@@ -161,22 +136,18 @@ void protobuf_AddDesc_GeneralRPC_2eproto() {
     "rdination_id\030\002 \001(\005\022\020\n\010rpc_type\030\003 \001(\005\"b\n\022"
     "CompleteRpcMessage\022#\n\006header\030\001 \001(\0132\023.exe"
     "c.rpc.RpcHeader\022\025\n\rprotobuf_body\030\002 \001(\014\022\020"
-    "\n\010raw_body\030\003 \001(\014\"[\n\nRpcFailure\022\020\n\010error_"
-    "id\030\001 \001(\003\022\022\n\nerror_code\030\002 \001(\005\022\023\n\013short_er"
-    "ror\030\003 \001(\t\022\022\n\nlong_error\030\004 \001(\t*:\n\007RpcMode"
-    "\022\013\n\007REQUEST\020\000\022\014\n\010RESPONSE\020\001\022\024\n\020RESPONSE_"
-    "FAILURE\020\002B1\n\033org.apache.drill.exec.proto"
-    "B\020GeneralRPCProtosH\001", 460);
+    "\n\010raw_body\030\003 \001(\014*:\n\007RpcMode\022\013\n\007REQUEST\020\000"
+    "\022\014\n\010RESPONSE\020\001\022\024\n\020RESPONSE_FAILURE\020\002B1\n\033"
+    "org.apache.drill.exec.protoB\020GeneralRPCP"
+    "rotosH\001", 367);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "GeneralRPC.proto", &protobuf_RegisterTypes);
   Ack::default_instance_ = new Ack();
   RpcHeader::default_instance_ = new RpcHeader();
   CompleteRpcMessage::default_instance_ = new CompleteRpcMessage();
-  RpcFailure::default_instance_ = new RpcFailure();
   Ack::default_instance_->InitAsDefaultInstance();
   RpcHeader::default_instance_->InitAsDefaultInstance();
   CompleteRpcMessage::default_instance_->InitAsDefaultInstance();
-  RpcFailure::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_GeneralRPC_2eproto);
 }
 
@@ -1007,368 +978,6 @@ void CompleteRpcMessage::Swap(CompleteRpcMessage* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = CompleteRpcMessage_descriptor_;
   metadata.reflection = CompleteRpcMessage_reflection_;
-  return metadata;
-}
-
-
-// ===================================================================
-
-#ifndef _MSC_VER
-const int RpcFailure::kErrorIdFieldNumber;
-const int RpcFailure::kErrorCodeFieldNumber;
-const int RpcFailure::kShortErrorFieldNumber;
-const int RpcFailure::kLongErrorFieldNumber;
-#endif  // !_MSC_VER
-
-RpcFailure::RpcFailure()
-  : ::google::protobuf::Message() {
-  SharedCtor();
-}
-
-void RpcFailure::InitAsDefaultInstance() {
-}
-
-RpcFailure::RpcFailure(const RpcFailure& from)
-  : ::google::protobuf::Message() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void RpcFailure::SharedCtor() {
-  _cached_size_ = 0;
-  error_id_ = GOOGLE_LONGLONG(0);
-  error_code_ = 0;
-  short_error_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  long_error_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-RpcFailure::~RpcFailure() {
-  SharedDtor();
-}
-
-void RpcFailure::SharedDtor() {
-  if (short_error_ != &::google::protobuf::internal::kEmptyString) {
-    delete short_error_;
-  }
-  if (long_error_ != &::google::protobuf::internal::kEmptyString) {
-    delete long_error_;
-  }
-  if (this != default_instance_) {
-  }
-}
-
-void RpcFailure::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ::google::protobuf::Descriptor* RpcFailure::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return RpcFailure_descriptor_;
-}
-
-const RpcFailure& RpcFailure::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_GeneralRPC_2eproto();
-  return *default_instance_;
-}
-
-RpcFailure* RpcFailure::default_instance_ = NULL;
-
-RpcFailure* RpcFailure::New() const {
-  return new RpcFailure;
-}
-
-void RpcFailure::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    error_id_ = GOOGLE_LONGLONG(0);
-    error_code_ = 0;
-    if (has_short_error()) {
-      if (short_error_ != &::google::protobuf::internal::kEmptyString) {
-        short_error_->clear();
-      }
-    }
-    if (has_long_error()) {
-      if (long_error_ != &::google::protobuf::internal::kEmptyString) {
-        long_error_->clear();
-      }
-    }
-  }
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-  mutable_unknown_fields()->Clear();
-}
-
-bool RpcFailure::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional int64 error_id = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &error_id_)));
-          set_has_error_id();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(16)) goto parse_error_code;
-        break;
-      }
-
-      // optional int32 error_code = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_error_code:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &error_code_)));
-          set_has_error_code();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(26)) goto parse_short_error;
-        break;
-      }
-
-      // optional string short_error = 3;
-      case 3: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_short_error:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_short_error()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-            this->short_error().data(), this->short_error().length(),
-            ::google::protobuf::internal::WireFormat::PARSE);
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(34)) goto parse_long_error;
-        break;
-      }
-
-      // optional string long_error = 4;
-      case 4: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_long_error:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_long_error()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-            this->long_error().data(), this->long_error().length(),
-            ::google::protobuf::internal::WireFormat::PARSE);
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, mutable_unknown_fields()));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void RpcFailure::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // optional int64 error_id = 1;
-  if (has_error_id()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->error_id(), output);
-  }
-
-  // optional int32 error_code = 2;
-  if (has_error_code()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->error_code(), output);
-  }
-
-  // optional string short_error = 3;
-  if (has_short_error()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->short_error().data(), this->short_error().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      3, this->short_error(), output);
-  }
-
-  // optional string long_error = 4;
-  if (has_long_error()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->long_error().data(), this->long_error().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      4, this->long_error(), output);
-  }
-
-  if (!unknown_fields().empty()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        unknown_fields(), output);
-  }
-}
-
-::google::protobuf::uint8* RpcFailure::SerializeWithCachedSizesToArray(
-    ::google::protobuf::uint8* target) const {
-  // optional int64 error_id = 1;
-  if (has_error_id()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->error_id(), target);
-  }
-
-  // optional int32 error_code = 2;
-  if (has_error_code()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->error_code(), target);
-  }
-
-  // optional string short_error = 3;
-  if (has_short_error()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->short_error().data(), this->short_error().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->short_error(), target);
-  }
-
-  // optional string long_error = 4;
-  if (has_long_error()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->long_error().data(), this->long_error().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        4, this->long_error(), target);
-  }
-
-  if (!unknown_fields().empty()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        unknown_fields(), target);
-  }
-  return target;
-}
-
-int RpcFailure::ByteSize() const {
-  int total_size = 0;
-
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional int64 error_id = 1;
-    if (has_error_id()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->error_id());
-    }
-
-    // optional int32 error_code = 2;
-    if (has_error_code()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->error_code());
-    }
-
-    // optional string short_error = 3;
-    if (has_short_error()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->short_error());
-    }
-
-    // optional string long_error = 4;
-    if (has_long_error()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->long_error());
-    }
-
-  }
-  if (!unknown_fields().empty()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        unknown_fields());
-  }
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void RpcFailure::MergeFrom(const ::google::protobuf::Message& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  const RpcFailure* source =
-    ::google::protobuf::internal::dynamic_cast_if_available<const RpcFailure*>(
-      &from);
-  if (source == NULL) {
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-    MergeFrom(*source);
-  }
-}
-
-void RpcFailure::MergeFrom(const RpcFailure& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_error_id()) {
-      set_error_id(from.error_id());
-    }
-    if (from.has_error_code()) {
-      set_error_code(from.error_code());
-    }
-    if (from.has_short_error()) {
-      set_short_error(from.short_error());
-    }
-    if (from.has_long_error()) {
-      set_long_error(from.long_error());
-    }
-  }
-  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
-}
-
-void RpcFailure::CopyFrom(const ::google::protobuf::Message& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-void RpcFailure::CopyFrom(const RpcFailure& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool RpcFailure::IsInitialized() const {
-
-  return true;
-}
-
-void RpcFailure::Swap(RpcFailure* other) {
-  if (other != this) {
-    std::swap(error_id_, other->error_id_);
-    std::swap(error_code_, other->error_code_);
-    std::swap(short_error_, other->short_error_);
-    std::swap(long_error_, other->long_error_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    _unknown_fields_.Swap(&other->_unknown_fields_);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::google::protobuf::Metadata RpcFailure::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = RpcFailure_descriptor_;
-  metadata.reflection = RpcFailure_reflection_;
   return metadata;
 }
 

@@ -31,6 +31,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* FragmentStatus_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   FragmentStatus_reflection_ = NULL;
+const ::google::protobuf::Descriptor* InitializeFragments_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  InitializeFragments_reflection_ = NULL;
 const ::google::protobuf::Descriptor* PlanFragment_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   PlanFragment_reflection_ = NULL;
@@ -99,7 +102,22 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(FragmentStatus));
-  PlanFragment_descriptor_ = file->message_type(3);
+  InitializeFragments_descriptor_ = file->message_type(3);
+  static const int InitializeFragments_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(InitializeFragments, fragment_),
+  };
+  InitializeFragments_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      InitializeFragments_descriptor_,
+      InitializeFragments::default_instance_,
+      InitializeFragments_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(InitializeFragments, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(InitializeFragments, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(InitializeFragments));
+  PlanFragment_descriptor_ = file->message_type(4);
   static const int PlanFragment_offsets_[15] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, handle_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, network_cost_),
@@ -128,7 +146,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(PlanFragment));
-  WorkQueueStatus_descriptor_ = file->message_type(4);
+  WorkQueueStatus_descriptor_ = file->message_type(5);
   static const int WorkQueueStatus_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(WorkQueueStatus, endpoint_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(WorkQueueStatus, queue_length_),
@@ -145,7 +163,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(WorkQueueStatus));
-  FinishedReceiver_descriptor_ = file->message_type(5);
+  FinishedReceiver_descriptor_ = file->message_type(6);
   static const int FinishedReceiver_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FinishedReceiver, receiver_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FinishedReceiver, sender_),
@@ -181,6 +199,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     FragmentStatus_descriptor_, &FragmentStatus::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    InitializeFragments_descriptor_, &InitializeFragments::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     PlanFragment_descriptor_, &PlanFragment::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     WorkQueueStatus_descriptor_, &WorkQueueStatus::default_instance());
@@ -197,6 +217,8 @@ void protobuf_ShutdownFile_BitControl_2eproto() {
   delete BitStatus_reflection_;
   delete FragmentStatus::default_instance_;
   delete FragmentStatus_reflection_;
+  delete InitializeFragments::default_instance_;
+  delete InitializeFragments_reflection_;
   delete PlanFragment::default_instance_;
   delete PlanFragment_reflection_;
   delete WorkQueueStatus::default_instance_;
@@ -225,43 +247,47 @@ void protobuf_AddDesc_BitControl_2eproto() {
     "2 .exec.bit.control.FragmentStatus\"n\n\016Fr"
     "agmentStatus\0222\n\007profile\030\001 \001(\0132!.exec.sha"
     "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013"
-    "2\030.exec.bit.FragmentHandle\"\275\003\n\014PlanFragm"
-    "ent\022(\n\006handle\030\001 \001(\0132\030.exec.bit.FragmentH"
-    "andle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030"
-    "\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030"
-    "\007 \001(\002\022\025\n\rfragment_json\030\010 \001(\t\022*\n\nassignme"
-    "nt\030\n \001(\0132\026.exec.DrillbitEndpoint\022\025\n\rleaf"
-    "_fragment\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.exec."
-    "DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\0102"
-    "0000000\022\033\n\007mem_max\030\r \001(\003:\n2000000000\022\030\n\020"
-    "query_start_time\030\016 \001(\003\0221\n\013credentials\030\017 "
-    "\001(\0132\034.exec.shared.UserCredentials\022\021\n\ttim"
-    "e_zone\030\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"f\n\017Wo"
-    "rkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec.D"
-    "rillbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n"
-    "\013report_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*"
-    "\n\010receiver\030\001 \001(\0132\030.exec.bit.FragmentHand"
-    "le\022(\n\006sender\030\002 \001(\0132\030.exec.bit.FragmentHa"
-    "ndle*\242\002\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001"
-    "\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_INIATILIZE_FRAGMENT"
-    "\020\003\022\027\n\023REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEI"
-    "VER_FINISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022"
-    "\022\n\016REQ_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020"
-    "\n\022\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAG"
-    "MENT_STATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RE"
-    "SP_QUERY_STATUS\020\016B+\n\033org.apache.drill.ex"
-    "ec.protoB\nBitControlH\001", 1422);
+    "2\030.exec.bit.FragmentHandle\"G\n\023Initialize"
+    "Fragments\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.c"
+    "ontrol.PlanFragment\"\275\003\n\014PlanFragment\022(\n\006"
+    "handle\030\001 \001(\0132\030.exec.bit.FragmentHandle\022\024"
+    "\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002\022\021"
+    "\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002\022\025"
+    "\n\rfragment_json\030\010 \001(\t\022*\n\nassignment\030\n \001("
+    "\0132\026.exec.DrillbitEndpoint\022\025\n\rleaf_fragme"
+    "nt\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.exec.Drillbi"
+    "tEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\01020000000"
+    "\022\033\n\007mem_max\030\r \001(\003:\n2000000000\022\030\n\020query_s"
+    "tart_time\030\016 \001(\003\0221\n\013credentials\030\017 \001(\0132\034.e"
+    "xec.shared.UserCredentials\022\021\n\ttime_zone\030"
+    "\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"f\n\017WorkQueue"
+    "Status\022(\n\010endpoint\030\001 \001(\0132\026.exec.Drillbit"
+    "Endpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report"
+    "_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010recei"
+    "ver\030\001 \001(\0132\030.exec.bit.FragmentHandle\022(\n\006s"
+    "ender\030\002 \001(\0132\030.exec.bit.FragmentHandle*\243\002"
+    "\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOO"
+    "DBYE\020\002\022\034\n\030REQ_INIATILIZE_FRAGMENTS\020\003\022\027\n\023"
+    "REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FI"
+    "NISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ"
+    "_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\030\n\024R"
+    "ESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_S"
+    "TATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUE"
+    "RY_STATUS\020\016B+\n\033org.apache.drill.exec.pro"
+    "toB\nBitControlH\001", 1496);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   BitControlHandshake::default_instance_ = new BitControlHandshake();
   BitStatus::default_instance_ = new BitStatus();
   FragmentStatus::default_instance_ = new FragmentStatus();
+  InitializeFragments::default_instance_ = new InitializeFragments();
   PlanFragment::default_instance_ = new PlanFragment();
   WorkQueueStatus::default_instance_ = new WorkQueueStatus();
   FinishedReceiver::default_instance_ = new FinishedReceiver();
   BitControlHandshake::default_instance_->InitAsDefaultInstance();
   BitStatus::default_instance_->InitAsDefaultInstance();
   FragmentStatus::default_instance_->InitAsDefaultInstance();
+  InitializeFragments::default_instance_->InitAsDefaultInstance();
   PlanFragment::default_instance_->InitAsDefaultInstance();
   WorkQueueStatus::default_instance_->InitAsDefaultInstance();
   FinishedReceiver::default_instance_->InitAsDefaultInstance();
@@ -1056,6 +1082,209 @@ void FragmentStatus::Swap(FragmentStatus* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = FragmentStatus_descriptor_;
   metadata.reflection = FragmentStatus_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int InitializeFragments::kFragmentFieldNumber;
+#endif  // !_MSC_VER
+
+InitializeFragments::InitializeFragments()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void InitializeFragments::InitAsDefaultInstance() {
+}
+
+InitializeFragments::InitializeFragments(const InitializeFragments& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void InitializeFragments::SharedCtor() {
+  _cached_size_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+InitializeFragments::~InitializeFragments() {
+  SharedDtor();
+}
+
+void InitializeFragments::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void InitializeFragments::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* InitializeFragments::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return InitializeFragments_descriptor_;
+}
+
+const InitializeFragments& InitializeFragments::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_BitControl_2eproto();
+  return *default_instance_;
+}
+
+InitializeFragments* InitializeFragments::default_instance_ = NULL;
+
+InitializeFragments* InitializeFragments::New() const {
+  return new InitializeFragments;
+}
+
+void InitializeFragments::Clear() {
+  fragment_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool InitializeFragments::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated .exec.bit.control.PlanFragment fragment = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_fragment:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_fragment()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(10)) goto parse_fragment;
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void InitializeFragments::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // repeated .exec.bit.control.PlanFragment fragment = 1;
+  for (int i = 0; i < this->fragment_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      1, this->fragment(i), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* InitializeFragments::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // repeated .exec.bit.control.PlanFragment fragment = 1;
+  for (int i = 0; i < this->fragment_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        1, this->fragment(i), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int InitializeFragments::ByteSize() const {
+  int total_size = 0;
+
+  // repeated .exec.bit.control.PlanFragment fragment = 1;
+  total_size += 1 * this->fragment_size();
+  for (int i = 0; i < this->fragment_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->fragment(i));
+  }
+
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void InitializeFragments::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const InitializeFragments* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const InitializeFragments*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void InitializeFragments::MergeFrom(const InitializeFragments& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  fragment_.MergeFrom(from.fragment_);
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void InitializeFragments::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void InitializeFragments::CopyFrom(const InitializeFragments& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool InitializeFragments::IsInitialized() const {
+
+  return true;
+}
+
+void InitializeFragments::Swap(InitializeFragments* other) {
+  if (other != this) {
+    fragment_.Swap(&other->fragment_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata InitializeFragments::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = InitializeFragments_descriptor_;
+  metadata.reflection = InitializeFragments_reflection_;
   return metadata;
 }
 

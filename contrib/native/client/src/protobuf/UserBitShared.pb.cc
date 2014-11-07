@@ -30,6 +30,12 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* DrillPBError_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   DrillPBError_reflection_ = NULL;
+const ::google::protobuf::Descriptor* ExceptionWrapper_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  ExceptionWrapper_reflection_ = NULL;
+const ::google::protobuf::Descriptor* StackTraceElementWrapper_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  StackTraceElementWrapper_reflection_ = NULL;
 const ::google::protobuf::Descriptor* ParsingError_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   ParsingError_reflection_ = NULL;
@@ -114,11 +120,12 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryId));
   DrillPBError_descriptor_ = file->message_type(2);
-  static const int DrillPBError_offsets_[5] = {
+  static const int DrillPBError_offsets_[6] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillPBError, error_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillPBError, endpoint_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillPBError, error_type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillPBError, message_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillPBError, exception_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DrillPBError, parsing_error_),
   };
   DrillPBError_reflection_ =
@@ -132,7 +139,44 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(DrillPBError));
-  ParsingError_descriptor_ = file->message_type(3);
+  ExceptionWrapper_descriptor_ = file->message_type(3);
+  static const int ExceptionWrapper_offsets_[4] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ExceptionWrapper, exception_class_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ExceptionWrapper, message_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ExceptionWrapper, stack_trace_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ExceptionWrapper, cause_),
+  };
+  ExceptionWrapper_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      ExceptionWrapper_descriptor_,
+      ExceptionWrapper::default_instance_,
+      ExceptionWrapper_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ExceptionWrapper, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ExceptionWrapper, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(ExceptionWrapper));
+  StackTraceElementWrapper_descriptor_ = file->message_type(4);
+  static const int StackTraceElementWrapper_offsets_[5] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackTraceElementWrapper, class_name_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackTraceElementWrapper, file_name_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackTraceElementWrapper, line_number_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackTraceElementWrapper, method_name_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackTraceElementWrapper, is_native_method_),
+  };
+  StackTraceElementWrapper_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      StackTraceElementWrapper_descriptor_,
+      StackTraceElementWrapper::default_instance_,
+      StackTraceElementWrapper_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackTraceElementWrapper, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackTraceElementWrapper, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(StackTraceElementWrapper));
+  ParsingError_descriptor_ = file->message_type(5);
   static const int ParsingError_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ParsingError, start_column_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ParsingError, start_row_),
@@ -150,7 +194,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(ParsingError));
-  RecordBatchDef_descriptor_ = file->message_type(4);
+  RecordBatchDef_descriptor_ = file->message_type(6);
   static const int RecordBatchDef_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordBatchDef, record_count_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RecordBatchDef, field_),
@@ -167,7 +211,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(RecordBatchDef));
-  NamePart_descriptor_ = file->message_type(5);
+  NamePart_descriptor_ = file->message_type(7);
   static const int NamePart_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NamePart, type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NamePart, name_),
@@ -185,7 +229,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(NamePart));
   NamePart_Type_descriptor_ = NamePart_descriptor_->enum_type(0);
-  SerializedField_descriptor_ = file->message_type(6);
+  SerializedField_descriptor_ = file->message_type(8);
   static const int SerializedField_offsets_[7] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SerializedField, major_type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SerializedField, name_part_),
@@ -206,7 +250,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(SerializedField));
-  NodeStatus_descriptor_ = file->message_type(7);
+  NodeStatus_descriptor_ = file->message_type(9);
   static const int NodeStatus_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeStatus, node_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeStatus, memory_footprint_),
@@ -222,7 +266,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(NodeStatus));
-  QueryResult_descriptor_ = file->message_type(8);
+  QueryResult_descriptor_ = file->message_type(10);
   static const int QueryResult_offsets_[11] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryResult, query_state_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryResult, query_id_),
@@ -248,7 +292,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryResult));
   QueryResult_QueryState_descriptor_ = QueryResult_descriptor_->enum_type(0);
-  QueryProfile_descriptor_ = file->message_type(9);
+  QueryProfile_descriptor_ = file->message_type(11);
   static const int QueryProfile_offsets_[11] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, type_),
@@ -273,7 +317,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryProfile));
-  MajorFragmentProfile_descriptor_ = file->message_type(10);
+  MajorFragmentProfile_descriptor_ = file->message_type(12);
   static const int MajorFragmentProfile_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorFragmentProfile, major_fragment_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorFragmentProfile, minor_fragment_profile_),
@@ -289,7 +333,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(MajorFragmentProfile));
-  MinorFragmentProfile_descriptor_ = file->message_type(11);
+  MinorFragmentProfile_descriptor_ = file->message_type(13);
   static const int MinorFragmentProfile_offsets_[9] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, state_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, error_),
@@ -312,7 +356,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(MinorFragmentProfile));
-  OperatorProfile_descriptor_ = file->message_type(12);
+  OperatorProfile_descriptor_ = file->message_type(14);
   static const int OperatorProfile_offsets_[8] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(OperatorProfile, input_profile_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(OperatorProfile, operator_id_),
@@ -334,7 +378,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(OperatorProfile));
-  StreamProfile_descriptor_ = file->message_type(13);
+  StreamProfile_descriptor_ = file->message_type(15);
   static const int StreamProfile_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StreamProfile, records_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StreamProfile, batches_),
@@ -351,7 +395,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(StreamProfile));
-  MetricValue_descriptor_ = file->message_type(14);
+  MetricValue_descriptor_ = file->message_type(16);
   static const int MetricValue_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MetricValue, metric_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MetricValue, long_value_),
@@ -391,6 +435,10 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     DrillPBError_descriptor_, &DrillPBError::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    ExceptionWrapper_descriptor_, &ExceptionWrapper::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    StackTraceElementWrapper_descriptor_, &StackTraceElementWrapper::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     ParsingError_descriptor_, &ParsingError::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     RecordBatchDef_descriptor_, &RecordBatchDef::default_instance());
@@ -425,6 +473,10 @@ void protobuf_ShutdownFile_UserBitShared_2eproto() {
   delete QueryId_reflection_;
   delete DrillPBError::default_instance_;
   delete DrillPBError_reflection_;
+  delete ExceptionWrapper::default_instance_;
+  delete ExceptionWrapper_reflection_;
+  delete StackTraceElementWrapper::default_instance_;
+  delete StackTraceElementWrapper_reflection_;
   delete ParsingError::default_instance_;
   delete ParsingError_reflection_;
   delete RecordBatchDef::default_instance_;
@@ -465,97 +517,108 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "s.proto\032\022Coordination.proto\032\017SchemaDef.p"
     "roto\"$\n\017UserCredentials\022\021\n\tuser_name\030\001 \001"
     "(\t\"\'\n\007QueryId\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 "
-    "\001(\020\"\241\001\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022("
+    "\001(\020\"\323\001\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022("
     "\n\010endpoint\030\002 \001(\0132\026.exec.DrillbitEndpoint"
     "\022\022\n\nerror_type\030\003 \001(\005\022\017\n\007message\030\004 \001(\t\0220\n"
-    "\rparsing_error\030\005 \003(\0132\031.exec.shared.Parsi"
-    "ngError\"\\\n\014ParsingError\022\024\n\014start_column\030"
-    "\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004"
-    " \001(\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022"
-    "\024\n\014record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.e"
-    "xec.shared.SerializedField\022)\n!carries_tw"
-    "o_byte_selection_vector\030\003 \001(\010\"\205\001\n\010NamePa"
-    "rt\022(\n\004type\030\001 \001(\0162\032.exec.shared.NamePart."
-    "Type\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec"
-    ".shared.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005AR"
-    "RAY\020\001\"\351\001\n\017SerializedField\022%\n\nmajor_type\030"
-    "\001 \001(\0132\021.common.MajorType\022(\n\tname_part\030\002 "
-    "\001(\0132\025.exec.shared.NamePart\022+\n\005child\030\003 \003("
-    "\0132\034.exec.shared.SerializedField\022\023\n\013value"
-    "_count\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\023\n"
-    "\013group_count\030\006 \001(\005\022\025\n\rbuffer_length\030\007 \001("
-    "\005\"7\n\nNodeStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memo"
-    "ry_footprint\030\002 \001(\003\"\335\003\n\013QueryResult\0228\n\013qu"
-    "ery_state\030\001 \001(\0162#.exec.shared.QueryResul"
-    "t.QueryState\022&\n\010query_id\030\002 \001(\0132\024.exec.sh"
-    "ared.QueryId\022\025\n\ris_last_chunk\030\003 \001(\010\022\021\n\tr"
-    "ow_count\030\004 \001(\005\022\024\n\014records_scan\030\005 \001(\003\022\025\n\r"
-    "records_error\030\006 \001(\003\022\027\n\017submission_time\030\007"
-    " \001(\003\022,\n\013node_status\030\010 \003(\0132\027.exec.shared."
-    "NodeStatus\022(\n\005error\030\t \003(\0132\031.exec.shared."
-    "DrillPBError\022(\n\003def\030\n \001(\0132\033.exec.shared."
-    "RecordBatchDef\022\026\n\016schema_changed\030\013 \001(\010\"b"
-    "\n\nQueryState\022\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r"
-    "\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022"
-    "\021\n\rUNKNOWN_QUERY\020\005\"\336\002\n\014QueryProfile\022 \n\002i"
-    "d\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 "
-    "\001(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003 \001"
-    "(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006"
-    " \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitEnd"
-    "point\0222\n\005state\030\010 \001(\0162#.exec.shared.Query"
-    "Result.QueryState\022\027\n\017total_fragments\030\t \001"
-    "(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020fragme"
-    "nt_profile\030\013 \003(\0132!.exec.shared.MajorFrag"
-    "mentProfile\"t\n\024MajorFragmentProfile\022\031\n\021m"
-    "ajor_fragment_id\030\001 \001(\005\022A\n\026minor_fragment"
-    "_profile\030\002 \003(\0132!.exec.shared.MinorFragme"
-    "ntProfile\"\274\002\n\024MinorFragmentProfile\022)\n\005st"
-    "ate\030\001 \001(\0162\032.exec.shared.FragmentState\022(\n"
-    "\005error\030\002 \001(\0132\031.exec.shared.DrillPBError\022"
-    "\031\n\021minor_fragment_id\030\003 \001(\005\0226\n\020operator_p"
-    "rofile\030\004 \003(\0132\034.exec.shared.OperatorProfi"
-    "le\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003"
-    "\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max_memory_used"
-    "\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.Drillbit"
-    "Endpoint\"\372\001\n\017OperatorProfile\0221\n\rinput_pr"
-    "ofile\030\001 \003(\0132\032.exec.shared.StreamProfile\022"
-    "\023\n\013operator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 "
-    "\001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nano"
-    "s\030\006 \001(\003\022\036\n\026local_memory_allocated\030\007 \001(\003\022"
-    "(\n\006metric\030\010 \003(\0132\030.exec.shared.MetricValu"
-    "e\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017"
-    "\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007sche"
-    "mas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 "
-    "\001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_value\030"
-    "\003 \001(\001*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010"
-    "BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\tQueryType\022\007\n\003SQL"
-    "\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*k\n\rFragmen"
-    "tState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATI"
-    "ON\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCE"
-    "LLED\020\004\022\n\n\006FAILED\020\005*\224\005\n\020CoreOperatorType\022"
-    "\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001"
-    "\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH"
-    "_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITIO"
-    "N_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVE"
-    "R\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PRO"
-    "JECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_"
-    "SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR"
-    "_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nT"
-    "OP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020"
-    "\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_RO"
-    "W_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYS"
-    "TEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016P"
-    "ARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013"
-    "TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON"
-    "_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n"
-    "\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020"
-    " B.\n\033org.apache.drill.exec.protoB\rUserBi"
-    "tSharedH\001", 3569);
+    "\texception\030\005 \001(\0132\035.exec.shared.Exception"
+    "Wrapper\0220\n\rparsing_error\030\006 \003(\0132\031.exec.sh"
+    "ared.ParsingError\"\246\001\n\020ExceptionWrapper\022\027"
+    "\n\017exception_class\030\001 \001(\t\022\017\n\007message\030\002 \001(\t"
+    "\022:\n\013stack_trace\030\003 \003(\0132%.exec.shared.Stac"
+    "kTraceElementWrapper\022,\n\005cause\030\004 \001(\0132\035.ex"
+    "ec.shared.ExceptionWrapper\"\205\001\n\030StackTrac"
+    "eElementWrapper\022\022\n\nclass_name\030\001 \001(\t\022\021\n\tf"
+    "ile_name\030\002 \001(\t\022\023\n\013line_number\030\003 \001(\005\022\023\n\013m"
+    "ethod_name\030\004 \001(\t\022\030\n\020is_native_method\030\005 \001"
+    "(\010\"\\\n\014ParsingError\022\024\n\014start_column\030\002 \001(\005"
+    "\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(\005\022"
+    "\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022\024\n\014re"
+    "cord_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.exec.s"
+    "hared.SerializedField\022)\n!carries_two_byt"
+    "e_selection_vector\030\003 \001(\010\"\205\001\n\010NamePart\022(\n"
+    "\004type\030\001 \001(\0162\032.exec.shared.NamePart.Type\022"
+    "\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.shar"
+    "ed.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY\020\001"
+    "\"\351\001\n\017SerializedField\022%\n\nmajor_type\030\001 \001(\013"
+    "2\021.common.MajorType\022(\n\tname_part\030\002 \001(\0132\025"
+    ".exec.shared.NamePart\022+\n\005child\030\003 \003(\0132\034.e"
+    "xec.shared.SerializedField\022\023\n\013value_coun"
+    "t\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\023\n\013grou"
+    "p_count\030\006 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005\"7\n\n"
+    "NodeStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_fo"
+    "otprint\030\002 \001(\003\"\335\003\n\013QueryResult\0228\n\013query_s"
+    "tate\030\001 \001(\0162#.exec.shared.QueryResult.Que"
+    "ryState\022&\n\010query_id\030\002 \001(\0132\024.exec.shared."
+    "QueryId\022\025\n\ris_last_chunk\030\003 \001(\010\022\021\n\trow_co"
+    "unt\030\004 \001(\005\022\024\n\014records_scan\030\005 \001(\003\022\025\n\rrecor"
+    "ds_error\030\006 \001(\003\022\027\n\017submission_time\030\007 \001(\003\022"
+    ",\n\013node_status\030\010 \003(\0132\027.exec.shared.NodeS"
+    "tatus\022(\n\005error\030\t \003(\0132\031.exec.shared.Drill"
+    "PBError\022(\n\003def\030\n \001(\0132\033.exec.shared.Recor"
+    "dBatchDef\022\026\n\016schema_changed\030\013 \001(\010\"b\n\nQue"
+    "ryState\022\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOM"
+    "PLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\021\n\rUN"
+    "KNOWN_QUERY\020\005\"\336\002\n\014QueryProfile\022 \n\002id\030\001 \001"
+    "(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001(\0162\026"
+    ".exec.shared.QueryType\022\r\n\005start\030\003 \001(\003\022\013\n"
+    "\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022"
+    "\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitEndpoint"
+    "\0222\n\005state\030\010 \001(\0162#.exec.shared.QueryResul"
+    "t.QueryState\022\027\n\017total_fragments\030\t \001(\005\022\032\n"
+    "\022finished_fragments\030\n \001(\005\022;\n\020fragment_pr"
+    "ofile\030\013 \003(\0132!.exec.shared.MajorFragmentP"
+    "rofile\"t\n\024MajorFragmentProfile\022\031\n\021major_"
+    "fragment_id\030\001 \001(\005\022A\n\026minor_fragment_prof"
+    "ile\030\002 \003(\0132!.exec.shared.MinorFragmentPro"
+    "file\"\274\002\n\024MinorFragmentProfile\022)\n\005state\030\001"
+    " \001(\0162\032.exec.shared.FragmentState\022(\n\005erro"
+    "r\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n\021mi"
+    "nor_fragment_id\030\003 \001(\005\0226\n\020operator_profil"
+    "e\030\004 \003(\0132\034.exec.shared.OperatorProfile\022\022\n"
+    "\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013m"
+    "emory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001("
+    "\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpo"
+    "int\"\372\001\n\017OperatorProfile\0221\n\rinput_profile"
+    "\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013op"
+    "erator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023"
+    "\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001"
+    "(\003\022\036\n\026local_memory_allocated\030\007 \001(\003\022(\n\006me"
+    "tric\030\010 \003(\0132\030.exec.shared.MetricValue\022\022\n\n"
+    "wait_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007rec"
+    "ords\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003"
+    " \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022"
+    "\n\nlong_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001"
+    "*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_D"
+    "ATA\020\001\022\010\n\004USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n"
+    "\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*k\n\rFragmentStat"
+    "e\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022"
+    "\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020"
+    "\004\022\n\n\006FAILED\020\005*\264\005\n\020CoreOperatorType\022\021\n\rSI"
+    "NGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006F"
+    "ILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN"
+    "\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SEN"
+    "DER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034"
+    "\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020"
+    "\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SENDE"
+    "R\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_REMO"
+    "VER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N_"
+    "SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005"
+    "UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GRO"
+    "UP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_T"
+    "ABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQUE"
+    "T_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT_"
+    "WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB_"
+    "SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COMP"
+    "LEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n\016"
+    "HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"B.\n\033org.apac"
+    "he.drill.exec.protoB\rUserBitSharedH\001", 3956);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   UserCredentials::default_instance_ = new UserCredentials();
   QueryId::default_instance_ = new QueryId();
   DrillPBError::default_instance_ = new DrillPBError();
+  ExceptionWrapper::default_instance_ = new ExceptionWrapper();
+  StackTraceElementWrapper::default_instance_ = new StackTraceElementWrapper();
   ParsingError::default_instance_ = new ParsingError();
   RecordBatchDef::default_instance_ = new RecordBatchDef();
   NamePart::default_instance_ = new NamePart();
@@ -571,6 +634,8 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
   UserCredentials::default_instance_->InitAsDefaultInstance();
   QueryId::default_instance_->InitAsDefaultInstance();
   DrillPBError::default_instance_->InitAsDefaultInstance();
+  ExceptionWrapper::default_instance_->InitAsDefaultInstance();
+  StackTraceElementWrapper::default_instance_->InitAsDefaultInstance();
   ParsingError::default_instance_->InitAsDefaultInstance();
   RecordBatchDef::default_instance_->InitAsDefaultInstance();
   NamePart::default_instance_->InitAsDefaultInstance();
@@ -679,6 +744,8 @@ bool CoreOperatorType_IsValid(int value) {
     case 30:
     case 31:
     case 32:
+    case 33:
+    case 34:
       return true;
     default:
       return false;
@@ -1162,6 +1229,7 @@ const int DrillPBError::kErrorIdFieldNumber;
 const int DrillPBError::kEndpointFieldNumber;
 const int DrillPBError::kErrorTypeFieldNumber;
 const int DrillPBError::kMessageFieldNumber;
+const int DrillPBError::kExceptionFieldNumber;
 const int DrillPBError::kParsingErrorFieldNumber;
 #endif  // !_MSC_VER
 
@@ -1172,6 +1240,7 @@ DrillPBError::DrillPBError()
 
 void DrillPBError::InitAsDefaultInstance() {
   endpoint_ = const_cast< ::exec::DrillbitEndpoint*>(&::exec::DrillbitEndpoint::default_instance());
+  exception_ = const_cast< ::exec::shared::ExceptionWrapper*>(&::exec::shared::ExceptionWrapper::default_instance());
 }
 
 DrillPBError::DrillPBError(const DrillPBError& from)
@@ -1186,6 +1255,7 @@ void DrillPBError::SharedCtor() {
   endpoint_ = NULL;
   error_type_ = 0;
   message_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  exception_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1202,6 +1272,7 @@ void DrillPBError::SharedDtor() {
   }
   if (this != default_instance_) {
     delete endpoint_;
+    delete exception_;
   }
 }
 
@@ -1241,6 +1312,9 @@ void DrillPBError::Clear() {
       if (message_ != &::google::protobuf::internal::kEmptyString) {
         message_->clear();
       }
+    }
+    if (has_exception()) {
+      if (exception_ != NULL) exception_->::exec::shared::ExceptionWrapper::Clear();
     }
   }
   parsing_error_.Clear();
@@ -1313,12 +1387,26 @@ bool DrillPBError::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(42)) goto parse_parsing_error;
+        if (input->ExpectTag(42)) goto parse_exception;
         break;
       }
 
-      // repeated .exec.shared.ParsingError parsing_error = 5;
+      // optional .exec.shared.ExceptionWrapper exception = 5;
       case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_exception:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_exception()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(50)) goto parse_parsing_error;
+        break;
+      }
+
+      // repeated .exec.shared.ParsingError parsing_error = 6;
+      case 6: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_parsing_error:
@@ -1327,7 +1415,7 @@ bool DrillPBError::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(42)) goto parse_parsing_error;
+        if (input->ExpectTag(50)) goto parse_parsing_error;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -1379,10 +1467,16 @@ void DrillPBError::SerializeWithCachedSizes(
       4, this->message(), output);
   }
 
-  // repeated .exec.shared.ParsingError parsing_error = 5;
+  // optional .exec.shared.ExceptionWrapper exception = 5;
+  if (has_exception()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      5, this->exception(), output);
+  }
+
+  // repeated .exec.shared.ParsingError parsing_error = 6;
   for (int i = 0; i < this->parsing_error_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      5, this->parsing_error(i), output);
+      6, this->parsing_error(i), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -1425,11 +1519,18 @@ void DrillPBError::SerializeWithCachedSizes(
         4, this->message(), target);
   }
 
-  // repeated .exec.shared.ParsingError parsing_error = 5;
+  // optional .exec.shared.ExceptionWrapper exception = 5;
+  if (has_exception()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        5, this->exception(), target);
+  }
+
+  // repeated .exec.shared.ParsingError parsing_error = 6;
   for (int i = 0; i < this->parsing_error_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        5, this->parsing_error(i), target);
+        6, this->parsing_error(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1471,8 +1572,15 @@ int DrillPBError::ByteSize() const {
           this->message());
     }
 
+    // optional .exec.shared.ExceptionWrapper exception = 5;
+    if (has_exception()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->exception());
+    }
+
   }
-  // repeated .exec.shared.ParsingError parsing_error = 5;
+  // repeated .exec.shared.ParsingError parsing_error = 6;
   total_size += 1 * this->parsing_error_size();
   for (int i = 0; i < this->parsing_error_size(); i++) {
     total_size +=
@@ -1519,6 +1627,9 @@ void DrillPBError::MergeFrom(const DrillPBError& from) {
     if (from.has_message()) {
       set_message(from.message());
     }
+    if (from.has_exception()) {
+      mutable_exception()->::exec::shared::ExceptionWrapper::MergeFrom(from.exception());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -1546,6 +1657,7 @@ void DrillPBError::Swap(DrillPBError* other) {
     std::swap(endpoint_, other->endpoint_);
     std::swap(error_type_, other->error_type_);
     std::swap(message_, other->message_);
+    std::swap(exception_, other->exception_);
     parsing_error_.Swap(&other->parsing_error_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
@@ -1558,6 +1670,790 @@ void DrillPBError::Swap(DrillPBError* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = DrillPBError_descriptor_;
   metadata.reflection = DrillPBError_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int ExceptionWrapper::kExceptionClassFieldNumber;
+const int ExceptionWrapper::kMessageFieldNumber;
+const int ExceptionWrapper::kStackTraceFieldNumber;
+const int ExceptionWrapper::kCauseFieldNumber;
+#endif  // !_MSC_VER
+
+ExceptionWrapper::ExceptionWrapper()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void ExceptionWrapper::InitAsDefaultInstance() {
+  cause_ = const_cast< ::exec::shared::ExceptionWrapper*>(&::exec::shared::ExceptionWrapper::default_instance());
+}
+
+ExceptionWrapper::ExceptionWrapper(const ExceptionWrapper& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void ExceptionWrapper::SharedCtor() {
+  _cached_size_ = 0;
+  exception_class_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  message_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  cause_ = NULL;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+ExceptionWrapper::~ExceptionWrapper() {
+  SharedDtor();
+}
+
+void ExceptionWrapper::SharedDtor() {
+  if (exception_class_ != &::google::protobuf::internal::kEmptyString) {
+    delete exception_class_;
+  }
+  if (message_ != &::google::protobuf::internal::kEmptyString) {
+    delete message_;
+  }
+  if (this != default_instance_) {
+    delete cause_;
+  }
+}
+
+void ExceptionWrapper::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* ExceptionWrapper::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return ExceptionWrapper_descriptor_;
+}
+
+const ExceptionWrapper& ExceptionWrapper::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_UserBitShared_2eproto();
+  return *default_instance_;
+}
+
+ExceptionWrapper* ExceptionWrapper::default_instance_ = NULL;
+
+ExceptionWrapper* ExceptionWrapper::New() const {
+  return new ExceptionWrapper;
+}
+
+void ExceptionWrapper::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (has_exception_class()) {
+      if (exception_class_ != &::google::protobuf::internal::kEmptyString) {
+        exception_class_->clear();
+      }
+    }
+    if (has_message()) {
+      if (message_ != &::google::protobuf::internal::kEmptyString) {
+        message_->clear();
+      }
+    }
+    if (has_cause()) {
+      if (cause_ != NULL) cause_->::exec::shared::ExceptionWrapper::Clear();
+    }
+  }
+  stack_trace_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool ExceptionWrapper::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string exception_class = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_exception_class()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->exception_class().data(), this->exception_class().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_message;
+        break;
+      }
+
+      // optional string message = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_message:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_message()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->message().data(), this->message().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(26)) goto parse_stack_trace;
+        break;
+      }
+
+      // repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_stack_trace:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_stack_trace()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(26)) goto parse_stack_trace;
+        if (input->ExpectTag(34)) goto parse_cause;
+        break;
+      }
+
+      // optional .exec.shared.ExceptionWrapper cause = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_cause:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_cause()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void ExceptionWrapper::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional string exception_class = 1;
+  if (has_exception_class()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->exception_class().data(), this->exception_class().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      1, this->exception_class(), output);
+  }
+
+  // optional string message = 2;
+  if (has_message()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->message().data(), this->message().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      2, this->message(), output);
+  }
+
+  // repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+  for (int i = 0; i < this->stack_trace_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      3, this->stack_trace(i), output);
+  }
+
+  // optional .exec.shared.ExceptionWrapper cause = 4;
+  if (has_cause()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      4, this->cause(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* ExceptionWrapper::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // optional string exception_class = 1;
+  if (has_exception_class()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->exception_class().data(), this->exception_class().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        1, this->exception_class(), target);
+  }
+
+  // optional string message = 2;
+  if (has_message()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->message().data(), this->message().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        2, this->message(), target);
+  }
+
+  // repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+  for (int i = 0; i < this->stack_trace_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        3, this->stack_trace(i), target);
+  }
+
+  // optional .exec.shared.ExceptionWrapper cause = 4;
+  if (has_cause()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        4, this->cause(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int ExceptionWrapper::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional string exception_class = 1;
+    if (has_exception_class()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->exception_class());
+    }
+
+    // optional string message = 2;
+    if (has_message()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->message());
+    }
+
+    // optional .exec.shared.ExceptionWrapper cause = 4;
+    if (has_cause()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->cause());
+    }
+
+  }
+  // repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+  total_size += 1 * this->stack_trace_size();
+  for (int i = 0; i < this->stack_trace_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->stack_trace(i));
+  }
+
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ExceptionWrapper::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const ExceptionWrapper* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const ExceptionWrapper*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void ExceptionWrapper::MergeFrom(const ExceptionWrapper& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  stack_trace_.MergeFrom(from.stack_trace_);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_exception_class()) {
+      set_exception_class(from.exception_class());
+    }
+    if (from.has_message()) {
+      set_message(from.message());
+    }
+    if (from.has_cause()) {
+      mutable_cause()->::exec::shared::ExceptionWrapper::MergeFrom(from.cause());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void ExceptionWrapper::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void ExceptionWrapper::CopyFrom(const ExceptionWrapper& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ExceptionWrapper::IsInitialized() const {
+
+  return true;
+}
+
+void ExceptionWrapper::Swap(ExceptionWrapper* other) {
+  if (other != this) {
+    std::swap(exception_class_, other->exception_class_);
+    std::swap(message_, other->message_);
+    stack_trace_.Swap(&other->stack_trace_);
+    std::swap(cause_, other->cause_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata ExceptionWrapper::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = ExceptionWrapper_descriptor_;
+  metadata.reflection = ExceptionWrapper_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int StackTraceElementWrapper::kClassNameFieldNumber;
+const int StackTraceElementWrapper::kFileNameFieldNumber;
+const int StackTraceElementWrapper::kLineNumberFieldNumber;
+const int StackTraceElementWrapper::kMethodNameFieldNumber;
+const int StackTraceElementWrapper::kIsNativeMethodFieldNumber;
+#endif  // !_MSC_VER
+
+StackTraceElementWrapper::StackTraceElementWrapper()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void StackTraceElementWrapper::InitAsDefaultInstance() {
+}
+
+StackTraceElementWrapper::StackTraceElementWrapper(const StackTraceElementWrapper& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void StackTraceElementWrapper::SharedCtor() {
+  _cached_size_ = 0;
+  class_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  file_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  line_number_ = 0;
+  method_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  is_native_method_ = false;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+StackTraceElementWrapper::~StackTraceElementWrapper() {
+  SharedDtor();
+}
+
+void StackTraceElementWrapper::SharedDtor() {
+  if (class_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete class_name_;
+  }
+  if (file_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete file_name_;
+  }
+  if (method_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete method_name_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void StackTraceElementWrapper::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* StackTraceElementWrapper::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return StackTraceElementWrapper_descriptor_;
+}
+
+const StackTraceElementWrapper& StackTraceElementWrapper::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_UserBitShared_2eproto();
+  return *default_instance_;
+}
+
+StackTraceElementWrapper* StackTraceElementWrapper::default_instance_ = NULL;
+
+StackTraceElementWrapper* StackTraceElementWrapper::New() const {
+  return new StackTraceElementWrapper;
+}
+
+void StackTraceElementWrapper::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (has_class_name()) {
+      if (class_name_ != &::google::protobuf::internal::kEmptyString) {
+        class_name_->clear();
+      }
+    }
+    if (has_file_name()) {
+      if (file_name_ != &::google::protobuf::internal::kEmptyString) {
+        file_name_->clear();
+      }
+    }
+    line_number_ = 0;
+    if (has_method_name()) {
+      if (method_name_ != &::google::protobuf::internal::kEmptyString) {
+        method_name_->clear();
+      }
+    }
+    is_native_method_ = false;
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool StackTraceElementWrapper::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string class_name = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_class_name()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->class_name().data(), this->class_name().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_file_name;
+        break;
+      }
+
+      // optional string file_name = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_file_name:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_file_name()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->file_name().data(), this->file_name().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(24)) goto parse_line_number;
+        break;
+      }
+
+      // optional int32 line_number = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_line_number:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &line_number_)));
+          set_has_line_number();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(34)) goto parse_method_name;
+        break;
+      }
+
+      // optional string method_name = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_method_name:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_method_name()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->method_name().data(), this->method_name().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(40)) goto parse_is_native_method;
+        break;
+      }
+
+      // optional bool is_native_method = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_is_native_method:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &is_native_method_)));
+          set_has_is_native_method();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void StackTraceElementWrapper::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional string class_name = 1;
+  if (has_class_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->class_name().data(), this->class_name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      1, this->class_name(), output);
+  }
+
+  // optional string file_name = 2;
+  if (has_file_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->file_name().data(), this->file_name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      2, this->file_name(), output);
+  }
+
+  // optional int32 line_number = 3;
+  if (has_line_number()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->line_number(), output);
+  }
+
+  // optional string method_name = 4;
+  if (has_method_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->method_name().data(), this->method_name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      4, this->method_name(), output);
+  }
+
+  // optional bool is_native_method = 5;
+  if (has_is_native_method()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->is_native_method(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* StackTraceElementWrapper::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // optional string class_name = 1;
+  if (has_class_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->class_name().data(), this->class_name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        1, this->class_name(), target);
+  }
+
+  // optional string file_name = 2;
+  if (has_file_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->file_name().data(), this->file_name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        2, this->file_name(), target);
+  }
+
+  // optional int32 line_number = 3;
+  if (has_line_number()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->line_number(), target);
+  }
+
+  // optional string method_name = 4;
+  if (has_method_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->method_name().data(), this->method_name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        4, this->method_name(), target);
+  }
+
+  // optional bool is_native_method = 5;
+  if (has_is_native_method()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->is_native_method(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int StackTraceElementWrapper::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional string class_name = 1;
+    if (has_class_name()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->class_name());
+    }
+
+    // optional string file_name = 2;
+    if (has_file_name()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->file_name());
+    }
+
+    // optional int32 line_number = 3;
+    if (has_line_number()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->line_number());
+    }
+
+    // optional string method_name = 4;
+    if (has_method_name()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->method_name());
+    }
+
+    // optional bool is_native_method = 5;
+    if (has_is_native_method()) {
+      total_size += 1 + 1;
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void StackTraceElementWrapper::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const StackTraceElementWrapper* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const StackTraceElementWrapper*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void StackTraceElementWrapper::MergeFrom(const StackTraceElementWrapper& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_class_name()) {
+      set_class_name(from.class_name());
+    }
+    if (from.has_file_name()) {
+      set_file_name(from.file_name());
+    }
+    if (from.has_line_number()) {
+      set_line_number(from.line_number());
+    }
+    if (from.has_method_name()) {
+      set_method_name(from.method_name());
+    }
+    if (from.has_is_native_method()) {
+      set_is_native_method(from.is_native_method());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void StackTraceElementWrapper::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void StackTraceElementWrapper::CopyFrom(const StackTraceElementWrapper& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool StackTraceElementWrapper::IsInitialized() const {
+
+  return true;
+}
+
+void StackTraceElementWrapper::Swap(StackTraceElementWrapper* other) {
+  if (other != this) {
+    std::swap(class_name_, other->class_name_);
+    std::swap(file_name_, other->file_name_);
+    std::swap(line_number_, other->line_number_);
+    std::swap(method_name_, other->method_name_);
+    std::swap(is_native_method_, other->is_native_method_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata StackTraceElementWrapper::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = StackTraceElementWrapper_descriptor_;
+  metadata.reflection = StackTraceElementWrapper_reflection_;
   return metadata;
 }
 

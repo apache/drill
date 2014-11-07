@@ -42,6 +42,7 @@ void protobuf_ShutdownFile_BitControl_2eproto();
 class BitControlHandshake;
 class BitStatus;
 class FragmentStatus;
+class InitializeFragments;
 class PlanFragment;
 class WorkQueueStatus;
 class FinishedReceiver;
@@ -50,7 +51,7 @@ enum RpcType {
   HANDSHAKE = 0,
   ACK = 1,
   GOODBYE = 2,
-  REQ_INIATILIZE_FRAGMENT = 3,
+  REQ_INIATILIZE_FRAGMENTS = 3,
   REQ_CANCEL_FRAGMENT = 6,
   REQ_RECEIVER_FINISHED = 7,
   REQ_FRAGMENT_STATUS = 8,
@@ -360,6 +361,91 @@ class FragmentStatus : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static FragmentStatus* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class InitializeFragments : public ::google::protobuf::Message {
+ public:
+  InitializeFragments();
+  virtual ~InitializeFragments();
+
+  InitializeFragments(const InitializeFragments& from);
+
+  inline InitializeFragments& operator=(const InitializeFragments& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const InitializeFragments& default_instance();
+
+  void Swap(InitializeFragments* other);
+
+  // implements Message ----------------------------------------------
+
+  InitializeFragments* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const InitializeFragments& from);
+  void MergeFrom(const InitializeFragments& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .exec.bit.control.PlanFragment fragment = 1;
+  inline int fragment_size() const;
+  inline void clear_fragment();
+  static const int kFragmentFieldNumber = 1;
+  inline const ::exec::bit::control::PlanFragment& fragment(int index) const;
+  inline ::exec::bit::control::PlanFragment* mutable_fragment(int index);
+  inline ::exec::bit::control::PlanFragment* add_fragment();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >&
+      fragment() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >*
+      mutable_fragment();
+
+  // @@protoc_insertion_point(class_scope:exec.bit.control.InitializeFragments)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment > fragment_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_BitControl_2eproto();
+  friend void protobuf_AssignDesc_BitControl_2eproto();
+  friend void protobuf_ShutdownFile_BitControl_2eproto();
+
+  void InitAsDefaultInstance();
+  static InitializeFragments* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -998,6 +1084,35 @@ inline void FragmentStatus::set_allocated_handle(::exec::bit::FragmentHandle* ha
   } else {
     clear_has_handle();
   }
+}
+
+// -------------------------------------------------------------------
+
+// InitializeFragments
+
+// repeated .exec.bit.control.PlanFragment fragment = 1;
+inline int InitializeFragments::fragment_size() const {
+  return fragment_.size();
+}
+inline void InitializeFragments::clear_fragment() {
+  fragment_.Clear();
+}
+inline const ::exec::bit::control::PlanFragment& InitializeFragments::fragment(int index) const {
+  return fragment_.Get(index);
+}
+inline ::exec::bit::control::PlanFragment* InitializeFragments::mutable_fragment(int index) {
+  return fragment_.Mutable(index);
+}
+inline ::exec::bit::control::PlanFragment* InitializeFragments::add_fragment() {
+  return fragment_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >&
+InitializeFragments::fragment() const {
+  return fragment_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >*
+InitializeFragments::mutable_fragment() {
+  return &fragment_;
 }
 
 // -------------------------------------------------------------------

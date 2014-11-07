@@ -41,6 +41,8 @@ void protobuf_ShutdownFile_UserBitShared_2eproto();
 class UserCredentials;
 class QueryId;
 class DrillPBError;
+class ExceptionWrapper;
+class StackTraceElementWrapper;
 class ParsingError;
 class RecordBatchDef;
 class NamePart;
@@ -192,11 +194,13 @@ enum CoreOperatorType {
   JSON_SUB_SCAN = 29,
   INFO_SCHEMA_SUB_SCAN = 30,
   COMPLEX_TO_JSON = 31,
-  PRODUCER_CONSUMER = 32
+  PRODUCER_CONSUMER = 32,
+  HBASE_SUB_SCAN = 33,
+  WINDOW = 34
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = PRODUCER_CONSUMER;
+const CoreOperatorType CoreOperatorType_MAX = WINDOW;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
@@ -484,10 +488,19 @@ class DrillPBError : public ::google::protobuf::Message {
   inline ::std::string* release_message();
   inline void set_allocated_message(::std::string* message);
 
-  // repeated .exec.shared.ParsingError parsing_error = 5;
+  // optional .exec.shared.ExceptionWrapper exception = 5;
+  inline bool has_exception() const;
+  inline void clear_exception();
+  static const int kExceptionFieldNumber = 5;
+  inline const ::exec::shared::ExceptionWrapper& exception() const;
+  inline ::exec::shared::ExceptionWrapper* mutable_exception();
+  inline ::exec::shared::ExceptionWrapper* release_exception();
+  inline void set_allocated_exception(::exec::shared::ExceptionWrapper* exception);
+
+  // repeated .exec.shared.ParsingError parsing_error = 6;
   inline int parsing_error_size() const;
   inline void clear_parsing_error();
-  static const int kParsingErrorFieldNumber = 5;
+  static const int kParsingErrorFieldNumber = 6;
   inline const ::exec::shared::ParsingError& parsing_error(int index) const;
   inline ::exec::shared::ParsingError* mutable_parsing_error(int index);
   inline ::exec::shared::ParsingError* add_parsing_error();
@@ -506,14 +519,281 @@ class DrillPBError : public ::google::protobuf::Message {
   inline void clear_has_error_type();
   inline void set_has_message();
   inline void clear_has_message();
+  inline void set_has_exception();
+  inline void clear_has_exception();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* error_id_;
   ::exec::DrillbitEndpoint* endpoint_;
   ::std::string* message_;
+  ::exec::shared::ExceptionWrapper* exception_;
   ::google::protobuf::RepeatedPtrField< ::exec::shared::ParsingError > parsing_error_;
   ::google::protobuf::int32 error_type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static DrillPBError* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ExceptionWrapper : public ::google::protobuf::Message {
+ public:
+  ExceptionWrapper();
+  virtual ~ExceptionWrapper();
+
+  ExceptionWrapper(const ExceptionWrapper& from);
+
+  inline ExceptionWrapper& operator=(const ExceptionWrapper& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ExceptionWrapper& default_instance();
+
+  void Swap(ExceptionWrapper* other);
+
+  // implements Message ----------------------------------------------
+
+  ExceptionWrapper* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ExceptionWrapper& from);
+  void MergeFrom(const ExceptionWrapper& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string exception_class = 1;
+  inline bool has_exception_class() const;
+  inline void clear_exception_class();
+  static const int kExceptionClassFieldNumber = 1;
+  inline const ::std::string& exception_class() const;
+  inline void set_exception_class(const ::std::string& value);
+  inline void set_exception_class(const char* value);
+  inline void set_exception_class(const char* value, size_t size);
+  inline ::std::string* mutable_exception_class();
+  inline ::std::string* release_exception_class();
+  inline void set_allocated_exception_class(::std::string* exception_class);
+
+  // optional string message = 2;
+  inline bool has_message() const;
+  inline void clear_message();
+  static const int kMessageFieldNumber = 2;
+  inline const ::std::string& message() const;
+  inline void set_message(const ::std::string& value);
+  inline void set_message(const char* value);
+  inline void set_message(const char* value, size_t size);
+  inline ::std::string* mutable_message();
+  inline ::std::string* release_message();
+  inline void set_allocated_message(::std::string* message);
+
+  // repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+  inline int stack_trace_size() const;
+  inline void clear_stack_trace();
+  static const int kStackTraceFieldNumber = 3;
+  inline const ::exec::shared::StackTraceElementWrapper& stack_trace(int index) const;
+  inline ::exec::shared::StackTraceElementWrapper* mutable_stack_trace(int index);
+  inline ::exec::shared::StackTraceElementWrapper* add_stack_trace();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::StackTraceElementWrapper >&
+      stack_trace() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::StackTraceElementWrapper >*
+      mutable_stack_trace();
+
+  // optional .exec.shared.ExceptionWrapper cause = 4;
+  inline bool has_cause() const;
+  inline void clear_cause();
+  static const int kCauseFieldNumber = 4;
+  inline const ::exec::shared::ExceptionWrapper& cause() const;
+  inline ::exec::shared::ExceptionWrapper* mutable_cause();
+  inline ::exec::shared::ExceptionWrapper* release_cause();
+  inline void set_allocated_cause(::exec::shared::ExceptionWrapper* cause);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.ExceptionWrapper)
+ private:
+  inline void set_has_exception_class();
+  inline void clear_has_exception_class();
+  inline void set_has_message();
+  inline void clear_has_message();
+  inline void set_has_cause();
+  inline void clear_has_cause();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* exception_class_;
+  ::std::string* message_;
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::StackTraceElementWrapper > stack_trace_;
+  ::exec::shared::ExceptionWrapper* cause_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static ExceptionWrapper* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class StackTraceElementWrapper : public ::google::protobuf::Message {
+ public:
+  StackTraceElementWrapper();
+  virtual ~StackTraceElementWrapper();
+
+  StackTraceElementWrapper(const StackTraceElementWrapper& from);
+
+  inline StackTraceElementWrapper& operator=(const StackTraceElementWrapper& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const StackTraceElementWrapper& default_instance();
+
+  void Swap(StackTraceElementWrapper* other);
+
+  // implements Message ----------------------------------------------
+
+  StackTraceElementWrapper* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const StackTraceElementWrapper& from);
+  void MergeFrom(const StackTraceElementWrapper& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string class_name = 1;
+  inline bool has_class_name() const;
+  inline void clear_class_name();
+  static const int kClassNameFieldNumber = 1;
+  inline const ::std::string& class_name() const;
+  inline void set_class_name(const ::std::string& value);
+  inline void set_class_name(const char* value);
+  inline void set_class_name(const char* value, size_t size);
+  inline ::std::string* mutable_class_name();
+  inline ::std::string* release_class_name();
+  inline void set_allocated_class_name(::std::string* class_name);
+
+  // optional string file_name = 2;
+  inline bool has_file_name() const;
+  inline void clear_file_name();
+  static const int kFileNameFieldNumber = 2;
+  inline const ::std::string& file_name() const;
+  inline void set_file_name(const ::std::string& value);
+  inline void set_file_name(const char* value);
+  inline void set_file_name(const char* value, size_t size);
+  inline ::std::string* mutable_file_name();
+  inline ::std::string* release_file_name();
+  inline void set_allocated_file_name(::std::string* file_name);
+
+  // optional int32 line_number = 3;
+  inline bool has_line_number() const;
+  inline void clear_line_number();
+  static const int kLineNumberFieldNumber = 3;
+  inline ::google::protobuf::int32 line_number() const;
+  inline void set_line_number(::google::protobuf::int32 value);
+
+  // optional string method_name = 4;
+  inline bool has_method_name() const;
+  inline void clear_method_name();
+  static const int kMethodNameFieldNumber = 4;
+  inline const ::std::string& method_name() const;
+  inline void set_method_name(const ::std::string& value);
+  inline void set_method_name(const char* value);
+  inline void set_method_name(const char* value, size_t size);
+  inline ::std::string* mutable_method_name();
+  inline ::std::string* release_method_name();
+  inline void set_allocated_method_name(::std::string* method_name);
+
+  // optional bool is_native_method = 5;
+  inline bool has_is_native_method() const;
+  inline void clear_is_native_method();
+  static const int kIsNativeMethodFieldNumber = 5;
+  inline bool is_native_method() const;
+  inline void set_is_native_method(bool value);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.StackTraceElementWrapper)
+ private:
+  inline void set_has_class_name();
+  inline void clear_has_class_name();
+  inline void set_has_file_name();
+  inline void clear_has_file_name();
+  inline void set_has_line_number();
+  inline void clear_has_line_number();
+  inline void set_has_method_name();
+  inline void clear_has_method_name();
+  inline void set_has_is_native_method();
+  inline void clear_has_is_native_method();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* class_name_;
+  ::std::string* file_name_;
+  ::std::string* method_name_;
+  ::google::protobuf::int32 line_number_;
+  bool is_native_method_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
@@ -523,7 +803,7 @@ class DrillPBError : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_UserBitShared_2eproto();
 
   void InitAsDefaultInstance();
-  static DrillPBError* default_instance_;
+  static StackTraceElementWrapper* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -2490,7 +2770,45 @@ inline void DrillPBError::set_allocated_message(::std::string* message) {
   }
 }
 
-// repeated .exec.shared.ParsingError parsing_error = 5;
+// optional .exec.shared.ExceptionWrapper exception = 5;
+inline bool DrillPBError::has_exception() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void DrillPBError::set_has_exception() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void DrillPBError::clear_has_exception() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void DrillPBError::clear_exception() {
+  if (exception_ != NULL) exception_->::exec::shared::ExceptionWrapper::Clear();
+  clear_has_exception();
+}
+inline const ::exec::shared::ExceptionWrapper& DrillPBError::exception() const {
+  return exception_ != NULL ? *exception_ : *default_instance_->exception_;
+}
+inline ::exec::shared::ExceptionWrapper* DrillPBError::mutable_exception() {
+  set_has_exception();
+  if (exception_ == NULL) exception_ = new ::exec::shared::ExceptionWrapper;
+  return exception_;
+}
+inline ::exec::shared::ExceptionWrapper* DrillPBError::release_exception() {
+  clear_has_exception();
+  ::exec::shared::ExceptionWrapper* temp = exception_;
+  exception_ = NULL;
+  return temp;
+}
+inline void DrillPBError::set_allocated_exception(::exec::shared::ExceptionWrapper* exception) {
+  delete exception_;
+  exception_ = exception;
+  if (exception) {
+    set_has_exception();
+  } else {
+    clear_has_exception();
+  }
+}
+
+// repeated .exec.shared.ParsingError parsing_error = 6;
 inline int DrillPBError::parsing_error_size() const {
   return parsing_error_.size();
 }
@@ -2513,6 +2831,471 @@ DrillPBError::parsing_error() const {
 inline ::google::protobuf::RepeatedPtrField< ::exec::shared::ParsingError >*
 DrillPBError::mutable_parsing_error() {
   return &parsing_error_;
+}
+
+// -------------------------------------------------------------------
+
+// ExceptionWrapper
+
+// optional string exception_class = 1;
+inline bool ExceptionWrapper::has_exception_class() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ExceptionWrapper::set_has_exception_class() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ExceptionWrapper::clear_has_exception_class() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ExceptionWrapper::clear_exception_class() {
+  if (exception_class_ != &::google::protobuf::internal::kEmptyString) {
+    exception_class_->clear();
+  }
+  clear_has_exception_class();
+}
+inline const ::std::string& ExceptionWrapper::exception_class() const {
+  return *exception_class_;
+}
+inline void ExceptionWrapper::set_exception_class(const ::std::string& value) {
+  set_has_exception_class();
+  if (exception_class_ == &::google::protobuf::internal::kEmptyString) {
+    exception_class_ = new ::std::string;
+  }
+  exception_class_->assign(value);
+}
+inline void ExceptionWrapper::set_exception_class(const char* value) {
+  set_has_exception_class();
+  if (exception_class_ == &::google::protobuf::internal::kEmptyString) {
+    exception_class_ = new ::std::string;
+  }
+  exception_class_->assign(value);
+}
+inline void ExceptionWrapper::set_exception_class(const char* value, size_t size) {
+  set_has_exception_class();
+  if (exception_class_ == &::google::protobuf::internal::kEmptyString) {
+    exception_class_ = new ::std::string;
+  }
+  exception_class_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ExceptionWrapper::mutable_exception_class() {
+  set_has_exception_class();
+  if (exception_class_ == &::google::protobuf::internal::kEmptyString) {
+    exception_class_ = new ::std::string;
+  }
+  return exception_class_;
+}
+inline ::std::string* ExceptionWrapper::release_exception_class() {
+  clear_has_exception_class();
+  if (exception_class_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = exception_class_;
+    exception_class_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ExceptionWrapper::set_allocated_exception_class(::std::string* exception_class) {
+  if (exception_class_ != &::google::protobuf::internal::kEmptyString) {
+    delete exception_class_;
+  }
+  if (exception_class) {
+    set_has_exception_class();
+    exception_class_ = exception_class;
+  } else {
+    clear_has_exception_class();
+    exception_class_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string message = 2;
+inline bool ExceptionWrapper::has_message() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ExceptionWrapper::set_has_message() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ExceptionWrapper::clear_has_message() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ExceptionWrapper::clear_message() {
+  if (message_ != &::google::protobuf::internal::kEmptyString) {
+    message_->clear();
+  }
+  clear_has_message();
+}
+inline const ::std::string& ExceptionWrapper::message() const {
+  return *message_;
+}
+inline void ExceptionWrapper::set_message(const ::std::string& value) {
+  set_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    message_ = new ::std::string;
+  }
+  message_->assign(value);
+}
+inline void ExceptionWrapper::set_message(const char* value) {
+  set_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    message_ = new ::std::string;
+  }
+  message_->assign(value);
+}
+inline void ExceptionWrapper::set_message(const char* value, size_t size) {
+  set_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    message_ = new ::std::string;
+  }
+  message_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ExceptionWrapper::mutable_message() {
+  set_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    message_ = new ::std::string;
+  }
+  return message_;
+}
+inline ::std::string* ExceptionWrapper::release_message() {
+  clear_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = message_;
+    message_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ExceptionWrapper::set_allocated_message(::std::string* message) {
+  if (message_ != &::google::protobuf::internal::kEmptyString) {
+    delete message_;
+  }
+  if (message) {
+    set_has_message();
+    message_ = message;
+  } else {
+    clear_has_message();
+    message_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;
+inline int ExceptionWrapper::stack_trace_size() const {
+  return stack_trace_.size();
+}
+inline void ExceptionWrapper::clear_stack_trace() {
+  stack_trace_.Clear();
+}
+inline const ::exec::shared::StackTraceElementWrapper& ExceptionWrapper::stack_trace(int index) const {
+  return stack_trace_.Get(index);
+}
+inline ::exec::shared::StackTraceElementWrapper* ExceptionWrapper::mutable_stack_trace(int index) {
+  return stack_trace_.Mutable(index);
+}
+inline ::exec::shared::StackTraceElementWrapper* ExceptionWrapper::add_stack_trace() {
+  return stack_trace_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::StackTraceElementWrapper >&
+ExceptionWrapper::stack_trace() const {
+  return stack_trace_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::StackTraceElementWrapper >*
+ExceptionWrapper::mutable_stack_trace() {
+  return &stack_trace_;
+}
+
+// optional .exec.shared.ExceptionWrapper cause = 4;
+inline bool ExceptionWrapper::has_cause() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ExceptionWrapper::set_has_cause() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ExceptionWrapper::clear_has_cause() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ExceptionWrapper::clear_cause() {
+  if (cause_ != NULL) cause_->::exec::shared::ExceptionWrapper::Clear();
+  clear_has_cause();
+}
+inline const ::exec::shared::ExceptionWrapper& ExceptionWrapper::cause() const {
+  return cause_ != NULL ? *cause_ : *default_instance_->cause_;
+}
+inline ::exec::shared::ExceptionWrapper* ExceptionWrapper::mutable_cause() {
+  set_has_cause();
+  if (cause_ == NULL) cause_ = new ::exec::shared::ExceptionWrapper;
+  return cause_;
+}
+inline ::exec::shared::ExceptionWrapper* ExceptionWrapper::release_cause() {
+  clear_has_cause();
+  ::exec::shared::ExceptionWrapper* temp = cause_;
+  cause_ = NULL;
+  return temp;
+}
+inline void ExceptionWrapper::set_allocated_cause(::exec::shared::ExceptionWrapper* cause) {
+  delete cause_;
+  cause_ = cause;
+  if (cause) {
+    set_has_cause();
+  } else {
+    clear_has_cause();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// StackTraceElementWrapper
+
+// optional string class_name = 1;
+inline bool StackTraceElementWrapper::has_class_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void StackTraceElementWrapper::set_has_class_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void StackTraceElementWrapper::clear_has_class_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void StackTraceElementWrapper::clear_class_name() {
+  if (class_name_ != &::google::protobuf::internal::kEmptyString) {
+    class_name_->clear();
+  }
+  clear_has_class_name();
+}
+inline const ::std::string& StackTraceElementWrapper::class_name() const {
+  return *class_name_;
+}
+inline void StackTraceElementWrapper::set_class_name(const ::std::string& value) {
+  set_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    class_name_ = new ::std::string;
+  }
+  class_name_->assign(value);
+}
+inline void StackTraceElementWrapper::set_class_name(const char* value) {
+  set_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    class_name_ = new ::std::string;
+  }
+  class_name_->assign(value);
+}
+inline void StackTraceElementWrapper::set_class_name(const char* value, size_t size) {
+  set_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    class_name_ = new ::std::string;
+  }
+  class_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* StackTraceElementWrapper::mutable_class_name() {
+  set_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    class_name_ = new ::std::string;
+  }
+  return class_name_;
+}
+inline ::std::string* StackTraceElementWrapper::release_class_name() {
+  clear_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = class_name_;
+    class_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void StackTraceElementWrapper::set_allocated_class_name(::std::string* class_name) {
+  if (class_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete class_name_;
+  }
+  if (class_name) {
+    set_has_class_name();
+    class_name_ = class_name;
+  } else {
+    clear_has_class_name();
+    class_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string file_name = 2;
+inline bool StackTraceElementWrapper::has_file_name() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void StackTraceElementWrapper::set_has_file_name() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void StackTraceElementWrapper::clear_has_file_name() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void StackTraceElementWrapper::clear_file_name() {
+  if (file_name_ != &::google::protobuf::internal::kEmptyString) {
+    file_name_->clear();
+  }
+  clear_has_file_name();
+}
+inline const ::std::string& StackTraceElementWrapper::file_name() const {
+  return *file_name_;
+}
+inline void StackTraceElementWrapper::set_file_name(const ::std::string& value) {
+  set_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    file_name_ = new ::std::string;
+  }
+  file_name_->assign(value);
+}
+inline void StackTraceElementWrapper::set_file_name(const char* value) {
+  set_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    file_name_ = new ::std::string;
+  }
+  file_name_->assign(value);
+}
+inline void StackTraceElementWrapper::set_file_name(const char* value, size_t size) {
+  set_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    file_name_ = new ::std::string;
+  }
+  file_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* StackTraceElementWrapper::mutable_file_name() {
+  set_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    file_name_ = new ::std::string;
+  }
+  return file_name_;
+}
+inline ::std::string* StackTraceElementWrapper::release_file_name() {
+  clear_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = file_name_;
+    file_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void StackTraceElementWrapper::set_allocated_file_name(::std::string* file_name) {
+  if (file_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete file_name_;
+  }
+  if (file_name) {
+    set_has_file_name();
+    file_name_ = file_name;
+  } else {
+    clear_has_file_name();
+    file_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional int32 line_number = 3;
+inline bool StackTraceElementWrapper::has_line_number() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void StackTraceElementWrapper::set_has_line_number() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void StackTraceElementWrapper::clear_has_line_number() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void StackTraceElementWrapper::clear_line_number() {
+  line_number_ = 0;
+  clear_has_line_number();
+}
+inline ::google::protobuf::int32 StackTraceElementWrapper::line_number() const {
+  return line_number_;
+}
+inline void StackTraceElementWrapper::set_line_number(::google::protobuf::int32 value) {
+  set_has_line_number();
+  line_number_ = value;
+}
+
+// optional string method_name = 4;
+inline bool StackTraceElementWrapper::has_method_name() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void StackTraceElementWrapper::set_has_method_name() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void StackTraceElementWrapper::clear_has_method_name() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void StackTraceElementWrapper::clear_method_name() {
+  if (method_name_ != &::google::protobuf::internal::kEmptyString) {
+    method_name_->clear();
+  }
+  clear_has_method_name();
+}
+inline const ::std::string& StackTraceElementWrapper::method_name() const {
+  return *method_name_;
+}
+inline void StackTraceElementWrapper::set_method_name(const ::std::string& value) {
+  set_has_method_name();
+  if (method_name_ == &::google::protobuf::internal::kEmptyString) {
+    method_name_ = new ::std::string;
+  }
+  method_name_->assign(value);
+}
+inline void StackTraceElementWrapper::set_method_name(const char* value) {
+  set_has_method_name();
+  if (method_name_ == &::google::protobuf::internal::kEmptyString) {
+    method_name_ = new ::std::string;
+  }
+  method_name_->assign(value);
+}
+inline void StackTraceElementWrapper::set_method_name(const char* value, size_t size) {
+  set_has_method_name();
+  if (method_name_ == &::google::protobuf::internal::kEmptyString) {
+    method_name_ = new ::std::string;
+  }
+  method_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* StackTraceElementWrapper::mutable_method_name() {
+  set_has_method_name();
+  if (method_name_ == &::google::protobuf::internal::kEmptyString) {
+    method_name_ = new ::std::string;
+  }
+  return method_name_;
+}
+inline ::std::string* StackTraceElementWrapper::release_method_name() {
+  clear_has_method_name();
+  if (method_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = method_name_;
+    method_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void StackTraceElementWrapper::set_allocated_method_name(::std::string* method_name) {
+  if (method_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete method_name_;
+  }
+  if (method_name) {
+    set_has_method_name();
+    method_name_ = method_name;
+  } else {
+    clear_has_method_name();
+    method_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bool is_native_method = 5;
+inline bool StackTraceElementWrapper::has_is_native_method() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void StackTraceElementWrapper::set_has_is_native_method() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void StackTraceElementWrapper::clear_has_is_native_method() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void StackTraceElementWrapper::clear_is_native_method() {
+  is_native_method_ = false;
+  clear_has_is_native_method();
+}
+inline bool StackTraceElementWrapper::is_native_method() const {
+  return is_native_method_;
+}
+inline void StackTraceElementWrapper::set_is_native_method(bool value) {
+  set_has_is_native_method();
+  is_native_method_ = value;
 }
 
 // -------------------------------------------------------------------
