@@ -27,6 +27,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -287,8 +288,10 @@ public class ChainedHashTable {
     assert keyExprsBuild.length == keyExprsProbe.length;
 
     for (int i = 0; i < keyExprsBuild.length; i++) {
-      MinorType buildType = keyExprsBuild[i].getMajorType().getMinorType();
-      MinorType probeType = keyExprsProbe[i].getMajorType().getMinorType();
+      LogicalExpression buildExpr = keyExprsBuild[i];
+      LogicalExpression probeExpr = keyExprsProbe[i];
+      MinorType buildType = buildExpr.getMajorType().getMinorType();
+      MinorType probeType = probeExpr.getMajorType().getMinorType();
 
       if (buildType != probeType) {
         // We need to add a cast to one of the expressions
@@ -296,22 +299,22 @@ public class ChainedHashTable {
         types.add(buildType);
         types.add(probeType);
         MinorType result = TypeCastRules.getLeastRestrictiveType(types);
+        ErrorCollector errorCollector = new ErrorCollectorImpl();
 
-        // Add the cast
-        List<LogicalExpression> args = new LinkedList<>();
         if (result == null) {
           throw new DrillRuntimeException(String.format("Join conditions cannot be compared failing build expression: %s failing probe expression: %s",
-              keyExprsBuild[i].getMajorType().toString(), keyExprsProbe[i].getMajorType().toString()));
+              buildExpr.getMajorType().toString(), probeExpr.getMajorType().toString()));
         }
         else if (result != buildType) {
           // Add a cast expression on top of the build expression
-          args.add(keyExprsBuild[i]);
-          FunctionCall castCall = new FunctionCall("cast" + result.toString().toUpperCase(), args, ExpressionPosition.UNKNOWN);
-          keyExprsBuild[i] = ExpressionTreeMaterializer.materialize(castCall, incomingBuild, new ErrorCollectorImpl(), context.getFunctionRegistry());
+          LogicalExpression castExpr = ExpressionTreeMaterializer.addCastExpression(buildExpr, probeExpr.getMajorType(), context.getFunctionRegistry(), errorCollector);
+          // Store the newly casted expression
+          keyExprsBuild[i] = ExpressionTreeMaterializer.materialize(castExpr, incomingBuild, errorCollector, context.getFunctionRegistry());
         } else if (result != probeType) {
-          args.add(keyExprsProbe[i]);
-          FunctionCall castCall = new FunctionCall("cast" + result.toString().toUpperCase(), args, ExpressionPosition.UNKNOWN);
-          keyExprsProbe[i] = ExpressionTreeMaterializer.materialize(castCall, incomingProbe, new ErrorCollectorImpl(), context.getFunctionRegistry());
+          // Add a cast expression on top of the probe expression
+          LogicalExpression castExpr = ExpressionTreeMaterializer.addCastExpression(probeExpr, buildExpr.getMajorType(), context.getFunctionRegistry(), errorCollector);
+          // store the newly casted expression
+          keyExprsProbe[i] = ExpressionTreeMaterializer.materialize(castExpr, incomingProbe, errorCollector, context.getFunctionRegistry());
         }
       }
     }

@@ -101,6 +101,61 @@ public class ExpressionTreeMaterializer {
     }
   }
 
+  public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionImplementationRegistry registry, ErrorCollector errorCollector) {
+    String castFuncName = CastFunctions.getCastFunc(toType.getMinorType());
+    List<LogicalExpression> castArgs = Lists.newArrayList();
+    castArgs.add(fromExpr);  //input_expr
+
+    if (!Types.isFixedWidthType(toType)) {
+
+        /* We are implicitly casting to VARCHAR so we don't have a max length,
+         * using an arbitrary value. We trim down the size of the stored bytes
+         * to the actual size so this size doesn't really matter.
+         */
+      castArgs.add(new ValueExpressions.LongExpression(65536, null));
+    }
+    else if (toType.getMinorType().name().startsWith("DECIMAL")) {
+      // Add the scale and precision to the arguments of the implicit cast
+      castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getPrecision(), null));
+      castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getScale(), null));
+    }
+
+    FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
+    FunctionResolver resolver = FunctionResolverFactory.getResolver(castCall);
+    DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
+
+    if (matchedCastFuncHolder == null) {
+      logFunctionResolutionError(errorCollector, castCall);
+      return NullExpression.INSTANCE;
+    }
+    return matchedCastFuncHolder.getExpr(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
+  }
+
+  private static void logFunctionResolutionError(ErrorCollector errorCollector, FunctionCall call) {
+    // add error to collector
+    StringBuilder sb = new StringBuilder();
+    sb.append("Missing function implementation: ");
+    sb.append("[");
+    sb.append(call.getName());
+    sb.append("(");
+    boolean first = true;
+    for(LogicalExpression e : call.args) {
+      TypeProtos.MajorType mt = e.getMajorType();
+      if (first) {
+        first = false;
+      } else {
+        sb.append(", ");
+      }
+      sb.append(mt.getMinorType().name());
+      sb.append("-");
+      sb.append(mt.getMode().name());
+    }
+    sb.append(")");
+    sb.append("]");
+
+    errorCollector.addGeneralError(call.getPosition(), sb.toString());
+  }
+
   private static class MaterializeVisitor extends AbstractExprVisitor<LogicalExpression, FunctionImplementationRegistry, RuntimeException> {
     private ExpressionValidator validator = new ExpressionValidator();
     private final ErrorCollector errorCollector;
@@ -143,38 +198,7 @@ public class ExpressionTreeMaterializer {
       return new BooleanOperator(op.getName(), args, op.getPosition());
     }
 
-    private LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionImplementationRegistry registry) {
-      String castFuncName = CastFunctions.getCastFunc(toType.getMinorType());
-      List<LogicalExpression> castArgs = Lists.newArrayList();
-      castArgs.add(fromExpr);  //input_expr
-
-      if (!Types.isFixedWidthType(toType)) {
-
-              /* We are implicitly casting to VARCHAR so we don't have a max length,
-               * using an arbitrary value. We trim down the size of the stored bytes
-               * to the actual size so this size doesn't really matter.
-               */
-        castArgs.add(new ValueExpressions.LongExpression(65536, null));
-      }
-      else if (toType.getMinorType().name().startsWith("DECIMAL")) {
-        // Add the scale and precision to the arguments of the implicit cast
-        castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getPrecision(), null));
-        castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getScale(), null));
-      }
-
-      FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
-      FunctionResolver resolver = FunctionResolverFactory.getResolver(castCall);
-      DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
-
-      if (matchedCastFuncHolder == null) {
-        logFunctionResolutionError(errorCollector, castCall);
-        return NullExpression.INSTANCE;
-      }
-
-      return matchedCastFuncHolder.getExpr(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
-
-    }
-    @Override
+   @Override
     public LogicalExpression visitFunctionCall(FunctionCall call, FunctionImplementationRegistry registry) {
       List<LogicalExpression> args = Lists.newArrayList();
       for (int i = 0; i < call.args.size(); ++i) {
@@ -217,7 +241,7 @@ public class ExpressionTreeMaterializer {
             argsWithCast.add(currentArg);
           } else {
             //Case 3: insert cast if param type is different from arg type.
-            argsWithCast.add(addCastExpression(call.args.get(i), parmType, registry));
+            argsWithCast.add(addCastExpression(call.args.get(i), parmType, registry, errorCollector));
           }
         }
 
@@ -238,7 +262,7 @@ public class ExpressionTreeMaterializer {
             extArgsWithCast.add(currentArg);
           } else {
             // Insert cast if param type is different from arg type.
-            extArgsWithCast.add(addCastExpression(call.args.get(i), parmType, registry));
+            extArgsWithCast.add(addCastExpression(call.args.get(i), parmType, registry, errorCollector));
           }
         }
 
@@ -249,31 +273,37 @@ public class ExpressionTreeMaterializer {
       return NullExpression.INSTANCE;
     }
 
-    private void logFunctionResolutionError(ErrorCollector errorCollector, FunctionCall call) {
-      // add error to collector
-      StringBuilder sb = new StringBuilder();
-      sb.append("Missing function implementation: ");
-      sb.append("[");
-      sb.append(call.getName());
-      sb.append("(");
-      boolean first = true;
-      for(LogicalExpression e : call.args) {
-        TypeProtos.MajorType mt = e.getMajorType();
-        if (first) {
-          first = false;
-        } else {
-          sb.append(", ");
-        }
-        sb.append(mt.getMinorType().name());
-        sb.append("-");
-        sb.append(mt.getMode().name());
+    public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionImplementationRegistry registry, ErrorCollector errorCollector) {
+      String castFuncName = CastFunctions.getCastFunc(toType.getMinorType());
+      List<LogicalExpression> castArgs = Lists.newArrayList();
+      castArgs.add(fromExpr);  //input_expr
+
+      if (!Types.isFixedWidthType(toType)) {
+
+        /* We are implicitly casting to VARCHAR so we don't have a max length,
+         * using an arbitrary value. We trim down the size of the stored bytes
+         * to the actual size so this size doesn't really matter.
+         */
+        castArgs.add(new ValueExpressions.LongExpression(65536, null));
       }
-      sb.append(")");
-      sb.append("]");
+      else if (toType.getMinorType().name().startsWith("DECIMAL")) {
+        // Add the scale and precision to the arguments of the implicit cast
+        castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getPrecision(), null));
+        castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getScale(), null));
+      }
 
-      errorCollector.addGeneralError(call.getPosition(), sb.toString());
+      FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
+      FunctionResolver resolver = FunctionResolverFactory.getResolver(castCall);
+      DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
+
+      if (matchedCastFuncHolder == null) {
+        logFunctionResolutionError(errorCollector, castCall);
+        return NullExpression.INSTANCE;
+      }
+
+      return matchedCastFuncHolder.getExpr(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
+
     }
-
 
     @Override
     public LogicalExpression visitIfExpression(IfExpression ifExpr, FunctionImplementationRegistry registry) {
@@ -294,10 +324,10 @@ public class ExpressionTreeMaterializer {
         if (leastRestrictive != thenType) {
           // Implicitly cast the then expression
           conditions = new IfExpression.IfCondition(newCondition,
-              addCastExpression(conditions.expression, newElseExpr.getMajorType(), registry));
+          addCastExpression(conditions.expression, newElseExpr.getMajorType(), registry, errorCollector));
         } else if (leastRestrictive != elseType) {
           // Implicitly cast the else expression
-          newElseExpr = addCastExpression(newElseExpr, conditions.expression.getMajorType(), registry);
+          newElseExpr = addCastExpression(newElseExpr, conditions.expression.getMajorType(), registry, errorCollector);
         } else {
           /* Cannot cast one of the two expressions to make the output type of if and else expression
            * to be the same. Raise error.
