@@ -45,6 +45,7 @@ import org.eigenbase.rel.RelFactories;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
 import org.eigenbase.rel.rules.PushFilterPastProjectRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
+import org.eigenbase.rel.rules.PushProjectPastFilterRule;
 import org.eigenbase.rel.rules.PushProjectPastJoinRule;
 import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.RemoveDistinctRule;
@@ -87,9 +88,15 @@ public class DrillRuleSets {
       DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
       RemoveDistinctAggregateRule.INSTANCE, //
       // ReduceAggregatesRule.INSTANCE, // replaced by DrillReduceAggregatesRule
-      PushProjectPastJoinRule.INSTANCE,
+
+      /*
+      Projection push-down related rules
+      */
 //      PushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastFilterRule.INSTANCE,
+//      PushProjectPastJoinRule.INSTANCE,
+      DrillPushProjectPastJoinRule.INSTANCE,
+
 //      SwapJoinRule.INSTANCE, //
 //      PushJoinThroughJoinRule.RIGHT, //
 //      PushJoinThroughJoinRule.LEFT, //
@@ -109,8 +116,8 @@ public class DrillRuleSets {
       DrillLimitRule.INSTANCE,
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
-      DrillUnionRule.INSTANCE
-      ,DrillReduceAggregatesRule.INSTANCE
+      DrillUnionRule.INSTANCE,
+      DrillReduceAggregatesRule.INSTANCE
       ));
     }
     return DRILL_BASIC_RULES;

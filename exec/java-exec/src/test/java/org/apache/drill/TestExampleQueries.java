@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.rpc.RpcException;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -374,15 +375,6 @@ public class TestExampleQueries extends BaseTestQuery{
          " group by n.n_regionkey \n" +
          " order by n.n_regionkey; " );
 
-    // select clause, where, on, group by, order by.
-    test(" select n.n_regionkey, count(*) as cnt \n" +
-         " from   (select * from cp.`tpch/nation.parquet`) n  \n" +
-         "   join (select * from cp.`tpch/region.parquet`) r  \n" +
-         " on n.n_regionkey = r.r_regionkey \n" +
-         " where n.n_nationkey > 10 \n" +
-         " group by n.n_regionkey \n" +
-         " order by n.n_regionkey; " );
-
     // Outer query use select *. Join condition in where clause.
     test(" select *  \n" +
          " from (select * from cp.`tpch/nation.parquet`) n \n" +
@@ -394,6 +386,19 @@ public class TestExampleQueries extends BaseTestQuery{
          " from (select * from cp.`tpch/nation.parquet`) n \n" +
          "    join (select * from cp.`tpch/region.parquet`) r \n" +
          " on n.n_regionkey = r.r_regionkey " );
+  }
+
+  @Test
+  @Ignore("This test has been ignored until DRILL-1680 is fixed")
+  public void testSelectStartSubQueryJoinWithWhereClause() throws Exception {
+    // select clause, where, on, group by, order by.
+    test(" select n.n_regionkey, count(*) as cnt \n" +
+        " from   (select * from cp.`tpch/nation.parquet`) n  \n" +
+        "   join (select * from cp.`tpch/region.parquet`) r  \n" +
+        " on n.n_regionkey = r.r_regionkey \n" +
+        " where n.n_nationkey > 10 \n" +
+        " group by n.n_regionkey \n" +
+        " order by n.n_regionkey; " );
   }
 
   @Test // DRILL-595 : Select * in CTE WithClause : regular columns appear in select clause, where, group by, order by.

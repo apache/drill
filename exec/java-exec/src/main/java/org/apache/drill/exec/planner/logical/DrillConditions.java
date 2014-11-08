@@ -17,16 +17,20 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.rules.PushProjectPastFilterRule;
 import org.eigenbase.rel.rules.PushProjector;
-import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexNode;
 
-public class DrillPushProjectPastFilterRule extends PushProjectPastFilterRule {
+public final class DrillConditions {
 
-  public final static RelOptRule INSTANCE = new DrillPushProjectPastFilterRule(DrillConditions.PRESERVE_ITEM);
-
-  protected DrillPushProjectPastFilterRule(PushProjector.ExprCondition preserveExprCondition) {
-    super(preserveExprCondition);
-  }
-
+  public static PushProjector.ExprCondition PRESERVE_ITEM = new PushProjector.ExprCondition() {
+    @Override
+    public boolean test(RexNode expr) {
+      if (expr instanceof RexCall) {
+        RexCall call = (RexCall)expr;
+        return "item".equals(call.getOperator().getName().toLowerCase());
+      }
+      return false;
+    }
+  };
 }

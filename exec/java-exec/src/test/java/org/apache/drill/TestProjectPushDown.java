@@ -106,9 +106,7 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
 
-  private static final String pushDownSql = "select %s from cp.`%s` t";
-  private static final String pushDownSqlWithFilter = pushDownSql + " where %s";
-  private final String[] inputTypes = new String[] {
+  private final String[] TABLES = new String[] {
       "project/pushdown/empty.json",
       "project/pushdown/empty.csv",
       "tpch/lineitem.parquet"
@@ -116,15 +114,122 @@ public class TestProjectPushDown extends PlanTestBase {
 
   @Test
   public void testProjectPushDown() throws Exception {
+    final String pushDownSqlPattern = "select %s from cp.`%s` t";
     final String projection = "t.trans_id, t.user_info.cust_id, t.marketing_info.keywords[0]";
     final String expected = "\"columns\" : [ \"`trans_id`\", \"`user_info`.`cust_id`\", \"`marketing_info`.`keywords`[0]\" ],";
-    final String filter = "t.another_field = 10 and t.columns[0] = 100 and t.columns[1] = t.other.columns[2]";
-    final String expectedWithFilter = "\"columns\" : [ \"`another_field`\", \"`trans_id`\", \"`user_info`.`cust_id`\", \"`marketing_info`.`keywords`[0]\", \"`columns`[0]\", \"`columns`[1]\", \"`other`.`columns`[2]\" ],";
 
-    for (String inputType:inputTypes) {
-      testPushDown(new PushDownTestInstance(pushDownSql, expected, projection, inputType));
-      testPushDown(new PushDownTestInstance(pushDownSqlWithFilter, expectedWithFilter, projection, inputType, filter));
+    for (String table: TABLES) {
+      testPushDown(new PushDownTestInstance(pushDownSqlPattern, expected, projection, table));
     }
+  }
+
+  @Test
+  public void testProjectPastFilterPushDown() throws Exception {
+    final String pushDownSqlPattern = "select %s from cp.`%s` t where %s";
+    final String projection = "t.trans_id, t.user_info.cust_id, t.marketing_info.keywords[0]";
+    final String filter = "t.another_field = 10 and t.columns[0] = 100 and t.columns[1] = t.other.columns[2]";
+    final String expected = "\"columns\" : [ \"`another_field`\", \"`trans_id`\", \"`user_info`.`cust_id`\", \"`marketing_info`.`keywords`[0]\", \"`columns`[0]\", \"`columns`[1]\", \"`other`.`columns`[2]\" ],";
+
+    for (String table: TABLES) {
+      testPushDown(new PushDownTestInstance(pushDownSqlPattern, expected, projection, table, filter));
+    }
+  }
+
+  @Test
+  public void testProjectPastJoinPushDown() throws Exception {
+    final String pushDownSqlPattern = "select %s from cp.`%s` t0, cp.`%s` t1 where %s";
+    final String projection = "t0.fcolumns[0], t0.fmy.field, t0.freally.nested.field[0], t1.scolumns[0], t1.smy.field, t1.sreally.nested.field[0]";
+    final String filter = "t0.fname = t1.sname and t0.fcolumns[1]=10 and t1.scolumns[1]=100";
+    final String firstExpected = "\"columns\" : [ \"`fname`\", \"`fcolumns`[0]\", \"`fmy`.`field`\", \"`freally`.`nested`.`field`[0]\", \"`fcolumns`[1]\" ],";
+    final String secondExpected = "\"columns\" : [ \"`sname`\", \"`scolumns`[0]\", \"`smy`.`field`\", \"`sreally`.`nested`.`field`[0]\", \"`scolumns`[1]\" ],";
+
+    for (String table: TABLES) {
+      testPushDown(new PushDownTestInstance(pushDownSqlPattern, new String[]{firstExpected, secondExpected},
+          projection, table, table, filter));
+    }
+  }
+
+  @Test
+  public void testProjectPastFilterPastJoinPushDown() throws Exception {
+    final String pushDownSqlPattern = "select %s from cp.`%s` t0, cp.`%s` t1 where %s";
+    final String projection = "t0.fcolumns[0], t0.fmy.field, t0.freally.nested.field[0], t1.scolumns[0], t1.smy.field, t1.sreally.nested.field[0]";
+    final String filter = "t0.fname = t1.sname and t0.fcolumns[1] + t1.scolumns[1]=100";
+    final String firstExpected = "\"columns\" : [ \"`fname`\", \"`fcolumns`[0]\", \"`fmy`.`field`\", \"`freally`.`nested`.`field`[0]\", \"`fcolumns`[1]\" ],";
+    final String secondExpected = "\"columns\" : [ \"`sname`\", \"`scolumns`[0]\", \"`smy`.`field`\", \"`sreally`.`nested`.`field`[0]\", \"`scolumns`[1]\" ],";
+
+    for (String table: TABLES) {
+      testPushDown(new PushDownTestInstance(pushDownSqlPattern, new String[]{firstExpected, secondExpected},
+          projection, table, table, filter));
+    }
+  }
+
+  @Test
+  public void testProjectPastFilterPastJoinPushDownWhenItemsAreWithinNestedOperators() throws Exception {
+    final String pushDownSqlPattern = "select %s from cp.`%s` t0, cp.`%s` t1 where %s";
+    final String projection = "concat(t0.fcolumns[0], concat(t1.scolumns[0], t0.fmy.field, t0.freally.nested.field[0], t1.smy.field, t1.sreally.nested.field[0]))";
+    final String filter = "t0.fname = t1.sname and t0.fcolumns[1] + t1.scolumns[1]=100";
+    final String firstExpected = "\"columns\" : [ \"`fname`\", \"`fcolumns`[0]\", \"`fmy`.`field`\", \"`freally`.`nested`.`field`[0]\", \"`fcolumns`[1]\" ],";
+    final String secondExpected = "\"columns\" : [ \"`sname`\", \"`scolumns`[0]\", \"`smy`.`field`\", \"`sreally`.`nested`.`field`[0]\", \"`scolumns`[1]\" ],";
+
+    for (String table: TABLES) {
+      testPushDown(new PushDownTestInstance(pushDownSqlPattern, new String[]{firstExpected, secondExpected},
+          projection, table, table, filter));
+    }
+  }
+
+  @Test
+  public void testProjectPastFilterPastJoinPastJoinPushDown() throws Exception {
+    final String pushDownSqlPattern = "select %s from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 where %s";
+    final String projection = "t0.fcolumns[0], t0.fmy.field, t0.freally.nested.field[0], t1.scolumns[0], t1.smy.field, t1.sreally.nested.field[0], t2.tcolumns[0], t2.tmy.field, t2.treally.nested.field[0]";
+    final String filter = "t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[1] + t1.scolumns[1] + t2.tcolumns[1]=100";
+    final String firstExpected = "\"columns\" : [ \"`fname`\", \"`fcolumns`[1]\", \"`fcolumns`[0]\", \"`fmy`.`field`\", \"`freally`.`nested`.`field`[0]\" ],";
+    final String secondExpected = "\"columns\" : [ \"`sname`\", \"`slastname`\", \"`scolumns`[1]\", \"`scolumns`[0]\", \"`smy`.`field`\", \"`sreally`.`nested`.`field`[0]\" ],";
+    final String thirdExpected = "\"columns\" : [ \"`tlastname`\", \"`tcolumns`[1]\", \"`tcolumns`[0]\", \"`tmy`.`field`\", \"`treally`.`nested`.`field`[0]\" ],";
+
+    for (String table: TABLES) {
+      testPushDown(new PushDownTestInstance(pushDownSqlPattern,
+          new String[]{firstExpected, secondExpected, thirdExpected}, projection, table, table, table, filter));
+    }
+  }
+
+  @Test
+  @Ignore("This query does not work when ProjectPastJoin is enabled. This is a known issue.")
+  public void testProjectPastJoinPastFilterPastJoinPushDown() throws Exception {
+    final String pushDownSqlPattern = "select %s from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 where %s";
+    final String projection = "t0.fcolumns[0], t0.fmy.field, t0.freally.nested.field[0], t1.scolumns[0], t1.smy.field, t1.sreally.nested.field[0], t2.tcolumns[0], t2.tmy.field, t2.treally.nested.field[0]";
+    final String filter = "t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[1] + t1.scolumns[1] = 100";
+    final String firstExpected = "\"columns\" : [ \"`fname`\", \"`fcolumns`[1]\", \"`fcolumns`[0]\", \"`fmy`.`field`\", \"`freally`.`nested`.`field`[0]\" ],";
+    final String secondExpected = "\"columns\" : [ \"`sname`\", \"`slastname`\", \"`scolumns`[1]\", \"`scolumns`[0]\", \"`smy`.`field`\", \"`sreally`.`nested`.`field`[0]\" ],";
+    final String thirdExpected = "\"columns\" : [ \"`tlastname`\", \"`tcolumns`[1]\", \"`tcolumns`[0]\", \"`tmy`.`field`\", \"`treally`.`nested`.`field`[0]\" ],";
+
+    final String[] TABLES = new String[] {
+        "project/pushdown/empty0.json",
+        "project/pushdown/empty1.json",
+        "project/pushdown/empty2.json",
+    };
+//    for (String table: TABLES) {
+      testPushDown(new PushDownTestInstance(pushDownSqlPattern,
+          new String[]{firstExpected, secondExpected, thirdExpected}, projection, TABLES[0], TABLES[1], TABLES[2], filter));
+//    }
+  }
+
+  @Test
+  @Ignore("This query does not work when ProjectPastJoin is enabled. This is a known issue.")
+  public void testSimpleProjectPastJoinPastFilterPastJoinPushDown() throws Exception {
+    String sql = "select * " +
+        "from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 " +
+        "where t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[0] + t1.scolumns = 100";
+
+    final String[] TABLES = new String[] {
+        "project/pushdown/empty0.json",
+        "project/pushdown/empty1.json",
+        "project/pushdown/empty2.json",
+    };
+
+    sql = "select t0.fa, t1.sa, t2.ta " +
+        " from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 " +
+        " where t0.a=t1.b and t1.c=t2.d and t0.fcolumns[0] + t1.a = 100";
+    testPushDown(new PushDownTestInstance(sql, "nothing", TABLES[0],TABLES[1],TABLES[2]));
   }
 
   protected void testPushDown(PushDownTestInstance test) throws Exception {
@@ -145,16 +250,20 @@ public class TestProjectPushDown extends PlanTestBase {
 
   protected static class PushDownTestInstance {
     private final String sqlPattern;
-    private final String expected;
+    private final String[] expected;
     private final Object[] params;
 
     public PushDownTestInstance(String sqlPattern, String expected, Object... params) {
+      this(sqlPattern, new String[]{expected}, params);
+    }
+
+    public PushDownTestInstance(String sqlPattern, String[] expected, Object... params) {
       this.sqlPattern = sqlPattern;
       this.expected = expected;
       this.params = params;
     }
 
-    public String getExpected() {
+    public String[] getExpected() {
       return expected;
     }
 

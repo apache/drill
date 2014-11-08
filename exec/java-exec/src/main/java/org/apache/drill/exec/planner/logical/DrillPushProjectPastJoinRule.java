@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.eigenbase.rel.rules.PushProjectPastFilterRule;
+import org.eigenbase.rel.rules.PushProjectPastJoinRule;
 import org.eigenbase.rel.rules.PushProjector;
 import org.eigenbase.relopt.RelOptRule;
 
-public class DrillPushProjectPastFilterRule extends PushProjectPastFilterRule {
+public class DrillPushProjectPastJoinRule extends PushProjectPastJoinRule {
 
-  public final static RelOptRule INSTANCE = new DrillPushProjectPastFilterRule(DrillConditions.PRESERVE_ITEM);
+  public static final RelOptRule INSTANCE = new DrillPushProjectPastJoinRule(DrillConditions.PRESERVE_ITEM);
 
-  protected DrillPushProjectPastFilterRule(PushProjector.ExprCondition preserveExprCondition) {
+  protected DrillPushProjectPastJoinRule(PushProjector.ExprCondition preserveExprCondition) {
     super(preserveExprCondition);
   }
 
