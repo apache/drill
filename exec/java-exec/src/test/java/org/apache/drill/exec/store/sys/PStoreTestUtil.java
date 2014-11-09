@@ -32,7 +32,7 @@ public class PStoreTestUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreTestUtil.class);
 
   public static void test(PStoreProvider provider) throws Exception{
-    PStore<String> store = provider.getPStore(PStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
+    PStore<String> store = provider.getStore(PStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
     String[] keys = {"first", "second"};
     String[] values = {"value1", "value2"};
     Map<String, String> expectedMap = Maps.newHashMap();
@@ -41,7 +41,7 @@ public class PStoreTestUtil {
       expectedMap.put(keys[i], values[i]);
       store.put(keys[i], values[i]);
     }
-
+    // allow one second for puts to propagate back to cache
     {
       Iterator<Map.Entry<String, String>> iter = store.iterator();
       for(int i =0; i < keys.length; i++){
@@ -60,6 +60,8 @@ public class PStoreTestUtil {
         iter.remove();
       }
     }
+
+    // allow one second for deletes to propagate back to cache
 
     assertFalse(store.iterator().hasNext());
   }

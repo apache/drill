@@ -51,7 +51,7 @@ public class TestPStoreProviders extends TestWithZookeeper {
 
     try(CuratorFramework curator = builder.build()){
       curator.start();
-      ZkPStoreProvider provider = new ZkPStoreProvider(curator);
+      ZkPStoreProvider provider = new ZkPStoreProvider(config, curator);
       PStoreTestUtil.test(provider);
     }
   }

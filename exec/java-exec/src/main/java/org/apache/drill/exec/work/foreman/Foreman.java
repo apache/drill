@@ -436,7 +436,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
   @Override
   public int compareTo(Object o) {
-    return o.hashCode() - o.hashCode();
+    return hashCode() - o.hashCode();
   }
 
 }

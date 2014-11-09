@@ -15,29 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.drill.exec.server.options;
 
-package org.apache.drill.exec.store.sys.zk;
+import java.util.Map;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.drill.exec.store.sys.EStore;
-import org.apache.drill.exec.store.sys.EStoreProvider;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreConfig.Mode;
+public abstract class InMemoryOptionManager extends FallbackOptionManager {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryOptionManager.class);
 
-import com.google.common.base.Preconditions;
+  final Map<String, OptionValue> options;
 
-import java.io.IOException;
-
-public class ZkEStoreProvider implements EStoreProvider{
-  private final CuratorFramework curator;
-
-  public ZkEStoreProvider(CuratorFramework curator) {
-    this.curator = curator;
+  InMemoryOptionManager(OptionManager fallback, Map<String, OptionValue> options) {
+    super(fallback);
+    this.options = options;
   }
 
   @Override
-  public <V> EStore<V> getStore(PStoreConfig<V> store) throws IOException {
-    Preconditions.checkArgument(store.getMode() == Mode.EPHEMERAL);
-    return new ZkEStore<V>(curator,store);
+  OptionValue getLocalOption(String name) {
+    return options.get(name);
   }
+
+  @Override
+  boolean setLocalOption(OptionValue value) {
+    if(supportsOption(value)){
+      options.put(value.name, value);
+      return true;
+    }else{
+      return false;
+    }
+
+  }
+
+  abstract boolean supportsOption(OptionValue value);
+
 }

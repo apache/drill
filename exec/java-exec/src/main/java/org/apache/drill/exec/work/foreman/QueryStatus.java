@@ -25,6 +25,7 @@ import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.SchemaUserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
@@ -41,10 +42,14 @@ public class QueryStatus {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryStatus.class);
 
   public static final PStoreConfig<QueryProfile> QUERY_PROFILE = PStoreConfig.
-          newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE, SchemaUserBitShared.QueryProfile.MERGE).name("query_profiles").build();
+          newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE, SchemaUserBitShared.QueryProfile.MERGE) //
+          .name("profiles") //
+          .blob() //
+          .max(100) //
+          .build();
 
-  public static final PStoreConfig<QueryProfile> RUNNING_QUERY_PROFILE = PStoreConfig.
-      newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE, SchemaUserBitShared.QueryProfile.MERGE).name("query_profiles_running").build();
+  public static final PStoreConfig<QueryInfo> RUNNING_QUERY_INFO = PStoreConfig.
+      newProtoBuilder(SchemaUserBitShared.QueryInfo.WRITE, SchemaUserBitShared.QueryInfo.MERGE).name("running").ephemeral().build();
 
   // doesn't need to be thread safe as fragmentDataMap is generated in a single thread and then accessed by multiple threads for reads only.
   private IntObjectOpenHashMap<IntObjectOpenHashMap<FragmentData>> fragmentDataMap = new IntObjectOpenHashMap<IntObjectOpenHashMap<FragmentData>>();
@@ -61,15 +66,15 @@ public class QueryStatus {
   private int finishedFragments = 0;
 
   private final PStore<QueryProfile> profilePStore;
-  private final EStore<QueryProfile> profileEStore;
+  private final PStore<QueryInfo> profileEStore;
 
   public QueryStatus(RunQuery query, QueryId id, PStoreProvider provider, Foreman foreman) {
     this.id = id;
     this.query = query;
     this.queryId = QueryIdHelper.getQueryId(id);
     try {
-      this.profilePStore = provider.getPStore(QUERY_PROFILE);
-      this.profileEStore = provider.getEStore(RUNNING_QUERY_PROFILE);
+      this.profilePStore = provider.getStore(QUERY_PROFILE);
+      this.profileEStore = provider.getStore(RUNNING_QUERY_INFO);
     } catch (IOException e) {
       throw new DrillRuntimeException(e);
     }
@@ -120,25 +125,24 @@ public class QueryStatus {
     fragmentDataMap.get(majorFragmentId).get(minorFragmentId).setStatus(fragmentStatus);
   }
 
-  public void updateQueryStateInStore() {
+  public synchronized void updateQueryStateInStore() {
     QueryState queryState = foreman.getQueryState();
     switch (queryState) {
       case PENDING:
-        // only foreman will put one node for "pending" query into PStore. This is to avoid concurrency issue when multiple threads fail and
-        // call this method.
-        profilePStore.put(queryId, getAsProfile(false));
       case RUNNING:
-        profileEStore.put(queryId, getAsProfile(false));  // store as ephemeral query profile.
-        logger.warn("Update running or pending query state : {}", queryState);
+        profileEStore.put(queryId, getAsInfo());  // store as ephemeral query profile.
         break;
       case COMPLETED:
       case CANCELED:
       case FAILED:
-        logger.warn("Update finished query state : {}", queryState);
-        profileEStore.put(queryId, getAsProfile(false));  //  Change the state in EStore to complete/cancel/fail.
+        try{
+          profileEStore.delete(queryId);
+        }catch(Exception e){
+          logger.warn("Failure while trying to delete the estore profile for this query.", e);
+        }
+        //profileEStore.put(queryId, getAsProfile(false));  //  Change the state in EStore to complete/cancel/fail.
         // profileEStore.delete(queryId);  // delete the ephemeral query profile.
-        profilePStore.put(queryId, getAsProfile(false));
-        profilePStore.putBlob(queryId, getAsProfile(true));
+        profilePStore.put(queryId, getAsProfile());
         break;
       default:
     }
@@ -205,7 +209,16 @@ public class QueryStatus {
     }
   }
 
-  public QueryProfile getAsProfile(boolean fullStatus) {
+  public QueryInfo getAsInfo() {
+    return QueryInfo.newBuilder() //
+      .setQuery(query.getPlan())
+      .setState(foreman.getQueryState())
+      .setForeman(foreman.getContext().getCurrentEndpoint())
+      .setStart(startTime)
+      .build();
+  }
+
+  public QueryProfile getAsProfile() {
     QueryProfile.Builder b = QueryProfile.newBuilder();
     b.setQuery(query.getPlan());
     b.setType(query.getType());
@@ -213,22 +226,20 @@ public class QueryStatus {
       b.setPlan(planText);
     }
     b.setId(id);
-    if (fullStatus) {
-      for (int i = 0; i < fragmentDataMap.allocated.length; i++) {
-        if (fragmentDataMap.allocated[i]) {
-          int majorFragmentId = fragmentDataMap.keys[i];
-          IntObjectOpenHashMap<FragmentData> minorMap = (IntObjectOpenHashMap<FragmentData>) ((Object[]) fragmentDataMap.values)[i];
+    for (int i = 0; i < fragmentDataMap.allocated.length; i++) {
+      if (fragmentDataMap.allocated[i]) {
+        int majorFragmentId = fragmentDataMap.keys[i];
+        IntObjectOpenHashMap<FragmentData> minorMap = (IntObjectOpenHashMap<FragmentData>) ((Object[]) fragmentDataMap.values)[i];
 
-          MajorFragmentProfile.Builder fb = MajorFragmentProfile.newBuilder();
-          fb.setMajorFragmentId(majorFragmentId);
-          for (int v = 0; v < minorMap.allocated.length; v++) {
-            if (minorMap.allocated[v]) {
-              FragmentData data = (FragmentData) ((Object[]) minorMap.values)[v];
-              fb.addMinorFragmentProfile(data.getStatus().getProfile());
-            }
+        MajorFragmentProfile.Builder fb = MajorFragmentProfile.newBuilder();
+        fb.setMajorFragmentId(majorFragmentId);
+        for (int v = 0; v < minorMap.allocated.length; v++) {
+          if (minorMap.allocated[v]) {
+            FragmentData data = (FragmentData) ((Object[]) minorMap.values)[v];
+            fb.addMinorFragmentProfile(data.getStatus().getProfile());
           }
-          b.addFragmentProfile(fb);
         }
+        b.addFragmentProfile(fb);
       }
     }
 

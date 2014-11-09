@@ -31,11 +31,25 @@ public class PStoreConfig<V> {
 
   private final String name;
   private final PClassSerializer<V> valueSerializer;
+  private final Mode mode;
+  private final int maxIteratorSize;
 
-  private PStoreConfig(String name, PClassSerializer<V> valueSerializer) {
+  public static enum Mode {PERSISTENT, EPHEMERAL, BLOB_PERSISTENT};
+
+  private PStoreConfig(String name, PClassSerializer<V> valueSerializer, Mode mode, int maxIteratorSize) {
     super();
     this.name = name;
     this.valueSerializer = valueSerializer;
+    this.mode = mode;
+    this.maxIteratorSize = Math.abs(maxIteratorSize);
+  }
+
+  public Mode getMode() {
+    return mode;
+  }
+
+  public int getMaxIteratorSize() {
+    return maxIteratorSize;
   }
 
   public String getName() {
@@ -57,20 +71,47 @@ public class PStoreConfig<V> {
   public static class PStoreConfigBuilder<V> {
     String name;
     PClassSerializer<V> serializer;
+    Mode mode = Mode.PERSISTENT;
+    int maxIteratorSize = Integer.MAX_VALUE;
 
     PStoreConfigBuilder(PClassSerializer<V> serializer) {
       super();
       this.serializer = serializer;
     }
 
-    public <X extends Builder> PStoreConfigBuilder<V> name(String name) {
+    public PStoreConfigBuilder<V> name(String name) {
       this.name = name;
+      return this;
+    }
+
+    public PStoreConfigBuilder<V> persist(){
+      this.mode = Mode.PERSISTENT;
+      return this;
+    }
+
+    public PStoreConfigBuilder<V> ephemeral(){
+      this.mode = Mode.EPHEMERAL;
+      return this;
+    }
+
+    public PStoreConfigBuilder<V> blob(){
+      this.mode = Mode.BLOB_PERSISTENT;
+      return this;
+    }
+
+    /**
+     * Set the maximum size of the iterator.  Positive numbers start from the start of the list.  Negative numbers start from the end of the list.
+     * @param size
+     * @return
+     */
+    public PStoreConfigBuilder<V> max(int size){
+      this.maxIteratorSize = size;
       return this;
     }
 
     public PStoreConfig<V> build(){
       Preconditions.checkNotNull(name);
-      return new PStoreConfig<V>(name, serializer);
+      return new PStoreConfig<V>(name, serializer, mode, maxIteratorSize);
     }
 
   }

@@ -68,13 +68,17 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
   }
 
   @Override
-  public <V> EStore<V> getEStore(PStoreConfig<V> storeConfig) throws IOException {
-    return localEStoreProvider.getEStore(storeConfig);
-  }
+  public <V> PStore<V> getStore(PStoreConfig<V> config) throws IOException {
+    switch(config.getMode()){
+    case BLOB_PERSISTENT:
+    case PERSISTENT:
+      return new MongoPStore<>(config, collection);
+    case EPHEMERAL:
+      return localEStoreProvider.getStore(config);
+    default:
+      throw new IllegalStateException();
 
-  @Override
-  public <V> PStore<V> getPStore(PStoreConfig<V> config) throws IOException {
-    return new MongoPStore<>(config, collection);
+    }
   }
 
   @Override

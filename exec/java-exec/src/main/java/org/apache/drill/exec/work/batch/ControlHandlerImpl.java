@@ -83,6 +83,16 @@ public class ControlHandlerImpl implements ControlMessageHandler {
       // TODO: Support a type of message that has no response.
       return DataRpcConfig.OK;
 
+    case RpcType.REQ_QUERY_CANCEL_VALUE:
+      QueryId id = get(pBody, QueryId.PARSER);
+      Foreman f = bee.getForemanForQueryId(id);
+      if(f != null){
+        f.cancel();
+        return DataRpcConfig.OK;
+      }else{
+        return DataRpcConfig.FAIL;
+      }
+
     case RpcType.REQ_INIATILIZE_FRAGMENTS_VALUE:
       InitializeFragments fragments = get(pBody, InitializeFragments.PARSER);
       for(int i =0; i < fragments.getFragmentCount(); i++){
@@ -95,13 +105,9 @@ public class ControlHandlerImpl implements ControlMessageHandler {
       Foreman foreman = bee.getForemanForQueryId(queryId);
       QueryProfile profile;
       if (foreman == null) {
-        try {
-          profile = bee.getContext().getPersistentStoreProvider().getEStore(QueryStatus.RUNNING_QUERY_PROFILE).get(QueryIdHelper.getQueryId(queryId));
-        } catch (IOException e) {
-          throw new RpcException("Failed to get persistent store", e);
-        }
+        throw new RpcException("Query not running on node.");
       } else {
-        profile = bee.getForemanForQueryId(queryId).getQueryStatus().getAsProfile(true);
+        profile = bee.getForemanForQueryId(queryId).getQueryStatus().getAsProfile();
       }
       return new Response(RpcType.RESP_QUERY_STATUS, profile);
 

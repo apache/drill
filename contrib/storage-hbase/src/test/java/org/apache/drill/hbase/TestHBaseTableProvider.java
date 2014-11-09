@@ -41,7 +41,7 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
 
   @Test
   public void testTableProvider() throws IOException {
-    PStore<String> hbaseStore = provider.getPStore(PStoreConfig.newJacksonBuilder(config.getMapper(), String.class).name("hbase").build());
+    PStore<String> hbaseStore = provider.getStore(PStoreConfig.newJacksonBuilder(config.getMapper(), String.class).name("hbase").build());
     hbaseStore.put("", "v0");
     hbaseStore.put("k1", "v1");
     hbaseStore.put("k2", "v2");
@@ -60,7 +60,7 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
     }
     assertEquals(7, rowCount);
 
-    PStore<String> hbaseTestStore = provider.getPStore(PStoreConfig.newJacksonBuilder(config.getMapper(), String.class).name("hbase.test").build());
+    PStore<String> hbaseTestStore = provider.getStore(PStoreConfig.newJacksonBuilder(config.getMapper(), String.class).name("hbase.test").build());
     hbaseTestStore.put("", "v0");
     hbaseTestStore.put("k1", "v1");
     hbaseTestStore.put("k2", "v2");

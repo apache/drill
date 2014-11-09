@@ -17,81 +17,21 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.util.Iterator;
-import java.util.Map;
+import java.util.HashMap;
 
-import org.eigenbase.sql.SqlLiteral;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-
-public class QueryOptionManager implements OptionManager {
+public class QueryOptionManager extends InMemoryOptionManager {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
 
-  private Map<String, OptionValue> options = Maps.newConcurrentMap();
-  private OptionManager sessionOptions;
-
   public QueryOptionManager(OptionManager sessionOptions) {
-    super();
-    this.sessionOptions = sessionOptions;
+    super(sessionOptions, new HashMap<String, OptionValue>());
   }
 
   @Override
-  public Iterator<OptionValue> iterator() {
-    return Iterables.concat(sessionOptions, options.values()).iterator();
+  boolean supportsOption(OptionValue value) {
+    return value.type == OptionType.QUERY;
   }
 
-  @Override
-  public OptionValue getOption(String name) {
-    OptionValue opt = options.get(name);
-    if (opt == null && sessionOptions != null) {
-      return sessionOptions.getOption(name);
-    } else {
-      return opt;
-    }
-  }
-
-  @Override
-  public void setOption(OptionValue value) {
-    sessionOptions.getAdmin().validate(value);
-    setValidatedOption(value);
-  }
-
-  @Override
-  public void setOption(String name, SqlLiteral literal, OptionValue.OptionType type) {
-    OptionValue val = sessionOptions.getAdmin().validate(name, literal);
-    val.type = type;
-    setValidatedOption(val);
-  }
-
-  private void setValidatedOption(OptionValue value) {
-    if (value.type == OptionValue.OptionType.QUERY) {
-      options.put(value.name, value);
-    } else {
-      sessionOptions.setOption(value);
-    }
-  }
-
-  @Override
-  public OptionManager.OptionAdmin getAdmin() {
-    return sessionOptions.getAdmin();
-  }
-
-  @Override
-  public OptionManager getSystemManager() {
-    return sessionOptions.getSystemManager();
-  }
-
-  @Override
-  public OptionList getOptionList() {
-    OptionList list = new OptionList();
-    list.addAll(sessionOptions.getOptionList());
-    list.addAll(options.values());
-    return list;
-  }
-
-  public OptionList getSessionOptionList() {
-    return sessionOptions.getOptionList();
-  }
 
 }

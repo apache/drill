@@ -18,15 +18,11 @@
 
 package org.apache.drill.exec.store.sys;
 
-import java.util.Map;
 
 /**
  * Interfaces to define EStore, which is keep track of status/information for running queries. The information
  * would be gone, if the query is completed, or the foreman drillbit is not responding.
  * @param <V>
  */
-public interface EStore <V> extends Iterable<Map.Entry<String, V>> {
-  public V get(String key);
-  public void put(String key, V value);
-  public void delete(String key);
+public interface EStore <V> extends PStore<V> {
 }

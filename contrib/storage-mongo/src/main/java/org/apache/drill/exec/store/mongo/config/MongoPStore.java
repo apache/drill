@@ -69,11 +69,6 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   }
 
   @Override
-  public V getBlob(String key) {
-    throw new UnsupportedOperationException("Mongo DB PStore not currently supported");
-  }
-
-  @Override
   public void put(String key, V value) {
     try {
       DBObject putObj = new BasicDBObject(2);
@@ -84,11 +79,6 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
       logger.error(e.getMessage(), e);
       throw new DrillRuntimeException(e.getMessage(), e);
     }
-  }
-
-  @Override
-  public void putBlob(String key, V value) {
-    throw new UnsupportedOperationException("Mongo DB PStore not currently supported");
   }
 
   @Override

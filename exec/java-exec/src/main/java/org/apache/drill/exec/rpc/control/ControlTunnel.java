@@ -60,6 +60,12 @@ public class ControlTunnel {
     manager.runCommand(b);
   }
 
+  public DrillRpcFuture<Ack> requestCancelQuery(QueryId queryId){
+    CancelQuery c = new CancelQuery(queryId);
+    manager.runCommand(c);
+    return c.getFuture();
+  }
+
   public void informReceiverFinished(RpcOutcomeListener<Ack> outcomeListener, FinishedReceiver finishedReceiver){
     ReceiverFinished b = new ReceiverFinished(outcomeListener, finishedReceiver);
     manager.runCommand(b);
@@ -149,6 +155,20 @@ public class ControlTunnel {
     @Override
     public void doRpcCall(RpcOutcomeListener<QueryProfile> outcomeListener, ControlConnection connection) {
       connection.send(outcomeListener, RpcType.REQ_QUERY_STATUS, queryId, QueryProfile.class);
+    }
+  }
+
+  public static class CancelQuery extends FutureBitCommand<Ack, ControlConnection> {
+    final QueryId queryId;
+
+    public CancelQuery(QueryId queryId) {
+      super();
+      this.queryId = queryId;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_QUERY_CANCEL, queryId, Ack.class);
     }
   }
 }

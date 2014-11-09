@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.user;
 
+import java.util.Random;
 import java.util.UUID;
 
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -45,8 +46,13 @@ public class UserWorker{
   }
 
   public QueryId submitWork(UserClientConnection connection, RunQuery query) {
-    UUID uuid = UUID.randomUUID();
-    QueryId id = QueryId.newBuilder().setPart1(uuid.getMostSignificantBits()).setPart2(uuid.getLeastSignificantBits()).build();
+    Random r = new Random();
+
+    // create a new queryid where the first four bytes are a growing time (each new value comes earlier in sequence).  Last 12 bytes are random.
+    long time = (int) (System.currentTimeMillis()/1000);
+    long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
+    long p2 = r.nextLong();
+    QueryId id = QueryId.newBuilder().setPart1(p1).setPart2(p2).build();
     Foreman foreman = new Foreman(bee, bee.getContext(), connection, id, query);
     bee.addNewForeman(foreman);
     return id;

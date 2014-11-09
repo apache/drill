@@ -87,7 +87,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       this.context = context;
       this.pluginSystemTable = context //
           .getPersistentStoreProvider() //
-          .getPStore(PStoreConfig //
+          .getStore(PStoreConfig //
               .newJacksonBuilder(context.getConfig().getMapper(), StoragePluginConfig.class) //
               .name("sys.storage_plugins") //
               .build());

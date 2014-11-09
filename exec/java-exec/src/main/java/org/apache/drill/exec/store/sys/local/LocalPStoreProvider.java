@@ -17,19 +17,19 @@
  */
 package org.apache.drill.exec.store.sys.local;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreRegistry;
 import org.apache.drill.exec.store.sys.PStoreProvider;
-
-import com.google.common.collect.Maps;
+import org.apache.drill.exec.store.sys.PStoreRegistry;
+import org.apache.hadoop.fs.Path;
 
 /**
  * A really simple provider that stores data in the local file system, one value per file.
@@ -37,21 +37,21 @@ import com.google.common.collect.Maps;
 public class LocalPStoreProvider implements PStoreProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalPStoreProvider.class);
 
-  private File path;
+  private final Path path;
   private final boolean enableWrite;
-  private ConcurrentMap<PStoreConfig<?>, PStore<?>> pstores;
+  private final ConcurrentMap<PStoreConfig<?>, PStore<?>> pstores;
   private final LocalEStoreProvider estoreProvider;
+  private final DrillFileSystem fs;
 
-  public LocalPStoreProvider(DrillConfig config) {
-    path = new File(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
-    enableWrite = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
-    if (!enableWrite) {
-      pstores = Maps.newConcurrentMap();
-    }
-    estoreProvider = new LocalEStoreProvider();
+  public LocalPStoreProvider(DrillConfig config) throws IOException {
+    this.path = new Path(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
+    this.enableWrite = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
+    this.pstores = enableWrite ? null : new ConcurrentHashMap<PStoreConfig<?>, PStore<?>>();
+    this.estoreProvider = new LocalEStoreProvider();
+    this.fs = FilePStore.getFileSystem(config, path);
   }
 
-  public LocalPStoreProvider(PStoreRegistry registry) {
+  public LocalPStoreProvider(PStoreRegistry registry) throws IOException {
     this(registry.getConfig());
   }
 
@@ -60,14 +60,22 @@ public class LocalPStoreProvider implements PStoreProvider {
   }
 
   @Override
-  public <V> EStore<V> getEStore(PStoreConfig<V> storeConfig) throws IOException {
-    return estoreProvider.getEStore(storeConfig);
+  public <V> PStore<V> getStore(PStoreConfig<V> storeConfig) throws IOException {
+    switch(storeConfig.getMode()){
+    case EPHEMERAL:
+      return estoreProvider.getStore(storeConfig);
+    case BLOB_PERSISTENT:
+    case PERSISTENT:
+      return getPStore(storeConfig);
+    default:
+      throw new IllegalStateException();
+    }
+
   }
 
-  @Override
-  public <V> PStore<V> getPStore(PStoreConfig<V> storeConfig) throws IOException {
+  private <V> PStore<V> getPStore(PStoreConfig<V> storeConfig) throws IOException {
     if (enableWrite) {
-      return new LocalPStore<V>(path, storeConfig);
+      return new FilePStore<V>(fs, path, storeConfig);
     } else {
       PStore<V> p = new NoWriteLocalPStore<V>();
       PStore<?> p2 = pstores.putIfAbsent(storeConfig, p);
@@ -77,6 +85,7 @@ public class LocalPStoreProvider implements PStoreProvider {
       return p;
     }
   }
+
 
   @Override
   public void start() {

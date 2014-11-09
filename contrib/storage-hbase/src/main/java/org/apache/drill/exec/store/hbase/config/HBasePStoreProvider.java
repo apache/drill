@@ -19,22 +19,16 @@ package org.apache.drill.exec.store.hbase.config;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Maps;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
-import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
 import org.apache.drill.exec.store.sys.local.LocalEStoreProvider;
-import org.apache.drill.exec.store.sys.local.MapEStore;
-import org.apache.drill.exec.store.sys.zk.ZkEStore;
 import org.apache.drill.exec.store.sys.zk.ZkEStoreProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -53,8 +47,6 @@ public class HBasePStoreProvider implements PStoreProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePStoreProvider.class);
 
   static final byte[] FAMILY = Bytes.toBytes("s");
-
-  static final byte[] FAMILY_BLOB = Bytes.toBytes("t");
 
   static final byte[] QUALIFIER = Bytes.toBytes("d");
 
@@ -104,10 +96,27 @@ public class HBasePStoreProvider implements PStoreProvider {
     this.zkAvailable = false;
   }
 
+
+
   @Override
-  public <V> PStore<V> getPStore(PStoreConfig<V> store) throws IOException {
-    return new HBasePStore<V>(store, this.table);
+  public <V> PStore<V> getStore(PStoreConfig<V> config) throws IOException {
+    switch(config.getMode()){
+    case EPHEMERAL:
+      if (this.zkAvailable) {
+        return zkEStoreProvider.getStore(config);
+      } else {
+        return localEStoreProvider.getStore(config);
+      }
+
+    case BLOB_PERSISTENT:
+    case PERSISTENT:
+      return new HBasePStore<V>(config, this.table);
+
+    default:
+      throw new IllegalStateException();
+    }
   }
+
 
   @Override
   public void start() throws IOException {
@@ -117,31 +126,19 @@ public class HBasePStoreProvider implements PStoreProvider {
       if (!admin.tableExists(storeTableName)) {
         HTableDescriptor desc = new HTableDescriptor(storeTableName);
         desc.addFamily(new HColumnDescriptor(FAMILY).setMaxVersions(1));
-        desc.addFamily(new HColumnDescriptor(FAMILY_BLOB).setMaxVersions(1));
         admin.createTable(desc);
       } else {
         HTableDescriptor desc = admin.getTableDescriptor(Bytes.toBytes(storeTableName));
-        if (!desc.hasFamily(FAMILY) || !desc.hasFamily(FAMILY_BLOB)) {
+        if (!desc.hasFamily(FAMILY)) {
           throw new DrillRuntimeException("The HBase table " + storeTableName
               + " specified as persistent store exists but does not contain column family: "
-              + (desc.hasFamily(FAMILY) ? Bytes.toString(FAMILY_BLOB) : Bytes.toString(FAMILY)));
+              + (Bytes.toString(FAMILY)));
         }
       }
     }
 
     this.table = connection.getTable(storeTableName);
     this.table.setAutoFlush(true);
-  }
-
-  @Override
-  public <V> EStore<V> getEStore(PStoreConfig<V> store) throws IOException {
-    // when ZK is available, use ZK as the Ephemeral store.
-    // when ZK is not available, use a Map as the Ephemeral store.
-    if (this.zkAvailable) {
-      return zkEStoreProvider.getEStore(store);
-    } else {
-      return localEStoreProvider.getEStore(store);
-    }
   }
 
   @Override

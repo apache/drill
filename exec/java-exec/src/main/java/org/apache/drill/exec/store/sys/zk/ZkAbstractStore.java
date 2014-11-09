@@ -17,15 +17,24 @@
  */
 package org.apache.drill.exec.store.sys.zk;
 
-import com.google.common.base.Preconditions;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.zookeeper.CreateMode;
-
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.ChildData;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
+import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.apache.zookeeper.CreateMode;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * This is the abstract class that is shared by ZkPStore (Persistent store) and ZkEStore (Ephemeral Store)
@@ -35,6 +44,7 @@ public abstract class ZkAbstractStore<V> {
 
   protected CuratorFramework framework;
   protected PStoreConfig<V> config;
+  private final PathChildrenCache childrenCache;
   private String prefix;
   private String parent;
 
@@ -50,16 +60,19 @@ public abstract class ZkAbstractStore<V> {
       if (framework.checkExists().forPath(parent) == null) {
         framework.create().withMode(CreateMode.PERSISTENT).forPath(parent);
       }
+
+      this.childrenCache = new PathChildrenCache(framework, parent, true);
+      this.childrenCache.start(StartMode.BUILD_INITIAL_CACHE);
+
     } catch (Exception e) {
-      throw new RuntimeException("Failure while accessing Zookeeper. " + e.getMessage(), e);
+      throw new RuntimeException("Failure while accessing Zookeeper for PStore: " + e.getMessage(), e);
     }
 
   }
 
   public Iterator<Entry<String, V>> iterator() {
     try {
-      List<String> children = framework.getChildren().forPath(parent);
-      return new Iter(children.iterator());
+      return new Iter(childrenCache.getCurrentData());
     } catch (Exception e) {
       throw new RuntimeException("Failure while accessing Zookeeper. " + e.getMessage(), e);
     }
@@ -73,10 +86,11 @@ public abstract class ZkAbstractStore<V> {
 
   public V get(String key) {
     try {
-      byte[] bytes = framework.getData().forPath(p(key));
-      if (bytes == null) {
+      ChildData d = childrenCache.getCurrentData(p(key));
+      if(d == null || d.getData() == null){
         return null;
       }
+      byte[] bytes = d.getData();
       return config.getSerializer().deserialize(bytes);
 
     } catch (Exception e) {
@@ -86,11 +100,12 @@ public abstract class ZkAbstractStore<V> {
 
   public void put(String key, V value) {
     try {
-      if (framework.checkExists().forPath(p(key)) != null) {
+      if (childrenCache.getCurrentData(p(key)) != null) {
         framework.setData().forPath(p(key), config.getSerializer().serialize(value));
       } else {
         createNodeInZK(key, value);
       }
+      childrenCache.rebuildNode(p(key));
 
     } catch (Exception e) {
       throw new RuntimeException("Failure while accessing Zookeeper. " + e.getMessage(), e);
@@ -100,8 +115,24 @@ public abstract class ZkAbstractStore<V> {
   public void delete(String key) {
     try {
         framework.delete().forPath(p(key));
+        childrenCache.rebuildNode(p(key));
     } catch (Exception e) {
       throw new RuntimeException("Failure while accessing Zookeeper. " + e.getMessage(), e);
+    }
+  }
+
+  public boolean putIfAbsent(String key, V value) {
+    try {
+      if (childrenCache.getCurrentData(p(key)) != null) {
+        return false;
+      } else {
+        createNodeInZK(key, value);
+        childrenCache.rebuildNode(p(key));
+        return true;
+      }
+
+    } catch (Exception e) {
+      throw new RuntimeException("Failure while accessing Zookeeper", e);
     }
   }
 
@@ -109,12 +140,18 @@ public abstract class ZkAbstractStore<V> {
 
   private class Iter implements Iterator<Entry<String, V>>{
 
-    private Iterator<String> keys;
-    private String current;
+    private Iterator<ChildData> keys;
+    private ChildData current;
 
-    public Iter(Iterator<String> keys) {
+    public Iter(List<ChildData> children) {
       super();
-      this.keys = keys;
+      List<ChildData> sortedChildren = Lists.newArrayList(children);
+      Collections.sort(sortedChildren, new Comparator<ChildData>(){
+        @Override
+        public int compare(ChildData o1, ChildData o2) {
+          return o1.getPath().compareTo(o2.getPath());
+        }});
+      this.keys = sortedChildren.iterator();
     }
 
     @Override
@@ -130,27 +167,35 @@ public abstract class ZkAbstractStore<V> {
 
     @Override
     public void remove() {
-      delete(current);
-      keys.remove();
+      delete(keyFromPath(current));
+    }
+
+    private String keyFromPath(ChildData data){
+      String path = data.getPath();
+      return path.substring(prefix.length(), path.length());
     }
 
     private class DeferredEntry implements Entry<String, V>{
 
-      private String name;
+      private ChildData data;
 
-      public DeferredEntry(String name) {
+      public DeferredEntry(ChildData data) {
         super();
-        this.name = name;
+        this.data = data;
       }
 
       @Override
       public String getKey() {
-        return name;
+        return keyFromPath(data);
       }
 
       @Override
       public V getValue() {
-        return get(name);
+        try {
+          return config.getSerializer().deserialize(data.getData());
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
       }
 
       @Override

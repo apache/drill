@@ -17,67 +17,31 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.util.Iterator;
 import java.util.Map;
 
-import org.eigenbase.sql.SqlLiteral;
-
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
-public class FragmentOptionManager implements OptionManager {
+public class FragmentOptionManager extends InMemoryOptionManager {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentOptionManager.class);
 
-  ImmutableMap<String, OptionValue> options;
-  OptionManager systemOptions;
-
   public FragmentOptionManager(OptionManager systemOptions, OptionList options) {
+    super(systemOptions, getMapFromOptionList(options));
+  }
+
+  private static Map<String, OptionValue> getMapFromOptionList(OptionList options){
     Map<String, OptionValue> tmp = Maps.newHashMap();
     for(OptionValue v : options){
       tmp.put(v.name, v);
     }
-    this.options = ImmutableMap.copyOf(tmp);
-    this.systemOptions = systemOptions;
+    return ImmutableMap.copyOf(tmp);
   }
 
   @Override
-  public Iterator<OptionValue> iterator() {
-    return Iterables.concat(systemOptions, options.values()).iterator();
-  }
-
-  @Override
-  public OptionValue getOption(String name) {
-    OptionValue value = options.get(name);
-    if (value == null && systemOptions != null) {
-      value = systemOptions.getOption(name);
-    }
-    return value;
-  }
-
-  @Override
-  public void setOption(OptionValue value) throws SetOptionException {
+  boolean supportsOption(OptionValue value) {
     throw new UnsupportedOperationException();
   }
 
-  @Override
-  public void setOption(String name, SqlLiteral literal, OptionValue.OptionType type) throws SetOptionException {
-    throw new UnsupportedOperationException();
-  }
 
-  @Override
-  public OptionAdmin getAdmin() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public OptionManager getSystemManager() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public OptionList getOptionList() {
-    throw new UnsupportedOperationException();
-  }
 
 }

@@ -40,17 +40,9 @@ import com.google.common.base.Preconditions;
  */
 public class ZkPStore<V> extends ZkAbstractStore<V> implements PStore<V>{
 
-  private DrillFileSystem fs;
-  private Path blobPath;
-  private boolean blobPathCreated;
-
-  ZkPStore(CuratorFramework framework, DrillFileSystem fs, Path blobRoot, PStoreConfig<V> config)
+  ZkPStore(CuratorFramework framework, PStoreConfig<V> config)
       throws IOException {
     super(framework, config);
-
-    this.fs = fs;
-    this.blobPath = new Path(blobRoot, config.getName());
-    this.blobPathCreated = false;
   }
 
   @Override
@@ -62,53 +54,7 @@ public class ZkPStore<V> extends ZkAbstractStore<V> implements PStore<V>{
     }
   }
 
-  @Override
-  public boolean putIfAbsent(String key, V value) {
-    try {
-      if (framework.checkExists().forPath(p(key)) != null) {
-        return false;
-      } else {
-        framework.create().withMode(CreateMode.PERSISTENT).forPath(p(key), config.getSerializer().serialize(value));
-        return true;
-      }
 
-    } catch (Exception e) {
-      throw new RuntimeException("Failure while accessing Zookeeper", e);
-    }
-  }
 
-  @Override
-  public V getBlob(String key) {
-    try (DrillInputStream is = fs.open(path(key))) {
-      return config.getSerializer().deserialize(IOUtils.toByteArray(is.getInputStream()));
-    } catch (FileNotFoundException e) {
-      return null;
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public void putBlob(String key, V value) {
-    try (DrillOutputStream os = fs.create(path(key))) {
-      IOUtils.write(config.getSerializer().serialize(value), os.getOuputStream());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private Path path(String name) throws IOException {
-    Preconditions.checkArgument(
-        !name.contains("/") &&
-        !name.contains(":") &&
-        !name.contains(".."));
-
-    if (!blobPathCreated) {
-      fs.mkdirs(blobPath);
-      blobPathCreated = true;
-    }
-
-    return new Path(blobPath, name + DRILL_SYS_FILE_SUFFIX);
-  }
 
 }

@@ -88,8 +88,9 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     if (storageEngineName == null) {
       this.knownViews = null;
     } else {
-      this.knownViews = provider.getPStore(PStoreConfig //
+      this.knownViews = provider.getStore(PStoreConfig //
           .newJacksonBuilder(drillConfig.getMapper(), String.class) //
+          .persist() //
           .name(Joiner.on('.').join("storage.views", storageEngineName, schemaName)) //
           .build());
     }

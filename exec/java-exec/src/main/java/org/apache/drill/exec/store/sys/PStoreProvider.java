@@ -21,7 +21,7 @@ import java.io.Closeable;
 import java.io.IOException;
 
 public interface PStoreProvider extends AutoCloseable, Closeable{
-  public <V> PStore<V> getPStore(PStoreConfig<V> table) throws IOException;
+
+  public <V> PStore<V> getStore(PStoreConfig<V> config) throws IOException;
   public void start() throws IOException;
-  public <V> EStore<V> getEStore(PStoreConfig<V> table) throws IOException;
 }

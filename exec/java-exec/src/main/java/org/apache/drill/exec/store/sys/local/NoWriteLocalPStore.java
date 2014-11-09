@@ -47,18 +47,8 @@ public class NoWriteLocalPStore<V> implements PStore<V>{
   }
 
   @Override
-  public V getBlob(String key) {
-    return blobMap.get(key);
-  }
-
-  @Override
   public void put(String key, V value) {
     map.put(key, value);
-  }
-
-  @Override
-  public void putBlob(String key, V value) {
-    blobMap.put(key, value);
   }
 
   @Override

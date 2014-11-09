@@ -19,11 +19,13 @@ package org.apache.drill.exec.store.sys;
 
 import java.util.Map;
 
+/**
+ * Interface for reading and writing values to a persistent storage provider.  Iterators are guaranteed to be returned in key order.
+ * @param <V>
+ */
 public interface PStore<V> extends Iterable<Map.Entry<String, V>> {
   public V get(String key);
-  public V getBlob(String key);
   public void put(String key, V value);
-  public void putBlob(String key, V value);
   public boolean putIfAbsent(String key, V value);
   public void delete(String key);
 }

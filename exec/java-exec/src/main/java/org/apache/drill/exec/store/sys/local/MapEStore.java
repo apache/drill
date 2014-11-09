@@ -51,4 +51,10 @@ public class MapEStore <V> implements EStore<V> {
   public Iterator<Map.Entry<String, V>> iterator() {
     return store.entrySet().iterator();
   }
+
+  @Override
+  public boolean putIfAbsent(String key, V value) {
+    V out = store.putIfAbsent(key, value);
+    return out == null;
+  }
 }

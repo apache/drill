@@ -20,6 +20,7 @@ package org.apache.drill.exec.server.options;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.collections.IteratorUtils;
@@ -99,57 +100,61 @@ public class SystemOptionManager implements OptionManager {
   }
 
   public SystemOptionManager init() throws IOException{
-    this.options = provider.getPStore(config);
+    this.options = provider.getStore(config);
     this.admin = new SystemOptionAdmin();
     return this;
   }
 
-  private class Iter implements Iterator<OptionValue>{
-    private Iterator<Map.Entry<String, OptionValue>> inner;
-
-    public Iter(Iterator<Map.Entry<String, OptionValue>> inner) {
-      this.inner = inner;
-    }
-
-    @Override
-    public boolean hasNext() {
-      return inner.hasNext();
-    }
-
-    @Override
-    public OptionValue next() {
-      return inner.next().getValue();
-    }
-
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException();
-    }
-
-  }
   @Override
   public Iterator<OptionValue> iterator() {
-    return new Iter(options.iterator());
+    Map<String, OptionValue> buildList = Maps.newHashMap();
+    for(OptionValidator v : knownOptions.values()){
+      buildList.put(v.getOptionName(), v.getDefault());
+    }
+    for(Map.Entry<String, OptionValue> v : options){
+      OptionValue value = v.getValue();
+      buildList.put(value.name, value);
+    }
+    return buildList.values().iterator();
   }
 
   @Override
   public OptionValue getOption(String name) {
-    return options.get(name);
+    // check local space
+    OptionValue v = options.get(name);
+    if(v != null){
+      return v;
+    }
+
+    // otherwise, return default.
+    OptionValidator validator = knownOptions.get(name);
+    if(validator == null){
+      return null;
+    }else{
+      return validator.getDefault();
+    }
   }
 
   @Override
   public void setOption(OptionValue value) {
     assert value.type == OptionType.SYSTEM;
     admin.validate(value);
-    options.put(value.name, value);
+    setOptionInternal(value);
   }
+
+  private void setOptionInternal(OptionValue value){
+    if(!value.equals(knownOptions.get(value.name))){
+      options.put(value.name, value);
+    }
+  }
+
 
   @Override
   public void setOption(String name, SqlLiteral literal, OptionType type) {
     assert type == OptionValue.OptionType.SYSTEM;
     OptionValue v = admin.validate(name, literal);
     v.type = type;
-    options.put(name, v);
+    setOptionInternal(v);
   }
 
   @Override
@@ -172,10 +177,24 @@ public class SystemOptionManager implements OptionManager {
     public SystemOptionAdmin() {
       for(OptionValidator v : VALIDATORS) {
         knownOptions.put(v.getOptionName(), v);
-        options.putIfAbsent(v.getOptionName(), v.getDefault());
       }
-    }
 
+      for(Entry<String, OptionValue> v : options){
+        OptionValue value = v.getValue();
+        OptionValidator defaultValidator = knownOptions.get(v.getKey());
+        if(defaultValidator == null){
+          // deprecated option, delete.
+          options.delete(value.name);
+          logger.warn("Deleting deprecated option `{}`.", value.name);
+        }else if(value.equals(defaultValidator)){
+          // option set with default value, remove storage of record.
+          options.delete(value.name);
+          logger.warn("Deleting option `{}` set to default value.", value.name);
+        }
+
+      }
+
+    }
 
     @Override
     public void registerOptionType(OptionValidator validator) {

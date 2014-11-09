@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.hbase.config;
 
 import static org.apache.drill.exec.store.hbase.config.HBasePStoreProvider.FAMILY;
-import static org.apache.drill.exec.store.hbase.config.HBasePStoreProvider.FAMILY_BLOB;
 import static org.apache.drill.exec.store.hbase.config.HBasePStoreProvider.QUALIFIER;
 
 import java.io.IOException;
@@ -63,16 +62,15 @@ public class HBasePStore<V> implements PStore<V> {
     return get(key, FAMILY);
   }
 
-  @Override
-  public V getBlob(String key) {
-    return get(key, FAMILY_BLOB);
-  }
-
   protected synchronized V get(String key, byte[] family) {
     try {
       Get get = new Get(row(key));
       get.addColumn(family, QUALIFIER);
-      return value(table.get(get));
+      Result r = table.get(get);
+      if(r.isEmpty()){
+        return null;
+      }
+      return value(r);
     } catch (IOException e) {
       throw new DrillRuntimeException("Caught error while getting row '" + key + "' from for table:" + Bytes.toString(table.getTableName()), e);
     }
@@ -81,11 +79,6 @@ public class HBasePStore<V> implements PStore<V> {
   @Override
   public void put(String key, V value) {
     put(key, FAMILY, value);
-  }
-
-  @Override
-  public void putBlob(String key, V value) {
-    put(key, FAMILY_BLOB, value);
   }
 
   protected synchronized void put(String key, byte[] family, V value) {

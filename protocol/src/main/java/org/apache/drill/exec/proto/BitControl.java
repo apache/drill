@@ -87,25 +87,29 @@ public final class BitControl {
      */
     REQ_QUERY_STATUS(8, 10),
     /**
+     * <code>REQ_QUERY_CANCEL = 15;</code>
+     */
+    REQ_QUERY_CANCEL(9, 15),
+    /**
      * <code>RESP_FRAGMENT_HANDLE = 11;</code>
      *
      * <pre>
      * bit responses
      * </pre>
      */
-    RESP_FRAGMENT_HANDLE(9, 11),
+    RESP_FRAGMENT_HANDLE(10, 11),
     /**
      * <code>RESP_FRAGMENT_STATUS = 12;</code>
      */
-    RESP_FRAGMENT_STATUS(10, 12),
+    RESP_FRAGMENT_STATUS(11, 12),
     /**
      * <code>RESP_BIT_STATUS = 13;</code>
      */
-    RESP_BIT_STATUS(11, 13),
+    RESP_BIT_STATUS(12, 13),
     /**
      * <code>RESP_QUERY_STATUS = 14;</code>
      */
-    RESP_QUERY_STATUS(12, 14),
+    RESP_QUERY_STATUS(13, 14),
     ;
 
     /**
@@ -161,6 +165,10 @@ public final class BitControl {
      */
     public static final int REQ_QUERY_STATUS_VALUE = 10;
     /**
+     * <code>REQ_QUERY_CANCEL = 15;</code>
+     */
+    public static final int REQ_QUERY_CANCEL_VALUE = 15;
+    /**
      * <code>RESP_FRAGMENT_HANDLE = 11;</code>
      *
      * <pre>
@@ -195,6 +203,7 @@ public final class BitControl {
         case 8: return REQ_FRAGMENT_STATUS;
         case 9: return REQ_BIT_STATUS;
         case 10: return REQ_QUERY_STATUS;
+        case 15: return REQ_QUERY_CANCEL;
         case 11: return RESP_FRAGMENT_HANDLE;
         case 12: return RESP_FRAGMENT_STATUS;
         case 13: return RESP_BIT_STATUS;
@@ -6635,16 +6644,16 @@ public final class BitControl {
       "Endpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report" +
       "_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010recei" +
       "ver\030\001 \001(\0132\030.exec.bit.FragmentHandle\022(\n\006s" +
-      "ender\030\002 \001(\0132\030.exec.bit.FragmentHandle*\243\002" +
+      "ender\030\002 \001(\0132\030.exec.bit.FragmentHandle*\271\002" +
       "\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOO",
       "DBYE\020\002\022\034\n\030REQ_INIATILIZE_FRAGMENTS\020\003\022\027\n\023" +
       "REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FI" +
       "NISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ" +
-      "_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\030\n\024R" +
-      "ESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_S" +
-      "TATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUE" +
-      "RY_STATUS\020\016B+\n\033org.apache.drill.exec.pro" +
-      "toB\nBitControlH\001"
+      "_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020R" +
+      "EQ_QUERY_CANCEL\020\017\022\030\n\024RESP_FRAGMENT_HANDL" +
+      "E\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BI" +
+      "T_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016B+\n\033org" +
+      ".apache.drill.exec.protoB\nBitControlH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

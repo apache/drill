@@ -1532,6 +1532,147 @@ public final class SchemaUserBitShared
         }
     }
 
+    public static final class QueryInfo
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryInfo>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryInfo message) throws java.io.IOException
+            {
+                if(message.hasQuery())
+                    output.writeString(1, message.getQuery(), false);
+                if(message.hasStart())
+                    output.writeInt64(2, message.getStart(), false);
+                if(message.hasState())
+                    output.writeEnum(3, message.getState().getNumber(), false);
+                if(message.hasUser())
+                    output.writeString(4, message.getUser(), false);
+                if(message.hasForeman())
+                    output.writeObject(5, message.getForeman(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryInfo message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.QueryInfo> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryInfo.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryInfo.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryInfo.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryInfo message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.QueryInfo newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setQuery(input.readString());
+                            break;
+                        case 2:
+                            builder.setStart(input.readInt64());
+                            break;
+                        case 3:
+                            builder.setState(org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(input.readEnum()));
+                            break;
+                        case 4:
+                            builder.setUser(input.readString());
+                            break;
+                        case 5:
+                            builder.setForeman(input.mergeObject(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.newBuilder(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryInfo.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryInfo.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryInfo.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "query";
+                case 2: return "start";
+                case 3: return "state";
+                case 4: return "user";
+                case 5: return "foreman";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("query", 1);
+            fieldMap.put("start", 2);
+            fieldMap.put("state", 3);
+            fieldMap.put("user", 4);
+            fieldMap.put("foreman", 5);
+        }
+    }
+
     public static final class QueryProfile
     {
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryProfile.MessageSchema WRITE =

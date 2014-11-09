@@ -25,5 +25,5 @@ import java.io.IOException;
  */
 
 public interface EStoreProvider {
-  public <V> EStore<V> getEStore(PStoreConfig<V> table) throws IOException;
+  public <V> PStore<V> getStore(PStoreConfig<V> table) throws IOException;
 }

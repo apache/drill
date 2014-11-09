@@ -23,6 +23,7 @@ enum RpcType {
   REQ_FRAGMENT_STATUS = 8; // send a fragment status, return Ack
   REQ_BIT_STATUS = 9; // get bit status.
   REQ_QUERY_STATUS = 10;
+  REQ_QUERY_CANCEL = 15;
       
     // bit responses
   RESP_FRAGMENT_HANDLE = 11;
