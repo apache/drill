@@ -164,6 +164,8 @@
           <excludeSubprojects>false</excludeSubprojects>
           <excludes>
             <exclude>**/*.log</exclude>
+            <exclude>**/*.css</exclude>
+            <exclude>**/*.js</exclude>
             <exclude>**/*.md</exclude>
             <exclude>sandbox/**</exclude>
             <exclude>**/*.json</exclude>
@@ -287,7 +289,7 @@
             </configuration>
           </execution>
           <execution>
-            <id>no_commons_logging</id>
+            <id>avoid_bad_dependencies</id>
             <goals>
               <goal>enforce</goal>
             </goals>
@@ -296,6 +298,8 @@
                 <bannedDependencies>
                   <excludes>
                     <exclude>commons-logging</exclude>
+                    <exclude>javax.servlet:servlet-api</exclude>
+                    <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -620,6 +624,14 @@
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
               </exclusion>
+                            <exclusion>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>servlet-api-2.5</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>              
+              </exclusion>
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
@@ -695,6 +707,10 @@
             <artifactId>hadoop-client</artifactId>
             <version>2.4.1</version>
             <exclusions>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>              
+              </exclusion>
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api</artifactId>
@@ -955,6 +971,11 @@
                 <artifactId>servlet-api-2.5</artifactId>
               </exclusion>
               <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>              
+              </exclusion>
+              
+              <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
               </exclusion>
@@ -1040,6 +1061,10 @@
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>              
               </exclusion>
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
@@ -1186,6 +1211,10 @@
             <version>0.94.17-mapr-1405-m7-4.0.1</version>
             <exclusions>
               <exclusion>
+                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
+              </exclusion>
+              <exclusion>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
               </exclusion>
@@ -1282,6 +1311,10 @@
             <version>2.3.0-cdh5.0.3</version>
             <exclusions>
               <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>              
+              </exclusion>
+              <exclusion>
                 <artifactId>commons-logging</artifactId>
                 <groupId>commons-logging</groupId>
               </exclusion>
@@ -1335,6 +1368,10 @@
             <artifactId>hadoop-client</artifactId>
             <version>2.4.0.2.1.3.0-563</version>
             <exclusions>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>              
+              </exclusion>
               <exclusion>
                 <artifactId>commons-logging</artifactId>
                 <groupId>commons-logging</groupId>

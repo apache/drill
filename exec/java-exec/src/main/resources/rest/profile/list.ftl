@@ -23,27 +23,37 @@
       <table class="table table-hover">
         <thead>
            <td>Time</td>
-           <td>Query Id</td>
+           <!-- <td>Query Id</td> -->
+           <td>Query</td>
+           <td>State</td>
            <td>Foreman</td>
         </thead>
         <tbody>
           <#list model.getRunningQueries() as query>
           <tr>
             <td>${query.getTime()}</td>
+            <!--
             <td>
-              <a href="/running_profiles/${query.getQueryId()}">
+              <a href="/profiles/${query.getQueryId()}">
                 <div style="height:100%;width:100%">
                   ${query.getQueryId()}
                 </div>
               </a>
             </td>
+            -->
             <td>
-              <a href="http://${query.getForeman()}:8047/running_profiles/${query.getQueryId()}" target="_blank">
+              <a href="/profiles/${query.getQueryId()}">
+              <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>
+              </a>
+            </td> 
+            <td>
+              <div style="height:100%;width:100%">${query.getState()}</div>          
+            <td>
                 <div style="height:100%;width:100%">
                   ${query.getForeman()}
                 </div>
-              </a>
             </td>
+            
           </tr>
           </#list>
         </tbody>
@@ -62,13 +72,16 @@
     <table class="table table-hover">
       <thead>
          <td>Time</td>
-         <td>Query Id</td>
+         <!-- <td>Query Id</td> -->
+         <td>Query</td>
+         <td>State</td>
          <td>Foreman</td>
       </thead>
       <tbody>
         <#list model.getFinishedQueries() as query>
         <tr>
           <td>${query.getTime()}</td>
+          <!--
           <td>
             <a href="/profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%">
@@ -76,12 +89,19 @@
               </div>
             </a>
           </td>
+          -->
           <td>
-            <a href="http://${query.getForeman()}:8047/profiles/${query.getQueryId()}" target="_blank">
+            <a href="/profiles/${query.getQueryId()}">
+              <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>
+            </a>
+          </td>      
+          <td>
+              <div style="height:100%;width:100%">${query.getState()}</div>
+          </td>
+          <td>
               <div style="height:100%;width:100%">
                 ${query.getForeman()}
               </div>
-            </a>
           </td>
         </tr>
         </#list>

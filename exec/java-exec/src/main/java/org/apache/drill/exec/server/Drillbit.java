@@ -35,8 +35,10 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.zookeeper.Environment;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import com.codahale.metrics.servlets.MetricsServlet;
@@ -132,9 +134,14 @@ public class Drillbit implements Closeable{
     context.addServlet(new ServletHolder(new MetricsServlet(this.context.getMetrics())), "/status/metrics");
     context.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
 
+    ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
+    staticHolder.setInitParameter("resourceBase", Resource.newClassPathResource("/rest/static").toString());
+    staticHolder.setInitParameter("dirAllowed","false");
+    staticHolder.setInitParameter("pathInfoOnly","true");
+    context.addServlet(staticHolder,"/static/*");
+
     embeddedJetty.start();
 
-    System.out.println("");
   }
 
 

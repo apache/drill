@@ -44,7 +44,6 @@ public class DrillRestServer extends ResourceConfig {
     register(QueryResources.class);
     register(MetricsResources.class);
     register(ThreadsResources.class);
-    register(WebResourceServer.class);
     register(FreemarkerMvcFeature.class);
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
     register(MultiPartFeature.class);

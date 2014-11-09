@@ -11,7 +11,7 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
-  <script src="http://malsup.github.com/jquery.form.js"></script>
+  <script src="/static/js/jquery.form.js"></script>
 </#macro>
 
 <#macro page_body>

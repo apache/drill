@@ -11,9 +11,9 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
-<script src="http://d3js.org/d3.v3.js"></script>
-<script src="http://cpettitt.github.io/project/dagre-d3/v0.2.6/dagre-d3.js"></script>
-<script src="/www/graph.js"></script>
+<script src="/static/js/d3.v3.js"></script>
+<script src="/static/js/dagre-d3.min.js"></script>
+<script src="/static/js/graph.js"></script>
 <script>
     var globalconfig = {
         "queryid" : "${model.getQueryId()}",

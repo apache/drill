@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -33,12 +34,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.foreman.QueryStatus;
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -48,8 +54,7 @@ import com.google.common.collect.Lists;
 public class ProfileResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileResources.class);
 
-  @Inject
-  WorkManager work;
+  @Inject WorkManager work;
 
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
@@ -58,12 +63,20 @@ public class ProfileResources {
     private Date time;
     private String location;
     private String foreman;
+    private String query;
+    private String state;
 
-    public ProfileInfo(String queryId, long time, String foreman) {
+    public ProfileInfo(String queryId, long time, String foreman, String query, String state) {
       this.queryId = queryId;
       this.time = new Date(time);
       this.foreman = foreman;
       this.location = "http://localhost:8047/profile/" + queryId + ".json";
+      this.query = query = query.substring(0,  Math.min(query.length(), 150));
+      this.state = state;
+    }
+
+    public String getQuery(){
+      return query;
     }
 
     public String getQueryId() {
@@ -72,6 +85,11 @@ public class ProfileResources {
 
     public String getTime() {
       return format.format(time);
+    }
+
+
+    public String getState() {
+      return state;
     }
 
     public String getLocation() {
@@ -87,6 +105,10 @@ public class ProfileResources {
       return foreman;
     }
 
+  }
+
+  private PStoreProvider provider(){
+    return work.getContext().getPersistentStoreProvider();
   }
 
   @XmlRootElement
@@ -112,35 +134,31 @@ public class ProfileResources {
   @Path("/profiles.json")
   @Produces(MediaType.APPLICATION_JSON)
   public QProfiles getProfilesJSON() {
-    PStore<QueryProfile> pStore = null;
-    EStore<QueryProfile> eStore = null;
+    PStore<QueryProfile> completed = null;
+    PStore<QueryInfo> running = null;
     try {
-      pStore = work.getContext().getPersistentStoreProvider().getPStore(QueryStatus.QUERY_PROFILE);
-      eStore = work.getContext().getPersistentStoreProvider().getEStore(QueryStatus.RUNNING_QUERY_PROFILE);
+      completed = provider().getStore(QueryStatus.QUERY_PROFILE);
+      running = provider().getStore(QueryStatus.RUNNING_QUERY_INFO);
     } catch (IOException e) {
       logger.debug("Failed to get profiles from persistent or ephemeral store.");
       return new QProfiles(new ArrayList<ProfileInfo>(), new ArrayList<ProfileInfo>());
     }
 
     List<ProfileInfo> runningQueries = Lists.newArrayList();
-    List<ProfileInfo> finishedQueries = Lists.newArrayList();
 
-    for (Map.Entry<String, QueryProfile> entry : eStore) {
-      QueryProfile profile = entry.getValue();
-      if (profile.getState() == QueryState.RUNNING || profile.getState() == QueryState.PENDING) {
-        runningQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress()));
-      }
-    }
-
-    for (Map.Entry<String, QueryProfile> entry : pStore) {
-      QueryProfile profile = entry.getValue();
-      if (profile.getState() == QueryState.COMPLETED || profile.getState() == QueryState.FAILED || profile.getState() == QueryState.CANCELED) {
-        finishedQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress()));
-      }
+    for (Map.Entry<String, QueryInfo> entry : running) {
+      QueryInfo profile = entry.getValue();
+      runningQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name()));
     }
 
     Collections.sort(runningQueries, Collections.reverseOrder());
-    Collections.sort(finishedQueries, Collections.reverseOrder());
+
+
+    List<ProfileInfo> finishedQueries = Lists.newArrayList();
+    for (Map.Entry<String, QueryProfile> entry : completed) {
+      QueryProfile profile = entry.getValue();
+      finishedQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name()));
+    }
 
     return new QProfiles(runningQueries, finishedQueries);
   }
@@ -154,56 +172,36 @@ public class ProfileResources {
   }
 
   private QueryProfile getQueryProfile(String queryId) {
-    PStore<QueryProfile> pStore = null;
-    try {
-      pStore = work.getContext().getPersistentStoreProvider().getPStore(QueryStatus.QUERY_PROFILE);
-    } catch (IOException e) {
-      logger.debug("Failed to get profile for: " + queryId);
-      return QueryProfile.getDefaultInstance();
+    QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
+
+    // first check local running
+    Foreman f = work.getBee().getForemanForQueryId(id);
+    if(f != null){
+      return f.getQueryStatus().getAsProfile();
     }
 
-    QueryProfile profile = null;
-
-    //TODO: we should handle the error case better. In stead of just returning a default profile instance, we should let user know of the error happened.
-    try {
-      // the complete profile is now stored as blob in the PStore
-      profile = pStore.getBlob(queryId);
-    } catch (Exception ex) {
-      logger.error("Fail to get full profile from PStore for query: {}. Error:{}", queryId, ex);
-    }
-    try {
-      if (profile == null) {
-        profile = pStore.get(queryId); // this is to load profile data from older builds.
-      }
-    } catch (Exception ex) {
-      logger.error("Fail to get compact profile from PStore for query: {}. Error:{}", queryId, ex);
+    // then check remote running
+    try{
+      PStore<QueryInfo> runningQueries = provider().getStore(QueryStatus.RUNNING_QUERY_INFO);
+      QueryInfo info = runningQueries.get(queryId);
+      return work.getContext().getController().getTunnel(info.getForeman()).requestQueryProfile(id).checkedGet(2, TimeUnit.SECONDS);
+    }catch(Exception e){
+      logger.debug("Failure to find query as running profile.", e);
     }
 
-    return profile == null ? QueryProfile.getDefaultInstance() : profile;
+    // then check blob store
+    try{
+      PStore<QueryProfile> profiles = provider().getStore(QueryStatus.QUERY_PROFILE);
+      return profiles.get(queryId);
+    }catch(Exception e){
+      logger.warn("Failure to load query profile for query {}", queryId, e);
+    }
+
+    // TODO: Improve error messaging.
+    return QueryProfile.getDefaultInstance();
 
   }
 
-  private QueryProfile getRunningQueryProfile(String queryId) {
-    EStore<QueryProfile> eStore = null;
-    try {
-      eStore = work.getContext().getPersistentStoreProvider().getEStore(QueryStatus.RUNNING_QUERY_PROFILE);
-    } catch (IOException e) {
-      logger.debug("Failed to get profile for: " + queryId);
-      return QueryProfile.getDefaultInstance();
-    }
-
-    QueryProfile profile = eStore.get(queryId);
-
-    if (profile != null) {
-      if (work.getBee().getForemanForQueryId(profile.getId()) != null) {
-        profile = work.getBee().getForemanForQueryId(profile.getId()).getQueryStatus().getAsProfile(true);
-        return profile;
-      }
-    } else {
-        logger.debug("profile from non-foreman");
-    }
-    return profile == null ? QueryProfile.getDefaultInstance() : profile;
-  }
 
   @GET
   @Path("/profiles/{queryid}.json")
@@ -227,30 +225,36 @@ public class ProfileResources {
 
   }
 
-  @GET
-  @Path("/running_profiles/{queryid}")
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getRunningProfile(@PathParam("queryid") String queryId) {
-    ProfileWrapper wrapper = new ProfileWrapper(getRunningQueryProfile(queryId));
-
-    return new Viewable("/rest/profile/profile.ftl", wrapper);
-
-  }
 
   @GET
   @Path("/profiles/cancel/{queryid}")
   @Produces(MediaType.TEXT_PLAIN)
   public String cancelQuery(@PathParam("queryid") String queryId) throws IOException {
-    EStore<QueryProfile> profiles = work.getContext().getPersistentStoreProvider().getEStore(QueryStatus.RUNNING_QUERY_PROFILE);
-    QueryProfile profile = profiles.get(queryId);
-    if (profile != null && (profile.getState() == QueryState.RUNNING || profile.getState() == QueryState.PENDING)) {
-      work.getUserWorker().cancelQuery(QueryIdHelper.getQueryIdFromString(queryId));
-      return "Cancelled query " + queryId;
+
+    QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
+
+    // first check local running
+    Foreman f = work.getBee().getForemanForQueryId(id);
+    if(f != null){
+      f.cancel();
+      return String.format("Cancelled query %s on locally running node.", queryId);
     }
-    if (profile == null) {
-      return "No such query: " + queryId;
+
+    // then check remote running
+    try{
+      PStore<QueryInfo> runningQueries = provider().getStore(QueryStatus.RUNNING_QUERY_INFO);
+      QueryInfo info = runningQueries.get(queryId);
+      Ack a = work.getContext().getController().getTunnel(info.getForeman()).requestCancelQuery(id).checkedGet(2, TimeUnit.SECONDS);
+      if(a.getOk()){
+        return String.format("Query %s canceled on node %s.", queryId, info.getForeman().getAddress());
+      }else{
+        return String.format("Attempted to cancel query %s on %s but the query is no longer active on that node.", queryId, info.getForeman().getAddress());
+      }
+    }catch(Exception e){
+      logger.debug("Failure to find query as running profile.", e);
+      return String.format("Failure attempting to cancel query %s.  Unable to find information about where query is actively running.", queryId);
     }
-    return "Query " + queryId + " not running";
+
   }
 
 }
