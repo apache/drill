@@ -67,7 +67,7 @@ public class VectorValidator {
       }
     }
     if (hash == 0) {
-      System.out.println(hash);
+//      System.out.println(hash);
     }
   }
 }

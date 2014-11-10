@@ -1031,14 +1031,12 @@ public class StringFunctions{
     public void eval() {
       final int len = in.end - in.start;
       int num = nTimes.value;
-      System.out.println(len + ":" + num);
       out.start = 0;
       out.buffer = buffer = buffer.reallocIfNeeded( len * num );
       for (int i =0; i < num; i++) {
         in.buffer.getBytes(in.start, out.buffer, i * len, len);
       }
       out.end = len * num;
-      System.out.println(out.end);
     }
   }
 

@@ -308,9 +308,6 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
 
   @Override
   public int getRecordCount() {
-    if (recordCount < 0) {
-      System.out.println();
-    }
     Preconditions.checkState(recordCount != -1, "Record count not set for this vector container");
     return recordCount;
   }

@@ -47,7 +47,6 @@ public abstract class FilterTemplate4 implements Filterer {
     for (int i = 0; i < incomingSelectionVector.getCount(); i++) {
       int index = incomingSelectionVector.get(i);
       if (doEval(index, 0)) {
-        System.out.println(" (match): " + index + " (i: " + i + ") ");
         outgoingSelectionVector.set(outPos++, index);
       }
     }

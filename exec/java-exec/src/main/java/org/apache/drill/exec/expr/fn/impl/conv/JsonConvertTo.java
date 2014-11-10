@@ -57,7 +57,7 @@ public class JsonConvertTo {
 
         jsonWriter.write(input);
       } catch (Exception e) {
-        System.out.println(" msg = " + e.getMessage() + " trace : " + e.getStackTrace());
+        throw new RuntimeException(e);
       }
 
       byte [] bytea = stream.toByteArray();

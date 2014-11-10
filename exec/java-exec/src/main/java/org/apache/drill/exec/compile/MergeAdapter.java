@@ -94,7 +94,7 @@ class MergeAdapter extends ClassVisitor {
 
   @Override
   public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-    System.out.println("Annotation");
+//    System.out.println("Annotation");
     return super.visitAnnotation(desc, visible);
   }
 

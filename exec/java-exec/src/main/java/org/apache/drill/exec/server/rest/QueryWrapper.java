@@ -33,6 +33,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.impl.flatten.FlattenRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -47,6 +48,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @XmlRootElement
 public class QueryWrapper {
+
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenRecordBatch.class);
 
   private String query;
   private String queryType;
@@ -77,15 +80,15 @@ public class QueryWrapper {
 
   public List<Map<String, Object>> run(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator)
     throws Exception {
-    DrillClient client = new DrillClient(config, coordinator, allocator);
-    Listener listener = new Listener(new RecordBatchLoader(allocator));
+    try(DrillClient client = new DrillClient(config, coordinator, allocator)){
+      Listener listener = new Listener(new RecordBatchLoader(allocator));
 
-    client.connect();
-    client.runQuery(getType(), query, listener);
+      client.connect();
+      client.runQuery(getType(), query, listener);
 
-    List<Map<String, Object>> result = listener.waitForCompletion();
-    client.close();
-    return result;
+      List<Map<String, Object>> result = listener.waitForCompletion();
+      return result;
+    }
   }
 
   @Override
@@ -110,7 +113,7 @@ public class QueryWrapper {
     @Override
     public void submissionFailed(RpcException ex) {
       exception = ex;
-      System.out.println("Query failed: " + ex.getMessage());
+      logger.error("Query Failed", ex);
       latch.countDown();
     }
 
