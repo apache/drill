@@ -141,8 +141,21 @@ public class FileSelection {
         return null;
       }
       String[] s = p.toUri().getPath().split("/");
-      String newPath = StringUtils.join(ArrayUtils.subarray(s, 0, s.length - 1), "/");
-      Preconditions.checkState(!newPath.contains("*") && !newPath.contains("?"), String.format("Unsupported selection path: %s", p));
+      int i = 0;
+
+      // get a selection root based on the portions of the selection path that don't contain a wildcard.
+      for(; i < s.length; i++){
+         if(s[i].contains("*") || s[i].contains("?")){
+           break;
+         }
+      }
+      String newPath;
+      if(i > 0){
+        newPath = StringUtils.join(ArrayUtils.subarray(s, 0, i), "/");
+      }else{
+        newPath = "/";
+      }
+
       return new FileSelection(Lists.newArrayList(status), newPath);
     }
   }

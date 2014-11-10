@@ -17,11 +17,12 @@
  */
 package org.apache.drill;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.rpc.RpcException;
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
@@ -43,6 +44,12 @@ public class TestExampleQueries extends BaseTestQuery{
 
     test("select `integer`, `float`, x, flatten(z), flatten(l) from cp.`/jsoninput/input2_modified.json`");
 
+  }
+
+  @Test
+  @Ignore("Can't be run on classpath since that fs doesn't support glob queries.")
+  public void testWildcard() throws Exception {
+    test("select * from dfs.`/tmp/xx/ab*/*.json`");
   }
 
   @Test // see DRILL-553
