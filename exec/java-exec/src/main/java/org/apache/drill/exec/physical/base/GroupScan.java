@@ -34,6 +34,7 @@ import com.google.common.collect.Lists;
 public interface GroupScan extends Scan, HasAffinity{
 
   public static final List<SchemaPath> ALL_COLUMNS = Lists.<SchemaPath>newArrayList(SchemaPath.getSimplePath("*"));
+  public static final long NO_COLUMN_STATS = -1;
 
   public abstract void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
 

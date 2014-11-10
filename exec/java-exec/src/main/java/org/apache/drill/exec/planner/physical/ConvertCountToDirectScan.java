@@ -119,6 +119,10 @@ public class ConvertCountToDirectScan extends Prule {
         String columnName = scan.getRowType().getFieldNames().get(index).toLowerCase();
 
         cnt = oldGrpScan.getColumnValueCount(SchemaPath.getSimplePath(columnName));
+        if (cnt == GroupScan.NO_COLUMN_STATS) {
+          // if column stats are not available don't apply this rule
+          return;
+        }
       } else {
         return; // do nothing.
       }

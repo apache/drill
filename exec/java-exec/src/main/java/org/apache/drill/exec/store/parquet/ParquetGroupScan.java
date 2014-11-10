@@ -227,8 +227,26 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
             valueCountInGrp = Math.max(col.getValueCount(), valueCountInGrp);
             SchemaPath path = SchemaPath.getSimplePath(col.getPath().toString().replace("[", "").replace("]", "").toLowerCase());
 
-            long valueCount = columnValueCounts.containsKey(path) ? columnValueCounts.get(path) : 0;
-            columnValueCounts.put(path, valueCount + col.getValueCount());
+            long previousCount = 0;
+            long currentCount = 0;
+
+            if (! columnValueCounts.containsKey(path)) {
+              // create an entry for this column
+              columnValueCounts.put(path, previousCount /* initialize to 0 */);
+            } else {
+              previousCount = columnValueCounts.get(path);
+            }
+
+            boolean statsAvail = (col.getStatistics() != null && !col.getStatistics().isEmpty());
+
+            if (statsAvail && previousCount != GroupScan.NO_COLUMN_STATS) {
+              currentCount = col.getValueCount() - col.getStatistics().getNumNulls(); // only count non-nulls
+              columnValueCounts.put(path, previousCount + currentCount);
+            } else {
+              // even if 1 chunk does not have stats, we cannot rely on the value count for this column
+              columnValueCounts.put(path, GroupScan.NO_COLUMN_STATS);
+            }
+
           }
 
           String filePath = footer.getFile().toUri().getPath();
