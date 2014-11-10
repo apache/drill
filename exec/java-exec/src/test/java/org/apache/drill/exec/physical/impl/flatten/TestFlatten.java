@@ -56,7 +56,7 @@ public class TestFlatten extends BaseTestQuery {
   @Test
   public void drill1653() throws Exception{
     int rowCount = testSql("select * from (select sum(t.flat.`value`) as sm from (select id, flatten(kvgen(m)) as flat from cp.`/flatten/missing-map.json`)t) where sm = 10 ");
-    assertEquals(rowCount, 1);
+    assertEquals(1, rowCount);
   }
 
   @Test

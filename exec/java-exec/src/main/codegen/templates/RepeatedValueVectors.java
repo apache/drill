@@ -27,6 +27,7 @@ import org.mortbay.jetty.servlet.Holder;
 <#list vv.types as type>
 <#list type.minor as minor>
 <#assign friendlyType = (minor.friendlyType!minor.boxedType!type.boxedType) />
+<#assign fields = minor.fields!type.fields />
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/Repeated${minor.class}Vector.java" />
 <#include "/@includes/license.ftl" />
@@ -490,6 +491,16 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
       boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
       return (b1 && b2);
     }
+    
+    <#if (fields?size > 1) && !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
+    public boolean addSafe(int arrayIndex, <#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
+      if(offsets.getValueCapacity() <= arrayIndex+1) return false;
+      int nextOffset = offsets.getAccessor().get(arrayIndex+1);
+      boolean b1 = values.getMutator().setSafe(nextOffset, <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
+      boolean b2 = offsets.getMutator().setSafe(arrayIndex+1, nextOffset+1);
+      return (b1 && b2);
+    }
+    </#if>
     
     protected void add(int index, ${minor.class}Holder holder){
       int nextOffset = offsets.getAccessor().get(index+1);

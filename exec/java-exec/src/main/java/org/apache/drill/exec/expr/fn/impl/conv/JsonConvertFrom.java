@@ -29,6 +29,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
@@ -45,27 +46,22 @@ public class JsonConvertFrom {
 
     @Param VarBinaryHolder in;
     @Inject DrillBuf buffer;
+    @Workspace org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
 
     @Output ComplexWriter writer;
 
     public void setup(RecordBatch incoming){
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false);
     }
 
     public void eval(){
 
-      byte[] buf = new byte[in.end - in.start];
-      in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false);
-
-        jsonReader.write(new java.io.StringReader(input), writer);
+        jsonReader.setSource(in.start, in.end, in.buffer);
+        jsonReader.write(writer);
         buffer = jsonReader.getWorkBuf();
 
       } catch (Exception e) {
-//        System.out.println("Error while converting from JSON. ");
-//        e.printStackTrace();
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
     }
@@ -75,27 +71,22 @@ public class JsonConvertFrom {
   public static class ConvertFromJsonVarchar implements DrillSimpleFunc{
 
     @Param VarCharHolder in;
-    @Output ComplexWriter writer;
     @Inject DrillBuf buffer;
+    @Workspace org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+
+    @Output ComplexWriter writer;
 
     public void setup(RecordBatch incoming){
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false);
     }
 
     public void eval(){
-
-      byte[] buf = new byte[in.end - in.start];
-      in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false);
-
-        jsonReader.write(new java.io.StringReader(input), writer);
+        jsonReader.setSource(in.start, in.end, in.buffer);
+        jsonReader.write(writer);
         buffer = jsonReader.getWorkBuf();
 
       } catch (Exception e) {
-//        System.out.println("Error while converting from JSON. ");
-//        e.printStackTrace();
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
     }

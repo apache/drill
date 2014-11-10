@@ -41,12 +41,21 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
     throw new IllegalStateException(String.format("You tried to end when you are using a ValueWriter of type %s.", this.getClass().getSimpleName()));
   }
   
-  <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first /> 
+  <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
+  <#assign fields = minor.fields!type.fields />
   public void write(${name}Holder holder){
     fail("${name}");
   }
   
+  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
+    fail("${name}");
+  }
+  
   </#list></#list>
+
+  public void writeNull(){
+    fail("${name}");
+  }
   
   public MapWriter map(){
     fail("Map");

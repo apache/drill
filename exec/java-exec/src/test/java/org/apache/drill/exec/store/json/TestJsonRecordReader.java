@@ -21,8 +21,8 @@ import org.apache.drill.BaseTestQuery;
 import org.junit.Test;
 
 
-public class JsonRecordReader2Test extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonRecordReader2Test.class);
+public class TestJsonRecordReader extends BaseTestQuery{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonRecordReader.class);
 
   @Test
   public void testComplexJsonInput() throws Exception{

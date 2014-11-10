@@ -17,19 +17,19 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
-import static org.junit.Assert.*;
-import io.netty.buffer.DrillBuf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -37,20 +37,11 @@ import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.RepeatedBigIntVector;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
-import org.apache.drill.exec.vector.complex.fn.JsonWriter;
-import org.apache.drill.exec.vector.complex.fn.ReaderJSONRecordSplitter;
-import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public class TestJsonReader extends BaseTestQuery {
@@ -184,6 +175,14 @@ public class TestJsonReader extends BaseTestQuery {
     test("alter system set `store.json.all_text_mode` = false");
   }
 
+  @Test
+  public void ensureProjectionPushdown() throws Exception {
+    // Tests to make sure that we are correctly eliminating schema changing columns.  If completes, means that the projection pushdown was successful.
+    test("alter system set `store.json.all_text_mode` = false; "
+        + "select  t.field_1, t.field_3.inner_1, t.field_3.inner_2, t.field_4.inner_1 "
+        + "from cp.`store/json/schema_change_int_to_string.json` t");
+  }
+
   // The project pushdown rule is correctly adding the projected columns to the scan, however it is not removing
   // the redundant project operator after the scan, this tests runs a physical plan generated from one of the tests to
   // ensure that the project is filtering out the correct data in the scan alone
@@ -202,26 +201,12 @@ public class TestJsonReader extends BaseTestQuery {
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
     QueryResultBatch batch = results.get(1);
     assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-    assertEquals(5, batchLoader.getSchema().getFieldCount());
+
+    // this used to be five.  It is now three.  This is because the plan doesn't have a project.
+    // Scanners are not responsible for projecting non-existent columns (as long as they project one column)
+    assertEquals(3, batchLoader.getSchema().getFieldCount());
     testExistentColumns(batchLoader, batch);
 
-    VectorWrapper vw = batchLoader.getValueAccessorById(
-        NullableIntVector.class, //
-        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("non_existent_at_root")).getFieldIds() //
-    );
-    assertNull(vw.getValueVector().getAccessor().getObject(0));
-    assertNull(vw.getValueVector().getAccessor().getObject(1));
-    assertNull(vw.getValueVector().getAccessor().getObject(2));
-
-    vw = batchLoader.getValueAccessorById(
-        NullableIntVector.class, //
-        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("non_existent", "nested","field")).getFieldIds() //
-    );
-    assertNull(vw.getValueVector().getAccessor().getObject(0));
-    assertNull(vw.getValueVector().getAccessor().getObject(1));
-    assertNull(vw.getValueVector().getAccessor().getObject(2));
-
-    vw.getValueVector().clear();
     batch.release();
     batchLoader.clear();
   }
@@ -260,113 +245,5 @@ public class TestJsonReader extends BaseTestQuery {
     assertEquals("[4,5,6]", vw.getValueVector().getAccessor().getObject(2).toString());
   }
 
-  @Test
-  public void testReader() throws Exception{
-    final int repeatSize = 10;
-
-    String simple = " { \"b\": \"hello\", \"c\": \"goodbye\"}\n " +
-        "{ \"b\": \"yellow\", \"c\": \"red\", \"p\":" +
-    "{ \"integer\" : 2001, \n" +
-        "  \"float\"   : 1.2,\n" +
-        "  \"x\": {\n" +
-        "    \"y\": \"friends\",\n" +
-        "    \"z\": \"enemies\"\n" +
-        "  },\n" +
-        "  \"z\": [\n" +
-        "    {\"orange\" : \"black\" },\n" +
-        "    {\"pink\" : \"purple\" }\n" +
-        "  ]\n" +
-        "  \n" +
-        "}\n }";
-
-    String compound = simple;
-    for (int i =0; i < repeatSize; i++) {
-      compound += simple;
-    }
-
-//    simple = "{ \"integer\" : 2001, \n" +
-//        "  \"float\"   : 1.2\n" +
-//        "}\n" +
-//        "{ \"integer\" : -2002,\n" +
-//        "  \"float\"   : -1.2 \n" +
-//        "}";
-    MapVector v = new MapVector("", allocator, null);
-    ComplexWriterImpl writer = new ComplexWriterImpl("col", v);
-    writer.allocate();
-
-    DrillBuf buffer = allocator.buffer(255);
-    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound), buffer,
-        GroupScan.ALL_COLUMNS, false);
-    int i =0;
-    List<Integer> batchSizes = Lists.newArrayList();
-
-    outside: while(true) {
-      writer.setPosition(i);
-      switch (jsonReader.write(writer)) {
-      case WRITE_SUCCEED:
-        i++;
-        break;
-      case NO_MORE:
-        batchSizes.add(i);
-        System.out.println("no more records - main loop");
-        break outside;
-
-      case WRITE_FAILED:
-        System.out.println("==== hit bounds at " + i);
-        //writer.setValueCounts(i - 1);
-        batchSizes.add(i);
-        i = 0;
-        writer.allocate();
-        writer.reset();
-
-        switch(jsonReader.write(writer)) {
-        case NO_MORE:
-          System.out.println("no more records - new alloc loop.");
-          break outside;
-        case WRITE_FAILED:
-          throw new RuntimeException("Failure while trying to write.");
-        case WRITE_SUCCEED:
-          i++;
-        };
-
-      };
-    }
-
-    int total = 0;
-    int lastRecordCount = 0;
-    for (Integer records : batchSizes) {
-      total += records;
-      lastRecordCount = records;
-    }
-
-
-    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-
-    ow.writeValueAsString(v.getAccessor().getObject(0));
-    ow.writeValueAsString(v.getAccessor().getObject(1));
-    FieldReader reader = v.get("col", MapVector.class).getAccessor().getReader();
-
-    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    JsonWriter jsonWriter = new JsonWriter(stream, true);
-
-    reader.setPosition(0);
-    jsonWriter.write(reader);
-    reader.setPosition(1);
-    jsonWriter.write(reader);
-    System.out.print("Json Read: ");
-    System.out.println(new String(stream.toByteArray(), Charsets.UTF_8));
-//    System.out.println(compound);
-
-    System.out.println("Total Records Written " + batchSizes);
-
-    reader.setPosition(lastRecordCount - 2);
-    assertEquals("goodbye", reader.reader("c").readText().toString());
-    reader.setPosition(lastRecordCount - 1);
-    assertEquals("red", reader.reader("c").readText().toString());
-    assertEquals((repeatSize+1) * 2, total);
-
-    writer.clear();
-    buffer.release();
-  }
 
 }

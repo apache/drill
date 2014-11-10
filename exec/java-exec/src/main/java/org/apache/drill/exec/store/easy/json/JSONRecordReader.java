@@ -18,61 +18,62 @@
 package org.apache.drill.exec.store.easy.json;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.BaseValueVector;
-import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
-import org.apache.drill.exec.vector.complex.fn.JsonRecordSplitter;
-import org.apache.drill.exec.vector.complex.fn.UTF8JsonRecordSplitter;
+import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.google.common.base.Stopwatch;
 
-public class JSONRecordReader2 extends AbstractRecordReader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader2.class);
+public class JSONRecordReader extends AbstractRecordReader {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
 
   private OutputMutator mutator;
   private VectorContainerWriter writer;
   private Path hadoopPath;
   private FileSystem fileSystem;
-  private InputStream stream;
-  private JsonReaderWithState jsonReader;
+  private FSDataInputStream stream;
+  private JsonReader jsonReader;
   private int recordCount;
   private FragmentContext fragmentContext;
   private OperatorContext operatorContext;
   private List<SchemaPath> columns;
   private boolean enableAllTextMode;
 
-  public JSONRecordReader2(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
                           List<SchemaPath> columns) throws OutOfMemoryException {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
     this.columns = columns;
-    enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption("store.json.all_text_mode").bool_val;
+    this.enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption(ExecConstants.JSON_ALL_TEXT_MODE).bool_val;
   }
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try{
-      stream = fileSystem.open(hadoopPath);
-      JsonRecordSplitter splitter = new UTF8JsonRecordSplitter(stream);
+      this.stream = fileSystem.open(hadoopPath);
       this.writer = new VectorContainerWriter(output);
       this.mutator = output;
-      jsonReader = new JsonReaderWithState(splitter, fragmentContext.getManagedBuffer(), columns, enableAllTextMode);
+      this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), columns, enableAllTextMode);
+      this.jsonReader.setSource(stream);
     }catch(Exception e){
       handleAndRaise("Failure reading JSON file.", e);
     }
@@ -103,34 +104,28 @@ public class JSONRecordReader2 extends AbstractRecordReader {
     writer.reset();
 
     recordCount = 0;
-
+//    Stopwatch p = new Stopwatch().start();
     try{
       outside: while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION){
         writer.setPosition(recordCount);
+        boolean write = jsonReader.write(writer);
 
-        switch(jsonReader.write(writer)){
-        case WRITE_SUCCEED:
+        if(write){
+//          logger.debug("Wrote record.");
           recordCount++;
-          break;
-
-        case NO_MORE:
+        }else{
+//          logger.debug("Exiting.");
           break outside;
-
-        case WRITE_FAILED:
-          break outside;
-        };
-      }
-      for (SchemaPath sp :jsonReader.getNullColumns() ) {
-        PathSegment root = sp.getRootSegment();
-        BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
-        while (root.getChild() != null && ! root.getChild().isArray()) {
-          fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
-          root = root.getChild();
         }
-        fieldWriter.integer(root.getNameSegment().getPath());
+
       }
+
+      jsonReader.ensureAtLeastOneField(writer);
 
       writer.setValueCount(recordCount);
+//      p.stop();
+//      System.out.println(String.format("Wrote %d records in %dms.", recordCount, p.elapsed(TimeUnit.MILLISECONDS)));
+
       return recordCount;
 
     } catch (JsonParseException e) {

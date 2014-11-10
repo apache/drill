@@ -31,7 +31,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 <#assign name = mode + minor.class?cap_first />
 <#assign eName = name />
 <#assign javaType = (minor.javaType!type.javaType) />
-
+<#assign fields = minor.fields!type.fields />
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/${eName}WriterImpl.java" />
 <#include "/@includes/license.ftl" />
@@ -99,6 +99,16 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     }
   }
 
+  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
+  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
+    if(ok()){
+      // update to inform(setSafe) once available for all vector types for holders.
+      inform(mutator.addSafe(idx(), <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>));
+      vector.setCurrentValueCount(idx());
+    }
+  }
+  </#if>
+  
   public void setPosition(int idx){
     if (ok()){
       super.setPosition(idx);
@@ -124,7 +134,26 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
       vector.setCurrentValueCount(idx());
     }
   }
+  
+  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
+  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
+    if(ok()){
+      // update to inform(setSafe) once available for all vector types for holders.
+      inform(mutator.setSafe(idx(), <#if mode == "Nullable">1, </#if><#list fields as field>${field.name}<#if field_has_next>, </#if></#list>));
+      vector.setCurrentValueCount(idx());
+    }
+  }
 
+  <#if mode == "Nullable">
+  public void writeNull(){
+    if(ok()){
+      inform(mutator.setNull(idx()));
+      vector.setCurrentValueCount(idx());
+    }
+  }
+  </#if>
+  </#if>
+  
   </#if>
 
 }
@@ -138,6 +167,10 @@ package org.apache.drill.exec.vector.complex.writer;
 @SuppressWarnings("unused")
 public interface ${eName}Writer extends BaseWriter{
   public void write(${minor.class}Holder h);
+  
+  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
+  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>);
+  </#if>
 }
 
 

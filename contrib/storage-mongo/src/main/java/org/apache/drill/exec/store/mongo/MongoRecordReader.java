@@ -42,7 +42,7 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
+import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.slf4j.Logger;
@@ -72,7 +72,7 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   private NullableVarCharVector valueVector;
 
-  private JsonReaderWithState jsonReaderWithState;
+  private JsonReader jsonReader;
   private VectorContainerWriter writer;
   private List<SchemaPath> columns;
 
@@ -172,14 +172,8 @@ public class MongoRecordReader extends AbstractRecordReader {
         throw new ExecutionSetupException(e);
       }
     } else {
-      try {
-        this.writer = new VectorContainerWriter(output);
-        this.jsonReaderWithState = new JsonReaderWithState(
-            fragmentContext.getManagedBuffer(), columns, enableAllTextMode);
-      } catch (IOException e) {
-        throw new ExecutionSetupException(
-            "Failure in Mongo JsonReader initialization.", e);
-      }
+      this.writer = new VectorContainerWriter(output);
+      this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), columns, enableAllTextMode);
     }
     logger.info("Filters Applied : " + filters);
     logger.info("Fields Selected :" + fields);
@@ -200,40 +194,18 @@ public class MongoRecordReader extends AbstractRecordReader {
       done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         writer.setPosition(docCount);
         String doc = cursor.next().toString();
-        byte[] record = doc.getBytes(Charsets.UTF_8);
-        switch (jsonReaderWithState.write(record, writer)) {
-        case WRITE_SUCCEED:
+        jsonReader.setSource(doc.getBytes(Charsets.UTF_8));
+        if(jsonReader.write(writer)) {
           docCount++;
           break;
-
-        case WRITE_FAILED:
+        }else{
           if (docCount == 0) {
             throw new DrillRuntimeException(errMsg);
           }
-          logger.warn(errMsg, doc);
-          break done;
-
-        default:
-          break done;
         }
       }
 
-      for (SchemaPath sp : jsonReaderWithState.getNullColumns()) {
-        PathSegment root = sp.getRootSegment();
-        BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
-        if (root.getChild() != null && !root.getChild().isArray()) {
-          fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
-          while (root.getChild().getChild() != null
-              && !root.getChild().isArray()) {
-            fieldWriter = fieldWriter.map(root.getChild().getNameSegment()
-                .getPath());
-            root = root.getChild();
-          }
-          fieldWriter.integer(root.getChild().getNameSegment().getPath());
-        } else {
-          fieldWriter.integer(root.getNameSegment().getPath());
-        }
-      }
+      jsonReader.ensureAtLeastOneField(writer);
 
       writer.setValueCount(docCount);
       logger.debug("Took {} ms to get {} records",

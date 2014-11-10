@@ -61,6 +61,16 @@
       <classifier>tests</classifier>
     </dependency>
     <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.4.3</version>
+    </dependency>    
+    <dependency>
       <groupId>pentaho</groupId>
       <artifactId>mondrian-data-foodmart-queries</artifactId>
       <version>0.3</version>

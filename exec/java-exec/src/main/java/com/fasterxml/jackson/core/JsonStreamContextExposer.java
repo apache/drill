@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex.fn;
+package com.fasterxml.jackson.core;
 
-import java.io.IOException;
-import java.io.Reader;
+/**
+ * Exposes certain package protected methods in Jackson.
+ */
+public class JsonStreamContextExposer {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonStreamContextExposer.class);
 
-public interface JsonRecordSplitter {
-
-  public abstract Reader getNextReader() throws IOException;
-
+  public static int getType(JsonStreamContext c){
+    return c._type;
+  }
 }

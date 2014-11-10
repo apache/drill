@@ -503,6 +503,10 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       </#if>
     }
 
+    public boolean setNull(int index){
+      return bits.getMutator().setSafe(index, 0);
+    }
+    
     public void setSkipNull(int index, ${minor.class}Holder holder){
       values.getMutator().set(index, holder);
     }
