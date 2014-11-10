@@ -42,7 +42,6 @@
 #include <zookeeper/zookeeper.h>
 #endif
 
-#include "drill/common.hpp"
 #include "drill/drillClient.hpp"
 #include "rpcEncoder.hpp"
 #include "rpcDecoder.hpp"
@@ -73,6 +72,7 @@ class DrillClientQueryResult{
         m_bHasSchemaChanged(false),
         m_bHasData(false),
         m_bHasError(false),
+        m_queryState(exec::shared::QueryResult_QueryState_PENDING),
         m_pError(NULL),
         m_pQueryId(NULL),
         m_pSchemaListener(NULL),
@@ -126,10 +126,14 @@ class DrillClientQueryResult{
     void setQueryStatus(status_t s){ m_status = s;}
     status_t getQueryStatus(){ return m_status;}
 
+    void setQueryState(exec::shared::QueryResult_QueryState s){ m_queryState = s;}
+    exec::shared::QueryResult_QueryState getQueryState(){ return m_queryState;}
+
     private:
     status_t setupColumnDefs(exec::shared::QueryResult* pQueryResult);
     status_t defaultQueryResultsListener(void* ctx, RecordBatch* b, DrillClientError* err);
     // Construct a DrillClientError object, set the appropriate state and signal any listeners, condition variables.
+    // Also used when a query is cancelled or when a query completed response is received.
     void signalError(DrillClientError* pErr);
     void clearAndDestroy();
 
@@ -161,6 +165,9 @@ class DrillClientQueryResult{
     bool m_bHasSchemaChanged;
     bool m_bHasData;
     bool m_bHasError;
+
+    // state in the last query result received from the server.
+    exec::shared::QueryResult_QueryState m_queryState;
 
     const DrillClientError* m_pError;
 
@@ -200,6 +207,7 @@ class DrillClientImpl{
             //Cancel any pending requests
             //Clear and destroy DrillClientQueryResults vector?
 
+            clearCancelledEntries();
             m_deadlineTimer.cancel();
             m_io_service.stop();
             boost::system::error_code ignorederr;
@@ -258,7 +266,10 @@ class DrillClientImpl{
                 InBoundRpcMessage& msg,
                 boost::system::error_code& error);
         status_t processQueryResult(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg);
+        status_t processCancelledQueryResult( exec::shared::QueryId& qid, exec::shared::QueryResult* qr);
         status_t processQueryId(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg );
+        status_t processQueryStatusResult( exec::shared::QueryResult* qr,
+                DrillClientQueryResult* pDrillClientQueryResult);
         void handleReadTimeout(const boost::system::error_code & err);
         void handleRead(ByteBuf_t _buf, const boost::system::error_code & err, size_t bytes_transferred) ;
         status_t validateMessage(InBoundRpcMessage& msg, exec::shared::QueryResult& qr, std::string& valError);
@@ -268,12 +279,13 @@ class DrillClientImpl{
                 const exec::shared::DrillPBError& e,
                 DrillClientQueryResult* pQueryResult);
         // handle query state indicating query is COMPELTED or CANCELED
-        // (i.e., COMPELTED or CANCELE)
+        // (i.e., COMPELTED or CANCELED)
         status_t handleTerminatedQryState(status_t status,
                 std::string msg,
                 DrillClientQueryResult* pQueryResult);
         void broadcastError(DrillClientError* pErr);
         void clearMapEntries(DrillClientQueryResult* pQueryResult);
+        void clearCancelledEntries();
         void sendAck(InBoundRpcMessage& msg, bool isOk);
         void sendCancel(exec::shared::QueryId* pQueryId);
 
@@ -311,8 +323,13 @@ class DrillClientImpl{
         // Map of coordination id to  Query Ids.
         std::map<int, DrillClientQueryResult*> m_queryIds;
 
-        // Map of query id to query result
+        // Map of query id to query result for currently executing queries
         std::map<exec::shared::QueryId*, DrillClientQueryResult*, compareQueryId> m_queryResults;
+        //
+        // State for every Query id whose queries have result data pending but which
+        // have been cancelled and whose resources have been released by the client application.
+        // The entry is cleared when the state changes to completed or failed.
+        std::set<exec::shared::QueryId*, compareQueryId> m_cancelledQueries;
 
 };
 
