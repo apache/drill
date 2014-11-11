@@ -195,9 +195,11 @@ public class DrillParquetReader extends AbstractRecordReader {
   @Override
   public int next() {
     int count = 0;
-    for (; count < 4000 && totalRead < recordCount; count++, totalRead++) {
+    while (count < 4000 && totalRead < recordCount) {
       recordMaterializer.setPosition(count);
       recordReader.read();
+      count++;
+      totalRead++;
       if (count % 100 == 0) {
         if (getPercentFilled() > 85) {
           break;
