@@ -20,6 +20,7 @@ package org.apache.drill.exec.work;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper;
@@ -61,6 +62,9 @@ public class ErrorHelper {
     builder.setEndpoint(endpoint);
     builder.setErrorId(id);
     builder.setMessage(message);
+    if(t == null){
+      t = new DrillException("Undefined failure occurred.");
+    }
     builder.setException(getWrapper(t));
 
     // record the error to the log for later reference.
