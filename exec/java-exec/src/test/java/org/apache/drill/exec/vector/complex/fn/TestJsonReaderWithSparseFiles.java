@@ -30,7 +30,7 @@ import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-public class JsonReaderTests extends BaseTestQuery {
+public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
 
   static interface Function<T> {
     void apply(T param);
@@ -40,11 +40,10 @@ public class JsonReaderTests extends BaseTestQuery {
     List<QueryResultBatch> batches = testSqlWithResults(query);
     RecordBatchLoader loader = new RecordBatchLoader(client.getAllocator());
     try {
-      QueryResultBatch batch = batches.get(0);
+      // first batch at index 0 is empty and used for fast schema return. Load the second one for the tests
+      QueryResultBatch batch = batches.get(1);
       loader.load(batch.getHeader().getDef(), batch.getData());
-
       testBody.apply(loader);
-
     } finally {
       for (QueryResultBatch batch:batches) {
         batch.release();
@@ -95,13 +94,14 @@ public class JsonReaderTests extends BaseTestQuery {
     query(sql, new Function<RecordBatchLoader>() {
       @Override
       public void apply(RecordBatchLoader loader) {
-        assert loader.getRecordCount() == 3 : "invalid record count returned";
+        assert loader.getRecordCount() == 4 : "invalid record count returned";
 
         //XXX: make sure value order matches vector order
         final Object[][] values = new Object[][] {
             {"[{},{},{},{\"name\":\"doe\"},{}]"},
             {"[]"},
             {"[{\"name\":\"john\",\"id\":10}]"},
+            {"[{},{}]"},
         };
 
         Object[] row;

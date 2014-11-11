@@ -105,7 +105,7 @@ public class JSONRecordReader2 extends AbstractRecordReader {
     recordCount = 0;
 
     try{
-      outside: while(true && recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION){
+      outside: while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION){
         writer.setPosition(recordCount);
 
         switch(jsonReader.write(writer)){
