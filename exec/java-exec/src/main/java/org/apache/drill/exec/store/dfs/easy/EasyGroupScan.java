@@ -225,7 +225,8 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
   @Override
   public String toString() {
-    return "EasyGroupScan [selectionRoot=" + selectionRoot + ", numFiles=" + getFiles().size() + ", columns = " + columns + "]";
+    final String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s]";
+    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles());
   }
 
   @Override
