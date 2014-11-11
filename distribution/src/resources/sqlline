@@ -37,9 +37,9 @@ bin=`cd "$bin">/dev/null; pwd`
 DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/sqlline.log"
 
 if [ -n "$QUERY" ] ; then
-  echo $QUERY | exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver "${ARGS[@]}"
+  echo $QUERY | exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver  --maxWidth=10000 "${ARGS[@]}"
 elif [ -n "$FILE" ] ; then
-  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver "${ARGS[@]}" --run=$FILE
+  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver  --maxWidth=10000 "${ARGS[@]}" --run=$FILE
 else
-  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver "${ARGS[@]}"
+  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver --maxWidth=10000 "${ARGS[@]}"
 fi
