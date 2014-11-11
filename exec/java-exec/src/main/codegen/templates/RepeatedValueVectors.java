@@ -18,6 +18,7 @@
 
 import java.lang.Override;
 
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.mortbay.jetty.servlet.Holder;
@@ -102,20 +103,25 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     clear();
   }
 
-  public void splitAndTransferTo(int startIndex, int length, Repeated${minor.class}Vector target) {
-    int startPos = offsets.getAccessor().get(startIndex);
-    int endPos = offsets.getAccessor().get(startIndex+length);
-    values.splitAndTransferTo(startIndex, endPos-startPos, target.values);
-    target.offsets.clear();
-    target.offsets.allocateNew(endPos - startPos + 1);
+  public void splitAndTransferTo(final int startIndex, final int groups, Repeated${minor.class}Vector to) {
+    final UInt4Vector.Accessor a = offsets.getAccessor();
+    final UInt4Vector.Mutator m = to.offsets.getMutator();
+    
+    final int startPos = offsets.getAccessor().get(startIndex);
+    final int endPos = offsets.getAccessor().get(startIndex + groups);
+    final int valuesToCopy = endPos - startPos;
+    
+    values.splitAndTransferTo(startPos, valuesToCopy, to.values);
+    to.offsets.clear();
+    to.offsets.allocateNew(valuesToCopy + 1);
     int normalizedPos = 0;
-    for (int i=0; i<length+1;i++) {
-      normalizedPos = offsets.getAccessor().get(startIndex+i) - startPos;
-      target.offsets.getMutator().set(i, normalizedPos);
+    for (int i=0; i < groups + 1;i++ ) {
+      normalizedPos = a.get(startIndex+i) - startPos;
+      m.set(i, normalizedPos);
     }
-    target.parentValueCount = length;
-    target.childValueCount  = offsets.getAccessor().get(startIndex+length) - startPos;
-    target.offsets.getMutator().setValueCount(length);
+    to.parentValueCount = groups;
+    to.childValueCount  = valuesToCopy;
+    m.setValueCount(groups);
   }
   
   private class TransferImpl implements TransferPair{

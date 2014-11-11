@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import net.hydromatic.optiq.tools.RelConversionException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.planner.physical.DrillFlattenPrel;
+import org.apache.drill.exec.planner.physical.FlattenPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.visitor.BasePrelVisitor;
@@ -103,7 +103,7 @@ public class RewriteProjectToFlatten extends BasePrelVisitor<Prel, Object, RelCo
       // TODO - figure out what is the right setting for the traits
       Prel newChild = ((Prel)project.getInput(0)).accept(this, null);
       ProjectPrel newProject = new ProjectPrel(node.getCluster(), project.getTraitSet(), newChild, exprList, new RelRecordType(relDataTypes));
-      DrillFlattenPrel flatten = new DrillFlattenPrel(project.getCluster(), project.getTraitSet(), newProject, flatttenExpr);
+      FlattenPrel flatten = new FlattenPrel(project.getCluster(), project.getTraitSet(), newProject, flatttenExpr);
       return flatten;
     }
 

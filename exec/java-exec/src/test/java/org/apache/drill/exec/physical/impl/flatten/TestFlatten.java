@@ -17,7 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.flatten;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.drill.BaseTestQuery;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestFlatten extends BaseTestQuery {
@@ -27,6 +30,7 @@ public class TestFlatten extends BaseTestQuery {
    *    - /tmp/yelp_academic_dataset_business.json
    *    - /tmp/mapkv.json
    *    - /tmp/drill1665.json
+   *    - /tmp/bigfile.json
    */
   public static boolean RUN_ADVANCED_TESTS = false;
 
@@ -36,6 +40,53 @@ public class TestFlatten extends BaseTestQuery {
     test("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json`");
 //    test("select complex, rownum from cp.`/store/json/test_flatten_mappify2.json`");
   }
+
+  @Test
+  public void drill1671() throws Exception{
+    int rowCount = testSql("select * from (select count(*) as cnt from (select id, flatten(evnts1), flatten(evnts2), flatten(evnts3), flatten(evnts4), flatten(evnts5), flatten(evnts6), flatten(evnts7), flatten(evnts8), flatten(evnts9), flatten(evnts10), flatten(evnts11) from cp.`/flatten/many-arrays-50.json`)x )y where cnt = 2048");
+    assertEquals(rowCount, 1);
+  }
+
+  @Test
+  @Ignore("not yet fixed")
+  public void drill1660() throws Exception {
+    test("select * from cp.`/flatten/empty-rm.json`");
+  }
+
+  @Test
+  public void drill1653() throws Exception{
+    int rowCount = testSql("select * from (select sum(t.flat.`value`) as sm from (select id, flatten(kvgen(m)) as flat from cp.`/flatten/missing-map.json`)t) where sm = 10 ");
+    assertEquals(rowCount, 1);
+  }
+
+  @Test
+  public void drill1652() throws Exception {
+    if(RUN_ADVANCED_TESTS){
+      test("select uid, flatten(transactions) from dfs.`/tmp/bigfile.json`");
+    }
+  }
+
+  @Test
+  @Ignore("Still not working.")
+  public void drill1649() throws Exception {
+    test("select event_info.uid, transaction_info.trans_id, event_info.event.evnt_id\n" +
+        "from (\n" +
+        " select userinfo.transaction.trans_id trans_id, max(userinfo.event.event_time) max_event_time\n" +
+        " from (\n" +
+        "     select uid, flatten(events) event, flatten(transactions) transaction from cp.`/flatten/single-user-transactions.json`\n" +
+        " ) userinfo\n" +
+        " where userinfo.transaction.trans_time >= userinfo.event.event_time\n" +
+        " group by userinfo.transaction.trans_id\n" +
+        ") transaction_info\n" +
+        "inner join\n" +
+        "(\n" +
+        " select uid, flatten(events) event\n" +
+        " from cp.`/flatten/single-user-transactions.json`\n" +
+        ") event_info\n" +
+        "on transaction_info.max_event_time = event_info.event.event_time;");
+  }
+
+
 
   @Test
   public void testKVGenFlatten1() throws Exception {

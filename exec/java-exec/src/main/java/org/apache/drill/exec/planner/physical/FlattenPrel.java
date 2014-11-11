@@ -28,6 +28,7 @@ import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelWriter;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
@@ -36,18 +37,18 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public class DrillFlattenPrel extends SinglePrel implements Prel {
+public class FlattenPrel extends SinglePrel implements Prel {
 
   RexNode toFlatten;
 
-  public DrillFlattenPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode toFlatten) {
+  public FlattenPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode toFlatten) {
     super(cluster, traits, child);
     this.toFlatten = toFlatten;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new DrillFlattenPrel(getCluster(), traitSet, sole(inputs), toFlatten);
+    return new FlattenPrel(getCluster(), traitSet, sole(inputs), toFlatten);
   }
 
   @Override
@@ -62,6 +63,10 @@ public class DrillFlattenPrel extends SinglePrel implements Prel {
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
     FlattenPOP f = new FlattenPOP(childPOP, (SchemaPath) getFlattenExpression(new DrillParseContext()));
     return creator.addMetadata(this, f);
+  }
+
+  public RelWriter explainTerms(RelWriter pw) {
+    return super.explainTerms(pw).item("flattenField", this.toFlatten);
   }
 
   @Override

@@ -18,10 +18,12 @@
 package org.apache.drill.exec.record;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -215,9 +217,27 @@ public class MaterializedField {
     return true;
   }
 
+
   @Override
   public String toString() {
-    return "MaterializedField [path=" + key.path + ", type=" + Types.toString(key.type) + "]";
+    final int maxLen = 10;
+    String childStr = children != null && !children.isEmpty() ? toString(children, maxLen) : "";
+    return key.path + "(" + key.type.getMinorType().name() + ":" + key.type.getMode().name() + ")" + childStr;
+  }
+
+
+  private String toString(Collection<?> collection, int maxLen) {
+    StringBuilder builder = new StringBuilder();
+    builder.append("[");
+    int i = 0;
+    for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
+      if (i > 0){
+        builder.append(", ");
+      }
+      builder.append(iterator.next());
+    }
+    builder.append("]");
+    return builder.toString();
   }
 
   public Key key() {

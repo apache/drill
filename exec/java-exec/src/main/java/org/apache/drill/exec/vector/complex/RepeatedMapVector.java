@@ -360,6 +360,9 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     public boolean copyValueSafe(int srcIndex, int destIndex) {
       RepeatedMapHolder holder = new RepeatedMapHolder();
       accessor.get(srcIndex, holder);
+      if(destIndex >= to.getValueCapacity()){
+        return false;
+      }
       to.populateEmpties(destIndex+1);
       int newIndex = to.offsets.getAccessor().get(destIndex);
       //todo: make these bulk copies
@@ -377,8 +380,30 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     }
 
     @Override
-    public void splitAndTransfer(int startIndex, int length) {
-      throw new UnsupportedOperationException();
+    public void splitAndTransfer(final int groupStart, final int groups) {
+      final UInt4Vector.Accessor a = offsets.getAccessor();
+      final UInt4Vector.Mutator m = to.offsets.getMutator();
+
+      final int startPos = a.get(groupStart);
+      final int endPos = a.get(groupStart+groups);
+      final int valuesToCopy = endPos - startPos;
+
+      to.offsets.clear();
+      to.offsets.allocateNew(groups + 1);
+      int normalizedPos = 0;
+
+      for (int i=0; i < groups+1; i++) {
+        normalizedPos = a.get(groupStart+i) - startPos;
+        m.set(i, normalizedPos);
+      }
+
+      m.setValueCount(groups + 1);
+      to.lastSet = groups;
+
+      for (TransferPair p : pairs) {
+        p.splitAndTransfer(startPos, valuesToCopy);
+      }
+
     }
 
   }
@@ -444,7 +469,9 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     SerializedField.Builder b = getField() //
         .getAsBuilder() //
         .setBufferLength(getBufferSize()) //
-        .setGroupCount(accessor.getGroupCount());
+        .setGroupCount(accessor.getGroupCount())
+        // while we don't need to actually read this on load, we need it to make sure we don't skip deserialization of this vector
+        .setValueCount(accessor.getValueCount());
     for (ValueVector v : vectors.values()) {
       b.addChild(v.getMetadata());
     }
@@ -503,7 +530,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     }
 
     public void get(int index, RepeatedMapHolder holder) {
-      assert index < getValueCapacity()-1;
+      assert index < getValueCapacity() : String.format("Attempted to access index %d when value capacity is %d", index, getValueCapacity());
       holder.start = offsets.getAccessor().get(index);
       holder.end = offsets.getAccessor().get(index+1);
     }

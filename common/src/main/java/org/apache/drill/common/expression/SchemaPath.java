@@ -233,8 +233,7 @@ public class SchemaPath extends LogicalExpressionBase {
 
   @Override
   public String toString() {
-    String expr = ExpressionStringBuilder.toString(this);
-    return "SchemaPath ["+ expr + "]";
+    return ExpressionStringBuilder.toString(this);
   }
 
   public String toExpr() {

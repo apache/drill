@@ -197,7 +197,6 @@ private boolean writeToVector(ComplexWriter writer, JsonToken t) throws JsonPars
     map.start();
     outside: while(true) {
       if (!map.ok()) {
-        logger.warn("Error reported. Quit writing");
         break;
       }
       JsonToken t = parser.nextToken();
@@ -320,7 +319,7 @@ private boolean writeToVector(ComplexWriter writer, JsonToken t) throws JsonPars
     list.start();
     outside: while (true) {
       if (!list.ok()) {
-        logger.warn("Error reported. Quit writing");
+//        logger.warn("Error reported. Quit writing");
         break;
       }
 
