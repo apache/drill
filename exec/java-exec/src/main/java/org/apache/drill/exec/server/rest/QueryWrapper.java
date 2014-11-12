@@ -49,7 +49,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @XmlRootElement
 public class QueryWrapper {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenRecordBatch.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWrapper.class);
 
   private String query;
   private String queryType;
