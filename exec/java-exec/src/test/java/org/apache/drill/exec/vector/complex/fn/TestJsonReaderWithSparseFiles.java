@@ -22,11 +22,10 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.proto.beans.QueryResult;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
@@ -34,6 +33,55 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
 
   static interface Function<T> {
     void apply(T param);
+  }
+
+  static class TypeConverter {
+
+    public Object convert(Object obj) {
+      if (obj == null) {
+        return null;
+      }
+      if (obj instanceof JsonStringArrayList || obj instanceof JsonStringHashMap) {
+        return obj.toString();
+      }
+      return obj;
+    }
+
+  }
+
+  static class Verifier implements Function<RecordBatchLoader> {
+
+    private final int count;
+    private final Object[][] values;
+    private final TypeConverter converter = new TypeConverter();
+
+    protected Verifier(int count, Object[][] values) {
+      this.count = count;
+      this.values = values;
+    }
+
+    @Override
+    public void apply(RecordBatchLoader loader) {
+      assert loader.getRecordCount() == count : "invalid record count returned";
+
+      Object[] row;
+      Object expected;
+      Object actual;
+      for (int r=0;r<values.length;r++) {
+        row = values[r];
+        for (int c=0; c<values[r].length; c++) {
+          expected = row[c];
+          actual = loader.getValueAccessorById(ValueVector.class, c).getValueVector().getAccessor().getObject(r);
+          actual = converter.convert(actual);
+          assert Objects.equals(actual, expected) : String.format("row:%d - col:%d - expected:%s[%s] - actual:%s[%s]",
+              r, c,
+              expected,
+              expected==null?"null":expected.getClass().getSimpleName(),
+              actual,
+              actual==null?"null":actual.getClass().getSimpleName());
+        }
+      }
+    }
   }
 
   protected void query(final String query, final Function<RecordBatchLoader> testBody) throws Exception {
@@ -55,73 +103,37 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
   @Test
   public void testIfDrillCanReadSparseRecords() throws Exception {
     final String sql = "select * from cp.`vector/complex/fn/sparse.json`";
-    query(sql, new Function<RecordBatchLoader>() {
-      @Override
-      public void apply(RecordBatchLoader loader) {
-        assert loader.getRecordCount() == 4 : "invalid record count returned";
-
-        //XXX: make sure value order matches vector order
-        final Object[][] values = new Object[][] {
-            {null, null},
-            {1L, null},
-            {null, 2L},
-            {3L, 3L}
-        };
-
-        Object[] row;
-        Object expected;
-        Object actual;
-        for (int r=0;r<values.length;r++) {
-          row = values[r];
-          for (int c=0; c<values[r].length; c++) {
-            expected = row[c];
-            actual = loader.getValueAccessorById(ValueVector.class, c).getValueVector().getAccessor().getObject(r);
-            assert Objects.equals(expected, actual) : String.format("row:%d - col:%d - expected:%s[%s] - actual:%s[%s]",
-                r, c,
-                expected,
-                expected==null?"null":expected.getClass().getSimpleName(),
-                actual,
-                actual==null?"null":actual.getClass().getSimpleName());
-          }
-        }
-      }
-    });
+    //XXX: make sure value order matches vector order
+    final Object[][] values = new Object[][] {
+        {null, null},
+        {1L, null},
+        {null, 2L},
+        {3L, 3L}
+    };
+    query(sql, new Verifier(4, values));
   }
 
   @Test
   public void testIfDrillCanReadSparseNestedRecordsWithoutRaisingException() throws Exception {
     final String sql = "select * from cp.`vector/complex/fn/nested-with-nulls.json`";
-    query(sql, new Function<RecordBatchLoader>() {
-      @Override
-      public void apply(RecordBatchLoader loader) {
-        assert loader.getRecordCount() == 4 : "invalid record count returned";
+    //XXX: make sure value order matches vector order
+    final Object[][] values = new Object[][] {
+        {"[{},{},{},{\"name\":\"doe\"},{}]"},
+        {"[]"},
+        {"[{\"name\":\"john\",\"id\":10}]"},
+        {"[{},{}]"},
+    };
+    query(sql, new Verifier(4, values));
+  }
 
-        //XXX: make sure value order matches vector order
-        final Object[][] values = new Object[][] {
-            {"[{},{},{},{\"name\":\"doe\"},{}]"},
-            {"[]"},
-            {"[{\"name\":\"john\",\"id\":10}]"},
-            {"[{},{}]"},
-        };
-
-        Object[] row;
-        Object expected;
-        Object actual;
-        for (int r=0;r<values.length;r++) {
-          row = values[r];
-          for (int c = 0; c < values[r].length; c++) {
-            expected = row[c];
-            actual = loader.getValueAccessorById(ValueVector.class, c).getValueVector().getAccessor().getObject(r);
-            assert Objects.equals(actual, expected) : String.format("row:%d - col:%d - expected:%s[%s] - actual:%s[%s]",
-                r, c,
-                expected,
-                expected == null ? "null" : expected.getClass().getSimpleName(),
-                actual,
-                actual == null ? "null" : actual.getClass().getSimpleName());
-          }
-        }
-      }
-    });
+  @Test
+  public void testIfDrillCanQuerySingleRecordWithEmpties() throws Exception {
+    final String sql = "select * from cp.`vector/complex/fn/single-record-with-empties.json`";
+    //XXX: make sure value order matches vector order
+    final Object[][] values = new Object[][] {
+        {"[{},{}]"},
+    };
+    query(sql, new Verifier(1, values));
   }
 
 }
