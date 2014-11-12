@@ -27,7 +27,9 @@ import java.util.Map;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField.Key;
@@ -73,13 +75,23 @@ public class DrillParquetReader extends AbstractRecordReader {
   private int recordCount;
   private List<ValueVector> primitiveVectors;
   private OperatorContext operatorContext;
+  // The interface for the parquet-mr library does not allow re-winding, to enable us to write into our
+  // fixed size value vectors, we must check how full the vectors are after some number of reads, for performance
+  // we avoid doing this every record. These values are populated with system/session settings to allow users to optimize
+  // for performance or allow a wider record size to be suported
+  private final int fillLevelCheckFrequency;
+  private final int fillLevelCheckThreshold;
+  private FragmentContext fragmentContext;
 
 
-  public DrillParquetReader(ParquetMetadata footer, RowGroupReadEntry entry, List<SchemaPath> columns, Configuration conf) {
+  public DrillParquetReader(FragmentContext fragmentContext, ParquetMetadata footer, RowGroupReadEntry entry, List<SchemaPath> columns, Configuration conf) {
     this.footer = footer;
     this.conf = conf;
     this.entry = entry;
     setColumns(columns);
+    this.fragmentContext = fragmentContext;
+    fillLevelCheckFrequency = this.fragmentContext.getOptions().getOption(ExecConstants.PARQUET_VECTOR_FILL_CHECK_THRESHOLD).num_val.intValue();
+    fillLevelCheckThreshold = this.fragmentContext.getOptions().getOption(ExecConstants.PARQUET_VECTOR_FILL_THRESHOLD).num_val.intValue();
   }
 
   public static MessageType getProjection(MessageType schema, Collection<SchemaPath> columns) {
@@ -200,8 +212,8 @@ public class DrillParquetReader extends AbstractRecordReader {
       recordReader.read();
       count++;
       totalRead++;
-      if (count % 100 == 0) {
-        if (getPercentFilled() > 85) {
+      if (count % fillLevelCheckFrequency == 0) {
+        if (getPercentFilled() > fillLevelCheckThreshold) {
           break;
         }
       }
@@ -217,6 +229,7 @@ public class DrillParquetReader extends AbstractRecordReader {
       if (v instanceof VariableWidthVector) {
         filled = Math.max(filled, ((VariableWidthVector) v).getCurrentSizeInBytes() * 100 / ((VariableWidthVector) v).getByteCapacity());
       }
+      // TODO - need to re-enable this
 //      if (v instanceof RepeatedFixedWidthVector) {
 //        filled = Math.max(filled, ((RepeatedFixedWidthVector) v).getAccessor().getGroupCount() * 100)
 //      }
