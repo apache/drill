@@ -55,8 +55,8 @@ public class Join extends LogicalOperatorBase {
     this(left, right, conditions, resolve(type));
   }
 
-
-  public Join(LogicalOperator left, @JsonProperty("right") LogicalOperator right, JoinCondition[] conditions, JoinRelType type) {
+  @JsonCreator
+  public Join(@JsonProperty("left") LogicalOperator left, @JsonProperty("right") LogicalOperator right, @JsonProperty("conditions")JoinCondition[] conditions, @JsonProperty("type") JoinRelType type) {
     super();
     this.conditions = conditions;
     this.left = left;
