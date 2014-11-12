@@ -130,34 +130,35 @@ public class CodeGenerator<T> {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((definition == null) ? 0 : definition.hashCode());
-    result = prime * result + ((generatedCode == null) ? 0 : generatedCode.hashCode());
+    result = prime * result + ((generifiedCode == null) ? 0 : generifiedCode.hashCode());
     return result;
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
+    if (this == obj){
       return true;
     }
-    if (obj == null) {
+    if (obj == null){
       return false;
     }
-    if (getClass() != obj.getClass()) {
+    if (getClass() != obj.getClass()){
       return false;
     }
     CodeGenerator other = (CodeGenerator) obj;
     if (definition == null) {
-      if (other.definition != null) {
+      if (other.definition != null){
         return false;
       }
-    } else if (!definition.equals(other.definition)) {
+    } else if (!definition.equals(other.definition)){
       return false;
     }
-    if (generatedCode == null) {
-      if (other.generatedCode != null) {
+    if (generifiedCode == null) {
+      if (other.generifiedCode != null){
         return false;
       }
-    } else if (!generatedCode.equals(other.generatedCode)) {
+
+    } else if (!generifiedCode.equals(other.generifiedCode)){
       return false;
     }
     return true;
