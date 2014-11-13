@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
@@ -55,6 +56,7 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
   private List<String> dirNameList;
   private List<RexNode> conjunctList;
   private List<String> dirPathList = Lists.newArrayList();
+  private final static List<String> emptyDirPathList = new ArrayList<>(0);
   private RexNode currentConjunct = null;    // the current conjunct are we evaluating during visitor traversal
   private RexNode finalCondition = null;     // placeholder for the final filter condition
   private boolean dirMatch = false;
@@ -133,7 +135,11 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
       }
       if (!dirPath.equals(EMPTY_STRING)) {
         dirPathList.add(dirPath);
+      } else {
+        // If one of the disjuncts do not satisfy our criteria then we shouldn't apply any optimization
+        return emptyDirPathList;
       }
+
       if (buildConjunction) {
         RexNode newConjunct = RexUtil.composeConjunction(builder, conjuncts, false);
         newDisjunctList.add(newConjunct);
