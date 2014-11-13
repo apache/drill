@@ -70,12 +70,30 @@ public class QueryResources {
 
     List<String> columnNames = new ArrayList<>(result.get(0).keySet());
     List<List<Object>> records = new ArrayList<>();
-    for(Map m : result) {
-      records.add(new ArrayList<Object>(m.values()));
+
+    if(!isEmptyResult(result)) {
+      for (Map m : result) {
+        records.add(new ArrayList<Object>(m.values()));
+      }
     }
+
     Table table = new Table(columnNames, records);
 
     return new Viewable("/rest/query/result.ftl", table);
+  }
+
+  private boolean isEmptyResult(List<Map<String, Object>> result) {
+    if (result.size() > 1) {
+      return false;
+    } else {
+      for(Object col : result.get(0).values()) {
+        if(col != null) {
+          return false;
+        }
+      }
+
+      return true;
+    }
   }
 
   public class Table {

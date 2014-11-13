@@ -35,6 +35,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.flatten.FlattenRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
@@ -42,6 +43,7 @@ import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -87,6 +89,14 @@ public class QueryWrapper {
       client.runQuery(getType(), query, listener);
 
       List<Map<String, Object>> result = listener.waitForCompletion();
+      if (result.isEmpty()) {
+        Map<String, Object> dumbRecord = new HashMap<>();
+        for (String columnName : listener.getColumnNames()) {
+          dumbRecord.put(columnName, null);
+        }
+        result.add(dumbRecord);
+      }
+
       return result;
     }
   }
@@ -120,12 +130,12 @@ public class QueryWrapper {
     @Override
     public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
       int rows = result.getHeader().getRowCount();
-      if (result.getData() != null) {
+      if (result.hasData()) {
         count.addAndGet(rows);
         try {
           loader.load(result.getHeader().getDef(), result.getData());
-          if (!schemaAdded) {
-            columnNames = new ArrayList<>();
+          if (!schemaAdded || output.isEmpty()) {
+                columnNames = new ArrayList<>();
             for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
               columnNames.add(loader.getSchema().getColumn(i).getPath().getAsUnescapedPath());
             }
@@ -152,7 +162,15 @@ public class QueryWrapper {
           }
           output.add(record);
         }
+      } else if (!schemaAdded) {
+        columnNames = new ArrayList<>();
+        schemaAdded = true;
+        for (SerializedField fmd : result.getHeader().getDef().getFieldList()) {
+          MaterializedField fieldDef = MaterializedField.create(fmd);
+          columnNames.add(fieldDef.getPath().getAsUnescapedPath());
+        }
       }
+
       result.release();
       if (result.getHeader().getIsLastChunk()) {
         latch.countDown();
@@ -169,6 +187,10 @@ public class QueryWrapper {
         throw exception;
       }
       return output;
+    }
+
+    public List<String> getColumnNames() {
+      return new ArrayList<String> (columnNames);
     }
   }
 }
