@@ -462,7 +462,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
         v = TypeHelper.getNewVector(fieldDef, allocator);
         put(fieldDef.getLastName(), v);
       }
-      if (fmd.getValueCount() == 0) {
+      if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
         v.clear();
       } else {
         v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
