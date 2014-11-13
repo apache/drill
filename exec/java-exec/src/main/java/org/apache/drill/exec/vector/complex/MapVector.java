@@ -19,6 +19,7 @@ package org.apache.drill.exec.vector.complex;
 
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
+
 import io.netty.buffer.DrillBuf;
 
 import java.util.HashMap;
@@ -342,6 +343,8 @@ public class MapVector extends AbstractContainerVector {
       }
       bufOffset += fmd.getBufferLength();
     }
+
+    Preconditions.checkArgument(bufOffset == buf.capacity());
   }
 
   @Override

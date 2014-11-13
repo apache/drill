@@ -32,6 +32,7 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapper<?>>{
@@ -93,6 +94,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       bufOffset += fmd.getBufferLength();
       newVectors.add(v);
     }
+
+    Preconditions.checkArgument(buf == null || bufOffset == buf.capacity());
 
     if(!oldFields.isEmpty()){
       schemaChanged = true;

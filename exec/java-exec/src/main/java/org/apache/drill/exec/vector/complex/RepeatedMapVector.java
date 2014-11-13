@@ -143,7 +143,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   @Override
   public int getBufferSize() {
-    if (accessor.getValueCount() == 0 || vectors.isEmpty()) {
+    if (accessor.getGroupCount() == 0) {
       return 0;
     }
     long buffer = offsets.getBufferSize();
@@ -430,6 +430,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
+    int bufSize = getBufferSize();
     List<DrillBuf> bufs = Lists.newArrayList(offsets.getBuffers(clear));
 
     for (ValueVector v : vectors.values()) {
@@ -437,6 +438,12 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
         bufs.add(b);
       }
     }
+    int actualBufSize = 0 ;
+    for(DrillBuf b : bufs){
+      actualBufSize += b.writerIndex();
+    }
+
+    Preconditions.checkArgument(actualBufSize == bufSize);
     return bufs.toArray(new DrillBuf[bufs.size()]);
   }
 
@@ -462,6 +469,8 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       }
       bufOffset += fmd.getBufferLength();
     }
+
+    Preconditions.checkArgument(bufOffset == buf.capacity());
   }
 
   @Override
@@ -471,7 +480,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
         .setBufferLength(getBufferSize()) //
         .setGroupCount(accessor.getGroupCount())
         // while we don't need to actually read this on load, we need it to make sure we don't skip deserialization of this vector
-        .setValueCount(accessor.getValueCount());
+        .setValueCount(accessor.getGroupCount());
     for (ValueVector v : vectors.values()) {
       b.addChild(v.getMetadata());
     }
@@ -600,7 +609,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
     public void setValueCount(int topLevelValueCount) {
       populateEmpties(topLevelValueCount);
-      offsets.getMutator().setValueCount(topLevelValueCount+1);
+      offsets.getMutator().setValueCount(topLevelValueCount == 0 ? 0 : topLevelValueCount+1);
       int childValueCount = offsets.getAccessor().get(topLevelValueCount);
       for (ValueVector v : vectors.values()) {
         v.getMutator().setValueCount(childValueCount);

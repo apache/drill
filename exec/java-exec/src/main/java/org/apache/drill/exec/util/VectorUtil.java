@@ -48,7 +48,12 @@ public class VectorUtil {
       int columnCounter = 0;
       for (VectorWrapper<?> vw : va) {
         boolean lastColumn = columnCounter == width - 1;
-        Object o = vw.getValueVector().getAccessor().getObject(row);
+        Object o ;
+        try{
+          o = vw.getValueVector().getAccessor().getObject(row);
+        }catch(Exception e){
+          throw new RuntimeException("failure while trying to read column " + vw.getField().getPath().toExpr());
+        }
         if (o == null) {
           //null value
           String value = "null";

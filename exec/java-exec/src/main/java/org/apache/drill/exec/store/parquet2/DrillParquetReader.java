@@ -214,6 +214,9 @@ public class DrillParquetReader extends AbstractRecordReader {
       totalRead++;
       if (count % fillLevelCheckFrequency == 0) {
         if (getPercentFilled() > fillLevelCheckThreshold) {
+          if(!recordMaterializer.ok()){
+            throw new RuntimeException(String.format("The setting for `%s` is too high for your Parquet records. Please set a lower check threshold and retry your query. ", ExecConstants.PARQUET_VECTOR_FILL_CHECK_THRESHOLD));
+          }
           break;
         }
       }

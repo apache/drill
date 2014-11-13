@@ -559,7 +559,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
         allocationMonitor = 0;
       }
       VectorTrimmer.trim(data, idx);
-      offsetVector.getMutator().setValueCount(valueCount+1);
+      offsetVector.getMutator().setValueCount(valueCount == 0 ? 0 : valueCount+1);
     }
 
     @Override
