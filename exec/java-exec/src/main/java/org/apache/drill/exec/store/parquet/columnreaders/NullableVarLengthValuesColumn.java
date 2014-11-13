@@ -122,14 +122,14 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
   protected void readField(long recordsToRead) {
     // TODO - unlike most implementations of this method, the recordsReadInThisIteration field is not set here
     // should verify that this is not breaking anything
-    if (usingDictionary) {
-      currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
-      // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
-    }
-    dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);
     currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
     if (! currentValNull) {
+      if (usingDictionary) {
+        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+      }
+      // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
+      dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);
       boolean success = setSafe(valuesReadInCurrentPass, pageReader.pageDataByteArray,
           (int) pageReader.readPosInBytes + 4, dataTypeLengthInBits);
       assert success;
