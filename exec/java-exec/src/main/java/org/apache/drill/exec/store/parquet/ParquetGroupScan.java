@@ -254,7 +254,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
           logger.debug("rowGroupInfo path: {} start: {} length {}", filePath, start, length);
           index++;
 
-          rowCount += valueCountInGrp;
+          rowCount += rowGroup.getRowCount();
         }
       }
     }
