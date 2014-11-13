@@ -453,6 +453,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       if (v == null) {
         // if we arrive here, we didn't have a matching vector.
         v = TypeHelper.getNewVector(fieldDef, allocator);
+        put(fieldDef.getLastName(), v);
       }
       if (fmd.getValueCount() == 0) {
         v.clear();
@@ -460,7 +461,6 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
         v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
       }
       bufOffset += fmd.getBufferLength();
-      put(fieldDef.getLastName(), v);
     }
   }
 
