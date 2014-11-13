@@ -48,6 +48,7 @@
   <script charset="utf-8">
     $(document).ready(function() {
       $('#result').dataTable( {
+        "aaSorting": [],
         "scrollX" : true,
         "dom": '<"H"lCfr>t<"F"ip>',
         "jQueryUI" : true
