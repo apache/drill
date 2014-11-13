@@ -41,7 +41,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.column.ColumnDescriptor;
+import parquet.column.Encoding;
 import parquet.hadoop.ParquetFileReader;
+import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.MessageType;
 import parquet.schema.Type;
@@ -107,7 +109,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           footers.put(e.getPath(),
               ParquetFileReader.readFooter( fs.getConf(), new Path(e.getPath())));
         }
-        if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
+        if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()), e.getRowGroupIndex())) {
           readers.add(
               new ParquetRecordReader(
                   context, e.getPath(), e.getRowGroupIndex(), fs,
@@ -153,7 +155,12 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     return s;
   }
 
-  private static boolean isComplex(ParquetMetadata footer) {
+  private static boolean isComplex(ParquetMetadata footer, int rowGroupIndex) {
+    for (ColumnChunkMetaData md : footer.getBlocks().get(rowGroupIndex).getColumns()) {
+      if (md.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+        return true; // for now, use Complex reader for Dictionary encoded
+      }
+    }
     MessageType schema = footer.getFileMetaData().getSchema();
 
     for (Type type : schema.getFields()) {
@@ -161,6 +168,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
         return true;
       }
     }
+    ColumnDescriptor desc;
     for (ColumnDescriptor col : schema.getColumns()) {
       if (col.getMaxRepetitionLevel() > 0) {
         return true;
