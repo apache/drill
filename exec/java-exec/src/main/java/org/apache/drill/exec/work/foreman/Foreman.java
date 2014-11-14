@@ -23,6 +23,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import net.hydromatic.optiq.tools.ValidationException;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
@@ -385,6 +387,8 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       runPhysicalPlan(plan);
     } catch (SqlParseException ex) {
       fail("Failure while parsing sql : " + ex.getMessage(), ex);
+    } catch (ValidationException ex) {
+      fail("Failure while validating sql : " + ex.getMessage(), ex);
     } catch(Exception e) {
       fail("Failure while running sql.", e);
     }
