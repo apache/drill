@@ -123,7 +123,7 @@ public class AtomicRemainder {
 //      assert outcome <= initShared;
       if (outcome < 0) {
         long newAvailableShared = availableShared.addAndGet(size);
-        assert newAvailableShared <= initShared;
+        // assert newAvailableShared <= initShared;
         if (parent != null) {
           parent.returnAllocation(size);
         }
