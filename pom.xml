@@ -261,6 +261,7 @@
           <source>1.7</source>
           <target>1.7</target>
           <maxmem>2048m</maxmem>
+          <useIncrementalCompilation>false</useIncrementalCompilation>
           <fork>true</fork>
         </configuration>
       </plugin>
@@ -361,7 +362,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.0</version>
+          <version>3.2</version>
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
