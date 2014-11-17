@@ -80,10 +80,19 @@ fi
 # get log directory
 if [ "$DRILL_LOG_DIR" = "" ]; then
   DRILL_LOG_DIR=/var/log/drill
+  touch $DRILL_LOG_DIR/sqlline.log
+  TOUCH_EXIT_CODE=$?
+  if [ $TOUCH_EXIT_CODE = 0 ]; then
+    echo "Default Drill log directory: $DRILL_LOG_DIR"
+    DRILL_LOG_DIR_FALLBACK=0
+  else
+    #Force DRILL_LOG_DIR to fall back
+    DRILL_LOG_DIR_FALLBACK=1
+  fi
 fi
 
-if [ ! -d $DRILL_LOG_DIR ]; then
-  echo "Drill log directory $DRILL_LOG_DIR does not exist, defaulting to $DRILL_HOME/log"
+if [ ! -d $DRILL_LOG_DIR ] || [ $DRILL_LOG_DIR_FALLBACK = 1 ]; then
+  echo "Drill log directory $DRILL_LOG_DIR does not exist or is not writable, defaulting to $DRILL_HOME/log"
   DRILL_LOG_DIR=$DRILL_HOME/log
   mkdir -p $DRILL_LOG_DIR
 fi
