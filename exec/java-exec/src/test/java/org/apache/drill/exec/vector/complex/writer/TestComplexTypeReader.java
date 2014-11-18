@@ -188,4 +188,9 @@ public class TestComplexTypeReader extends BaseTestQuery{
     test("select kvgen(x) from cp.`jsoninput/input2.json`");
     test("select kvgen(bigintegercol), kvgen(float8col) from cp.`jsoninput/input3.json`");
   }
+
+  @Test
+  public void testNestedFlatten() throws Exception {
+    test("select flatten(rl) from cp.`jsoninput/input2.json`");
+  }
 }

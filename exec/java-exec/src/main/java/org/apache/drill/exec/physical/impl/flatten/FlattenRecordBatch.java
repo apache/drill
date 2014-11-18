@@ -29,6 +29,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -263,7 +264,11 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
             ValueVector vector = container.addOrGet(vw.getField());
             container.add(vector);
           } else {
-            container.add(getFlattenFieldTransferPair().getTo());
+            TransferPair pair = getFlattenFieldTransferPair();
+            if (pair == null) {
+              continue;
+            }
+            container.add(pair.getTo());
           }
         } else {
           ValueVector vector = container.addOrGet(vw.getField());
@@ -297,12 +302,15 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
                 popConfig.getColumn()).getFieldIds()[0]).getValueClass(),
         incoming.getValueVectorId(popConfig.getColumn()).getFieldIds()).getValueVector();
 
-    TransferPair tp;
+    TransferPair tp = null;
     if (flattenField instanceof RepeatedMapVector) {
       tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap();
     } else {
       ValueVector vvIn = ((RepeatedVector)flattenField).getAccessor().getAllChildValues();
-      tp = vvIn.getTransferPair();
+      // vvIn may be null because of fast schema return for repeated list vectors
+      if (vvIn != null) {
+        tp = vvIn.getTransferPair();
+      }
     }
     return tp;
   }
@@ -326,9 +334,11 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
     TransferPair tp = getFlattenFieldTransferPair();
 
-    transfers.add(tp);
-    container.add(tp.getTo());
-    transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
+    if (tp != null) {
+      transfers.add(tp);
+      container.add(tp.getTo());
+      transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
+    }
 
     logger.debug("Added transfer for project expression.");
 

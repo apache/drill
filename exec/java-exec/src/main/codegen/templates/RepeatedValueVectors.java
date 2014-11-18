@@ -124,7 +124,7 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     }
     to.parentValueCount = groups;
     to.childValueCount  = valuesToCopy;
-    m.setValueCount(groups);
+    m.setValueCount(groups == 0 ? 0 : groups + 1);
   }
   
   private class TransferImpl implements TransferPair{
