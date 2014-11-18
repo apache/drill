@@ -62,7 +62,7 @@ public class ClassPathFileSystem extends FileSystem{
   }
 
   private String getFileName(Path path){
-    String file = path.toString();
+    String file = path.toUri().getPath();
     if(file.charAt(0) == '/'){
       file = file.substring(1);
     }
