@@ -23,19 +23,17 @@ import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
 import java.util.List;
 
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.sql.SqlSelect;
-import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -48,7 +46,7 @@ public class ShowTablesHandler extends DefaultSqlHandler {
 
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.`TABLES` ... */
   @Override
-  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException{
+  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException, ForemanSetupException {
     SqlShowTables node = unwrap(sqlNode, SqlShowTables.class);
     List<SqlNode> selectList = Lists.newArrayList();
     SqlNode fromClause;

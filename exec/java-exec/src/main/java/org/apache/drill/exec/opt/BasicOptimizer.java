@@ -18,6 +18,7 @@
 package org.apache.drill.exec.opt;
 
 import com.google.common.collect.Lists;
+
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -54,6 +55,7 @@ import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.work.foreman.ForemanException;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 import org.eigenbase.rel.RelFieldCollation.NullDirection;
 

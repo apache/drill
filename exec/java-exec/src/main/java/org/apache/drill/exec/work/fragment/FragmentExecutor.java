@@ -200,11 +200,10 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
 
     @Override
     public void drillbitUnregistered(Set<CoordinationProtos.DrillbitEndpoint> unregisteredDrillbits) {
-      if (unregisteredDrillbits.contains(FragmentExecutor.this.context.getForemanDrillbitEndPoint())) {
-        logger.warn("Forman : {} seems not responding or not work properly. Cancel this fragment {}:{}",
-            FragmentExecutor.this.context.getForemanDrillbitEndPoint(),
-            FragmentExecutor.this.context.getHandle().getMajorFragmentId(),
-            FragmentExecutor.this.context.getHandle().getMinorFragmentId());
+      if (unregisteredDrillbits.contains(FragmentExecutor.this.context.getForemanEndpoint())) {
+        logger.warn("Forman : {} no longer active. Cancelling fragment {}.",
+            FragmentExecutor.this.context.getForemanEndpoint().getAddress(),
+            QueryIdHelper.getQueryIdentifier(context.getHandle()));
         FragmentExecutor.this.cancel();
       }
     }

@@ -61,7 +61,9 @@ public class ErrorHelper {
     DrillPBError.Builder builder = DrillPBError.newBuilder();
     builder.setEndpoint(endpoint);
     builder.setErrorId(id);
-    builder.setMessage(message);
+    if(message != null){
+      builder.setMessage(message);
+    }
     if(t == null){
       t = new DrillException("Undefined failure occurred.");
     }

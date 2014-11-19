@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.exception;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.work.foreman.ForemanException;
 
-public class FragmentSetupException extends ExecutionSetupException{
+public class FragmentSetupException extends ForemanException{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentSetupException.class);
 
   public FragmentSetupException() {

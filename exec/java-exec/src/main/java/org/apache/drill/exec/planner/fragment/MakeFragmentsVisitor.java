@@ -17,16 +17,16 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
-import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 /**
  * Responsible for breaking a plan into its constituent Fragments.
  */
-public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Fragment, FragmentSetupException> {
+public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Fragment, ForemanSetupException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MakeFragmentsVisitor.class);
 
 
@@ -34,10 +34,10 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
   }
 
   @Override
-  public Fragment visitExchange(Exchange exchange, Fragment value) throws FragmentSetupException {
+  public Fragment visitExchange(Exchange exchange, Fragment value) throws ForemanSetupException {
 //    logger.debug("Visiting Exchange {}", exchange);
     if (value == null) {
-      throw new FragmentSetupException("The simple fragmenter was called without a FragmentBuilder value.  This will only happen if the initial call to SimpleFragmenter is by a Exchange node.  This should never happen since an Exchange node should never be the root node of a plan.");
+      throw new ForemanSetupException("The simple fragmenter was called without a FragmentBuilder value.  This will only happen if the initial call to SimpleFragmenter is by a Exchange node.  This should never happen since an Exchange node should never be the root node of a plan.");
     }
     Fragment next = getNextBuilder();
     value.addReceiveExchange(exchange, next);
@@ -47,13 +47,13 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
   }
 
   @Override
-  public Fragment visitSubScan(SubScan subScan, Fragment value) throws FragmentSetupException {
+  public Fragment visitSubScan(SubScan subScan, Fragment value) throws ForemanSetupException {
     // TODO - implement this
     return super.visitOp(subScan, value);
   }
 
   @Override
-  public Fragment visitOp(PhysicalOperator op, Fragment value)  throws FragmentSetupException{
+  public Fragment visitOp(PhysicalOperator op, Fragment value)  throws ForemanSetupException{
 //    logger.debug("Visiting Other {}", op);
     value = ensureBuilder(value);
     value.addOperator(op);
@@ -63,7 +63,7 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
     return value;
   }
 
-  private Fragment ensureBuilder(Fragment value) throws FragmentSetupException{
+  private Fragment ensureBuilder(Fragment value) throws ForemanSetupException{
     if (value != null) {
       return value;
     } else {

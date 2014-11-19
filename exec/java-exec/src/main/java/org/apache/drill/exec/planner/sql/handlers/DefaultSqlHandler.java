@@ -39,7 +39,6 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.RewriteProjectRel;
-import org.apache.drill.exec.planner.physical.visitor.RewriteProjectToFlatten;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -50,8 +49,8 @@ import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifie
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.MemoryEstimationVisitor;
-import org.apache.drill.exec.planner.physical.visitor.ProducerConsumerPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
+import org.apache.drill.exec.planner.physical.visitor.RewriteProjectToFlatten;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.SplitUpComplexExpressions;
 import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
@@ -59,6 +58,7 @@ import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.Pointer;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
@@ -119,7 +119,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   @Override
-  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
+  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
 
     SqlNode rewrittenSqlNode = rewrite(sqlNode);
     SqlNode validated = validateNode(rewrittenSqlNode);
@@ -141,7 +141,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return plan;
   }
 
-  protected SqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException {
+  protected SqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException, ForemanSetupException {
     return planner.validate(sqlNode);
   }
 
@@ -301,7 +301,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * @return Rewritten sql parse tree
    * @throws RelConversionException
    */
-  public SqlNode rewrite(SqlNode node) throws RelConversionException {
+  public SqlNode rewrite(SqlNode node) throws RelConversionException, ForemanSetupException {
     return node;
   }
 }

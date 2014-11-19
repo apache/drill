@@ -89,8 +89,8 @@ public class QueryStatus {
     this.planText = planText;
   }
 
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
+  public void markStart() {
+    this.startTime = System.currentTimeMillis();
   }
 
   public void setEndTime(long endTime) {
@@ -125,8 +125,7 @@ public class QueryStatus {
     fragmentDataMap.get(majorFragmentId).get(minorFragmentId).setStatus(fragmentStatus);
   }
 
-  public synchronized void updateQueryStateInStore() {
-    QueryState queryState = foreman.getQueryState();
+  synchronized QueryState updateQueryStateInStore(QueryState queryState) {
     switch (queryState) {
       case PENDING:
       case RUNNING:
@@ -140,12 +139,13 @@ public class QueryStatus {
         }catch(Exception e){
           logger.warn("Failure while trying to delete the estore profile for this query.", e);
         }
-        //profileEStore.put(queryId, getAsProfile(false));  //  Change the state in EStore to complete/cancel/fail.
-        // profileEStore.delete(queryId);  // delete the ephemeral query profile.
+
         profilePStore.put(queryId, getAsProfile());
         break;
       default:
+        throw new IllegalStateException();
     }
+    return queryState;
   }
 
   @Override
@@ -212,7 +212,7 @@ public class QueryStatus {
   public QueryInfo getAsInfo() {
     return QueryInfo.newBuilder() //
       .setQuery(query.getPlan())
-      .setState(foreman.getQueryState())
+      .setState(foreman.getState())
       .setForeman(foreman.getContext().getCurrentEndpoint())
       .setStart(startTime)
       .build();
@@ -243,7 +243,7 @@ public class QueryStatus {
       }
     }
 
-    b.setState(foreman.getQueryState());
+    b.setState(foreman.getState());
     b.setForeman(foreman.getContext().getCurrentEndpoint());
     b.setStart(startTime);
     b.setEnd(endTime);

@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import java.io.IOException;
+
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
+
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ops.QueryContext;
@@ -30,14 +33,13 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.sql.DirectPlan;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.sql.SqlExplain;
 import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
-
-import java.io.IOException;
 
 public class ExplainHandler extends DefaultSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplainHandler.class);
@@ -49,7 +51,7 @@ public class ExplainHandler extends DefaultSqlHandler {
   }
 
   @Override
-  public PhysicalPlan getPlan(SqlNode node) throws ValidationException, RelConversionException, IOException {
+  public PhysicalPlan getPlan(SqlNode node) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     SqlNode sqlNode = rewrite(node);
     SqlNode validated = validateNode(sqlNode);
     RelNode rel = convertToRel(validated);
@@ -72,7 +74,7 @@ public class ExplainHandler extends DefaultSqlHandler {
   }
 
   @Override
-  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException{
+  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException, ForemanSetupException {
     SqlExplain node = unwrap(sqlNode, SqlExplain.class);
     SqlLiteral op = node.operand(2);
     SqlExplain.Depth depth = (SqlExplain.Depth) op.getValue();

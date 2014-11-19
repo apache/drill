@@ -20,9 +20,9 @@ package org.apache.drill.exec.planner.fragment;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.google.common.collect.Lists;
 
@@ -40,9 +40,9 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
     }
   }
 
-  public void addSendExchange(Exchange e) throws FragmentSetupException{
+  public void addSendExchange(Exchange e) throws ForemanSetupException{
     if (sendingExchange != null) {
-      throw new FragmentSetupException("Fragment was trying to add a second SendExchange.  ");
+      throw new ForemanSetupException("Fragment was trying to add a second SendExchange.  ");
     }
     addOperator(e);
     sendingExchange = e;

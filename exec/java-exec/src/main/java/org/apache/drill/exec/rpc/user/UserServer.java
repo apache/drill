@@ -82,15 +82,6 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
         throw new RpcException("Failure while decoding RunQuery body.", e);
       }
 
-    case RpcType.REQUEST_RESULTS_VALUE:
-      logger.debug("Received results requests.  Returning empty query result.");
-      try {
-        RequestResults req = RequestResults.PARSER.parseFrom(new ByteBufInputStream(pBody));
-        return new Response(RpcType.QUERY_RESULT, worker.getResult(connection, req));
-      } catch (InvalidProtocolBufferException e) {
-        throw new RpcException("Failure while decoding RequestResults body.", e);
-      }
-
     case RpcType.CANCEL_QUERY_VALUE:
       try {
         QueryId queryId = QueryId.PARSER.parseFrom(new ByteBufInputStream(pBody));

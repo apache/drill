@@ -15,42 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.exceptions;
+package org.apache.drill.exec.work.foreman;
 
 import java.lang.reflect.InvocationTargetException;
 
-public class ExecutionSetupException extends DrillException {
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 
-  public static ExecutionSetupException fromThrowable(String message, Throwable cause) {
+public class ForemanException extends ExecutionSetupException {
+  private static final long serialVersionUID = -6943409010231014085L;
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ForemanException.class);
+
+  public static ForemanException fromThrowable(String message, Throwable cause) {
     Throwable t = cause instanceof InvocationTargetException
         ? ((InvocationTargetException)cause).getTargetException() : cause;
-    if (t instanceof ExecutionSetupException) {
-      return ((ExecutionSetupException) t);
+    if (t instanceof ForemanException) {
+      return ((ForemanException) t);
     }
-    return new ExecutionSetupException(message, t);
+    return new ForemanException(message, t);
   }
-  public ExecutionSetupException() {
+
+  public ForemanException() {
     super();
-
   }
 
-  public ExecutionSetupException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+  public ForemanException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
-
   }
 
-  public ExecutionSetupException(String message, Throwable cause) {
+  public ForemanException(String message, Throwable cause) {
     super(message, cause);
-
   }
 
-  public ExecutionSetupException(String message) {
+  public ForemanException(String message) {
     super(message);
-
   }
 
-  public ExecutionSetupException(Throwable cause) {
+  public ForemanException(Throwable cause) {
     super(cause);
-
   }
+
 }

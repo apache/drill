@@ -21,12 +21,11 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -34,11 +33,12 @@ import org.apache.drill.exec.planner.fragment.Materializer.IndexedFragmentNode;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.QueryWorkUnit;
+import org.apache.drill.exec.work.foreman.ForemanException;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
@@ -88,7 +88,7 @@ public class SimpleParallelizer {
    * @param rootNode        The root node of the PhysicalPlan that we will parallelizing.
    * @param planningSet     The set of queries with collected statistics that we'll work with.
    * @return The list of generated PlanFragment protobuf objects to be assigned out to the individual nodes.
-   * @throws ExecutionSetupException
+   * @throws ForemanException
    */
   public QueryWorkUnit getFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId, Collection<DrillbitEndpoint> activeEndpoints,
       PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet, UserSession session) throws ExecutionSetupException {
@@ -116,7 +116,7 @@ public class SimpleParallelizer {
       boolean isRootNode = rootNode == node;
 
       if (isRootNode && wrapper.getWidth() != 1) {
-        throw new FragmentSetupException(
+        throw new ForemanSetupException(
             String.format(
                 "Failure while trying to setup fragment.  The root fragment must always have parallelization one.  In the current case, the width was set to %d.",
                 wrapper.getWidth()));
@@ -139,7 +139,7 @@ public class SimpleParallelizer {
           plan = reader.writeJson(root);
           optionsData = reader.writeJson(options);
         } catch (JsonProcessingException e) {
-          throw new FragmentSetupException("Failure while trying to convert fragment into json.", e);
+          throw new ForemanSetupException("Failure while trying to convert fragment into json.", e);
         }
 
         FragmentHandle handle = FragmentHandle //

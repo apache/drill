@@ -89,7 +89,7 @@ public class DrillOptiq {
 
     @Override
     public LogicalExpression visitCall(RexCall call) {
-      logger.debug("RexCall {}, {}", call);
+//      logger.debug("RexCall {}, {}", call);
       final SqlSyntax syntax = call.getOperator().getSyntax();
       switch (syntax) {
       case BINARY:

@@ -20,13 +20,11 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.util.List;
 
-import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
-import org.eigenbase.relopt.hep.HepPlanner;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlNodeList;
@@ -42,7 +40,7 @@ public class ShowSchemasHandler extends DefaultSqlHandler {
 
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.SCHEMATA ... */
   @Override
-  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException{
+  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException, ForemanSetupException {
     SqlShowSchemas node = unwrap(sqlNode, SqlShowSchemas.class);
     List<SqlNode> selectList = ImmutableList.of((SqlNode) new SqlIdentifier("SCHEMA_NAME", SqlParserPos.ZERO));
 

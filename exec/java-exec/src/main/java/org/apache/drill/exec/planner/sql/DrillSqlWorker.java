@@ -28,6 +28,7 @@ import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.RuleSet;
 import net.hydromatic.optiq.tools.ValidationException;
+
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
@@ -42,6 +43,7 @@ import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.Pointer;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.rel.rules.ReduceExpressionsRule;
 import org.eigenbase.rel.rules.WindowedAggSplitterRule;
@@ -63,7 +65,7 @@ public class DrillSqlWorker {
   private final QueryContext context;
 
 
-  public DrillSqlWorker(QueryContext context) throws Exception {
+  public DrillSqlWorker(QueryContext context) {
     final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
 
     traitDefs.add(ConventionTraitDef.INSTANCE);
@@ -101,12 +103,17 @@ public class DrillSqlWorker {
     return allRules;
   }
 
-  public PhysicalPlan getPlan(String sql) throws SqlParseException, ValidationException, RelConversionException, IOException{
+  public PhysicalPlan getPlan(String sql) throws SqlParseException, ValidationException, ForemanSetupException{
     return getPlan(sql, null);
   }
 
-  public PhysicalPlan getPlan(String sql, Pointer<String> textPlan) throws SqlParseException, ValidationException, RelConversionException, IOException{
-    SqlNode sqlNode = planner.parse(sql);
+  public PhysicalPlan getPlan(String sql, Pointer<String> textPlan) throws ForemanSetupException {
+    SqlNode sqlNode;
+    try {
+      sqlNode = planner.parse(sql);
+    } catch (SqlParseException e) {
+      throw new QueryInputException("Failure parsing SQL.", e);
+    }
 
     AbstractSqlHandler handler;
     SqlHandlerConfig config = new SqlHandlerConfig(hepPlanner, planner, context);
@@ -129,7 +136,14 @@ public class DrillSqlWorker {
       handler = new DefaultSqlHandler(config, textPlan);
     }
 
-    return handler.getPlan(sqlNode);
+    try{
+      return handler.getPlan(sqlNode);
+    }catch(ValidationException e){
+      throw new QueryInputException("Failure validating SQL.", e);
+    } catch (IOException | RelConversionException e) {
+      throw new QueryInputException("Failure handling SQL.", e);
+    }
+
   }
 
 }

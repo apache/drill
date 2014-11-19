@@ -170,7 +170,7 @@ public class DirPathBuilder extends RexVisitorImpl <SchemaPath> {
 
   @Override
   public SchemaPath visitCall(RexCall call) {
-    logger.debug("RexCall {}, {}", call);
+//    logger.debug("RexCall {}, {}", call);
     final SqlSyntax syntax = call.getOperator().getSyntax();
     switch (syntax) {
     case BINARY:

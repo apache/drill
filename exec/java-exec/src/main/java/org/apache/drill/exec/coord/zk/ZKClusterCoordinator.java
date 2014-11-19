@@ -207,7 +207,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   }
 
 
-  private void updateEndpoints() {
+  private synchronized void updateEndpoints() {
     try {
       Collection<DrillbitEndpoint> newDrillbitSet =
       transform(discovery.queryForInstances(serviceName),
@@ -226,12 +226,21 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
       if (logger.isDebugEnabled()) {
         StringBuilder builder = new StringBuilder();
-        builder.append("# of active drillbits : " + newDrillbitSet.size() + "");
-        builder.append("Active drillbits : ");
+        builder.append("Active drillbit set changed.  Now includes ");
+        builder.append(newDrillbitSet.size());
+        builder.append(" total bits.  New active drillbits: \n");
         for (DrillbitEndpoint bit: newDrillbitSet) {
-          builder.append(bit.toString() + "\t");
+          builder.append('\t');
+          builder.append(bit.getAddress());
+          builder.append(':');
+          builder.append(bit.getUserPort());
+          builder.append(':');
+          builder.append(bit.getControlPort());
+          builder.append(':');
+          builder.append(bit.getDataPort());
+          builder.append('\n');
         }
-        logger.debug("Active drillbits set changed: {}", builder.toString());
+        logger.debug(builder.toString());
       }
 
       // Notify the drillbit listener for newly unregistered bits. For now, we only care when drillbits are down / unregistered.

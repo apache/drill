@@ -17,22 +17,28 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.BitControl.FragmentStatus;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.work.fragment.AbstractStatusReporter;
 
-public class RootStatusReporter extends AbstractStatusReporter{
+public class ForemanSetupException extends ForemanException {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ForemanSetupException.class);
 
-  QueryManager runningFragmentManager;
-
-  private RootStatusReporter(FragmentContext context){
-    super(context);
+  public ForemanSetupException() {
+    super();
   }
 
-  @Override
-  protected void statusChange(FragmentHandle handle, FragmentStatus status) {
-    runningFragmentManager.statusUpdate(status);
+  public ForemanSetupException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+  }
+
+  public ForemanSetupException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public ForemanSetupException(String message) {
+    super(message);
+  }
+
+  public ForemanSetupException(Throwable cause) {
+    super(cause);
   }
 
 

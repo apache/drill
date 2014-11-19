@@ -30,6 +30,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlLiteral;
@@ -48,7 +49,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
 
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.COLUMNS ... */
   @Override
-  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException {
+  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException, ForemanSetupException {
     SqlDescribeTable node = unwrap(sqlNode, SqlDescribeTable.class);
 
     try {

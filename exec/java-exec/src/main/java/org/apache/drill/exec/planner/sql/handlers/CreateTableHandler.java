@@ -38,6 +38,7 @@ import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.hep.HepPlanner;
@@ -51,7 +52,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
   }
 
   @Override
-  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
+  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
 
     try {

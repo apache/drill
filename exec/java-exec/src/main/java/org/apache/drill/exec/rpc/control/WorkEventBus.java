@@ -29,6 +29,7 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.FragmentStatusListener;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 
 import com.google.common.cache.Cache;
@@ -57,11 +58,11 @@ public class WorkEventBus {
     listeners.remove(queryId);
   }
 
-  public void setFragmentStatusListener(QueryId queryId, FragmentStatusListener listener) throws RpcException {
+  public void setFragmentStatusListener(QueryId queryId, FragmentStatusListener listener) throws ForemanSetupException {
     logger.debug("Adding fragment status listener for queryId {}.", queryId);
     FragmentStatusListener old = listeners.putIfAbsent(queryId, listener);
     if (old != null) {
-      throw new RpcException(
+      throw new ForemanSetupException (
           "Failure.  The provided handle already exists in the listener pool.  You need to remove one listener before adding another.");
     }
   }

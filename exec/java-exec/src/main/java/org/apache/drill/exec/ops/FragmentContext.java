@@ -171,7 +171,7 @@ public class FragmentContext implements Closeable {
     return this.rootFragmentTimeZone;
   }
 
-  public DrillbitEndpoint getForemanDrillbitEndPoint() {return fragment.getForeman();}
+  public DrillbitEndpoint getForemanEndpoint() {return fragment.getForeman();}
 
   /**
    * The FragmentHandle for this Fragment

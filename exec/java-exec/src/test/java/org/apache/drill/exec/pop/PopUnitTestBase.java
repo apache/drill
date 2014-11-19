@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.junit.BeforeClass;
 
 import com.google.common.base.Charsets;
@@ -53,7 +54,7 @@ public abstract class PopUnitTestBase  extends ExecTest{
     return i;
   }
 
-  public Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException, IOException {
+  public Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException, IOException, ForemanSetupException {
     MakeFragmentsVisitor f = new MakeFragmentsVisitor();
 
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));

@@ -17,23 +17,16 @@
  */
 package org.apache.drill.exec.work.user;
 
-import java.util.Random;
-import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
-import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
-import org.apache.drill.exec.work.fragment.FragmentExecutor;
 
 public class UserWorker{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserWorker.class);
@@ -46,7 +39,7 @@ public class UserWorker{
   }
 
   public QueryId submitWork(UserClientConnection connection, RunQuery query) {
-    Random r = new Random();
+    ThreadLocalRandom r = ThreadLocalRandom.current();
 
     // create a new queryid where the first four bytes are a growing time (each new value comes earlier in sequence).  Last 12 bytes are random.
     long time = (int) (System.currentTimeMillis()/1000);
@@ -58,32 +51,12 @@ public class UserWorker{
     return id;
   }
 
-  public QueryResult getResult(UserClientConnection connection, RequestResults req) {
-    Foreman foreman = bee.getForemanForQueryId(req.getQueryId());
-    if (foreman == null) {
-      return QueryResult.newBuilder().setQueryState(QueryState.UNKNOWN_QUERY).build();
-    }
-    return foreman.getResult(connection, req);
-  }
-
   public Ack cancelQuery(QueryId query) {
     Foreman foreman = bee.getForemanForQueryId(query);
     if(foreman != null) {
       foreman.cancel();
     }
     return Acks.OK;
-  }
-
-  public Ack cancelFragment(FragmentHandle handle) {
-    FragmentExecutor runner = bee.getFragmentRunner(handle);
-    if (runner != null) {
-      runner.cancel();
-    }
-    return Acks.OK;
-  }
-
-  public SchemaFactory getSchemaFactory() {
-    return bee.getContext().getSchemaFactory();
   }
 
   public OptionManager getSystemOptions() {

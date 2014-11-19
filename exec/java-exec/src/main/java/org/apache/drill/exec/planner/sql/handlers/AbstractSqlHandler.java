@@ -26,6 +26,7 @@ import net.hydromatic.optiq.tools.ValidationException;
 
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.sql.SqlNode;
 
 import com.google.common.base.Joiner;
@@ -33,13 +34,13 @@ import com.google.common.base.Joiner;
 public abstract class AbstractSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSqlHandler.class);
 
-  public abstract PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException;
+  public abstract PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException;
 
-  public static <T> T unwrap(Object o, Class<T> clazz) throws RelConversionException {
+  public static <T> T unwrap(Object o, Class<T> clazz) throws ForemanSetupException {
     if (clazz.isAssignableFrom(o.getClass())) {
       return (T) o;
     } else {
-      throw new RelConversionException(String.format("Failure trying to treat %s as type %s.", o.getClass().getSimpleName(), clazz.getSimpleName()));
+      throw new ForemanSetupException(String.format("Failure trying to treat %s as type %s.", o.getClass().getSimpleName(), clazz.getSimpleName()));
     }
   }
 

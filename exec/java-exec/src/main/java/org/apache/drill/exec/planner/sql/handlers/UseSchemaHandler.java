@@ -26,6 +26,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlUseSchema;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.sql.SqlNode;
 
 public class UseSchemaHandler extends AbstractSqlHandler {
@@ -36,7 +37,7 @@ public class UseSchemaHandler extends AbstractSqlHandler {
   }
 
   @Override
-  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
+  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     SqlUseSchema useSchema = unwrap(sqlNode, SqlUseSchema.class);
 
     String defaultSchema = useSchema.getSchema();

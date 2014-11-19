@@ -15,16 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.exception;
+package org.apache.drill.exec.physical;
 
-import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 
-public class OptimizerException extends ForemanSetupException {
-  public OptimizerException(String message, Throwable cause) {
+
+public class PhysicalOperatorSetupException extends ExecutionSetupException {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalOperatorSetupException.class);
+
+  public PhysicalOperatorSetupException() {
+    super();
+  }
+
+  public PhysicalOperatorSetupException(String message, Throwable cause, boolean enableSuppression,
+      boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+  }
+
+  public PhysicalOperatorSetupException(String message, Throwable cause) {
     super(message, cause);
   }
 
-  public OptimizerException(String s) {
-        super(s);
-    }
+  public PhysicalOperatorSetupException(String message) {
+    super(message);
+  }
+
+  public PhysicalOperatorSetupException(Throwable cause) {
+    super(cause);
+  }
+
+
 }

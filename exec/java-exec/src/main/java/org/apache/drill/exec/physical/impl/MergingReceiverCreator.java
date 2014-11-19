@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
@@ -34,7 +35,7 @@ public class MergingReceiverCreator implements BatchCreator<MergingReceiverPOP> 
   public RecordBatch getBatch(FragmentContext context,
                               MergingReceiverPOP receiver,
                               List<RecordBatch> children)
-      throws ExecutionSetupException {
+      throws ExecutionSetupException, OutOfMemoryException {
 
     assert children == null || children.isEmpty();
     IncomingBuffers bufHolder = context.getBuffers();

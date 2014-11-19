@@ -15,30 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.exceptions;
+package org.apache.drill.exec.planner.sql;
 
-public class PhysicalOperatorSetupException extends ExecutionSetupException{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalOperatorSetupException.class);
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
-  public PhysicalOperatorSetupException() {
+public class QueryInputException extends ForemanSetupException {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryInputException.class);
+
+  public QueryInputException() {
     super();
+
   }
 
-  public PhysicalOperatorSetupException(String message, Throwable cause, boolean enableSuppression,
-      boolean writableStackTrace) {
+  public QueryInputException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
+
   }
 
-  public PhysicalOperatorSetupException(String message, Throwable cause) {
+  public QueryInputException(String message, Throwable cause) {
     super(message, cause);
+
   }
 
-  public PhysicalOperatorSetupException(String message) {
+  public QueryInputException(String message) {
     super(message);
+
   }
 
-  public PhysicalOperatorSetupException(Throwable cause) {
+  public QueryInputException(Throwable cause) {
     super(cause);
+
   }
 
 
