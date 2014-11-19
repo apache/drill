@@ -182,9 +182,9 @@ public class TestProjectPushDown extends PlanTestBase {
     final String pushDownSqlPattern = "select %s from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 where %s";
     final String projection = "t0.fcolumns[0], t0.fmy.field, t0.freally.nested.field[0], t1.scolumns[0], t1.smy.field, t1.sreally.nested.field[0], t2.tcolumns[0], t2.tmy.field, t2.treally.nested.field[0]";
     final String filter = "t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[1] + t1.scolumns[1] + t2.tcolumns[1]=100";
-    final String firstExpected = "\"columns\" : [ \"`fname`\", \"`fcolumns`[1]\", \"`fcolumns`[0]\", \"`fmy`.`field`\", \"`freally`.`nested`.`field`[0]\" ],";
-    final String secondExpected = "\"columns\" : [ \"`sname`\", \"`slastname`\", \"`scolumns`[1]\", \"`scolumns`[0]\", \"`smy`.`field`\", \"`sreally`.`nested`.`field`[0]\" ],";
-    final String thirdExpected = "\"columns\" : [ \"`tlastname`\", \"`tcolumns`[1]\", \"`tcolumns`[0]\", \"`tmy`.`field`\", \"`treally`.`nested`.`field`[0]\" ],";
+    final String firstExpected = "\"columns\" : [ \"`fname`\", \"`fcolumns`[0]\", \"`fmy`.`field`\", \"`freally`.`nested`.`field`[0]\", \"`fcolumns`[1]\" ],";
+    final String secondExpected = "\"columns\" : [ \"`sname`\", \"`slastname`\", \"`scolumns`[0]\", \"`smy`.`field`\", \"`sreally`.`nested`.`field`[0]\", \"`scolumns`[1]\" ],";
+    final String thirdExpected = "\"columns\" : [ \"`tlastname`\", \"`tcolumns`[0]\", \"`tmy`.`field`\", \"`treally`.`nested`.`field`[0]\", \"`tcolumns`[1]\" ],";
 
     for (String table: TABLES) {
       testPushDown(new PushDownTestInstance(pushDownSqlPattern,
@@ -193,43 +193,38 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
-  @Ignore("This query does not work when ProjectPastJoin is enabled. This is a known issue.")
   public void testProjectPastJoinPastFilterPastJoinPushDown() throws Exception {
     final String pushDownSqlPattern = "select %s from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 where %s";
     final String projection = "t0.fcolumns[0], t0.fmy.field, t0.freally.nested.field[0], t1.scolumns[0], t1.smy.field, t1.sreally.nested.field[0], t2.tcolumns[0], t2.tmy.field, t2.treally.nested.field[0]";
     final String filter = "t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[1] + t1.scolumns[1] = 100";
     final String firstExpected = "\"columns\" : [ \"`fname`\", \"`fcolumns`[1]\", \"`fcolumns`[0]\", \"`fmy`.`field`\", \"`freally`.`nested`.`field`[0]\" ],";
     final String secondExpected = "\"columns\" : [ \"`sname`\", \"`slastname`\", \"`scolumns`[1]\", \"`scolumns`[0]\", \"`smy`.`field`\", \"`sreally`.`nested`.`field`[0]\" ],";
-    final String thirdExpected = "\"columns\" : [ \"`tlastname`\", \"`tcolumns`[1]\", \"`tcolumns`[0]\", \"`tmy`.`field`\", \"`treally`.`nested`.`field`[0]\" ],";
+    final String thirdExpected = "\"columns\" : [ \"`tlastname`\", \"`tcolumns`[0]\", \"`tmy`.`field`\", \"`treally`.`nested`.`field`[0]\" ],";
 
-    final String[] TABLES = new String[] {
-        "project/pushdown/empty0.json",
-        "project/pushdown/empty1.json",
-        "project/pushdown/empty2.json",
-    };
-//    for (String table: TABLES) {
-      testPushDown(new PushDownTestInstance(pushDownSqlPattern,
-          new String[]{firstExpected, secondExpected, thirdExpected}, projection, TABLES[0], TABLES[1], TABLES[2], filter));
-//    }
+    for (String table: TABLES) {
+    testPushDown(new PushDownTestInstance(pushDownSqlPattern,
+        new String[]{firstExpected, secondExpected, thirdExpected}, projection, table, table, table, filter));
+    }
+
   }
 
   @Test
-  @Ignore("This query does not work when ProjectPastJoin is enabled. This is a known issue.")
   public void testSimpleProjectPastJoinPastFilterPastJoinPushDown() throws Exception {
-    String sql = "select * " +
-        "from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 " +
-        "where t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[0] + t1.scolumns = 100";
+//    String sql = "select * " +
+//        "from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 " +
+//        "where t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[0] + t1.scolumns = 100";
 
-    final String[] TABLES = new String[] {
-        "project/pushdown/empty0.json",
-        "project/pushdown/empty1.json",
-        "project/pushdown/empty2.json",
-    };
+    final String firstExpected = "\"columns\" : [ \"`a`\", \"`fa`\", \"`fcolumns`[0]\" ],";
+    final String secondExpected = "\"columns\" : [ \"`a`\", \"`b`\", \"`c`\", \"`sa`\" ],";
+    final String thirdExpected = "\"columns\" : [ \"`d`\", \"`ta`\" ],";
 
-    sql = "select t0.fa, t1.sa, t2.ta " +
+    String sql = "select t0.fa, t1.sa, t2.ta " +
         " from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 " +
         " where t0.a=t1.b and t1.c=t2.d and t0.fcolumns[0] + t1.a = 100";
-    testPushDown(new PushDownTestInstance(sql, "nothing", TABLES[0],TABLES[1],TABLES[2]));
+    for (String table: TABLES) {
+    testPushDown(new PushDownTestInstance(sql,
+        new String[]{firstExpected, secondExpected, thirdExpected}, table,table,table));
+    }
   }
 
   protected void testPushDown(PushDownTestInstance test) throws Exception {

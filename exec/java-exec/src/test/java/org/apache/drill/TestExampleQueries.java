@@ -386,7 +386,6 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
-  @Ignore("This test has been ignored until DRILL-1680 is fixed")
   public void testSelectStartSubQueryJoinWithWhereClause() throws Exception {
     // select clause, where, on, group by, order by.
     test(" select n.n_regionkey, count(*) as cnt \n" +

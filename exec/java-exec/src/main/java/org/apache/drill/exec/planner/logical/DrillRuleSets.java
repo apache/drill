@@ -66,7 +66,8 @@ public class DrillRuleSets {
     if (DRILL_BASIC_RULES == null) {
     DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.of( //
         // Add support for WHERE style joins.
-      PushFilterPastProjectRule.INSTANCE,
+//      PushFilterPastProjectRule.INSTANCE, // Replaced by DrillPushFilterPastProjectRule
+      DrillPushFilterPastProjectRule.INSTANCE,
       PushFilterPastJoinRule.FILTER_ON_JOIN,
       PushFilterPastJoinRule.JOIN,
       PushJoinThroughJoinRule.RIGHT,
@@ -123,58 +124,6 @@ public class DrillRuleSets {
     return DRILL_BASIC_RULES;
   }
 
-  /*
-  public static final RuleSet DRILL_PHYSICAL_MEM = new DrillRuleSet(ImmutableSet.of( //
-//      DrillScanRule.INSTANCE,
-//      DrillFilterRule.INSTANCE,
-//      DrillProjectRule.INSTANCE,
-//      DrillAggregateRule.INSTANCE,
-//
-//      DrillLimitRule.INSTANCE,
-//      DrillSortRule.INSTANCE,
-//      DrillJoinRule.INSTANCE,
-//      DrillUnionRule.INSTANCE,
-
-      ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN,
-      ConvertCountToDirectScan.AGG_ON_SCAN,
-
-      SortConvertPrule.INSTANCE,
-      SortPrule.INSTANCE,
-      ProjectPrule.INSTANCE,
-      ScanPrule.INSTANCE,
-      ScreenPrule.INSTANCE,
-      ExpandConversionRule.INSTANCE,
-      StreamAggPrule.INSTANCE,
-      HashAggPrule.INSTANCE,
-      MergeJoinPrule.INSTANCE,
-      HashJoinPrule.INSTANCE,
-      FilterPrule.INSTANCE,
-      LimitPrule.INSTANCE,
-      WindowPrule.INSTANCE,
-
-      WriterPrule.INSTANCE,
-      PushLimitToTopN.INSTANCE
-
-//    ExpandConversionRule.INSTANCE,
-//    SwapJoinRule.INSTANCE,
-//    RemoveDistinctRule.INSTANCE,
-//    UnionToDistinctRule.INSTANCE,
-//    RemoveTrivialProjectRule.INSTANCE,
-//    RemoveTrivialCalcRule.INSTANCE,
-//    RemoveSortRule.INSTANCE,
-//
-//    TableAccessRule.INSTANCE, //
-//    MergeProjectRule.INSTANCE, //
-//    PushFilterPastProjectRule.INSTANCE, //
-//    PushFilterPastJoinRule.FILTER_ON_JOIN, //
-//    RemoveDistinctAggregateRule.INSTANCE, //
-//    ReduceAggregatesRule.INSTANCE, //
-//    SwapJoinRule.INSTANCE, //
-//    PushJoinThroughJoinRule.RIGHT, //
-//    PushJoinThroughJoinRule.LEFT, //
-//    PushSortPastProjectRule.INSTANCE, //
-    ));
-*/
   public static final RuleSet DRILL_PHYSICAL_DISK = new DrillRuleSet(ImmutableSet.of( //
       ProjectPrule.INSTANCE
 
