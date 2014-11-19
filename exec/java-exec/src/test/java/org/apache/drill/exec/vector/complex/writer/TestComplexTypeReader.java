@@ -190,6 +190,28 @@ public class TestComplexTypeReader extends BaseTestQuery{
   }
 
   @Test
+  // Functions tests kvgen functionality where the 'value' part of the map is complex
+  public void testKVGenWithComplexValues() throws Exception {
+    // test where 'value' is a list of integers
+    test("select kvgen(a) from cp.`jsoninput/kvgen_complex_input.json`");
+
+    // test where 'value' is a repeated list of floats
+    test("select kvgen(c) from cp.`jsoninput/kvgen_complex_input.json`");
+
+    // test where 'value' is a map
+    test("select kvgen(e) from cp.`jsoninput/kvgen_complex_input.json`");
+
+    // test where 'value' is a repeated list of maps
+    test("select kvgen(i) from cp.`jsoninput/kvgen_complex_input.json`");
+
+    // test where 'value' is a map that contains a list
+    test("select kvgen(m) from cp.`jsoninput/kvgen_complex_input.json`");
+
+    // test where 'value' is a map that contains a map
+    test("select kvgen(p) from cp.`jsoninput/kvgen_complex_input.json`");
+  }
+
+  @Test
   public void testNestedFlatten() throws Exception {
     test("select flatten(rl) from cp.`jsoninput/input2.json`");
   }

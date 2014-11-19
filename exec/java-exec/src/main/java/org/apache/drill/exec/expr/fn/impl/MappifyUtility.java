@@ -58,11 +58,6 @@ public class MappifyUtility {
         continue;
       }
 
-      // Check if the value field is not repeated
-      if (fieldReader.getType().getMode() == TypeProtos.DataMode.REPEATED) {
-        throw new DrillRuntimeException("kvgen function does not support repeated type values");
-      }
-
       // writing a new field, start a new map
       mapWriter.start();
 
@@ -77,7 +72,7 @@ public class MappifyUtility {
       mapWriter.varChar(fieldKey).write(vh);
 
       // Write the value to the map
-      MapUtility.writeToMapFromReader(fieldReader, mapWriter, buffer);
+      MapUtility.writeToMapFromReader(fieldReader, mapWriter);
 
       mapWriter.end();
     }
