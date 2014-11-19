@@ -320,6 +320,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         classifyExpr(namedExpression, incoming, result);
 
         if (result.isStar) {
+          // The parameter value indicates which wildcard we are processing now
           Integer value = result.prefixMap.get(result.prefix);
           if (value != null && value.intValue() == 1) {
             int k = 0;
@@ -550,12 +551,14 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       result.prefix = exprPrefix;
     }
 
+    boolean exprIsFirstWildcard = false;
     if (exprContainsStar) {
       result.isStar = true;
       Integer value = (Integer) result.prefixMap.get(exprPrefix);
       if (value == null) {
         Integer n = 1;
         result.prefixMap.put(exprPrefix, n);
+        exprIsFirstWildcard = true;
       } else {
         Integer n = value + 1;
         result.prefixMap.put(exprPrefix, n);
@@ -585,7 +588,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
     }
     // input and output are the same
-    else if (expr.getPath().equals(ref.getPath())) {
+    else if (expr.getPath().equals(ref.getPath()) && (!exprContainsStar || exprIsFirstWildcard)) {
       if (exprContainsStar && exprHasPrefix) {
         assert exprPrefix != null;
 
@@ -637,6 +640,17 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         }
       }
     }
+
+    // input is wildcard and it is not the first wildcard
+    else if(exprIsStar) {
+      result.outputNames = Lists.newArrayList();
+      for (VectorWrapper<?> wrapper : incoming) {
+        ValueVector vvIn = wrapper.getValueVector();
+        String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
+        addToResultMaps(incomingName, result, true); // allow dups since this is likely top-level project
+      }
+    }
+
     // only the output has prefix
     else if (!exprHasPrefix && refHasPrefix) {
       result.outputNames = Lists.newArrayList();
