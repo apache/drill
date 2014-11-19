@@ -187,6 +187,9 @@ public class TestFlatten extends BaseTestQuery {
 
   }
 
-
+  @Test
+  public void testFlattenComplexRepeatedMap() throws Exception {
+    test("select a, flatten(r_map_1), flatten(r_map_2) from cp.`/store/json/complex_repeated_map.json`");
+  }
 
 }

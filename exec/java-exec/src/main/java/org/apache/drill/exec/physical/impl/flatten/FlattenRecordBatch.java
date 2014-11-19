@@ -303,7 +303,9 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         incoming.getValueVectorId(popConfig.getColumn()).getFieldIds()).getValueVector();
 
     TransferPair tp = null;
-    if (flattenField instanceof RepeatedMapVector) {
+    if (flattenField instanceof MapVector) {
+      return null;
+    } else if (flattenField instanceof RepeatedMapVector) {
       tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap();
     } else {
       ValueVector vvIn = ((RepeatedVector)flattenField).getAccessor().getAllChildValues();

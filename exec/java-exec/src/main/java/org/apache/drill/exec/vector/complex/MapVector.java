@@ -281,7 +281,10 @@ public class MapVector extends AbstractContainerVector {
 
     @Override
     public void splitAndTransfer(int startIndex, int length) {
-      throw new UnsupportedOperationException();
+      for (TransferPair p : pairs) {
+        p.splitAndTransfer(startIndex, length);
+      }
+      to.getMutator().setValueCount(length);
     }
 
   }
