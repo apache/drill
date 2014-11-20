@@ -58,31 +58,6 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
   }
 
   @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    stats.startProcessing();
-    try {
-      stats.stopProcessing();
-      try {
-        incoming.buildSchema();
-      } finally {
-        stats.startProcessing();
-      }
-      stats.startSetup();
-      try {
-        for (VectorWrapper w : incoming) {
-          container.addOrGet(w.getField());
-        }
-      } finally {
-        stats.stopSetup();
-      }
-    } finally {
-      stats.stopProcessing();
-    }
-    container.buildSchema(incoming.getSchema().getSelectionVectorMode());
-    return IterOutcome.OK_NEW_SCHEMA;
-  }
-
-  @Override
   public IterOutcome innerNext() {
     if (!running) {
       producer.start();

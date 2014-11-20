@@ -111,10 +111,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private final JoinRelType joinType;
   private JoinWorker worker;
   public MergeJoinBatchBuilder batchBuilder;
-  private boolean done = false;
 
   protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
-    super(popConfig, context);
+    super(popConfig, context, true);
 
     if (popConfig.getConditions().size() == 0) {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
@@ -136,24 +135,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     return status.getOutPosition();
   }
 
-  @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    left.buildSchema();
-    right.buildSchema();
-    try {
-      allocateBatch(true);
-      worker = generateNewWorker();
-    } catch (IOException | ClassTransformationException e) {
-      throw new SchemaChangeException(e);
-    }
-    return IterOutcome.OK_NEW_SCHEMA;
+  public void buildSchema() throws SchemaChangeException {
+    status.ensureInitial();
+    allocateBatch(true);
   }
 
   @Override
   public IterOutcome innerNext() {
-    if (done) {
-      return IterOutcome.NONE;
-    }
     // we do this in the here instead of the constructor because don't necessary want to start consuming on construction.
     status.ensureInitial();
 
@@ -214,7 +202,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       case NO_MORE_DATA:
         logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : (first ? "OK_NEW_SCHEMA" :"NONE")));
         setRecordCountInContainer();
-        done = true;
+        state = BatchState.DONE;
         return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.NONE);
       case SCHEMA_CHANGED:
         worker = null;
@@ -437,35 +425,37 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     // allocate new batch space.
     container.zeroVectors();
 
-    //estimation of joinBatchSize : max of left/right size, expanded by a factor of 16, which is then bounded by MAX_BATCH_SIZE.
-    int leftCount = worker == null ? left.getRecordCount() : (status.isLeftPositionAllowed() ? left.getRecordCount() : 0);
-    int rightCount = worker == null ? left.getRecordCount() : (status.isRightPositionAllowed() ? right.getRecordCount() : 0);
-    int joinBatchSize = Math.min(Math.max(leftCount, rightCount) * 16, MAX_BATCH_SIZE);
+    boolean leftAllowed = status.getLastLeft() != IterOutcome.NONE;
+    boolean rightAllowed = status.getLastRight() != IterOutcome.NONE;
 
     if (newSchema) {
     // add fields from both batches
-      for (VectorWrapper<?> w : left) {
-        MajorType inputType = w.getField().getType();
-        MajorType outputType;
-        if (joinType == JoinRelType.RIGHT && inputType.getMode() == DataMode.REQUIRED) {
-          outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
-        } else {
-          outputType = inputType;
+      if (leftAllowed) {
+        for (VectorWrapper<?> w : left) {
+          MajorType inputType = w.getField().getType();
+          MajorType outputType;
+          if (joinType == JoinRelType.RIGHT && inputType.getMode() == DataMode.REQUIRED) {
+            outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+          } else {
+            outputType = inputType;
+          }
+          MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+          container.addOrGet(newField);
         }
-        MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
-       container.addOrGet(newField);
       }
 
-      for (VectorWrapper<?> w : right) {
-        MajorType inputType = w.getField().getType();
-        MajorType outputType;
-        if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED) {
-          outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
-        } else {
-          outputType = inputType;
+      if (rightAllowed) {
+        for (VectorWrapper<?> w : right) {
+          MajorType inputType = w.getField().getType();
+          MajorType outputType;
+          if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED) {
+            outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+          } else {
+            outputType = inputType;
+          }
+          MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+          container.addOrGet(newField);
         }
-        MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
-        container.addOrGet(newField);
       }
     }
 
@@ -489,7 +479,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
         // materialize value vector readers from join expression
         LogicalExpression materializedLeftExpr;
-        if (worker == null || status.isLeftPositionAllowed()) {
+        if (status.getLastLeft() != IterOutcome.NONE) {
+//          if (status.isLeftPositionAllowed()) {
           materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector, context.getFunctionRegistry());
         } else {
           materializedLeftExpr = new TypedNullConstant(Types.optional(MinorType.INT));
@@ -500,7 +491,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         }
 
         LogicalExpression materializedRightExpr;
-        if (worker == null || status.isRightPositionAllowed()) {
+//        if (status.isRightPositionAllowed()) {
+        if (status.getLastRight() != IterOutcome.NONE) {
           materializedRightExpr = ExpressionTreeMaterializer.materialize(rightFieldExpr, right, collector, context.getFunctionRegistry());
         } else {
           materializedRightExpr = new TypedNullConstant(Types.optional(MinorType.INT));

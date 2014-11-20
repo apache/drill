@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 
@@ -61,8 +63,8 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.carrotsearch.hppc.IntOpenHashSet;
@@ -83,6 +85,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private boolean buildingSchema = true;
 
   private static final String EMPTY_STRING = "";
+  private boolean first = true;
 
   private class ClassifierResult {
     public boolean isStar = false;
@@ -136,8 +139,28 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
   @Override
   protected IterOutcome doWork() {
-//    VectorUtil.showVectorAccessibleContent(incoming, ",");
     int incomingRecordCount = incoming.getRecordCount();
+
+    if (first && incomingRecordCount == 0) {
+      if (complexWriters != null) {
+        IterOutcome next = null;
+        while (incomingRecordCount == 0) {
+          next = next(incoming);
+          if (next != IterOutcome.OK && next != IterOutcome.OK_NEW_SCHEMA) {
+            return next;
+          }
+          incomingRecordCount = incoming.getRecordCount();
+        }
+        if (next == IterOutcome.OK_NEW_SCHEMA) {
+          try {
+            setupNewSchema();
+          } catch (SchemaChangeException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+    }
+    first = false;
 
     container.zeroVectors();
 
@@ -262,13 +285,6 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     NameSegment expr = ((SchemaPath)ex.getExpr()).getRootSegment();
     NameSegment ref = ex.getRef().getRootSegment();
     return ref.getPath().equals("*") && expr.getPath().equals("*");
-  }
-
-  @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    incoming.buildSchema();
-    setupNewSchema();
-    return IterOutcome.OK_NEW_SCHEMA;
   }
 
   @Override
@@ -400,11 +416,6 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
         ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
         cg.addExpr(expr);
-        if (buildingSchema) {
-          buildingSchema = false;
-          MaterializedField f = MaterializedField.create(outputField.getPath().getAsUnescapedPath(), Types.required(MinorType.MAP));
-          container.addOrGet(f);
-        }
       } else{
         // need to do evaluation.
         ValueVector vector = container.addOrGet(outputField, callBack);

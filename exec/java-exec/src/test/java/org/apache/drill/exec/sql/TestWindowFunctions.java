@@ -19,10 +19,12 @@
 package org.apache.drill.exec.sql;
 
 import org.apache.drill.BaseTestQuery;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestWindowFunctions extends BaseTestQuery {
   @Test
+  @Ignore
   public void testWindowSum() throws Exception {
     test("select sum(position_id) over w from cp.`employee.json` window w as ( partition by position_id order by position_id)");
   }

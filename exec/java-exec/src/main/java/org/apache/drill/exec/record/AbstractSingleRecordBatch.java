@@ -21,19 +21,18 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
   protected final RecordBatch incoming;
-  private boolean first = true;
-  protected boolean done = false;
   protected boolean outOfMemory = false;
   protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
 
   public AbstractSingleRecordBatch(T popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
-    super(popConfig, context);
+    super(popConfig, context, false);
     this.incoming = incoming;
   }
 
@@ -45,30 +44,35 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   @Override
   public IterOutcome innerNext() {
     // Short circuit if record batch has already sent all data and is done
-    if (done) {
+    if (state == BatchState.DONE) {
       return IterOutcome.NONE;
     }
 
     IterOutcome upstream = next(incoming);
-    if (!first && upstream == IterOutcome.OK && incoming.getRecordCount() == 0) {
+    if (state != BatchState.FIRST && upstream == IterOutcome.OK && incoming.getRecordCount() == 0) {
       do {
         for (VectorWrapper w : incoming) {
           w.clear();
         }
       } while ((upstream = next(incoming)) == IterOutcome.OK && incoming.getRecordCount() == 0);
     }
-    if (first && upstream == IterOutcome.OK) {
+    if ((state == BatchState.FIRST) && upstream == IterOutcome.OK) {
       upstream = IterOutcome.OK_NEW_SCHEMA;
     }
     switch (upstream) {
     case NONE:
     case NOT_YET:
     case STOP:
+      if (state == BatchState.FIRST) {
+        container.buildSchema(SelectionVectorMode.NONE);
+      }
       return upstream;
     case OUT_OF_MEMORY:
       return upstream;
     case OK_NEW_SCHEMA:
-      first = false;
+      if (state == BatchState.FIRST) {
+        state = BatchState.NOT_FIRST;
+      }
       try {
         stats.startSetup();
         if (!setupNewSchema()) {
@@ -84,9 +88,15 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       }
       // fall through.
     case OK:
-      assert !first : "First batch should be OK_NEW_SCHEMA";
+      assert state != BatchState.FIRST : "First batch should be OK_NEW_SCHEMA";
       container.zeroVectors();
-      doWork();
+      IterOutcome out = doWork();
+
+      // since doWork method does not know if there is a new schema, it will always return IterOutcome.OK if it was successful.
+      // But if upstream is IterOutcome.OK_NEW_SCHEMA, we should return that
+      if (out != IterOutcome.OK) {
+        upstream = out;
+      }
 
       if (outOfMemory) {
         outOfMemory = false;
@@ -102,13 +112,6 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     default:
       throw new UnsupportedOperationException();
     }
-  }
-
-  @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    incoming.buildSchema();
-    setupNewSchema();
-    return IterOutcome.OK_NEW_SCHEMA;
   }
 
   @Override

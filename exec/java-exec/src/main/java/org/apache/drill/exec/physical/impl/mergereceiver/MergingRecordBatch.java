@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -107,7 +108,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private int[] batchOffsets;
   private PriorityQueue <Node> pqueue;
   private RawFragmentBatch emptyBatch = null;
-  private boolean done = false;
+  private RawFragmentBatch[] tempBatchHolder; //
 
   public static enum Metric implements MetricDef{
     BYTES_RECEIVED,
@@ -123,7 +124,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   public MergingRecordBatch(FragmentContext context,
                             MergingReceiverPOP config,
                             RawFragmentBatchProvider[] fragProviders) throws OutOfMemoryException {
-    super(config, context, new OperatorContext(config, context, false));
+    super(config, context, true, new OperatorContext(config, context, false));
     //super(config, context);
     this.fragProviders = fragProviders;
     this.context = context;
@@ -151,9 +152,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     if (fragProviders.length == 0) {
       return IterOutcome.NONE;
     }
-    if (done) {
-      return IterOutcome.NONE;
-    }
     boolean schemaChanged = false;
 
     if (prevBatchWasFull) {
@@ -175,11 +173,18 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
       // set up each (non-empty) incoming record batch
       List<RawFragmentBatch> rawBatches = Lists.newArrayList();
-      boolean firstBatch = true;
+      int p = 0;
       for (RawFragmentBatchProvider provider : fragProviders) {
         RawFragmentBatch rawBatch = null;
         try {
-          rawBatch = getNext(provider);
+          // check if there is a batch in temp holder before calling getNext(), as it may have been used when building schema
+          if (tempBatchHolder[p] != null) {
+            rawBatch = tempBatchHolder[p];
+            tempBatchHolder[p] = null;
+          } else {
+            rawBatch = getNext(provider);
+          }
+          p++;
           if (rawBatch == null && context.isCancelled()) {
             return IterOutcome.STOP;
           }
@@ -190,7 +195,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         if (rawBatch.getHeader().getDef().getRecordCount() != 0) {
           rawBatches.add(rawBatch);
         } else {
-          if (emptyBatch == null) {
+          // save an empty batch to use for schema purposes. ignore batch if it contains no fields, and thus no schema
+          if (emptyBatch == null && rawBatch.getHeader().getDef().getFieldCount() != 0) {
             emptyBatch = rawBatch;
           }
           try {
@@ -406,9 +412,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     }
 
     if (pqueue.isEmpty()) {
-      if (!done) {
-        done = !done;
-      }
+      state = BatchState.DONE;
     }
 
     if (schemaChanged) {
@@ -429,22 +433,33 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     return outgoingContainer.getSchema();
   }
 
-  @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    stats.startProcessing();
+  public void buildSchema() {
+    // find frag provider that has data to use to build schema, and put in tempBatchHolder for later use
+    tempBatchHolder = new RawFragmentBatch[fragProviders.length];
+    int i = 0;
     try {
-      RawFragmentBatch batch = getNext(fragProviders[0]);
-      for (SerializedField field : batch.getHeader().getDef().getFieldList()) {
-        outgoingContainer.addOrGet(MaterializedField.create(field));
+      while (true) {
+        if (i >= fragProviders.length) {
+          state = BatchState.DONE;
+          return;
+        }
+        RawFragmentBatch batch = getNext(fragProviders[i]);
+        if (batch.getHeader().getDef().getFieldCount() == 0) {
+          i++;
+          continue;
+        }
+        tempBatchHolder[i] = batch;
+        for (SerializedField field : batch.getHeader().getDef().getFieldList()) {
+          ValueVector v = outgoingContainer.addOrGet(MaterializedField.create(field));
+          v.allocateNew();
+        }
+        break;
       }
     } catch (IOException e) {
-      throw new SchemaChangeException(e);
-    } finally {
-      stats.stopProcessing();
+      throw new DrillRuntimeException(e);
     }
     outgoingContainer = VectorContainer.canonicalize(outgoingContainer);
     outgoingContainer.buildSchema(SelectionVectorMode.NONE);
-    return IterOutcome.OK_NEW_SCHEMA;
   }
 
   @Override

@@ -85,32 +85,6 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     }
 
     @Override
-    public void buildSchema() throws SchemaChangeException {
-      stats.startProcessing();
-      try {
-        stats.stopProcessing();
-        try {
-          incoming.buildSchema();
-        } finally {
-          stats.startProcessing();
-        }
-
-        FragmentWritableBatch batch = FragmentWritableBatch.getEmptyBatchWithSchema(handle.getQueryId(),
-                handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), 0, incoming.getSchema());
-
-        stats.startWait();
-        try {
-          tunnel.sendRecordBatch(new RecordSendFailure(), batch);
-        } finally {
-          stats.stopWait();
-        }
-        sendCount.increment();
-      } finally {
-        stats.stopProcessing();
-      }
-    }
-
-    @Override
     public boolean innerNext() {
       if (!ok) {
         incoming.kill(false);

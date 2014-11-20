@@ -61,7 +61,7 @@ public class TestDecimal extends PopUnitTestBase{
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String decimal9Output[] = {"99.0000", "11.1235", "0.1000", "-0.1200", "-123.1234", "-1.0001"};
@@ -106,7 +106,7 @@ public class TestDecimal extends PopUnitTestBase{
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String decimal9Output[] = {"99.0000", "11.1235", "0.1000", "-0.1200", "-123.1234", "-1.0001"};
@@ -151,7 +151,7 @@ public class TestDecimal extends PopUnitTestBase{
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String addOutput[] = {"123456888.0", "22.2", "0.2", "-0.2", "-987654444.2","-3.0"};
@@ -202,7 +202,7 @@ public class TestDecimal extends PopUnitTestBase{
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String addOutput[] = {"-99999998877.700000000", "11.423456789", "123456789.100000000", "-0.119998000", "100000000112.423456789" , "-99999999879.907000000", "123456789123456801.300000000"};
@@ -294,7 +294,7 @@ public class TestDecimal extends PopUnitTestBase{
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-      QueryResultBatch batch = results.get(1);
+      QueryResultBatch batch = results.get(0);
       assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
       Iterator<VectorWrapper<?>> itr = batchLoader.iterator();

@@ -96,22 +96,27 @@ public class WorkManager implements Closeable {
     // executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
     executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
     eventThread.start();
-    dContext.getMetrics().register(
-        MetricRegistry.name("drill.exec.work.running_fragments." + dContext.getEndpoint().getUserPort()),
-        new Gauge<Integer>() {
-          @Override
-          public Integer getValue() {
-            return runningFragments.size();
-          }
-        });
-    dContext.getMetrics().register(
-        MetricRegistry.name("drill.exec.work.pendingTasks" + dContext.getEndpoint().getUserPort()),
-        new Gauge<Integer>() {
-          @Override
-          public Integer getValue() {
-            return pendingTasks.size();
-          }
-        });
+    // TODO remove try block once metrics moved from singleton, For now catch to avoid unit test failures
+    try {
+      dContext.getMetrics().register(
+              MetricRegistry.name("drill.exec.work.running_fragments." + dContext.getEndpoint().getUserPort()),
+              new Gauge<Integer>() {
+                @Override
+                public Integer getValue() {
+                  return runningFragments.size();
+                }
+              });
+      dContext.getMetrics().register(
+              MetricRegistry.name("drill.exec.work.pendingTasks" + dContext.getEndpoint().getUserPort()),
+              new Gauge<Integer>() {
+                @Override
+                public Integer getValue() {
+                  return pendingTasks.size();
+                }
+              });
+    } catch (IllegalArgumentException e) {
+      logger.warn("Exception while registering metrics", e);
+    }
   }
 
   public WorkEventBus getWorkBus() {

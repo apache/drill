@@ -40,7 +40,6 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
 
   private RecordBatch incoming;
   private ScreenRoot screenRoot;
-  private boolean schemaBuilt = false;
   public SimpleRootExec(RootExec e) {
     if (e instanceof ScreenRoot) {
       incoming = ((ScreenRoot)e).getIncoming();
@@ -70,20 +69,7 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   }
 
   @Override
-  public void buildSchema() throws SchemaChangeException {
-    incoming.buildSchema();
-    schemaBuilt = true;
-  }
-
-  @Override
   public boolean next() {
-    if (!schemaBuilt) {
-      try {
-        buildSchema();
-      } catch (SchemaChangeException e) {
-        throw new RuntimeException(e);
-      }
-    }
     switch (incoming.next()) {
     case NONE:
     case STOP:

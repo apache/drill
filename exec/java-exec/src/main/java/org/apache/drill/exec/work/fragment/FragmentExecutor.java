@@ -108,7 +108,6 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       }
 
       // run the query until root.next returns false.
-      root.buildSchema();
       while (state.get() == FragmentState.RUNNING_VALUE) {
         if (!root.next()) {
           if (context.isFailed()) {

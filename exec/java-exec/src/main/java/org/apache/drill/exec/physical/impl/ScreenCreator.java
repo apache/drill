@@ -87,31 +87,6 @@ public class ScreenCreator implements RootCreator<Screen>{
     }
 
     @Override
-    public void buildSchema() throws SchemaChangeException {
-      stats.startProcessing();
-      try {
-        stats.stopProcessing();
-        try {
-          incoming.buildSchema();
-        } finally {
-          stats.startProcessing();
-        }
-
-        QueryWritableBatch batch = QueryWritableBatch.getEmptyBatchWithSchema(context.getHandle().getQueryId(), 0, false, incoming.getSchema());
-        stats.startWait();
-        try {
-          connection.sendResult(listener, batch);
-        } finally {
-          stats.stopWait();
-        }
-        sendCount.increment();
-      } finally {
-        stats.stopProcessing();
-      }
-      materializer = new VectorRecordMaterializer(context, incoming);
-    }
-
-    @Override
     public boolean innerNext() {
       if(!ok){
         stop();
@@ -129,7 +104,7 @@ public class ScreenCreator implements RootCreator<Screen>{
               .setQueryId(context.getHandle().getQueryId()) //
               .setRowCount(0) //
               .setQueryState(QueryState.FAILED)
-              .addError(ErrorHelper.logAndConvertMessageError(context.getIdentity(), "Query stopeed.",
+              .addError(ErrorHelper.logAndConvertMessageError(context.getIdentity(), "Query stopped.",
                 context.getFailureCause(), logger, verbose))
               .setDef(RecordBatchDef.getDefaultInstance()) //
               .setIsLastChunk(true) //

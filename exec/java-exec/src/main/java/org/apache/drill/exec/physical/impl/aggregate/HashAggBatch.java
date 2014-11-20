@@ -46,6 +46,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
@@ -58,11 +59,9 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   private HashAggregator aggregator;
   private final RecordBatch incoming;
-  private boolean done = false;
   private LogicalExpression[] aggrExprs;
   private TypedFieldId[] groupByOutFieldIds ;
   private TypedFieldId[] aggrOutFieldIds ;      // field ids for the outgoing batch
-  private boolean first = true;
 
   private final GeneratorMapping UPDATE_AGGR_INSIDE =
     GeneratorMapping.create("setupInterior" /* setup method */, "updateAggrValuesInternal" /* eval method */,
@@ -82,44 +81,41 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   @Override
   public int getRecordCount() {
-    if (done) {
+    if (state == BatchState.DONE) {
       return 0;
     }
     return aggregator.getOutputCount();
   }
 
   @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    stats.startProcessing();
-    try {
-      stats.stopProcessing();
-      try {
-        incoming.buildSchema();
-      } finally {
-        stats.startProcessing();
-      }
-      if (!createAggregator()) {
-        done = true;
-        return IterOutcome.STOP;
-      }
-      return IterOutcome.OK_NEW_SCHEMA;
-    } finally {
-      stats.stopProcessing();
+  public void buildSchema() throws SchemaChangeException {
+    if (next(incoming) == IterOutcome.NONE) {
+      state = BatchState.DONE;
+      container.buildSchema(SelectionVectorMode.NONE);
+      return;
+    }
+    if (!createAggregator()) {
+      state = BatchState.DONE;
+    }
+    for (VectorWrapper w : container) {
+      w.getValueVector().allocateNew();
     }
   }
 
   @Override
   public IterOutcome innerNext() {
-    if (done) {
-      return IterOutcome.NONE;
-    }
     // this is only called on the first batch. Beyond this, the aggregator manages batches.
-    if (aggregator == null || first) {
-      first = false;
+    if (aggregator == null || state == BatchState.FIRST) {
       if (aggregator != null) {
         aggregator.cleanup();
       }
-      IterOutcome outcome = next(incoming);
+      IterOutcome outcome;
+      if (state == BatchState.FIRST) {
+        state = BatchState.NOT_FIRST;
+        outcome = IterOutcome.OK;
+      } else {
+        outcome = next(incoming);
+      }
       if (outcome == IterOutcome.OK) {
         outcome = IterOutcome.OK_NEW_SCHEMA;
       }
@@ -133,7 +129,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         return outcome;
       case OK_NEW_SCHEMA:
         if (!createAggregator()) {
-          done = true;
+          state = BatchState.DONE;
           return IterOutcome.STOP;
         }
         break;
@@ -163,7 +159,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       case CLEANUP_AND_RETURN:
         container.zeroVectors();
         aggregator.cleanup();
-        done = true;
+        state = BatchState.DONE;
         // fall through
       case RETURN_OUTCOME:
         IterOutcome outcome = aggregator.getOutcome();

@@ -76,12 +76,6 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
   }
 
   @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    state = incoming.buildSchema();
-    return state;
-  }
-
-  @Override
   public int getRecordCount() {
     validateReadState();
     return incoming.getRecordCount();

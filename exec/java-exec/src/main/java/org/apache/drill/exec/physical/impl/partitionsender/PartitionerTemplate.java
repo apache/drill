@@ -364,6 +364,7 @@ public abstract class PartitionerTemplate implements Partitioner {
 
         // allocate a new value vector
         ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), allocator);
+        v.getValueVector().makeTransferPair(outgoingVector);
         outgoingVector.allocateNew();
         vectorContainer.add(outgoingVector);
       }

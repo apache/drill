@@ -118,7 +118,7 @@ public class TestExtractFunctions extends PopUnitTestBase {
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-      QueryResultBatch batch = results.get(1);
+      QueryResultBatch batch = results.get(0);
       assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
       for(int i=0; i<expectedValues.length; i++) {

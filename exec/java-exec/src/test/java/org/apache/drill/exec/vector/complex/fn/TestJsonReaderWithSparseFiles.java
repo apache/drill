@@ -89,7 +89,7 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
     RecordBatchLoader loader = new RecordBatchLoader(client.getAllocator());
     try {
       // first batch at index 0 is empty and used for fast schema return. Load the second one for the tests
-      QueryResultBatch batch = batches.get(1);
+      QueryResultBatch batch = batches.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
       testBody.apply(loader);
     } finally {

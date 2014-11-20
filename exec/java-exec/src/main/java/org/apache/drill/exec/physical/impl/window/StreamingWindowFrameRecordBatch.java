@@ -252,7 +252,7 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
     }
 
     if (out == StreamingWindowFramer.AggOutcome.RETURN_AND_COMPLETE) {
-      done = true;
+      state = BatchState.DONE;
     }
 
     return framer.getOutcome();

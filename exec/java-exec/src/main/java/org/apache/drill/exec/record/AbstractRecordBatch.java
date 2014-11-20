@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import java.util.Iterator;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
@@ -38,24 +39,36 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected final OperatorContext oContext;
   protected final OperatorStats stats;
 
+  protected BatchState state;
+
   protected AbstractRecordBatch(T popConfig, FragmentContext context) throws OutOfMemoryException {
-    super();
-    this.context = context;
-    this.popConfig = popConfig;
-    this.oContext = new OperatorContext(popConfig, context, true);
-    this.stats = oContext.getStats();
-    this.container = new VectorContainer(this.oContext);
+    this(popConfig, context, true, new OperatorContext(popConfig, context, true));
   }
 
-  protected AbstractRecordBatch(T popConfig, FragmentContext context, OperatorContext oContext) throws OutOfMemoryException {
+  protected AbstractRecordBatch(T popConfig, FragmentContext context, boolean buildSchema) throws OutOfMemoryException {
+    this(popConfig, context, buildSchema, new OperatorContext(popConfig, context, true));
+  }
+
+  protected AbstractRecordBatch(T popConfig, FragmentContext context, boolean buildSchema, OperatorContext oContext) throws OutOfMemoryException {
     super();
     this.context = context;
     this.popConfig = popConfig;
     this.oContext = oContext;
     this.stats = oContext.getStats();
     this.container = new VectorContainer(this.oContext);
+    if (buildSchema) {
+      state = BatchState.BUILD_SCHEMA;
+    } else {
+      state = BatchState.FIRST;
+    }
   }
 
+  protected static enum BatchState {
+    BUILD_SCHEMA, // Need to build schema and return
+    FIRST, // This is still the first data batch
+    NOT_FIRST, // The first data batch has alread been returned
+    DONE // All work is done, no more data to be sent
+  }
 
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
@@ -103,7 +116,33 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   public final IterOutcome next() {
     try {
       stats.startProcessing();
-      return innerNext();
+//      if (state == BatchState.BUILD_SCHEMA) {
+//        buildSchema();
+//        if (state == BatchState.BUILD_SCHEMA.DONE) {
+//          return IterOutcome.NONE;
+//        } else {
+//          state = BatchState.FIRST;
+//          return IterOutcome.OK_NEW_SCHEMA;
+//        }
+//      }
+      switch (state) {
+        case BUILD_SCHEMA: {
+          buildSchema();
+          if (state == BatchState.DONE) {
+            return IterOutcome.NONE;
+          } else {
+            state = BatchState.FIRST;
+            return IterOutcome.OK_NEW_SCHEMA;
+          }
+        }
+        case DONE: {
+          return IterOutcome.NONE;
+        }
+        default:
+          return innerNext();
+      }
+    } catch (SchemaChangeException e) {
+      throw new DrillRuntimeException(e);
     } finally {
       stats.stopProcessing();
     }
@@ -116,9 +155,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     return container.getSchema();
   }
 
-  @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    throw new UnsupportedOperationException("buildSchema() not yet implemented");
+  protected void buildSchema() throws SchemaChangeException {
   }
 
   @Override

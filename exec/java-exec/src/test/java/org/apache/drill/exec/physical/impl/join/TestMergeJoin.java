@@ -307,6 +307,7 @@ public class TestMergeJoin extends PopUnitTestBase {
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    exec.next(); // skip schema batch
     while (exec.next()) {
       assertEquals(100, exec.getRecordCount());
     }

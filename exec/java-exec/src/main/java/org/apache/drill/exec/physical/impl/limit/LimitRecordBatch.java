@@ -43,6 +43,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   private boolean noEndLimit;
   private boolean skipBatch;
   private boolean done = false;
+  private boolean first = true;
   List<TransferPair> transfers = Lists.newArrayList();
 
   public LimitRecordBatch(Limit popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
@@ -93,10 +94,10 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       return IterOutcome.NONE;
     }
 
-    if(!noEndLimit && recordsLeft <= 0) {
+    if(!first && !noEndLimit && recordsLeft <= 0) {
       incoming.kill(true);
 
-      IterOutcome upStream = incoming.next();
+      IterOutcome upStream = next(incoming);
 
       while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
 
@@ -104,7 +105,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
         for (VectorWrapper<?> wrapper : incoming) {
           wrapper.getValueVector().clear();
         }
-        upStream = incoming.next();
+        upStream = next(incoming);
       }
 
       return IterOutcome.NONE;
@@ -119,11 +120,18 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
   @Override
   protected IterOutcome doWork() {
-    for(TransferPair tp : transfers) {
-      tp.transfer();
+    if (first) {
+      first = false;
     }
     skipBatch = false;
     int recordCount = incoming.getRecordCount();
+    if (recordCount == 0) {
+      skipBatch = true;
+      return IterOutcome.OK;
+    }
+    for(TransferPair tp : transfers) {
+      tp.transfer();
+    }
     if(recordCount <= recordsToSkip) {
       recordsToSkip -= recordCount;
       skipBatch = true;

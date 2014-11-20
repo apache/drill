@@ -80,10 +80,6 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     container.zeroVectors();
     int recordCount = incoming.getRecordCount();
     filter.filterBatch(recordCount);
-//    for (VectorWrapper<?> v : container) {
-//      ValueVector.Mutator m = v.getValueVector().getMutator();
-//      m.setValueCount(recordCount);
-//    }
 
     return IterOutcome.OK;
   }

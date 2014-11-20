@@ -85,34 +85,6 @@ public class BroadcastSenderRootExec extends BaseRootExec {
   }
 
   @Override
-  public void buildSchema() throws SchemaChangeException {
-    stats.startProcessing();
-    try {
-      stats.stopProcessing();
-      try {
-        incoming.buildSchema();
-      } finally {
-        stats.startProcessing();
-      }
-
-      FragmentWritableBatch batch = FragmentWritableBatch.getEmptyBatchWithSchema(handle.getQueryId(),
-              handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), 0, incoming.getSchema());
-
-      stats.startWait();
-      for (int i = 0; i < tunnels.length; i++) {
-        try {
-          tunnels[i].sendRecordBatch(this.statusHandler, batch);
-        } finally {
-          stats.stopWait();
-        }
-        statusHandler.sendCount.increment();
-      }
-    } finally {
-      stats.stopProcessing();
-    }
-  }
-
-  @Override
   public boolean innerNext() {
     if(!ok) {
       context.fail(statusHandler.ex);

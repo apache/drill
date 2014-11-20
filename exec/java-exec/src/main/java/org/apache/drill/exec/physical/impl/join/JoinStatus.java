@@ -35,6 +35,12 @@ public final class JoinStatus {
     INCOMING, SV4;
   }
 
+  private static enum InitState {
+    INIT, // initial state
+    CHECK, // need to check if batches are empty
+    READY // read to do work
+  }
+
   private static final int LEFT_INPUT = 0;
   private static final int RIGHT_INPUT = 1;
 
@@ -55,7 +61,7 @@ public final class JoinStatus {
   private final JoinRelType joinType;
 
   public boolean ok = true;
-  private boolean initialSet = false;
+  private InitState initialSet = InitState.INIT;
   private boolean leftRepeating = false;
 
   public JoinStatus(RecordBatch left, RecordBatch right, MergeJoinBatch output) {
@@ -75,10 +81,23 @@ public final class JoinStatus {
   }
 
   public final void ensureInitial() {
-    if(!initialSet) {
-      this.lastLeft = nextLeft();
-      this.lastRight = nextRight();
-      initialSet = true;
+    switch(initialSet) {
+      case INIT:
+        this.lastLeft = nextLeft();
+        this.lastRight = nextRight();
+        initialSet = InitState.CHECK;
+        break;
+      case CHECK:
+        if (lastLeft != IterOutcome.NONE && left.getRecordCount() == 0) {
+          this.lastLeft = nextLeft();
+        }
+        if (lastRight != IterOutcome.NONE && right.getRecordCount() == 0) {
+          this.lastRight = nextRight();
+        }
+        initialSet = InitState.READY;
+        // fall through
+      default:
+        break;
     }
   }
 

@@ -30,8 +30,14 @@ import com.google.common.collect.Queues;
 public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnlimitedRawBatchBuffer.class);
 
+  private static enum BufferState {
+    INIT,
+    FINISHED,
+    KILLED
+  }
+
   private final LinkedBlockingDeque<RawFragmentBatch> buffer;
-  private volatile boolean finished = false;
+  private volatile BufferState state = BufferState.INIT;
   private final int softlimit;
   private final int startlimit;
   private final AtomicBoolean overlimit = new AtomicBoolean(false);
@@ -54,7 +60,10 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public void enqueue(RawFragmentBatch batch) {
-    if (finished) {
+    if (state == BufferState.KILLED) {
+      batch.release();
+    }
+    if (isFinished()) {
       throw new RuntimeException("Attempted to enqueue batch after finished");
     }
     if (batch.getHeader().getIsOutOfMemory()) {
@@ -78,7 +87,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public void cleanup() {
-    if (!finished && !context.isCancelled()) {
+    if (!isFinished() && !context.isCancelled()) {
       String msg = String.format("Cleanup before finished. " + (fragmentCount - streamCounter) + " out of " + fragmentCount + " streams have finished.");
       logger.error(msg);
       IllegalStateException e = new IllegalStateException(msg);
@@ -106,15 +115,20 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public void kill(FragmentContext context) {
+    state = BufferState.KILLED;
     while (!buffer.isEmpty()) {
       RawFragmentBatch batch = buffer.poll();
-      batch.getBody().release();
+      if (batch.getBody() != null) {
+        batch.getBody().release();
+      }
     }
   }
 
   @Override
   public void finished() {
-    finished = true;
+    if (state != BufferState.KILLED) {
+      state = BufferState.FINISHED;
+    }
     if (!buffer.isEmpty()) {
       throw new IllegalStateException("buffer not empty when finished");
     }
@@ -134,7 +148,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     b = buffer.poll();
 
     // if we didn't get a buffer, block on waiting for buffer.
-    if (b == null && (!finished || !buffer.isEmpty())) {
+    if (b == null && (!isFinished() || !buffer.isEmpty())) {
       try {
         b = buffer.take();
       } catch (InterruptedException e) {
@@ -149,7 +163,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
 
     // if we are in the overlimit condition and aren't finished, check if we've passed the start limit.  If so, turn off the overlimit condition and set auto read to true (start reading from socket again).
-    if (!finished && overlimit.get()) {
+    if (!isFinished() && overlimit.get()) {
       if (buffer.size() == startlimit) {
         overlimit.set(false);
         readController.flushResponses();
@@ -166,11 +180,15 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     if (b == null && buffer.size() > 0) {
       throw new IllegalStateException("Returning null when there are batches left in queue");
     }
-    if (b == null && !finished) {
+    if (b == null && !isFinished()) {
       throw new IllegalStateException("Returning null when not finished");
     }
     return b;
 
+  }
+
+  private boolean isFinished() {
+    return (state == BufferState.KILLED || state == BufferState.FINISHED);
   }
 
 }

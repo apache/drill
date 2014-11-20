@@ -68,14 +68,6 @@ public interface RecordBatch extends VectorAccessible {
    */
   public BatchSchema getSchema();
 
-
-  /**
-   * To be called out the beginning of fragment execution. This will build the schema to return downstream, and to the client
-   *
-   * @return OK_NEW_SCHEMA if succesful.
-   */
-  public IterOutcome buildSchema() throws SchemaChangeException;
-
   /**
    * Provide the number of records that are within this record count
    *

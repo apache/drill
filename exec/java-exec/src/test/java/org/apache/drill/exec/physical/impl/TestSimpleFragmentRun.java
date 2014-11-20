@@ -130,7 +130,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
 
       for (int i = 0; i < results.size(); ++i) {
         QueryResultBatch batch = results.get(i);
-        if (i == 1) {
+        if (i == 0) {
           assertTrue(batch.hasData());
         } else {
           assertFalse(batch.hasData());

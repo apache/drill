@@ -252,39 +252,6 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     return ref;
   }
 
-  @Override
-  public IterOutcome buildSchema() throws SchemaChangeException {
-    incoming.buildSchema();
-    if ( ! fastSchemaCalled ) {
-      for (VectorWrapper vw : incoming) {
-        if (vw.getField().getPath().equals(popConfig.getColumn())) {
-          if (vw.getValueVector() instanceof MapVector) {
-            // fast schema upstream did not report a repeated type
-            // assume it will be repeated in the actual results and it will fail in execution if it is not
-            container.addOrGet(vw.getField());
-          } else if (! (vw.getValueVector() instanceof RepeatedVector )) {
-            container.addOrGet(vw.getField());
-          } else {
-            TransferPair pair = getFlattenFieldTransferPair();
-            if (pair == null) {
-              continue;
-            }
-            container.add(pair.getTo());
-          }
-        } else {
-          container.addOrGet(vw.getField());
-        }
-      }
-      fastSchemaCalled = true;
-      container.buildSchema(SelectionVectorMode.NONE);
-      return IterOutcome.OK_NEW_SCHEMA;
-    }
-    else {
-      setupNewSchema();
-      return IterOutcome.OK_NEW_SCHEMA;
-    }
-  }
-
   /**
    * The data layout is the same for the actual data within a repeated field, as it is in a scalar vector for
    * the same sql type. For example, a repeated int vector has a vector of offsets into a regular int vector to
