@@ -51,7 +51,7 @@ public class ParquetToDrillTypeConverter {
               case DECIMAL:
                 return Types.withScaleAndPrecision(getDecimalType(schemaElement), TypeProtos.DataMode.OPTIONAL, schemaElement.getScale(), schemaElement.getPrecision());
               default:
-                throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
+                return Types.optional(TypeProtos.MinorType.VARBINARY);
             }
           case INT64:
             if (convertedType == null) {
@@ -115,7 +115,7 @@ public class ParquetToDrillTypeConverter {
               case DECIMAL:
                 return Types.withScaleAndPrecision(getDecimalType(schemaElement), DataMode.REQUIRED, schemaElement.getScale(), schemaElement.getPrecision());
               default:
-                throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
+                return Types.required(TypeProtos.MinorType.VARBINARY);
             }
           case INT64:
             if (convertedType == null) {
@@ -178,7 +178,7 @@ public class ParquetToDrillTypeConverter {
               case DECIMAL:
                 return Types.withScaleAndPrecision(getDecimalType(schemaElement), DataMode.REPEATED, schemaElement.getScale(), schemaElement.getPrecision());
               default:
-                throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
+                return Types.repeated(TypeProtos.MinorType.VARBINARY);
             }
           case INT64:
             if (convertedType == null) {
