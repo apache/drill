@@ -129,16 +129,16 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
     }
   }
   
-  
+
   public void end(){
     // noop
   }
   <#else>
-  
+
   public void setValueCount(int count){
     container.getMutator().setValueCount(count);
   }
-  
+
   public void setPosition(int index){
     super.setPosition(index);
     for(FieldWriter w: fields.values()){
@@ -146,7 +146,10 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
     }
   }
   public void start(){
-    // noop
+    // check capacity only after we have a non empty container
+    if(container.size() > 0 && ok()) {
+      checkValueCapacity();
+    }
   }
   
   public void end(){
