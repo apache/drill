@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +54,10 @@ import org.eigenbase.relopt.RelTraitDef;
 import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.relopt.hep.HepProgramBuilder;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.parser.SqlAbstractParserImpl;
 import org.eigenbase.sql.parser.SqlParseException;
+import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.parser.SqlParserImplFactory;
 
 public class DrillSqlWorker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
@@ -64,7 +68,6 @@ public class DrillSqlWorker {
   public final static int PHYSICAL_MEM_RULES = 1;
   private final QueryContext context;
 
-
   public DrillSqlWorker(QueryContext context) {
     final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
 
@@ -74,8 +77,10 @@ public class DrillSqlWorker {
     this.context = context;
     RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ?
         null : new DrillCostBase.DrillCostFactory() ;
+    int idMaxLength = (int)context.getPlannerSettings().getIdentifierMaxLength();
+
     FrameworkConfig config = Frameworks.newConfigBuilder() //
-        .lex(Lex.MYSQL) //
+        .parserConfig(new SqlParser.ParserConfigImpl(Lex.MYSQL, idMaxLength)) //
         .parserFactory(DrillParserWithCompoundIdConverter.FACTORY) //
         .defaultSchema(context.getNewDefaultSchema()) //
         .operatorTable(context.getDrillOperatorTable()) //

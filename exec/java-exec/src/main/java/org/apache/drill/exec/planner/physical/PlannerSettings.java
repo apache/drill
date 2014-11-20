@@ -25,6 +25,7 @@ import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
+import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.eigenbase.relopt.Context;
 
 public class PlannerSettings implements Context{
@@ -34,6 +35,7 @@ public class PlannerSettings implements Context{
   private boolean useDefaultCosting = false; // True: use default Optiq costing, False: use Drill costing
 
   public static final int MAX_BROADCAST_THRESHOLD = Integer.MAX_VALUE;
+  public static final int DEFAULT_IDENTIFIER_MAX_LENGTH = 1024;
 
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
   public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg", true);
@@ -47,6 +49,9 @@ public class PlannerSettings implements Context{
   public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer", false);
   public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size", 10);
   public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key", true);
+  public static final OptionValidator IDENTIFIER_MAX_LENGTH =
+      new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
+                              Integer.MAX_VALUE, DEFAULT_IDENTIFIER_MAX_LENGTH);
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
@@ -126,6 +131,10 @@ public class PlannerSettings implements Context{
 
   public String getFsPartitionColumnLabel() {
     return options.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+  }
+
+  public long getIdentifierMaxLength(){
+    return options.getOption(IDENTIFIER_MAX_LENGTH.getOptionName()).num_val;
   }
 
   @Override

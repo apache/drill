@@ -53,6 +53,7 @@ public class SystemOptionManager implements OptionManager {
       PlannerSettings.PRODUCER_CONSUMER,
       PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE,
       PlannerSettings.HASH_SINGLE_KEY,
+      PlannerSettings.IDENTIFIER_MAX_LENGTH,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
       ExecConstants.PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR,

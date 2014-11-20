@@ -112,6 +112,27 @@ public class TypeValidators {
     }
   }
 
+  public static class RangeLongValidator extends LongValidator {
+    private final long min;
+    private final long max;
+
+    public RangeLongValidator(String name, long min, long max, long def) {
+      super(name, def);
+      this.min = min;
+      this.max = max;
+    }
+
+    @Override
+    public void validate(OptionValue v) throws ExpressionParsingException {
+      super.validate(v);
+      if (v.num_val > max || v.num_val < min) {
+        throw new ExpressionParsingException(String.format("Option %s must be between %d and %d.", getOptionName(), min,
+            max));
+      }
+    }
+
+  }
+
   public static abstract class TypeValidator extends OptionValidator {
     final Kind kind;
     private OptionValue defaultValue;

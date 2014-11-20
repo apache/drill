@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql.parser.impl;
 
 import java.io.Reader;
 
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.parser.CompoundIdentifierConverter;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlAbstractParserImpl;
@@ -30,9 +31,12 @@ public class DrillParserWithCompoundIdConverter extends DrillParserImpl {
   /**
    * {@link org.eigenbase.sql.parser.SqlParserImplFactory} implementation for creating parser.
    */
+
   public static final SqlParserImplFactory FACTORY = new SqlParserImplFactory() {
     public SqlAbstractParserImpl getParser(Reader stream) {
-      return new DrillParserWithCompoundIdConverter(stream);
+      SqlAbstractParserImpl parserImpl = new DrillParserWithCompoundIdConverter(stream);
+      parserImpl.setIdentifierMaxLength(PlannerSettings.DEFAULT_IDENTIFIER_MAX_LENGTH);
+      return parserImpl;
     }
   };
 

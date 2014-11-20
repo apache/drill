@@ -23,11 +23,13 @@ import net.hydromatic.optiq.tools.FrameworkConfig;
 import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
 
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillConvertletTable;
 import org.apache.drill.exec.planner.sql.parser.CompoundIdentifierConverter;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
 import org.apache.drill.test.DrillAssert;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.parser.SqlParser;
 import org.junit.Test;
 
 public class TestSqlBracketlessSyntax {
@@ -36,7 +38,7 @@ public class TestSqlBracketlessSyntax {
   @Test
   public void checkComplexExpressionParsing() throws Exception{
     FrameworkConfig config = Frameworks.newConfigBuilder() //
-        .lex(Lex.MYSQL) //
+        .parserConfig(new SqlParser.ParserConfigImpl(Lex.MYSQL, PlannerSettings.DEFAULT_IDENTIFIER_MAX_LENGTH))
         .parserFactory(DrillParserImpl.FACTORY) //
         .defaultSchema(SimpleOptiqSchema.createRootSchema(false)) //
         .convertletTable(new DrillConvertletTable()) //

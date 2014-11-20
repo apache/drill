@@ -572,4 +572,14 @@ public class TestExampleQueries extends BaseTestQuery{
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
+  @Test // DRILL-1488
+  public void testIdentifierMaxLength() throws  Exception {
+    // use long column alias name (approx 160 chars)
+    test("select employee_id as  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa from cp.`employee.json` limit 1");
+
+    // use long table alias name  (approx 160 chars)
+    test("select employee_id from cp.`employee.json` as aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa limit 1");
+
+  }
+
 }
