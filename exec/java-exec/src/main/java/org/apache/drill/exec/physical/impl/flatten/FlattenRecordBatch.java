@@ -262,6 +262,8 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
             // fast schema upstream did not report a repeated type
             // assume it will be repeated in the actual results and it will fail in execution if it is not
             container.addOrGet(vw.getField());
+          } else if (! (vw.getValueVector() instanceof RepeatedVector )) {
+            container.addOrGet(vw.getField());
           } else {
             TransferPair pair = getFlattenFieldTransferPair();
             if (pair == null) {
