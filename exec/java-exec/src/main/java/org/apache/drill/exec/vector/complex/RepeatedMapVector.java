@@ -69,7 +69,6 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   private final BufferAllocator allocator;
   private final MaterializedField field;
   private int lastPopulatedValueIndex = -1;
-  private int lastSet = -1;
   private CallBack callBack;
 
   public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
@@ -398,7 +397,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       }
 
       m.setValueCount(groups + 1);
-      to.lastSet = groups;
+      to.lastPopulatedValueIndex = groups - 1;
 
       for (TransferPair p : pairs) {
         p.splitAndTransfer(startPos, valuesToCopy);

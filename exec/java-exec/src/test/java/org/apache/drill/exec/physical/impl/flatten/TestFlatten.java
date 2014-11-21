@@ -192,4 +192,9 @@ public class TestFlatten extends BaseTestQuery {
     test("select a, flatten(r_map_1), flatten(r_map_2) from cp.`/store/json/complex_repeated_map.json`");
   }
 
+  @Test
+  public void testFlatten2_levelRepeatedMap() throws Exception {
+    test("select flatten(rm) from cp.`/store/json/2_level_repeated_map.json`");
+  }
+
 }

@@ -261,8 +261,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
           if (vw.getValueVector() instanceof MapVector) {
             // fast schema upstream did not report a repeated type
             // assume it will be repeated in the actual results and it will fail in execution if it is not
-            ValueVector vector = container.addOrGet(vw.getField());
-            container.add(vector);
+            container.addOrGet(vw.getField());
           } else {
             TransferPair pair = getFlattenFieldTransferPair();
             if (pair == null) {
@@ -271,8 +270,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
             container.add(pair.getTo());
           }
         } else {
-          ValueVector vector = container.addOrGet(vw.getField());
-          container.add(vector);
+          container.addOrGet(vw.getField());
         }
       }
       fastSchemaCalled = true;
