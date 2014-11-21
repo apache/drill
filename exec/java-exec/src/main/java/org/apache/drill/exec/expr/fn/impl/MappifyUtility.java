@@ -37,7 +37,7 @@ public class MappifyUtility {
   public static final String fieldKey = "key";
   public static final String fieldValue = "value";
 
-  public static void mappify(FieldReader reader, BaseWriter.ComplexWriter writer, DrillBuf buffer) {
+  public static DrillBuf mappify(FieldReader reader, BaseWriter.ComplexWriter writer, DrillBuf buffer) {
     // Currently we expect single map as input
     if (!(reader instanceof SingleMapReaderImpl)) {
       throw new DrillRuntimeException("kvgen function only supports Simple maps as input");
@@ -64,7 +64,7 @@ public class MappifyUtility {
       // write "key":"columnname" into the map
       VarCharHolder vh = new VarCharHolder();
       byte[] b = str.getBytes(Charsets.UTF_8);
-      buffer.reallocIfNeeded(b.length);
+      buffer = buffer.reallocIfNeeded(b.length);
       buffer.setBytes(0, b);
       vh.start = 0;
       vh.end = b.length;
@@ -77,6 +77,8 @@ public class MappifyUtility {
       mapWriter.end();
     }
     listWriter.end();
+
+    return buffer;
   }
 }
 
