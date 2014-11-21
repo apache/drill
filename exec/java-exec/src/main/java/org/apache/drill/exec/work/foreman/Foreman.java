@@ -435,7 +435,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
         assert exception != null;
         recordNewState(QueryState.FAILED);
         cancelExecutingFragments();
-        DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(), "Query failed.", exception, logger);
+        DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(), "Query failed: "+ exception.getMessage(), exception, logger);
         QueryResult result = QueryResult //
           .newBuilder() //
           .addError(error) //
