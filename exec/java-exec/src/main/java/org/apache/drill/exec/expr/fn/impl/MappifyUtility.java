@@ -20,6 +20,9 @@ package org.apache.drill.exec.expr.fn.impl;
 import com.google.common.base.Charsets;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+//import org.apache.drill.common.types.DataMode;
+import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.MapUtility;
@@ -39,7 +42,7 @@ public class MappifyUtility {
 
   public static DrillBuf mappify(FieldReader reader, BaseWriter.ComplexWriter writer, DrillBuf buffer) {
     // Currently we expect single map as input
-    if (!(reader instanceof SingleMapReaderImpl)) {
+    if (DataMode.REPEATED == reader.getType().getMode() || !(reader.getType().getMinorType() == TypeProtos.MinorType.MAP)) {
       throw new DrillRuntimeException("kvgen function only supports Simple maps as input");
     }
     BaseWriter.ListWriter listWriter = writer.rootAsList();
