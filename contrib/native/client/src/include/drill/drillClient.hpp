@@ -238,6 +238,10 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
          * back. The listener callback will return the handle in the ctx parameter.
          */
         status_t submitQuery(Drill::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle);
+        /*
+         * Get the application context from query handle
+         */
+        static void* getApplicationContext(QueryHandle_t handle);
 
         /*
          * Submit a query asynchronously and wait for results to be returned through an iterator that returns
