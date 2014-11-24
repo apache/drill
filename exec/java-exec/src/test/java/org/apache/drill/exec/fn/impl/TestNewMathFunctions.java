@@ -141,4 +141,11 @@ public class TestNewMathFunctions {
     runTest(bitContext, connection, expected, "functions/testDivModTruncFunctions.json");
   }
 
+ @Test
+ public void testIsNumeric(@Injectable final DrillbitContext bitContext,
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+   Object [] expected = new Object[] {1, 1, 1, 0};
+   runTest(bitContext, connection, expected, "functions/testIsNumericFunction.json");
+ }
+
 }

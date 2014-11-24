@@ -14,7 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{
-  numeric: ["Int", "BigInt", "TinyInt", "SmallInt", "UInt1", "UInt2", "UInt4", "UInt8", "Float4", "Float8",
-            "Decimal9", "Decimal18", "Decimal28Dense", "Decimal28Sparse", "Decimal38Dense", "Decimal38Sparse"]
+ {
+   numeric: ["Int", "BigInt", "TinyInt", "SmallInt", "UInt1", "UInt2", "UInt4", "UInt8", "Float4", "Float8",
+             "Decimal9", "Decimal18", "Decimal28Dense", "Decimal28Sparse", "Decimal38Dense", "Decimal38Sparse"],
+
+  numericFunctions: [
+  {className: "IsNumeric", funcName: "isnumeric", aliasName: "", outputType: "Int", types: [
+    {inputType: "BigInt", intype: "numeric"},
+    {inputType: "NullableBigInt", intype: "numeric"},
+    {inputType: "Int", intype: "numeric"},
+    {inputType: "NullableInt", intype: "numeric"},
+    {inputType: "SmallInt", intype: "numeric"},
+    {inputType: "NullableSmallInt", intype: "numeric"},
+    {inputType: "TinyInt", intype: "numeric"},
+    {inputType: "NullableTinyInt", intype: "numeric"},
+    {inputType: "UInt1", intype: "numeric"},
+    {inputType: "NullableUInt1", intype: "numeric"},
+    {inputType: "UInt2", intype: "numeric"},
+    {inputType: "NullableUInt2", intype: "numeric"},
+    {inputType: "UInt4", intype: "numeric"},
+    {inputType: "NullableUInt4", intype: "numeric"},
+    {inputType: "UInt8", intype: "numeric"},
+    {inputType: "NullableUInt8", intype: "numeric"},
+    {inputType: "VarChar", intype: "char"},
+    {inputType: "NullableVarChar", intype: "char"}
+  ]
+  }
+ ]
 }
