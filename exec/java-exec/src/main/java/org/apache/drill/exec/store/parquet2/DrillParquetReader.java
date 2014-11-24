@@ -44,6 +44,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import parquet.column.ColumnDescriptor;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ColumnChunkIncReadStore;
 import parquet.hadoop.metadata.BlockMetaData;
@@ -56,9 +57,12 @@ import parquet.io.MessageColumnIO;
 import parquet.schema.GroupType;
 import parquet.schema.MessageType;
 import parquet.schema.Type;
+import parquet.schema.PrimitiveType;
+
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import parquet.schema.Types;
 
 public class DrillParquetReader extends AbstractRecordReader {
 
@@ -96,31 +100,51 @@ public class DrillParquetReader extends AbstractRecordReader {
 
   public static MessageType getProjection(MessageType schema, Collection<SchemaPath> columns) {
     MessageType projection = null;
+
+    String messageName = schema.getName();
+    List<ColumnDescriptor> schemaColumns = schema.getColumns();
+
     for (SchemaPath path : columns) {
-      List<String> segments = Lists.newArrayList();
-      PathSegment rootSegment = path.getRootSegment();
-      PathSegment seg = rootSegment;
-      String messageName = schema.getName();
-      while(seg != null){
-        if(seg.isNamed()) {
-          segments.add(seg.getNameSegment().getPath());
+      for (ColumnDescriptor colDesc: schemaColumns) {
+        String[] schemaColDesc = colDesc.getPath();
+        SchemaPath schemaPath = SchemaPath.getCompoundPath(schemaColDesc);
+
+        PathSegment schemaSeg = schemaPath.getRootSegment();
+        PathSegment colSeg = path.getRootSegment();
+        List<String> segments = Lists.newArrayList();
+        List<String> colSegments = Lists.newArrayList();
+        while(schemaSeg != null && colSeg != null){
+          if (colSeg.isNamed()) {
+            // DRILL-1739 - Use case insensitive name comparison
+            if(schemaSeg.getNameSegment().getPath().equalsIgnoreCase(colSeg.getNameSegment().getPath())) {
+              segments.add(schemaSeg.getNameSegment().getPath());
+              colSegments.add(colSeg.getNameSegment().getPath());
+            }else{
+              break;
+            }
+          }else{
+            colSeg=colSeg.getChild();
+            continue;
+          }
+          colSeg = colSeg.getChild();
+          schemaSeg = schemaSeg.getChild();
         }
-        seg = seg.getChild();
-      }
-      String[] pathSegments = new String[segments.size()];
-      segments.toArray(pathSegments);
-      Type type = null;
-      try {
-        type = schema.getType(pathSegments);
-      } catch (InvalidRecordException e) {
-        logger.warn("Invalid record" , e);
-      }
-      if (type != null) {
-        Type t = getType(pathSegments, 0, schema);
-        if (projection == null) {
-          projection = new MessageType(messageName, t);
-        } else {
-          projection = projection.union(new MessageType(messageName, t));
+        // Field exists in schema
+        if (!segments.isEmpty()) {
+          String[] pathSegments = new String[segments.size()];
+          segments.toArray(pathSegments);
+          String[] colPathSegments = new String[colSegments.size()];
+          colSegments.toArray(colPathSegments);
+
+          // Use the field names from the schema or we get an exception if the case of the name doesn't match
+          Type t = getType(colPathSegments, pathSegments, 0, schema);
+
+          if (projection == null) {
+            projection = new MessageType(messageName, t);
+          } else {
+            projection = projection.union(new MessageType(messageName, t));
+          }
+          break;
         }
       }
     }
@@ -184,7 +208,7 @@ public class DrillParquetReader extends AbstractRecordReader {
       }
 
       writer = new VectorContainerWriter(output);
-      recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection);
+      recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, getColumns());
       primitiveVectors = writer.getMapVector().getPrimitiveVectors();
       recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
     } catch (Exception e) {
@@ -192,13 +216,29 @@ public class DrillParquetReader extends AbstractRecordReader {
     }
   }
 
-  private static Type getType(String[] pathSegments, int depth, MessageType schema) {
+  private static Type getType(String[] colSegs, String[] pathSegments, int depth, MessageType schema) {
     Type type = schema.getType(Arrays.copyOfRange(pathSegments, 0, depth + 1));
+    //String name = colSegs[depth]; // get the name from the column list not the schema
     if (depth + 1 == pathSegments.length) {
+      //type.name = colSegs[depth];
+      //Type newType = type;
+
+      //if(type.isPrimitive()){
+      //  //newType = new PrimitiveType(type.getRepetition(), type.asPrimitiveType().getPrimitiveTypeName(), name, type.getOriginalType());
+      //  Types.PrimitiveBuilder<PrimitiveType> builder = Types.primitive(
+      //    type.asPrimitiveType().getPrimitiveTypeName(), type.getRepetition());
+      //  if (PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY == type.asPrimitiveType().getPrimitiveTypeName()) {
+      //    builder.length(type.asPrimitiveType().getTypeLength());
+      //  }
+      //  newType = builder.named(name);
+      //}else{
+      //  //newType = new GroupType(type.getRepetition(), name, type);
+      //  newType = new GroupType(type.getRepetition(), name, type.asGroupType().getFields());
+      //}
       return type;
     } else {
       Preconditions.checkState(!type.isPrimitive());
-      return new GroupType(type.getRepetition(), type.getName(), getType(pathSegments, depth + 1, schema));
+      return new GroupType(type.getRepetition(), type.getName(), getType(colSegs, pathSegments, depth + 1, schema));
     }
   }
 
@@ -254,5 +294,16 @@ public class DrillParquetReader extends AbstractRecordReader {
     this.operatorContext = operatorContext;
   }
 
+  static public class ProjectedColumnType{
+    ProjectedColumnType(String projectedColumnName, MessageType type){
+      this.projectedColumnName=projectedColumnName;
+      this.type=type;
+    }
+
+    public String projectedColumnName;
+    public MessageType type;
+
+
+  }
 
 }

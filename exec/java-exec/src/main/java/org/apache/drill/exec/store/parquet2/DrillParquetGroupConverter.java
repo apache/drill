@@ -20,8 +20,13 @@ package org.apache.drill.exec.store.parquet2;
 import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
@@ -76,35 +81,73 @@ public class DrillParquetGroupConverter extends GroupConverter {
   private MapWriter mapWriter;
   private final OutputMutator mutator;
 
-  public DrillParquetGroupConverter(OutputMutator mutator, ComplexWriterImpl complexWriter, MessageType schema) {
-    this(mutator, complexWriter.rootAsMap(), schema);
+  public DrillParquetGroupConverter(OutputMutator mutator, ComplexWriterImpl complexWriter, MessageType schema, Collection<SchemaPath> columns) {
+    this(mutator, complexWriter.rootAsMap(), schema, columns);
   }
 
-  public DrillParquetGroupConverter(OutputMutator mutator, MapWriter mapWriter, GroupType schema) {
+  // This function assumes that the fields in the schema parameter are in the same order as the fields in the columns parameter. The
+  // columns parameter may have fields that are not present in the schema, though.
+  public DrillParquetGroupConverter(OutputMutator mutator, MapWriter mapWriter, GroupType schema, Collection<SchemaPath> columns) {
     this.mapWriter = mapWriter;
     this.mutator = mutator;
     converters = Lists.newArrayList();
+
+    Iterator<SchemaPath> colIterator=columns.iterator();
+
     for (Type type : schema.getFields()) {
       Repetition rep = type.getRepetition();
       boolean isPrimitive = type.isPrimitive();
+
+      // Match the name of the field in the schema definition to the name of the field in the query.
+      String name = null;
+      SchemaPath col=null;
+      PathSegment colPath = null;
+      PathSegment colNextChild = null;
+      if(colIterator.hasNext()) {
+        col = colIterator.next();
+        colPath=col.getRootSegment();
+        colNextChild = colPath.getChild();
+      }
+      if( colPath!=null && colPath.isNamed() && (!colPath.getNameSegment().getPath().equals("*")) ){
+        name=colPath.getNameSegment().getPath();
+        // We may have a field that does not exist in the schema
+        if(!name.equalsIgnoreCase(type.getName())){
+          continue;
+        }
+      }else{
+        name=type.getName();
+      }
+
       if (!isPrimitive) {
+        Collection<SchemaPath> c = new ArrayList<SchemaPath>();
+
+        while(colNextChild!=null) {
+          if(colNextChild.isNamed()) {
+            break;
+          }
+          colNextChild=colNextChild.getChild();
+        }
+
+        if(colNextChild!=null) {
+          SchemaPath s = new SchemaPath(colNextChild.getNameSegment());
+          c.add(s);
+        }
         if (rep != Repetition.REPEATED) {
-          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.map(type.getName()), type.asGroupType());
+          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.map(name), type.asGroupType(), c);
           converters.add(converter);
         } else {
-          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.list(type.getName()).map(), type.asGroupType());
+          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.list(name).map(), type.asGroupType(), c);
           converters.add(converter);
         }
       } else {
-        PrimitiveConverter converter = getConverterForType(type.asPrimitiveType());
+        PrimitiveConverter converter = getConverterForType(name, type.asPrimitiveType());
         converters.add(converter);
       }
     }
   }
 
-  private PrimitiveConverter getConverterForType(PrimitiveType type) {
+  private PrimitiveConverter getConverterForType(String name, PrimitiveType type) {
 
-    String name = type.getName();
     switch(type.getPrimitiveTypeName()) {
       case INT32: {
         if (type.getOriginalType() == null) {

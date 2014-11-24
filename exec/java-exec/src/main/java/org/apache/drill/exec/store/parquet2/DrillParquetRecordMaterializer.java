@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
@@ -24,14 +25,17 @@ import parquet.io.api.GroupConverter;
 import parquet.io.api.RecordMaterializer;
 import parquet.schema.MessageType;
 
+import java.util.Collection;
+import java.util.List;
+
 public class DrillParquetRecordMaterializer extends RecordMaterializer<Void> {
 
   public DrillParquetGroupConverter root;
   private ComplexWriter complexWriter;
 
-  public DrillParquetRecordMaterializer(OutputMutator mutator, ComplexWriter complexWriter, MessageType schema) {
+  public DrillParquetRecordMaterializer(OutputMutator mutator, ComplexWriter complexWriter, MessageType schema, Collection<SchemaPath> columns) {
     this.complexWriter = complexWriter;
-    root = new DrillParquetGroupConverter(mutator, complexWriter.rootAsMap(), schema);
+    root = new DrillParquetGroupConverter(mutator, complexWriter.rootAsMap(), schema, columns);
   }
 
   public void setPosition(int position) {
