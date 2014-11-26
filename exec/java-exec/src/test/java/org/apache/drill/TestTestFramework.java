@@ -68,7 +68,6 @@ public class TestTestFramework extends BaseTestQuery{
         .build().run();
   }
 
-  @Ignore("Drill 1737")
   @Test
   public void testDecimalBaseline() throws  Exception {
     // type information can be provided explicitly
@@ -76,19 +75,18 @@ public class TestTestFramework extends BaseTestQuery{
         .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
         .unOrdered()
         .csvBaselineFile("testframework/decimal_test.tsv")
-        .baselineTypes(Types.withScaleAndPrecision(TypeProtos.MinorType.DECIMAL38SPARSE, TypeProtos.DataMode.REQUIRED, 38, 2))
+        .baselineTypes(Types.withScaleAndPrecision(TypeProtos.MinorType.DECIMAL38SPARSE, TypeProtos.DataMode.REQUIRED, 2, 38))
         .baselineColumns("dec_col")
         .build().run();
 
-    // TODO - re-enable once DRILL-1737 is fixed
     // type information can also be left out, this will prompt the result types of the test query to drive the
     // interpretation of the test file
-//    testBuilder()
-//        .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
-//        .unOrdered()
-//        .csvBaselineFile("testframework/decimal_test.tsv")
-//        .baselineColumns("dec_col")
-//        .build().run();
+    testBuilder()
+        .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
+        .unOrdered()
+        .csvBaselineFile("testframework/decimal_test.tsv")
+        .baselineColumns("dec_col")
+        .build().run();
 
     // Or you can provide explicit values to the builder itself to avoid going through the drill engine at all to
     // populate the baseline results

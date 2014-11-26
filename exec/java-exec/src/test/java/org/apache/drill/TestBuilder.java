@@ -340,7 +340,7 @@ public class TestBuilder {
       case DECIMAL38DENSE:
       case DECIMAL28DENSE:
       case DECIMAL9:
-        precision = String.format("(%d,%d)", type.getScale(), type.getPrecision());
+        precision = String.format("(%d,%d)", type.getPrecision(), type.getScale());
         break;
       default:
         ; // do nothing empty string set above
