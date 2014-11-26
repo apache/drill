@@ -769,6 +769,9 @@ public class TypeCastRules {
   }
 
   public static boolean isCastableWithNullHandling(MajorType from, MajorType to, NullHandling nullHandling) {
+    if ((from.getMode() == DataMode.REPEATED || to.getMode() == DataMode.REPEATED) && from.getMode() != to.getMode()) {
+      return false;
+    }
     if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) {
       return false;
     }
