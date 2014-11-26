@@ -103,19 +103,22 @@ public class DrillParquetGroupConverter extends GroupConverter {
       SchemaPath col=null;
       PathSegment colPath = null;
       PathSegment colNextChild = null;
-      if(colIterator.hasNext()) {
+      while(colIterator.hasNext()) {
         col = colIterator.next();
-        colPath=col.getRootSegment();
+        colPath = col.getRootSegment();
         colNextChild = colPath.getChild();
-      }
-      if( colPath!=null && colPath.isNamed() && (!colPath.getNameSegment().getPath().equals("*")) ){
-        name=colPath.getNameSegment().getPath();
-        // We may have a field that does not exist in the schema
-        if(!name.equalsIgnoreCase(type.getName())){
-          continue;
+
+        if (colPath != null && colPath.isNamed() && (!colPath.getNameSegment().getPath().equals("*"))) {
+          name = colPath.getNameSegment().getPath();
+          // We may have a field that does not exist in the schema
+          if (!name.equalsIgnoreCase(type.getName())) {
+            continue;
+          }
         }
-      }else{
-        name=type.getName();
+        break;
+      }
+      if (name == null) {
+        name = type.getName();
       }
 
       if (!isPrimitive) {

@@ -19,25 +19,30 @@ package org.apache.drill.exec.store.parquet2;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.conf.Configuration;
@@ -68,6 +73,10 @@ public class DrillParquetReader extends AbstractRecordReader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
 
+  // same as the DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH in ParquetRecordReader
+
+  private static final char DEFAULT_RECORDS_TO_READ = 32*1024;
+
   private ParquetMetadata footer;
   private MessageType schema;
   private Configuration conf;
@@ -87,6 +96,17 @@ public class DrillParquetReader extends AbstractRecordReader {
   private final int fillLevelCheckThreshold;
   private FragmentContext fragmentContext;
 
+  // For columns not found in the file, we need to return a schema element with the correct number of values
+  // at that position in the schema. Currently this requires a vector be present. Here is a list of all of these vectors
+  // that need only have their value count set at the end of each call to next(), as the values default to null.
+  private List<NullableBitVector> nullFilledVectors;
+  // Keeps track of the number of records returned in the case where only columns outside of the file were selected.
+  // No actual data needs to be read out of the file, we only need to return batches until we have 'read' the number of
+  // records specified in the row group metadata
+  long mockRecordsRead=0;
+  private List<SchemaPath> columnsNotFound=null;
+  boolean noColumnsFound = false; // true if none of the columns in the projection list is found in the schema
+
 
   public DrillParquetReader(FragmentContext fragmentContext, ParquetMetadata footer, RowGroupReadEntry entry, List<SchemaPath> columns, Configuration conf) {
     this.footer = footer;
@@ -98,27 +118,27 @@ public class DrillParquetReader extends AbstractRecordReader {
     fillLevelCheckThreshold = this.fragmentContext.getOptions().getOption(ExecConstants.PARQUET_VECTOR_FILL_THRESHOLD).num_val.intValue();
   }
 
-  public static MessageType getProjection(MessageType schema, Collection<SchemaPath> columns) {
+  public static MessageType getProjection(MessageType schema,
+                                          Collection<SchemaPath> columns,
+                                          List<SchemaPath> columnsNotFound) {
     MessageType projection = null;
 
     String messageName = schema.getName();
     List<ColumnDescriptor> schemaColumns = schema.getColumns();
 
     for (SchemaPath path : columns) {
+      boolean colNotFound=true;
       for (ColumnDescriptor colDesc: schemaColumns) {
-        String[] schemaColDesc = colDesc.getPath();
+        String[] schemaColDesc = Arrays.copyOf(colDesc.getPath(), colDesc.getPath().length);
         SchemaPath schemaPath = SchemaPath.getCompoundPath(schemaColDesc);
-
         PathSegment schemaSeg = schemaPath.getRootSegment();
         PathSegment colSeg = path.getRootSegment();
         List<String> segments = Lists.newArrayList();
-        List<String> colSegments = Lists.newArrayList();
         while(schemaSeg != null && colSeg != null){
           if (colSeg.isNamed()) {
             // DRILL-1739 - Use case insensitive name comparison
             if(schemaSeg.getNameSegment().getPath().equalsIgnoreCase(colSeg.getNameSegment().getPath())) {
               segments.add(schemaSeg.getNameSegment().getPath());
-              colSegments.add(colSeg.getNameSegment().getPath());
             }else{
               break;
             }
@@ -133,11 +153,9 @@ public class DrillParquetReader extends AbstractRecordReader {
         if (!segments.isEmpty()) {
           String[] pathSegments = new String[segments.size()];
           segments.toArray(pathSegments);
-          String[] colPathSegments = new String[colSegments.size()];
-          colSegments.toArray(colPathSegments);
-
-          // Use the field names from the schema or we get an exception if the case of the name doesn't match
-          Type t = getType(colPathSegments, pathSegments, 0, schema);
+          colNotFound=false;
+          // Use the field names from the schema otherwise we get an exception if the case of the name doesn't match
+          Type t = getType(pathSegments, 0, schema);
 
           if (projection == null) {
             projection = new MessageType(messageName, t);
@@ -146,6 +164,9 @@ public class DrillParquetReader extends AbstractRecordReader {
           }
           break;
         }
+      }
+      if(colNotFound){
+        columnsNotFound.add(path);
       }
     }
     return projection;
@@ -172,9 +193,23 @@ public class DrillParquetReader extends AbstractRecordReader {
       if (isStarQuery()) {
         projection = schema;
       } else {
-        projection = getProjection(schema, getColumns());
-        if (projection == null) {
-          projection = schema;
+        columnsNotFound=new ArrayList<SchemaPath>();
+        projection = getProjection(schema, getColumns(), columnsNotFound);
+        if(projection == null){
+            projection = schema;
+        }
+        if(columnsNotFound!=null && columnsNotFound.size()>0) {
+          nullFilledVectors = new ArrayList();
+          for(SchemaPath col: columnsNotFound){
+            nullFilledVectors.add(
+              (NullableBitVector)output.addField(MaterializedField.create(col,
+                  org.apache.drill.common.types.Types.optional(TypeProtos.MinorType.BIT)),
+                (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(TypeProtos.MinorType.BIT,
+                  TypeProtos.DataMode.OPTIONAL)));
+          }
+          if(columnsNotFound.size()==getColumns().size()){
+            noColumnsFound=true;
+          }
         }
       }
 
@@ -207,38 +242,24 @@ public class DrillParquetReader extends AbstractRecordReader {
         }
       }
 
-      writer = new VectorContainerWriter(output);
-      recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, getColumns());
-      primitiveVectors = writer.getMapVector().getPrimitiveVectors();
-      recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
+      if(!noColumnsFound) {
+        writer = new VectorContainerWriter(output);
+        recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, getColumns());
+        primitiveVectors = writer.getMapVector().getPrimitiveVectors();
+        recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
+      }
     } catch (Exception e) {
       throw new ExecutionSetupException(e);
     }
   }
 
-  private static Type getType(String[] colSegs, String[] pathSegments, int depth, MessageType schema) {
+  private static Type getType(String[] pathSegments, int depth, MessageType schema) {
     Type type = schema.getType(Arrays.copyOfRange(pathSegments, 0, depth + 1));
-    //String name = colSegs[depth]; // get the name from the column list not the schema
     if (depth + 1 == pathSegments.length) {
-      //type.name = colSegs[depth];
-      //Type newType = type;
-
-      //if(type.isPrimitive()){
-      //  //newType = new PrimitiveType(type.getRepetition(), type.asPrimitiveType().getPrimitiveTypeName(), name, type.getOriginalType());
-      //  Types.PrimitiveBuilder<PrimitiveType> builder = Types.primitive(
-      //    type.asPrimitiveType().getPrimitiveTypeName(), type.getRepetition());
-      //  if (PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY == type.asPrimitiveType().getPrimitiveTypeName()) {
-      //    builder.length(type.asPrimitiveType().getTypeLength());
-      //  }
-      //  newType = builder.named(name);
-      //}else{
-      //  //newType = new GroupType(type.getRepetition(), name, type);
-      //  newType = new GroupType(type.getRepetition(), name, type.asGroupType().getFields());
-      //}
       return type;
     } else {
       Preconditions.checkState(!type.isPrimitive());
-      return new GroupType(type.getRepetition(), type.getName(), getType(colSegs, pathSegments, depth + 1, schema));
+      return new GroupType(type.getRepetition(), type.getName(), getType(pathSegments, depth + 1, schema));
     }
   }
 
@@ -247,6 +268,21 @@ public class DrillParquetReader extends AbstractRecordReader {
   @Override
   public int next() {
     int count = 0;
+
+    // No columns found in the file were selected, simply return a full batch of null records for each column requested
+    if (noColumnsFound) {
+      if (mockRecordsRead == footer.getBlocks().get(entry.getRowGroupIndex()).getRowCount()) {
+        return 0;
+      }
+      long recordsToRead = 0;
+      recordsToRead = Math.min(DEFAULT_RECORDS_TO_READ, footer.getBlocks().get(entry.getRowGroupIndex()).getRowCount() - mockRecordsRead);
+      for (ValueVector vv : nullFilledVectors ) {
+        vv.getMutator().setValueCount( (int) recordsToRead);
+      }
+      mockRecordsRead += recordsToRead;
+      return (int) recordsToRead;
+    }
+
     while (count < 4000 && totalRead < recordCount) {
       recordMaterializer.setPosition(count);
       recordReader.read();
@@ -262,6 +298,13 @@ public class DrillParquetReader extends AbstractRecordReader {
       }
     }
     writer.setValueCount(count);
+    // if we have requested columns that were not found in the file fill their vectors with null
+    // (by simply setting the value counts inside of them, as they start null filled)
+    if (nullFilledVectors != null) {
+      for (ValueVector vv : nullFilledVectors ) {
+        vv.getMutator().setValueCount(count);
+      }
+    }
     return count;
   }
 
