@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.DrillFunc;
@@ -73,12 +74,12 @@ public class DrillFunctionRegistry {
     for (Entry<String, Collection<DrillFuncHolder>> function : methods.asMap().entrySet()) {
       Set<Integer> argCounts = Sets.newHashSet();
       String name = function.getKey().toUpperCase();
-      for (DrillFuncHolder f : function.getValue()) {
-        if (argCounts.add(f.getParamCount())) {
-          if (f.isAggregating()) {
-            op = new DrillSqlAggOperator(name, f.getParamCount());
+      for (DrillFuncHolder func : function.getValue()) {
+        if (argCounts.add(func.getParamCount())) {
+          if (func.isAggregating()) {
+            op = new DrillSqlAggOperator(name, func.getParamCount());
           } else {
-            op = new DrillSqlOperator(name, f.getParamCount());
+            op = new DrillSqlOperator(name, func.getParamCount(), func.getReturnType());
           }
           operatorTable.add(function.getKey(), op);
         }
