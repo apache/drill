@@ -212,6 +212,12 @@ public class TestComplexTypeReader extends BaseTestQuery{
   }
 
   @Test
+  // Test SplitUpComplexExpressions rule which splits complex expression into multiple projects
+  public void testComplexAndSimpleColumnSelection() throws Exception {
+    test("select t.a.b, kvgen(t.a.c) from cp.`jsoninput/input4.json` t");
+  }
+
+  @Test
   public void testNestedFlatten() throws Exception {
     test("select flatten(rl) from cp.`jsoninput/input2.json`");
   }

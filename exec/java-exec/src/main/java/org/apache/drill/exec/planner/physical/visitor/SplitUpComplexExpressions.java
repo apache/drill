@@ -90,16 +90,11 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
 
     ProjectPushInfo columnInfo = PrelUtil.getColumns(project.getInput(0).getRowType(), project.getProjects());
 
-    List<RexNode> newProjects = Lists.newArrayList();
     if (columnInfo == null ) {
       return project;
     }
-    int lastRexInput = columnInfo.columns.size();
+    int lastRexInput = columnInfo.desiredFields.size();
     RexVisitorComplexExprSplitter exprSplitter = new RexVisitorComplexExprSplitter(factory, funcReg, lastRexInput);
-
-    for (RexNode n : project.getChildExps()) {
-      newProjects.add(n.accept(columnInfo.getInputRewriter()));
-    }
 
     for (RexNode rex : project.getChildExps()) {
       origRelDataTypes.add(project.getRowType().getFieldList().get(i));
