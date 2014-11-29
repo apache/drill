@@ -1,0 +1,21 @@
+<head>
+
+<meta charset="UTF-8">
+{% if site.noindex == 1 %}<meta name="robots" content="noindex">{% endif %}
+
+<title>{% if page.title %}{{ page.title }} - {{ site.title_suffix }}{% else %}{{ site.title }}{% endif %}</title>
+
+<link href="{{ site.baseurl }}/css/syntax.css" rel="stylesheet" type="text/css">
+<link href="{{ site.baseurl }}/css/style.css" rel="stylesheet" type="text/css">
+<link href="{{ site.baseurl }}/css/arrows.css" rel="stylesheet" type="text/css">
+<link href="{{ site.baseurl }}/css/button.css" rel="stylesheet" type="text/css">
+
+<link rel="shortcut icon" href="{{ site.baseurl }}/favicon.ico" type="image/x-icon">
+<link rel="icon" href="{{ site.baseurl }}/favicon.ico" type="image/x-icon">
+
+<script language="javascript" type="text/javascript" src="{{ site.baseurl }}/js/lib/jquery-1.11.1.min.js"></script>
+<script language="javascript" type="text/javascript" src="{{ site.baseurl }}/js/lib/jquery.easing.1.3.js"></script>
+<script language="javascript" type="text/javascript" src="{{ site.baseurl }}/js/modernizr.custom.js"></script>
+<script language="javascript" type="text/javascript" src="{{ site.baseurl }}/js/script.js"></script>
+
+</head>

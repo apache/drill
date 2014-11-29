@@ -1,0 +1,64 @@
+---
+layout: page
+title: Download
+---
+<div class="download">
+            <h2>The latest release is Drill 0.6.0, released November 1, 2014</h2>
+          <br>
+            
+            <table>
+              <tr>
+                  <td><a href="http://www.apache.org/dyn/closer.cgi/incubator/drill/drill-0.6.0-incubating/apache-drill-0.6.0-incubating.tar.gz" class="find" id="apachemirror" style="background-color: #4aaf4c;">FIND AN APACHE MIRROR</a></td>
+                    <td><a href="http://getdrill.org/drill/download/apache-drill-0.6.0-incubating.tar.gz" rel="nofollow" class="dl" id="directdownload">DIRECT FILE DOWNLOAD</a></td>
+            <td><a href="http://doc.mapr.com/display/MapR/Step+1.+Install+the+MapR+Drill+ODBC+Driver" rel="nofollow" class="dl">ODBC DRIVERS FOR DRILL*</a></td>    
+                </tr>
+            </table>
+   
+            <p style="margin-top:1px; padding-top:1px;"><strong>Release Notes: </strong><a href="https://cwiki.apache.org/confluence/display/DRILL/Release+Notes">&nbsp;Click here</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+             <strong>Fork Drill 0.6 on GitHub: </strong><a href="https://github.com/apache/incubator-drill/tree/0.6.0-incubating" rel="nofollow">&nbsp;Click here</a></p>
+           
+           <br>
+              
+
+              <!--<div style="border-top: solid 2px #1a6bc7; border-bottom: solid 2px #1a6bc7;padding: 5px;">-->
+               <!--<div style="background: #e7e7e7; padding:1px 0px 0px 0px;">-->
+               <h2>Visit the Apache Drill Tutorial for sample datasets and code examples</h2><br>
+             <table>
+              <tr>
+              <td>&nbsp;</td>
+              
+              <td style="padding-left: 38px"><a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+Tutorial" rel="nofollow" target="_blank" class="find">DRILL TUTORIAL</a></td>    
+<td>&nbsp;</td>
+                </tr>
+                <tr>
+                   <td>&nbsp;</td>
+                    <td></td>
+                    <td>&nbsp;</td>
+                </tr>
+                
+                </table>    
+        <!--</div>-->
+                   <p style="margin-top:0px; padding-top:0px;"><strong>Don't have Hadoop deployed? You can try <a href="https://www.mapr.com/products/mapr-sandbox-hadoop/download-sandbox-drill" rel="nofollow">Drill with a VM</a>*</p>
+<br>
+
+                 
+                   <p style="margin-top:1px; padding-top:1px;"><strong>Previous Drill releases: </strong><a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+0.5.0+Release+Notes" rel="nofollow">0.5.0</a> | <a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+0.4.0+Release+Notes" rel="nofollow">0.4.0</a></p>
+
+<br><br>
+      <p>*Please note that ODBC drivers and VM are provided by a third-party under a non-Apache license.</p>
+</div>
+<script type="text/javascript">
+$('#directdownload').click(function(event) {
+  ga('send', 'event', 'Downloads', 'Direct', 'Direct Download');
+});
+$('#apachemirror').click(function(event) {
+  event.preventDefault();
+  var link = $(this);
+  ga('send', 'event', 'Downloads', 'Link', 'Apache Mirrors', {
+    'hitCallback': function () {
+      document.location = link.attr('href');
+    }
+  });
+});
+</script>
+
