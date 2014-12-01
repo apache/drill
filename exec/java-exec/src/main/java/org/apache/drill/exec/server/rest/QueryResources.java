@@ -30,6 +30,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -68,7 +69,12 @@ public class QueryResources {
   public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType) throws Exception {
     List<Map<String, Object>> result = submitQueryJSON(new QueryWrapper(query, queryType));
 
-    List<String> columnNames = new ArrayList<>(result.get(0).keySet());
+    List<String> columnNames;
+    if (result.isEmpty()) {
+      columnNames = Lists.newArrayList();
+    } else {
+      columnNames = Lists.newArrayList(result.get(0).keySet());
+    }
     List<List<Object>> records = new ArrayList<>();
 
     if(!isEmptyResult(result)) {
@@ -104,6 +110,8 @@ public class QueryResources {
       this.columnNames = columnNames;
       this.records = records;
     }
+
+    public boolean isEmpty() { return getColumnNames().isEmpty(); }
 
     public List<String> getColumnNames() {
       return columnNames;

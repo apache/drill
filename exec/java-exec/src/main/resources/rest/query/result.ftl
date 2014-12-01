@@ -25,7 +25,11 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <div>
+  <#if model.isEmpty()>
+    <div class="jumbotron">
+      <p class="lead">No result found.</p>
+    </div>
+  <#else>
     <table id="result" class="table table-striped table-bordered table-condensed" style="table-layout: auto; width=100%;">
       <thead>
         <tr>
@@ -44,7 +48,7 @@
       </#list>
       </tbody>
     </table>
-  </div>
+  </#if>
   <script charset="utf-8">
     $(document).ready(function() {
       $('#result').dataTable( {

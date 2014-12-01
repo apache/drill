@@ -45,22 +45,20 @@ public class DrillRestServer extends ResourceConfig {
     register(MetricsResources.class);
     register(ThreadsResources.class);
     register(FreemarkerMvcFeature.class);
-    property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
     register(MultiPartFeature.class);
+    property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
 
-    register_jackson : {
 
-      //disable moxy so it doesn't conflict with jackson.
-      final String disableMoxy = PropertiesHelper.getPropertyNameForRuntime(CommonProperties.MOXY_JSON_FEATURE_DISABLE, getConfiguration().getRuntimeType());
-      property(disableMoxy, true);
+    //disable moxy so it doesn't conflict with jackson.
+    final String disableMoxy = PropertiesHelper.getPropertyNameForRuntime(CommonProperties.MOXY_JSON_FEATURE_DISABLE, getConfiguration().getRuntimeType());
+    property(disableMoxy, true);
 
-      register(JsonParseExceptionMapper.class);
-      register(JsonMappingExceptionMapper.class);
+    register(JsonParseExceptionMapper.class);
+    register(JsonMappingExceptionMapper.class);
 
-      JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
-      provider.setMapper(workManager.getContext().getConfig().getMapper());
-      register(provider);
-    }
+    JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
+    provider.setMapper(workManager.getContext().getConfig().getMapper());
+    register(provider);
 
     register(new AbstractBinder() {
       @Override
