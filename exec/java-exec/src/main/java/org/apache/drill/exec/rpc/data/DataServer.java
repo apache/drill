@@ -113,14 +113,15 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
         if (body != null) {
           body.release();
         }
-      }
-      BufferAllocator allocator = manager.getFragmentContext().getAllocator();
-      if (body != null) {
-        if (!allocator.takeOwnership((DrillBuf) body.unwrap())) {
-          dataHandler.handle(connection, manager, OOM_FRAGMENT, null, null);
+      }else{
+        BufferAllocator allocator = manager.getFragmentContext().getAllocator();
+        if (body != null) {
+          if (!allocator.takeOwnership((DrillBuf) body.unwrap())) {
+            dataHandler.handle(connection, manager, OOM_FRAGMENT, null, null);
+          }
         }
+        dataHandler.handle(connection, manager, fragmentBatch, (DrillBuf) body, sender);
       }
-      dataHandler.handle(connection, manager, fragmentBatch, (DrillBuf) body, sender);
 
     } catch (FragmentSetupException e) {
       logger.error("Failure while getting fragment manager. {}", QueryIdHelper.getQueryIdentifier(handle),  e);
