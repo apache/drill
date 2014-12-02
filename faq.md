@@ -16,7 +16,7 @@ We expect Drill to be used in lot more use cases where low latency is required.
 ## Does Drill replace Hive for batch processing? What about my OLTP applications?
 
 Drill complements batch-processing frameworks such as Hive, Pig, MapReduce to support low latency queries. Drill at this point doesn't make an optimal choice for OLTP/operational applications that require sub-second response times.
-            
+
 ## There are lots of SQL on Hadoop technologies out there. How is Drill different?
 
 Drill takes a different approach to SQL-on-Hadoop than Hive and other related technologies. The goal for Drill is to bring the SQL ecosystem and performance of the relational systems to Hadoop-scale data without compromising on the flexibility of Hadoop/NoSQL systems. Drill provides a flexible query environment for users with the key capabilities as below.
@@ -76,7 +76,7 @@ Drill is not designed with a particular Hadoop distribution in mind and we expec
 
 ## How does Drill achieve performance?
 
-Drill is built from the ground up for performance on large-scale datasets. The key architectural components that help in achieving performance include. 
+Drill is built from the ground up for performance on large-scale datasets. The key architectural components that help in achieving performance include.
 
 * Distributed query optimization & execution
 * Columnar execution
@@ -91,7 +91,7 @@ Drill is built to support several 100s of queries at any given point. Clients ca
 ## Do I need to load data into Drill to start querying it?
 
 No. Drill can query data "in situ".
-    
+
 ## What is the best way to get started with Drill?
 
 The best way to get started is to just try it out. It just takes a few minutes even if you do not have a cluster. Here is a good place to start: [Apache Drill in 10 minutes](https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+in+10+Minutes).
