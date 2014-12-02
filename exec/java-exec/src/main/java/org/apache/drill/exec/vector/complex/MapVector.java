@@ -292,7 +292,7 @@ public class MapVector extends AbstractContainerVector {
   @Override
   public int getValueCapacity() {
     if (this.vectors.isEmpty()) {
-      return 0;
+      return Integer.MAX_VALUE;
     }
 
     final Ordering<ValueVector> natural = new Ordering<ValueVector>() {

@@ -70,7 +70,11 @@ public class JsonReader {
    */
   private boolean onReset = false;
 
-  public static enum ReadState {WRITE_FAILURE, END_OF_STREAM, WRITE_SUCCEED}
+  public static enum ReadState {
+    WRITE_FAILURE,
+    END_OF_STREAM,
+    WRITE_SUCCEED
+  }
 
   public JsonReader() throws IOException {
     this(null, false);
@@ -131,8 +135,7 @@ public class JsonReader {
   }
 
 
-  public boolean write(ComplexWriter writer) throws JsonParseException, IOException {
-
+  public ReadState write(ComplexWriter writer) throws IOException {
     JsonToken t = onReset ? parser.getCurrentToken() : parser.nextToken();
 
     while (!parser.hasCurrentToken() && parser.hasDataAvailable()) {
@@ -140,7 +143,7 @@ public class JsonReader {
     }
 
     if(!parser.hasCurrentToken()){
-      return false;
+      return ReadState.END_OF_STREAM;
     }
 
     if(onReset){
@@ -153,26 +156,25 @@ public class JsonReader {
 
     switch(readState){
     case END_OF_STREAM:
-      return false;
+      break;
     case WRITE_FAILURE:
       logger.debug("Ran out of space while writing object, rewinding to object start.");
       parser.resetToMark();
       onReset = true;
-      return false;
-
+      break;
     case WRITE_SUCCEED:
-      return true;
-
+      break;
+    default:
+      throw new IllegalStateException();
     }
-    throw new IllegalStateException();
 
+    return readState;
   }
 
-  private ReadState writeToVector(ComplexWriter writer, JsonToken t) throws JsonParseException, IOException {
+  private ReadState writeToVector(ComplexWriter writer, JsonToken t) throws IOException {
     if (!writer.ok()) {
       return ReadState.WRITE_FAILURE;
     }
-
 
     switch (t) {
       case START_OBJECT:
@@ -198,7 +200,7 @@ public class JsonReader {
       }
   }
 
-  private void writeDataSwitch(MapWriter w) throws JsonParseException, IOException{
+  private void writeDataSwitch(MapWriter w) throws IOException{
     if(this.allTextMode){
       writeDataAllText(w, this.selection);
     }else{
@@ -206,7 +208,7 @@ public class JsonReader {
     }
   }
 
-  private void writeDataSwitch(ListWriter w) throws JsonParseException, IOException{
+  private void writeDataSwitch(ListWriter w) throws IOException{
     if(this.allTextMode){
       writeDataAllText(w);
     }else{
@@ -227,7 +229,7 @@ public class JsonReader {
     }
   }
 
-  private void writeData(MapWriter map, FieldSelection selection) throws JsonParseException, IOException {
+  private void writeData(MapWriter map, FieldSelection selection) throws IOException {
     //
     map.start();
     outside: while(true) {
@@ -299,7 +301,7 @@ public class JsonReader {
   }
 
 
-  private void writeDataAllText(MapWriter map, FieldSelection selection) throws JsonParseException, IOException {
+  private void writeDataAllText(MapWriter map, FieldSelection selection) throws IOException {
     //
     map.start();
     outside: while(true) {
@@ -378,7 +380,7 @@ public class JsonReader {
     writer.varChar().writeVarChar(0, prepareVarCharHolder(parser.getText()), workBuf);
   }
 
-  private void writeData(ListWriter list) throws JsonParseException, IOException {
+  private void writeData(ListWriter list) throws IOException {
     list.start();
     outside: while (true) {
       if (!list.ok()) {
@@ -431,7 +433,7 @@ public class JsonReader {
 
   }
 
-  private void writeDataAllText(ListWriter list) throws JsonParseException, IOException {
+  private void writeDataAllText(ListWriter list) throws IOException {
     list.start();
     outside: while (true) {
       if (!list.ok()) {

@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
+import org.apache.drill.exec.vector.complex.fn.JsonReader.ReadState;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -104,13 +105,14 @@ public class JSONRecordReader extends AbstractRecordReader {
     writer.reset();
 
     recordCount = 0;
+    ReadState write = null;
 //    Stopwatch p = new Stopwatch().start();
     try{
       outside: while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION){
         writer.setPosition(recordCount);
-        boolean write = jsonReader.write(writer);
+        write = jsonReader.write(writer);
 
-        if(write){
+        if(write == ReadState.WRITE_SUCCEED){
 //          logger.debug("Wrote record.");
           recordCount++;
         }else{
@@ -125,6 +127,9 @@ public class JSONRecordReader extends AbstractRecordReader {
       writer.setValueCount(recordCount);
 //      p.stop();
 //      System.out.println(String.format("Wrote %d records in %dms.", recordCount, p.elapsed(TimeUnit.MILLISECONDS)));
+      if (recordCount == 0 && write == ReadState.WRITE_FAILURE) {
+        throw new IOException("Record was too large to copy into vector.");
+      }
 
       return recordCount;
 

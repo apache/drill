@@ -45,11 +45,11 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
 
   @Override
   public int getValueCapacity() {
-    return mapVector.getValueCapacity();
+    return mapRoot.getValueCapacity();
   }
 
   public void checkValueCapacity(){
-    inform(mapVector.getValueCapacity() > idx());
+    inform(getValueCapacity() > idx());
   }
 
   public MapVector getMapVector() {
@@ -77,10 +77,6 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
   public void setPosition(int index) {
     super.setPosition(index);
     mapRoot.setPosition(index);
-  }
-
-  public MapWriter directMap() {
-    return mapRoot;
   }
 
   @Override

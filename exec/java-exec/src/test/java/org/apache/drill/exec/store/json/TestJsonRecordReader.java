@@ -51,4 +51,10 @@ public class TestJsonRecordReader extends BaseTestQuery{
     test("select a[0].b[1] from cp.`jsoninput/nestedArray.json`");
     test("select a[1].b[1] from cp.`jsoninput/nestedArray.json`");  // index out of the range. Should return empty list.
   }
+
+  @Test
+  public void testEmptyMapDoesNotFailValueCapacityCheck() throws Exception {
+    final String sql = "select * from cp.`store/json/value-capacity.json`";
+    test(sql);
+  }
 }

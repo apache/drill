@@ -195,7 +195,7 @@ public class MongoRecordReader extends AbstractRecordReader {
         writer.setPosition(docCount);
         String doc = cursor.next().toString();
         jsonReader.setSource(doc.getBytes(Charsets.UTF_8));
-        if(jsonReader.write(writer)) {
+        if(jsonReader.write(writer)== JsonReader.ReadState.WRITE_SUCCEED) {
           docCount++;
           break;
         }else{
