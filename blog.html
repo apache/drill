@@ -5,7 +5,7 @@ title: Blog
 {% for post in site.categories.blog %}<!-- previously: site.posts -->
 <p><a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>{% if post.date %} ({{ post.date | date: "%b %-d, %Y" }}){% endif %}{% if post.excerpt %}<br/>{{ post.excerpt }}{% endif %}</p>
 {% endfor %}
-<p class="info">Want to contribute a blog post? Check out the source for some of the <a href="https://github.com/tshiran/drill-website/tree/gh-pages/blog/_posts">existing posts</a> to see how it's done. When you're ready, email your Markdown file to <a href="mailto:dev@drill.apache.org">dev@drill.apache.org</a>.</p>
+<p class="info">Want to contribute a blog post? Check out the source for some of the <a href="https://github.com/apache/drill/tree/gh-pages/blog/_posts">existing posts</a> to see how it's done. When you're ready, email your Markdown file to <a href="mailto:dev@drill.apache.org">dev@drill.apache.org</a>.</p>
 <h1>Third-Party Articles</h1>
 {% for article in site.data.articles %}<!-- previously: site.posts -->
 <p><a class="post-link" href="{{ article.url }}">{{ article.title }}</a>{% if article.date %} ({{ article.date | date: "%b %-d, %Y" }}){% endif %}{% if article.excerpt %}<br/>{{ article.excerpt }}{% endif %}</p>
