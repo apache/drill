@@ -420,13 +420,12 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
       case COMPLETED: {
         assert exception == null;
         recordNewState(QueryState.COMPLETED);
-//        QueryResult result = QueryResult //
-//            .newBuilder() //
-//            .setIsLastChunk(true) //
-//            .setQueryState(QueryState.COMPLETED) //
-//            .setQueryId(queryId) //
-//            .build();
-        cleanup(null);
+        QueryResult result = QueryResult //
+            .newBuilder() //
+            .setQueryState(QueryState.COMPLETED) //
+            .setQueryId(queryId) //
+            .build();
+        cleanup(result);
         return true;
       }
 

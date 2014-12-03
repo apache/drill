@@ -123,9 +123,13 @@ public class ScreenCreator implements RootCreator<Screen>{
       case NONE: {
         this.internalStop();
         QueryWritableBatch batch;
+        //TODO: At some point we should make this the last message.
+        //For the moment though, to detect memory leaks, we need to delay sending the
+        //COMPLETED message until the Foreman calls cleanup.
         QueryResult header = QueryResult.newBuilder() //
             .setQueryId(context.getHandle().getQueryId()) //
             .setRowCount(0) //
+            //.setQueryState(QueryState.COMPLETED) //
             .setDef(RecordBatchDef.getDefaultInstance()) //
             .setIsLastChunk(true) //
             .build();
