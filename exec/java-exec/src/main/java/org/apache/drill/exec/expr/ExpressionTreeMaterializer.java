@@ -293,7 +293,7 @@ public class ExpressionTreeMaterializer {
       }
 
       FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
-      FunctionResolver resolver = FunctionResolverFactory.getResolver(castCall);
+      FunctionResolver resolver = FunctionResolverFactory.getExactResolver(castCall);
       DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
 
       if (matchedCastFuncHolder == null) {

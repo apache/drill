@@ -15,20 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.resolver;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
-public class FunctionResolverFactory {
+import java.util.List;
 
-  public static FunctionResolver getResolver(FunctionCall call) {
-    return new DefaultFunctionResolver();
+public class ExactFunctionResolver implements FunctionResolver {
+
+
+  /*
+   * This function resolves the input call to a func holder only if all
+   * the input argument types match exactly with the func holder arguments. This is used when we
+   * are trying to inject an implicit cast and do not want to inject another implicit
+   * cast
+   */
+  @Override
+  public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods, FunctionCall call) {
+
+    int currcost;
+
+    for (DrillFuncHolder h : methods) {
+
+      currcost = TypeCastRules.getCost(call, h);
+
+      // Return if we found a function that has an exact match with the input arguments
+      if (currcost  == 0){
+        return h;
+      }
+    }
+    // No match found
+    return null;
   }
-
-  public static FunctionResolver getExactResolver(FunctionCall call) {
-    return new ExactFunctionResolver();
-  }
-
-
 }
