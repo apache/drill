@@ -20,6 +20,7 @@ package org.apache.drill.exec.compile;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -117,12 +118,14 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   }
 
   @Test
+  @Ignore("DRILL-1808")
   public void testEXTERNAL_SORT() throws Exception {
     testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_ORDER_BY);
   }
 
   @Test
+  @Ignore("DRILL-1808")
   public void testTOP_N_SORT() throws Exception {
     testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_ORDER_BY_WITH_LIMIT);
