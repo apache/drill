@@ -18,7 +18,7 @@
 <@pp.dropOutputFile />
 
 <#list cast.types as type>
-<#if type.major == "VarCharDate">  <#-- Template to convert from VarChar to Date, Time, TimeStamp, TimeStampTZ -->
+<#if type.major == "VarCharDate" || type.major == "VarBinaryDate">  <#-- Template to convert from VarChar/ VarBinary to Date, Time, TimeStamp, TimeStampTZ -->
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
 

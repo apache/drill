@@ -72,5 +72,19 @@ public class BitFunctions {
     }
   }
 
+  @FunctionTemplate(names = {"equal","==","="}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class EqualsBitBit implements DrillSimpleFunc {
+
+    @Param BitHolder left;
+    @Param BitHolder right;
+    @Output BitHolder out;
+
+    public void setup(RecordBatch b) {}
+
+    public void eval() {
+      out.value = left.value == right.value ? 1 : 0;
+
+    }
+  }
 
 }

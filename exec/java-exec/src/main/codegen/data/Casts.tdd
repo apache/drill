@@ -66,6 +66,10 @@
     {from: "VarChar", to: "TimeStampTZ", major: "VarCharDate", alias: "timestamptztype"},
     {from: "VarChar", to: "Time", major: "VarCharDate", alias: "timetype"},
 
+    {from: "VarBinary", to: "Date", major: "VarBinaryDate", alias: "datetype"},
+    {from: "VarBinary", to: "TimeStamp", major: "VarBinaryDate", alias: "timestamptype"},
+    {from: "VarBinary", to: "Time", major: "VarBinaryDate", alias: "timetype"},
+
     {from: "Date", to: "VarChar", major: "DateVarChar", bufferLength: "10"}
     {from: "TimeStamp", to: "VarChar", major: "DateVarChar", bufferLength: "23"},
     {from: "Time", to: "VarChar", major: "DateVarChar", bufferLength: "12"},
