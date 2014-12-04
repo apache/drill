@@ -115,8 +115,11 @@ public class ${datetype}${intervaltype}Functions {
     @Param ${intervaltype}Holder right;
     @Param ${datetype}Holder left;
     @Workspace org.joda.time.MutableDateTime temp;
+    <#if datetype == "Date" && (intervaltype.startsWith("Interval"))>
+    @Output TimeStampHolder out;
+    <#else>
     @Output ${datetype}Holder out;
-
+    </#if>
         public void setup(RecordBatch incoming) {
             <#if datetype == "TimeStampTZ">
             temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
