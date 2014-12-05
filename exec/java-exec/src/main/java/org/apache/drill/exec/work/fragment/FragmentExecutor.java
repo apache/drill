@@ -78,6 +78,8 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   }
 
   public void receivingFragmentFinished(FragmentHandle handle) {
+    updateState(FragmentState.CANCELLED);
+    context.cancel();
     root.receivingFragmentFinished(handle);
   }
 

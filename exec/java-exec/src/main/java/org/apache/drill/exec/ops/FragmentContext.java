@@ -29,7 +29,6 @@ import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -79,8 +78,13 @@ public class FragmentContext implements Closeable {
   private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
 
   private volatile Throwable failureCause;
-  private volatile boolean failed = false;
-  private volatile boolean cancelled = false;
+  private volatile FragmentContextState state = FragmentContextState.OK;
+
+  private static enum FragmentContextState {
+    OK,
+    FAILED,
+    CANCELED
+  }
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
       FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
@@ -127,12 +131,24 @@ public class FragmentContext implements Closeable {
 
   public void fail(Throwable cause) {
     logger.error("Fragment Context received failure.", cause);
-    failed = true;
+    setState(FragmentContextState.FAILED);
     failureCause = cause;
   }
 
   public void cancel() {
-    cancelled = true;
+    setState(FragmentContextState.CANCELED);
+  }
+
+  /**
+   * Allowed transitions from left to right: OK -> FAILED -> CANCELED
+   * @param newState
+   */
+  private synchronized void setState(FragmentContextState newState) {
+    if (state == FragmentContextState.OK) {
+      state = newState;
+    } else if (newState == FragmentContextState.CANCELED) {
+      state = newState;
+    }
   }
 
   public DrillbitContext getDrillbitContext() {
@@ -251,11 +267,11 @@ public class FragmentContext implements Closeable {
   }
 
   public boolean isFailed() {
-    return failed;
+    return state == FragmentContextState.FAILED;
   }
 
   public boolean isCancelled() {
-    return cancelled;
+    return state == FragmentContextState.CANCELED;
   }
 
   public FunctionImplementationRegistry getFunctionRegistry() {

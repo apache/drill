@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.fragment;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -44,7 +45,7 @@ public class RootFragmentManager implements FragmentManager{
   }
 
   @Override
-  public boolean handle(RawFragmentBatch batch) throws FragmentSetupException {
+  public boolean handle(RawFragmentBatch batch) throws FragmentSetupException, IOException {
     return buffers.batchArrived(batch);
   }
 

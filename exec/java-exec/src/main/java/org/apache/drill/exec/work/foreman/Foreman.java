@@ -191,7 +191,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
       moveToState(QueryState.FAILED, e);
 
     } catch (AssertionError | Exception ex) {
-      moveToState(QueryState.FAILED, new ForemanException("Unexpected exception during fragment initialization.", ex));
+      moveToState(QueryState.FAILED, new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
 
     } catch (OutOfMemoryError e) {
       System.out.println("Out of memory, exiting.");

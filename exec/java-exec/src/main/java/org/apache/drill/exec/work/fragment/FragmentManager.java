@@ -23,6 +23,8 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
 
+import java.io.IOException;
+
 /**
  * The Fragment Manager is responsible managing incoming data and executing a fragment. Once enough data and resources
  * are avialable, a fragment manager will start a fragment executor to run the associated fragment.
@@ -34,9 +36,9 @@ public interface FragmentManager {
    *
    * @param batch
    * @return True if the fragment has enough incoming data to be able to be run.
-   * @throws FragmentSetupException
+   * @throws FragmentSetupException, IOException
    */
-  public abstract boolean handle(RawFragmentBatch batch) throws FragmentSetupException;
+  public abstract boolean handle(RawFragmentBatch batch) throws FragmentSetupException, IOException;
 
   /**
    * Get the fragment runner for this incoming fragment. Note, this can only be requested once.

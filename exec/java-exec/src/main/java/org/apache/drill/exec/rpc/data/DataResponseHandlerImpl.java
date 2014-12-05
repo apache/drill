@@ -31,6 +31,8 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 
+import java.io.IOException;
+
 public class DataResponseHandlerImpl implements DataResponseHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataResponseHandlerImpl.class);
 
@@ -67,5 +69,8 @@ public class DataResponseHandlerImpl implements DataResponseHandler{
     } catch (FragmentSetupException e) {
       logger.error("Failure while attempting to setup new fragment.", e);
       sender.send(new Response(RpcType.ACK, Acks.FAIL));
+    } catch (IOException e) {
+      throw new RpcException(e);
     }
-  }}
+  }
+}

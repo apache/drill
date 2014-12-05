@@ -61,16 +61,12 @@ public class IncomingBuffers implements AutoCloseable {
     streamsRemaining.set(totalStreams);
   }
 
-  public boolean batchArrived(RawFragmentBatch batch) throws FragmentSetupException {
+  public boolean batchArrived(RawFragmentBatch batch) throws FragmentSetupException, IOException {
     // no need to do anything if we've already enabled running.
     // logger.debug("New Batch Arrived {}", batch);
     if (batch.getHeader().getIsOutOfMemory()) {
       for (DataCollector fSet : fragCounts.values()) {
-        try {
-          fSet.batchArrived(0, batch);
-        } catch (IOException e) {
-          throw new RuntimeException();
-        }
+        fSet.batchArrived(0, batch);
       }
       return false;
     }
@@ -82,15 +78,10 @@ public class IncomingBuffers implements AutoCloseable {
     if (fSet == null) {
       throw new FragmentSetupException(String.format("We received a major fragment id that we were not expecting.  The id was %d. %s", sendMajorFragmentId, Arrays.toString(fragCounts.values().toArray())));
     }
-    try {
-      synchronized (this) {
-        boolean decremented = fSet.batchArrived(batch.getHeader().getSendingMinorFragmentId(), batch);
-
-        // we should only return true if remaining required has been decremented and is currently equal to zero.
-        return decremented && remainingRequired.get() == 0;
-      }
-    } catch (IOException e) {
-      throw new FragmentSetupException(e);
+    synchronized (this) {
+      boolean decremented = fSet.batchArrived(batch.getHeader().getSendingMinorFragmentId(), batch);
+      // we should only return true if remaining required has been decremented and is currently equal to zero.
+      return decremented && remainingRequired.get() == 0;
     }
   }
 

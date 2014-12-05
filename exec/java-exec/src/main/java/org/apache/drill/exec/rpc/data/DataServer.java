@@ -115,7 +115,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
         }
       }else{
         BufferAllocator allocator = manager.getFragmentContext().getAllocator();
-        if (body != null) {
+        if (body != null && !manager.getFragmentContext().isCancelled()) {
           if (!allocator.takeOwnership((DrillBuf) body.unwrap())) {
             dataHandler.handle(connection, manager, OOM_FRAGMENT, null, null);
           }

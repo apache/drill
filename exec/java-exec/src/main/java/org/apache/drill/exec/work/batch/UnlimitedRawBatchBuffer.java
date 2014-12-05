@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.batch;
 
+import java.io.IOException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -59,12 +60,16 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   }
 
   @Override
-  public void enqueue(RawFragmentBatch batch) {
+  public void enqueue(RawFragmentBatch batch) throws IOException {
     if (state == BufferState.KILLED) {
       batch.release();
     }
     if (isFinished()) {
-      throw new RuntimeException("Attempted to enqueue batch after finished");
+      if (state == BufferState.KILLED) {
+        batch.release();
+      } else {
+        throw new IOException("Attempted to enqueue batch after finished");
+      }
     }
     if (batch.getHeader().getIsOutOfMemory()) {
       logger.debug("Setting autoread false");
