@@ -159,7 +159,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         if (!context.isCancelled() && !context.isFailed()) {
           context.fail(ex);
         }
-        stop();
+        done = true;
       }
 
       @Override
@@ -172,7 +172,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         logger.error("Downstream fragment was not accepted.  Stopping future sends.");
         // if we didn't get ack ok, we'll need to kill the query.
         context.fail(new RpcException("A downstream fragment batch wasn't accepted.  This fragment thus fails."));
-        stop();
+        done = true;
       }
 
     }
