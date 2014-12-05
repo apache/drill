@@ -149,7 +149,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public void copyAsValue(MapWriter writer) {
-    if (currentOffset == NO_VALUES) {
+    if (currentOffset == NO_VALUES || writer.ok() == false) {
       return;
     }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer;
@@ -157,7 +157,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   public void copyAsValueSingle(MapWriter writer) {
-    if (currentOffset == NO_VALUES) {
+    if (currentOffset == NO_VALUES || writer.ok() == false) {
       return;
     }
     SingleMapWriter impl = (SingleMapWriter) writer;
