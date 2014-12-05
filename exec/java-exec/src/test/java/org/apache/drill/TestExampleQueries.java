@@ -27,6 +27,12 @@ import org.junit.Test;
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
+  @Test // see DRILL-1811
+  public void testSelStarDifferentColumnOrder() throws Exception {
+    test("select first_name, * from cp.`employee.json`;");
+    test("select *, first_name, *, last_name from cp.`employee.json`;");
+  }
+
   @Test // see DRILL-985
   public void testViewFileName() throws Exception {
     test("use dfs.tmp");
