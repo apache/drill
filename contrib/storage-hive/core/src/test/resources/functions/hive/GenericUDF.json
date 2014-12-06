@@ -28,7 +28,6 @@
             exprs: [
                 { ref: "str1", expr: "str1" },
                 { ref: "upperStr1", expr: "ucase(str1)" },
-                { ref: "unix_timestamp", expr: "unix_timestamp()" },
                 { ref: "concat", expr: "concat_ws('-', str2, str3)" },
                 { ref: "flt1", expr: "flt1" },
                 { ref: "format_number", expr: "format_number(cast(flt1 as float8), cast(2 as int))" },

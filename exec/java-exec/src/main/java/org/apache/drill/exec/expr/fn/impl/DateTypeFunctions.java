@@ -472,4 +472,62 @@ public class DateTypeFunctions {
             out.value = (int) (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         }
     }
+
+    @FunctionTemplate(name = "unix_timestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class UnixTimeStamp implements DrillSimpleFunc {
+      @Output BigIntHolder out;
+      @Workspace long queryStartDate;
+
+      @Override
+      public void setup(RecordBatch incoming) {
+         queryStartDate = incoming.getContext().getQueryStartTime();
+      }
+
+      @Override
+      public void eval() {
+        out.value = queryStartDate / 1000;
+      }
+    }
+
+    @FunctionTemplate(name = "unix_timestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class UnixTimeStampForDate implements DrillSimpleFunc {
+      @Param VarCharHolder inputDateValue;
+      @Output BigIntHolder out;
+      @Workspace org.joda.time.DateTime date;
+      @Workspace org.joda.time.format.DateTimeFormatter formatter;
+
+      @Override
+      public void setup(RecordBatch incoming) {
+         formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+      }
+
+      @Override
+      public void eval() {
+        String inputDate = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputDateValue.start, inputDateValue.end, inputDateValue.buffer);
+        date = (org.joda.time.DateTime) formatter.parseDateTime(inputDate);
+        out.value = date.getMillis() / 1000;
+      }
+    }
+
+    @FunctionTemplate(name = "unix_timestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class UnixTimeStampForDateWithPattern implements DrillSimpleFunc {
+      @Param VarCharHolder inputDateValue;
+      @Param VarCharHolder inputPattern;
+      @Output BigIntHolder out;
+      @Workspace org.joda.time.DateTime date;
+      @Workspace org.joda.time.format.DateTimeFormatter formatter;
+
+      @Override
+      public void setup(RecordBatch incoming) {
+         String pattern = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputPattern.start, inputPattern.end, inputPattern.buffer);
+         formatter = org.joda.time.format.DateTimeFormat.forPattern(pattern);
+      }
+
+      @Override
+      public void eval() {
+          String inputDate = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputDateValue.start, inputDateValue.end, inputDateValue.buffer);
+          date = (org.joda.time.DateTime) formatter.parseDateTime(inputDate);
+          out.value = date.getMillis() / 1000;
+      }
+    }
 }

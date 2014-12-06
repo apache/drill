@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
@@ -56,27 +57,24 @@ public class TestHiveUDFs extends BaseTestQuery {
       // Output columns and types
       //  1. str1 : Var16Char
       //  2. upperStr1 : NullableVar16Char
-      //  3. unix_timestamp : NullableBigInt
-      //  4. concat : NullableVarChar
-      //  5. flt1 : Float4
-      //  6. format_number : NullableFloat8
-      //  7. nullableStr1 : NullableVar16Char
-      //  8. upperNullableStr1 : NullableVar16Char
+      //  3. concat : NullableVarChar
+      //  4. flt1 : Float4
+      //  5. format_number : NullableFloat8
+      //  6. nullableStr1 : NullableVar16Char
+      //  7. upperNullableStr1 : NullableVar16Char
       Var16CharVector str1V = (Var16CharVector) batchLoader.getValueAccessorById(Var16CharVector.class, 0).getValueVector();
       NullableVar16CharVector upperStr1V = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 1).getValueVector();
-      NullableBigIntVector unix_timestampV = (NullableBigIntVector) batchLoader.getValueAccessorById(NullableBigIntVector.class, 2).getValueVector();
-      NullableVar16CharVector concatV = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 3).getValueVector();
-      Float4Vector flt1V = (Float4Vector) batchLoader.getValueAccessorById(Float4Vector.class, 4).getValueVector();
-      NullableVar16CharVector format_numberV = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 5).getValueVector();
-      NullableVar16CharVector nullableStr1V = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 6).getValueVector();
-      NullableVar16CharVector upperNullableStr1V = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 7).getValueVector();
+      NullableVar16CharVector concatV = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 2).getValueVector();
+      Float4Vector flt1V = (Float4Vector) batchLoader.getValueAccessorById(Float4Vector.class, 3).getValueVector();
+      NullableVar16CharVector format_numberV = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 4).getValueVector();
+      NullableVar16CharVector nullableStr1V = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 5).getValueVector();
+      NullableVar16CharVector upperNullableStr1V = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 6).getValueVector();
 
       for (int i=0; i<batchLoader.getRecordCount(); i++) {
         String in = new String(str1V.getAccessor().get(i), Charsets.UTF_16);
         String upper = new String(upperStr1V.getAccessor().get(i), Charsets.UTF_16);
         assertTrue(in.toUpperCase().equals(upper));
 
-        long unix_timestamp = unix_timestampV.getAccessor().get(i);
 
         String concat = new String(concatV.getAccessor().get(i), Charsets.UTF_16);
         assertTrue(concat.equals(in+"-"+in));
@@ -100,7 +98,7 @@ public class TestHiveUDFs extends BaseTestQuery {
           assertEquals(nullableStr1.toUpperCase(), upperNullableStr1);
         }
 
-        System.out.println(in + ", " + upper + ", " + unix_timestamp + ", " + concat + ", " +
+        System.out.println(in + ", " + upper + ", " + concat + ", " +
           flt1 + ", " + format_number + ", " + nullableStr1 + ", " + upperNullableStr1);
 
         numRecords++;
