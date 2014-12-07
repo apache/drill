@@ -137,7 +137,7 @@ public class MapVector extends AbstractContainerVector {
     if (vectors.put(name, vv) != null) {
       throw new IllegalStateException();
     }
-    vectorIds.put(name, new VectorWithOrdinal(vv, ordinal));
+    vectorIds.put(name.toLowerCase(), new VectorWithOrdinal(vv, ordinal));
     vectorsById.put(ordinal, vv);
     field.addChild(vv.getField());
   }
@@ -445,7 +445,7 @@ public class MapVector extends AbstractContainerVector {
 
   @Override
   public VectorWithOrdinal getVectorWithOrdinal(String name) {
-    return vectorIds.get(name);
+    return vectorIds.get(name.toLowerCase());
   }
 
 }
