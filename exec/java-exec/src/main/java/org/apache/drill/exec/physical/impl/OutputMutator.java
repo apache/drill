@@ -25,15 +25,41 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
+/**
+ * Interface that allows a record reader to modify the current schema.
+ *
+ * The output mutator interface abstracts ValueVector creation and maintenance away from any particular RecordReader.
+ * This means, among other things, that a new RecordReader that shares the same column definitions in a different order
+ * does not generate a Schema change event for downstream consumers.
+ */
 public interface OutputMutator {
-  public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException ;
+
+  /**
+   * Add a ValueVector for new (or existing) field.
+   *
+   * @param field
+   *          The specification of the newly desired vector.
+   * @param clazz
+   *          The expected ValueVector class. Also allows strongly typed use of this interface.
+   *
+   * @return The existing or new ValueVector associated with the provided field.
+   *
+   * @throws SchemaChangeException
+   *           If the addition of this field is incompatible with this OutputMutator's capabilities.
+   */
+  public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException;
+
   public void allocate(int recordCount);
+
+  /**
+   * Whether or not the fields added to the OutputMutator generated a new schema event.
+   * @return
+   */
   public boolean isNewSchema();
 
-  /* TODO: This interface is added to support information schema tables,
-   * FixedTables, the way they exist currently.
-   * One to many layers to rip out, address it as a separate JIRA.
+  /**
+   * Allows a scanner to request a set of managed block of memory.
+   * @return A DrillBuf that will be released at the end of the current query (and can be resized as desired during use).
    */
-  public void addFields(List<ValueVector> vvList);
   public DrillBuf getManagedBuffer();
 }

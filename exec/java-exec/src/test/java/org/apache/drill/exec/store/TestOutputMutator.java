@@ -59,10 +59,6 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     fieldVectorMap.put(vector.getField(), vector);
   }
 
-  public void addFields(List<ValueVector> v) {
-    return;
-  }
-
   public Iterator<VectorWrapper<?>> iterator() {
     return container.iterator();
   }

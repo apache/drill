@@ -283,22 +283,18 @@ public class ScanBatch implements RecordBatch {
           throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
         }
         container.add(v);
-        fieldVectorMap.put(field.key(), v);
+
+        ValueVector old = fieldVectorMap.put(field.key(), v);
+        if(old != null){
+          container.remove(old);
+          old.clear();
+        }
 
         // Adding new vectors to the container mark that the schema has changed
         schemaChange = true;
       }
 
       return (T) v;
-    }
-
-    @Override
-    public void addFields(List<ValueVector> vvList) {
-      for (ValueVector v : vvList) {
-        fieldVectorMap.put(v.getField().key(), v);
-        container.add(v);
-      }
-      schemaChange = true;
     }
 
     @Override

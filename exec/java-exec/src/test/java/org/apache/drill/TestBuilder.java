@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import com.google.common.base.Joiner;
+
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -26,6 +27,7 @@ import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 
@@ -117,7 +120,7 @@ public class TestBuilder {
   }
 
   public TestBuilder sqlQuery(String query) {
-    this.query = query;
+    this.query = query.replaceAll(Pattern.quote("${WORKING_PATH}"), TestTools.getWorkingPath());
     this.queryType = UserBitShared.QueryType.SQL;
     return this;
   }

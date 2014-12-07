@@ -30,9 +30,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -206,6 +208,7 @@ public class BaseTestQuery extends ExecTest{
   }
 
   public static void test(String query) throws Exception{
+    query = query.replaceAll(Pattern.quote("${WORKING_PATH}"), TestTools.getWorkingPath());
     String[] queries = query.split(";");
     for (String q : queries) {
       if (q.trim().isEmpty()) {
