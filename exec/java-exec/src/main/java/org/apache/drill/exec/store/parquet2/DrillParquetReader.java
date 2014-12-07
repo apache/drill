@@ -24,7 +24,9 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -125,28 +127,41 @@ public class DrillParquetReader extends AbstractRecordReader {
 
     String messageName = schema.getName();
     List<ColumnDescriptor> schemaColumns = schema.getColumns();
+    // parquet type.union() seems to lose ConvertedType info when merging two columns that are the same type. This can
+    // happen when selecting two elements from an array. So to work around this, we use set of SchemaPath to avoid duplicates
+    // and then merge the types at the end
+    Set<SchemaPath> schemaPaths = Sets.newLinkedHashSet(); // Use LinkedHashSet to preserver ordering, otherwise DrillParquetGroupConverter breaks
 
     for (SchemaPath path : columns) {
       boolean colNotFound=true;
-      for (ColumnDescriptor colDesc: schemaColumns) {
+      schemaColumnLoop: for (ColumnDescriptor colDesc: schemaColumns) {
         String[] schemaColDesc = Arrays.copyOf(colDesc.getPath(), colDesc.getPath().length);
         SchemaPath schemaPath = SchemaPath.getCompoundPath(schemaColDesc);
         PathSegment schemaSeg = schemaPath.getRootSegment();
         PathSegment colSeg = path.getRootSegment();
         List<String> segments = Lists.newArrayList();
-        while(schemaSeg != null && colSeg != null){
+        while(schemaSeg != null || colSeg != null){
+          // if one is null but not the other, this is not a match
+          if (schemaSeg == null || colSeg == null) {
+            continue schemaColumnLoop;
+          }
           if (colSeg.isNamed()) {
             // DRILL-1739 - Use case insensitive name comparison
             if(schemaSeg.getNameSegment().getPath().equalsIgnoreCase(colSeg.getNameSegment().getPath())) {
               segments.add(schemaSeg.getNameSegment().getPath());
             }else{
-              break;
+              continue schemaColumnLoop;
             }
           }else{
             colSeg=colSeg.getChild();
             continue;
           }
-          colSeg = colSeg.getChild();
+          while ((colSeg = colSeg.getChild()) != null && colSeg.isArray()) {
+            colSeg = colSeg.getChild();
+            if (colSeg == null) {
+              break;
+            }
+          }
           schemaSeg = schemaSeg.getChild();
         }
         // Field exists in schema
@@ -154,19 +169,28 @@ public class DrillParquetReader extends AbstractRecordReader {
           String[] pathSegments = new String[segments.size()];
           segments.toArray(pathSegments);
           colNotFound=false;
-          // Use the field names from the schema otherwise we get an exception if the case of the name doesn't match
-          Type t = getType(pathSegments, 0, schema);
-
-          if (projection == null) {
-            projection = new MessageType(messageName, t);
-          } else {
-            projection = projection.union(new MessageType(messageName, t));
-          }
+          schemaPaths.add(schemaPath);
           break;
         }
       }
       if(colNotFound){
         columnsNotFound.add(path);
+      }
+    }
+    for (SchemaPath schemaPath : schemaPaths) {
+      List<String> segments = Lists.newArrayList();
+      PathSegment seg = schemaPath.getRootSegment();
+      do {
+        segments.add(seg.getNameSegment().getPath());
+      } while ((seg = seg.getChild()) != null);
+      String[] pathSegments = new String[segments.size()];
+      segments.toArray(pathSegments);
+      Type t = getType(pathSegments, 0, schema);
+
+      if (projection == null) {
+        projection = new MessageType(messageName, t);
+      } else {
+        projection = projection.union(new MessageType(messageName, t));
       }
     }
     return projection;
