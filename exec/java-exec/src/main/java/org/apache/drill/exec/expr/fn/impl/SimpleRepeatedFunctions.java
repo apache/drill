@@ -64,7 +64,6 @@ public class SimpleRepeatedFunctions {
       out.value = input.end - input.start;
     }
   }
-
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class RepeatedLengthTinyInt implements DrillSimpleFunc {
 
@@ -342,7 +341,7 @@ public class SimpleRepeatedFunctions {
         out.value = 0;
         listToSearch.vector.getAccessor().get(i, currVal);
         if (org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(
-            currVal.buffer.memoryAddress(), currVal.start, currVal.end, targetValue.buffer.memoryAddress(), targetValue.start, targetValue.end) == 0 ) {
+            currVal.buffer, currVal.start, currVal.end, targetValue.buffer, targetValue.start, targetValue.end) == 0 ) {
           out.value = 1;
           break;
         }

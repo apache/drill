@@ -38,6 +38,6 @@ public class CastVarBinaryToDate implements DrillSimpleFunc {
     }
 
     public void eval() {
-        out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getDate(in.buffer.memoryAddress(), in.start, in.end);
+        out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getDate(in.buffer, in.start, in.end);
     }
   }

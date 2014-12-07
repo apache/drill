@@ -53,7 +53,7 @@ outside:{
     </#if>
     
     <#if mode == "var">
-      ${output} = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end);
+      ${output} = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end);
     <#elseif mode == "fixed">
       ${output} = left.value < right.value ? -1 : ((left.value == right.value)? 0 : 1);
     </#if>    
@@ -203,7 +203,7 @@ public class GCompare${left}${right}{
 
       public void eval() {
           <#if type.mode == "var" >
-          out.value = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.equal(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end);
+          out.value = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end);
           <#else>
           out.value = left.value == right.value ? 1 : 0;
           </#if>

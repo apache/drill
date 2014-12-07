@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import org.apache.drill.exec.util.AssertionUtil;
+
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
@@ -25,13 +27,15 @@ import com.google.common.primitives.UnsignedLongs;
 public final class XXHash {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XXHash.class);
 
+  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
+
   static final long PRIME64_1 = UnsignedLongs.decode("11400714785074694791");
   static final long PRIME64_2 = UnsignedLongs.decode("14029467366897019727");
   static final long PRIME64_3 = UnsignedLongs.decode("1609587929392839161");
   static final long PRIME64_4 = UnsignedLongs.decode("9650029242287828579");
   static final long PRIME64_5 = UnsignedLongs.decode("2870177450012600261");
 
-  public static long hash64(long start, long bEnd, long seed) {
+  private static long hash64(long start, long bEnd, long seed) {
     long len = bEnd - start;
     long h64;
     long p = start;
@@ -126,8 +130,13 @@ public final class XXHash {
   }
 
   public static int hash32(int start, int end, DrillBuf buffer){
+    if(BOUNDS_CHECKING_ENABLED){
+      buffer.checkBytes(start, end);
+    }
+
     long s = buffer.memoryAddress() + start;
     long e = buffer.memoryAddress() + end;
+
     return hash32(s, e, 0);
   }
 
@@ -158,7 +167,7 @@ public final class XXHash {
     return (int) applyFinalHashComputation(h64);
   }
 
-  public static int hash32(long start, long bEnd, long seed){
+  private static int hash32(long start, long bEnd, long seed){
     return (int) hash64(start, bEnd, seed);
   }
 

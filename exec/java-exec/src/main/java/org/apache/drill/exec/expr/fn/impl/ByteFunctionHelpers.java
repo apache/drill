@@ -18,8 +18,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.expr.fn.impl;
 
+import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
+import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.drill.exec.util.DecimalUtility;
 
 import com.google.common.primitives.UnsignedLongs;
@@ -27,18 +29,28 @@ import com.google.common.primitives.UnsignedLongs;
 public class ByteFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteFunctionHelpers.class);
 
+  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
+
   /**
    * Helper function to check for equality of bytes in two DrillBuffers
    *
-   * @param laddr start address of the DrillBuf
+   * @param left Left DrillBuf for comparison
    * @param lStart start offset in the buffer
    * @param lEnd end offset in the buffer
-   * @param raddr start address of the DrillBuf
+   * @param right Right DrillBuf for comparison
    * @param rStart start offset in the buffer
    * @param rEnd end offset in the buffer
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
-  public static final int equal(final long laddr, int lStart, int lEnd, final long raddr, int rStart,
+  public static final int equal(final DrillBuf left, int lStart, int lEnd, final DrillBuf right, int rStart, int rEnd){
+    if(BOUNDS_CHECKING_ENABLED){
+      left.checkBytes(lStart, lEnd);
+      right.checkBytes(rStart, rEnd);
+    }
+    return memEqual(left.memoryAddress(), lStart, lEnd, right.memoryAddress(), rStart, rEnd);
+  }
+
+  private static final int memEqual(final long laddr, int lStart, int lEnd, final long raddr, int rStart,
       final int rEnd) {
 
     int n = lEnd - lStart;
@@ -72,17 +84,27 @@ public class ByteFunctionHelpers {
   }
 
   /**
-   * Helper function to compare a set of bytes in two DrillBuffers
+   * Helper function to compare a set of bytes in two DrillBuffers.
    *
-   * @param laddr start address of the DrillBuf
+   * Function will check data before completing in the case that
+   *
+   * @param left Left DrillBuf to compare
    * @param lStart start offset in the buffer
    * @param lEnd end offset in the buffer
-   * @param raddr start address of the DrillBuf
+   * @param right Right DrillBuf to compare
    * @param rStart start offset in the buffer
    * @param rEnd end offset in the buffer
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
-  public static final int compare(final long laddr, int lStart, int lEnd, final long raddr, int rStart, final int rEnd) {
+  public static final int compare(final DrillBuf left, int lStart, int lEnd, final DrillBuf right, int rStart, int rEnd){
+    if(BOUNDS_CHECKING_ENABLED){
+      left.checkBytes(lStart, lEnd);
+      right.checkBytes(rStart, rEnd);
+    }
+    return memcmp(left.memoryAddress(), lStart, lEnd, right.memoryAddress(), rStart, rEnd);
+  }
+
+  private static final int memcmp(final long laddr, int lStart, int lEnd, final long raddr, int rStart, final int rEnd) {
     int lLen = lEnd - lStart;
     int rLen = rEnd - rStart;
     int n = Math.min(rLen, lLen);
@@ -121,7 +143,7 @@ public class ByteFunctionHelpers {
   /**
    * Helper function to compare a set of bytes in DrillBuf to a ByteArray.
    *
-   * @param laddr start address of the DrillBuf
+   * @param left Left DrillBuf for comparison purposes
    * @param lStart start offset in the buffer
    * @param lEnd end offset in the buffer
    * @param right second input to be compared
@@ -129,7 +151,15 @@ public class ByteFunctionHelpers {
    * @param rEnd end offset in the byte array
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
-  public static final int compare(final long laddr, int lStart, int lEnd, final byte[] right, int rStart, final int rEnd) {
+  public static final int compare(final DrillBuf left, int lStart, int lEnd, final byte[] right, int rStart, final int rEnd) {
+    if(BOUNDS_CHECKING_ENABLED){
+      left.checkBytes(lStart, lEnd);
+    }
+    return memcmp(left.memoryAddress(), lStart, lEnd, right, rStart, rEnd);
+  }
+
+
+  private static final int memcmp(final long laddr, int lStart, int lEnd, final byte[] right, int rStart, final int rEnd) {
     int lLen = lEnd - lStart;
     int rLen = rEnd - rStart;
     int n = Math.min(rLen, lLen);

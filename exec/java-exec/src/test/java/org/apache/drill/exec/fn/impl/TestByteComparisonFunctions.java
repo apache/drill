@@ -61,69 +61,69 @@ public class TestByteComparisonFunctions extends ExecTest{
   public void testAfter(){
     VarCharHolder left = hello;
     VarCharHolder right = goodbye;
-    assertTrue(ByteFunctionHelpers.compare(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == 1);
+    assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 1);
   }
 
   @Test
   public void testBefore(){
     VarCharHolder left = goodbye;
     VarCharHolder right = hello;
-    assertTrue(ByteFunctionHelpers.compare(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == -1);
+    assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == -1);
   }
 
   @Test
   public void testEqualCompare(){
     VarCharHolder left = hello;
     VarCharHolder right = hello;
-    assertTrue(ByteFunctionHelpers.compare(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == 0);
+    assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 0);
   }
 
   @Test
   public void testEqual(){
     VarCharHolder left = hello;
     VarCharHolder right = hello;
-    assertTrue(ByteFunctionHelpers.equal(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == 1);
+    assertTrue(ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 1);
   }
 
   @Test
   public void testNotEqual(){
     VarCharHolder left = hello;
     VarCharHolder right = goodbye;
-    assertTrue(ByteFunctionHelpers.equal(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == 0);
+    assertTrue(ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 0);
   }
 
   @Test
   public void testAfterLong(){
     VarCharHolder left = helloLong;
     VarCharHolder right = goodbyeLong;
-    assertTrue(ByteFunctionHelpers.compare(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == 1);
+    assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 1);
   }
 
   @Test
   public void testBeforeLong(){
     VarCharHolder left = goodbyeLong;
     VarCharHolder right = helloLong;
-    assertTrue(ByteFunctionHelpers.compare(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == -1);
+    assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == -1);
   }
 
   @Test
   public void testEqualCompareLong(){
     VarCharHolder left = helloLong;
     VarCharHolder right = helloLong;
-    assertTrue(ByteFunctionHelpers.compare(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == 0);
+    assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 0);
   }
 
   @Test
   public void testEqualLong(){
     VarCharHolder left = helloLong;
     VarCharHolder right = helloLong;
-    assertTrue(ByteFunctionHelpers.equal(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == 1);
+    assertTrue(ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 1);
   }
 
   @Test
   public void testNotEqualLong(){
     VarCharHolder left = helloLong;
     VarCharHolder right = goodbyeLong;
-    assertTrue(ByteFunctionHelpers.equal(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end) == 0);
+    assertTrue(ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 0);
   }
 }
