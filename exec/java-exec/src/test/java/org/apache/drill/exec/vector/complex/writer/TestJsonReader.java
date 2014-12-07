@@ -26,19 +26,14 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.RepeatedBigIntVector;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -47,17 +42,23 @@ import com.google.common.io.Files;
 public class TestJsonReader extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
 
-  private static BufferAllocator allocator;
   private static final boolean VERBOSE_DEBUG = false;
 
-  @BeforeClass
-  public static void setupAllocator() {
-    allocator = new TopLevelAllocator();
+
+  @Test
+  public void schemaChange() throws Exception {
+    test("select b from dfs.`${WORKING_PATH}/src/test/resources/vector/complex/writer/schemaChange/`");
   }
 
-  @AfterClass
-  public static void destroyAllocator() {
-    allocator.close();
+  @Test
+  @Ignore("DRILL-1824")
+  public void schemaChangeValidate() throws Exception {
+    testBuilder() //
+      .sqlQuery("select b from dfs.`${WORKING_PATH}/src/test/resources/vector/complex/writer/schemaChange/`") //
+      .unOrdered() //
+      .jsonBaselineFile("/vector/complex/writer/expected.json") //
+      .build()
+      .run();
   }
 
   public void runTestsOnFile(String filename, UserBitShared.QueryType queryType, String[] queries, long[] rowCounts) throws Exception {

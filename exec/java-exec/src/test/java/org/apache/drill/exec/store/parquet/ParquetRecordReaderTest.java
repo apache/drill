@@ -332,11 +332,6 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     }
 
     @Override
-    public void addFields(List<ValueVector> vv) {
-      return;
-    }
-
-    @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
       return null;
     }

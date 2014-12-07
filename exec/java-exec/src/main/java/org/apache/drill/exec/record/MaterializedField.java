@@ -268,7 +268,6 @@ public class MaterializedField {
       final int prime = 31;
       int result = 1;
       result = prime * result + ((path == null) ? 0 : path.hashCode());
-      result = prime * result + ((type == null) ? 0 : type.hashCode());
       return result;
     }
 
@@ -291,13 +290,7 @@ public class MaterializedField {
       } else if (!path.equals(other.path)) {
         return false;
       }
-      if (type == null) {
-        if (other.type != null) {
-          return false;
-        }
-      } else if (!type.equals(other.type)) {
-        return false;
-      }
+
       return true;
     }
 

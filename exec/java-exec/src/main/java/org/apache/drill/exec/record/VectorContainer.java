@@ -106,15 +106,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
 
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
     MaterializedField field = MaterializedField.create(name, type);
-    ValueVector v = TypeHelper.getNewVector(field, this.oContext.getAllocator());
-
-    add(v);
-
-    if (clazz.isAssignableFrom(v.getClass())) {
-      return (T) v;
-    } else {
-      throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), v.getClass().getSimpleName()));
-    }
+    return addOrGet(field);
   }
 
   /**
