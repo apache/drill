@@ -37,6 +37,8 @@ import org.apache.drill.exec.util.AssertionUtil;
 public final class DrillBuf extends AbstractByteBuf {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBuf.class);
 
+  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
+
   private final ByteBuf b;
   private final long addr;
   private final int offset;
@@ -45,7 +47,7 @@ public final class DrillBuf extends AbstractByteBuf {
   private volatile BufferAllocator allocator;
   private volatile Accountor acct;
   private volatile int length;
-  private final boolean emptyBuffer;
+
   private OperatorContext context;
   private FragmentContext fContext;
 
@@ -59,7 +61,6 @@ public final class DrillBuf extends AbstractByteBuf {
     this.offset = 0;
     this.rootBuffer = true;
     this.allocator = allocator;
-    this.emptyBuffer = false;
   }
 
   private DrillBuf(ByteBuffer bb) {
@@ -69,7 +70,6 @@ public final class DrillBuf extends AbstractByteBuf {
     this.addr = bytebuf.memoryAddress();
     this.allocator = FakeAllocator.FAKE_ALLOCATOR;
     this.b = bytebuf;
-    this.emptyBuffer = false;
     this.length = bytebuf.capacity();
     this.offset = 0;
     this.rootBuffer = true;
@@ -85,7 +85,6 @@ public final class DrillBuf extends AbstractByteBuf {
     this.addr = 0;
     this.rootBuffer = true;
     this.offset = 0;
-    this.emptyBuffer = true;
   }
 
   private DrillBuf(DrillBuf buffer, int index, int length) {
@@ -93,7 +92,7 @@ public final class DrillBuf extends AbstractByteBuf {
     if (index < 0 || index > buffer.capacity() - length) {
       throw new IndexOutOfBoundsException(buffer.toString() + ".slice(" + index + ", " + length + ')');
     }
-    this.emptyBuffer = false;
+
     this.length = length;
     writerIndex(length);
 
@@ -159,20 +158,35 @@ public final class DrillBuf extends AbstractByteBuf {
     }
   }
 
+  /**
+   * Allows a function to determine whether not reading a particular string of bytes is valid.
+   *
+   * Will throw an exception if the memory is not readable for some reason.  Only doesn't something in the
+   * case that AssertionUtil.BOUNDS_CHECKING_ENABLED is true.
+   *
+   * @param start The starting position of the bytes to be read.
+   * @param end The exclusive endpoint of the bytes to be read.
+   */
+  public void checkBytes(int start, int end){
+    if (BOUNDS_CHECKING_ENABLED) {
+      checkIndexD(start, end - start);
+    }
+  }
+
   private void chk(int index, int width) {
-    if (AssertionUtil.isAssertionsEnabled()) {
+    if (BOUNDS_CHECKING_ENABLED) {
       checkIndexD(index, width);
     }
   }
 
   private void chk(int index) {
-    if (AssertionUtil.isAssertionsEnabled()) {
+    if (BOUNDS_CHECKING_ENABLED) {
       checkIndexD(index);
     }
   }
 
   private void ensure(int width) {
-    if (AssertionUtil.isAssertionsEnabled()) {
+    if (BOUNDS_CHECKING_ENABLED) {
       ensureWritable(width);
     }
   }
@@ -551,6 +565,7 @@ public final class DrillBuf extends AbstractByteBuf {
 
   @Override
   public ByteBuf setByte(int index, int value) {
+    chk(index, 1);
     PlatformDependent.putByte(addr(index), (byte) value);
     return this;
   }
@@ -655,6 +670,7 @@ public final class DrillBuf extends AbstractByteBuf {
 
   @Override
   public byte getByte(int index) {
+    chk(index, 1);
     return PlatformDependent.getByte(addr(index));
   }
 

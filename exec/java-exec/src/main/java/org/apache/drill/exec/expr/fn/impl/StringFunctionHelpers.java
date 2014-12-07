@@ -21,12 +21,15 @@ package org.apache.drill.exec.expr.fn.impl;
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
+import org.apache.drill.exec.util.AssertionUtil;
 import org.joda.time.chrono.ISOChronology;
 
 import com.google.common.base.Charsets;
 
 public class StringFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctionHelpers.class);
+
+  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
 
   static final int RADIX = 10;
   static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
@@ -193,7 +196,15 @@ public class StringFunctionHelpers {
 
   private static final ISOChronology CHRONOLOGY = org.joda.time.chrono.ISOChronology.getInstanceUTC();
 
-  public static long getDate(long memoryAddress, int start, int end){
+  public static long getDate(DrillBuf buf, int start, int end){
+    if(BOUNDS_CHECKING_ENABLED){
+      buf.checkBytes(start, end);
+    }
+    return memGetDate(buf.memoryAddress(), start, end);
+  }
+
+
+  private static long memGetDate(long memoryAddress, int start, int end){
     long index = memoryAddress + start;
     final long endIndex = memoryAddress + end;
     int digit = 0;

@@ -103,7 +103,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       swap = true;
     } else {
       // Compare the bytes
-      cmp = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(in.buffer.memoryAddress(), in.start, in.end, tmp.getBytes(), 0, tmp.getLength());
+      cmp = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(in.buffer, in.start, in.end, tmp.getBytes(), 0, tmp.getLength());
 
 
       <#if aggrtype.className == "Min">

@@ -63,7 +63,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       </#if>  
       
       <#if type.to == "Date">
-      out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getDate(in.buffer.memoryAddress(), in.start, in.end);
+      out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getDate(in.buffer, in.start, in.end);
 
       <#elseif type.to == "TimeStamp">
       org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getDateTimeFormatter();
