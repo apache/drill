@@ -337,7 +337,7 @@ public class TestFrameworkTest extends BaseTestQuery{
           .expectsEmptyResultSet()
           .build().run();
     } catch (AssertionError ex) {
-      assertEquals("Different number of records returned expected:<4> but was:<0>", ex.getMessage());
+      assertEquals("Different number of records returned expected:<0> but was:<4>", ex.getMessage());
       // this indicates successful completion of the test
       return;
     }
