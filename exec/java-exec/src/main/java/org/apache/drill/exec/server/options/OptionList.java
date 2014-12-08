@@ -20,4 +20,8 @@ package org.apache.drill.exec.server.options;
 import java.util.ArrayList;
 
 public class OptionList extends ArrayList<OptionValue>{
+
+  public void merge(OptionList list){
+    this.addAll(list);
+  }
 }

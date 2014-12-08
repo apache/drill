@@ -71,7 +71,6 @@ public class SystemTablePlugin extends AbstractStoragePlugin{
     case DRILLBITS:
       return new DrillbitIterator(context);
     case OPTION:
-
       return Iterables.concat((Iterable<Object>)(Object) new DrillConfigIterator(context.getConfig()), //
           context.getOptions()).iterator();
     default:

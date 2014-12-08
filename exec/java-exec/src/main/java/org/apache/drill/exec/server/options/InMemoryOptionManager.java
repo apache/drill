@@ -45,6 +45,11 @@ public abstract class InMemoryOptionManager extends FallbackOptionManager {
 
   }
 
+  @Override
+  Iterable<OptionValue> optionIterable() {
+    return options.values();
+  }
+
   abstract boolean supportsOption(OptionValue value);
 
 }

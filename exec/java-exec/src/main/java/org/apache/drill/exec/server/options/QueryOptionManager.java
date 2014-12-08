@@ -28,6 +28,15 @@ public class QueryOptionManager extends InMemoryOptionManager {
     super(sessionOptions, new HashMap<String, OptionValue>());
   }
 
+
+  @Override
+  public OptionList getOptionList() {
+    OptionList list = super.getOptionList();
+    list.merge(fallback.getOptionList());
+    return list;
+  }
+
+
   @Override
   boolean supportsOption(OptionValue value) {
     return value.type == OptionType.QUERY;
