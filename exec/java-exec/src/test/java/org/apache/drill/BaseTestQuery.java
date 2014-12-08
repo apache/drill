@@ -137,6 +137,10 @@ public class BaseTestQuery extends ExecTest{
     return allocator;
   }
 
+  public TestBuilder newTest() {
+    return testBuilder();
+  }
+
   public TestBuilder testBuilder() {
     return new TestBuilder(allocator);
   }
@@ -205,6 +209,10 @@ public class BaseTestQuery extends ExecTest{
         queryResultBatch.release();
       }
     }
+  }
+
+  public static void test(String query, Object... args) throws Exception {
+    test(String.format(query, args));
   }
 
   public static void test(String query) throws Exception{

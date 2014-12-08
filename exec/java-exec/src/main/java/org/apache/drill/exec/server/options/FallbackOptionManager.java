@@ -29,8 +29,7 @@ import com.google.common.collect.Maps;
 public abstract class FallbackOptionManager implements OptionManager{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
 
-  private Map<String, OptionValue> options = Maps.newConcurrentMap();
-  private OptionManager fallback;
+  protected OptionManager fallback;
 
   public FallbackOptionManager(OptionManager fallback) {
     super();
@@ -39,7 +38,7 @@ public abstract class FallbackOptionManager implements OptionManager{
 
   @Override
   public Iterator<OptionValue> iterator() {
-    return Iterables.concat(fallback, options.values()).iterator();
+    return Iterables.concat(fallback, optionIterable()).iterator();
   }
 
   @Override
@@ -52,6 +51,7 @@ public abstract class FallbackOptionManager implements OptionManager{
     }
   }
 
+  abstract Iterable<OptionValue> optionIterable();
   abstract OptionValue getLocalOption(String name);
   abstract boolean setLocalOption(OptionValue value);
 
@@ -71,6 +71,8 @@ public abstract class FallbackOptionManager implements OptionManager{
   private void setValidatedOption(OptionValue value) {
     if (!setLocalOption(value)) {
       fallback.setOption(value);
+    }else{
+      setLocalOption(value);
     }
   }
 
@@ -88,7 +90,7 @@ public abstract class FallbackOptionManager implements OptionManager{
   @Override
   public OptionList getOptionList() {
     OptionList list = new OptionList();
-    for (OptionValue o : options.values()) {
+    for (OptionValue o : optionIterable()) {
       list.add(o);
     }
     return list;

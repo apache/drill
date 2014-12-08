@@ -119,10 +119,18 @@ public class TestBuilder {
         getValidationQueryType(), ordered, approximateEquality, highPerformanceComparison, baselineRecords);
   }
 
+  public void go() throws Exception {
+    build().run();
+  }
+
   public TestBuilder sqlQuery(String query) {
     this.query = query.replaceAll(Pattern.quote("${WORKING_PATH}"), TestTools.getWorkingPath());
     this.queryType = UserBitShared.QueryType.SQL;
     return this;
+  }
+
+  public TestBuilder sqlQuery(String query, Object... replacements) {
+    return sqlQuery(String.format(query, replacements));
   }
 
   public TestBuilder sqlQueryFromFile(String queryFile) throws IOException {
