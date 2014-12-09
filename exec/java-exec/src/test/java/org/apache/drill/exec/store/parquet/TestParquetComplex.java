@@ -25,6 +25,39 @@ public class TestParquetComplex extends BaseTestQuery {
   private static final String DATAFILE = "cp.`store/parquet/complex/complex.parquet`";
 
   @Test
+  public void selectMap() throws Exception {
+    String query = "select marketing_info from cp.`store/parquet/complex/complex.parquet`";
+    testBuilder()
+            .sqlQuery(query)
+            .ordered()
+            .jsonBaselineFile("store/parquet/complex/baseline5.json")
+            .build()
+            .run();
+  }
+
+  @Test
+  public void selectMapAndElements() throws Exception {
+    String query = "select marketing_info, t.marketing_info.camp_id as camp_id, t.marketing_info.keywords[2] as keyword2 from cp.`store/parquet/complex/complex.parquet` t";
+    testBuilder()
+            .sqlQuery(query)
+            .ordered()
+            .jsonBaselineFile("store/parquet/complex/baseline6.json")
+            .build()
+            .run();
+  }
+
+  @Test
+  public void selectMultiElements() throws Exception {
+    String query = "select t.marketing_info.camp_id as camp_id, t.marketing_info.keywords as keywords from cp.`store/parquet/complex/complex.parquet` t";
+    testBuilder()
+            .sqlQuery(query)
+            .ordered()
+            .jsonBaselineFile("store/parquet/complex/baseline7.json")
+            .build()
+            .run();
+  }
+
+  @Test
   public void testStar() throws Exception {
     testBuilder()
             .sqlQuery("select * from cp.`store/parquet/complex/complex.parquet`")

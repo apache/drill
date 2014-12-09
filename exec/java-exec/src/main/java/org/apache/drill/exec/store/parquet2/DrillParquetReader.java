@@ -130,54 +130,56 @@ public class DrillParquetReader extends AbstractRecordReader {
     // parquet type.union() seems to lose ConvertedType info when merging two columns that are the same type. This can
     // happen when selecting two elements from an array. So to work around this, we use set of SchemaPath to avoid duplicates
     // and then merge the types at the end
-    Set<SchemaPath> schemaPaths = Sets.newLinkedHashSet(); // Use LinkedHashSet to preserver ordering, otherwise DrillParquetGroupConverter breaks
+    Set<SchemaPath> selectedSchemaPaths = Sets.newLinkedHashSet();
 
+    // get a list of modified columns which have the array elements removed from the schema path since parquet schema doesn't include array elements
+    List<SchemaPath> modifiedColumns = Lists.newLinkedList();
     for (SchemaPath path : columns) {
-      boolean colNotFound=true;
-      schemaColumnLoop: for (ColumnDescriptor colDesc: schemaColumns) {
-        String[] schemaColDesc = Arrays.copyOf(colDesc.getPath(), colDesc.getPath().length);
-        SchemaPath schemaPath = SchemaPath.getCompoundPath(schemaColDesc);
-        PathSegment schemaSeg = schemaPath.getRootSegment();
-        PathSegment colSeg = path.getRootSegment();
-        List<String> segments = Lists.newArrayList();
-        while(schemaSeg != null || colSeg != null){
-          // if one is null but not the other, this is not a match
-          if (schemaSeg == null || colSeg == null) {
-            continue schemaColumnLoop;
-          }
-          if (colSeg.isNamed()) {
-            // DRILL-1739 - Use case insensitive name comparison
-            if(schemaSeg.getNameSegment().getPath().equalsIgnoreCase(colSeg.getNameSegment().getPath())) {
-              segments.add(schemaSeg.getNameSegment().getPath());
-            }else{
-              continue schemaColumnLoop;
-            }
-          }else{
-            colSeg=colSeg.getChild();
-            continue;
-          }
-          while ((colSeg = colSeg.getChild()) != null && colSeg.isArray()) {
-            colSeg = colSeg.getChild();
-            if (colSeg == null) {
-              break;
-            }
-          }
-          schemaSeg = schemaSeg.getChild();
+      List<String> segments = Lists.newArrayList();
+      PathSegment seg = path.getRootSegment();
+      do {
+        if (seg.isNamed()) {
+          segments.add(seg.getNameSegment().getPath());
         }
-        // Field exists in schema
-        if (!segments.isEmpty()) {
-          String[] pathSegments = new String[segments.size()];
-          segments.toArray(pathSegments);
-          colNotFound=false;
-          schemaPaths.add(schemaPath);
-          break;
+      } while ((seg = seg.getChild()) != null);
+      String[] pathSegments = new String[segments.size()];
+      segments.toArray(pathSegments);
+      SchemaPath modifiedSchemaPath = SchemaPath.getCompoundPath(pathSegments);
+      modifiedColumns.add(modifiedSchemaPath);
+    }
+
+    // convert the columns in the parquet schema to a list of SchemaPath columns so that they can be compared in case insensitive manner
+    // to the projection columns
+    List<SchemaPath> schemaPaths = Lists.newLinkedList();
+    for (ColumnDescriptor columnDescriptor : schemaColumns) {
+      String[] schemaColDesc = Arrays.copyOf(columnDescriptor.getPath(), columnDescriptor.getPath().length);
+      SchemaPath schemaPath = SchemaPath.getCompoundPath(schemaColDesc);
+      schemaPaths.add(schemaPath);
+    }
+
+    // loop through columns in parquet schema and add columns that are included in project list
+    outer: for (SchemaPath schemaPath : schemaPaths) {
+      for (SchemaPath columnPath : columns) {
+        if (columnPath.contains(schemaPath)) {
+          selectedSchemaPaths.add(schemaPath);
+          continue outer;
         }
-      }
-      if(colNotFound){
-        columnsNotFound.add(path);
       }
     }
-    for (SchemaPath schemaPath : schemaPaths) {
+
+    // loop through projection columns and add any columns that are missing from parquet schema to columnsNotFound list
+    outer: for (SchemaPath columnPath : modifiedColumns) {
+      for (SchemaPath schemaPath : schemaPaths) {
+        if (schemaPath.contains(columnPath)) {
+          continue outer;
+        }
+      }
+      columnsNotFound.add(columnPath);
+    }
+
+
+    // convert SchemaPaths from selectedSchemaPaths and convert to parquet type, and merge into projection schema
+    for (SchemaPath schemaPath : selectedSchemaPaths) {
       List<String> segments = Lists.newArrayList();
       PathSegment seg = schemaPath.getRootSegment();
       do {
