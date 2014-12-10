@@ -49,9 +49,12 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.eigenbase.rel.JoinRelType;
 
 import com.sun.codemodel.JExpr;
@@ -176,8 +179,12 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     try {
       rightSchema = right.getSchema();
       VectorContainer c = new VectorContainer(oContext);
-      for (MaterializedField field : rightSchema) {
-        c.addOrGet(field);
+      for (VectorWrapper w : right) {
+        ValueVector v = c.addOrGet(w.getField());
+        if (v instanceof AbstractContainerVector) {
+          w.getValueVector().makeTransferPair(v);
+          v.clear();
+        }
       }
       c.buildSchema(SelectionVectorMode.NONE);
       c.setRecordCount(0);
@@ -451,7 +458,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                   outputType = inputType;
                 }
 
-                container.addOrGet(MaterializedField.create(vv.getField().getPath(), outputType));
+                ValueVector v = container.addOrGet(MaterializedField.create(vv.getField().getPath(), outputType));
+                if (v instanceof AbstractContainerVector) {
+                  vv.getValueVector().makeTransferPair(v);
+                  v.clear();
+                }
 
                 JVar inVV = g.declareVectorValueSetupAndMember("probeBatch", new TypedFieldId(inputType, false, fieldId));
                 JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, outputFieldId));

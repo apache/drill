@@ -25,6 +25,64 @@ public class TestParquetComplex extends BaseTestQuery {
   private static final String DATAFILE = "cp.`store/parquet/complex/complex.parquet`";
 
   @Test
+  public void sort() throws Exception {
+    String query = String.format("select * from %s order by amount", DATAFILE);
+    testBuilder()
+            .sqlQuery(query)
+            .ordered()
+            .jsonBaselineFile("store/parquet/complex/baseline_sorted.json")
+            .build()
+            .run();
+  }
+
+  @Test
+  public void topN() throws Exception {
+    String query = String.format("select * from %s order by amount limit 5", DATAFILE);
+    testBuilder()
+            .sqlQuery(query)
+            .ordered()
+            .jsonBaselineFile("store/parquet/complex/baseline_sorted.json")
+            .build()
+            .run();
+  }
+
+  @Test
+  public void hashJoin() throws Exception{
+    String query = String.format("select t1.amount, t1.`date`, t1.marketing_info, t1.`time`, t1.trans_id, t1.trans_info, t1.user_info " +
+            "from %s t1, %s t2 where t1.amount = t2.amount", DATAFILE, DATAFILE);
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .jsonBaselineFile("store/parquet/complex/baseline.json")
+            .build()
+            .run();
+  }
+
+  @Test
+  public void mergeJoin() throws Exception{
+    test("alter session set `planner.enable_hashjoin` = false");
+    String query = String.format("select t1.amount, t1.`date`, t1.marketing_info, t1.`time`, t1.trans_id, t1.trans_info, t1.user_info " +
+            "from %s t1, %s t2 where t1.amount = t2.amount", DATAFILE, DATAFILE);
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .jsonBaselineFile("store/parquet/complex/baseline.json")
+            .build()
+            .run();
+  }
+
+  @Test
+  public void selectAllColumns() throws Exception {
+    String query = String.format("select amount, `date`, marketing_info, `time`, trans_id, trans_info, user_info from %s", DATAFILE);
+    testBuilder()
+            .sqlQuery(query)
+            .ordered()
+            .jsonBaselineFile("store/parquet/complex/baseline.json")
+            .build()
+            .run();
+  }
+
+  @Test
   public void selectMap() throws Exception {
     String query = "select marketing_info from cp.`store/parquet/complex/complex.parquet`";
     testBuilder()
