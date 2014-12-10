@@ -4,7 +4,7 @@ title: "Apache Drill Graduates to a Top-Level Project"
 code: drill-top-level-project
 excerpt: Drill has graduated to a Top-Level Project at Apache. This marks a significant accomplishment for the Drill community, which now includes dozens of developers working at a variety of companies.
 date: 2014-12-02 08:00
-authors: ["Tomer Shiran, Apache Drill Founder and PMC member"]
+authors: ["Tomer Shiran, Apache Drill Founder, PMC Member and Committer"]
 ---
 The Apache Software Foundation has just announced that it has promoted Drill to a top-level project at Apache, similar to other well-known projects like Apache Hadoop and httpd (the world's most popular Web server). This marks a significant accomplishment for the Drill community, and I wanted to personally thank everyone who has contributed to the project. It takes many people, and countless hours, to develop something as complex and innovative as Drill.
 
