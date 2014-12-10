@@ -157,26 +157,19 @@ public class DrillParquetReader extends AbstractRecordReader {
       schemaPaths.add(schemaPath);
     }
 
-    // loop through columns in parquet schema and add columns that are included in project list
-    outer: for (SchemaPath schemaPath : schemaPaths) {
-      for (SchemaPath columnPath : columns) {
-        if (columnPath.contains(schemaPath)) {
-          selectedSchemaPaths.add(schemaPath);
-          continue outer;
-        }
-      }
-    }
-
     // loop through projection columns and add any columns that are missing from parquet schema to columnsNotFound list
     outer: for (SchemaPath columnPath : modifiedColumns) {
+      boolean notFound = true;
       for (SchemaPath schemaPath : schemaPaths) {
         if (schemaPath.contains(columnPath)) {
-          continue outer;
+          selectedSchemaPaths.add(schemaPath);
+          notFound = false;
         }
       }
-      columnsNotFound.add(columnPath);
+      if (notFound) {
+        columnsNotFound.add(columnPath);
+      }
     }
-
 
     // convert SchemaPaths from selectedSchemaPaths and convert to parquet type, and merge into projection schema
     for (SchemaPath schemaPath : selectedSchemaPaths) {

@@ -50,6 +50,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
@@ -58,6 +59,7 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 
 import com.google.common.base.Stopwatch;
@@ -132,11 +134,19 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       case OK:
       case OK_NEW_SCHEMA:
         for (VectorWrapper w : incoming) {
-          c.addOrGet(w.getField());
+          ValueVector v = c.addOrGet(w.getField());
+          if (v instanceof AbstractContainerVector) {
+            w.getValueVector().makeTransferPair(v);
+            v.clear();
+          }
         }
         c = VectorContainer.canonicalize(c);
         for (VectorWrapper w : c) {
           ValueVector v = container.addOrGet(w.getField());
+          if (v instanceof AbstractContainerVector) {
+            w.getValueVector().makeTransferPair(v);
+            v.clear();
+          }
           v.allocateNew();
         }
         container.buildSchema(SelectionVectorMode.NONE);

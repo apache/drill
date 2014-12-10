@@ -54,6 +54,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
+import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.eigenbase.rel.JoinRelType;
 
 import com.google.common.base.Preconditions;
@@ -440,7 +441,11 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
             outputType = inputType;
           }
           MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
-          container.addOrGet(newField);
+          ValueVector v = container.addOrGet(newField);
+          if (v instanceof AbstractContainerVector) {
+            w.getValueVector().makeTransferPair(v);
+            v.clear();
+          }
         }
       }
 
@@ -454,7 +459,11 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
             outputType = inputType;
           }
           MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
-          container.addOrGet(newField);
+          ValueVector v = container.addOrGet(newField);
+          if (v instanceof AbstractContainerVector) {
+            w.getValueVector().makeTransferPair(v);
+            v.clear();
+          }
         }
       }
     }
