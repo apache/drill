@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
@@ -33,7 +34,7 @@ import com.google.common.collect.Lists;
  */
 public interface GroupScan extends Scan, HasAffinity{
 
-  public static final List<SchemaPath> ALL_COLUMNS = Lists.<SchemaPath>newArrayList(SchemaPath.getSimplePath("*"));
+  public static final List<SchemaPath> ALL_COLUMNS = ImmutableList.of(SchemaPath.getSimplePath("*"));
   public static final long NO_COLUMN_STATS = -1;
 
   public abstract void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
