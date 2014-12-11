@@ -29,6 +29,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -68,20 +69,24 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     List<Integer> selectedPartitionColumns = Lists.newArrayList();
     boolean selectAllColumns = AbstractRecordReader.isStarQuery(columns);
 
+    List<SchemaPath> newColumns = columns;
     if (!selectAllColumns) {
-      List<SchemaPath> newColums = Lists.newArrayList();
+      newColumns = Lists.newArrayList();
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {
         Matcher m = pattern.matcher(column.getAsUnescapedPath());
         if (m.matches()) {
           selectedPartitionColumns.add(Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
         } else {
-          newColums.add(column);
+          newColumns.add(column);
         }
+      }
+      if (newColumns.isEmpty()) {
+        newColumns = GroupScan.ALL_COLUMNS;
       }
       final int id = rowGroupScan.getOperatorId();
       // Create the new row group scan with the new columns
-      rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getStorageEngine(), rowGroupScan.getRowGroupReadEntries(), newColums, rowGroupScan.getSelectionRoot());
+      rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getStorageEngine(), rowGroupScan.getRowGroupReadEntries(), newColumns, rowGroupScan.getSelectionRoot());
       rowGroupScan.setOperatorId(id);
     }
 
@@ -118,7 +123,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           );
         } else {
           ParquetMetadata footer = footers.get(e.getPath());
-          readers.add(new DrillParquetReader(context, footer, e, columns, conf));
+          readers.add(new DrillParquetReader(context, footer, e, newColumns, conf));
         }
         if (rowGroupScan.getSelectionRoot() != null) {
           String[] r = rowGroupScan.getSelectionRoot().split("/");
