@@ -119,17 +119,34 @@ public class MapVector extends AbstractContainerVector {
 
   @Override
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
-    ValueVector v = vectors.get(name);
-    if (v == null) {
-      v = TypeHelper.getNewVector(field.getPath(), name, allocator, type);
-      Preconditions.checkNotNull(v, String.format("Failure to create vector of type %s.", type));
-      put(name, v);
-      if (callBack != null) {
-        callBack.doWork();
+    while (true) {
+      ValueVector vector = vectors.get(name);
+      if (vector == null) {
+        vector = TypeHelper.getNewVector(field.getPath(), name, allocator, type);
+        Preconditions.checkNotNull(vector, String.format("Failure to create vector of type %s.", type));
+        put(name, vector);
+        if (callBack != null) {
+          callBack.doWork();
+        }
+      }
+      if (clazz.isAssignableFrom(vector.getClass())) {
+        return (T)vector;
+      } else {
+        boolean allNulls = true;
+        for (int i=0; i<vector.getAccessor().getValueCount(); i++) {
+          if (!vector.getAccessor().isNull(i)) {
+            allNulls = false;
+            break;
+          }
+        }
+        if (allNulls) {
+          vector.clear();
+          vectors.remove(name);
+        } else {
+          throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), vector.getClass().getSimpleName()));
+        }
       }
     }
-    return typeify(v, clazz);
-
   }
 
   protected void put(String name, ValueVector vv) {
