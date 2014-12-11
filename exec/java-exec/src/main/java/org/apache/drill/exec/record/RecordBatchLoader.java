@@ -78,21 +78,25 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     int bufOffset = 0;
     for (SerializedField fmd : fields) {
       MaterializedField fieldDef = MaterializedField.create(fmd);
-      ValueVector v = oldFields.remove(fieldDef);
-      if(v == null) {
-        // if we arrive here, we didn't have a matching vector.
+      ValueVector vector = oldFields.remove(fieldDef);
+
+      if (vector == null) {
         schemaChanged = true;
-        v = TypeHelper.getNewVector(fieldDef, allocator);
+        vector = TypeHelper.getNewVector(fieldDef, allocator);
+      } else if (!vector.getField().getType().equals(fieldDef.getType())) {
+        // clear previous vector
+        vector.clear();
+        schemaChanged = true;
+        vector = TypeHelper.getNewVector(fieldDef, allocator);
       }
+
       if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
-//        v.clear();
-//        v.load(fmd, allocator.buffer(8));
-        AllocationHelper.allocate(v, 0, 0, 0);
+        AllocationHelper.allocate(vector, 0, 0, 0);
       } else {
-        v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
+        vector.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
       }
       bufOffset += fmd.getBufferLength();
-      newVectors.add(v);
+      newVectors.add(vector);
     }
 
     Preconditions.checkArgument(buf == null || bufOffset == buf.capacity());
