@@ -71,6 +71,8 @@ public class StatsCollector {
 
     @Override
     public Void visitReceivingExchange(Exchange exchange, Wrapper wrapper) throws RuntimeException {
+      Stats stats = wrapper.getStats();
+      stats.addMaxWidth(exchange.getMaxReceiveWidth()) ;
       // no traversal since it would cross fragment boundary.
       return null;
     }

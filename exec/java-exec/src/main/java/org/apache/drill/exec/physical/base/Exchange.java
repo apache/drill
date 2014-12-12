@@ -73,6 +73,14 @@ public interface Exchange extends PhysicalOperator {
   public abstract int getMaxSendWidth();
 
   /**
+   * The widest width this receiver can receive(max receive parallelization). Default is Integer.MAX_VALUE.
+   *
+   * @return
+   */
+  @JsonIgnore
+  public abstract int getMaxReceiveWidth();
+
+  /**
    * Return the feeding child of this operator node.
    *
    * @return

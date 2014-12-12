@@ -55,6 +55,11 @@ public class SingleMergeExchange extends AbstractExchange {
   }
 
   @Override
+  public int getMaxReceiveWidth() {
+    return 1;
+  }
+
+  @Override
   protected void setupSenders(List<CoordinationProtos.DrillbitEndpoint> senderLocations) {
     this.senderLocations = senderLocations;
   }
