@@ -41,6 +41,7 @@ import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableBitVector;
+import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileSystem;
@@ -96,7 +97,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   // For columns not found in the file, we need to return a schema element with the correct number of values
   // at that position in the schema. Currently this requires a vector be present. Here is a list of all of these vectors
   // that need only have their value count set at the end of each call to next(), as the values default to null.
-  private List<NullableBitVector> nullFilledVectors;
+  private List<NullableIntVector> nullFilledVectors;
   // Keeps track of the number of records returned in the case where only columns outside of the file were selected.
   // No actual data needs to be read out of the file, we only need to return batches until we have 'read' the number of
   // records specified in the row group metadata
@@ -311,9 +312,9 @@ public class ParquetRecordReader extends AbstractRecordReader {
           col = projectedColumns.get(i);
           assert col!=null;
           if ( ! columnsFound[i] && !col.equals(STAR_COLUMN)) {
-            nullFilledVectors.add((NullableBitVector)output.addField(MaterializedField.create(col,
-                    Types.optional(TypeProtos.MinorType.BIT)),
-                (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(TypeProtos.MinorType.BIT, DataMode.OPTIONAL)));
+            nullFilledVectors.add((NullableIntVector)output.addField(MaterializedField.create(col,
+                    Types.optional(TypeProtos.MinorType.INT)),
+                (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(TypeProtos.MinorType.INT, DataMode.OPTIONAL)));
 
           }
         }
