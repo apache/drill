@@ -4,10 +4,8 @@ title: "Running SQL Queries on Amazon S3"
 code: running-sql-queries-on-amazon-s3
 excerpt: Drill enables you to run SQL queries directly on data in S3. There's no need to ingest the data into a managed cluster or transform the data. This is a step-by-step tutorial on how to use Drill with S3.
 date: 2014-12-9 18:50:01
-authors: ["Nick Amato, MapR Technologies"]
+author: ["Nick Amato, MapR Technologies"]
 ---
-# Running SQL Queries on Amazon S3
-
 The functionality and sheer usefulness of Drill is growing fast.  If you're a user of some of the popular BI tools out there like Tableau or SAP Lumira, now is a good time to take a look at how Drill can make your life easier, especially if  you're faced with the task of quickly getting a handle on large sets of unstructured data.  With schema generated on the fly, you can save a lot of time and headaches by running SQL queries on the data where it rests without knowing much about columns or formats.  There's even more good news:  Drill also works with data stored in the cloud.  With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries.  In this post we'll look at how to configure Drill to access data stored in an S3 bucket.
 
 If you're more of a visual person, you can skip this article entirely and [go straight to a video](https://www.youtube.com/watch?v=w8gZ2nn_ZUQ) I put together that walks through an end-to-end example with Tableau.  This example is easily extended to other BI tools, as the steps are identical on the Drill side.

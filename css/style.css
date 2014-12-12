@@ -498,7 +498,7 @@ table.intro span {
 table.intro a {
 	color:#1a6bc7;
 	font-size:12px;	
-	 font-weight: bold;
+	font-weight: bold;
 }
 
 .home_txt { 
@@ -666,7 +666,7 @@ table.intro a {
 
 .int_text a, .int_title a {
 	color:#1a6bc7;
-	font-weight:normal;	
+	/* font-weight:normal;	*/
 }
 
 .int_text p, .int_text ul, .int_text ol { 
@@ -768,7 +768,7 @@ table.intro a:before, table.intro a:after {
     pointer-events: none;
 }
 
-table.intro a, .int_text a, .int_title a {
+table.intro a, .int_title a {
 	display:inline-block;
     overflow: hidden;
 	outline: medium none;
@@ -776,27 +776,6 @@ table.intro a, .int_text a, .int_title a {
     text-decoration: none;
     vertical-align: bottom;
     white-space: nowrap;
-}
-table.intro a:before, .int_text a:before, .int_title a:before {
-    background: none repeat scroll 0 0 rgba(149, 165, 166, 0.4);
-    content: "";
-    height: 100%;
-    left: 0;
-    position: absolute;
-    top: 0;
-    transform: scaleY(0.8) translateX(-100%);
-    transition: transform 0.3s ease 0s;
-    width: 100%;
-    z-index: -1;
-}
-table.intro a:hover:before, 
-table.intro a:focus:before,
-.int_text a:focus:before,
-.int_text a:hover:before, 
-.int_title a:focus:before,
-.int_title a:hover:before
- {
-    transform: scaleY(0.8) translateX(0px);
 }
 
 #header .dots, .aLeft, .aRight { display:none; }
