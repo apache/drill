@@ -57,6 +57,7 @@ enum RpcType {
   REQ_FRAGMENT_STATUS = 8,
   REQ_BIT_STATUS = 9,
   REQ_QUERY_STATUS = 10,
+  REQ_QUERY_CANCEL = 15,
   RESP_FRAGMENT_HANDLE = 11,
   RESP_FRAGMENT_STATUS = 12,
   RESP_BIT_STATUS = 13,
@@ -64,7 +65,7 @@ enum RpcType {
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = RESP_QUERY_STATUS;
+const RpcType RpcType_MAX = REQ_QUERY_CANCEL;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();

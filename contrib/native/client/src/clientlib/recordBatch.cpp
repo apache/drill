@@ -301,6 +301,11 @@ ret_t FieldBatch::load(){
     return RET_SUCCESS;
 }
 
+ret_t FieldBatch::loadNull(size_t nRecords){
+    this->m_pValueVector= new ValueVectorNull(this->m_pFieldData, nRecords);
+    return RET_SUCCESS;
+}
+    
 RecordBatch::RecordBatch(exec::shared::QueryResult* pResult, AllocatedBufferPtr r, ByteBuf_t b)
     :m_fieldDefs(new(std::vector<Drill::FieldMetadata*>)){
         m_pQueryResult=pResult;
@@ -349,6 +354,9 @@ ret_t RecordBatch::build(){
         // We may get an empty record batch. All the fields will be empty, except for metadata.
         if(len>0){
             pField->load(); // set up the value vectors
+        }else if(this->m_numRecords!=pFmd->getValueCount() && pFmd->getValueCount()==0){
+            // We may  get an *inconsistent* record batch where the value count in the fields do not match.
+            pField->loadNull(this->m_numRecords);
         }
         this->m_fields.push_back(pField);
         this->m_fieldDefs->push_back(pFmd);

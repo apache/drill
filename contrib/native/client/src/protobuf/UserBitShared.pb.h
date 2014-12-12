@@ -49,6 +49,7 @@ class NamePart;
 class SerializedField;
 class NodeStatus;
 class QueryResult;
+class QueryInfo;
 class QueryProfile;
 class MajorFragmentProfile;
 class MinorFragmentProfile;
@@ -1615,6 +1616,140 @@ class QueryResult : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static QueryResult* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class QueryInfo : public ::google::protobuf::Message {
+ public:
+  QueryInfo();
+  virtual ~QueryInfo();
+
+  QueryInfo(const QueryInfo& from);
+
+  inline QueryInfo& operator=(const QueryInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const QueryInfo& default_instance();
+
+  void Swap(QueryInfo* other);
+
+  // implements Message ----------------------------------------------
+
+  QueryInfo* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const QueryInfo& from);
+  void MergeFrom(const QueryInfo& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string query = 1;
+  inline bool has_query() const;
+  inline void clear_query();
+  static const int kQueryFieldNumber = 1;
+  inline const ::std::string& query() const;
+  inline void set_query(const ::std::string& value);
+  inline void set_query(const char* value);
+  inline void set_query(const char* value, size_t size);
+  inline ::std::string* mutable_query();
+  inline ::std::string* release_query();
+  inline void set_allocated_query(::std::string* query);
+
+  // optional int64 start = 2;
+  inline bool has_start() const;
+  inline void clear_start();
+  static const int kStartFieldNumber = 2;
+  inline ::google::protobuf::int64 start() const;
+  inline void set_start(::google::protobuf::int64 value);
+
+  // optional .exec.shared.QueryResult.QueryState state = 3;
+  inline bool has_state() const;
+  inline void clear_state();
+  static const int kStateFieldNumber = 3;
+  inline ::exec::shared::QueryResult_QueryState state() const;
+  inline void set_state(::exec::shared::QueryResult_QueryState value);
+
+  // optional string user = 4;
+  inline bool has_user() const;
+  inline void clear_user();
+  static const int kUserFieldNumber = 4;
+  inline const ::std::string& user() const;
+  inline void set_user(const ::std::string& value);
+  inline void set_user(const char* value);
+  inline void set_user(const char* value, size_t size);
+  inline ::std::string* mutable_user();
+  inline ::std::string* release_user();
+  inline void set_allocated_user(::std::string* user);
+
+  // optional .exec.DrillbitEndpoint foreman = 5;
+  inline bool has_foreman() const;
+  inline void clear_foreman();
+  static const int kForemanFieldNumber = 5;
+  inline const ::exec::DrillbitEndpoint& foreman() const;
+  inline ::exec::DrillbitEndpoint* mutable_foreman();
+  inline ::exec::DrillbitEndpoint* release_foreman();
+  inline void set_allocated_foreman(::exec::DrillbitEndpoint* foreman);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.QueryInfo)
+ private:
+  inline void set_has_query();
+  inline void clear_has_query();
+  inline void set_has_start();
+  inline void clear_has_start();
+  inline void set_has_state();
+  inline void clear_has_state();
+  inline void set_has_user();
+  inline void clear_has_user();
+  inline void set_has_foreman();
+  inline void clear_has_foreman();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* query_;
+  ::google::protobuf::int64 start_;
+  ::std::string* user_;
+  ::exec::DrillbitEndpoint* foreman_;
+  int state_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static QueryInfo* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -4122,6 +4257,233 @@ inline bool QueryResult::schema_changed() const {
 inline void QueryResult::set_schema_changed(bool value) {
   set_has_schema_changed();
   schema_changed_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// QueryInfo
+
+// optional string query = 1;
+inline bool QueryInfo::has_query() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void QueryInfo::set_has_query() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void QueryInfo::clear_has_query() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void QueryInfo::clear_query() {
+  if (query_ != &::google::protobuf::internal::kEmptyString) {
+    query_->clear();
+  }
+  clear_has_query();
+}
+inline const ::std::string& QueryInfo::query() const {
+  return *query_;
+}
+inline void QueryInfo::set_query(const ::std::string& value) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(value);
+}
+inline void QueryInfo::set_query(const char* value) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(value);
+}
+inline void QueryInfo::set_query(const char* value, size_t size) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryInfo::mutable_query() {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  return query_;
+}
+inline ::std::string* QueryInfo::release_query() {
+  clear_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = query_;
+    query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryInfo::set_allocated_query(::std::string* query) {
+  if (query_ != &::google::protobuf::internal::kEmptyString) {
+    delete query_;
+  }
+  if (query) {
+    set_has_query();
+    query_ = query;
+  } else {
+    clear_has_query();
+    query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional int64 start = 2;
+inline bool QueryInfo::has_start() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void QueryInfo::set_has_start() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void QueryInfo::clear_has_start() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void QueryInfo::clear_start() {
+  start_ = GOOGLE_LONGLONG(0);
+  clear_has_start();
+}
+inline ::google::protobuf::int64 QueryInfo::start() const {
+  return start_;
+}
+inline void QueryInfo::set_start(::google::protobuf::int64 value) {
+  set_has_start();
+  start_ = value;
+}
+
+// optional .exec.shared.QueryResult.QueryState state = 3;
+inline bool QueryInfo::has_state() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void QueryInfo::set_has_state() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void QueryInfo::clear_has_state() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void QueryInfo::clear_state() {
+  state_ = 0;
+  clear_has_state();
+}
+inline ::exec::shared::QueryResult_QueryState QueryInfo::state() const {
+  return static_cast< ::exec::shared::QueryResult_QueryState >(state_);
+}
+inline void QueryInfo::set_state(::exec::shared::QueryResult_QueryState value) {
+  assert(::exec::shared::QueryResult_QueryState_IsValid(value));
+  set_has_state();
+  state_ = value;
+}
+
+// optional string user = 4;
+inline bool QueryInfo::has_user() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void QueryInfo::set_has_user() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void QueryInfo::clear_has_user() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void QueryInfo::clear_user() {
+  if (user_ != &::google::protobuf::internal::kEmptyString) {
+    user_->clear();
+  }
+  clear_has_user();
+}
+inline const ::std::string& QueryInfo::user() const {
+  return *user_;
+}
+inline void QueryInfo::set_user(const ::std::string& value) {
+  set_has_user();
+  if (user_ == &::google::protobuf::internal::kEmptyString) {
+    user_ = new ::std::string;
+  }
+  user_->assign(value);
+}
+inline void QueryInfo::set_user(const char* value) {
+  set_has_user();
+  if (user_ == &::google::protobuf::internal::kEmptyString) {
+    user_ = new ::std::string;
+  }
+  user_->assign(value);
+}
+inline void QueryInfo::set_user(const char* value, size_t size) {
+  set_has_user();
+  if (user_ == &::google::protobuf::internal::kEmptyString) {
+    user_ = new ::std::string;
+  }
+  user_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryInfo::mutable_user() {
+  set_has_user();
+  if (user_ == &::google::protobuf::internal::kEmptyString) {
+    user_ = new ::std::string;
+  }
+  return user_;
+}
+inline ::std::string* QueryInfo::release_user() {
+  clear_has_user();
+  if (user_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = user_;
+    user_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryInfo::set_allocated_user(::std::string* user) {
+  if (user_ != &::google::protobuf::internal::kEmptyString) {
+    delete user_;
+  }
+  if (user) {
+    set_has_user();
+    user_ = user;
+  } else {
+    clear_has_user();
+    user_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional .exec.DrillbitEndpoint foreman = 5;
+inline bool QueryInfo::has_foreman() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void QueryInfo::set_has_foreman() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void QueryInfo::clear_has_foreman() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void QueryInfo::clear_foreman() {
+  if (foreman_ != NULL) foreman_->::exec::DrillbitEndpoint::Clear();
+  clear_has_foreman();
+}
+inline const ::exec::DrillbitEndpoint& QueryInfo::foreman() const {
+  return foreman_ != NULL ? *foreman_ : *default_instance_->foreman_;
+}
+inline ::exec::DrillbitEndpoint* QueryInfo::mutable_foreman() {
+  set_has_foreman();
+  if (foreman_ == NULL) foreman_ = new ::exec::DrillbitEndpoint;
+  return foreman_;
+}
+inline ::exec::DrillbitEndpoint* QueryInfo::release_foreman() {
+  clear_has_foreman();
+  ::exec::DrillbitEndpoint* temp = foreman_;
+  foreman_ = NULL;
+  return temp;
+}
+inline void QueryInfo::set_allocated_foreman(::exec::DrillbitEndpoint* foreman) {
+  delete foreman_;
+  foreman_ = foreman;
+  if (foreman) {
+    set_has_foreman();
+  } else {
+    clear_has_foreman();
+  }
 }
 
 // -------------------------------------------------------------------

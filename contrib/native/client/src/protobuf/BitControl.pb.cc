@@ -265,16 +265,16 @@ void protobuf_AddDesc_BitControl_2eproto() {
     "Endpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report"
     "_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010recei"
     "ver\030\001 \001(\0132\030.exec.bit.FragmentHandle\022(\n\006s"
-    "ender\030\002 \001(\0132\030.exec.bit.FragmentHandle*\243\002"
+    "ender\030\002 \001(\0132\030.exec.bit.FragmentHandle*\271\002"
     "\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOO"
     "DBYE\020\002\022\034\n\030REQ_INIATILIZE_FRAGMENTS\020\003\022\027\n\023"
     "REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FI"
     "NISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ"
-    "_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\030\n\024R"
-    "ESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_S"
-    "TATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUE"
-    "RY_STATUS\020\016B+\n\033org.apache.drill.exec.pro"
-    "toB\nBitControlH\001", 1496);
+    "_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020R"
+    "EQ_QUERY_CANCEL\020\017\022\030\n\024RESP_FRAGMENT_HANDL"
+    "E\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BI"
+    "T_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016B+\n\033org"
+    ".apache.drill.exec.protoB\nBitControlH\001", 1518);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   BitControlHandshake::default_instance_ = new BitControlHandshake();
@@ -319,6 +319,7 @@ bool RpcType_IsValid(int value) {
     case 12:
     case 13:
     case 14:
+    case 15:
       return true;
     default:
       return false;

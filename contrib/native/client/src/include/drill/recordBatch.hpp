@@ -72,19 +72,19 @@ class SlicedByteBuf{
     public:
         //TODO: check the size and offset parameters. What is the largest they can be?
         SlicedByteBuf(const ByteBuf_t b, size_t offset, size_t length){
-            assert(length>0);
+            assert(length>=0);
             this->m_buffer=b;
             this->m_start=offset;
-            this->m_end=offset+length-1;
+            this->m_end=length>0?offset+length-1:offset;
             this->m_length=length;
         }
 
         // Carve a sliced buffer out of another sliced buffer
         SlicedByteBuf(const SlicedByteBuf& sb, size_t offset, size_t length){
-            assert(length>0);
+            assert(length>=0);
             this->m_buffer=sb.m_buffer;
             this->m_start=sb.m_start+offset;
-            this->m_end=sb.m_start+offset+length-1;
+            this->m_end=length>0?sb.m_start+offset+length-1:sb.m_start+offset;
             this->m_length=length;
         }
 
@@ -217,9 +217,27 @@ class DECLSPEC_DRILL_CLIENT ValueVectorUnimplemented:public ValueVectorBase{
 
         virtual uint32_t getSize(size_t index) const{ return 0;};
 
-    protected:
-        SlicedByteBuf* m_pBuffer;
-        size_t m_rowCount;
+};
+
+// Represents a value vector that has all values NULL
+class DECLSPEC_DRILL_CLIENT ValueVectorNull:public ValueVectorBase{
+    public:
+        ValueVectorNull(SlicedByteBuf *b, size_t rowCount):ValueVectorBase(b,rowCount){
+        }
+
+        virtual ~ValueVectorNull(){
+        }
+
+        virtual void getValueAt(size_t index, char* buf, size_t nChars) const{
+            *buf=0; return;
+        }
+
+        virtual uint32_t getSize(size_t index) const{ return 0;};
+
+        virtual bool isNull(size_t index) const {
+            return true;
+        }
+
 };
 
 class DECLSPEC_DRILL_CLIENT ValueVectorFixedWidth:public ValueVectorBase{
@@ -821,6 +839,7 @@ class FieldBatch{
 
         // Loads the data into a Value Vector ofappropriate type
         ret_t load();
+        ret_t loadNull(size_t nRecords);
 
         const ValueVectorBase * getVector(){
             return m_pValueVector;
