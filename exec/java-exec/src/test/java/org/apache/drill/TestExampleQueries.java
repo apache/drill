@@ -20,6 +20,7 @@ package org.apache.drill;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.RpcException;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -586,6 +587,20 @@ public class TestExampleQueries extends BaseTestQuery{
     // use long table alias name  (approx 160 chars)
     test("select employee_id from cp.`employee.json` as aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa limit 1");
 
+  }
+
+  @Test // DRILL-1846  (this tests issue with SimpleMergeExchange)
+  public void testOrderByDiffColumnsInSubqAndOuter() throws Exception {
+    String query = "select n.n_nationkey from  (select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by n_regionkey) n  order by n.n_nationkey";
+    // set slice_target = 1 to force exchanges
+    test("alter session set `planner.slice_target` = 1; " + query);
+  }
+
+  @Test // DRILL-1846  (this tests issue with UnionExchange)
+  public void testLimitInSubqAndOrderByOuter() throws Exception {
+    String query = "select t2.n_nationkey from (select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` t1 group by n_nationkey, n_regionkey limit 10) t2 order by t2.n_nationkey";
+    // set slice_target = 1 to force exchanges
+    test("alter session set `planner.slice_target` = 1; " + query);
   }
 
 }

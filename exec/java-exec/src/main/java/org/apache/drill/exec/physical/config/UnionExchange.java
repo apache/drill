@@ -70,6 +70,11 @@ public class UnionExchange extends AbstractExchange{
   }
 
   @Override
+  public int getMaxReceiveWidth() {
+    return 1;
+  }
+
+  @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new UnionExchange(child);
   }

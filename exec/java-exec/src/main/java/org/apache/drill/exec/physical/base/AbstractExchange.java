@@ -41,6 +41,11 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
     return false;
   }
 
+  @Override
+  public int getMaxReceiveWidth() {
+    return Integer.MAX_VALUE;
+  }
+
   protected abstract void setupSenders(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException ;
   protected abstract void setupReceivers(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException ;
 
