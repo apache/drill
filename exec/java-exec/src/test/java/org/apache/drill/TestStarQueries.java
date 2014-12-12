@@ -23,6 +23,11 @@ import org.apache.drill.exec.rpc.RpcException;
 public class TestStarQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStarQueries.class);
 
+  @Test // see DRILL-1825
+  public void testSelStarWithAdditionalColumnLimit() throws Exception {
+    test("select *, first_name, *, last_name from cp.`employee.json` limit 2;");
+  }
+
   @Test
   public void testSelStarOrderBy() throws Exception{
     test("select * from cp.`employee.json` order by last_name");

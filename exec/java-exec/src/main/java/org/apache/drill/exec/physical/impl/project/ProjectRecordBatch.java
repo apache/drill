@@ -372,11 +372,17 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
       String outputName = getRef(namedExpression).getRootSegment().getPath();
       if (result != null && result.outputNames != null && result.outputNames.size() > 0) {
+        boolean isMatched = false;
         for (int j = 0; j < result.outputNames.size(); j++) {
           if (!result.outputNames.get(j).equals(EMPTY_STRING)) {
             outputName = result.outputNames.get(j);
+            isMatched = true;
             break;
           }
+        }
+
+        if(!isMatched) {
+          continue;
         }
       }
 
