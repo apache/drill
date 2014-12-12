@@ -142,7 +142,7 @@ public interface ExecConstants {
    */
   public static final String MAX_QUERY_MEMORY_PER_NODE_KEY = "planner.memory.max_query_memory_per_node";
   public static final OptionValidator MAX_QUERY_MEMORY_PER_NODE = new PowerOfTwoLongValidator(
-    MAX_QUERY_MEMORY_PER_NODE_KEY, Runtime.getRuntime().maxMemory(), 1 << 11);
+    MAX_QUERY_MEMORY_PER_NODE_KEY, Runtime.getRuntime().maxMemory(), 2*1024*1024*1024L);
 
   /**
    * Extra query memory per node for non-blocking operators.
