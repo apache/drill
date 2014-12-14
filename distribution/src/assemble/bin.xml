@@ -211,10 +211,6 @@
       <outputDirectory />
     </file>
     <file>
-      <source>../DISCLAIMER</source>
-      <outputDirectory />
-    </file>
-    <file>
       <source>../git.properties</source>
       <outputDirectory />
     </file>
