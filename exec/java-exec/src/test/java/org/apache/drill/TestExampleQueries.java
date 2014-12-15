@@ -263,6 +263,7 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test  // tests with LIMIT 0
+  @Ignore("DRILL-1866")
   public void testLimit0_1() throws Exception {
     test("select n_nationkey, n_name from cp.`tpch/nation.parquet` limit 0");
     test("select n_nationkey, n_name from cp.`tpch/nation.parquet` limit 0 offset 5");
@@ -412,6 +413,7 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-1846  (this tests issue with UnionExchange)
+  @Ignore("DRILL-1866")
   public void testLimitInSubqAndOrderByOuter() throws Exception {
     String query = "select t2.n_nationkey from (select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` t1 group by n_nationkey, n_regionkey limit 10) t2 order by t2.n_nationkey";
     // set slice_target = 1 to force exchanges
