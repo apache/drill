@@ -29,7 +29,6 @@ import org.apache.drill.common.util.ConstructorChecker;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 import com.google.common.collect.Maps;
 

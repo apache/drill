@@ -20,7 +20,7 @@ package org.apache.drill.exec.dotdrill;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
@@ -50,7 +50,7 @@ public class DotDrillUtil {
   }
 
   public static List<DotDrillFile> getDotDrills(DrillFileSystem fs, Path root, DotDrillType... types) throws IOException{
-    return getDrillFiles(fs, fs.getUnderlying().globStatus(new Path(root, "*.drill")), types);
+    return getDrillFiles(fs, fs.globStatus(new Path(root, "*.drill")), types);
   }
 
     public static List<DotDrillFile> getDotDrills(DrillFileSystem fs, Path root, String name, DotDrillType... types) throws IOException{
@@ -58,6 +58,6 @@ public class DotDrillUtil {
         name = name + DotDrillType.DOT_DRILL_GLOB;
       }
 
-      return getDrillFiles(fs, fs.getUnderlying().globStatus(new Path(root, name)), types);
+      return getDrillFiles(fs, fs.globStatus(new Path(root, name)), types);
     }
 }

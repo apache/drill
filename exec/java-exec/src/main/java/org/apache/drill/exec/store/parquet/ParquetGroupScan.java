@@ -135,7 +135,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     Preconditions.checkNotNull(formatConfig);
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(formatPlugin);
-    this.fs = formatPlugin.getFileSystem().getUnderlying();
+    this.fs = formatPlugin.getFileSystem();
     this.formatConfig = formatPlugin.getConfig();
     this.entries = entries;
     this.selectionRoot = selectionRoot;
@@ -155,7 +155,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.formatPlugin = formatPlugin;
     this.columns = columns;
     this.formatConfig = formatPlugin.getConfig();
-    this.fs = formatPlugin.getFileSystem().getUnderlying();
+    this.fs = formatPlugin.getFileSystem();
 
     this.entries = Lists.newArrayList();
     for (FileStatus file : files) {

@@ -29,12 +29,14 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
 import org.apache.hadoop.conf.Configuration;
@@ -64,6 +66,8 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     String partitionDesignator = context.getConfig().getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
     List<SchemaPath> columns = rowGroupScan.getColumns();
     List<RecordReader> readers = Lists.newArrayList();
+    OperatorContext oContext = new OperatorContext(rowGroupScan, context,
+        false /* ScanBatch is not subject to fragment memory limit */);
 
     List<String[]> partitionColumns = Lists.newArrayList();
     List<Integer> selectedPartitionColumns = Lists.newArrayList();
@@ -90,7 +94,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       rowGroupScan.setOperatorId(id);
     }
 
-    FileSystem fs = rowGroupScan.getStorageEngine().getFileSystem().getUnderlying();
+    DrillFileSystem fs = new DrillFileSystem(rowGroupScan.getStorageEngine().getFileSystem(), oContext.getStats());
     Configuration conf = fs.getConf();
     conf.setBoolean(ENABLE_BYTES_READ_COUNTER, false);
     conf.setBoolean(ENABLE_BYTES_TOTAL_COUNTER, false);
@@ -123,7 +127,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           );
         } else {
           ParquetMetadata footer = footers.get(e.getPath());
-          readers.add(new DrillParquetReader(context, footer, e, newColumns, conf));
+          readers.add(new DrillParquetReader(context, footer, e, newColumns, fs));
         }
         if (rowGroupScan.getSelectionRoot() != null) {
           String[] r = rowGroupScan.getSelectionRoot().split("/");
@@ -149,7 +153,8 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       }
     }
 
-    ScanBatch s = new ScanBatch(rowGroupScan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+    ScanBatch s =
+        new ScanBatch(rowGroupScan, context, oContext, readers.iterator(), partitionColumns, selectedPartitionColumns);
 
     for(RecordReader r  : readers){
       r.setOperatorContext(s.getOperatorContext());

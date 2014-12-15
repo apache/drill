@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -64,7 +63,7 @@ public class BasicFormatMatcher extends FormatMatcher{
     this.fs = fs;
     this.plugin = plugin;
     this.compressible = compressible;
-    this.codecFactory = new CompressionCodecFactory(fs.getUnderlying().getConf());
+    this.codecFactory = new CompressionCodecFactory(fs.getConf());
   }
 
   @Override
@@ -135,7 +134,7 @@ public class BasicFormatMatcher extends FormatMatcher{
       }
       final Range<Long> fileRange = Range.closedOpen( 0L, status.getLen());
 
-      try (FSDataInputStream is = fs.open(status.getPath()).getInputStream()) {
+      try (FSDataInputStream is = fs.open(status.getPath())) {
         for(RangeMagics rMagic : ranges) {
           Range<Long> r = rMagic.range;
           if (!fileRange.encloses(r)) {

@@ -40,6 +40,7 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BaseValueVector;
@@ -82,7 +83,7 @@ public class DrillParquetReader extends AbstractRecordReader {
 
   private ParquetMetadata footer;
   private MessageType schema;
-  private Configuration conf;
+  private DrillFileSystem fileSystem;
   private RowGroupReadEntry entry;
   private VectorContainerWriter writer;
   private ColumnChunkIncReadStore pageReadStore;
@@ -111,9 +112,10 @@ public class DrillParquetReader extends AbstractRecordReader {
   boolean noColumnsFound = false; // true if none of the columns in the projection list is found in the schema
 
 
-  public DrillParquetReader(FragmentContext fragmentContext, ParquetMetadata footer, RowGroupReadEntry entry, List<SchemaPath> columns, Configuration conf) {
+  public DrillParquetReader(FragmentContext fragmentContext, ParquetMetadata footer, RowGroupReadEntry entry,
+      List<SchemaPath> columns, DrillFileSystem fileSystem) {
     this.footer = footer;
-    this.conf = conf;
+    this.fileSystem = fileSystem;
     this.entry = entry;
     setColumns(columns);
     this.fragmentContext = fragmentContext;
@@ -243,8 +245,7 @@ public class DrillParquetReader extends AbstractRecordReader {
         paths.put(md.getPath(), md);
       }
 
-      CodecFactoryExposer codecFactoryExposer = new CodecFactoryExposer(conf);
-      FileSystem fs = FileSystem.get(conf);
+      CodecFactoryExposer codecFactoryExposer = new CodecFactoryExposer(fileSystem.getConf());
       Path filePath = new Path(entry.getPath());
 
       BlockMetaData blockMetaData = footer.getBlocks().get(entry.getRowGroupIndex());
@@ -252,7 +253,7 @@ public class DrillParquetReader extends AbstractRecordReader {
       recordCount = (int) blockMetaData.getRowCount();
 
       pageReadStore = new ColumnChunkIncReadStore(recordCount,
-              codecFactoryExposer.getCodecFactory(), operatorContext.getAllocator(), fs, filePath);
+              codecFactoryExposer.getCodecFactory(), operatorContext.getAllocator(), fileSystem, filePath);
 
       for (String[] path : schema.getPaths()) {
         Type type = schema.getType(path);

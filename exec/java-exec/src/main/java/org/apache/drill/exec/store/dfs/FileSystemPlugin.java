@@ -36,8 +36,6 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.shim.FileSystemCreator;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 
@@ -71,7 +69,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.connection);
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
-      fs = FileSystemCreator.getFileSystem(context.getConfig(), fsConf);
+      fs = new DrillFileSystem(fsConf);
       formatPluginsByName = FormatCreator.getFormatPlugins(context, fs, config);
       List<FormatMatcher> matchers = Lists.newArrayList();
       formatPluginsByConfig = Maps.newHashMap();

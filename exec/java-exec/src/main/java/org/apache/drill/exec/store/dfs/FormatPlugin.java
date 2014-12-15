@@ -29,7 +29,6 @@ import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 /**
  * Similar to a storage engine but built specifically to work within a FileSystem context.

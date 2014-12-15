@@ -17,22 +17,12 @@
  */
 package org.apache.drill.exec.store.sys.zk;
 
-import static org.apache.drill.exec.ExecConstants.DRILL_SYS_FILE_SUFFIX;
-
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.shim.DrillInputStream;
-import org.apache.drill.exec.store.dfs.shim.DrillOutputStream;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.hadoop.fs.Path;
 import org.apache.zookeeper.CreateMode;
-
-import com.google.common.base.Preconditions;
 
 /**
  * Implementation of PStore using Zookeeper's PERSISTENT node.

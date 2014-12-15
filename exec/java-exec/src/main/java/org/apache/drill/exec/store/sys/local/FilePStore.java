@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -31,8 +30,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.shim.FileSystemCreator;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.hadoop.conf.Configuration;
@@ -65,7 +63,7 @@ public class FilePStore<V> implements PStore<V> {
   }
 
   private void mk(Path path) throws IOException{
-    fs.getUnderlying().mkdirs(path);
+    fs.mkdirs(path);
   }
 
   public static Path getLogDir(){
@@ -84,8 +82,8 @@ public class FilePStore<V> implements PStore<V> {
     }
 
 
-    DrillFileSystem fs = FileSystemCreator.getFileSystem(config, fsConf);
-    fs.getUnderlying().mkdirs(blobRoot);
+    DrillFileSystem fs = new DrillFileSystem(fsConf);
+    fs.mkdirs(blobRoot);
     return fs;
   }
 
@@ -128,14 +126,14 @@ public class FilePStore<V> implements PStore<V> {
   public V get(String key) {
     try{
       Path path = p(key);
-      if(!fs.getUnderlying().exists(path)){
+      if(!fs.exists(path)){
         return null;
       }
     }catch(IOException e){
       throw new RuntimeException(e);
     }
 
-    try (InputStream is = fs.open(p(key)).getInputStream()) {
+    try (InputStream is = fs.open(p(key))) {
       return config.getSerializer().deserialize(IOUtils.toByteArray(is));
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -143,7 +141,7 @@ public class FilePStore<V> implements PStore<V> {
   }
 
   public void put(String key, V value) {
-    try (OutputStream os = fs.create(p(key)).getOuputStream()) {
+    try (OutputStream os = fs.create(p(key))) {
       IOUtils.write(config.getSerializer().serialize(value), os);
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -154,7 +152,7 @@ public class FilePStore<V> implements PStore<V> {
   public boolean putIfAbsent(String key, V value) {
     try {
       Path p = p(key);
-      if (fs.getUnderlying().exists(p)) {
+      if (fs.exists(p)) {
         return false;
       } else {
         put(key, value);
@@ -167,7 +165,7 @@ public class FilePStore<V> implements PStore<V> {
 
   public void delete(String key) {
     try {
-      fs.getUnderlying().delete(p(key), false);
+      fs.delete(p(key), false);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

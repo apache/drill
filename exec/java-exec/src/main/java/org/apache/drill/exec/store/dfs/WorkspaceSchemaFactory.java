@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.Table;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
@@ -43,8 +43,6 @@ import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.shim.DrillOutputStream;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
@@ -172,9 +170,9 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
     public boolean createView(View view) throws Exception {
       Path viewPath = getViewPath(view.getName());
-      boolean replaced = fs.getUnderlying().exists(viewPath);
-      try (DrillOutputStream stream = fs.create(viewPath)) {
-        mapper.writeValue(stream.getOuputStream(), view);
+      boolean replaced = fs.exists(viewPath);
+      try (OutputStream stream = fs.create(viewPath)) {
+        mapper.writeValue(stream, view);
       }
       if (knownViews != null) {
         knownViews.put(view.getName(), viewPath.toString());
@@ -184,11 +182,11 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
     public boolean viewExists(String viewName) throws Exception {
       Path viewPath = getViewPath(viewName);
-      return fs.getUnderlying().exists(viewPath);
+      return fs.exists(viewPath);
     }
 
     public void dropView(String viewName) throws IOException {
-      fs.getUnderlying().delete(getViewPath(viewName), false);
+      fs.delete(getViewPath(viewName), false);
       if (knownViews != null) {
         knownViews.delete(viewName);
       }

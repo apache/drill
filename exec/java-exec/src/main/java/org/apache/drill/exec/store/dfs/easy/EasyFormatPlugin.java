@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -45,7 +46,7 @@ import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
@@ -79,7 +80,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     this.storageConfig = storageConfig;
     this.formatConfig = formatConfig;
     this.name = name == null ? defaultName : name;
-    this.codecFactory = new CompressionCodecFactory(new Configuration(fs.getUnderlying().getConf()));
+    this.codecFactory = new CompressionCodecFactory(new Configuration(fs.getConf()));
   }
 
   @Override
@@ -113,7 +114,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     return compressible;
   }
 
-  public abstract RecordReader getRecordReader(FragmentContext context, FileWork fileWork, List<SchemaPath> columns) throws ExecutionSetupException;
+  public abstract RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
+      List<SchemaPath> columns) throws ExecutionSetupException;
 
   RecordBatch getReaderBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
     String partitionDesignator = context.getConfig().getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
@@ -147,8 +149,11 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     }
 
     int numParts = 0;
+    OperatorContext oContext = new OperatorContext(scan, context,
+        false /* ScanBatch is not subject to fragment memory limit */);
+    DrillFileSystem dfs = new DrillFileSystem(fs, oContext.getStats());
     for(FileWork work : scan.getWorkUnits()){
-      readers.add(getRecordReader(context, work, scan.getColumns()));
+      readers.add(getRecordReader(context, dfs, work, scan.getColumns()));
       if (scan.getSelectionRoot() != null) {
         String[] r = scan.getSelectionRoot().split("/");
         String[] p = work.getPath().split("/");
@@ -170,7 +175,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       }
     }
 
-    return new ScanBatch(scan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+    return new ScanBatch(scan, context, oContext, readers.iterator(), partitionColumns, selectedPartitionColumns);
   }
 
   public abstract RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException;

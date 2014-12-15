@@ -45,7 +45,7 @@ import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MagicString;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -79,7 +79,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   public ParquetFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig, ParquetFormatConfig formatConfig){
     this.context = context;
-    this.codecFactoryExposer = new CodecFactoryExposer(fs.getUnderlying().getConf());
+    this.codecFactoryExposer = new CodecFactoryExposer(fs.getConf());
     this.config = formatConfig;
     this.formatMatcher = new ParquetFormatMatcher(this, fs);
     this.storageConfig = storageConfig;
@@ -88,7 +88,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
   }
 
   Configuration getHadoopConfig() {
-    return fs.getUnderlying().getConf();
+    return fs.getConf();
   }
 
   public DrillFileSystem getFileSystem() {
@@ -219,13 +219,13 @@ public class ParquetFormatPlugin implements FormatPlugin{
     boolean isDirReadable(FileStatus dir) {
       Path p = new Path(dir.getPath(), ParquetFileWriter.PARQUET_METADATA_FILE);
       try {
-        if (fs.getUnderlying().exists(p)) {
+        if (fs.exists(p)) {
           return true;
         } else {
 
           PathFilter filter = new DrillPathFilter();
 
-          FileStatus[] files = fs.getUnderlying().listStatus(dir.getPath(), filter);
+          FileStatus[] files = fs.listStatus(dir.getPath(), filter);
           if (files.length == 0) {
             return false;
           }

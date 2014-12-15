@@ -18,11 +18,12 @@
 package org.apache.drill.exec.dotdrill;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.shim.DrillInputStream;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;
 
 import com.google.common.base.Preconditions;
+
+import java.io.InputStream;
 
 public class DotDrillFile {
 
@@ -51,8 +52,8 @@ public class DotDrillFile {
 
   public View getView(DrillConfig config) throws Exception{
     Preconditions.checkArgument(type == DotDrillType.VIEW);
-    try(DrillInputStream is = fs.open(status.getPath())){
-      return config.getMapper().readValue(is.getInputStream(), View.class);
+    try(InputStream is = fs.open(status.getPath())){
+      return config.getMapper().readValue(is, View.class);
     }
   }
 }

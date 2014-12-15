@@ -32,6 +32,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReader.ReadState;
@@ -54,8 +55,8 @@ public class JSONRecordReader extends AbstractRecordReader {
   private OutputMutator mutator;
   private VectorContainerWriter writer;
   private Path hadoopPath;
-  private FileSystem fileSystem;
   private InputStream stream;
+  private DrillFileSystem fileSystem;
   private JsonReader jsonReader;
   private int recordCount;
   private FragmentContext fragmentContext;
@@ -63,7 +64,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private List<SchemaPath> columns;
   private boolean enableAllTextMode;
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, DrillFileSystem fileSystem,
                           List<SchemaPath> columns) throws OutOfMemoryException {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;

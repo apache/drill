@@ -23,12 +23,10 @@ import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -136,7 +134,7 @@ public class FileSelection {
       return new FileSelection(Collections.singletonList(status), p.toUri().getPath());
     } else {
       Path p = new Path(parent,removeLeadingSlash(path));
-      FileStatus[] status = fs.getUnderlying().globStatus(p);
+      FileStatus[] status = fs.globStatus(p);
       if (status == null || status.length == 0) {
         return null;
       }

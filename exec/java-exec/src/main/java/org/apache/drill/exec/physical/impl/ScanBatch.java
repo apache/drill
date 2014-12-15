@@ -83,17 +83,23 @@ public class ScanBatch implements RecordBatch {
   private boolean done = false;
   private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
 
-  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
+  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, OperatorContext oContext,
+                   Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
     this.context = context;
     this.readers = readers;
     if (!readers.hasNext()) {
       throw new ExecutionSetupException("A scan batch must contain at least one reader.");
     }
     this.currentReader = readers.next();
-    // Scan Batch is not subject to fragment memory limit
-    this.oContext = new OperatorContext(subScanConfig, context, false);
+    this.oContext = oContext;
     this.currentReader.setOperatorContext(this.oContext);
-    this.currentReader.setup(mutator);
+
+    try {
+      oContext.getStats().startProcessing();
+      this.currentReader.setup(mutator);
+    } finally {
+      oContext.getStats().stopProcessing();
+    }
     this.partitionColumns = partitionColumns.iterator();
     this.partitionValues = this.partitionColumns.hasNext() ? this.partitionColumns.next() : null;
     this.selectedPartitionColumns = selectedPartitionColumns;
@@ -103,7 +109,9 @@ public class ScanBatch implements RecordBatch {
   }
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers) throws ExecutionSetupException {
-    this(subScanConfig, context, readers, Collections.<String[]> emptyList(), Collections.<Integer> emptyList());
+    this(subScanConfig, context,
+        new OperatorContext(subScanConfig, context, false /* ScanBatch is not subject to fragment memory limit */),
+        readers, Collections.<String[]> emptyList(), Collections.<Integer> emptyList());
   }
 
   public FragmentContext getContext() {
@@ -166,26 +174,23 @@ public class ScanBatch implements RecordBatch {
             }
             return IterOutcome.NONE;
           }
-          oContext.getStats().startSetup();
+
+          currentReader.cleanup();
+          currentReader = readers.next();
+          partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
+          currentReader.setup(mutator);
+          currentReader.setOperatorContext(oContext);
           try {
-            currentReader.cleanup();
-            currentReader = readers.next();
-            partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
-            currentReader.setup(mutator);
-            currentReader.setOperatorContext(oContext);
-            try {
-              currentReader.allocate(fieldVectorMap);
-            } catch (OutOfMemoryException e) {
-              logger.debug("Caught OutOfMemoryException");
-              for (ValueVector v : fieldVectorMap.values()) {
-                v.clear();
-              }
-              return IterOutcome.OUT_OF_MEMORY;
+            currentReader.allocate(fieldVectorMap);
+          } catch (OutOfMemoryException e) {
+            logger.debug("Caught OutOfMemoryException");
+            for (ValueVector v : fieldVectorMap.values()) {
+              v.clear();
             }
-            addPartitionVectors();
-          } finally {
-            oContext.getStats().stopSetup();
+            return IterOutcome.OUT_OF_MEMORY;
           }
+          addPartitionVectors();
+
         } catch (ExecutionSetupException e) {
           this.context.fail(e);
           releaseAssets();
