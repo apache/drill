@@ -73,7 +73,7 @@ public class FilePStore<V> implements PStore<V> {
     if (drillLogDir == null) {
       drillLogDir = "/var/log/drill";
     }
-    return new Path("file://" + new File(drillLogDir).getAbsoluteFile().toString());
+    return new Path(new File(drillLogDir).getAbsoluteFile().toURI());
   }
 
   public static DrillFileSystem getFileSystem(DrillConfig config, Path root) throws IOException{
