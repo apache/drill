@@ -41,6 +41,8 @@ import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 public class FragmentExecutor implements Runnable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentExecutor.class);
 
+  // TODO:  REVIEW:  Can't this be AtomicReference<FragmentState> (so that
+  // debugging and logging don't show just integer values--and for type safety)?
   private final AtomicInteger state = new AtomicInteger(FragmentState.AWAITING_ALLOCATION_VALUE);
   private final FragmentRoot rootOperator;
   private final FragmentContext fragmentContext;
@@ -48,11 +50,24 @@ public class FragmentExecutor implements Runnable {
   private volatile boolean closed;
   private RootExec root;
 
+
   public FragmentExecutor(final FragmentContext context, final FragmentRoot rootOperator,
-      final StatusReporter listener) {
+                          final StatusReporter listener) {
     this.fragmentContext = context;
     this.rootOperator = rootOperator;
     this.listener = listener;
+  }
+
+  @Override
+  public String toString() {
+    return
+        super.toString()
+        + "[closed = " + closed
+        + ", state = " + state
+        + ", rootOperator = " + rootOperator
+        + ", fragmentContext = " + fragmentContext
+        + ", listener = " + listener
+        + "]";
   }
 
   public FragmentStatus getStatus() {
@@ -73,10 +88,15 @@ public class FragmentExecutor implements Runnable {
   }
 
   public void cancel() {
+    logger.debug("Cancelling fragment {}", fragmentContext.getHandle());
+
     // Note this will be called outside of run(), from another thread
+    // Change state checked by main loop to terminate it (if not already done):
     updateState(FragmentState.CANCELLED);
-    logger.debug("Cancelled Fragment {}", fragmentContext.getHandle());
+
     fragmentContext.cancel();
+
+    logger.debug("Cancelled fragment {}", fragmentContext.getHandle());
   }
 
   public void receivingFragmentFinished(FragmentHandle handle) {
@@ -106,18 +126,20 @@ public class FragmentExecutor implements Runnable {
       logger.debug("Starting fragment runner. {}:{}",
           fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId());
       if (!updateStateOrFail(FragmentState.AWAITING_ALLOCATION, FragmentState.RUNNING)) {
-        logger.warn("Unable to set fragment state to RUNNING. Cancelled or failed?");
+        logger.warn("Unable to set fragment state to RUNNING.  Cancelled or failed?");
         return;
       }
 
       /*
-       * Run the query until root.next returns false.
-       * Note that we closeOutResources() here if we're done. That's because this can also throw
-       * exceptions that we want to treat as failures of the request, even if the request did fine
-       * up until this point. Any failures there will be caught in the catch clause below, which
-       * will be reported to the user. If they were to come from the finally clause, the uncaught
-       * exception there will simply terminate this thread without alerting the user -- the
-       * behavior then is to hang.
+       * Run the query until root.next returns false OR cancel() changes the
+       * state.
+       * Note that we closeOutResources() here if we're done.  That's because
+       * this can also throw exceptions that we want to treat as failures of the
+       * request, even if the request did fine up until this point.  Any
+       * failures there will be caught in the catch clause below, which will be
+       * reported to the user.  If they were to come from the finally clause,
+       * the uncaught exception there will simply terminate this thread without
+       * alerting the user--the behavior then is to hang.
        */
       while (state.get() == FragmentState.RUNNING_VALUE) {
         if (!root.next()) {
@@ -191,7 +213,7 @@ public class FragmentExecutor implements Runnable {
   /**
    * Updates the fragment state with the given state
    *
-   * @param to target state
+   * @param  to  target state
    */
   private void updateState(final FragmentState to) {
     state.set(to.getNumber());
@@ -201,8 +223,8 @@ public class FragmentExecutor implements Runnable {
   /**
    * Updates the fragment state only if the current state matches the expected.
    *
-   * @param expected expected current state
-   * @param to target state
+   * @param  expected  expected current state
+   * @param  to  target state
    * @return true only if update succeeds
    */
   private boolean checkAndUpdateState(final FragmentState expected, final FragmentState to) {
@@ -229,8 +251,8 @@ public class FragmentExecutor implements Runnable {
    * Update the state if current state matches expected or fail the fragment if state transition fails even though
    * fragment is not in a terminal state.
    *
-   * @param expected current expected state
-   * @param to target state
+   * @param expected  current expected state
+   * @param to  target state
    * @return true only if update succeeds
    */
   private boolean updateStateOrFail(final FragmentState expected, final FragmentState to) {
@@ -257,8 +279,9 @@ public class FragmentExecutor implements Runnable {
       // if the defunct Drillbit was running our Foreman, then cancel the query
       final DrillbitEndpoint foremanEndpoint = FragmentExecutor.this.fragmentContext.getForemanEndpoint();
       if (unregisteredDrillbits.contains(foremanEndpoint)) {
-        logger.warn("Foreman : {} no longer active. Cancelling fragment {}.",
-            foremanEndpoint.getAddress(), QueryIdHelper.getQueryIdentifier(fragmentContext.getHandle()));
+        logger.warn("Foreman {} no longer active.  Cancelling fragment {}.",
+                    foremanEndpoint.getAddress(),
+                    QueryIdHelper.getQueryIdentifier(fragmentContext.getHandle()));
         FragmentExecutor.this.cancel();
       }
     }

@@ -26,9 +26,17 @@ import java.sql.Timestamp;
 
 import org.apache.drill.exec.vector.accessor.AbstractSqlAccessor.InvalidAccessException;
 
+// TODO:  Doc.
 public interface SqlAccessor {
 
+  // TODO:  Document (renamed) index.
+  // TODO:  Rename ambiguous "index" (JDBC (1-based) column index? other index?)
+  // TODO:  Doc./Spec.:  What happens if index is invalid?
+
   public abstract boolean isNull(int index);
+
+  // TODO:  Clean:  This interface refers to type InvalidAccessException
+  // defined in class implementing this interface.
 
   public abstract BigDecimal getBigDecimal(int index) throws InvalidAccessException;
 
@@ -56,6 +64,9 @@ public interface SqlAccessor {
 
   public abstract Reader getReader(int index) throws InvalidAccessException;
 
+  // TODO: Doc./Spec.:  What should happen if called on non-string type?  (Most
+  // are convertible to string.  Does that result in error or conversion?)
+  // Similar question for many other methods.
   public abstract String getString(int index) throws InvalidAccessException;
 
   public abstract Time getTime(int index) throws InvalidAccessException;

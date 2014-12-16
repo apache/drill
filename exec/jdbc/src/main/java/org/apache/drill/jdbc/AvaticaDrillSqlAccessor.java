@@ -43,67 +43,77 @@ import org.apache.drill.exec.vector.accessor.SqlAccessor;
 public class AvaticaDrillSqlAccessor implements Accessor{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AvaticaDrillSqlAccessor.class);
 
-  private SqlAccessor a;
+  private SqlAccessor underlyingAccessor;
   private DrillCursor cursor;
 
   public AvaticaDrillSqlAccessor(SqlAccessor drillSqlAccessor, DrillCursor cursor) {
     super();
-    this.a = drillSqlAccessor;
+    this.underlyingAccessor = drillSqlAccessor;
     this.cursor = cursor;
   }
 
-  private int row(){
-    return cursor.currentRecord;
+  private int getCurrentRecordNumber() throws SQLException {
+    if ( cursor.getResultSet().isBeforeFirst() ) {
+      throw new InvalidCursorStateSqlException(
+          "Result set cursor is positioned before all rows.  Call next() first." );
+    }
+    else if ( cursor.getResultSet().isAfterLast() ) {
+      throw new InvalidCursorStateSqlException(
+          "Result set cursor is already positioned past all rows." );
+    }
+    else {
+      return cursor.getCurrentRecordNumber();
+    }
   }
 
   @Override
-  public boolean wasNull() {
-    return a.isNull(row());
+  public boolean wasNull() throws SQLException {
+    return underlyingAccessor.isNull(getCurrentRecordNumber());
   }
 
   @Override
   public String getString() throws SQLException {
-    return a.getString(row());
+    return underlyingAccessor.getString(getCurrentRecordNumber());
   }
 
   @Override
   public boolean getBoolean() throws SQLException {
-    return a.getBoolean(row());
+    return underlyingAccessor.getBoolean(getCurrentRecordNumber());
   }
 
   @Override
   public byte getByte() throws SQLException {
-    return a.getByte(row());
+    return underlyingAccessor.getByte(getCurrentRecordNumber());
   }
 
   @Override
   public short getShort() throws SQLException {
-    return a.getShort(row());
+    return underlyingAccessor.getShort(getCurrentRecordNumber());
   }
 
   @Override
   public int getInt() throws SQLException {
-    return a.getInt(row());
+    return underlyingAccessor.getInt(getCurrentRecordNumber());
   }
 
   @Override
   public long getLong() throws SQLException {
-    return a.getLong(row());
+    return underlyingAccessor.getLong(getCurrentRecordNumber());
   }
 
   @Override
   public float getFloat() throws SQLException {
-    return a.getFloat(row());
+    return underlyingAccessor.getFloat(getCurrentRecordNumber());
   }
 
   @Override
   public double getDouble() throws SQLException {
-    return a.getDouble(row());
+    return underlyingAccessor.getDouble(getCurrentRecordNumber());
   }
 
   @Override
   public BigDecimal getBigDecimal() throws SQLException {
-    return a.getBigDecimal(row());
+    return underlyingAccessor.getBigDecimal(getCurrentRecordNumber());
   }
 
   @Override
@@ -113,32 +123,32 @@ public class AvaticaDrillSqlAccessor implements Accessor{
 
   @Override
   public byte[] getBytes() throws SQLException {
-    return a.getBytes(row());
+    return underlyingAccessor.getBytes(getCurrentRecordNumber());
   }
 
   @Override
   public InputStream getAsciiStream() throws SQLException {
-    return a.getStream(row());
+    return underlyingAccessor.getStream(getCurrentRecordNumber());
   }
 
   @Override
   public InputStream getUnicodeStream() throws SQLException {
-    return a.getStream(row());
+    return underlyingAccessor.getStream(getCurrentRecordNumber());
   }
 
   @Override
   public InputStream getBinaryStream() throws SQLException {
-    return a.getStream(row());
+    return underlyingAccessor.getStream(getCurrentRecordNumber());
   }
 
   @Override
   public Object getObject() throws SQLException {
-    return a.getObject(row());
+    return underlyingAccessor.getObject(getCurrentRecordNumber());
   }
 
   @Override
   public Reader getCharacterStream() throws SQLException {
-    return a.getReader(row());
+    return underlyingAccessor.getReader(getCurrentRecordNumber());
   }
 
   @Override
@@ -168,17 +178,17 @@ public class AvaticaDrillSqlAccessor implements Accessor{
 
   @Override
   public Date getDate(Calendar calendar) throws SQLException {
-    return a.getDate(row());
+    return underlyingAccessor.getDate(getCurrentRecordNumber());
   }
 
   @Override
   public Time getTime(Calendar calendar) throws SQLException {
-    return a.getTime(row());
+    return underlyingAccessor.getTime(getCurrentRecordNumber());
   }
 
   @Override
   public Timestamp getTimestamp(Calendar calendar) throws SQLException {
-    return a.getTimestamp(row());
+    return underlyingAccessor.getTimestamp(getCurrentRecordNumber());
   }
 
   @Override
@@ -198,12 +208,12 @@ public class AvaticaDrillSqlAccessor implements Accessor{
 
   @Override
   public String getNString() throws SQLException {
-    return a.getString(row());
+    return underlyingAccessor.getString(getCurrentRecordNumber());
   }
 
   @Override
   public Reader getNCharacterStream() throws SQLException {
-    return a.getReader(row());
+    return underlyingAccessor.getReader(getCurrentRecordNumber());
   }
 
   @Override

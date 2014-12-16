@@ -71,9 +71,11 @@ public class Driver extends UnregisteredDriver {
 
   @Override
   protected Handler createHandler() {
-    return new HandlerImpl();
+    return new DrillHandler();
   }
 
+  // Any reference to class loads class, and loading class instantiates an
+  // instance and has it register itself:
   static {
     new Driver().register();
   }

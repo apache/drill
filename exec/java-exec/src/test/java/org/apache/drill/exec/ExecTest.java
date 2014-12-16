@@ -25,6 +25,8 @@ public class ExecTest extends DrillTest {
 
   @After
   public void clear(){
+    // TODO:  (Re DRILL-1735) Check whether still needed now that
+    // BootstrapContext.close() resets the metrics.
     DrillMetrics.resetMetrics();
   }
 

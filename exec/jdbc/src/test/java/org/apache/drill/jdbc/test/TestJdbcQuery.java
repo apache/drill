@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
@@ -31,6 +32,17 @@ import com.google.common.base.Function;
 
 public class TestJdbcQuery extends JdbcTestQueryBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
+
+  // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment race
+  // conditions are fixed (not just DRILL-2245 fixes).
+  ///**
+  // * Calls {@link ResultSet#next} on given {@code ResultSet} until it returns
+  // * false.  (For TEMPORARY workaround for query cancelation race condition.)
+  // */
+  //private void nextUntilEnd(final ResultSet resultSet) throws SQLException {
+  //  while (resultSet.next()) {
+  //  }
+  //}
 
   @Test
   @Ignore
@@ -214,6 +226,9 @@ public class TestJdbcQuery extends JdbcTestQueryBase{
                              "\ninterval year: " + intervalYear + " intervalDay: " + intervalDay +
                              " date_interval_add: " + ts1.toString() + "date_int_add: " + date1.toString());
 
+          // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
+          // race conditions are fixed (not just DRILL-2245 fixes).
+          // nextUntilEnd(resultSet);
           statement.close();
           return null;
         } catch (Exception e) {

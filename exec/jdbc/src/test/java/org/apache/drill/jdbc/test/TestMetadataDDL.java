@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Set;
 
@@ -39,6 +40,17 @@ import com.google.common.collect.ImmutableSet;
  * -- SHOW FILES
  */
 public class TestMetadataDDL extends JdbcTestQueryBase {
+
+  // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment race
+  // conditions are fixed (not just DRILL-2245 fixes).
+  ///**
+  // * Calls {@link ResultSet#next} on given {@code ResultSet} until it returns
+  // * false.  (For TEMPORARY workaround for query cancelation race condition.)
+  // */
+  //private void nextUntilEnd(final ResultSet resultSet) throws SQLException {
+  //  while (resultSet.next()) {
+  //  }
+  //}
 
   @BeforeClass
   public static void generateHive() throws Exception{
@@ -197,14 +209,23 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
     JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
       public Void apply(Connection connection) {
         try {
+          ResultSet resultSet;
           Statement statement = connection.createStatement();
-          statement.executeQuery("USE dfs_test.tmp").close();
+          resultSet = statement.executeQuery("USE dfs_test.tmp");
+          // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
+          // race conditions are fixed (not just DRILL-2245 fixes).
+          // nextUntilEnd(resultSet);
+          resultSet.close();
 
           // INFORMATION_SCHEMA already has a table named "TABLES". Now create a table with same name in "dfs_test.tmp" schema
-          statement.executeQuery("CREATE OR REPLACE VIEW `TABLES` AS SELECT key FROM hive_test.kv").close();
+          resultSet = statement.executeQuery("CREATE OR REPLACE VIEW `TABLES` AS SELECT key FROM hive_test.kv");
+          // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
+          // race conditions are fixed (not just DRILL-2245 fixes).
+          // nextUntilEnd(resultSet);
+          resultSet.close();
 
           // Test describe of `TABLES` with no schema qualifier
-          ResultSet resultSet = statement.executeQuery("DESCRIBE `TABLES`");
+          resultSet = statement.executeQuery("DESCRIBE `TABLES`");
           Set<String> result = JdbcAssert.toStringSet(resultSet);
           resultSet.close();
           ImmutableSet<String> expected = ImmutableSet.of("COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO");
@@ -222,7 +243,11 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
           // drop created view
-          statement.executeQuery("DROP VIEW `TABLES`").close();
+          resultSet = statement.executeQuery("DROP VIEW `TABLES`");
+          // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
+          // race conditions are fixed (not just DRILL-2245 fixes).
+          // nextUntilEnd(resultSet);
+          resultSet.close();
 
           statement.close();
           return null;
@@ -420,13 +445,17 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
     JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
       public Void apply(Connection connection) {
         try {
+          ResultSet resultSet;
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs_test.`default`");
+          resultSet = statement.executeQuery("USE dfs_test.`default`");
+          // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
+          // race conditions are fixed (not just DRILL-2245 fixes).
+          // nextUntilEnd(resultSet);
 
           // show files
-          ResultSet resultSet = statement.executeQuery("show files from `/tmp`");
+          resultSet = statement.executeQuery("show files from `/tmp`");
 
           System.out.println(JdbcAssert.toString(resultSet));
           resultSet.close();

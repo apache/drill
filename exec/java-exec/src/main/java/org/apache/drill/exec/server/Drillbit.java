@@ -237,7 +237,7 @@ public class Drillbit implements AutoCloseable {
     registrationHandle = coord.register(md);
     startJetty();
 
-    Runtime.getRuntime().addShutdownHook(new ShutdownThread());
+    Runtime.getRuntime().addShutdownHook(new ShutdownThread(this));
   }
 
   @Override
@@ -269,15 +269,20 @@ public class Drillbit implements AutoCloseable {
     logger.info("Shutdown completed.");
   }
 
-  private class ShutdownThread extends Thread {
-    ShutdownThread() {
-      setName("Drillbit-ShutdownHook");
+  private static class ShutdownThread extends Thread {
+    private static int idCounter = 0;
+    private final Drillbit drillbit;
+
+    ShutdownThread( Drillbit drillbit ) {
+      this.drillbit = drillbit;
+      idCounter++;
+      setName("Drillbit-ShutdownHook#" + idCounter );
     }
 
     @Override
     public void run() {
       logger.info("Received shutdown request.");
-      close();
+      drillbit.close();
     }
   }
 

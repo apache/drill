@@ -17,12 +17,61 @@
  */
 package org.apache.drill.jdbc;
 
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+
+import static org.slf4j.LoggerFactory.getLogger;
+
+/**
+ * Registry of open statements (for a connection), for closing them when a
+ * connection is closed.
+ * <p>
+ *   Concurrency:  Not thread-safe.  (Creating statements, closing statements,
+ *   and closing connection cannot be concurrent (unless concurrency is
+ *   coordinated elsewhere).)
+ * </p>
+ */
 class DrillStatementRegistry {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillStatementRegistry.class);
+
+  private static final Logger logger = getLogger( DrillStatementRegistry.class );
+
+  /** ... (using as IdentityHash*Set*) */
+  private final Map<Statement, Object> openStatements = new IdentityHashMap<>();
 
 
-  public void addStatement(DrillRemoteStatement statement){}
-  public void removeStatement(DrillRemoteStatement statement){}
+  public void addStatement( Statement statement ) {
+    logger.debug( "Adding to open-statements registry: " + statement );
+    openStatements.put( statement, statement );
+  }
 
-  public void close(){}
+  public void removeStatement( Statement statement ) {
+    logger.debug( "Removing from open-statements registry: " + statement );
+    openStatements.remove( statement );
+  }
+
+  public void close() {
+    // Note:  Can't call close() on statement during iteration of map because
+    // close() calls our removeStatement(...), which modifies the map.
+
+    // Copy set of open statements to other collection before closing:
+    final List<Statement> copiedList = new ArrayList<>( openStatements.keySet() );
+
+    for ( final Statement statement : copiedList ) {
+      try {
+        logger.debug( "Auto-closing (via open-statements registry): " + statement );
+        statement.close();
+      }
+      catch ( SQLException e ) {
+        logger.error( "Error auto-closing statement " + statement + ": " + e, e );
+        // Otherwise ignore the error, to close which statements we can close.
+      }
+    }
+    openStatements.clear();
+  }
 }

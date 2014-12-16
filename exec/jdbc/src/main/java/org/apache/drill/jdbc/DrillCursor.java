@@ -31,32 +31,50 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 
-public class DrillCursor implements Cursor{
+public class DrillCursor implements Cursor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillCursor.class);
 
   private static final String UNKNOWN = "--UNKNOWN--";
 
+  /** The associated java.sql.ResultSet implementation. */
+  private final DrillResultSet resultSet;
+
+  private final RecordBatchLoader currentBatch;
+  private final DrillResultSet.ResultsListener resultsListener;
+
+  // TODO:  Doc.:  Say what's started (set of rows?  just current result batch?)
   private boolean started = false;
   private boolean finished = false;
-  private final RecordBatchLoader currentBatch;
-  private final DrillResultSet.Listener listener;
+  // TODO:  Doc.: Say what "readFirstNext" means.
   private boolean redoFirstNext = false;
+  // TODO:  Doc.: First what? (First batch? record? "next" call/operation?)
   private boolean first = true;
 
   private DrillColumnMetaDataList columnMetaDataList;
   private BatchSchema schema;
 
-  final DrillResultSet results;
-  int currentRecord = 0;
+  /** Zero-based index of current record in record batch. */
+  private int currentRecordNumber = -1;
   private long recordBatchCount;
   private final DrillAccessorList accessors = new DrillAccessorList();
 
 
-  public DrillCursor(DrillResultSet results) {
-    super();
-    this.results = results;
-    currentBatch = results.currentBatch;
-    this.listener = results.listener;
+  /**
+   *
+   * @param  resultSet  the associated ResultSet implementation
+   */
+  public DrillCursor(final DrillResultSet resultSet) {
+    this.resultSet = resultSet;
+    currentBatch = resultSet.currentBatch;
+    resultsListener = resultSet.resultslistener;
+  }
+
+  public DrillResultSet getResultSet() {
+    return resultSet;
+  }
+
+  protected int getCurrentRecordNumber() {
+    return currentRecordNumber;
   }
 
   @Override
@@ -65,12 +83,20 @@ public class DrillCursor implements Cursor{
     return accessors;
   }
 
+  // TODO:  Doc.:  Specify what the return value actually means.  (The wording
+  // "Moves to the next row" and "Whether moved" from the documentation of the
+  // implemented interface (net.hydromatic.avatica.Cursor) doesn't address
+  // moving past last row or how to evaluate "whether moved" on the first call.
+  // In particular, document what the return value indicates about whether we're
+  // currently at a valid row (or whether next() can be called again, or
+  // whatever it does indicate), especially the first time this next() called
+  // for a new result.
   @Override
   public boolean next() throws SQLException {
     if (!started) {
       started = true;
       redoFirstNext = true;
-    } else if(redoFirstNext && !finished) {
+    } else if (redoFirstNext && !finished) {
       redoFirstNext = false;
       return true;
     }
@@ -79,27 +105,32 @@ public class DrillCursor implements Cursor{
       return false;
     }
 
-    if (currentRecord+1 < currentBatch.getRecordCount()) {
-      currentRecord++;
+    if (currentRecordNumber + 1 < currentBatch.getRecordCount()) {
+      // Next index is in within current batch--just increment to that record.
+      currentRecordNumber++;
       return true;
     } else {
+      // Next index is not in current batch (including initial empty batch--
+      // (try to) get next batch.
       try {
-        QueryResultBatch qrb = listener.getNext();
+        QueryResultBatch qrb = resultsListener.getNext();
         recordBatchCount++;
         while (qrb != null && qrb.getHeader().getRowCount() == 0 && !first) {
           qrb.release();
-          qrb = listener.getNext();
+          qrb = resultsListener.getNext();
           recordBatchCount++;
         }
 
         first = false;
 
         if (qrb == null) {
+          currentBatch.clear();
           finished = true;
           return false;
         } else {
-          currentRecord = 0;
+          currentRecordNumber = 0;
           boolean changed = currentBatch.load(qrb.getHeader().getDef(), qrb.getData());
+          qrb.release();
           schema = currentBatch.getSchema();
           if (changed) {
             updateColumns();
@@ -119,8 +150,8 @@ public class DrillCursor implements Cursor{
   void updateColumns() {
     accessors.generateAccessors(this, currentBatch);
     columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, schema);
-    if (results.changeListener != null) {
-      results.changeListener.schemaChanged(schema);
+    if (getResultSet().changeListener != null) {
+      getResultSet().changeListener.schemaChanged(schema);
     }
   }
 
@@ -130,7 +161,17 @@ public class DrillCursor implements Cursor{
 
   @Override
   public void close() {
-    results.cleanup();
+    // currentBatch is owned by resultSet and cleaned up by
+    // DrillResultSet.cleanup()
+
+    // listener is owned by resultSet and cleaned up by
+    // DrillResultSet.cleanup()
+
+    // Clean up result set (to deallocate any buffers).
+    getResultSet().cleanup();
+    // TODO:  CHECK:  Something might need to set statement.openResultSet to
+    // null.  Also, AvaticaResultSet.close() doesn't check whether already
+    // closed and skip calls to cursor.close(), statement.onResultSetClose()
   }
 
   @Override

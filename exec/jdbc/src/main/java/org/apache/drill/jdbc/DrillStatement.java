@@ -19,10 +19,12 @@ package org.apache.drill.jdbc;
 
 import net.hydromatic.avatica.AvaticaStatement;
 
-public abstract class DrillStatement extends AvaticaStatement implements DrillRemoteStatement {
+public abstract class DrillStatement extends AvaticaStatement
+   implements DrillRemoteStatement {
 
   DrillStatement(DrillConnectionImpl connection, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
     super(connection, resultSetType, resultSetConcurrency, resultSetHoldability);
+    connection.openStatementsRegistry.addStatement(this);
   }
 
   @Override
@@ -33,7 +35,7 @@ public abstract class DrillStatement extends AvaticaStatement implements DrillRe
   @Override
   public void cleanup() {
     final DrillConnectionImpl connection1 = (DrillConnectionImpl) connection;
-    connection1.registry.removeStatement(this);
+    connection1.openStatementsRegistry.removeStatement(this);
   }
 
 }

@@ -31,6 +31,8 @@ public class DrillAccessorList extends BasicList<Accessor>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAccessorList.class);
 
   private Accessor[] accessors = new Accessor[0];
+  // TODO  Rename to lastColumnAccessed and/or document.
+  // TODO  Why 1, rather than, say, -1?
   private int lastColumn = 1;
 
   public void generateAccessors(DrillCursor cursor, RecordBatchLoader currentBatch){

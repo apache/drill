@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +39,7 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
-public class TestJdbcDistQuery extends JdbcTest{
+public class TestJdbcDistQuery extends JdbcTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcDistQuery.class);
 
 
@@ -50,6 +51,17 @@ public class TestJdbcDistQuery extends JdbcTest{
     Driver.load();
     WORKING_PATH = Paths.get("").toAbsolutePath().toString();
 
+  }
+
+  // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment race
+  // conditions are fixed (not just DRILL-2245 fixes).
+  /**
+   * Calls {@link ResultSet#next} on given {@code ResultSet} until it returns
+   * false.  (For TEMPORARY workaround for query cancelation race condition.)
+   */
+  private static void nextUntilEnd(final ResultSet resultSet) throws SQLException {
+    while (resultSet.next()) {
+    }
   }
 
   @Test
@@ -183,13 +195,17 @@ public class TestJdbcDistQuery extends JdbcTest{
  private void testQuery(String sql) throws Exception{
     boolean success = false;
     try (Connection c = DriverManager.getConnection("jdbc:drill:zk=local", null);) {
+      // ???? TODO:  What is this currently redundant one-time loop for?  (If
+      // it's keep around to make it easy to switch to looping multiple times
+      // (e.g., for debugging) then define a constant field or local variable
+      // for the number of iterations.)
       for (int x = 0; x < 1; x++) {
         Stopwatch watch = new Stopwatch().start();
         Statement s = c.createStatement();
         ResultSet r = s.executeQuery(sql);
         boolean first = true;
         ResultSetMetaData md = r.getMetaData();
-        if (first == true) {
+        if (first) {
           for (int i = 1; i <= md.getColumnCount(); i++) {
             System.out.print(md.getColumnName(i));
             System.out.print('\t');
@@ -235,6 +251,9 @@ public class TestJdbcDistQuery extends JdbcTest{
       String[] expected = {"fullname", "occupation", "postal_code"};
       Assert.assertEquals(3, md.getColumnCount());
       Assert.assertArrayEquals(expected, columns.toArray());
+      // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment race
+      // conditions are fixed (not just DRILL-2245 fixes).
+      nextUntilEnd(r);
     }
   }
 

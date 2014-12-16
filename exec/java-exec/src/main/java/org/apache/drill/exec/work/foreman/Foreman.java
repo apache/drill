@@ -803,7 +803,8 @@ public class Foreman implements Runnable {
 
     // record all fragments for status purposes.
     for (PlanFragment planFragment : fragments) {
-//      logger.debug("Tracking intermediate remote node {} with data {}", f.getAssignment(), f.getFragmentJson());
+      logger.trace("Tracking intermediate remote node {} with data {}",
+                   planFragment.getAssignment(), planFragment.getFragmentJson());
       queryManager.addFragmentStatusTracker(planFragment, false);
       if (planFragment.getLeafFragment()) {
         leafFragmentMap.put(planFragment.getAssignment(), planFragment);

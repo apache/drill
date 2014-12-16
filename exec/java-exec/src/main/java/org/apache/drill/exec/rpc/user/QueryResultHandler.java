@@ -20,8 +20,13 @@ package org.apache.drill.exec.rpc.user;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+
+import javax.annotation.Nullable;
 
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -36,69 +41,203 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 
 /**
- * Encapsulates the future management of query submissions. This entails a potential race condition. Normal ordering is:
- * 1. Submit query to be executed. 2. Receive QueryHandle for buffer management 3. Start receiving results batches for
- * query.
- *
- * However, 3 could potentially occur before 2. As such, we need to handle this case and then do a switcheroo.
- *
+ * Encapsulates the future management of query submissions.  This entails a
+ * potential race condition.  Normal ordering is:
+ * <ul>
+ *   <li>1.  Submit query to be executed. </li>
+ *   <li>2.  Receive QueryHandle for buffer management. </li>
+ *   <li>3.  Start receiving results batches for query. </li>
+ * </ul>
+ * However, 3 could potentially occur before 2.   Because of that, we need to
+ * handle this case and then do a switcheroo.
  */
 public class QueryResultHandler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResultHandler.class);
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(QueryResultHandler.class);
 
-  private ConcurrentMap<QueryId, UserResultsListener> resultsListener = Maps.newConcurrentMap();
+  /**
+   * Current listener for results, for each active query.
+   * <p>
+   *   Concurrency:  Access by SubmissionLister for query-ID message vs.
+   *   access by batchArrived is not otherwise synchronized.
+   * </p>
+   */
+  private final ConcurrentMap<QueryId, UserResultsListener> queryIdToResultsListenersMap =
+      Maps.newConcurrentMap();
+
+  /**
+   * Any is-last-chunk batch being deferred until the next batch
+   * (normally one with COMPLETED) arrives, per active query.
+   * <ul>
+   *   <li>Last-chunk batch is added (and not passed on) when it arrives.</li>
+   *   <li>Last-chunk batch is removed (and passed on) when next batch arrives
+   *       and has state {@link QueryState.COMPLETED}.</li>
+   *   <li>Last-chunk batch is removed (and not passed on) when next batch
+   *       arrives and has state {@link QueryState.CANCELED} or
+   *       {@link QueryState.FAILED}.</li>
+   * </ul>
+   */
+  private final Map<QueryId, QueryResultBatch> queryIdToDeferredLastChunkBatchesMap =
+      new ConcurrentHashMap<>();
 
 
-  public RpcOutcomeListener<QueryId> getWrappedListener(UserResultsListener listener) {
-    return new SubmissionListener(listener);
+  public RpcOutcomeListener<QueryId> getWrappedListener(UserResultsListener resultsListener) {
+    return new SubmissionListener(resultsListener);
   }
 
-  public void batchArrived(ConnectionThrottle throttle, ByteBuf pBody, ByteBuf dBody) throws RpcException {
-    final QueryResult result = RpcBus.get(pBody, QueryResult.PARSER);
-    final QueryResultBatch batch = new QueryResultBatch(result, (DrillBuf) dBody);
-    final boolean failed = (batch.getHeader().getQueryState() == QueryState.FAILED);
+  /**
+   * Maps internal low-level API protocol to {@link UserResultsListener}-level
+   * API protocol, deferring sending is-last-chunk batches until (internal)
+   * COMPLETED batch.
+   */
+  public void batchArrived( ConnectionThrottle throttle,
+                            ByteBuf pBody, ByteBuf dBody ) throws RpcException {
+    final QueryResult queryResult = RpcBus.get( pBody, QueryResult.PARSER );
+    // Current batch coming in.  (Not necessarily passed along now or ever.)
+    final QueryResultBatch inputBatch = new QueryResultBatch( queryResult,
+                                                              (DrillBuf) dBody );
 
-    assert failed || batch.getHeader().getErrorCount() == 0 : "Error count for the query batch is non-zero but QueryState != FAILED";
+    final QueryId queryId = queryResult.getQueryId();
+    final QueryState queryState = inputBatch.getHeader().getQueryState();
 
-    UserResultsListener l = resultsListener.get(result.getQueryId());
-    // logger.debug("For QueryId [{}], retrieved result listener {}", result.getQueryId(), l);
-    if (l == null) {
-      BufferingListener bl = new BufferingListener();
-      l = resultsListener.putIfAbsent(result.getQueryId(), bl);
-      // if we had a successful insert, use that reference.  Otherwise, just throw away the new bufering listener.
-      if (l == null) {
-        l = bl;
+    logger.debug( "batchArrived: isLastChunk: {}, queryState: {}, queryId = {}",
+                  inputBatch.getHeader().getIsLastChunk(), queryState, queryId );
+    logger.trace( "batchArrived: currentBatch = {}", inputBatch );
+
+    final boolean isFailureBatch    = QueryState.FAILED    == queryState;
+    final boolean isCompletionBatch = QueryState.COMPLETED == queryState;
+    final boolean isLastChunkBatchToDelay =
+        inputBatch.getHeader().getIsLastChunk() && QueryState.PENDING == queryState;
+    final boolean isTerminalBatch;
+    switch ( queryState ) {
+      case PENDING:
+         isTerminalBatch = false;
+         break;
+      case FAILED:
+      case CANCELED:
+      case COMPLETED:
+        isTerminalBatch = true;
+        break;
+      default:
+        logger.error( "Unexpected/unhandled QueryState " + queryState
+                      + " (for query " + queryId +  ")" );
+        isTerminalBatch = false;
+        break;
+    }
+    assert isFailureBatch || inputBatch.getHeader().getErrorCount() == 0
+        : "Error count for the query batch is non-zero but QueryState != FAILED";
+
+    UserResultsListener resultsListener = queryIdToResultsListenersMap.get( queryId );
+    logger.trace( "For QueryId [{}], retrieved results listener {}", queryId,
+                  resultsListener );
+    if ( null == resultsListener ) {
+      // WHO?? didn't get query ID response and set submission listener yet,
+      // so install a buffering listener for now
+
+      BufferingResultsListener bl = new BufferingResultsListener();
+      resultsListener = queryIdToResultsListenersMap.putIfAbsent( queryId, bl );
+      // If we had a successful insertion, use that reference.  Otherwise, just
+      // throw away the new buffering listener.
+      if ( null == resultsListener ) {
+        resultsListener = bl;
       }
-      if (result.getQueryId().toString().equals("")) {
+      // TODO:  Is there a more direct way to detect a Query ID in whatever
+      // state this string comparison detects?
+      if ( queryId.toString().equals( "" ) ) {
         failAll();
       }
     }
 
-    if(failed) {
-      String message = buildErrorMessage(batch);
-      l.submissionFailed(new RpcException(message));
-      resultsListener.remove(result.getQueryId(), l);
-    }else{
-      try {
-        l.resultArrived(batch, throttle);
-      } catch (Exception e) {
-        batch.release();
-        l.submissionFailed(new RpcException(e));
-      }
-    }
+    try {
+      if (isFailureBatch) {
+        // Failure case--pass on via submissionFailed(...).
 
-    if (
-        (failed || result.getIsLastChunk())
-        &&
-        (!(l instanceof BufferingListener) || ((BufferingListener)l).output != null)
-        ) {
-      resultsListener.remove(result.getQueryId(), l);
+        try {
+          String message = buildErrorMessage(inputBatch);
+          resultsListener.submissionFailed(new RpcException(message));
+        }
+        finally {
+          inputBatch.release();
+        }
+        // Note: Listener and any delayed batch are removed in finally below.
+      } else {
+        // A successful (data, completion, or cancelation) case--pass on via
+        // resultArrived, delaying any last-chunk batches until following
+        // COMPLETED batch and omitting COMPLETED batch.
+
+        // If is last-chunk batch, save until next batch for query (normally a
+        // COMPLETED batch) comes in:
+        if ( isLastChunkBatchToDelay ) {
+          // We have a (non-failure) is-last-chunk batch--defer it until we get
+          // the query's COMPLETED batch.
+
+          QueryResultBatch expectNone;
+          assert null == ( expectNone =
+                           queryIdToDeferredLastChunkBatchesMap.get( queryId ) )
+              : "Already have pending last-batch QueryResultBatch " + expectNone
+                + " (at receiving last-batch QueryResultBatch " + inputBatch
+                + ") for query " + queryId;
+          queryIdToDeferredLastChunkBatchesMap.put( queryId, inputBatch );
+          // Can't release batch now; will release at terminal batch in
+          // finally below.
+        } else {
+          // We have a batch triggering sending out a batch (maybe same one,
+          // maybe deferred one.
+
+          // Batch to send out in response to current batch.
+          final QueryResultBatch outputBatch;
+          if ( isCompletionBatch ) {
+            // We have a COMPLETED batch--we should have a saved is-last-chunk
+            // batch, and we must pass that on now (that we've seen COMPLETED).
+
+            outputBatch = queryIdToDeferredLastChunkBatchesMap.get( queryId );
+            assert null != outputBatch
+                : "No pending last-batch QueryResultsBatch saved, at COMPLETED"
+                + " QueryResultsBatch " + inputBatch + " for query " + queryId;
+          } else {
+            // We have a non--last-chunk PENDING batch or a CANCELED
+            // batch--pass it on.
+            outputBatch = inputBatch;
+          }
+          // Note to release input batch if it's not the batch we're sending out.
+          final boolean releaseInputBatch = outputBatch != inputBatch;
+
+          try {
+            resultsListener.resultArrived( outputBatch, throttle );
+            // That releases outputBatch if successful.
+          } catch ( Exception e ) {
+            outputBatch.release();
+            resultsListener.submissionFailed(new RpcException(e));
+          }
+          finally {
+            if ( releaseInputBatch ) {
+              inputBatch.release();
+            }
+          }
+        }
+      }
+    } finally {
+      if ( isTerminalBatch ) {
+        // Remove and release any deferred is-last-chunk batch:
+        QueryResultBatch anyUnsentLastChunkBatch =
+             queryIdToDeferredLastChunkBatchesMap.remove( queryId );
+        if ( null != anyUnsentLastChunkBatch ) {
+          anyUnsentLastChunkBatch.release();
+        }
+
+       // TODO:  What exactly are we checking for?  How should we really check
+        // for it?
+        if ( (! ( resultsListener instanceof BufferingResultsListener )
+             || ((BufferingResultsListener) resultsListener).output != null ) ) {
+          queryIdToResultsListenersMap.remove( queryId, resultsListener );
+        }
+      }
     }
   }
 
   protected String buildErrorMessage(QueryResultBatch batch) {
     StringBuilder sb = new StringBuilder();
-    for (UserBitShared.DrillPBError error:batch.getHeader().getErrorList()) {
+    for (UserBitShared.DrillPBError error : batch.getHeader().getErrorList()) {
       sb.append(error.getMessage());
       sb.append("\n");
     }
@@ -106,12 +245,12 @@ public class QueryResultHandler {
   }
 
   private void failAll() {
-    for (UserResultsListener l : resultsListener.values()) {
+    for (UserResultsListener l : queryIdToResultsListenersMap.values()) {
       l.submissionFailed(new RpcException("Received result without QueryId"));
     }
   }
 
-  private class BufferingListener implements UserResultsListener {
+  private static class BufferingResultsListener implements UserResultsListener {
 
     private ConcurrentLinkedQueue<QueryResultBatch> results = Queues.newConcurrentLinkedQueue();
     private volatile boolean finished = false;
@@ -174,39 +313,42 @@ public class QueryResultHandler {
   }
 
   private class SubmissionListener extends BaseRpcOutcomeListener<QueryId> {
-    private UserResultsListener listener;
+    private UserResultsListener resultsListener;
 
-    public SubmissionListener(UserResultsListener listener) {
+    public SubmissionListener(UserResultsListener resultsListener) {
       super();
-      this.listener = listener;
+      this.resultsListener = resultsListener;
     }
 
     @Override
     public void failed(RpcException ex) {
-      listener.submissionFailed(ex);
+      resultsListener.submissionFailed(ex);
     }
 
     @Override
     public void success(QueryId queryId, ByteBuf buf) {
-      listener.queryIdArrived(queryId);
-      logger.debug("Received QueryId {} succesfully.  Adding listener {}", queryId, listener);
-      UserResultsListener oldListener = resultsListener.putIfAbsent(queryId, listener);
+      resultsListener.queryIdArrived(queryId);
+      logger.debug("Received QueryId {} successfully.  Adding results listener {}.",
+                   queryId, resultsListener);
+      UserResultsListener oldListener =
+          queryIdToResultsListenersMap.putIfAbsent(queryId, resultsListener);
 
-      // we need to deal with the situation where we already received results by the time we got the query id back. In
-      // that case, we'll need to transfer the buffering listener over, grabbing a lock against reception of additional
-      // results during the transition
+      // We need to deal with the situation where we already received results by
+      // the time we got the query id back.  In that case, we'll need to
+      // transfer the buffering listener over, grabbing a lock against reception
+      // of additional results during the transition.
       if (oldListener != null) {
         logger.debug("Unable to place user results listener, buffering listener was already in place.");
-        if (oldListener instanceof BufferingListener) {
-          resultsListener.remove(oldListener);
-          boolean all = ((BufferingListener) oldListener).transferTo(this.listener);
+        if (oldListener instanceof BufferingResultsListener) {
+          queryIdToResultsListenersMap.remove(oldListener);
+          boolean all = ((BufferingResultsListener) oldListener).transferTo(this.resultsListener);
           // simply remove the buffering listener if we already have the last response.
           if (all) {
-            resultsListener.remove(oldListener);
+            queryIdToResultsListenersMap.remove(oldListener);
           } else {
-            boolean replaced = resultsListener.replace(queryId, oldListener, listener);
+            boolean replaced = queryIdToResultsListenersMap.replace(queryId, oldListener, resultsListener);
             if (!replaced) {
-              throw new IllegalStateException();
+              throw new IllegalStateException(); // TODO: Say what the problem is!
             }
           }
         } else {

@@ -78,6 +78,7 @@ public class ScreenCreator implements RootCreator<Screen>{
 
     public ScreenRoot(FragmentContext context, RecordBatch incoming, Screen config) throws OutOfMemoryException {
       super(context, config);
+      // TODO  Edit:  That "as such" doesn't make sense.
       assert context.getConnection() != null : "A screen root should only be run on the driving node which is connected directly to the client.  As such, this should always be true.";
       this.context = context;
       this.incoming = incoming;
@@ -86,15 +87,15 @@ public class ScreenCreator implements RootCreator<Screen>{
 
     @Override
     public boolean innerNext() {
-      if(!ok){
+      if (!ok) {
         stop();
         context.fail(this.listener.ex);
         return false;
       }
 
       IterOutcome outcome = next(incoming);
-//      logger.debug("Screen Outcome {}", outcome);
-      switch(outcome){
+      logger.trace("Screen Outcome {}", outcome);
+      switch (outcome) {
       case STOP: {
         this.internalStop();
         boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
@@ -177,7 +178,7 @@ public class ScreenCreator implements RootCreator<Screen>{
 
     @Override
     public void stop() {
-      if(!oContext.isClosed()){
+      if (!oContext.isClosed()) {
         internalStop();
       }
       sendCount.waitForSendComplete();
@@ -211,7 +212,6 @@ public class ScreenCreator implements RootCreator<Screen>{
     RecordBatch getIncoming() {
       return incoming;
     }
-
 
 
   }

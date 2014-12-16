@@ -30,11 +30,13 @@ import net.hydromatic.avatica.AvaticaPreparedStatement;
  * {@link net.hydromatic.avatica.AvaticaFactory#newPreparedStatement}.
  * </p>
  */
-abstract class DrillPreparedStatement extends AvaticaPreparedStatement implements DrillRemoteStatement {
+abstract class DrillPreparedStatement extends AvaticaPreparedStatement
+    implements DrillRemoteStatement {
 
   protected DrillPreparedStatement(DrillConnectionImpl connection, AvaticaPrepareResult prepareResult,
       int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
     super(connection, prepareResult, resultSetType, resultSetConcurrency, resultSetHoldability);
+    connection.openStatementsRegistry.addStatement(this);
   }
 
   @Override
@@ -45,6 +47,6 @@ abstract class DrillPreparedStatement extends AvaticaPreparedStatement implement
   @Override
   public void cleanup() {
     final DrillConnectionImpl connection1 = (DrillConnectionImpl) connection;
-    connection1.registry.removeStatement(this);
+    connection1.openStatementsRegistry.removeStatement(this);
   }
 }

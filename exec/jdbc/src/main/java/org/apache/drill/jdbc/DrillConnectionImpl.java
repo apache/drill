@@ -44,16 +44,17 @@ import org.apache.drill.exec.server.RemoteServiceSet;
  * Abstract to allow newer versions of JDBC to add methods.
  * </p>
  */
-abstract class DrillConnectionImpl extends AvaticaConnection implements org.apache.drill.jdbc.DrillConnection {
-  public final DrillStatementRegistry registry = new DrillStatementRegistry();
-  final DrillConnectionConfig config;
-
+abstract class DrillConnectionImpl extends AvaticaConnection implements DrillConnection {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
+
+  final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
+  final DrillConnectionConfig config;
 
   private final DrillClient client;
   private final BufferAllocator allocator;
   private Drillbit bit;
   private RemoteServiceSet serviceSet;
+
 
   protected DrillConnectionImpl(Driver driver, AvaticaFactory factory, String url, Properties info) throws SQLException {
     super(driver, factory, url, info);
@@ -71,7 +72,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
         this.allocator = new TopLevelAllocator(dConfig);
         RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
         if (set == null) {
-          // we're embedded, start a local drill bit.
+          // We're embedded; start a local drill bit.
           serviceSet = RemoteServiceSet.getLocalServiceSet();
           set = serviceSet;
           try {
@@ -89,6 +90,10 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
       } else {
         final DrillConfig dConfig = DrillConfig.forClient();
         this.allocator = new TopLevelAllocator(dConfig);
+        // TODO:  Check:  Why does new DrillClient() create another DrillConfig,
+        // with enableServerConfigs true, and cause scanning for function
+        // implementations (needed by a server, but not by a client-only
+        // process, right?)?  Probably pass dConfig to construction.
         this.client = new DrillClient();
         this.client.connect(config.getZookeeperConnectionString(), info);
       }
@@ -121,21 +126,24 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
   }
 
   @Override
-  public DrillStatement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
-      throws SQLException {
-    DrillStatement statement = (DrillStatement) super.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-    registry.addStatement(statement);
+  public DrillStatement createStatement(int resultSetType, int resultSetConcurrency,
+                                        int resultSetHoldability) throws SQLException {
+    DrillStatement statement =
+        (DrillStatement) super.createStatement(resultSetType, resultSetConcurrency,
+                                               resultSetHoldability);
     return statement;
   }
 
   @Override
-  public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
-      int resultSetHoldability) throws SQLException {
+  public PreparedStatement prepareStatement(String sql, int resultSetType,
+                                            int resultSetConcurrency,
+                                            int resultSetHoldability) throws SQLException {
     try {
       DrillPrepareResult prepareResult = new DrillPrepareResult(sql);
-      DrillPreparedStatement statement = (DrillPreparedStatement) factory.newPreparedStatement(this, prepareResult,
-          resultSetType, resultSetConcurrency, resultSetHoldability);
-      registry.addStatement(statement);
+      DrillPreparedStatement statement =
+          (DrillPreparedStatement) factory.newPreparedStatement(
+              this, prepareResult, resultSetType, resultSetConcurrency,
+              resultSetHoldability);
       return statement;
     } catch (RuntimeException e) {
       throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
@@ -160,6 +168,10 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
   }
 
   void cleanup() {
+    // First close any open JDBC Statement objects, to close any open ResultSet
+    // objects and release their buffers/vectors.
+    openStatementsRegistry.close();
+
     client.close();
     allocator.close();
     if (bit != null) {

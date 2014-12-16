@@ -31,9 +31,11 @@ public class DrillConnectionConfig extends ConnectionConfigImpl {
   }
 
   public boolean isLocal(){
+    // TODO  Why doesn't this call getZookeeperConnectionString()?
     return "local".equals(props.getProperty("zk"));
   }
 
+  // TODO: Check: Shouldn't something validate that URL has "zk" parameter?
   public String getZookeeperConnectionString(){
     return props.getProperty("zk");
   }

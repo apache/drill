@@ -48,7 +48,7 @@ public class JdbcTest extends ExecTest {
   private static CachingConnectionFactory factory;
 
   @BeforeClass
-  public static void setUp() {
+  public static void setUpTestCase() {
     factory = new SingleConnectionCachingFactory(new ConnectionFactory() {
       @Override
       public Connection createConnection(ConnectionInfo info) throws Exception {
@@ -92,11 +92,24 @@ public class JdbcTest extends ExecTest {
     }
   }
 
+  // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment race
+  // conditions are fixed (not just DRILL-2245 fixes).
+  ///**
+  // * Calls {@link ResultSet#next} on given {@code ResultSet} until it returns
+  // * false.  (For TEMPORARY workaround for query cancelation race condition.)
+  // */
+  //private static void nextUntilEnd(final ResultSet resultSet) throws SQLException {
+  //  while (resultSet.next()) {
+  //  }
+  //}
+
   protected static void changeSchema(Connection conn, String schema) {
     final String query = String.format("use %s", schema);
-    try {
-      Statement s = conn.createStatement();
+    try ( Statement s = conn.createStatement() ) {
       ResultSet r = s.executeQuery(query);
+      // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
+      // race conditions are fixed (not just DRILL-2245 fixes).
+      // nextUntilEnd(r);
     } catch (SQLException e) {
       throw new RuntimeException("unable to change schema", e);
     }
@@ -114,7 +127,7 @@ public class JdbcTest extends ExecTest {
   }
 
   @AfterClass
-  public static void clearUp() throws Exception {
+  public static void tearDownTestCase() throws Exception {
     factory.close();
   }
 }
