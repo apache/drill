@@ -45,12 +45,14 @@ import com.google.common.collect.Maps;
 
 public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
+  private static final boolean IS_COMPRESSIBLE = true;
+
   public JSONFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig) {
     this(name, context, fs, storageConfig, new JSONFormatConfig());
   }
 
   public JSONFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig config, JSONFormatConfig formatPluginConfig) {
-    super(name, context, fs, config, formatPluginConfig, true, false, false, false, Lists.newArrayList("json"), "json");
+    super(name, context, fs, config, formatPluginConfig, true, false, false, IS_COMPRESSIBLE, Lists.newArrayList("json"), "json");
   }
 
   @Override

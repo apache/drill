@@ -21,7 +21,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
@@ -34,16 +40,20 @@ import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.RepeatedBigIntVector;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.rules.TemporaryFolder;
 
 public class TestJsonReader extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
 
   private static final boolean VERBOSE_DEBUG = false;
 
+  @Rule
+  public TemporaryFolder folder = new TemporaryFolder();
 
   @Test
   public void schemaChange() throws Exception {
@@ -85,6 +95,50 @@ public class TestJsonReader extends BaseTestQuery {
       System.out.println();
       i++;
     }
+  }
+
+  @Test
+  public void testReadCompressed() throws Exception {
+    String filepath = "compressed_json.json";
+    File f = folder.newFile(filepath);
+    PrintWriter out = new PrintWriter(f);
+    out.println("{\"a\" :5}");
+    out.close();
+
+    gzipIt(f);
+    testBuilder()
+        .sqlQuery("select * from dfs.`" + f.getPath() + ".gz" + "`")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(5l)
+        .build().run();
+
+    // test reading the uncompressed version as well
+    testBuilder()
+        .sqlQuery("select * from dfs.`" + f.getPath() + "`")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(5l)
+        .build().run();
+  }
+
+  public void gzipIt(File sourceFile) throws IOException {
+
+    // modified from: http://www.mkyong.com/java/how-to-compress-a-file-in-gzip-format/
+    byte[] buffer = new byte[1024];
+    GZIPOutputStream gzos =
+        new GZIPOutputStream(new FileOutputStream(sourceFile.getPath() + ".gz"));
+
+    FileInputStream in =
+        new FileInputStream(sourceFile);
+
+    int len;
+    while ((len = in.read(buffer)) > 0) {
+      gzos.write(buffer, 0, len);
+    }
+    in.close();
+    gzos.finish();
+    gzos.close();
   }
 
   @Test

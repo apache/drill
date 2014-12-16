@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.easy.json;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -36,12 +37,16 @@ import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReader.ReadState;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.base.Stopwatch;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.io.compress.CompressionInputStream;
 
 public class JSONRecordReader extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
@@ -50,7 +55,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private VectorContainerWriter writer;
   private Path hadoopPath;
   private FileSystem fileSystem;
-  private FSDataInputStream stream;
+  private InputStream stream;
   private JsonReader jsonReader;
   private int recordCount;
   private FragmentContext fragmentContext;
@@ -70,7 +75,13 @@ public class JSONRecordReader extends AbstractRecordReader {
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try{
-      this.stream = fileSystem.open(hadoopPath);
+      CompressionCodecFactory factory = new CompressionCodecFactory(new Configuration());
+      CompressionCodec codec = factory.getCodec(hadoopPath); // infers from file ext.
+      if (codec != null) {
+        this.stream = codec.createInputStream(fileSystem.open(hadoopPath));
+      } else {
+        this.stream = fileSystem.open(hadoopPath);
+      }
       this.writer = new VectorContainerWriter(output);
       this.mutator = output;
       this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), columns, enableAllTextMode);

@@ -51,6 +51,7 @@ import com.fasterxml.jackson.core.sym.BytesToNameCanonicalizer;
 import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import org.apache.hadoop.io.compress.CompressionInputStream;
 
 public class JsonReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
@@ -116,7 +117,7 @@ public class JsonReader {
     }
   }
 
-  public void setSource(FSDataInputStream is) throws IOException{
+  public void setSource(InputStream is) throws IOException{
     parser.setInputStream(is);
     this.onReset = false;
   }
