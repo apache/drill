@@ -133,8 +133,8 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   }
 
   private void allocateVectors(int targetRecordCount) {
-    for(VectorAllocator a : allocators){
-      a.alloc(targetRecordCount);
+    for (VectorWrapper w: outgoing) {
+      w.getValueVector().allocateNew();
     }
   }
 
