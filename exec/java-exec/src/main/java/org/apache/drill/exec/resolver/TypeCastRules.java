@@ -413,6 +413,9 @@ public class TypeCastRules {
 
     /** TIMESTAMP cast able from **/
     rule = new HashSet<MinorType>();
+    rule.add(MinorType.VAR16CHAR);
+    rule.add(MinorType.VARCHAR);
+    rule.add(MinorType.VARBINARY);
     rule.add(MinorType.TIMESTAMP);
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
@@ -722,7 +725,6 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL38SPARSE);
     rule.add(MinorType.DECIMAL38DENSE);
     rule.add(MinorType.MONEY);
-    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
@@ -758,6 +760,7 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL38SPARSE);
     rule.add(MinorType.DECIMAL38DENSE);
     rule.add(MinorType.MONEY);
+    rule.add(MinorType.TIMESTAMP);
     rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
