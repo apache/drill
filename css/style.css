@@ -788,7 +788,7 @@ div.download table a {
 	background-size:16px auto;
 	background-position:17px center;
 	background-repeat:no-repeat;
-	padding:0 35px 0 45px;
+	padding:10px 35px 10px 45px;
 	line-height:40px;
 	font-size:12px;
 	font-weight:normal;
@@ -806,12 +806,21 @@ div.download table a.dl:hover {
 }
 
 div.download table a.find {
-	background-color:#1a6bc7;
+	background-color:#4aaf4c;
 	background-image:url(../images/btn-lens.png);
 }
 
 div.download table a.find:hover {
-	background-color:#145aa8;
+	background-color:#348436;
+}
+
+div.download table a.tutorial {
+    background-color:#1a6bc7;
+    background-image:url(../images/btn-lens.png);
+}
+
+div.download table a.tutorial:hover {
+    background-color:#145aa8;
 }
 
 p.info {
