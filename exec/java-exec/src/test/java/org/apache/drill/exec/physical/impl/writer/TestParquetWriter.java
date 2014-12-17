@@ -216,6 +216,14 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate(selection, validateSelection, inputTable, "foodmart_employee_parquet");
   }
 
+  @Test
+  public void testBoolean() throws Exception {
+    String selection = "true as x, false as y";
+    String validateSelection = "x, y";
+    String inputTable = "cp.`tpch/region.parquet`";
+    runTestAndValidate(selection, validateSelection, inputTable, "region_boolean_parquet");
+  }
+
   public void compareParquetReadersColumnar(String selection, String table) throws Exception {
     String query = "select " + selection + " from " + table;
     testBuilder()
