@@ -34,12 +34,25 @@ public class ResponseSenderQueue {
   }
 
   public void flushResponses(){
-    while(!q.isEmpty()){
+    flushResponses(Integer.MAX_VALUE);
+  }
+
+  /**
+   * Flush only up to a count responses
+   * @param count
+   * @return
+   */
+  public int flushResponses(int count){
+    logger.debug("queue.size: {}, count: {}", q.size(), count);
+    int i = 0;
+    while(!q.isEmpty() && i < count){
       ResponseSender s = q.poll();
       if(s != null){
         s.send(DataRpcConfig.OK);
       }
+      i++;
     }
-
+    return i;
   }
+
 }

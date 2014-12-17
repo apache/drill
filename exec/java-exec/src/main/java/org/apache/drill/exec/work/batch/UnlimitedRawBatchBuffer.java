@@ -41,6 +41,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   private volatile BufferState state = BufferState.INIT;
   private final int softlimit;
   private final int startlimit;
+  private final int bufferSizePerSocket;
   private final AtomicBoolean overlimit = new AtomicBoolean(false);
   private final AtomicBoolean outOfMemory = new AtomicBoolean(false);
   private final ResponseSenderQueue readController = new ResponseSenderQueue();
@@ -49,10 +50,11 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   private FragmentContext context;
 
   public UnlimitedRawBatchBuffer(FragmentContext context, int fragmentCount) {
-    int bufferSizePerSocket = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
+    bufferSizePerSocket = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
 
     this.softlimit = bufferSizePerSocket * fragmentCount;
     this.startlimit = Math.max(softlimit/2, 1);
+    logger.debug("softLimit: {}, startLimit: {}", softlimit, startlimit);
     this.buffer = Queues.newLinkedBlockingDeque();
     this.fragmentCount = fragmentCount;
     this.streamCounter = fragmentCount;
@@ -82,7 +84,8 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
       return;
     }
     buffer.add(batch);
-    if (buffer.size() == softlimit) {
+    if (buffer.size() >= softlimit) {
+      logger.debug("buffer.size: {}", buffer.size());
       overlimit.set(true);
       readController.enqueueResponse(batch.getSender());
     } else {
@@ -167,11 +170,17 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     }
 
 
-    // if we are in the overlimit condition and aren't finished, check if we've passed the start limit.  If so, turn off the overlimit condition and set auto read to true (start reading from socket again).
+    // try to flush the difference between softlimit and queue size, so every flush we are reducing backlog
+    // when queue size is lower then softlimit - the bigger the difference the more we can flush
     if (!isFinished() && overlimit.get()) {
-      if (buffer.size() == startlimit) {
-        overlimit.set(false);
-        readController.flushResponses();
+      int flushCount = softlimit - buffer.size();
+      if ( flushCount > 0 ) {
+        int flushed = readController.flushResponses(flushCount);
+        logger.debug("flush {} entries, flushed {} entries ", flushCount, flushed);
+        if ( flushed == 0 ) {
+          // queue is empty - nothing to do for now
+          overlimit.set(false);
+        }
       }
     }
 
