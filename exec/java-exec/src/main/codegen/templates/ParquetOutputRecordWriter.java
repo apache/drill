@@ -178,6 +178,7 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
               consumer.addBoolean(holder.value == 1);
       <#else>
     consumer.startField(fieldName, fieldId);
+    reader.read(holder);
     consumer.addBoolean(holder.value == 1);
     consumer.endField(fieldName, fieldId);
       </#if>
