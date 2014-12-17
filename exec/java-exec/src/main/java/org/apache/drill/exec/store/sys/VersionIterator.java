@@ -37,9 +37,9 @@ public class VersionIterator implements Iterator<Object>{
     public String build_time = "";
 
     public VersionInfo(){
-      URL u = Resources.getResource("git.properties");
-      if(u != null){
-        try {
+      try {
+        URL u = Resources.getResource("git.properties");
+        if(u != null){
           Properties p = new Properties();
           p.load(Resources.newInputStreamSupplier(u).getInput());
           commit_id = p.getProperty("git.commit.id");
@@ -48,11 +48,10 @@ public class VersionIterator implements Iterator<Object>{
           build_time = p.getProperty("git.build.time");
           commit_message = p.getProperty("git.commit.message.short");
 
-        } catch (IOException e) {
-          logger.warn("Failure while trying to load \"git.properties\" file.", e);
         }
+      } catch (IOException | IllegalArgumentException e) {
+        logger.warn("Failure while trying to load \"git.properties\" file.", e);
       }
-
     }
   }
   @Override
