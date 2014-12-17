@@ -20,8 +20,6 @@ package org.apache.drill;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.rpc.RpcException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -424,6 +422,13 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testCaseInsensitiveJoin() throws Exception {
     test("select n3.n_name from (select n2.n_name from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.N_name = n2.n_name) n3 " +
           " join cp.`tpch/nation.parquet` n4 on n3.n_name = n4.n_name");
+  }
+
+  @Test // DRILL-1561
+  public void test2PhaseAggAfterOrderBy() throws Exception {
+    String query = "select count(*) from (select o_custkey from cp.`tpch/orders.parquet` order by o_custkey)";
+    // set slice_target = 1 to force exchanges and 2-phase aggregation
+    test("alter session set `planner.slice_target` = 1; " + query);
   }
 
 }
