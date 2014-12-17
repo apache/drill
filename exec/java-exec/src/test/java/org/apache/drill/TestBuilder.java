@@ -124,7 +124,7 @@ public class TestBuilder {
   }
 
   public TestBuilder sqlQuery(String query) {
-    this.query = query.replaceAll(Pattern.quote("${WORKING_PATH}"), TestTools.getWorkingPath());
+    this.query = BaseTestQuery.normalizeQuery(query);
     this.queryType = UserBitShared.QueryType.SQL;
     return this;
   }
