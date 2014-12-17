@@ -47,7 +47,7 @@ public class PlanTestBase extends BaseTestQuery {
    */
   public void testPhysicalPlan(String sql, String... expectedSubstrs)
       throws Exception {
-    sql = "EXPLAIN PLAN for " + sql.replace("[WORKING_PATH]", TestTools.getWorkingPath());
+    sql = "EXPLAIN PLAN for " + normalizeQuery(sql);
 
     String planStr = getPlanInString(sql, JSON_FORMAT);
 
@@ -184,7 +184,7 @@ public class PlanTestBase extends BaseTestQuery {
     }
 
     sql = "EXPLAIN PLAN " + levelStr + " " + depthStr + "  for "
-        + sql.replace("[WORKING_PATH]", TestTools.getWorkingPath());
+        + normalizeQuery(sql);
 
     return getPlanInString(sql, OPTIQ_FORMAT);
   }
