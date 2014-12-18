@@ -124,10 +124,8 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
   private void doTransfer() {
     outRecordCount = current.getRecordCount();
-    // skip empty batches
-    if (outRecordCount == 0) {
-      return;
-    }
+    // If the batch is empty we still need to set up the outgoing vectors otherwise the downstream operators will get
+    // a NPE. SEE DRILL-1886
     if (container.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) {
       this.sv = current.getSelectionVector2();
     }
