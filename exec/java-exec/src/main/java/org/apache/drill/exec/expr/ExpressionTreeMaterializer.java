@@ -520,8 +520,8 @@ public class ExpressionTreeMaterializer {
       // if the cast is pointless, remove it.
       LogicalExpression input = e.getInput().accept(this,  value);
 
-      MajorType newMajor = e.getMajorType();
-      MinorType newMinor = input.getMajorType().getMinorType();
+      MajorType newMajor = e.getMajorType(); // Output type
+      MinorType newMinor = input.getMajorType().getMinorType(); // Input type
 
       if (castEqual(e.getPosition(), input.getMajorType(), newMajor)) {
         return input; // don't do pointless cast.
@@ -618,5 +618,4 @@ public class ExpressionTreeMaterializer {
       }
     }
   }
-
 }

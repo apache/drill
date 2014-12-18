@@ -104,6 +104,9 @@ public interface ExecConstants {
   public static final String SLICE_TARGET = "planner.slice_target";
   public static final OptionValidator SLICE_TARGET_OPTION = new PositiveLongValidator(SLICE_TARGET, Long.MAX_VALUE, 100000);
 
+  public static final String CAST_TO_NULLABLE_NUMERIC = "drill.exec.functions.cast_empty_string_to_null";
+  public static final OptionValidator CAST_TO_NULLABLE_NUMERIC_OPTION = new BooleanValidator(CAST_TO_NULLABLE_NUMERIC, false);
+
   /**
    * HashTable runtime settings
    */

@@ -74,8 +74,8 @@ public class DrillbitContext {
     this.storagePlugins = new StoragePluginRegistry(this);
     this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storagePlugins);
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
-    this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
     this.systemOptions = new SystemOptionManager(context.getConfig(), provider);
+    this.functionRegistry = new FunctionImplementationRegistry(context.getConfig(), systemOptions);
     this.compiler = new CodeCompiler(context.getConfig(), systemOptions);
   }
 

@@ -145,11 +145,16 @@ public class DrillTextRecordReader extends AbstractRecordReader {
       int recordCount = 0;
       while (redoRecord || (batchSize < 200*1000 && reader.next(key, value))) {
         redoRecord = false;
+
+        // start and end together are used to split fields
         int start;
         int end = -1;
+
+        // index of the scanned field
         int p = 0;
         int i = 0;
         vector.getMutator().startNewGroup(recordCount);
+        // Process each field in this line
         while (end < value.getLength() - 1) {
           if(numCols > 0 && p >= numCols) {
             break;
@@ -195,7 +200,15 @@ public class DrillTextRecordReader extends AbstractRecordReader {
     }
   }
 
-  public int find(Text text, byte what, int start) {
+  /**
+   * Returns the index within the text of the first occurrence of delimiter, starting the search at the specified index.
+   *
+   * @param  text  the text being searched
+   * @param  delimiter the delimiter
+   * @param  start the index to start searching
+   * @return      the first occurrence of delimiter, starting the search at the specified index
+   */
+  public int find(Text text, byte delimiter, int start) {
     int len = text.getLength();
     int p = start;
     byte[] bytes = text.getBytes();
@@ -204,7 +217,7 @@ public class DrillTextRecordReader extends AbstractRecordReader {
       if ('\"' == bytes[p]) {
         inQuotes = !inQuotes;
       }
-      if (!inQuotes && bytes[p] == what) {
+      if (!inQuotes && bytes[p] == delimiter) {
         return p;
       }
       p++;

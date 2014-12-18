@@ -24,6 +24,8 @@ import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.fn.CastFunctions;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
@@ -31,12 +33,14 @@ import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.resolver.FunctionResolver;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.server.options.OptionManager;
 
 public class FunctionImplementationRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
   private DrillFunctionRegistry drillFuncRegistry;
   private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
+  private OptionManager optionManager = null;
 
   public FunctionImplementationRegistry(DrillConfig config){
     drillFuncRegistry = new DrillFunctionRegistry(config);
@@ -65,6 +69,11 @@ public class FunctionImplementationRegistry {
     }
   }
 
+  public FunctionImplementationRegistry(DrillConfig config, OptionManager optionManager) {
+    this(config);
+    this.optionManager = optionManager;
+  }
+
   /**
    * Register functions in given operator table.
    * @param operatorTable
@@ -87,7 +96,18 @@ public class FunctionImplementationRegistry {
    * @return
    */
   public DrillFuncHolder findDrillFunction(FunctionResolver functionResolver, FunctionCall functionCall) {
-    return functionResolver.getBestMatch(drillFuncRegistry.getMethods(functionCall.getName()), functionCall);
+    return functionResolver.getBestMatch(drillFuncRegistry.getMethods(functionReplacement(functionCall)), functionCall);
+  }
+
+  // Check if this Function Replacement is Needed; if yes, return a new name. otherwise, return the original name
+  private String functionReplacement(FunctionCall functionCall) {
+    String funcName = functionCall.getName();
+    if(optionManager != null && optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC).bool_val && CastFunctions.isReplacementNeeded(functionCall.args.get(0).getMajorType().getMinorType(), funcName)) {
+      org.apache.drill.common.types.TypeProtos.DataMode dataMode = functionCall.args.get(0).getMajorType().getMode();
+      funcName = CastFunctions.getReplacingCastFunction(funcName, dataMode);
+    }
+
+    return funcName;
   }
 
   /**

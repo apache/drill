@@ -19,8 +19,13 @@
 
 <#list cast.types as type>
 
-<#if type.major == "VarCharDecimalSimple">  <#-- Cast function template for conversion from VarChar to Decimal9, Decimal18 -->
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
+<#if type.major == "VarCharDecimalSimple" || type.major == "EmptyStringVarCharDecimalSimple">  <#-- Cast function template for conversion from VarChar to Decimal9, Decimal18 -->
+
+<#if type.major == "VarCharDecimalSimple">
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java"/>
+<#elseif type.major == "EmptyStringVarCharDecimalSimple">
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/CastEmptyString${type.from}ToNullable${type.to}.java"/>
+</#if>
 
 <#include "/@includes/license.ftl" />
 
@@ -44,18 +49,35 @@ import io.netty.buffer.DrillBuf;
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
+<#if type.major == "VarCharDecimalSimple">
+@FunctionTemplate(name ="cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
-
+<#elseif type.major == "EmptyStringVarCharDecimalSimple">
+@FunctionTemplate(name ="castEmptyString${type.from}ToNullable${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.INTERNAL)
+public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSimpleFunc {
+</#if>
     @Param ${type.from}Holder in;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
+
+    <#if type.major == "VarCharDecimalSimple">
     @Output ${type.to}Holder out;
+    <#elseif type.major == "EmptyStringVarCharDecimalSimple">
+    @Output Nullable${type.to}Holder out;
+    </#if>
 
     public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
+        <#if type.major == "EmptyStringVarCharDecimalSimple">
+        // Check if the input is null or empty string
+        if(<#if type.from == "NullableVarChar"> in.isSet == 0 || </#if> in.end == in.start) {
+            out.isSet = 0;
+            return;
+        }
+        out.isSet = 1;
+        </#if>
 
         // Assign the scale and precision
         out.scale = (int) scale.value;
@@ -64,10 +86,13 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int readIndex = in.start;
         int endIndex  = in.end;
 
+        <#if type.major == "VarCharDecimalSimple">
         // Check if its an empty string
         if (endIndex - readIndex == 0) {
             throw new org.apache.drill.common.exceptions.DrillRuntimeException("Empty String, cannot cast to Decimal");
         }
+        </#if>
+
         // Starting position of fractional part
         int scaleIndex = -1;
         // true if we have a negative sign at the beginning
@@ -167,8 +192,13 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     }
 }
 
-<#elseif type.major == "VarCharDecimalComplex">  <#-- Cast function template for conversion from VarChar to Decimal28, Decimal38 -->
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
+<#elseif type.major == "VarCharDecimalComplex" || type.major == "EmptyStringVarCharDecimalComplex">  <#-- Cast function template for conversion from VarChar to Decimal28, Decimal38 -->
+
+<#if type.major == "VarCharDecimalComplex">
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java"/>
+<#elseif type.major == "EmptyStringVarCharDecimalComplex">
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/CastEmptyString${type.from}ToNullable${type.to}.java"/>
+</#if>
 
 <#include "/@includes/license.ftl" />
 
@@ -191,14 +221,23 @@ import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
+<#if type.major == "VarCharDecimalComplex">
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
-
+<#elseif type.major == "EmptyStringVarCharDecimalComplex">
+@FunctionTemplate(name = "castEmptyString${type.from}ToNullable${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.INTERNAL)
+public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSimpleFunc {
+</#if>
     @Param ${type.from}Holder in;
     @Inject DrillBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
+
+    <#if type.major == "VarCharDecimalComplex">
     @Output ${type.to}Holder out;
+    <#elseif type.major == "EmptyStringVarCharDecimalComplex">
+    @Output Nullable${type.to}Holder out;
+    </#if>
 
     public void setup(RecordBatch incoming) {
         int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize);
@@ -206,6 +245,15 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     }
 
     public void eval() {
+        <#if type.major == "EmptyStringVarCharDecimalComplex">
+        // Check if the input is null or empty string
+        if(<#if type.from == "NullableVarChar"> in.isSet == 0 || </#if> in.end == in.start) {
+            out.isSet = 0;
+            return;
+        }
+        out.isSet = 1;
+        </#if>
+
         out.buffer = buffer;
         out.start  = 0;
 
@@ -241,9 +289,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             scaleIndex = readIndex; // Fractional part starts at the first position
         }
 
+        <#if type.major == "VarCharDecimalComplex">
+        // Check if its an empty string
         if (in.end - readIndex == 0) {
             throw new org.apache.drill.common.exceptions.DrillRuntimeException("Empty String, cannot cast to Decimal");
         }
+        </#if>
 
         // Store start index for the second pass
         startIndex = readIndex;

@@ -172,7 +172,27 @@
 
     {from: "Decimal38Sparse", to: "Decimal28Sparse", major: "DownwardDecimalComplexDecimalComplex", arraySize: "5"},
     {from: "Decimal38Sparse", to: "Decimal18", major: "DownwardDecimalComplexDecimalSimple", javatype: "long"},
-    {from: "Decimal38Sparse", to: "Decimal9", major: "DownwardDecimalComplexDecimalSimple", javatype: "int"}
+    {from: "Decimal38Sparse", to: "Decimal9", major: "DownwardDecimalComplexDecimalSimple", javatype: "int"},
+
+    {from: "VarChar", to: "Int", major: "EmptyString", javaType:"Integer", primeType:"int"},
+    {from: "VarChar", to: "BigInt", major: "EmptyString", javaType: "Long", primeType: "long"},
+    {from: "VarChar", to: "Float4", major: "EmptyString", javaType:"Float", parse:"Float"},
+    {from: "VarChar", to: "Float8", major: "EmptyString", javaType:"Double", parse:"Double"},
+
+    {from: "VarChar", to: "Decimal9", major: "EmptyStringVarCharDecimalSimple", javatype: "int"},
+    {from: "VarChar", to: "Decimal18", major: "EmptyStringVarCharDecimalSimple", javatype: "long"},
+    {from: "VarChar", to: "Decimal28Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "5"},
+    {from: "VarChar", to: "Decimal38Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "6"},
+
+    {from: "NullableVarChar", to: "Int", major: "EmptyString", javaType:"Integer", primeType:"int"},
+    {from: "NullableVarChar", to: "BigInt", major: "EmptyString", javaType: "Long", primeType: "long"},
+    {from: "NullableVarChar", to: "Float4", major: "EmptyString", javaType:"Float", parse:"Float"},
+    {from: "NullableVarChar", to: "Float8", major: "EmptyString", javaType:"Double", parse:"Double"},
+
+    {from: "NullableVarChar", to: "Decimal9", major: "EmptyStringVarCharDecimalSimple", javatype: "int"},
+    {from: "NullableVarChar", to: "Decimal18", major: "EmptyStringVarCharDecimalSimple", javatype: "long"},
+    {from: "NullableVarChar", to: "Decimal28Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "5"},
+    {from: "NullableVarChar", to: "Decimal38Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "6"},
 
   ]
 } 
