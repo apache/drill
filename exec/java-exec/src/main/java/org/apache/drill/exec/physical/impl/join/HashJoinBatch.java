@@ -307,7 +307,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr);
 
         // Create the chained hash table
-        ChainedHashTable ht  = new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null);
+        ChainedHashTable ht  = new ChainedHashTable(htConfig, context, oContext.getAllocator(),
+            this.right, this.left, null, false /* nulls are not equal */);
         hashTable = ht.createAndSetupHashTable(null);
     }
 

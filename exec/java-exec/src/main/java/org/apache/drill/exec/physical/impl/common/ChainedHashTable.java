@@ -110,13 +110,15 @@ public class ChainedHashTable {
   private final RecordBatch incomingBuild;
   private final RecordBatch incomingProbe;
   private final RecordBatch outgoing;
+  private final boolean areNullsEqual;
 
   public ChainedHashTable(HashTableConfig htConfig,
                           FragmentContext context,
                           BufferAllocator allocator,
                           RecordBatch incomingBuild,
                           RecordBatch incomingProbe,
-                          RecordBatch outgoing)  {
+                          RecordBatch outgoing,
+                          boolean areNullsEqual)  {
 
     this.htConfig = htConfig;
     this.context = context;
@@ -124,6 +126,7 @@ public class ChainedHashTable {
     this.incomingBuild = incomingBuild;
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
+    this.areNullsEqual = areNullsEqual;
   }
 
   public HashTable createAndSetupHashTable (TypedFieldId[] outKeyFieldIds) throws ClassTransformationException, IOException, SchemaChangeException {
@@ -229,12 +232,21 @@ public class ChainedHashTable {
       ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i++]);
       HoldingContainer right = cg.addExpr(vvrExpr, false);
 
+      JConditional jc;
+
+      // codegen for nullable columns if nulls are not equal
+      if (!areNullsEqual && left.isOptional() && right.isOptional()) {
+        jc = cg.getEvalBlock()._if(left.getIsSet().eq(JExpr.lit(0)).
+            cand(right.getIsSet().eq(JExpr.lit(0))));
+        jc._then()._return(JExpr.FALSE);
+      }
+
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression f = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
       HoldingContainer out = cg.addExpr(f, false);
 
       // check if two values are not equal (comparator result != 0)
-      JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
+      jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
       jc._then()._return(JExpr.FALSE);
     }
