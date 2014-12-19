@@ -18,6 +18,7 @@
 package org.apache.drill.exec.util;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.io.Text;
 
@@ -37,14 +38,18 @@ public class JsonStringArrayList<E> extends ArrayList<E> {
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (other instanceof JsonStringArrayList) {
-      return toString().equals(other.toString());
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
-    if (other instanceof String) {
-      return toString().equals(other);
+    if (obj == null) {
+      return false;
     }
-    return false;
+    if (!(obj instanceof List)) {
+      return false;
+    }
+    List other = (List) obj;
+    return this.size() == other.size() && this.containsAll(other);
   }
 
   @Override

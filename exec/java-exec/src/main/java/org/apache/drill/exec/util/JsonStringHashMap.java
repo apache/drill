@@ -18,6 +18,7 @@
 package org.apache.drill.exec.util;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.hadoop.io.Text;
 
@@ -41,14 +42,33 @@ public class JsonStringHashMap<K, V> extends LinkedHashMap<K, V> {
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (other instanceof JsonStringHashMap) {
-      return toString().equals(other.toString());
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
-    if (other instanceof String) {
-      return toString().equals(other);
+    if (obj == null) {
+      return false;
     }
-    return false;
+    if (!(obj instanceof Map)) {
+      return false;
+    }
+    Map other = (Map) obj;
+    if (this.size() != other.size()) {
+      return false;
+    }
+    for (K key : this.keySet()) {
+      if (this.get(key) == null ) {
+        if (other.get(key) == null) {
+          continue;
+        } else {
+          return false;
+        }
+      }
+      if ( ! this.get(key).equals(other.get(key))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override

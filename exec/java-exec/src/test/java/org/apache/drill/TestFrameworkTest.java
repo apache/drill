@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
+import org.apache.hadoop.io.Text;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 // currently using it with the assumption that the csv and json readers are well tested, and handling diverse
 // types in the test framework would require doing some redundant work to enable casting outside of Drill or
 // some better tooling to generate parquet files that have all of the parquet types
-public class TestTestFramework extends BaseTestQuery{
+public class TestFrameworkTest extends BaseTestQuery{
 
   private static String CSV_COLS = " cast(columns[0] as bigint) employee_id, columns[1] as first_name, columns[2] as last_name ";
 
@@ -100,6 +101,15 @@ public class TestTestFramework extends BaseTestQuery{
   }
 
   @Test
+  public void testMapOrdering() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from cp.`/testframework/map_reordering.json`")
+        .unOrdered()
+        .jsonBaselineFile("testframework/map_reordering2.json")
+        .build().run();
+  }
+
+  @Test
   public void testBaselineValsVerificationWithNulls() throws Exception {
     testBuilder()
         .sqlQuery("select * from cp.`store/json/json_simple_with_null.json`")
@@ -139,17 +149,17 @@ public class TestTestFramework extends BaseTestQuery{
     l_list.add(2l);
 
     JsonStringHashMap x = new JsonStringHashMap();
-    x.put("y", "kevin");
-    x.put("z", "paul");
+    x.put("y", new Text("kevin"));
+    x.put("z", new Text("paul"));
 
     // [{"orange":"yellow","pink":"red"},{"pink":"purple"}]
     JsonStringArrayList z = new JsonStringArrayList();
     JsonStringHashMap z_1 = new JsonStringHashMap();
-    z_1.put("orange", "yellow");
-    z_1.put("pink", "red");
+    z_1.put("orange", new Text("yellow"));
+    z_1.put("pink", new Text("red"));
 
     JsonStringHashMap z_2 = new JsonStringHashMap();
-    z_2.put("pink", "purple");
+    z_2.put("pink", new Text("purple"));
     z.add(z_1);
     z.add(z_2);
 
