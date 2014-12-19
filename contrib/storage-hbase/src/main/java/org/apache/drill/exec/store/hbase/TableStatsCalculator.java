@@ -44,6 +44,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class TableStatsCalculator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TableStatsCalculator.class);
 
+  public static final long DEFAULT_ROW_COUNT = 1024L * 1024L;
+
   private static final String DRILL_EXEC_HBASE_SCAN_SAMPLE_ROWS_COUNT = "drill.exec.hbase.scan.samplerows.count";
 
   private static final int DEFAULT_SAMPLE_SIZE = 100;
@@ -74,7 +76,8 @@ public class TableStatsCalculator {
         scan.setCaching(rowsToSample < DEFAULT_SAMPLE_SIZE ? rowsToSample : DEFAULT_SAMPLE_SIZE);
         scan.setMaxVersions(1);
         ResultScanner scanner = table.getScanner(scan);
-        int rowSizeSum = 0, numColumnsSum = 0, rowCount = 0;
+        long rowSizeSum = 0;
+        int numColumnsSum = 0, rowCount = 0;
         for (; rowCount < rowsToSample; ++rowCount) {
           Result row = scanner.next();
           if (row == null) {
@@ -84,7 +87,7 @@ public class TableStatsCalculator {
           rowSizeSum += row.getBytes().getLength();
         }
         if (rowCount > 0) {
-          avgRowSizeInBytes = rowSizeSum/rowCount;
+          avgRowSizeInBytes = (int) (rowSizeSum/rowCount);
           colsPerRow = numColumnsSum/rowCount;
         }
         scanner.close();
@@ -155,7 +158,7 @@ public class TableStatsCalculator {
    */
   public long getRegionSizeInBytes(byte[] regionId) {
     if (sizeMap == null) {
-      return avgRowSizeInBytes*1024*1024; // 1 million rows
+      return (long) avgRowSizeInBytes * DEFAULT_ROW_COUNT; // 1 million rows
     } else {
       Long size = sizeMap.get(regionId);
       if (size == null) {

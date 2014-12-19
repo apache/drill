@@ -352,7 +352,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   @Override
   public ScanStats getScanStats() {
-    int rowCount =  (int) ((scanSizeInBytes / statsCalculator.getAvgRowSizeInBytes()) * (hbaseScanSpec.getFilter() != null ? 0.5 : 1));
+    long rowCount = (long) ((scanSizeInBytes / statsCalculator.getAvgRowSizeInBytes()) * (hbaseScanSpec.getFilter() != null ? 0.5 : 1));
     // the following calculation is not precise since 'columns' could specify CFs while getColsPerRow() returns the number of qualifier.
     float diskCost = scanSizeInBytes * ((columns == null || columns.isEmpty()) ? 1 : columns.size()/statsCalculator.getColsPerRow());
     return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, diskCost);
