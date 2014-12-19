@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.ischema;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -28,6 +29,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
@@ -41,23 +43,35 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaGroupScan.class);
 
   private final SelectedTable table;
+  private final InfoSchemaFilter filter;
 
-  private List<SchemaPath> columns;
+  private boolean isFilterPushedDown = false;
+
+  public InfoSchemaGroupScan(SelectedTable table) {
+    this(table, null);
+  }
 
   @JsonCreator
   public InfoSchemaGroupScan(@JsonProperty("table") SelectedTable table,
-      @JsonProperty("columns") List<SchemaPath> columns) {
+                             @JsonProperty("filter") InfoSchemaFilter filter) {
     this.table = table;
-    this.columns = columns;
+    this.filter = filter;
   }
 
   private InfoSchemaGroupScan(InfoSchemaGroupScan that) {
     this.table = that.table;
-    this.columns = that.columns;
+    this.filter = that.filter;
+    this.isFilterPushedDown = that.isFilterPushedDown;
   }
 
-  public List<SchemaPath> getColumns() {
-    return columns;
+  @JsonProperty("table")
+  public SelectedTable getTable() {
+    return table;
+  }
+
+  @JsonProperty("filter")
+  public InfoSchemaFilter getFilter() {
+    return filter;
   }
 
   @Override
@@ -68,11 +82,17 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
     Preconditions.checkArgument(minorFragmentId == 0);
-    return new InfoSchemaSubScan(table);
+    return new InfoSchemaSubScan(table, filter);
   }
 
   public ScanStats getScanStats(){
-    return ScanStats.TRIVIAL_TABLE;
+    if (filter == null) {
+      return ScanStats.TRIVIAL_TABLE;
+    } else {
+      // If the filter is available, return stats that is lower in cost than TRIVIAL_TABLE cost so that
+      // Scan with Filter is chosen.
+      return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, 10, 1, 0);
+    }
   }
 
   @Override
@@ -92,14 +112,21 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
 
   @Override
   public String getDigest() {
-    return this.table.toString() + "columns=" + columns;
+    return this.table.toString() + ", filter=" + filter;
   }
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     InfoSchemaGroupScan  newScan = new InfoSchemaGroupScan (this);
-    newScan.columns = columns;
     return newScan;
   }
 
+  public void setFilterPushedDown(boolean status) {
+    this.isFilterPushedDown = status;
+  }
+
+  @JsonIgnore
+  public boolean isFilterPushedDown() {
+    return isFilterPushedDown;
+  }
 }

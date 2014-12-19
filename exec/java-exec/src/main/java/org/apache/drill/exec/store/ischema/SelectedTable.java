@@ -41,8 +41,9 @@ public enum SelectedTable{
     this.tableDef = tableDef;
   }
 
-  public RecordReader getRecordReader(SchemaPlus rootSchema) {
+  public RecordReader getRecordReader(SchemaPlus rootSchema, InfoSchemaFilter filter) {
     RecordGenerator recordGenerator = tableDef.getRecordGenerator();
+    recordGenerator.setInfoSchemaFilter(filter);
     recordGenerator.scanSchema(rootSchema);
     return recordGenerator.getRecordReader();
   }

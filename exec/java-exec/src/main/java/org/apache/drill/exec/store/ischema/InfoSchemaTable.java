@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /** Base class of tables in INFORMATION_SCHEMA. Defines the table (fields and types) */
-public abstract class InfoSchemaTable{
+public abstract class InfoSchemaTable implements InfoSchemaConstants{
 
   public static class Field {
     public String name;
@@ -81,12 +81,12 @@ public abstract class InfoSchemaTable{
   /** Layout for the CATALOGS table. */
   static public class Catalogs extends InfoSchemaTable {
     private static final List<Field> fields = ImmutableList.of(
-        Field.create("CATALOG_NAME", VARCHAR),
-        Field.create("CATALOG_DESCRIPTION", VARCHAR),
-        Field.create("CATALOG_CONNECT", VARCHAR));
+        Field.create(COL_CATALOG_NAME, VARCHAR),
+        Field.create(COL_CATALOG_DESCRIPTION, VARCHAR),
+        Field.create(COL_CATALOG_CONNECT, VARCHAR));
 
     Catalogs() {
-      super("CATALOGS", fields);
+      super(TAB_CATALOGS, fields);
     }
 
     @Override
@@ -98,14 +98,14 @@ public abstract class InfoSchemaTable{
   /** Layout for the SCHEMATA table. */
   public static class Schemata extends InfoSchemaTable {
     private static final List<Field> fields = ImmutableList.of(
-        Field.create("CATALOG_NAME", VARCHAR),
-        Field.create("SCHEMA_NAME", VARCHAR),
-        Field.create("SCHEMA_OWNER", VARCHAR),
-        Field.create("TYPE", VARCHAR),
-        Field.create("IS_MUTABLE", VARCHAR));
+        Field.create(COL_CATALOG_NAME, VARCHAR),
+        Field.create(COL_SCHEMA_NAME, VARCHAR),
+        Field.create(COL_SCHEMA_OWNER, VARCHAR),
+        Field.create(COL_TYPE, VARCHAR),
+        Field.create(COL_IS_MUTABLE, VARCHAR));
 
     public Schemata() {
-      super("SCHEMATA", fields);
+      super(TAB_SCHEMATA, fields);
     }
 
     @Override
@@ -117,13 +117,13 @@ public abstract class InfoSchemaTable{
   /** Layout for the TABLES table. */
   public static class Tables extends InfoSchemaTable {
     private static final List<Field> fields = ImmutableList.of(
-        Field.create("TABLE_CATALOG", VARCHAR),
-        Field.create("TABLE_SCHEMA", VARCHAR),
-        Field.create("TABLE_NAME", VARCHAR),
-        Field.create("TABLE_TYPE", VARCHAR));
+        Field.create(COL_TABLE_CATALOG, VARCHAR),
+        Field.create(COL_TABLE_SCHEMA, VARCHAR),
+        Field.create(COL_TABLE_NAME, VARCHAR),
+        Field.create(COL_TABLE_TYPE, VARCHAR));
 
     public Tables() {
-      super("TABLES", fields);
+      super(TAB_TABLES, fields);
     }
 
     @Override
@@ -135,13 +135,13 @@ public abstract class InfoSchemaTable{
   /** Layout for the VIEWS table. */
   static public class Views extends InfoSchemaTable {
     private static final List<Field> fields = ImmutableList.of(
-        Field.create("TABLE_CATALOG", VARCHAR),
-        Field.create("TABLE_SCHEMA", VARCHAR),
-        Field.create("TABLE_NAME", VARCHAR),
-        Field.create("VIEW_DEFINITION", VARCHAR));
+        Field.create(COL_TABLE_CATALOG, VARCHAR),
+        Field.create(COL_TABLE_SCHEMA, VARCHAR),
+        Field.create(COL_TABLE_NAME, VARCHAR),
+        Field.create(COL_VIEW_DEFINITION, VARCHAR));
 
     public Views() {
-      super("VIEWS", fields);
+      super(TAB_VIEWS, fields);
     }
 
     @Override
@@ -153,20 +153,20 @@ public abstract class InfoSchemaTable{
   /** Layout for the COLUMNS table. */
   public static class Columns extends InfoSchemaTable {
     private static final List<Field> fields = ImmutableList.of(
-        Field.create("TABLE_CATALOG", VARCHAR),
-        Field.create("TABLE_SCHEMA", VARCHAR),
-        Field.create("TABLE_NAME", VARCHAR),
-        Field.create("COLUMN_NAME", VARCHAR),
-        Field.create("ORDINAL_POSITION", INT),
-        Field.create("IS_NULLABLE", VARCHAR),
-        Field.create("DATA_TYPE", VARCHAR),
-        Field.create("CHARACTER_MAXIMUM_LENGTH", INT),
-        Field.create("NUMERIC_PRECISION_RADIX", INT),
-        Field.create("NUMERIC_SCALE", INT),
-        Field.create("NUMERIC_PRECISION", INT));
+        Field.create(COL_TABLE_CATALOG, VARCHAR),
+        Field.create(COL_TABLE_SCHEMA, VARCHAR),
+        Field.create(COL_TABLE_NAME, VARCHAR),
+        Field.create(COL_COLUMN_NAME, VARCHAR),
+        Field.create(COL_ORDINAL_POSITION, INT),
+        Field.create(COL_IS_NULLABLE, VARCHAR),
+        Field.create(COL_DATA_TYPE, VARCHAR),
+        Field.create(COL_CHARACTER_MAXIMUM_LENGTH, INT),
+        Field.create(COL_NUMERIC_PRECISION_RADIX, INT),
+        Field.create(COL_NUMERIC_SCALE, INT),
+        Field.create(COL_NUMERIC_PRECISION, INT));
 
     public Columns() {
-      super("COLUMNS", fields);
+      super(TAB_COLUMNS, fields);
     }
 
     @Override

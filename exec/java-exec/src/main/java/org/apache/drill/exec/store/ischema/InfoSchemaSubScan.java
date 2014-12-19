@@ -26,16 +26,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class InfoSchemaSubScan extends AbstractSubScan{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaSubScan.class);
 
-
   private final SelectedTable table;
+  private final InfoSchemaFilter filter;
 
   @JsonCreator
-  public InfoSchemaSubScan(@JsonProperty("table") SelectedTable table) {
+  public InfoSchemaSubScan(@JsonProperty("table") SelectedTable table,
+                           @JsonProperty("filter") InfoSchemaFilter filter) {
     this.table = table;
+    this.filter = filter;
   }
 
+  @JsonProperty("table")
   public SelectedTable getTable() {
     return table;
+  }
+
+  @JsonProperty("filter")
+  public InfoSchemaFilter getFilter() {
+    return filter;
   }
 
   @Override

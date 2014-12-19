@@ -24,6 +24,7 @@ import net.hydromatic.optiq.tools.RelConversionException;
 
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
+import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlNode;
@@ -34,7 +35,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 
 import com.google.common.collect.ImmutableList;
 
-public class ShowSchemasHandler extends DefaultSqlHandler {
+public class ShowSchemasHandler extends DefaultSqlHandler implements InfoSchemaConstants {
 
   public ShowSchemasHandler(SqlHandlerConfig config) { super(config); }
 
@@ -42,15 +43,15 @@ public class ShowSchemasHandler extends DefaultSqlHandler {
   @Override
   public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException, ForemanSetupException {
     SqlShowSchemas node = unwrap(sqlNode, SqlShowSchemas.class);
-    List<SqlNode> selectList = ImmutableList.of((SqlNode) new SqlIdentifier("SCHEMA_NAME", SqlParserPos.ZERO));
+    List<SqlNode> selectList = ImmutableList.of((SqlNode) new SqlIdentifier(COL_SCHEMA_NAME, SqlParserPos.ZERO));
 
     SqlNode fromClause = new SqlIdentifier(
-        ImmutableList.of("INFORMATION_SCHEMA", "SCHEMATA"), null, SqlParserPos.ZERO, null);
+        ImmutableList.of(IS_SCHEMA_NAME, TAB_SCHEMATA), null, SqlParserPos.ZERO, null);
 
     SqlNode where = null;
     final SqlNode likePattern = node.getLikePattern();
     if (likePattern != null) {
-      where = DrillParserUtil.createCondition(new SqlIdentifier("SCHEMA_NAME", SqlParserPos.ZERO),
+      where = DrillParserUtil.createCondition(new SqlIdentifier(COL_SCHEMA_NAME, SqlParserPos.ZERO),
           SqlStdOperatorTable.LIKE, likePattern);
     } else if (node.getWhereClause() != null) {
       where = node.getWhereClause();

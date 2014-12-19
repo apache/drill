@@ -32,7 +32,7 @@ public class InfoSchemaBatchCreator implements BatchCreator<InfoSchemaSubScan>{
 
   @Override
   public RecordBatch getBatch(FragmentContext context, InfoSchemaSubScan config, List<RecordBatch> children) throws ExecutionSetupException {
-    RecordReader rr = config.getTable().getRecordReader(context.getRootSchema());
+    RecordReader rr = config.getTable().getRecordReader(context.getRootSchema(), config.getFilter());
     return new ScanBatch(config, context, Collections.singleton(rr).iterator());
   }
 }

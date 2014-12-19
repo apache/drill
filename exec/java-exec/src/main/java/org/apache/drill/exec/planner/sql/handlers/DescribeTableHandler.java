@@ -30,6 +30,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.SqlIdentifier;
@@ -43,7 +44,7 @@ import org.eigenbase.util.Util;
 
 import com.google.common.collect.ImmutableList;
 
-public class DescribeTableHandler extends DefaultSqlHandler {
+public class DescribeTableHandler extends DefaultSqlHandler implements InfoSchemaConstants {
 
   public DescribeTableHandler(SqlHandlerConfig config) { super(config); }
 
@@ -53,12 +54,12 @@ public class DescribeTableHandler extends DefaultSqlHandler {
     SqlDescribeTable node = unwrap(sqlNode, SqlDescribeTable.class);
 
     try {
-      List<SqlNode> selectList = ImmutableList.of((SqlNode) new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
-          new SqlIdentifier("DATA_TYPE", SqlParserPos.ZERO),
-          new SqlIdentifier("IS_NULLABLE", SqlParserPos.ZERO));
+      List<SqlNode> selectList = ImmutableList.of((SqlNode) new SqlIdentifier(COL_COLUMN_NAME, SqlParserPos.ZERO),
+          new SqlIdentifier(COL_DATA_TYPE, SqlParserPos.ZERO),
+          new SqlIdentifier(COL_IS_NULLABLE, SqlParserPos.ZERO));
 
       SqlNode fromClause = new SqlIdentifier(
-          ImmutableList.of("INFORMATION_SCHEMA", "COLUMNS"), null, SqlParserPos.ZERO, null);
+          ImmutableList.of(IS_SCHEMA_NAME, TAB_COLUMNS), null, SqlParserPos.ZERO, null);
 
       final SqlIdentifier table = node.getTable();
       final SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(),
@@ -74,14 +75,14 @@ public class DescribeTableHandler extends DefaultSqlHandler {
         AbstractSchema drillSchema = getDrillSchema(schema);
 
         schemaCondition = DrillParserUtil.createCondition(
-            new SqlIdentifier("TABLE_SCHEMA", SqlParserPos.ZERO),
+            new SqlIdentifier(COL_TABLE_SCHEMA, SqlParserPos.ZERO),
             SqlStdOperatorTable.EQUALS,
             SqlLiteral.createCharString(drillSchema.getFullSchemaName(), CHARSET, SqlParserPos.ZERO)
         );
       }
 
       SqlNode where = DrillParserUtil.createCondition(
-          new SqlIdentifier("TABLE_NAME", SqlParserPos.ZERO),
+          new SqlIdentifier(COL_TABLE_NAME, SqlParserPos.ZERO),
           SqlStdOperatorTable.EQUALS,
           SqlLiteral.createCharString(tableName, CHARSET, SqlParserPos.ZERO));
 
@@ -89,11 +90,11 @@ public class DescribeTableHandler extends DefaultSqlHandler {
 
       SqlNode columnFilter = null;
       if (node.getColumn() != null) {
-        columnFilter = DrillParserUtil.createCondition(new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
+        columnFilter = DrillParserUtil.createCondition(new SqlIdentifier(COL_COLUMN_NAME, SqlParserPos.ZERO),
             SqlStdOperatorTable.EQUALS,
             SqlLiteral.createCharString(node.getColumn().toString(), CHARSET, SqlParserPos.ZERO));
       } else if (node.getColumnQualifier() != null) {
-        columnFilter = DrillParserUtil.createCondition(new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
+        columnFilter = DrillParserUtil.createCondition(new SqlIdentifier(COL_COLUMN_NAME, SqlParserPos.ZERO),
             SqlStdOperatorTable.LIKE, node.getColumnQualifier());
       }
 

@@ -18,7 +18,9 @@
 package org.apache.drill.exec.store.ischema;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
 import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
@@ -27,6 +29,7 @@ import net.hydromatic.optiq.jdbc.JavaTypeFactoryImpl;
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.ischema.InfoSchemaFilter.Result;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -35,10 +38,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /** Generates records for POJO RecordReader by scanning the given schema */
-public abstract class RecordGenerator {
+public abstract class RecordGenerator implements InfoSchemaConstants {
+  protected InfoSchemaFilter filter;
+
+  public void setInfoSchemaFilter(InfoSchemaFilter filter) {
+    this.filter = filter;
+  }
 
   public boolean visitSchema(String schemaName, SchemaPlus schema) {
-    return shouldVisitSchema(schema);
+    return true;
   }
 
   public boolean visitTable(String schemaName, String tableName, Table table) {
@@ -49,13 +57,37 @@ public abstract class RecordGenerator {
     return true;
   }
 
-  protected boolean shouldVisitSchema(SchemaPlus schema) {
+  protected boolean shouldVisitSchema(String schemaName, SchemaPlus schema) {
     try {
+      // if the schema path is null or empty (try for root schema)
+      if (schemaName == null || schemaName.isEmpty()) {
+        return false;
+      }
+
       AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
-      return drillSchema.showInInformationSchema();
+      if (!drillSchema.showInInformationSchema()) {
+        return false;
+      }
+
+      Map<String, String> recordValues = ImmutableMap.of(COL_TABLE_SCHEMA, schemaName, COL_SCHEMA_NAME, schemaName);
+      if (filter != null && filter.evaluate(recordValues) == Result.FALSE) {
+        // If the filter evaluates to false then we don't need to visit the schema. For other two results (TRUE,
+        // INCONCLUSIVE) continue to visit the schema.
+        return false;
+      }
     } catch(ClassCastException e) {
       // ignore and return true as this is not a drill schema
     }
+    return true;
+  }
+
+  protected boolean shouldVisitTable(String schemaName, String tableName) {
+    Map<String, String> recordValues = ImmutableMap.of(
+        COL_TABLE_SCHEMA, schemaName, COL_SCHEMA_NAME, schemaName, COL_TABLE_NAME, tableName);
+    if (filter != null && filter.evaluate(recordValues) == Result.FALSE) {
+      return false;
+    }
+
     return true;
   }
 
@@ -80,14 +112,13 @@ public abstract class RecordGenerator {
     }
 
     // Visit this schema and if requested ...
-    if (visitSchema(schemaPath, schema)) {
-
+    if (shouldVisitSchema(schemaPath, schema) && visitSchema(schemaPath, schema)) {
       // ... do for each of the schema's tables.
       for (String tableName: schema.getTableNames()) {
         Table table = schema.getTable(tableName);
         // Visit the table, and if requested ...
-        if (visitTable(schemaPath,  tableName, table)) {
 
+        if (shouldVisitTable(schemaPath, tableName) && visitTable(schemaPath,  tableName, table)) {
           // ... do for each of the table's fields.
           RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl());
           for (RelDataTypeField field: tableRow.getFieldList()) {
@@ -116,10 +147,8 @@ public abstract class RecordGenerator {
 
     @Override
     public boolean visitSchema(String schemaName, SchemaPlus schema) {
-      if (shouldVisitSchema(schema) && schemaName != null && !schemaName.isEmpty()) {
-        AbstractSchema as = schema.unwrap(AbstractSchema.class);
-        records.add(new Records.Schema("DRILL", schemaName, "<owner>", as.getTypeName(), as.isMutable()));
-      }
+      AbstractSchema as = schema.unwrap(AbstractSchema.class);
+      records.add(new Records.Schema("DRILL", schemaName, "<owner>", as.getTypeName(), as.isMutable()));
       return false;
     }
   }

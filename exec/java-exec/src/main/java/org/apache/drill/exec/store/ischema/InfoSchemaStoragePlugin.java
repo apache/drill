@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 
@@ -36,8 +37,9 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 
-public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
+public class InfoSchemaStoragePlugin extends AbstractStoragePlugin implements InfoSchemaConstants {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaStoragePlugin.class);
 
   private final InfoSchemaConfig config;
@@ -58,7 +60,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   @Override
   public InfoSchemaGroupScan getPhysicalScan(JSONOptions selection, List<SchemaPath> columns) throws IOException {
     SelectedTable table = selection.getWith(context.getConfig(),  SelectedTable.class);
-    return new InfoSchemaGroupScan(table, columns);
+    return new InfoSchemaGroupScan(table);
   }
 
   @Override
@@ -75,10 +77,10 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   private class ISchema extends AbstractSchema{
     private Map<String, InfoSchemaDrillTable> tables;
     public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
-      super(ImmutableList.<String>of(), "INFORMATION_SCHEMA");
+      super(ImmutableList.<String>of(), IS_SCHEMA_NAME);
       Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
       for(SelectedTable tbl : SelectedTable.values()){
-        tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, "INFORMATION_SCHEMA", tbl, config));
+        tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, IS_SCHEMA_NAME, tbl, config));
       }
       this.tables = ImmutableMap.copyOf(tbls);
     }
@@ -97,5 +99,12 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
     public String getTypeName() {
       return InfoSchemaConfig.NAME;
     }
+  }
+
+  @Override
+  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+    return ImmutableSet.of(
+        InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_PROJECT,
+        InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_SCAN);
   }
 }
