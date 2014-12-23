@@ -30,8 +30,9 @@ import org.eigenbase.relopt.RelTraitSet;
 
 public abstract class UnionPrel extends DrillUnionRelBase implements Prel{
 
-  public UnionPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs, boolean all) throws InvalidRelException{
-    super(cluster, traits, inputs, all);
+  public UnionPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs, boolean all,
+      boolean checkCompatibility) throws InvalidRelException {
+    super(cluster, traits, inputs, all, checkCompatibility);
   }
 
   @Override

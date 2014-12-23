@@ -60,7 +60,9 @@ public class UnionAllPrule extends Prule {
       }
 
       traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
-      UnionAllPrel unionAll = new UnionAllPrel(union.getCluster(), traits, convertedInputList);
+      UnionAllPrel unionAll =
+          new UnionAllPrel(union.getCluster(), traits, convertedInputList,
+              false /* compatibility already checked during logical phase */);
 
       call.transformTo(unionAll);
 

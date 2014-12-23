@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFamily;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.reltype.RelDataTypeImpl;
 import org.eigenbase.reltype.RelDataTypePrecedenceList;
@@ -112,4 +113,8 @@ public class RelDataTypeDrillImpl extends RelDataTypeImpl {
       return true;
     }
 
+    @Override
+    public RelDataTypeFamily getFamily() {
+      return getSqlTypeName().getFamily();
+    }
 }

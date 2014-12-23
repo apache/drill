@@ -38,15 +38,18 @@ import com.google.common.collect.Lists;
 
 public class UnionAllPrel extends UnionPrel {
 
-  public UnionAllPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs) throws InvalidRelException {
-    super(cluster, traits, inputs, true /* all */);
+  public UnionAllPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs,
+      boolean checkCompatibility) throws InvalidRelException {
+    super(cluster, traits, inputs, true /* all */, checkCompatibility);
+
   }
 
 
   @Override
   public UnionRelBase copy(RelTraitSet traitSet, List<RelNode> inputs, boolean all) {
     try {
-      return new UnionAllPrel(this.getCluster(), traitSet, inputs);
+      return new UnionAllPrel(this.getCluster(), traitSet, inputs,
+          false /* don't check compatibility during copy */);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }

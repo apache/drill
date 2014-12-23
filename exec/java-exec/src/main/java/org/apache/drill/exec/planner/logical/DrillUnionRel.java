@@ -38,15 +38,16 @@ import org.eigenbase.relopt.RelTraitSet;
 public class DrillUnionRel extends DrillUnionRelBase implements DrillRel {
   /** Creates a DrillUnionRel. */
   public DrillUnionRel(RelOptCluster cluster, RelTraitSet traits,
-      List<RelNode> inputs, boolean all) throws InvalidRelException {
-    super(cluster, traits, inputs, all);
+      List<RelNode> inputs, boolean all, boolean checkCompatibility) throws InvalidRelException {
+    super(cluster, traits, inputs, all, checkCompatibility);
   }
 
   @Override
   public DrillUnionRel copy(RelTraitSet traitSet, List<RelNode> inputs,
       boolean all) {
     try {
-      return new DrillUnionRel(getCluster(), traitSet, inputs, all);
+      return new DrillUnionRel(getCluster(), traitSet, inputs, all,
+          false /* don't check compatibility during copy */);
     } catch (InvalidRelException e) {
       throw new AssertionError(e) ;
     }

@@ -920,7 +920,7 @@
           <dependency>
             <groupId>net.hydromatic</groupId>
             <artifactId>optiq-core</artifactId>
-            <version>0.9-drill-r15</version>
+            <version>0.9-drill-r16</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>

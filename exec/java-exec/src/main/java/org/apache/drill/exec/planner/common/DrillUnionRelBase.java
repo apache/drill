@@ -32,10 +32,10 @@ import org.eigenbase.reltype.RelDataType;
 public abstract class DrillUnionRelBase extends UnionRelBase implements DrillRelNode {
 
   public DrillUnionRelBase(RelOptCluster cluster, RelTraitSet traits,
-      List<RelNode> inputs, boolean all) throws InvalidRelException {
+      List<RelNode> inputs, boolean all, boolean checkCompatibility) throws InvalidRelException {
     super(cluster, traits, inputs, all);
-    // if (! this.isHomogeneous(false /* don't compare names */)) {
-    if (! this.isCompatible(false /* don't compare names */, true /* allow substrings */)) {
+    if (checkCompatibility &&
+        !this.isCompatible(false /* don't compare names */, true /* allow substrings */)) {
       throw new InvalidRelException("Input row types of the Union are not compatible.");
     }
   }
@@ -50,4 +50,10 @@ public abstract class DrillUnionRelBase extends UnionRelBase implements DrillRel
     }
     return true;
   }
+
+  @Override
+  public boolean isDistinct() {
+    return !this.all;
+  }
+
 }

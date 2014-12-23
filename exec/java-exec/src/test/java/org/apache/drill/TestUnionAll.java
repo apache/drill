@@ -17,10 +17,13 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
 
 public class TestUnionAll extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
+  static final String WORKING_PATH = TestTools.getWorkingPath();
+  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   @Test    // Simple Union-All over two scans
   public void testUnionAll1() throws Exception {
@@ -67,5 +70,12 @@ public class TestUnionAll extends BaseTestQuery{
     test("select n_name from cp.`tpch/nation.parquet` union all select r_comment from cp.`tpch/region.parquet`");
   }
 
+  @Test // DRILL-1905: Union-all of * column from JSON files in different directories
+  public void testUnionAll9() throws Exception {
+    String query1 = String.format("select * from dfs_test.`%s/multilevel/json/1994/Q1/orders_94_q1.json` " +
+             " union all select * from dfs_test.`%s/multilevel/json/1995/Q1/orders_95_q1.json`",
+             TEST_RES_PATH, TEST_RES_PATH);
+    test(query1);
+  }
 
 }
