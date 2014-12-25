@@ -36,4 +36,14 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineValues(3l, 4l)
         .build().run();
   }
+
+  @Test
+  public void testCountDistinctOnBoolColumn() throws Exception {
+    testBuilder()
+        .sqlQuery("select count(distinct `bool_val`) as cnt from `sys`.`options`")
+        .ordered()
+        .baselineColumns("cnt")
+        .baselineValues(2l)
+        .build().run();
+  }
 }

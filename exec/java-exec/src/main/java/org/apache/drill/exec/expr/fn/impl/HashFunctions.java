@@ -23,6 +23,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
@@ -32,6 +33,7 @@ import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
+import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.NullableDateHolder;
 import org.apache.drill.exec.expr.holders.NullableDecimal18Holder;
 import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
@@ -535,6 +537,38 @@ public class HashFunctions {
         }
         out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(xor, 0);
       }
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class NullableBitHash implements DrillSimpleFunc {
+
+    @Param NullableBitHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0) {
+        out.value = 0;
+      } else {
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      }
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class BitHash implements DrillSimpleFunc {
+
+    @Param BitHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
     }
   }
 

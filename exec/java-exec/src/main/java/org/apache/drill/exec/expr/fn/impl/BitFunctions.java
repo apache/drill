@@ -87,4 +87,17 @@ public class BitFunctions {
     }
   }
 
+  @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class CompareBitBit implements DrillSimpleFunc {
+
+    @Param BitHolder left;
+    @Param BitHolder right;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch b) {}
+
+    public void eval() {
+      out.value = left.value < right.value ? -1 : ((left.value == right.value)? 0 : 1);
+    }
+  }
 }
