@@ -51,11 +51,6 @@ public class HiveTestDataGenerator {
     this.pluginRegistry = pluginRegistry;
   }
 
-  // TODO: Remove this once hive related tests in exec/jdbc are moved to contrib/storage-hive/core module
-  public HiveTestDataGenerator() {
-    this(null);
-  }
-
   private void cleanDir(String dir) throws IOException{
     File f = new File(dir);
     if (f.exists()) {
@@ -137,17 +132,10 @@ public class HiveTestDataGenerator {
     executeQuery("CREATE DATABASE IF NOT EXISTS db1");
     createTableAndLoadData("db1", "kv_db1", testDataFile);
 
-    // Generate data with date and timestamp data type
-    String testDateDataFile = generateTestDataFileWithDate();
-
-    // create table with date and timestamp data type
     executeQuery("USE default");
-    executeQuery("CREATE TABLE IF NOT EXISTS default.foodate(a DATE, b TIMESTAMP) "+
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.foodate", testDateDataFile));
 
     // create a table with no data
-    executeQuery("CREATE TABLE IF NOT EXISTS default.empty_table(a INT, b STRING)");
+    executeQuery("CREATE TABLE IF NOT EXISTS empty_table(a INT, b STRING)");
     // delete the table location of empty table
     File emptyTableLocation = new File(WH_DIR + "/empty_table");
     if (emptyTableLocation.exists()) {
@@ -263,8 +251,10 @@ public class HiveTestDataGenerator {
     // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA
     executeQuery("CREATE VIEW IF NOT EXISTS hiveview AS SELECT * FROM kv");
 
+    // Generate data with date and timestamp data type
+    String testDateDataFile = generateTestDataFileWithDate();
+
     // create partitioned hive table to test partition pruning
-    executeQuery("USE default");
     executeQuery("CREATE TABLE IF NOT EXISTS default.partition_pruning_test(a DATE, b TIMESTAMP) "+
         "partitioned by (c int, d int, e int) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
     executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=1)", testDateDataFile));

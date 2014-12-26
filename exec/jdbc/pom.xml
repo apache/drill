@@ -36,11 +36,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill.contrib.storage-hive</groupId>
-      <artifactId>drill-storage-hive-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
       <classifier>tests</classifier>
@@ -53,12 +48,6 @@
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.drill.contrib.storage-hive</groupId>
-      <artifactId>drill-storage-hive-core</artifactId>
-      <version>${project.version}</version>
-      <classifier>tests</classifier>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
