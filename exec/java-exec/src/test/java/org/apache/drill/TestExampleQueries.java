@@ -431,4 +431,45 @@ public class TestExampleQueries extends BaseTestQuery{
     test("alter session set `planner.slice_target` = 1; " + query);
   }
 
+  @Test // DRILL-1867
+  public void testCaseInsensitiveSubQuery() throws Exception {
+    int actualRecordCount = 0, expectedRecordCount = 0;
+
+    // source is JSON
+    actualRecordCount = testSql("select EMPID from ( select employee_id as empid from cp.`employee.json` limit 2)");
+    expectedRecordCount = 2;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+    actualRecordCount = testSql("select EMPLOYEE_ID from ( select employee_id from cp.`employee.json` where Employee_id is not null limit 2)");
+    expectedRecordCount = 2;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+    actualRecordCount = testSql("select x.EMPLOYEE_ID from ( select employee_id from cp.`employee.json` limit 2) X");
+    expectedRecordCount = 2;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+    // source is PARQUET
+    actualRecordCount = testSql("select NID from ( select n_nationkey as nid from cp.`tpch/nation.parquet`) where NID = 3");
+    expectedRecordCount = 1;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+    actualRecordCount = testSql("select x.N_nationkey from ( select n_nationkey from cp.`tpch/nation.parquet`) X where N_NATIONKEY = 3");
+    expectedRecordCount = 1;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+      // source is CSV
+    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    String query = String.format("select rid, x.name from (select columns[0] as RID, columns[1] as NAME from dfs_test.`%s`) X where X.rid = 2", root);
+    actualRecordCount = testSql(query);
+    expectedRecordCount = 1;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+  }
+
 }
