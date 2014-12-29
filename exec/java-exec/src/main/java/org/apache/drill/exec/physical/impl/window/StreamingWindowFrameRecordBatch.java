@@ -242,6 +242,7 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
     StreamingWindowFramer.AggOutcome out = framer.doWork();
 
     while (out == StreamingWindowFramer.AggOutcome.UPDATE_AGGREGATOR) {
+      framer.cleanup();
       framer = null;
       try {
         setupNewSchema();
