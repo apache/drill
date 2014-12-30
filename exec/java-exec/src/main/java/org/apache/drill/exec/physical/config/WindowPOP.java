@@ -21,6 +21,7 @@ package org.apache.drill.exec.physical.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -31,24 +32,27 @@ public class WindowPOP extends AbstractSingle {
 
   private final NamedExpression[] withins;
   private final NamedExpression[] aggregations;
+  private final Order.Ordering[] orderings;
   private final long start;
   private final long end;
 
   public WindowPOP(@JsonProperty("child") PhysicalOperator child,
                    @JsonProperty("within") NamedExpression[] withins,
                    @JsonProperty("aggregations") NamedExpression[] aggregations,
+                   @JsonProperty("orderings") Order.Ordering[] orderings,
                    @JsonProperty("start") long start,
                    @JsonProperty("end") long end) {
     super(child);
     this.withins = withins;
     this.aggregations = aggregations;
+    this.orderings = orderings;
     this.start = start;
     this.end = end;
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new WindowPOP(child, withins, aggregations, start, end);
+    return new WindowPOP(child, withins, aggregations, orderings, start, end);
   }
 
   @Override
@@ -75,5 +79,9 @@ public class WindowPOP extends AbstractSingle {
 
   public NamedExpression[] getWithins() {
     return withins;
+  }
+
+  public Order.Ordering[] getOrderings() {
+    return orderings;
   }
 }

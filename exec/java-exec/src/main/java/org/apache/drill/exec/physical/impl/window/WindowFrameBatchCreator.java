@@ -16,16 +16,22 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.sql;
+package org.apache.drill.exec.physical.impl.window;
 
-import org.apache.drill.BaseTestQuery;
-import org.junit.Ignore;
-import org.junit.Test;
+import com.google.common.base.Preconditions;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.config.WindowPOP;
+import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.record.RecordBatch;
 
-public class TestWindowFunctions extends BaseTestQuery {
-  @Test
-  @Ignore
-  public void testWindowSum() throws Exception {
-    test("select sum(position_id) over w from cp.`employee.json` window w as ( partition by position_id order by position_id)");
+import java.util.List;
+
+public class WindowFrameBatchCreator implements BatchCreator<WindowPOP> {
+
+  @Override
+  public RecordBatch getBatch(FragmentContext context, WindowPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+    Preconditions.checkArgument(children.size() == 1);
+    return new WindowFrameRecordBatch(config, context, children.iterator().next());
   }
 }

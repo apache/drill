@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,200 +14,112 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ ******************************************************************************/
 package org.apache.drill.exec.physical.impl.window;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.pop.PopUnitTestBase;
-import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.BigIntVector;
-import org.apache.drill.exec.vector.NullableBigIntVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.junit.Ignore;
+import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 
-import java.util.List;
+public class TestWindowFrame extends BaseTestQuery {
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+  private void runTest(String data, String results, String window) throws Exception {
+    testNoResult("alter session set `%s`= true", ExecConstants.ENABLE_WINDOW_FUNCTIONS);
+    testBuilder()
+      .sqlQuery("select count(*) over pos_win `count`, sum(salary) over pos_win `sum` from cp.`window/%s.json` window pos_win as (%s)", data, window)
+      .ordered()
+      .csvBaselineFile("window/" + results + ".tsv")
+      .baselineColumns("count", "sum")
+      .build().run();
+  }
 
-public class TestWindowFrame extends PopUnitTestBase {
-
+  /**
+   * Single batch with a single partition (position_id column)
+   */
   @Test
-  @Ignore
-  public void testWindowFrameWithOneKeyCount() throws Throwable {
-    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-         Drillbit bit = new Drillbit(CONFIG, serviceSet);
-         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+  public void testB1P1() throws Exception {
+    runTest("b1.p1.data", "b1.p1", "partition by position_id order by position_id");
+  }
 
-      // run query.
-      bit.run();
-      client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/window/oneKeyCount.json"), Charsets.UTF_8)
-              .replace("#{DATA_FILE}", FileUtils.getResourceAsFile("/window/oneKeyCountData.json").toURI().toString())
-      );
+  /**
+   * Single batch with a single partition (position_id column) and multiple sub-partitions (sub column)
+   */
+  @Test
+  public void testB1P1OrderBy() throws Exception {
+    runTest("b1.p1.data", "b1.p1.subs", "partition by position_id order by sub");
+  }
 
-      long[] cntArr = {1, 2, 1, 2};
-      long[] sumArr = {100, 150, 25, 75};
+  /**
+   * Single batch with 2 partitions (position_id column)
+   */
+  @Test
+  public void testB1P2() throws Exception {
+    runTest("b1.p2.data", "b1.p2", "partition by position_id order by position_id");
+  }
 
-      // look at records
-      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
-      int recordCount = 0;
+  /**
+   * Single batch with 2 partitions (position_id column)
+   * with order by clause
+   */
+  @Test
+  public void testB1P2OrderBy() throws Exception {
+    runTest("b1.p2.data", "b1.p2.subs", "partition by position_id order by sub");
+  }
 
-      for (QueryResultBatch batch : results) {
-        if (!batch.hasData()) {
-          continue;
-        }
-
-        assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-        batchLoader.load(batch.getHeader().getDef(), batch.getData());
-
-        for (int r = 0; r < batchLoader.getRecordCount(); r++) {
-          recordCount++;
-          VectorWrapper<?> wrapper = batchLoader.getValueAccessorById(
-            BigIntVector.class,
-            batchLoader.getValueVectorId(new SchemaPath(new PathSegment.NameSegment("cnt"))).getFieldIds()[0]
-          );
-          assertEquals(cntArr[r], wrapper.getValueVector().getAccessor().getObject(r));
-          wrapper = batchLoader.getValueAccessorById(
-            NullableBigIntVector.class,
-            batchLoader.getValueVectorId(new SchemaPath(new PathSegment.NameSegment("sum"))).getFieldIds()[0]
-          );
-          assertEquals(sumArr[r], wrapper.getValueVector().getAccessor().getObject(r));
-        }
-        batchLoader.clear();
-        batch.release();
-      }
-
-      assertEquals(4, recordCount);
-    }
+  /**
+   * 2 batches with 2 partitions (position_id column), each batch contains a different partition
+   */
+  @Test
+  public void testB2P2() throws Exception {
+    runTest("b2.p2.data", "b2.p2", "partition by position_id order by position_id");
   }
 
   @Test
-  @Ignore
-  public void testWindowFrameWithOneKeyMultipleBatches() throws Throwable {
-    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-         Drillbit bit = new Drillbit(CONFIG, serviceSet);
-         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
-
-      // run query.
-      bit.run();
-      client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/window/oneKeyCountMultiBatch.json"), Charsets.UTF_8)
-              .replace("#{DATA_FILE}", FileUtils.getResourceAsFile("/window/mediumData.json").toURI().toString()));
-
-      // look at records
-      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
-      int recordCount = 0;
-
-      for (QueryResultBatch batch : results) {
-        if (!batch.hasData()) {
-          continue;
-        }
-
-        assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-        batchLoader.load(batch.getHeader().getDef(), batch.getData());
-        ValueVector.Accessor output = batchLoader.getValueAccessorById(NullableBigIntVector.class,
-          batchLoader.getValueVectorId(
-            new SchemaPath(new PathSegment.NameSegment("output"))).getFieldIds()[0]
-        ).getValueVector().getAccessor();
-        ValueVector.Accessor sum = batchLoader.getValueAccessorById(
-          BigIntVector.class,
-          batchLoader.getValueVectorId(
-            new SchemaPath(new PathSegment.NameSegment("sum"))).getFieldIds()[0]
-        ).getValueVector().getAccessor();
-        ValueVector.Accessor cnt = batchLoader.getValueAccessorById(
-          BigIntVector.class,
-          batchLoader.getValueVectorId(
-            new SchemaPath(new PathSegment.NameSegment("cnt"))).getFieldIds()[0]
-        ).getValueVector().getAccessor();
-        int lastGroup = -1;
-        long groupCounter = 0;
-        long s = 0;
-        for (int r = 1; r <= batchLoader.getRecordCount(); r++) {
-          recordCount++;
-          int group = r / 4;
-          if (lastGroup != group) {
-            lastGroup = group;
-            groupCounter = 1;
-            s = 0;
-          } else {
-            groupCounter++;
-          }
-
-          s += group * 8 + r % 4;
-
-          assertEquals("Count, Row " + r, groupCounter, cnt.getObject(r - 1));
-          assertEquals("Sum, Row " + r, s, sum.getObject(r - 1));
-          assertEquals("Output, Row " + r, s, output.getObject(r - 1));
-        }
-        batchLoader.clear();
-        batch.release();
-      }
-
-      assertEquals(1000, recordCount);
-    }
+  public void testB2P2OrderBy() throws Exception {
+    runTest("b2.p2.data", "b2.p2.subs", "partition by position_id order by sub");
   }
 
+  /**
+   * 2 batches with 4 partitions, one partition has rows in both batches
+   */
   @Test
-  @Ignore
-  public void testWindowFrameWithTwoKeys() throws Throwable {
-    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-         Drillbit bit = new Drillbit(CONFIG, serviceSet);
-         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
-
-      // run query.
-      bit.run();
-      client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/window/twoKeys.json"), Charsets.UTF_8)
-              .replace("#{DATA_FILE}", FileUtils.getResourceAsFile("/window/twoKeysData.json").toURI().toString())
-      );
-
-      long[] cntArr = {1, 2, 1, 2, 1, 2, 1, 2};
-      long[] sumArr = {5, 15, 15, 35, 25, 55, 35, 75};
-
-      // look at records
-      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
-      int recordCount = 0;
-
-      for (QueryResultBatch batch : results) {
-        if (!batch.hasData()) {
-          continue;
-        }
-
-        assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-        batchLoader.load(batch.getHeader().getDef(), batch.getData());
-
-        for (int r = 0; r < batchLoader.getRecordCount(); r++) {
-          recordCount++;
-          VectorWrapper<?> wrapper = batchLoader.getValueAccessorById(
-            BigIntVector.class,
-            batchLoader.getValueVectorId(new SchemaPath(new PathSegment.NameSegment("cnt"))).getFieldIds()[0]
-          );
-          assertEquals(cntArr[r], wrapper.getValueVector().getAccessor().getObject(r));
-          wrapper = batchLoader.getValueAccessorById(
-            NullableBigIntVector.class,
-            batchLoader.getValueVectorId(new SchemaPath(new PathSegment.NameSegment("sum"))).getFieldIds()[0]
-          );
-          assertEquals(sumArr[r], wrapper.getValueVector().getAccessor().getObject(r));
-        }
-        batchLoader.clear();
-        batch.release();
-      }
-      assertEquals(8, recordCount);
-    }
+  public void testB2P4() throws Exception {
+    runTest("b2.p4.data", "b2.p4", "partition by position_id order by position_id");
   }
+
+  /**
+   * 2 batches with 4 partitions, one partition has rows in both batches
+   * no sub partition has rows in both batches
+   */
+  @Test
+  public void testB2P4OrderBy() throws Exception {
+    runTest("b2.p4.data", "b2.p4.subs", "partition by position_id order by sub");
+  }
+
+  /**
+   * 3 batches with 2 partitions, one partition has rows in all 3 batches
+   */
+  @Test
+  public void testB3P2() throws Exception {
+    runTest("b3.p2.data", "b3.p2", "partition by position_id order by position_id");
+  }
+
+  /**
+   * 3 batches with 2 partitions, one partition has rows in all 3 batches
+   * 2 subs have rows in 2 batches
+   */
+  @Test
+  public void testB3P2OrderBy() throws Exception {
+    runTest("b3.p2.data", "b3.p2.subs", "partition by position_id order by sub");
+  }
+
+  /**
+   * 4 batches with 4 partitions. After processing 1st batch, when innerNext() is called again, framer can process
+   * current batch without the need to call next(incoming).
+   */
+  @Test
+  public void testb4P4() throws Exception {
+    runTest("b4.p4.data", "b4.p4", "partition by position_id order by position_id");
+  }
+
 }

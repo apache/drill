@@ -42,10 +42,10 @@ import org.eigenbase.sql.SqlAggFunction;
 
 import java.util.List;
 
-public class StreamingWindowPrule extends RelOptRule {
-  public static final RelOptRule INSTANCE = new StreamingWindowPrule();
+public class WindowPrule extends RelOptRule {
+  public static final RelOptRule INSTANCE = new WindowPrule();
 
-  private StreamingWindowPrule() {
+  private WindowPrule() {
     super(RelOptHelper.some(DrillWindowRel.class, DrillRel.DRILL_LOGICAL, RelOptHelper.any(RelNode.class)), "Prel.WindowPrule");
   }
 
@@ -102,7 +102,7 @@ public class StreamingWindowPrule extends RelOptRule {
           newWinAggCalls
       );
 
-      input = new StreamingWindowPrel(
+      input = new WindowPrel(
           window.getCluster(),
           window.getTraitSet().merge(traits),
           convertedInput,
@@ -119,6 +119,11 @@ public class StreamingWindowPrule extends RelOptRule {
     for (int group : BitSets.toIter(window.groupSet)) {
       fields.add(new RelFieldCollation(group));
     }
+
+    for (RelFieldCollation field : window.orderKeys.getFieldCollations()) {
+      fields.add(field);
+    }
+
     return RelCollationImpl.of(fields);
   }
 

@@ -39,4 +39,8 @@ public abstract class AbstractBuilder<T extends LogicalOperator> {
     return exprs.toArray(new NamedExpression[exprs.size()]);
   }
 
+  protected Order.Ordering[] aO(List<Order.Ordering> orderings) {
+    return orderings.toArray(new Order.Ordering[orderings.size()]);
+  }
+
 }

@@ -33,5 +33,6 @@
 
   <modules>
     <module>tpch-sample-data</module>
+    <module>window-test-data</module>
   </modules>
 </project>

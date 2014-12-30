@@ -38,6 +38,7 @@ import static com.google.common.base.Preconditions.checkState;
 public class Window extends SingleInputOperator {
   private final NamedExpression[] withins;
   private final NamedExpression[] aggregations;
+  private final Order.Ordering[] orderings;
   private final long start;
   private final long end;
 
@@ -45,6 +46,7 @@ public class Window extends SingleInputOperator {
   @JsonCreator
   public Window(@JsonProperty("withins") NamedExpression[] withins,
                 @JsonProperty("aggregations") NamedExpression[] aggregations,
+                @JsonProperty("orderings") Order.Ordering[] orderings,
                 @JsonProperty("start") Long start,
                 @JsonProperty("end") Long end) {
     super();
@@ -52,6 +54,7 @@ public class Window extends SingleInputOperator {
     this.start = start == null ? Long.MIN_VALUE : start;
     this.end = end == null ? Long.MIN_VALUE : end;
     this.aggregations = aggregations;
+    this.orderings = orderings;
   }
 
   public NamedExpression[] getWithins() {
@@ -68,6 +71,10 @@ public class Window extends SingleInputOperator {
 
   public NamedExpression[] getAggregations() {
     return aggregations;
+  }
+
+  public Order.Ordering[] getOrderings() {
+    return orderings;
   }
 
   @Override
@@ -99,9 +106,10 @@ public class Window extends SingleInputOperator {
     }
 
     public Window internalBuild() {
+      //TODO withins can actually be empty: over(), over(order by <expression>), ...
       checkState(!withins.isEmpty(), "Withins in window must not be empty.");
       checkState(!aggregations.isEmpty(), "Aggregations in window must not be empty.");
-      return new Window(aN(withins), aN(aggregations), start, end);
+      return new Window(aN(withins), aN(aggregations), aO(orderings), start, end);
     }
 
     public Builder addOrdering(Order.Ordering ordering) {

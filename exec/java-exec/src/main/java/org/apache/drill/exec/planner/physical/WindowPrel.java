@@ -26,12 +26,14 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.planner.common.DrillWindowRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
 import org.eigenbase.rel.AggregateCall;
+import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
@@ -45,19 +47,19 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
 
-public class StreamingWindowPrel extends DrillWindowRelBase implements Prel {
-  public StreamingWindowPrel(RelOptCluster cluster,
-                             RelTraitSet traits,
-                             RelNode child,
-                             List<RexLiteral> constants,
-                             RelDataType rowType,
-                             Window window) {
+public class WindowPrel extends DrillWindowRelBase implements Prel {
+  public WindowPrel(RelOptCluster cluster,
+                    RelTraitSet traits,
+                    RelNode child,
+                    List<RexLiteral> constants,
+                    RelDataType rowType,
+                    Window window) {
     super(cluster, traits, child, constants, rowType, Collections.singletonList(window));
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new StreamingWindowPrel(getCluster(), traitSet, sole(inputs), constants, getRowType(), windows.get(0));
+    return new WindowPrel(getCluster(), traitSet, sole(inputs), constants, getRowType(), windows.get(0));
   }
 
   @Override
@@ -68,11 +70,14 @@ public class StreamingWindowPrel extends DrillWindowRelBase implements Prel {
 
     final List<String> childFields = getChild().getRowType().getFieldNames();
 
+    // We don't support distinct partitions
     checkState(windows.size() == 1, "Only one window is expected in WindowPrel");
 
     Window window = windows.get(0);
     List<NamedExpression> withins = Lists.newArrayList();
     List<NamedExpression> aggs = Lists.newArrayList();
+    List<Order.Ordering> orderings = Lists.newArrayList();
+
     for (int group : BitSets.toIter(window.groupSet)) {
       FieldReference fr = new FieldReference(childFields.get(group), ExpressionPosition.UNKNOWN);
       withins.add(new NamedExpression(fr, fr));
@@ -84,10 +89,15 @@ public class StreamingWindowPrel extends DrillWindowRelBase implements Prel {
       aggs.add(new NamedExpression(expr, ref));
     }
 
+    for (RelFieldCollation fieldCollation : window.orderKeys.getFieldCollations()) {
+      orderings.add(new Order.Ordering(fieldCollation.getDirection(), new FieldReference(childFields.get(fieldCollation.getFieldIndex())), fieldCollation.nullDirection));
+    }
+
     WindowPOP windowPOP = new WindowPOP(
         childPOP,
         withins.toArray(new NamedExpression[withins.size()]),
         aggs.toArray(new NamedExpression[aggs.size()]),
+        orderings.toArray(new Order.Ordering[orderings.size()]),
         Long.MIN_VALUE, //TODO: Get first/last to work
         Long.MIN_VALUE);
 
@@ -116,7 +126,7 @@ public class StreamingWindowPrel extends DrillWindowRelBase implements Prel {
 
   @Override
   public BatchSchema.SelectionVectorMode[] getSupportedEncodings() {
-    return BatchSchema.SelectionVectorMode.ALL;
+    return BatchSchema.SelectionVectorMode.DEFAULT;
   }
 
   @Override

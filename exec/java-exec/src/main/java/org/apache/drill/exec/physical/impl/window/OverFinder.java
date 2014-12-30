@@ -15,22 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl.window;
 
-import com.google.common.collect.Iterables;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.WindowPOP;
-import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.record.RecordBatch;
+import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.util.SqlBasicVisitor;
+import org.eigenbase.util.Util;
 
-import java.util.List;
+/**
+ * Visitor which looks for an over clause inside a tree of {@link
+ * SqlNode} objects.
+ */
+public class OverFinder extends SqlBasicVisitor<Void> {
 
-public class StreamingWindowFrameBatchCreator implements BatchCreator<WindowPOP> {
+  public boolean findOver(SqlNode node) {
+    try {
+      node.accept(this);
+      return false;
+    } catch (Util.FoundOne e) {
+      Util.swallow(e, null);
+      return true;
+    }
+  }
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, WindowPOP config, List<RecordBatch> children) throws ExecutionSetupException {
-    return new StreamingWindowFrameRecordBatch(config, context, Iterables.getOnlyElement(children));
+  public Void visit(SqlCall call) {
+    final SqlOperator operator = call.getOperator();
+
+    if (operator.getKind().equals(SqlKind.OVER)) {
+      throw new Util.FoundOne(call);
+    }
+
+    return super.visit(call);
   }
 }
