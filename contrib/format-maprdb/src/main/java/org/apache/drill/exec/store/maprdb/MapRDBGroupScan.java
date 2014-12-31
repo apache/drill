@@ -17,16 +17,22 @@
  */
 package org.apache.drill.exec.store.maprdb;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -39,12 +45,10 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemFormatConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
-import org.apache.drill.exec.store.hbase.HBaseUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -53,22 +57,16 @@ import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.client.HTable;
 import org.codehaus.jackson.annotate.JsonCreator;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Comparator;
-import java.util.TreeMap;
-import java.util.HashMap;
-import java.util.Queue;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.PriorityQueue;
-
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 @JsonTypeName("maprdb-scan")
 public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseConstants {
@@ -150,8 +148,8 @@ public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseCons
   private void init() {
     logger.debug("Getting region locations");
     try {
-      tableStats = new MapRDBTableStats(hbaseScanSpec.getTableName());
       HTable table = new HTable(HBaseConfiguration.create(), hbaseScanSpec.getTableName());
+      tableStats = new MapRDBTableStats(table);
       this.hTableDesc = table.getTableDescriptor();
       NavigableMap<HRegionInfo, ServerName> regionsMap = table.getRegionLocations();
       table.close();
@@ -359,7 +357,7 @@ public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseCons
   @Override
   public ScanStats getScanStats() {
     //TODO: look at stats for this.
-    int rowCount = (int) (hbaseScanSpec.getFilter() != null ? .5 : 1) * tableStats.getNumRows();
+    long rowCount = (long) ((hbaseScanSpec.getFilter() != null ? .5 : 1) * tableStats.getNumRows());
     int avgColumnSize = 10;
     int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
     return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, avgColumnSize * numColumns * rowCount);

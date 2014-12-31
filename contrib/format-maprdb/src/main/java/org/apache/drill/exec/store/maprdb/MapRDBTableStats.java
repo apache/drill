@@ -17,34 +17,25 @@
  */
 package org.apache.drill.exec.store.maprdb;
 
-import java.io.IOException;
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-
-import com.mapr.fs.hbase.HBaseAdminImpl;
-import org.apache.hadoop.hbase.client.mapr.BaseTableMappingRules;
 import org.apache.hadoop.hbase.client.mapr.TableMappingRulesFactory;
 
+import com.mapr.fs.hbase.HBaseAdminImpl;
+
 public class MapRDBTableStats {
-	
-	private int numRows;
-  private Configuration config = HBaseConfiguration.create();
 
-	public MapRDBTableStats(HTable table) throws Exception {
-		HBaseAdminImpl admin = new HBaseAdminImpl(config, TableMappingRulesFactory.create(config));
-		numRows = admin.getNumRows(new String(table.getTableName()));
-	}
+  private long numRows;
 
-  public MapRDBTableStats(String tableName) throws Exception {
+  public MapRDBTableStats(HTable table) throws Exception {
+    Configuration config = table.getConfiguration();
     HBaseAdminImpl admin = new HBaseAdminImpl(config, TableMappingRulesFactory.create(config));
-    numRows = admin.getNumRows(tableName);
+    numRows = admin.getNumRows(new String(table.getTableName()));
+    admin.close();
   }
 
-	public int getNumRows() {
-		return numRows;
-	}
-	
+  public long getNumRows() {
+    return numRows;
+  }
+
 }
