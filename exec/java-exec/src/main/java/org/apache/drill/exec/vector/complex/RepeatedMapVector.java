@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -33,7 +34,6 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -48,9 +48,7 @@ import org.apache.drill.exec.vector.complex.impl.NullReader;
 import org.apache.drill.exec.vector.complex.impl.RepeatedMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class RepeatedMapVector extends AbstractContainerVector implements RepeatedFixedWidthVector {
@@ -60,22 +58,14 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
 
   private final UInt4Vector offsets;   // offsets to start of each record (considering record indices are 0-indexed)
-  private final Map<String, ValueVector> vectors = Maps.newLinkedHashMap();
-  private final Map<String, VectorWithOrdinal> vectorIds = Maps.newHashMap();
   private final RepeatedMapReaderImpl reader = new RepeatedMapReaderImpl(RepeatedMapVector.this);
-  private final IntObjectOpenHashMap<ValueVector> vectorsById = new IntObjectOpenHashMap<>();
   private final RepeatedMapAccessor accessor = new RepeatedMapAccessor();
   private final Mutator mutator = new Mutator();
-  private final BufferAllocator allocator;
-  private final MaterializedField field;
   private int lastPopulatedValueIndex = -1;
-  private CallBack callBack;
 
   public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
-    this.field = field;
-    this.allocator = allocator;
+    super(field, allocator, callBack);
     this.offsets = new UInt4Vector(null, allocator);
-    this.callBack = callBack;
   }
 
   @Override
@@ -83,7 +73,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     clear();
     offsets.allocateNew(topLevelValueCount+1);
     offsets.zeroVector();
-    for (ValueVector v : vectors.values()) {
+    for (ValueVector v : getChildren()) {
       AllocationHelper.allocatePrecomputedChildCount(v, topLevelValueCount, 50, childValueCount);
     }
     mutator.reset();
@@ -91,53 +81,14 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   public Iterator<String> fieldNameIterator() {
-    return vectors.keySet().iterator();
-  }
-
-  @Override
-  public int size() {
-    return vectors.size();
+    return getChildFieldNames().iterator();
   }
 
   @Override
   public List<ValueVector> getPrimitiveVectors() {
-    List<ValueVector> primitiveVectors = Lists.newArrayList();
-    for (ValueVector v : this.vectors.values()) {
-      if (v instanceof AbstractContainerVector) {
-        AbstractContainerVector av = (AbstractContainerVector) v;
-        for (ValueVector vv : av.getPrimitiveVectors()) {
-          primitiveVectors.add(vv);
-        }
-      } else {
-        primitiveVectors.add(v);
-      }
-    }
+    List<ValueVector> primitiveVectors = super.getPrimitiveVectors();
     primitiveVectors.add(offsets);
     return primitiveVectors;
-  }
-
-  @Override
-  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
-    ValueVector v = vectors.get(name);
-
-    if (v == null) {
-      v = TypeHelper.getNewVector(field.getPath(), name, allocator, type);
-      Preconditions.checkNotNull(v, String.format("Failure to create vector of type %s.", type));
-      put(name, v);
-      if (callBack != null) {
-        callBack.doWork();
-      }
-    }
-    return typeify(v, clazz);
-  }
-
-  @Override
-  public <T extends ValueVector> T get(String name, Class<T> clazz) {
-    ValueVector v = vectors.get(name);
-    if (v == null) {
-      throw new IllegalStateException(String.format("Attempting to access invalid map field of name %s.", name));
-    }
-    return typeify(v, clazz);
   }
 
   @Override
@@ -154,49 +105,45 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   @Override
   public void close() {
-    for (ValueVector v : this) {
-      v.close();
-    }
-  }
-
-  @Override
-  public Iterator<ValueVector> iterator() {
-    return vectors.values().iterator();
-  }
-
-  @Override
-  public MaterializedField getField() {
-    return field;
+    super.close();
+    offsets.close();
   }
 
   @Override
   public TransferPair getTransferPair() {
-    return new MapTransferPair(field.getPath());
+    return new RepeatedMapTransferPair(this, getField().getPath());
   }
 
   @Override
   public TransferPair makeTransferPair(ValueVector to) {
-    return new MapTransferPair( (RepeatedMapVector) to);
+    return new RepeatedMapTransferPair(this, (RepeatedMapVector)to);
   }
 
   MapSingleCopier makeSingularCopier(MapVector to) {
-    return new MapSingleCopier(to);
+    return new MapSingleCopier(this, to);
   }
 
-  class MapSingleCopier {
+  protected static class MapSingleCopier {
     private final TransferPair[] pairs;
-    final RepeatedMapVector from = RepeatedMapVector.this;
+    public final RepeatedMapVector from;
 
-    public MapSingleCopier(MapVector to) {
-      pairs = new TransferPair[vectors.size()];
-      int i =0;
-      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-        int preSize = to.vectors.size();
-        ValueVector v = to.addOrGet(e.getKey(), e.getValue().getField().getType(), e.getValue().getClass());
-        if (to.vectors.size() != preSize) {
-          v.allocateNew();
+    public MapSingleCopier(RepeatedMapVector from, MapVector to) {
+      this.from = from;
+      this.pairs = new TransferPair[from.size()];
+
+      int i = 0;
+      ValueVector vector;
+      for (String child:from.getChildFieldNames()) {
+        int preSize = to.size();
+        vector = from.getChild(child);
+        if (vector == null) {
+          continue;
         }
-        pairs[i++] = e.getValue().makeTransferPair(v);
+        ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
+        if (to.size() != preSize) {
+          newVector.allocateNew();
+        }
+        pairs[i++] = vector.makeTransferPair(newVector);
       }
     }
 
@@ -211,19 +158,12 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   public TransferPair getTransferPairToSingleMap() {
-    return new SingleMapTransferPair(field.getPath());
+    return new SingleMapTransferPair(this, getField());
   }
 
   @Override
   public TransferPair getTransferPair(FieldReference ref) {
-    return new MapTransferPair(ref);
-  }
-
-  @Override
-  public void allocateNew() throws OutOfMemoryRuntimeException {
-    if (!allocateNewSafe()) {
-      throw new OutOfMemoryRuntimeException();
-    }
+    return new RepeatedMapTransferPair(this, ref);
   }
 
   @Override
@@ -232,44 +172,40 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       return false;
     }
     offsets.zeroVector();
-    for (ValueVector v : vectors.values()) {
-      if (!v.allocateNewSafe()) {
-        return false;
-      }
-    }
-    return true;
+    return super.allocateNewSafe();
   }
 
-  private class SingleMapTransferPair implements TransferPair{
-    private RepeatedMapVector from = RepeatedMapVector.this;
-    private TransferPair[] pairs;
-    private MapVector to;
+  protected static class SingleMapTransferPair implements TransferPair {
+    private final TransferPair[] pairs;
+    private final RepeatedMapVector from;
+    private final MapVector to;
+    private static final MajorType MAP_TYPE = Types.required(MinorType.MAP);
 
-    public SingleMapTransferPair(SchemaPath path) {
-
-      MaterializedField mf = MaterializedField.create(path, Types.required(field.getType().getMinorType()));
-      MapVector v = new MapVector(mf, allocator, callBack);
-      pairs = new TransferPair[vectors.size()];
-      int i =0;
-      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-        TransferPair otherSide = e.getValue().getTransferPair();
-        v.put(e.getKey(), otherSide.getTo());
-        pairs[i++] = otherSide;
-      }
-      this.to = v;
+    public SingleMapTransferPair(RepeatedMapVector from, MaterializedField field) {
+      this(from, new MapVector(MaterializedField.create(field.getPath(), MAP_TYPE), from.allocator, from.callBack), false);
     }
 
-    public SingleMapTransferPair(MapVector to) {
+    public SingleMapTransferPair(RepeatedMapVector from, MapVector to) {
+      this(from, to, true);
+    }
+
+    public SingleMapTransferPair(RepeatedMapVector from, MapVector to, boolean allocate) {
+      this.from = from;
       this.to = to;
-      pairs = new TransferPair[vectors.size()];
-      int i =0;
-      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-        int preSize = to.vectors.size();
-        ValueVector v = to.addOrGet(e.getKey(), e.getValue().getField().getType(), e.getValue().getClass());
-        if (to.vectors.size() != preSize) {
-          v.allocateNew();
+      this.pairs = new TransferPair[from.size()];
+      int i = 0;
+      ValueVector vector;
+      for (String child:from.getChildFieldNames()) {
+        int preSize = to.size();
+        vector = from.getChild(child);
+        if (vector == null) {
+          continue;
         }
-        pairs[i++] = e.getValue().makeTransferPair(v);
+        ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
+        if (allocate && to.size() != preSize) {
+          newVector.allocateNew();
+        }
+        pairs[i++] = vector.makeTransferPair(newVector);
       }
     }
 
@@ -280,7 +216,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
         p.transfer();
       }
       to.getMutator().setValueCount(from.getAccessor().getValueCount());
-      clear();
+      from.clear();
     }
 
     @Override
@@ -308,46 +244,49 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   }
 
-  private class MapTransferPair implements TransferPair{
+  private static class RepeatedMapTransferPair implements TransferPair{
 
     private final TransferPair[] pairs;
     private final RepeatedMapVector to;
-    private final RepeatedMapVector from = RepeatedMapVector.this;
+    private final RepeatedMapVector from;
 
-    public MapTransferPair(SchemaPath path) {
-      RepeatedMapVector v = new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator, callBack);
-      pairs = new TransferPair[vectors.size()];
-      int i =0;
-      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-        TransferPair otherSide = e.getValue().getTransferPair();
-        v.put(e.getKey(), otherSide.getTo());
-        pairs[i++] = otherSide;
-      }
-      this.to = v;
+    public RepeatedMapTransferPair(RepeatedMapVector from, SchemaPath path) {
+      this(from, new RepeatedMapVector(MaterializedField.create(path, TYPE), from.allocator, from.callBack), false);
     }
 
-    public MapTransferPair(RepeatedMapVector to) {
+    public RepeatedMapTransferPair(RepeatedMapVector from, RepeatedMapVector to) {
+      this(from, to, true);
+    }
+
+    public RepeatedMapTransferPair(RepeatedMapVector from, RepeatedMapVector to, boolean allocate) {
+      this.from = from;
       this.to = to;
-      pairs = new TransferPair[vectors.size()];
-      int i =0;
-      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-        int preSize = to.vectors.size();
-        ValueVector v = to.addOrGet(e.getKey(), e.getValue().getField().getType(), e.getValue().getClass());
-        if (preSize != to.vectors.size()) {
-          v.allocateNew();
+      this.pairs = new TransferPair[from.size()];
+
+      int i = 0;
+      ValueVector vector;
+      for (String child:from.getChildFieldNames()) {
+        int preSize = to.size();
+        vector = from.getChild(child);
+        if (vector == null) {
+          continue;
         }
-        pairs[i++] = e.getValue().makeTransferPair(v);
+        ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
+        if (to.size() != preSize) {
+          newVector.allocateNew();
+        }
+        pairs[i++] = vector.makeTransferPair(newVector);
       }
     }
 
 
     @Override
     public void transfer() {
-      offsets.transferTo(to.offsets);
+      from.offsets.transferTo(to.offsets);
       for (TransferPair p : pairs) {
         p.transfer();
       }
-      clear();
+      from.clear();
     }
 
     @Override
@@ -358,7 +297,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     @Override
     public boolean copyValueSafe(int srcIndex, int destIndex) {
       RepeatedMapHolder holder = new RepeatedMapHolder();
-      accessor.get(srcIndex, holder);
+      from.getAccessor().get(srcIndex, holder);
       if(destIndex >= to.getValueCapacity()){
         return false;
       }
@@ -380,7 +319,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
     @Override
     public void splitAndTransfer(final int groupStart, final int groups) {
-      final UInt4Vector.Accessor a = offsets.getAccessor();
+      final UInt4Vector.Accessor a = from.offsets.getAccessor();
       final UInt4Vector.Mutator m = to.offsets.getMutator();
 
       final int startPos = a.get(groupStart);
@@ -408,11 +347,11 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
 
-  transient private MapTransferPair ephPair;
+  transient private RepeatedMapTransferPair ephPair;
 
   public boolean copyFromSafe(int fromIndex, int thisIndex, RepeatedMapVector from) {
     if (ephPair == null || ephPair.from != from) {
-      ephPair = (MapTransferPair) from.makeTransferPair(this);
+      ephPair = (RepeatedMapTransferPair) from.makeTransferPair(this);
     }
     return ephPair.copyValueSafe(fromIndex, thisIndex);
   }
@@ -429,21 +368,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    int bufSize = getBufferSize();
-    List<DrillBuf> bufs = Lists.newArrayList(offsets.getBuffers(clear));
-
-    for (ValueVector v : vectors.values()) {
-      for (DrillBuf b : v.getBuffers(clear)) {
-        bufs.add(b);
-      }
-    }
-    int actualBufSize = 0 ;
-    for(DrillBuf b : bufs){
-      actualBufSize += b.writerIndex();
-    }
-
-    Preconditions.checkArgument(actualBufSize == bufSize);
-    return bufs.toArray(new DrillBuf[bufs.size()]);
+    return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
   }
 
 
@@ -455,11 +380,11 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
     for (SerializedField fmd : fields) {
       MaterializedField fieldDef = MaterializedField.create(fmd);
-      ValueVector v = vectors.get(fieldDef.getLastName());
+      ValueVector v = getChild(fieldDef.getLastName());
       if (v == null) {
         // if we arrive here, we didn't have a matching vector.
         v = TypeHelper.getNewVector(fieldDef, allocator);
-        put(fieldDef.getLastName(), v);
+        putChild(fieldDef.getLastName(), v);
       }
       if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
         v.clear();
@@ -480,20 +405,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
         .setGroupCount(accessor.getGroupCount())
         // while we don't need to actually read this on load, we need it to make sure we don't skip deserialization of this vector
         .setValueCount(accessor.getGroupCount());
-    for (ValueVector v : vectors.values()) {
+    for (ValueVector v : getChildren()) {
       b.addChild(v.getMetadata());
     }
     return b.build();
-  }
-
-  protected void put(String name, ValueVector vv) {
-    int ordinal = vectors.size();
-    if (vectors.put(name, vv) != null) {
-      throw new IllegalStateException();
-    }
-    vectorIds.put(name, new VectorWithOrdinal(vv, ordinal));
-    vectorsById.put(ordinal, vv);
-    field.addChild(vv.getField());
   }
 
   @Override
@@ -507,14 +422,14 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     public Object getObject(int index) {
       List<Object> l = new JsonStringArrayList();
       int end = offsets.getAccessor().get(index+1);
+      String fieldName;
       for (int i =  offsets.getAccessor().get(index); i < end; i++) {
         Map<String, Object> vv = Maps.newLinkedHashMap();
-        for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-          ValueVector v = e.getValue();
-          String k = e.getKey();
-          Object value =  v.getAccessor().getObject(i);
+        for (MaterializedField field:getField().getChildren()) {
+          fieldName = field.getLastName();
+          Object value = getChild(fieldName).getAccessor().getObject(i);
           if (value != null) {
-            vv.put(k,value);
+            vv.put(fieldName, value);
           }
         }
         l.add(vv);
@@ -610,7 +525,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       populateEmpties(topLevelValueCount);
       offsets.getMutator().setValueCount(topLevelValueCount == 0 ? 0 : topLevelValueCount+1);
       int childValueCount = offsets.getAccessor().get(topLevelValueCount);
-      for (ValueVector v : vectors.values()) {
+      for (ValueVector v : getChildren()) {
         v.getMutator().setValueCount(childValueCount);
       }
     }
@@ -647,7 +562,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     getMutator().reset();
 
     offsets.clear();
-    for(ValueVector v : vectors.values()) {
+    for(ValueVector v : getChildren()) {
       v.clear();;
     }
   }
@@ -656,10 +571,4 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   public int load(int parentValueCount, int childValueCount, DrillBuf buf) {
     throw new UnsupportedOperationException();
   }
-
-  @Override
-  public VectorWithOrdinal getVectorWithOrdinal(String name) {
-    return vectorIds.get(name);
-  }
-
 }

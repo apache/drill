@@ -23,7 +23,6 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.RepeatedListHolder;
-import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -111,7 +110,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   @Override
   public FieldReader reader() {
     if (reader == null) {
-      reader = container.get(name, ValueVector.class).getAccessor().getReader();
+      reader = container.getChild(name).getAccessor().getReader();
       if (currentOffset == NO_VALUES) {
         reader = NullReader.INSTANCE;
       } else {

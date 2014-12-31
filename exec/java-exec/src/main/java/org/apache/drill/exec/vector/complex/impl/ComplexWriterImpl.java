@@ -190,7 +190,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
     @Override
     public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
       ValueVector v = vc.addOrGet(name, type, clazz);
-      this.put(name, v);
+      putChild(name, v);
       return this.typeify(v, clazz);
 
     }

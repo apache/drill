@@ -22,7 +22,6 @@ import com.google.common.primitives.Ints;
 
 import io.netty.buffer.DrillBuf;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -48,56 +46,24 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class MapVector extends AbstractContainerVector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);
 
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REQUIRED).build();
 
-  final HashMap<String, ValueVector> vectors = Maps.newLinkedHashMap();
-  private final Map<String, VectorWithOrdinal> vectorIds = Maps.newHashMap();
-  private final IntObjectOpenHashMap<ValueVector> vectorsById = new IntObjectOpenHashMap<>();
   private final SingleMapReaderImpl reader = new SingleMapReaderImpl(MapVector.this);
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
-  private final BufferAllocator allocator;
-  private MaterializedField field;
   private int valueCount;
-  private CallBack callBack;
 
   public MapVector(String path, BufferAllocator allocator, CallBack callBack){
-    this.field = MaterializedField.create(SchemaPath.getSimplePath(path), TYPE);
-    this.allocator = allocator;
-    this.callBack = callBack;
-  }
-  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
-    this.field = field;
-    this.allocator = allocator;
-    this.callBack = callBack;
-  }
-  @Override
-  public int size() {
-    return vectors.size();
+    this(MaterializedField.create(SchemaPath.getSimplePath(path), TYPE), allocator, callBack);
   }
 
-  @Override
-  public List<ValueVector> getPrimitiveVectors() {
-    List<ValueVector> primitiveVectors = Lists.newArrayList();
-    for (ValueVector v : this.vectors.values()) {
-      if (v instanceof AbstractContainerVector) {
-        AbstractContainerVector av = (AbstractContainerVector) v;
-        for (ValueVector vv : av.getPrimitiveVectors()) {
-          primitiveVectors.add(vv);
-        }
-      } else {
-        primitiveVectors.add(v);
-      }
-    }
-    return primitiveVectors;
+  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
+    super(field, allocator, callBack);
   }
 
   transient private MapTransferPair ephPair;
@@ -118,86 +84,17 @@ public class MapVector extends AbstractContainerVector {
   }
 
   @Override
-  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
-    while (true) {
-      ValueVector vector = vectors.get(name);
-      if (vector == null) {
-        vector = TypeHelper.getNewVector(field.getPath(), name, allocator, type);
-        Preconditions.checkNotNull(vector, String.format("Failure to create vector of type %s.", type));
-        put(name, vector);
-        if (callBack != null) {
-          callBack.doWork();
-        }
-      }
-      if (clazz.isAssignableFrom(vector.getClass())) {
-        return (T)vector;
-      } else {
-        boolean allNulls = true;
-        for (int i=0; i<vector.getAccessor().getValueCount(); i++) {
-          if (!vector.getAccessor().isNull(i)) {
-            allNulls = false;
-            break;
-          }
-        }
-        if (allNulls) {
-          vector.clear();
-          vectors.remove(name);
-        } else {
-          throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), vector.getClass().getSimpleName()));
-        }
-      }
-    }
-  }
-
-  protected void put(String name, ValueVector vv) {
-    int ordinal = vectors.size();
-    if (vectors.put(name, vv) != null) {
-      throw new IllegalStateException();
-    }
-    vectorIds.put(name.toLowerCase(), new VectorWithOrdinal(vv, ordinal));
-    vectorsById.put(ordinal, vv);
-    field.addChild(vv.getField());
-  }
-
-
-  @Override
   protected boolean supportsDirectRead() {
     return true;
   }
 
   public Iterator<String> fieldNameIterator() {
-    return vectors.keySet().iterator();
-  }
-
-  @Override
-  public void allocateNew() throws OutOfMemoryRuntimeException {
-    if (!allocateNewSafe()) {
-      throw new OutOfMemoryRuntimeException();
-    }
-  }
-
-  @Override
-  public boolean allocateNewSafe() {
-    for (ValueVector v : vectors.values()) {
-      if (!v.allocateNewSafe()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  @Override
-  public <T extends ValueVector> T get(String name, Class<T> clazz) {
-    ValueVector v = vectors.get(name);
-    if (v == null) {
-      throw new IllegalStateException(String.format("Attempting to access invalid map field of name %s.", name));
-    }
-    return typeify(v, clazz);
+    return getChildFieldNames().iterator();
   }
 
   @Override
   public int getBufferSize() {
-    if (valueCount == 0 || vectors.isEmpty()) {
+    if (valueCount == 0 || size() == 0) {
       return 0;
     }
     long buffer = 0;
@@ -209,65 +106,51 @@ public class MapVector extends AbstractContainerVector {
   }
 
   @Override
-  public void close() {
-    for (ValueVector v : this) {
-      v.close();
-    }
-  }
-
-  @Override
-  public Iterator<ValueVector> iterator() {
-    return vectors.values().iterator();
-  }
-
-  @Override
-  public MaterializedField getField() {
-    return field;
-  }
-
-  @Override
   public TransferPair getTransferPair() {
-    return new MapTransferPair(field.getPath());
+    return new MapTransferPair(this, getField().getPath());
   }
 
   @Override
   public TransferPair makeTransferPair(ValueVector to) {
-    return new MapTransferPair( (MapVector) to);
+    return new MapTransferPair(this, (MapVector)to);
   }
 
   @Override
   public TransferPair getTransferPair(FieldReference ref) {
-    return new MapTransferPair(ref);
+    return new MapTransferPair(this, ref);
   }
 
-  private class MapTransferPair implements TransferPair{
-    private MapVector from = MapVector.this;
-    private TransferPair[] pairs;
-    private MapVector to;
+  protected static class MapTransferPair implements TransferPair{
+    private final TransferPair[] pairs;
+    private final MapVector from;
+    private final MapVector to;
 
-    public MapTransferPair(SchemaPath path) {
-      MapVector v = new MapVector(MaterializedField.create(path, TYPE), allocator, callBack);
-      pairs = new TransferPair[vectors.size()];
-      int i =0;
-      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-        TransferPair otherSide = e.getValue().getTransferPair();
-        v.put(e.getKey(), otherSide.getTo());
-        pairs[i++] = otherSide;
-      }
-      this.to = v;
+    public MapTransferPair(MapVector from, SchemaPath path) {
+      this(from, new MapVector(MaterializedField.create(path, TYPE), from.allocator, from.callBack), false);
     }
 
-    public MapTransferPair(MapVector to) {
+    public MapTransferPair(MapVector from, MapVector to) {
+      this(from, to, true);
+    }
+
+    protected MapTransferPair(MapVector from, MapVector to, boolean allocate) {
+      this.from = from;
       this.to = to;
-      pairs = new TransferPair[vectors.size()];
-      int i =0;
-      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-        int preSize = to.vectors.size();
-        ValueVector v = to.addOrGet(e.getKey(), e.getValue().getField().getType(), e.getValue().getClass());
-        if (to.vectors.size() != preSize) {
-          v.allocateNew();
+      this.pairs = new TransferPair[from.size()];
+
+      int i = 0;
+      ValueVector vector;
+      for (String child:from.getChildFieldNames()) {
+        int preSize = to.size();
+        vector = from.getChild(child);
+        if (vector == null) {
+          continue;
         }
-        pairs[i++] = e.getValue().makeTransferPair(v);
+        ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
+        if (allocate && to.size() != preSize) {
+          newVector.allocateNew();
+        }
+        pairs[i++] = vector.makeTransferPair(newVector);
       }
     }
 
@@ -277,8 +160,8 @@ public class MapVector extends AbstractContainerVector {
       for (TransferPair p : pairs) {
         p.transfer();
       }
-      to.valueCount = valueCount;
-      clear();
+      to.valueCount = from.valueCount;
+      from.clear();
     }
 
     @Override
@@ -308,7 +191,7 @@ public class MapVector extends AbstractContainerVector {
 
   @Override
   public int getValueCapacity() {
-    if (this.vectors.isEmpty()) {
+    if (size() == 0) {
       return Integer.MAX_VALUE;
     }
 
@@ -322,23 +205,12 @@ public class MapVector extends AbstractContainerVector {
       }
     };
 
-    return natural.min(vectors.values()).getValueCapacity();
+    return natural.min(getChildren()).getValueCapacity();
   }
 
   @Override
   public Accessor getAccessor() {
     return accessor;
-  }
-
-  @Override
-  public DrillBuf[] getBuffers(boolean clear) {
-    List<DrillBuf> bufs = Lists.newArrayList();
-    for (ValueVector v : vectors.values()) {
-      for (DrillBuf b : v.getBuffers(clear)) {
-        bufs.add(b);
-      }
-    }
-    return bufs.toArray(new DrillBuf[bufs.size()]);
   }
 
   @Override
@@ -350,11 +222,11 @@ public class MapVector extends AbstractContainerVector {
     for (SerializedField fmd : fields) {
       MaterializedField fieldDef = MaterializedField.create(fmd);
 
-      ValueVector v = vectors.get(fieldDef.getLastName());
+      ValueVector v = getChild(fieldDef.getLastName());
       if (v == null) {
         // if we arrive here, we didn't have a matching vector.
         v = TypeHelper.getNewVector(fieldDef, allocator);
-        put(fieldDef.getLastName(), v);
+        putChild(fieldDef.getLastName(), v);
       }
       if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
         v.clear();
@@ -375,7 +247,7 @@ public class MapVector extends AbstractContainerVector {
         .setValueCount(valueCount);
 
 
-    for(ValueVector v : vectors.values()) {
+    for(ValueVector v : getChildren()) {
       b.addChild(v.getMetadata());
     }
     return b.build();
@@ -391,12 +263,10 @@ public class MapVector extends AbstractContainerVector {
     @Override
     public Object getObject(int index) {
       Map<String, Object> vv = new JsonStringHashMap();
-      for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
-        ValueVector v = e.getValue();
-        String k = e.getKey();
-        Object value = v.getAccessor().getObject(index);
+      for (String child:getChildFieldNames()) {
+        Object value = getChild(child).getAccessor().getObject(index);
         if (value != null) {
-          vv.put(k, value);
+          vv.put(child, value);
         }
       }
       return vv;
@@ -429,40 +299,31 @@ public class MapVector extends AbstractContainerVector {
   }
 
   public ValueVector getVectorById(int id) {
-    return vectorsById.get(id);
+    return getChildByOrdinal(id);
   }
 
   public class Mutator implements ValueVector.Mutator{
 
     @Override
     public void setValueCount(int valueCount) {
-      for (ValueVector v : vectors.values()) {
+      for (ValueVector v : getChildren()) {
         v.getMutator().setValueCount(valueCount);
       }
       MapVector.this.valueCount = valueCount;
     }
 
     @Override
-    public void reset() {
-    }
+    public void reset() { }
 
     @Override
-    public void generateTestData(int values) {
-    }
-
+    public void generateTestData(int values) { }
   }
 
   @Override
   public void clear() {
     valueCount = 0;
-    for (ValueVector v : vectors.values()) {
-      v.clear();;
+    for (ValueVector v : getChildren()) {
+      v.clear();
     }
   }
-
-  @Override
-  public VectorWithOrdinal getVectorWithOrdinal(String name) {
-    return vectorIds.get(name.toLowerCase());
-  }
-
 }

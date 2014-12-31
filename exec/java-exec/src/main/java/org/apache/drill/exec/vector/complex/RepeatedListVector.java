@@ -54,16 +54,10 @@ import com.google.common.collect.Lists;
 public class RepeatedListVector extends AbstractContainerVector implements RepeatedFixedWidthVector{
 
   private final UInt4Vector offsets;   // offsets to start of each record
-  private final BufferAllocator allocator;
   private final Mutator mutator = new Mutator();
   private final RepeatedListAccessor accessor = new RepeatedListAccessor();
   private ValueVector vector;
-  private final MaterializedField field;
   private final RepeatedListReaderImpl reader = new RepeatedListReaderImpl(null, this);
-  private int allocationValueCount = 4000;
-  private int allocationMonitor = 0;
-  private CallBack callBack;
-
   private int lastSet = 0;
 
   private int valueCount;
@@ -71,10 +65,8 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   public static MajorType TYPE = Types.repeated(MinorType.LIST);
 
   public RepeatedListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
-    this.allocator = allocator;
+    super(field, allocator, callBack);
     this.offsets = new UInt4Vector(null, allocator);
-    this.field = field;
-    this.callBack = callBack;
   }
 
   public RepeatedListVector(SchemaPath path, BufferAllocator allocator, CallBack callBack){
@@ -86,19 +78,6 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     return vector != null ? 1 : 0;
   }
 
-  @Override
-  public List<ValueVector> getPrimitiveVectors() {
-    List<ValueVector> primitiveVectors = Lists.newArrayList();
-    if (vector instanceof AbstractContainerVector) {
-      for (ValueVector v : ((AbstractContainerVector) vector).getPrimitiveVectors()) {
-        primitiveVectors.add(v);
-      }
-    } else {
-      primitiveVectors.add(vector);
-    }
-    primitiveVectors.add(offsets);
-    return primitiveVectors;
-  }
 
   transient private RepeatedListTransferPair ephPair;
 
@@ -114,13 +93,6 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public void allocateNew() throws OutOfMemoryRuntimeException {
-    if (!allocateNewSafe()) {
-      throw new OutOfMemoryRuntimeException();
-    }
-  }
-
-  @Override
   public boolean allocateNewSafe() {
     if (!offsets.allocateNewSafe()) {
       return false;
@@ -132,7 +104,6 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     } else {
       return true;
     }
-
   }
 
   public class Mutator implements ValueVector.Mutator, RepeatedMutator{
@@ -277,9 +248,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   @Override
   public void close() {
     offsets.close();
-    if (vector != null) {
-      vector.close();
-    }
+    super.close();
   }
 
   @Override
@@ -292,13 +261,8 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public MaterializedField getField() {
-    return field;
-  }
-
-  @Override
   public TransferPair getTransferPair() {
-    return new RepeatedListTransferPair(field.getPath());
+    return new RepeatedListTransferPair(getField().getPath());
   }
 
   public class RepeatedListTransferPair implements TransferPair{
@@ -391,7 +355,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   private void setVector(ValueVector v) {
-    field.addChild(v.getField());
+    getField().addChild(v.getField());
     this.vector = v;
   }
 
@@ -441,7 +405,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     Preconditions.checkArgument(name == null);
 
     if(vector == null){
-      vector = TypeHelper.getNewVector(MaterializedField.create(field.getPath().getUnindexedArrayChild(), type), allocator, callBack);
+      vector = TypeHelper.getNewVector(MaterializedField.create(getField().getPath().getUnindexedArrayChild(), type), allocator, callBack);
       if (callBack != null) {
         callBack.doWork();
       }
@@ -450,7 +414,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public <T extends ValueVector> T get(String name, Class<T> clazz) {
+  public <T extends ValueVector> T getChild(String name, Class<T> clazz) {
     if (name != null) {
       return null;
     }
@@ -471,7 +435,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public VectorWithOrdinal getVectorWithOrdinal(String name) {
+  public VectorWithOrdinal getChildVectorWithOrdinal(String name) {
     if (name != null) {
       return null;
     }

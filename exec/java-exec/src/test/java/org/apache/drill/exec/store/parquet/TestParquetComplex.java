@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.Test;
 
 public class TestParquetComplex extends BaseTestQuery {
@@ -157,7 +158,7 @@ public class TestParquetComplex extends BaseTestQuery {
     String[] columns = {"keyword0", "keyword2"};
     testBuilder()
             .sqlQuery(query)
-            .ordered()
+            .unOrdered()
             .jsonBaselineFile("store/parquet/complex/baseline4.json")
             .baselineColumns(columns)
             .build()
@@ -170,7 +171,7 @@ public class TestParquetComplex extends BaseTestQuery {
     String[] columns = {"keyword0", "keyword2"};
     testBuilder()
             .sqlQuery(query)
-            .ordered()
+            .unOrdered()
             .jsonBaselineFile("store/parquet/complex/baseline4.json")
             .baselineColumns(columns)
             .build()

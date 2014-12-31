@@ -29,15 +29,13 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class VectorContainer extends AbstractMapVector implements Iterable<VectorWrapper<?>>, VectorAccessible {
+public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccessible {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
 
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
@@ -53,16 +51,6 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
   public VectorContainer( OperatorContext oContext) {
     this.oContext = oContext;
   }
-
-  // public VectorContainer(List<ValueVector> vectors, List<ValueVector[]> hyperVectors) {
-  // assert !vectors.isEmpty() || !hyperVectors.isEmpty();
-  //
-  // addCollection(vectors);
-  //
-  // for (ValueVector[] vArr : hyperVectors) {
-  // add(vArr);
-  // }
-  // }
 
   public boolean isSchemaChanged() {
     return schemaChanged;

@@ -38,9 +38,6 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
   static class TypeConverter {
 
     public Object convert(Object obj) {
-      if (obj == null) {
-        return null;
-      }
       if (obj instanceof JsonStringArrayList || obj instanceof JsonStringHashMap) {
         return obj.toString();
       }

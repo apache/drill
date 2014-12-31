@@ -17,6 +17,14 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-public class AbstractMapVector {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractMapVector.class);
+import org.apache.drill.exec.vector.ValueVector;
+
+public class VectorWithOrdinal {
+  public final ValueVector vector;
+  public final int ordinal;
+
+  public VectorWithOrdinal(ValueVector v, int ordinal) {
+    this.vector = v;
+    this.ordinal = ordinal;
+  }
 }
