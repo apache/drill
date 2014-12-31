@@ -17137,15 +17137,15 @@ public final class UserBitShared {
      */
     long getProcessNanos();
 
-    // optional int64 local_memory_allocated = 7;
+    // optional int64 peak_local_memory_allocated = 7;
     /**
-     * <code>optional int64 local_memory_allocated = 7;</code>
+     * <code>optional int64 peak_local_memory_allocated = 7;</code>
      */
-    boolean hasLocalMemoryAllocated();
+    boolean hasPeakLocalMemoryAllocated();
     /**
-     * <code>optional int64 local_memory_allocated = 7;</code>
+     * <code>optional int64 peak_local_memory_allocated = 7;</code>
      */
-    long getLocalMemoryAllocated();
+    long getPeakLocalMemoryAllocated();
 
     // repeated .exec.shared.MetricValue metric = 8;
     /**
@@ -17263,7 +17263,7 @@ public final class UserBitShared {
             }
             case 56: {
               bitField0_ |= 0x00000010;
-              localMemoryAllocated_ = input.readInt64();
+              peakLocalMemoryAllocated_ = input.readInt64();
               break;
             }
             case 66: {
@@ -17425,20 +17425,20 @@ public final class UserBitShared {
       return processNanos_;
     }
 
-    // optional int64 local_memory_allocated = 7;
-    public static final int LOCAL_MEMORY_ALLOCATED_FIELD_NUMBER = 7;
-    private long localMemoryAllocated_;
+    // optional int64 peak_local_memory_allocated = 7;
+    public static final int PEAK_LOCAL_MEMORY_ALLOCATED_FIELD_NUMBER = 7;
+    private long peakLocalMemoryAllocated_;
     /**
-     * <code>optional int64 local_memory_allocated = 7;</code>
+     * <code>optional int64 peak_local_memory_allocated = 7;</code>
      */
-    public boolean hasLocalMemoryAllocated() {
+    public boolean hasPeakLocalMemoryAllocated() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional int64 local_memory_allocated = 7;</code>
+     * <code>optional int64 peak_local_memory_allocated = 7;</code>
      */
-    public long getLocalMemoryAllocated() {
-      return localMemoryAllocated_;
+    public long getPeakLocalMemoryAllocated() {
+      return peakLocalMemoryAllocated_;
     }
 
     // repeated .exec.shared.MetricValue metric = 8;
@@ -17499,7 +17499,7 @@ public final class UserBitShared {
       operatorType_ = 0;
       setupNanos_ = 0L;
       processNanos_ = 0L;
-      localMemoryAllocated_ = 0L;
+      peakLocalMemoryAllocated_ = 0L;
       metric_ = java.util.Collections.emptyList();
       waitNanos_ = 0L;
     }
@@ -17531,7 +17531,7 @@ public final class UserBitShared {
         output.writeInt64(6, processNanos_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeInt64(7, localMemoryAllocated_);
+        output.writeInt64(7, peakLocalMemoryAllocated_);
       }
       for (int i = 0; i < metric_.size(); i++) {
         output.writeMessage(8, metric_.get(i));
@@ -17570,7 +17570,7 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(7, localMemoryAllocated_);
+          .computeInt64Size(7, peakLocalMemoryAllocated_);
       }
       for (int i = 0; i < metric_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
@@ -17712,7 +17712,7 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00000008);
         processNanos_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000010);
-        localMemoryAllocated_ = 0L;
+        peakLocalMemoryAllocated_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000020);
         if (metricBuilder_ == null) {
           metric_ = java.util.Collections.emptyList();
@@ -17778,7 +17778,7 @@ public final class UserBitShared {
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.localMemoryAllocated_ = localMemoryAllocated_;
+        result.peakLocalMemoryAllocated_ = peakLocalMemoryAllocated_;
         if (metricBuilder_ == null) {
           if (((bitField0_ & 0x00000040) == 0x00000040)) {
             metric_ = java.util.Collections.unmodifiableList(metric_);
@@ -17846,8 +17846,8 @@ public final class UserBitShared {
         if (other.hasProcessNanos()) {
           setProcessNanos(other.getProcessNanos());
         }
-        if (other.hasLocalMemoryAllocated()) {
-          setLocalMemoryAllocated(other.getLocalMemoryAllocated());
+        if (other.hasPeakLocalMemoryAllocated()) {
+          setPeakLocalMemoryAllocated(other.getPeakLocalMemoryAllocated());
         }
         if (metricBuilder_ == null) {
           if (!other.metric_.isEmpty()) {
@@ -18277,35 +18277,35 @@ public final class UserBitShared {
         return this;
       }
 
-      // optional int64 local_memory_allocated = 7;
-      private long localMemoryAllocated_ ;
+      // optional int64 peak_local_memory_allocated = 7;
+      private long peakLocalMemoryAllocated_ ;
       /**
-       * <code>optional int64 local_memory_allocated = 7;</code>
+       * <code>optional int64 peak_local_memory_allocated = 7;</code>
        */
-      public boolean hasLocalMemoryAllocated() {
+      public boolean hasPeakLocalMemoryAllocated() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <code>optional int64 local_memory_allocated = 7;</code>
+       * <code>optional int64 peak_local_memory_allocated = 7;</code>
        */
-      public long getLocalMemoryAllocated() {
-        return localMemoryAllocated_;
+      public long getPeakLocalMemoryAllocated() {
+        return peakLocalMemoryAllocated_;
       }
       /**
-       * <code>optional int64 local_memory_allocated = 7;</code>
+       * <code>optional int64 peak_local_memory_allocated = 7;</code>
        */
-      public Builder setLocalMemoryAllocated(long value) {
+      public Builder setPeakLocalMemoryAllocated(long value) {
         bitField0_ |= 0x00000020;
-        localMemoryAllocated_ = value;
+        peakLocalMemoryAllocated_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int64 local_memory_allocated = 7;</code>
+       * <code>optional int64 peak_local_memory_allocated = 7;</code>
        */
-      public Builder clearLocalMemoryAllocated() {
+      public Builder clearPeakLocalMemoryAllocated() {
         bitField0_ = (bitField0_ & ~0x00000020);
-        localMemoryAllocated_ = 0L;
+        peakLocalMemoryAllocated_ = 0L;
         onChanged();
         return this;
       }
@@ -19877,41 +19877,41 @@ public final class UserBitShared {
       ".exec.shared.OperatorProfile\022\022\n\nstart_ti" +
       "me\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_use" +
       "d\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n\010endp" +
-      "oint\030\t \001(\0132\026.exec.DrillbitEndpoint\"\372\001\n\017O" +
+      "oint\030\t \001(\0132\026.exec.DrillbitEndpoint\"\377\001\n\017O" +
       "peratorProfile\0221\n\rinput_profile\030\001 \003(\0132\032.",
       "exec.shared.StreamProfile\022\023\n\013operator_id" +
       "\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023\n\013setup_n" +
-      "anos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022\036\n\026loc" +
-      "al_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(" +
-      "\0132\030.exec.shared.MetricValue\022\022\n\nwait_nano" +
-      "s\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007records\030\001 \001(" +
-      "\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013M" +
-      "etricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_va" +
-      "lue\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001*5\n\nRpcCh" +
-      "annel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004",
-      "USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020" +
-      "\002\022\014\n\010PHYSICAL\020\003*k\n\rFragmentState\022\013\n\007SEND" +
-      "ING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNIN" +
-      "G\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAIL" +
-      "ED\020\005*\264\005\n\020CoreOperatorType\022\021\n\rSINGLE_SEND" +
-      "ER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022" +
-      "\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMER" +
-      "GE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006\022\t\n\005" +
-      "LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030ORDERED" +
-      "_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNOR",
-      "DERED_RECEIVER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SC" +
-      "REEN\020\r\022\034\n\030SELECTION_VECTOR_REMOVER\020\016\022\027\n\023" +
-      "STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n" +
-      "\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014" +
-      "\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025" +
-      "\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN" +
-      "\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020" +
-      "\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022" +
-      "\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n" +
-      "\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JS",
-      "ON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE_SUB" +
-      "_SCAN\020!\022\n\n\006WINDOW\020\"B.\n\033org.apache.drill." +
-      "exec.protoB\rUserBitSharedH\001"
+      "anos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033pea" +
+      "k_local_memory_allocated\030\007 \001(\003\022(\n\006metric" +
+      "\030\010 \003(\0132\030.exec.shared.MetricValue\022\022\n\nwait" +
+      "_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007records" +
+      "\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003" +
+      "\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlo" +
+      "ng_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001*5\n\n" +
+      "RpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020",
+      "\001\022\010\n\004USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOG" +
+      "ICAL\020\002\022\014\n\010PHYSICAL\020\003*k\n\rFragmentState\022\013\n" +
+      "\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007R" +
+      "UNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n" +
+      "\006FAILED\020\005*\264\005\n\020CoreOperatorType\022\021\n\rSINGLE" +
+      "_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTE" +
+      "R\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016" +
+      "\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDER\020" +
+      "\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030OR" +
+      "DERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n",
+      "\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SENDER\020\014\022" +
+      "\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_REMOVER\020" +
+      "\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N_SORT" +
+      "\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNIO" +
+      "N\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GROUP_S" +
+      "CAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE" +
+      "_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WR" +
+      "ITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRIT" +
+      "ER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN" +
+      "\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_",
+      "TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n\016HBAS" +
+      "E_SUB_SCAN\020!\022\n\n\006WINDOW\020\"B.\n\033org.apache.d" +
+      "rill.exec.protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -20013,7 +20013,7 @@ public final class UserBitShared {
           internal_static_exec_shared_OperatorProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_OperatorProfile_descriptor,
-              new java.lang.String[] { "InputProfile", "OperatorId", "OperatorType", "SetupNanos", "ProcessNanos", "LocalMemoryAllocated", "Metric", "WaitNanos", });
+              new java.lang.String[] { "InputProfile", "OperatorId", "OperatorType", "SetupNanos", "ProcessNanos", "PeakLocalMemoryAllocated", "Metric", "WaitNanos", });
           internal_static_exec_shared_StreamProfile_descriptor =
             getDescriptor().getMessageTypes().get(16);
           internal_static_exec_shared_StreamProfile_fieldAccessorTable = new

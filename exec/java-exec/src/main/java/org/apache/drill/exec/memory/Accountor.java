@@ -62,6 +62,8 @@ public class Accountor {
   private final FragmentContext fragmentContext;
   long fragmentLimit;
 
+  private long peakMemoryAllocation = 0;
+
   // The top level Allocator has an accountor that keeps track of all the FragmentContexts currently executing.
   // This enables the top level accountor to calculate a new fragment limit whenever necessary.
   private final List<FragmentContext> fragmentContexts;
@@ -132,14 +134,22 @@ public class Accountor {
     return remainder.getUsed();
   }
 
+  public long getPeakMemoryAllocation() {
+    return peakMemoryAllocation;
+  }
+
   public boolean reserve(long size) {
     logger.trace("Fragment:"+fragmentStr+" Reserved "+size+" bytes. Total Allocated: "+getAllocation());
-    return remainder.get(size, this.applyFragmentLimit);
+    boolean status = remainder.get(size, this.applyFragmentLimit);
+    peakMemoryAllocation = Math.max(peakMemoryAllocation, getAllocation());
+    return status;
   }
 
   public boolean forceAdditionalReservation(long size) {
     if (size > 0) {
-      return remainder.forceGet(size);
+      boolean status = remainder.forceGet(size);
+      peakMemoryAllocation = Math.max(peakMemoryAllocation, getAllocation());
+      return status;
     } else {
       return true;
     }
@@ -156,6 +166,8 @@ public class Accountor {
     if (ENABLE_ACCOUNTING) {
       buffers.put(buf, new DebugStackTrace(buf.capacity(), Thread.currentThread().getStackTrace()));
     }
+
+    peakMemoryAllocation = Math.max(peakMemoryAllocation, getAllocation());
   }
 
 

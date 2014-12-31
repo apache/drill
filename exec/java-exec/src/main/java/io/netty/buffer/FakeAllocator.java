@@ -91,6 +91,11 @@ class FakeAllocator implements BufferAllocator {
     return 0;
   }
 
+  @Override
+  public long getPeakMemoryAllocation() {
+    return 0;
+  }
+
   static class FakeAccountor extends Accountor {
 
     public FakeAccountor() {

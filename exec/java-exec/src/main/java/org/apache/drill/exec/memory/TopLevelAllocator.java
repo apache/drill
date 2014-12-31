@@ -99,6 +99,11 @@ public class TopLevelAllocator implements BufferAllocator {
   }
 
   @Override
+  public long getPeakMemoryAllocation() {
+    return acct.getPeakMemoryAllocation();
+  }
+
+  @Override
   public ByteBufAllocator getUnderlyingAllocator() {
     return innerAllocator;
   }
@@ -287,6 +292,11 @@ public class TopLevelAllocator implements BufferAllocator {
     @Override
     public long getAllocatedMemory() {
       return childAcct.getAllocation();
+    }
+
+    @Override
+    public long getPeakMemoryAllocation() {
+      return childAcct.getPeakMemoryAllocation();
     }
 
     @Override

@@ -108,5 +108,7 @@ public interface BufferAllocator extends Closeable {
 
   public abstract long getAllocatedMemory();
 
+  public abstract long getPeakMemoryAllocation();
+
   public DrillBuf getEmpty();
 }

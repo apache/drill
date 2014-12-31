@@ -54,7 +54,7 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
     private int operatorType;
     private long setupNanos;
     private long processNanos;
-    private long localMemoryAllocated;
+    private long peakLocalMemoryAllocated;
     private List<MetricValue> metric;
     private long waitNanos;
 
@@ -130,16 +130,16 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
         return this;
     }
 
-    // localMemoryAllocated
+    // peakLocalMemoryAllocated
 
-    public long getLocalMemoryAllocated()
+    public long getPeakLocalMemoryAllocated()
     {
-        return localMemoryAllocated;
+        return peakLocalMemoryAllocated;
     }
 
-    public OperatorProfile setLocalMemoryAllocated(long localMemoryAllocated)
+    public OperatorProfile setPeakLocalMemoryAllocated(long peakLocalMemoryAllocated)
     {
-        this.localMemoryAllocated = localMemoryAllocated;
+        this.peakLocalMemoryAllocated = peakLocalMemoryAllocated;
         return this;
     }
 
@@ -242,7 +242,7 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
                     message.processNanos = input.readInt64();
                     break;
                 case 7:
-                    message.localMemoryAllocated = input.readInt64();
+                    message.peakLocalMemoryAllocated = input.readInt64();
                     break;
                 case 8:
                     if(message.metric == null)
@@ -284,8 +284,8 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
         if(message.processNanos != 0)
             output.writeInt64(6, message.processNanos, false);
 
-        if(message.localMemoryAllocated != 0)
-            output.writeInt64(7, message.localMemoryAllocated, false);
+        if(message.peakLocalMemoryAllocated != 0)
+            output.writeInt64(7, message.peakLocalMemoryAllocated, false);
 
         if(message.metric != null)
         {
@@ -310,7 +310,7 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
             case 4: return "operatorType";
             case 5: return "setupNanos";
             case 6: return "processNanos";
-            case 7: return "localMemoryAllocated";
+            case 7: return "peakLocalMemoryAllocated";
             case 8: return "metric";
             case 9: return "waitNanos";
             default: return null;
@@ -331,7 +331,7 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
         __fieldMap.put("operatorType", 4);
         __fieldMap.put("setupNanos", 5);
         __fieldMap.put("processNanos", 6);
-        __fieldMap.put("localMemoryAllocated", 7);
+        __fieldMap.put("peakLocalMemoryAllocated", 7);
         __fieldMap.put("metric", 8);
         __fieldMap.put("waitNanos", 9);
     }

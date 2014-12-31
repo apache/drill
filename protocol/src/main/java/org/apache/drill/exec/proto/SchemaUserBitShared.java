@@ -2175,8 +2175,8 @@ public final class SchemaUserBitShared
                     output.writeInt64(5, message.getSetupNanos(), false);
                 if(message.hasProcessNanos())
                     output.writeInt64(6, message.getProcessNanos(), false);
-                if(message.hasLocalMemoryAllocated())
-                    output.writeInt64(7, message.getLocalMemoryAllocated(), false);
+                if(message.hasPeakLocalMemoryAllocated())
+                    output.writeInt64(7, message.getPeakLocalMemoryAllocated(), false);
                 for(org.apache.drill.exec.proto.UserBitShared.MetricValue metric : message.getMetricList())
                     output.writeObject(8, metric, org.apache.drill.exec.proto.SchemaUserBitShared.MetricValue.WRITE, true);
 
@@ -2238,7 +2238,7 @@ public final class SchemaUserBitShared
                             builder.setProcessNanos(input.readInt64());
                             break;
                         case 7:
-                            builder.setLocalMemoryAllocated(input.readInt64());
+                            builder.setPeakLocalMemoryAllocated(input.readInt64());
                             break;
                         case 8:
                             builder.addMetric(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.MetricValue.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.MetricValue.MERGE));
@@ -2292,7 +2292,7 @@ public final class SchemaUserBitShared
                 case 4: return "operatorType";
                 case 5: return "setupNanos";
                 case 6: return "processNanos";
-                case 7: return "localMemoryAllocated";
+                case 7: return "peakLocalMemoryAllocated";
                 case 8: return "metric";
                 case 9: return "waitNanos";
                 default: return null;
@@ -2311,7 +2311,7 @@ public final class SchemaUserBitShared
             fieldMap.put("operatorType", 4);
             fieldMap.put("setupNanos", 5);
             fieldMap.put("processNanos", 6);
-            fieldMap.put("localMemoryAllocated", 7);
+            fieldMap.put("peakLocalMemoryAllocated", 7);
             fieldMap.put("metric", 8);
             fieldMap.put("waitNanos", 9);
         }

@@ -164,7 +164,7 @@ message OperatorProfile {
   optional int32 operator_type = 4;
   optional int64 setup_nanos = 5;
   optional int64 process_nanos = 6;
-  optional int64 local_memory_allocated = 7;
+  optional int64 peak_local_memory_allocated = 7;
   repeated MetricValue metric = 8;
   optional int64 wait_nanos = 9;
 }
