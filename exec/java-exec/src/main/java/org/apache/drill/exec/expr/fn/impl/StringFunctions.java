@@ -970,11 +970,34 @@ public class StringFunctions{
       out.buffer = in.buffer;
       out.start = in.start;
       out.end = org.apache.drill.common.util.DrillStringUtils.parseBinaryString(in.buffer, in.start, in.end);
-      out.buffer.readerIndex(out.start);
-      out.buffer.writerIndex(out.end);
+      out.buffer.setIndex(out.start, out.end);
     }
   }
 
+  // Converts a varbinary type into a hex encoded string.
+  // (byte[]) {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}  => "\xca\xfe\xba\xbe"
+  @FunctionTemplate(name = "string_binary", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class StringBinary implements DrillSimpleFunc {
+
+    @Param  VarBinaryHolder in;
+    @Output VarCharHolder   out;
+    @Workspace Charset charset;
+    @Inject DrillBuf buffer;
+
+    public void setup(RecordBatch incoming) {
+      charset = java.nio.charset.Charset.forName("UTF-8");
+    }
+
+    public void eval() {
+      byte[] buf = org.apache.drill.common.util.DrillStringUtils.toBinaryString(in.buffer, in.start, in.end).getBytes(charset);
+      buffer.setBytes(0, buf);
+      buffer.setIndex(0, buf.length);
+
+      out.start = 0;
+      out.end = buf.length;
+      out.buffer = buffer;
+    }
+  }
 
   /**
   * Returns the ASCII code of the first character of input string
