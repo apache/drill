@@ -47,7 +47,6 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
@@ -161,6 +160,10 @@ public class ScanBatch implements RecordBatch {
             currentReader.cleanup();
             releaseAssets();
             done = true;
+            if (mutator.isNewSchema()) {
+              container.buildSchema(SelectionVectorMode.NONE);
+              schema = container.getSchema();
+            }
             return IterOutcome.NONE;
           }
           oContext.getStats().startSetup();

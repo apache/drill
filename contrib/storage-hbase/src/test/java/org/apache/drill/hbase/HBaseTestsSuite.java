@@ -34,6 +34,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+  TestHBaseQueries.class,
   TestHBaseRegexParser.class,
   HBaseRecordReaderTest.class,
   TestHBaseFilterPushDown.class,
