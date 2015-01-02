@@ -29,7 +29,7 @@ static Drill::ErrorMessages errorMessages[]={
     {ERR_CONN_FAILURE, ERR_CATEGORY_CONN, 0, "Connection failure. Host:%s port:%s. Error: %s."},
     {ERR_CONN_EXCEPT, ERR_CATEGORY_CONN, 0, "Socket connection failure with the following exception: %s."},
     {ERR_CONN_UNKPROTO, ERR_CATEGORY_CONN, 0, "Unknown protocol: %s."},
-    {ERR_CONN_RDFAIL, ERR_CATEGORY_CONN, 0, "A socket read failed with error: %s."},
+    {ERR_CONN_RDFAIL, ERR_CATEGORY_CONN, 0, "Connection failed with error: %s."},
     {ERR_CONN_WFAIL, ERR_CATEGORY_CONN, 0, "Synchronous socket write failed with error: %s."},
     {ERR_CONN_ZOOKEEPER, ERR_CATEGORY_CONN, 0, "Zookeeper error. %s"},
     {ERR_CONN_NOHSHAKE, ERR_CATEGORY_CONN, 0, "Handshake failed: Expected RPC version %d, got %d."},

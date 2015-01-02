@@ -230,7 +230,12 @@ void DrillClientImpl::handleHandshake(ByteBuf_t _buf,
 
     }else{
         // boost error
-        handleConnError(CONN_FAILURE, getMessage(ERR_CONN_RDFAIL, error.message().c_str()));
+        if(error==boost::asio::error::eof){ // Server broke off the connection
+        handleConnError(CONN_HANDSHAKE_FAILED,
+                getMessage(ERR_CONN_NOHSHAKE, DRILL_RPC_VERSION, m_handshakeVersion));
+        }else{
+            handleConnError(CONN_FAILURE, getMessage(ERR_CONN_RDFAIL, error.message().c_str()));
+        }
         return;
     }
     return;
