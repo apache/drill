@@ -125,13 +125,14 @@ public class QueryClassLoader extends URLClassLoader {
       boolean debug = (value != null) ? value.bool_val : config.getBoolean(JAVA_COMPILER_DEBUG_CONFIG);
 
       this.janinoClassCompiler = (policy == CompilerPolicy.JANINO || policy == CompilerPolicy.DEFAULT) ? new JaninoClassCompiler(QueryClassLoader.this, debug) : null;
-      this.jdkClassCompiler = (policy == CompilerPolicy.JDK || policy == CompilerPolicy.DEFAULT) ? new JDKClassCompiler(QueryClassLoader.this, debug) : null;
+      this.jdkClassCompiler = (policy == CompilerPolicy.JDK || policy == CompilerPolicy.DEFAULT) ? JDKClassCompiler.newInstance(QueryClassLoader.this, debug) : null;
     }
 
     private byte[][] getClassByteCode(ClassNames className, String sourceCode)
         throws CompileException, ClassNotFoundException, ClassTransformationException, IOException {
       AbstractClassCompiler classCompiler;
-      if (policy == CompilerPolicy.JDK || (policy == CompilerPolicy.DEFAULT && sourceCode.length() > janinoThreshold)) {
+      if (jdkClassCompiler != null &&
+          (policy == CompilerPolicy.JDK || (policy == CompilerPolicy.DEFAULT && sourceCode.length() > janinoThreshold))) {
         classCompiler = jdkClassCompiler;
       } else {
         classCompiler = janinoClassCompiler;

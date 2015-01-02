@@ -41,12 +41,18 @@ class JDKClassCompiler extends AbstractClassCompiler {
   private final JavaCompiler compiler;
   private final DrillJavaFileManager fileManager;
 
-  public JDKClassCompiler(ClassLoader classLoader, boolean debug) {
-    super(debug);
-    this.compiler = ToolProvider.getSystemJavaCompiler();
+  public static JDKClassCompiler newInstance(ClassLoader classLoader, boolean debug) {
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     if (compiler == null) {
-      throw new UnsupportedOperationException("JDK Java compiler not available - probably you're running a JRE, not a JDK");
+      logger.warn("JDK Java compiler not available - probably you're running Drill with a JRE and not a JDK");
+      return null;
     }
+    return new JDKClassCompiler(compiler, classLoader, debug);
+  }
+
+  private JDKClassCompiler(JavaCompiler compiler, ClassLoader classLoader, boolean debug) {
+    super(debug);
+    this.compiler = compiler;
     this.listener = new DrillDiagnosticListener();
     this.fileManager = new DrillJavaFileManager(compiler.getStandardFileManager(listener, null, Charsets.UTF_8), classLoader);
     this.compilerOptions = Lists.newArrayList(this.debug ? "-g:source,lines,vars" : "-g:none");
