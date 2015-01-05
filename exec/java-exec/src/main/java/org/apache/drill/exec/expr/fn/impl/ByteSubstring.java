@@ -46,7 +46,7 @@ import org.apache.drill.exec.record.RecordBatch;
                   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
 public class ByteSubstring implements DrillSimpleFunc {
 
-  @Param VarBinaryHolder string;
+  @Param VarBinaryHolder in;
   @Param BigIntHolder offset;
   @Param BigIntHolder length;
   @Output VarBinaryHolder out;
@@ -56,30 +56,25 @@ public class ByteSubstring implements DrillSimpleFunc {
 
   @Override
   public void eval() {
-    out.buffer = string.buffer;
+    out.buffer = in.buffer;
 
     // handle invalid values; e.g. SUBSTRING(value, 0, x) or SUBSTRING(value, x, 0)
     if (offset.value == 0 || length.value <= 0) {
-
       out.start = 0;
       out.end = 0;
-
     } else {
-
       // handle negative and positive offset values
       if (offset.value < 0) {
-        out.start = string.end + (int)offset.value;
+        out.start = in.end + (int)offset.value;
       } else {
-        out.start = (int)offset.value - 1;
+        out.start = in.start + (int)offset.value - 1;
       }
-
       // calculate end position from length and truncate to upper value bounds
-      if (out.start + length.value > string.end) {
-        out.end = string.end;
+      if (out.start + length.value > in.end) {
+        out.end = in.end;
       } else {
         out.end = out.start + (int)length.value;
       }
-
     }
   }
 
