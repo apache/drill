@@ -68,8 +68,13 @@ public class QueryResources {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_HTML)
   public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType) throws Exception {
-    final QueryWrapper.QueryResult result = submitQueryJSON(new QueryWrapper(query, queryType));
-    return new Viewable("/rest/query/result.ftl", new TabularResult(result));
+    try {
+      final QueryWrapper.QueryResult result = submitQueryJSON(new QueryWrapper(query, queryType));
+      return new Viewable("/rest/query/result.ftl", new TabularResult(result));
+    } catch(Exception | Error e) {
+      logger.error("Query from Web UI Failed", e);
+      return new Viewable("/rest/query/errorMessage.ftl", e);
+    }
   }
 
   public static class TabularResult {
