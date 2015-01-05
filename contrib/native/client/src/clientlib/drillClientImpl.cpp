@@ -923,49 +923,44 @@ status_t DrillClientQueryResult::setupColumnDefs(exec::shared::QueryResult* pQue
     bool isFirstIter=false;
     boost::lock_guard<boost::mutex> schLock(this->m_schemaMutex);
 
-    FieldDefPtr prevSchema=this->m_columnDefs;
     isFirstIter=this->m_numBatches==1?true:false;
     std::map<std::string, Drill::FieldMetadata*> oldSchema;
     if(!m_columnDefs->empty()){
-        for(std::vector<Drill::FieldMetadata*>::iterator it = prevSchema->begin(); it != prevSchema->end(); ++it){
+        for(std::vector<Drill::FieldMetadata*>::iterator it = this->m_columnDefs->begin(); it != this->m_columnDefs->end(); ++it){
             // the key is the field_name + type
             char type[256];
             sprintf(type, ":%d:%d",(*it)->getMinorType(), (*it)->getDataMode() );
             std::string k= (*it)->getName()+type;
             oldSchema[k]=*it;
+            delete *it;
         }
     }
     m_columnDefs->clear();
     size_t numFields=pQueryResult->def().field_size();
-    for(size_t i=0; i<numFields; i++){
-        Drill::FieldMetadata* fmd= new Drill::FieldMetadata;
-        fmd->set(pQueryResult->def().field(i));
-        this->m_columnDefs->push_back(fmd);
+    if (numFields > 0){
+        for(size_t i=0; i<numFields; i++){
+            Drill::FieldMetadata* fmd= new Drill::FieldMetadata;
+            fmd->set(pQueryResult->def().field(i));
+            this->m_columnDefs->push_back(fmd);
 
-        //Look for changes in the vector and trigger a Schema change event if necessary.
-        //If vectors are different, then call the schema change listener.
-        char type[256];
-        sprintf(type, ":%d:%d",fmd->getMinorType(), fmd->getDataMode() );
-        std::string k= fmd->getName()+type;
-        std::map<std::string, Drill::FieldMetadata*>::iterator iter=oldSchema.find(k);
-        if(iter==oldSchema.end()){
-            // not found
+            //Look for changes in the vector and trigger a Schema change event if necessary.
+            //If vectors are different, then call the schema change listener.
+            char type[256];
+            sprintf(type, ":%d:%d",fmd->getMinorType(), fmd->getDataMode() );
+            std::string k= fmd->getName()+type;
+            std::map<std::string, Drill::FieldMetadata*>::iterator iter=oldSchema.find(k);
+            if(iter==oldSchema.end()){
+                // not found
+                hasSchemaChanged=true;
+            }else{
+                oldSchema.erase(iter);
+            }
+        }
+        if(oldSchema.size()>0){
             hasSchemaChanged=true;
-        }else{
-            oldSchema.erase(iter);
+            oldSchema.clear();
         }
     }
-    if(oldSchema.size()>0){
-        hasSchemaChanged=true;
-    }
-
-    //free memory allocated for FieldMetadata objects saved in previous columnDefs;
-    if(!prevSchema->empty()){
-        for(std::vector<Drill::FieldMetadata*>::iterator it = prevSchema->begin(); it != prevSchema->end(); ++it){
-            delete *it;
-        }
-    }
-    prevSchema->clear();
     this->m_bHasSchemaChanged=hasSchemaChanged&&!isFirstIter;
     if(this->m_bHasSchemaChanged){
         //invoke schema change Listener
