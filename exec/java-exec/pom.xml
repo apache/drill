@@ -129,8 +129,8 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>net.hydromatic</groupId>
-      <artifactId>optiq-core</artifactId>
+      <groupId>org.apache.calcite</groupId>
+      <artifactId>calcite-core</artifactId>
     </dependency>
     <dependency>
       <groupId>net.sf.jpam</groupId>
@@ -509,7 +509,7 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- Extract parser grammar template from optiq-core.jar and put 
+        <!-- Extract parser grammar template from calcite-core.jar and put 
           it under ${project.build.directory} where all freemarker templates are. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -524,8 +524,8 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>net.hydromatic</groupId>
-                  <artifactId>optiq-core</artifactId>
+                  <groupId>org.apache.calcite</groupId>
+                  <artifactId>calcite-core</artifactId>
                   <type>jar</type>
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.build.directory}/</outputDirectory>

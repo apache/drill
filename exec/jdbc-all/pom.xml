@@ -30,7 +30,8 @@
   <dependencies>
     <dependency>
       <groupId>net.hydromatic</groupId>
-      <artifactId>optiq-core</artifactId>
+        <artifactId>optiq-avatica</artifactId>
+        <version>0.9-drill-r20</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -234,6 +235,12 @@
             <!-- do not mess with enums, Java doesn't like it -->
             <option>-keep enum ** { *; }</option>
           </options>
+          <exclusions>
+            <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+            </exclusion>
+          </exclusions>
           <libs>
             <lib>${java.home}/lib/rt.jar</lib>
             <lib>${java.home}/lib/jsse.jar</lib>

@@ -23,7 +23,8 @@
   <dependencies>
     <dependency>
       <groupId>net.hydromatic</groupId>
-      <artifactId>optiq-core</artifactId>
+      <artifactId>optiq-avatica</artifactId>
+      <version>0.9-drill-r20</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>

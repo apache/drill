@@ -90,7 +90,7 @@
     </repository>
 
     <repository>
-      <!-- Keep until we move back to released optiq versions. -->
+      <!-- Keep until we move back to released calcite versions. -->
       <id>mapr-drill-optiq-snapshots</id>
       <name>MapR Drill Optiq Snapshots</name>
       <url>http://repository.mapr.com/nexus/content/repositories/drill-optiq/</url>
@@ -1036,14 +1036,18 @@
           </dependency>
 
           <dependency>
-            <groupId>net.hydromatic</groupId>
-            <artifactId>optiq-core</artifactId>
-            <version>0.9-drill-r21.1</version>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-core</artifactId>
+            <version>1.1.0-drill-r1</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>
                 <artifactId>jgrapht-jdk1.5</artifactId>
               </exclusion>
+            <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+            </exclusion>
             </exclusions>
           </dependency>
 

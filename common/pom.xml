@@ -43,8 +43,8 @@
     </dependency>
 
     <dependency>
-      <groupId>net.hydromatic</groupId>
-      <artifactId>optiq-core</artifactId>
+      <groupId>org.apache.calcite</groupId>
+      <artifactId>calcite-core</artifactId>
     </dependency>
 
     <dependency>
