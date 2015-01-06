@@ -478,6 +478,17 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
 
         qid.CopyFrom(qr->query_id());
         std::map<exec::shared::QueryId*, DrillClientQueryResult*, compareQueryId>::iterator it;
+        DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryResult: m_queryResults size: " << m_queryResults.size() << std::endl;
+        if(m_queryResults.size() != 0){
+            for(it=m_queryResults.begin(); it!=m_queryResults.end(); it++){
+                DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryResult: m_QueryResult ids: [" << it->first->part1() << ":"
+                    << it->first->part2() << "]\n";
+            }
+        }
+        if(qid.part1()==0){
+            DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryResult: QID=0. Ignore and return QRY_SUCCESS." << std::endl;
+            return QRY_SUCCESS;
+        }
         it=this->m_queryResults.find(&qid);
         if(it!=this->m_queryResults.end()){
             pDrillClientQueryResult=(*it).second;
@@ -610,6 +621,13 @@ status_t DrillClientImpl::processQueryId(AllocatedBufferPtr allocatedBuffer, InB
 
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
     std::map<int,DrillClientQueryResult*>::iterator it;
+    for(it=this->m_queryIds.begin();it!=this->m_queryIds.end();it++){
+    DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::processQueryId: m_queryIds: " << it->first << std::endl;
+    }
+    if(msg.m_coord_id==0){
+        DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryId: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;
+        return QRY_SUCCESS;
+    }
     it=this->m_queryIds.find(msg.m_coord_id);
     if(it!=this->m_queryIds.end()){
         pDrillClientQueryResult=(*it).second;
@@ -755,10 +773,27 @@ void DrillClientImpl::handleRead(ByteBuf_t _buf,
                 handleQryError(QRY_COMM_ERROR, getMessage(ERR_QRY_COMMERR, error.message().c_str()), NULL);
                 return;
             }else{
-                //If not QUERY_RESULT, then we think something serious has gone wrong?
-                assert(0);
-                DRILL_LOG(LOG_TRACE) << "QueryResult returned " << msg.m_rpc_type << std::endl;
+                // If not QUERY_RESULT, then we think something serious has gone wrong?
+                // In one case when the client hung, we observed that the server was sending a handshake request to the client
+                // We should properly handle these handshake requests/responses
+                if(msg.has_rpc_type() && msg.m_rpc_type==exec::user::HANDSHAKE){
+                    if(msg.has_mode() && msg.m_mode==exec::rpc::REQUEST){
+                        DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake request from server. Send response.\n";
+                        exec::user::UserToBitHandshake u2b;
+                        u2b.set_channel(exec::shared::USER);
+                        u2b.set_rpc_version(DRILL_RPC_VERSION);
+                        u2b.set_support_listening(true);
+                        OutBoundRpcMessage out_msg(exec::rpc::RESPONSE, exec::user::HANDSHAKE, msg.m_coord_id, &u2b);
+                        sendSync(out_msg);
+                        DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake response sent.\n";
+                    }else{
+                        DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake response from server. Ignore.\n";
+                    }
+                }else{
+                DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: ERR_QRY_INVRPCTYPE. "
+                        << "QueryResult returned " << msg.m_rpc_type << std::endl;
                 handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVRPCTYPE, msg.m_rpc_type), NULL);
+                }
                 return;
             }
         }

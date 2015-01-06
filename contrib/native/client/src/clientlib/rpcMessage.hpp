@@ -33,6 +33,10 @@ class InBoundRpcMessage {
         int m_coord_id;
         DataBuf m_pbody;
         ByteBuf_t m_dbody;
+        bool m_has_mode;
+        bool m_has_rpc_type;
+        bool has_mode() { return m_has_mode; };
+        bool has_rpc_type() { return m_has_rpc_type; };
 };
 
 class OutBoundRpcMessage {

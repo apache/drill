@@ -84,8 +84,10 @@ int RpcDecoder::Decode(const uint8_t* buf, int length, InBoundRpcMessage& msg) {
     int header_limit = cis->PushLimit(header_length);
     header.ParseFromCodedStream(cis);
     cis->PopLimit(header_limit);
+    msg.m_has_mode = header.has_mode();
     msg.m_mode = header.mode();
     msg.m_coord_id = header.coordination_id();
+    msg.m_has_rpc_type = header.has_rpc_type();
     msg.m_rpc_type = header.rpc_type();
 
     //if(RpcConstants.EXTRA_DEBUGGING) logger.debug(" post header read index {}", buffer.readerIndex());
