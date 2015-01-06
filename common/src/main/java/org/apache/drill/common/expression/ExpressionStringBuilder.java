@@ -223,7 +223,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   public Void visitConvertExpression(ConvertExpression e, StringBuilder sb) throws RuntimeException {
     sb.append(e.getConvertFunction()).append("(");
     e.getInput().accept(this, sb);
-    sb.append(", \"").append(e.getEncodingType()).append("\")");
+    sb.append(", '").append(e.getEncodingType()).append("')");
     return null;
   }
 
