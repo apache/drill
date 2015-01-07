@@ -6,8 +6,19 @@ layout: default
   <header class="post-header">
     <h1 class="post-title">{{ page.title }}</h1>
     <p class="post-meta">
-{% if page.author %}<strong>Author:</strong> {{ page.author }}{% endif %}
-{% if page.authors %}<strong>Authors:</strong> {{ page.authors | join: '; '}}{% endif %}
+    {% if page.authors.size > 1 %}
+    <strong>Authors:</strong>
+    <ul>
+      {% for alias in page.authors %}
+        {% assign author = site.data.authors[alias] %}
+        <li>{{ author.name }} ({{ author.title}}, {{ author.org}})</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      {% assign alias = page.authors[0] %}
+      {% assign author = site.data.authors[alias] %}
+      <strong>Author:</strong> {{ author.name }} ({{ author.title}}, {{ author.org}})
+    {% endif %}
 {% unless page.nodate %}<br/><strong>Date:</strong> {{ page.date | date: "%b %-d, %Y" }}{% endunless %}
 {% if page.meta %}{{ page.meta }}{% endif %}</p>
   </header>

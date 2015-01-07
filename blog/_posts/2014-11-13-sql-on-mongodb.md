@@ -4,7 +4,7 @@ title: "SQL on MongoDB"
 code: sql-on-mongodb
 excerpt: The MongoDB storage plugin for Drill enables analytical queries on MongoDB databases. Drill's schema-free JSON data model is a natural fit for MongoDB's data model.
 date: 2014-11-19 13:50:01
-authors: ["Anil Kumar Batchu, SSE, Intuit India (IDC)", "Kamesh Bhallamudi, SSE, Intuit India (IDC)"]
+authors: ["akumar", "kbhallamudi"]
 ---
 One of the many interesting and unique features about Drill is its ability to support multiple query languages, data formats, and data sources, as well as cross-platform querying (such as joining HBase tables with your Mongo collections) using ANSI SQL.
 

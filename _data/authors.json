@@ -1,0 +1,32 @@
+{
+  "tshiran": {
+    "name": "Tomer Shiran",
+    "title": "Founder, PMC Member and Committer",
+    "org": "Apache Drill",
+    "email": "tshiran@apache.org"
+  },
+  "jnadeau": {
+    "name": "Jacques Nadeau",
+    "title": "PMC Chair and Committer",
+    "org": "Apache Drill",
+    "email": "jacques@apache.org"
+  },
+  "namato": {
+    "name": "Nick Amato",
+    "title": "Director, Technical Marketing",
+    "org": "MapR Technologies",
+    "email": "namato@mapr.com"
+  },
+  "akumar": {
+    "name": "Anil Kumar Batchu",
+    "title": "SSE",
+    "org": "Intuit India (IDC)",
+    "email": "akumarb2010@gmail.com"
+  },
+  "kbhallamudi": {
+    "name": "Kamesh Bhallamudi",
+    "title": "SSE",
+    "org": "Intuit India (IDC)",
+    "email": "kamesh.hadoop@gmail.com"
+  }
+}

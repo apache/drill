@@ -3,7 +3,7 @@ layout: post
 title: "What's Coming in 2015?"
 code: whats-coming-in-2015
 excerpt: Drill is now a top-level project, and the community is expanding rapidly. Find out more about some of the new features planned for 2015.
-authors: ["Tomer Shiran, Apache Drill Founder, PMC Member and Committer"]
+authors: ["tshiran"]
 ---
 2014 was an exciting year for the Drill community. In August we made Drill available for downloads, and last week the Apache Software Foundation promoted Drill to a top-level project. Many of you have asked me what's coming next, so I decided to sit down and outline some of the interesting initiatives that the Drill community is currently working on:
 
