@@ -472,4 +472,21 @@ public class TestExampleQueries extends BaseTestQuery{
 
   }
 
+  @Test
+  public void testMultipleCountDistinctWithGroupBy() throws Exception {
+    String query = "select n_regionkey, count(distinct n_nationkey), count(distinct n_name) from cp.`tpch/nation.parquet` group by n_regionkey;";
+    String hashagg_only = "alter session set `planner.enable_hashagg` = true; " +
+                          "alter session set `planner.enable_streamagg` = false;";
+    String streamagg_only = "alter session set `planner.enable_hashagg` = false; " +
+                            "alter session set `planner.enable_streamagg` = true;";
+
+    // hash agg and streaming agg with default slice target (single phase aggregate)
+    test(hashagg_only + query);
+    test(streamagg_only + query);
+
+    // hash agg and streaming agg with lower slice target (multiphase aggregate)
+    test("alter session set `planner.slice_target` = 1; " + hashagg_only + query);
+    test("alter session set `planner.slice_target` = 1; " + streamagg_only + query);
+  }
+
 }
