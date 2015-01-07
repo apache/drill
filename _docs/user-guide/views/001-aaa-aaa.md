@@ -1,5 +1,4 @@
 ---
-layout: docpage
 title: "This is Aaa Aaa"
 parent: "Views"
 ---

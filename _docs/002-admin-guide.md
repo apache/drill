@@ -1,5 +1,4 @@
 ---
-layout: docpage
 title: "Admin Guide"
 nocontent: true
 ---

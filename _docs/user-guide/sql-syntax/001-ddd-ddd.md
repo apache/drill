@@ -1,5 +1,4 @@
 ---
-layout: docpage
 title: "A page on Ds"
 parent: "SQL Syntax"
 ---

@@ -1,5 +1,4 @@
 ---
-layout: docpage
 title: "Bbb Bbb"
 parent: "Views"
 ---
