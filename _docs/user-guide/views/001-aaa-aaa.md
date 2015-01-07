@@ -1,6 +1,7 @@
 ---
 layout: docpage
-title: "Aaa Aaa"
+title: "This is Aaa Aaa"
+parent: "Views"
 ---
 This is a documentation page.
 

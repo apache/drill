@@ -1,0 +1,39 @@
+---
+layout: page
+title: Documentation
+---
+{% comment %}
+Notes:
+* Other doc attributes: relative_path, url
+* Directories don't matter at all. You don't have to use them.
+* File names don't matter either, except the alphabetical order between them.
+{% endcomment %}
+<ul>
+{% for doc0 in site.docs %}
+  {% if doc0.parent == null %}
+    {% if doc0.nocontent %}<li>{{ doc0.title }}</li>{% else %}<li><a href="{{ site.baseurl }}/docs/{{ doc0.title | slugify }}/">{{ doc0.title }}</a></li>{% endif %}
+    {% assign doc0_has_children = false %}
+    {% for doc1 in site.docs %}{% if doc1.parent == doc0.title %}{% assign doc0_has_children = true %}{% endif %}{% endfor %}
+    {% if doc0_has_children %}
+      <ul>
+      {% for doc1 in site.docs %}
+        {% if doc1.parent == doc0.title %}
+          {% if doc1.nocontent %}<li>{{ doc1.title }}</li>{% else %}<li><a href="{{ site.baseurl }}/docs/{{ doc1.title | slugify }}/">{{ doc1.title }}</a></li>{% endif %}
+          {% assign doc1_has_children = false %}
+          {% for doc2 in site.docs %}{% if doc2.parent == doc1.title %}{% assign doc1_has_children = true %}{% endif %}{% endfor %}
+          {% if doc1_has_children %}
+            <ul>
+            {% for doc2 in site.docs %}
+              {% if doc2.parent == doc1.title %}
+                <li><a href="{{ site.baseurl }}/docs/{{ doc2.title | slugify }}/">{{ doc2.title }}</a></li>
+              {% endif %}
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+</ul>

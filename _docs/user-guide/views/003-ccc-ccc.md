@@ -1,6 +1,7 @@
 ---
 layout: docpage
-title: "Ccc Ccc"
+title: "Another page"
+parent: "Views"
 ---
 This is a documentation page.
 
