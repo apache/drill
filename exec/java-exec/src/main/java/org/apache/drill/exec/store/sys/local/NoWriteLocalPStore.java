@@ -62,4 +62,8 @@ public class NoWriteLocalPStore<V> implements PStore<V>{
     blobMap.remove(key);
   }
 
+  @Override
+  public void close() {
+  }
+
 }

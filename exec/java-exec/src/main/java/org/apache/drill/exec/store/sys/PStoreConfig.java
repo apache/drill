@@ -116,4 +116,51 @@ public class PStoreConfig<V> {
 
   }
 
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + maxIteratorSize;
+    result = prime * result + ((mode == null) ? 0 : mode.hashCode());
+    result = prime * result + ((name == null) ? 0 : name.hashCode());
+    result = prime * result + ((valueSerializer == null) ? 0 : valueSerializer.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    PStoreConfig other = (PStoreConfig) obj;
+    if (maxIteratorSize != other.maxIteratorSize) {
+      return false;
+    }
+    if (mode != other.mode) {
+      return false;
+    }
+    if (name == null) {
+      if (other.name != null) {
+        return false;
+      }
+    } else if (!name.equals(other.name)) {
+      return false;
+    }
+    if (valueSerializer == null) {
+      if (other.valueSerializer != null) {
+        return false;
+      }
+    } else if (!valueSerializer.equals(other.valueSerializer)) {
+      return false;
+    }
+    return true;
+  }
+
+
 }

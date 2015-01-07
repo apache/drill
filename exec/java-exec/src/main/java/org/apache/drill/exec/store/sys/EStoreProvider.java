@@ -18,12 +18,10 @@
 
 package org.apache.drill.exec.store.sys;
 
-import java.io.IOException;
 
 /**
  * Interface to define the provider which return EStore.
  */
 
-public interface EStoreProvider {
-  public <V> PStore<V> getStore(PStoreConfig<V> table) throws IOException;
+public interface EStoreProvider extends PStoreProvider {
 }

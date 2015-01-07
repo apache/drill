@@ -40,4 +40,12 @@ public class ZkEStoreProvider implements EStoreProvider{
     Preconditions.checkArgument(store.getMode() == Mode.EPHEMERAL);
     return new ZkEStore<V>(curator,store);
   }
+
+  @Override
+  public void start() throws IOException {
+  }
+
+  @Override
+  public void close() throws Exception {
+  }
 }

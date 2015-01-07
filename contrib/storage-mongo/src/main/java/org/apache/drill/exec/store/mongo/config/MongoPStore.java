@@ -177,4 +177,8 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
       throw new UnsupportedOperationException();
     }
   }
+
+  @Override
+  public void close() {
+  }
 }

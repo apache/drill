@@ -53,7 +53,7 @@ public class PStoreRegistry {
       logger.info("Using the configured PStoreProvider class: '{}'.", storeProviderClassName);
       Class<? extends PStoreProvider> storeProviderClass = (Class<? extends PStoreProvider>) Class.forName(storeProviderClassName);
       Constructor<? extends PStoreProvider> c = storeProviderClass.getConstructor(PStoreRegistry.class);
-      return c.newInstance(this);
+      return new CachingStoreProvider(c.newInstance(this));
     } catch (ConfigException.Missing | ClassNotFoundException | NoSuchMethodException | SecurityException
         | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       logger.error(e.getMessage(), e);

@@ -17,11 +17,9 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.io.Closeable;
 import java.io.IOException;
 
-public interface PStoreProvider extends AutoCloseable, Closeable{
-
+public interface PStoreProvider extends AutoCloseable {
   public <V> PStore<V> getStore(PStoreConfig<V> config) throws IOException;
   public void start() throws IOException;
 }

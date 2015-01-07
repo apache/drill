@@ -27,9 +27,8 @@ import java.util.Map.Entry;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
-import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
-import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
+import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.zookeeper.CreateMode;
 
@@ -40,7 +39,8 @@ import com.google.common.collect.Lists;
  * This is the abstract class that is shared by ZkPStore (Persistent store) and ZkEStore (Ephemeral Store)
  * @param <V>
  */
-public abstract class ZkAbstractStore<V> {
+public abstract class ZkAbstractStore<V> implements AutoCloseable {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZkAbstractStore.class);
 
   protected CuratorFramework framework;
   protected PStoreConfig<V> config;
@@ -206,4 +206,15 @@ public abstract class ZkAbstractStore<V> {
     }
 
   }
+
+  @Override
+  public void close() {
+    try{
+      childrenCache.close();
+    }catch(IOException e){
+      logger.warn("Failure while closing out abstract store.", e);
+    }
+  }
+
+
 }

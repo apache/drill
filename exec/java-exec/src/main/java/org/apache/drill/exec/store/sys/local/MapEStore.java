@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Implementation of EStore using ConcurrentHashMap.
  * @param <V>
  */
-public class MapEStore <V> implements EStore<V> {
+public class MapEStore<V> implements EStore<V> {
   ConcurrentHashMap<String, V> store = new ConcurrentHashMap<>();
 
   @Override
@@ -56,5 +56,9 @@ public class MapEStore <V> implements EStore<V> {
   public boolean putIfAbsent(String key, V value) {
     V out = store.putIfAbsent(key, value);
     return out == null;
+  }
+
+  @Override
+  public void close() {
   }
 }

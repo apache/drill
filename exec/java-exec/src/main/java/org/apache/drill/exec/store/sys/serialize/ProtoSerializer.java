@@ -51,5 +51,43 @@ public class ProtoSerializer<X, B extends Message.Builder> implements PClassSeri
     return (X) b.build();
   }
 
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((readSchema == null) ? 0 : readSchema.hashCode());
+    result = prime * result + ((writeSchema == null) ? 0 : writeSchema.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    ProtoSerializer other = (ProtoSerializer) obj;
+    if (readSchema == null) {
+      if (other.readSchema != null) {
+        return false;
+      }
+    } else if (!readSchema.equals(other.readSchema)) {
+      return false;
+    }
+    if (writeSchema == null) {
+      if (other.writeSchema != null) {
+        return false;
+      }
+    } else if (!writeSchema.equals(other.writeSchema)) {
+      return false;
+    }
+    return true;
+  }
+
 
 }

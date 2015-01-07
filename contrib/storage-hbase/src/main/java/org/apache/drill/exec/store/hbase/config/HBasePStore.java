@@ -229,4 +229,8 @@ public class HBasePStore<V> implements PStore<V> {
 
   }
 
+  @Override
+  public void close() {
+  }
+
 }

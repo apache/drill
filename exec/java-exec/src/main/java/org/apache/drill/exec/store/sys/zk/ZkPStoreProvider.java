@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.sys.zk;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -26,7 +25,7 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-import org.apache.drill.exec.store.sys.EStore;
+import org.apache.drill.exec.store.sys.EStoreProvider;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
@@ -45,7 +44,7 @@ public class ZkPStoreProvider implements PStoreProvider {
 
   private final DrillFileSystem fs;
   private final Path blobRoot;
-  private final ZkEStoreProvider zkEStoreProvider;
+  private final EStoreProvider zkEStoreProvider;
 
   public ZkPStoreProvider(PStoreRegistry registry) throws DrillbitStartupException {
     ClusterCoordinator coord = registry.getClusterCoordinator();
@@ -66,7 +65,6 @@ public class ZkPStoreProvider implements PStoreProvider {
       throw new DrillbitStartupException("Failure while attempting to set up blob store.", e);
     }
 
-
     this.zkEStoreProvider = new ZkEStoreProvider(curator);
   }
 
@@ -77,11 +75,6 @@ public class ZkPStoreProvider implements PStoreProvider {
     this.fs = FilePStore.getFileSystem(config, blobRoot);
     this.zkEStoreProvider = new ZkEStoreProvider(curator);
   }
-
-  @Override
-  public void close() {
-  }
-
 
   @Override
   public <V> PStore<V> getStore(PStoreConfig<V> config) throws IOException {
@@ -101,4 +94,7 @@ public class ZkPStoreProvider implements PStoreProvider {
   public void start() {
   }
 
+  @Override
+  public void close() {
+  }
 }

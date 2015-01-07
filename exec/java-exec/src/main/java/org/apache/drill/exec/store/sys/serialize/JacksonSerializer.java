@@ -43,4 +43,44 @@ public class JacksonSerializer<X> implements PClassSerializer<X> {
   public X deserialize(byte[] bytes) throws IOException {
     return reader.readValue(bytes);
   }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((reader == null) ? 0 : reader.hashCode());
+    result = prime * result + ((writer == null) ? 0 : writer.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    JacksonSerializer other = (JacksonSerializer) obj;
+    if (reader == null) {
+      if (other.reader != null) {
+        return false;
+      }
+    } else if (!reader.equals(other.reader)) {
+      return false;
+    }
+    if (writer == null) {
+      if (other.writer != null) {
+        return false;
+      }
+    } else if (!writer.equals(other.writer)) {
+      return false;
+    }
+    return true;
+  }
+
+
 }

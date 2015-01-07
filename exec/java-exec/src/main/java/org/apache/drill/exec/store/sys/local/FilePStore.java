@@ -228,4 +228,8 @@ public class FilePStore<V> implements PStore<V> {
     }
   }
 
+  @Override
+  public void close() {
+  }
+
 }

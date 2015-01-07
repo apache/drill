@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.sys.local;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.EStoreProvider;
@@ -27,24 +26,22 @@ import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreConfig.Mode;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 
 public class LocalEStoreProvider implements EStoreProvider{
-  private ConcurrentMap<PStoreConfig<?>, EStore<?>> estores = Maps.newConcurrentMap();
 
   @Override
   public <V> EStore<V> getStore(PStoreConfig<V> storeConfig) throws IOException {
     Preconditions.checkArgument(storeConfig.getMode() == Mode.EPHEMERAL, "Estore configurations must be set ephemeral.");
 
-    if (! (estores.containsKey(storeConfig)) ) {
-      EStore<V> p = new MapEStore<V>();
-      EStore<?> p2 = estores.putIfAbsent(storeConfig, p);
-      if(p2 != null) {
-        return (EStore<V>) p2;
-      }
-      return p;
-    } else {
-      return (EStore<V>) estores.get(storeConfig);
-    }
+    return new MapEStore<V>();
   }
+
+  @Override
+  public void start() throws IOException {
+  }
+
+  @Override
+  public void close() {
+  }
+
 }

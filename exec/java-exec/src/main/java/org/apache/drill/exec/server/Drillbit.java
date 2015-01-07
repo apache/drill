@@ -28,6 +28,7 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.rest.DrillRestServer;
 import org.apache.drill.exec.service.ServiceEngine;
+import org.apache.drill.exec.store.sys.CachingStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
 import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
@@ -106,7 +107,7 @@ public class Drillbit implements Closeable{
 
     if(serviceSet != null) {
       this.coord = serviceSet.getCoordinator();
-      this.storeProvider = new LocalPStoreProvider(config);
+      this.storeProvider = new CachingStoreProvider(new LocalPStoreProvider(config));
     } else {
       Runtime.getRuntime().addShutdownHook(new ShutdownThread(config));
       this.coord = new ZKClusterCoordinator(config);
@@ -175,7 +176,11 @@ public class Drillbit implements Closeable{
       logger.warn("Failure while shutting down embedded jetty server.");
     }
     Closeables.closeQuietly(engine);
-    Closeables.closeQuietly(storeProvider);
+    try{
+      storeProvider.close();
+    }catch(Exception e){
+      logger.warn("Failure while closing store provider.", e);
+    }
     Closeables.closeQuietly(coord);
     Closeables.closeQuietly(manager);
     Closeables.closeQuietly(context);
