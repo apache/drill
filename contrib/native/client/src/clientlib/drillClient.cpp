@@ -297,6 +297,11 @@ RecordIterator* DrillClient::submitQuery(Drill::QueryType t, const std::string& 
 void* DrillClient::getApplicationContext(QueryHandle_t handle){
     return ((DrillClientQueryResult*)handle)->getListenerContext();
 }
+
+status_t DrillClient::getQueryStatus(QueryHandle_t handle){
+    return ((DrillClientQueryResult*)handle)->getQueryStatus();
+}
+
 std::string& DrillClient::getError(){
     return m_pImpl->getError()->msg;
 }

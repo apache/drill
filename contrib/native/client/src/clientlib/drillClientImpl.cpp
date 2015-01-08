@@ -664,7 +664,6 @@ status_t DrillClientImpl::processQueryStatusResult(exec::shared::QueryResult* qr
                     ret=handleQryError(ret, qr->error(0), pDrillClientQueryResult);
                 }
                 break;
-
                 // m_pendingRequests should be decremented when the query is
                 // completed
             case exec::shared::QueryResult_QueryState_CANCELED:
@@ -677,15 +676,16 @@ status_t DrillClientImpl::processQueryStatusResult(exec::shared::QueryResult* qr
                 break;
             case exec::shared::QueryResult_QueryState_COMPLETED:
                 {
-                    // DO NOT call handleTerminateQryState because that
-                    // signals an error condition and the synchronous API
-                    // will then free the query result object without it
-                    // being processed by the application.
-                    ret=QRY_COMPLETED;
+                    //Not clean to call the handleTerminatedQryState method
+                    //because it signals an error to the listener. 
+                    //The ODBC driver expects this though and the sync API
+                    //handles this (luckily). 
+                    ret=handleTerminatedQryState(ret,
+                            getMessage(ERR_QRY_COMPLETED),
+                            pDrillClientQueryResult);
                     m_pendingRequests--;
                 }
                 break;
-
             default:
                 {
                     DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryResult: Unknown Query State.\n";
