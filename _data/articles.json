@@ -4,5 +4,11 @@
   "url": "https://www.mapr.com/blog/how-turn-raw-data-yelp-insights-minutes-apache-drill",
   "excerpt": "",
   "date": "2014-11-13"
+},
+{
+  "title": "How to Use SQL, Hadoop, Drill, REST, JSON, NoSQL, and HBase in a Simple REST Client",
+  "url" : "https://www.mapr.com/blog/how-use-sql-hadoop-drill-rest-json-nosql-and-hbase-simple-rest-client",
+  "excerpt": "",
+  "date": "2015-1-6"
 }
 ]
