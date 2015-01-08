@@ -58,7 +58,9 @@ public class ColumnDataReader {
     int l=directBuffer.remaining();
     int bl=byteBuf.capacity();
     try{
-      CompatibilityUtil.getBuf(input, directBuffer, pageLength);
+      while (directBuffer.remaining() > 0) {
+        CompatibilityUtil.getBuf(input, directBuffer, directBuffer.remaining());
+      }
     }catch(Exception e) {
       logger.error("Failed to read data into Direct ByteBuffer with exception: "+e.getMessage());
       throw new DrillRuntimeException(e.getMessage());
