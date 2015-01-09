@@ -44,7 +44,10 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.FixedWidthVector;
+import org.apache.drill.exec.vector.ObjectVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 import javax.inject.Named;
@@ -128,7 +131,24 @@ public abstract class HashAggTemplate implements HashAggregator {
         MaterializedField outputField = materializedValueFields[i];
         // Create a type-specific ValueVector for this value
         vector = TypeHelper.getNewVector(outputField, allocator);
-        vector.allocateNew();
+
+        // Try to allocate space to store BATCH_SIZE records. Key stored at index i in HashTable has its workspace
+        // variables (such as count, sum etc) stored at index i in HashAgg. HashTable and HashAgg both have
+        // BatchHolders. Whenever a BatchHolder in HashAgg reaches its capacity, a new BatchHolder is added to
+        // HashTable. If HashAgg can't store BATCH_SIZE records in a BatchHolder, it leaves empty slots in current
+        // BatchHolder in HashTable, causing the HashTable to be space inefficient. So it is better to allocate space
+        // to fit as close to as BATCH_SIZE records.
+        if (vector instanceof FixedWidthVector) {
+          ((FixedWidthVector) vector).allocateNew(HashTable.BATCH_SIZE);
+        } else if (vector instanceof VariableWidthVector) {
+          ((VariableWidthVector) vector).allocateNew(HashTable.VARIABLE_WIDTH_VECTOR_SIZE * HashTable.BATCH_SIZE,
+              HashTable.BATCH_SIZE);
+        } else if (vector instanceof ObjectVector) {
+          ((ObjectVector)vector).allocateNew(HashTable.BATCH_SIZE);
+        } else {
+          vector.allocateNew();
+        }
+
         capacity = Math.min(capacity, vector.getValueCapacity());
 
         aggrValuesContainer.add(vector);
@@ -149,10 +169,14 @@ public abstract class HashAggTemplate implements HashAggregator {
       outStartIdxHolder.value = batchOutputCount;
       outNumRecordsHolder.value = 0;
       boolean status = true;
-      for (int i = batchOutputCount; i <= maxOccupiedIdx; i++) {
-        if (outputRecordValues(i, batchOutputCount)) {
+
+      // Output records starting from 'batchOutputCount' in current batch until there are no more records
+      // or output vectors have no space left. In destination vectors, start filling records from 0th position.
+      while(batchOutputCount <= maxOccupiedIdx) {
+        if (outputRecordValues(batchOutputCount, outNumRecordsHolder.value)) {
           if (EXTRA_DEBUG_2) {
-            logger.debug("Outputting values to output index: {}", batchOutputCount);
+            logger.debug("Outputting values from input index {} to output index: {}",
+                batchOutputCount, outNumRecordsHolder.value);
           }
           batchOutputCount++;
           outNumRecordsHolder.value++;
@@ -256,7 +280,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     numGroupByOutFields = groupByOutFieldIds.length;
     batchHolders = new ArrayList<BatchHolder>();
-    addBatchHolder();
+    // First BatchHolder is created when the first put request is received.
 
     doSetup(incoming);
   }
@@ -494,7 +518,11 @@ public abstract class HashAggTemplate implements HashAggregator {
       logger.debug("HashAggregate: Output current batch index {} with {} records.", outBatchIndex, numOutputRecords);
 
       lastBatchOutputCount = numOutputRecords;
-      outBatchIndex++;
+      // If there are no more records to output, go to the next batch. If there are any records left refer to the
+      // same BatchHolder. Remaining records will be outputted in next outputCurrentBatch() call(s).
+      if (batchHolders.get(outBatchIndex).getNumPendingOutput() == 0) {
+        outBatchIndex++;
+      }
       if (outBatchIndex == batchHolders.size()) {
         allFlushed = true;
 

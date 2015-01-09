@@ -51,6 +51,9 @@ public interface HashTable {
   static final public int BATCH_SIZE = Character.MAX_VALUE + 1;
   static final public int BATCH_MASK = 0x0000FFFF;
 
+  /** Variable width vector size in bytes */
+  public static final int VARIABLE_WIDTH_VECTOR_SIZE = 50 * BATCH_SIZE;
+
   public void setup(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
       RecordBatch incomingBuild, RecordBatch incomingProbe,
       RecordBatch outgoing, VectorContainer htContainerOrig);

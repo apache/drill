@@ -30,8 +30,10 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 
 import javax.inject.Named;
 import java.util.ArrayList;
@@ -116,15 +118,24 @@ public abstract class HashTableTemplate implements HashTable {
     private BatchHolder(int idx) {
       this.batchIndex = idx;
 
-      if (idx == 0) {  // first batch holder can use the original htContainer
-        htContainer = htContainerOrig;
-      } else { // otherwise create a new one using the original's fields
-        htContainer = new VectorContainer();
-        for (VectorWrapper<?> w : htContainerOrig) {
-          ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
+      htContainer = new VectorContainer();
+      for (VectorWrapper<?> w : htContainerOrig) {
+        ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
+
+        // Capacity for "hashValues" and "links" vectors is BATCH_SIZE records. It is better to allocate space for
+        // "key" vectors to store as close to as BATCH_SIZE records. A new BatchHolder is created when either BATCH_SIZE
+        // records are inserted or "key" vectors ran out of space. Allocating too less space for "key" vectors will
+        // result in unused space in "hashValues" and "links" vectors in the BatchHolder. Also for each new
+        // BatchHolder we create a SV4 vector of BATCH_SIZE in HashJoinHelper.
+        if (vv instanceof FixedWidthVector) {
+          ((FixedWidthVector) vv).allocateNew(BATCH_SIZE);
+        } else if (vv instanceof VariableWidthVector) {
+          ((VariableWidthVector) vv).allocateNew(VARIABLE_WIDTH_VECTOR_SIZE, BATCH_SIZE);
+        } else {
           vv.allocateNew();
-          htContainer.add(vv);
         }
+
+        htContainer.add(vv);
       }
 
       links = allocMetadataVector(HashTable.BATCH_SIZE, EMPTY_SLOT);
@@ -454,7 +465,7 @@ public abstract class HashTableTemplate implements HashTable {
 
     // Create the first batch holder
     batchHolders = new ArrayList<BatchHolder>();
-    addBatchHolder();
+    // First BatchHolder is created when the first put request is received.
 
     doSetup(incomingBuild, incomingProbe);
 
@@ -753,6 +764,7 @@ public abstract class HashTableTemplate implements HashTable {
 
   public boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords) {
     assert batchIdx < batchHolders.size();
+
     if (!batchHolders.get(batchIdx).outputKeys(outContainer, outStartIndex, numRecords)) {
       return false;
     }

@@ -97,6 +97,12 @@ public class ObjectVector extends BaseValueVector{
     addNewArray();
   }
 
+  public void allocateNew(int valueCount) throws OutOfMemoryRuntimeException {
+    while (maxCount < valueCount) {
+      addNewArray();
+    }
+  }
+
   @Override
   public boolean allocateNewSafe() {
     allocateNew();
