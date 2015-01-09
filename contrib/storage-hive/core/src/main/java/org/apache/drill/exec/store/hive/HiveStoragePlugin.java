@@ -71,7 +71,8 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
     HiveReadEntry hiveReadEntry = selection.getListWith(new ObjectMapper(), new TypeReference<HiveReadEntry>(){});
     try {
       if (hiveReadEntry.getJdbcTableType() == TableType.VIEW) {
-        throw new UnsupportedOperationException("Querying Hive views from Drill is not supported in current version.");
+        throw new UnsupportedOperationException(
+            "Querying views created in Hive from Drill is not supported in current version.");
       }
 
       return new HiveScan(hiveReadEntry, this, columns);

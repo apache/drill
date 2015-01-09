@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -438,7 +439,8 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
         assert exception != null;
         recordNewState(QueryState.FAILED);
         cancelExecutingFragments();
-        DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(), "Query failed: "+ exception.getMessage(), exception, logger);
+        DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(),
+            ExceptionUtils.getRootCauseMessage(exception), exception, logger);
         QueryResult result = QueryResult //
           .newBuilder() //
           .addError(error) //
