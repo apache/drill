@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -34,21 +31,22 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 
+import java.io.IOException;
+import java.util.List;
+
 public interface HashAggregator {
 
-  public static TemplateClassDefinition<HashAggregator> TEMPLATE_DEFINITION = new TemplateClassDefinition<HashAggregator>(HashAggregator.class, HashAggTemplate.class);
+  public static TemplateClassDefinition<HashAggregator> TEMPLATE_DEFINITION =
+      new TemplateClassDefinition<HashAggregator>(HashAggregator.class, HashAggTemplate.class);
 
   public static enum AggOutcome {
     RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR
   }
 
   public abstract void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context,
-                             OperatorStats stats, BufferAllocator allocator, RecordBatch incoming,
-                             HashAggBatch outgoing, LogicalExpression[] valueExprs,
-                             List<TypedFieldId> valueFieldIds,
-                             TypedFieldId[] keyFieldIds,
-                             VectorContainer outContainer)
-    throws SchemaChangeException, IOException, ClassTransformationException;
+      OperatorStats stats, BufferAllocator allocator, RecordBatch incoming, HashAggBatch outgoing,
+      LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds,
+      VectorContainer outContainer) throws SchemaChangeException, IOException, ClassTransformationException;
 
   public abstract IterOutcome getOutcome();
 
