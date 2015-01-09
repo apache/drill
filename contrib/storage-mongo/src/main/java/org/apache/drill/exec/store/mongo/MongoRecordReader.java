@@ -191,14 +191,13 @@ public class MongoRecordReader extends AbstractRecordReader {
 
     try {
       String errMsg = "Document {} is too big to fit into allocated ValueVector";
-      done: for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
+      for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         writer.setPosition(docCount);
         String doc = cursor.next().toString();
         jsonReader.setSource(doc.getBytes(Charsets.UTF_8));
-        if(jsonReader.write(writer)== JsonReader.ReadState.WRITE_SUCCEED) {
+        if (jsonReader.write(writer) == JsonReader.ReadState.WRITE_SUCCEED) {
           docCount++;
-          break;
-        }else{
+        } else {
           if (docCount == 0) {
             throw new DrillRuntimeException(errMsg);
           }
