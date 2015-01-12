@@ -136,6 +136,6 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
       allExprs.add(builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
       relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + index, allExprs.size(), factory.createSqlType(SqlTypeName.ANY) ));
     }
-    return new ProjectPrel(project.getCluster(), project.getTraitSet(), originalInput, exprList, new RelRecordType(origRelDataTypes));
+    return (Prel) project.copy(project.getTraitSet(), originalInput, exprList, new RelRecordType(origRelDataTypes));
   }
 }

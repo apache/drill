@@ -196,13 +196,16 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      */
     phyRelNode = JoinPrelRenameVisitor.insertRenameProject(phyRelNode);
 
-    // TODO - re-enable once execution issues are resolved. This rule allows for several flatten operations to appear
-    // within a single query, it also breaks up all expressions with complex outputs into their own project operations.
-    // It currently appears to be producing good plans, but for the flatten case it is revealing execution errors in the
-    // project operator.
+    /*
+     * 1.1) Break up all expressions with complex outputs into their own project operations
+     */
     phyRelNode = ((Prel) phyRelNode).accept(new SplitUpComplexExpressions(planner.getTypeFactory(), context.getDrillOperatorTable(), context.getPlannerSettings().functionImplementationRegistry), null);
+
+    /*
+     * 1.2) Projections that contain reference to flatten are rewritten as Flatten operators followed by Project
+     */
     phyRelNode = ((Prel) phyRelNode).accept(new RewriteProjectToFlatten(planner.getTypeFactory(), context.getDrillOperatorTable()), null);
-    // Definitely before this one
+
     /*
      * 2.)
      * Since our operators work via names rather than indices, we have to make to reorder any
