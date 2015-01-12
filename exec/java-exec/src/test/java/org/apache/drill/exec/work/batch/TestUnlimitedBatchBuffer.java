@@ -19,6 +19,7 @@ package org.apache.drill.exec.work.batch;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -29,6 +30,7 @@ import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.data.DataRpcConfig;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -47,6 +49,11 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
 
   private static int FRAGMENT_COUNT = 5;
   private DrillConfig dc = DrillConfig.create();
+  private MySender mySender;
+  private UnlimitedRawBatchBuffer rawBuffer;
+  private RawFragmentBatch batch;
+  private FragmentContext context;
+  private int softLimit;
 
   private static class MySender implements ResponseSender {
 
@@ -66,17 +73,17 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
       sendCount = 0;
     }
   }
-  @Test
-  public void testBackPressure() throws Exception {
 
-    final MySender mySender = new MySender();
-    FragmentContext context = Mockito.mock(FragmentContext.class);
+  @Before
+  public void setUp() {
+    mySender = new MySender();
+    context = Mockito.mock(FragmentContext.class);
 
     Mockito.when(context.getConfig()).thenReturn(dc);
 
-    UnlimitedRawBatchBuffer rawBuffer = new UnlimitedRawBatchBuffer(context, FRAGMENT_COUNT);
+    rawBuffer = new UnlimitedRawBatchBuffer(context, FRAGMENT_COUNT);
 
-    RawFragmentBatch batch = Mockito.mock(RawFragmentBatch.class);
+    batch = Mockito.mock(RawFragmentBatch.class);
 
     Mockito.when(batch.getSender()).thenReturn(mySender);
     Mockito.doAnswer(new Answer<Void>() {
@@ -91,8 +98,11 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
 
     /// start the real test
     int incomingBufferSize = dc.getInt(ExecConstants.INCOMING_BUFFER_SIZE);
-    int softLimit = incomingBufferSize * FRAGMENT_COUNT;
+    softLimit = incomingBufferSize * FRAGMENT_COUNT;
+  }
 
+  @Test
+  public void testBackPressure() throws Exception {
     // No back pressure should be kicked in
     for ( int i = 0; i < softLimit-1; i++) {
       rawBuffer.enqueue(batch);
@@ -131,4 +141,24 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
     }
   }
 
+  @Test
+  public void testAcksWithKill() throws Exception {
+    // Back pressure should be kicked in
+    for ( int i = 0; i < 2*softLimit; i++) {
+      rawBuffer.enqueue(batch);
+    }
+    assertEquals(softLimit - 1, mySender.getSendCount());
+    assertTrue(!rawBuffer.getReadController().isEmpty());
+
+    rawBuffer.kill(context);
+
+    // UnlimitedBatchBuffer queue should be cleared
+    assertTrue(rawBuffer.isBufferEmpty());
+
+    // acks queue should be cleared as well
+    assertTrue(rawBuffer.getReadController().isEmpty());
+
+    // all acks should be sent
+    assertEquals(2*softLimit, mySender.getSendCount());
+  }
 }

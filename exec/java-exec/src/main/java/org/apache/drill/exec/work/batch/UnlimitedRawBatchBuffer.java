@@ -26,6 +26,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Queues;
 
 public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
@@ -63,12 +64,12 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public void enqueue(RawFragmentBatch batch) throws IOException {
-    if (state == BufferState.KILLED) {
-      batch.release();
-    }
     if (isFinished()) {
       if (state == BufferState.KILLED) {
+        // do not even enqueue just release and send ack back
         batch.release();
+        batch.sendOk();
+        return;
       } else {
         throw new IOException("Attempted to enqueue batch after finished");
       }
@@ -107,29 +108,29 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
       if (!context.isFailed() && !context.isCancelled()) {
         context.fail(new IllegalStateException("Batches still in queue during cleanup"));
         logger.error("{} Batches in queue.", buffer.size());
-        RawFragmentBatch batch;
-        while ((batch = buffer.poll()) != null) {
-          logger.error("Batch left in queue: {}", batch);
-        }
       }
-      RawFragmentBatch batch;
-      while ((batch = buffer.poll()) != null) {
-        if (batch.getBody() != null) {
-          batch.getBody().release();
-        }
-      }
+      clearBufferWithBody();
     }
   }
 
   @Override
   public void kill(FragmentContext context) {
     state = BufferState.KILLED;
+    clearBufferWithBody();
+  }
+
+  /**
+   * Helper method to clear buffer with request bodies release
+   * also flushes ack queue - in case there are still responses pending
+   */
+  private void clearBufferWithBody() {
     while (!buffer.isEmpty()) {
       RawFragmentBatch batch = buffer.poll();
       if (batch.getBody() != null) {
         batch.getBody().release();
       }
     }
+    readController.flushResponses();
   }
 
   @Override
@@ -205,4 +206,13 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     return (state == BufferState.KILLED || state == BufferState.FINISHED);
   }
 
+  @VisibleForTesting
+  ResponseSenderQueue getReadController() {
+    return readController;
+  }
+
+  @VisibleForTesting
+  boolean isBufferEmpty() {
+    return buffer.isEmpty();
+  }
 }

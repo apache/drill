@@ -22,6 +22,7 @@ import java.util.Queue;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.data.DataRpcConfig;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Queues;
 
 public class ResponseSenderQueue {
@@ -55,4 +56,8 @@ public class ResponseSenderQueue {
     return i;
   }
 
+  @VisibleForTesting
+  boolean isEmpty() {
+    return q.isEmpty();
+  }
 }
