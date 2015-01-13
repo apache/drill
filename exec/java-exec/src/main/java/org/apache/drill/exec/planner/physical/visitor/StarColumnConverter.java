@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
@@ -45,18 +46,24 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
   private static final AtomicLong tableNumber = new AtomicLong(0);
 
   public static Prel insertRenameProject(Prel root, RelDataType origRowType) {
-    // Insert top project to do rename only when : 1) there is a join
-    // 2) there is a SCAN with * column.  We pass two boolean to keep track of
-    // these two conditions.
-    boolean [] renamedForStar = new boolean [2];
-    renamedForStar[0] = false;
-    renamedForStar[1] = false;
+    // Prefixing columns for columns expanded from star column :
+    // Insert one project under screen (PUS) to remove prefix, and one project above scan (PAS) to add prefix.
+    // PUS AND PAS are required, when
+    //   Any non-SCAN prel produces regular column / expression AND star column,
+    //   or multiple star columns.
+    //   This is because we have to use prefix to distinguish columns expanded
+    //   from star column, from those regular column referenced in the query.
+
+    // We use an array of boolean to keep track this condition.
+    boolean [] prefixedForStar = new boolean [1];
+    prefixedForStar[0] = false;
 
     //root should be screen / writer : no need to rename for the root.
+    Prel child = ((Prel) root.getInput(0)).accept(INSTANCE, prefixedForStar);
 
-    Prel child = ((Prel) root.getInput(0)).accept(INSTANCE, renamedForStar);
+    int fieldCount = root.getRowType().isStruct()? root.getRowType().getFieldCount():1;
 
-    if (renamedForStar[0] && renamedForStar[1]) {
+    if (prefixedForStar[0]) {
       List<RexNode> exprs = Lists.newArrayList();
       for (int i = 0; i < origRowType.getFieldCount(); i++) {
         RexNode expr = child.getCluster().getRexBuilder().makeInputRef(origRowType.getFieldList().get(i).getType(), i);
@@ -65,25 +72,33 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
 
       RelDataType newRowType = RexUtil.createStructType(child.getCluster().getTypeFactory(), exprs, origRowType.getFieldNames());
 
-      // Insert a top project which allows duplicate columns.
-      child = new ProjectAllowDupPrel(child.getCluster(), child.getTraitSet(), child, exprs, newRowType);
+      // Insert PUS : remove the prefix and keep the orignal field name.
+      if (fieldCount > 1) { // // no point in allowing duplicates if we only have one column
+        child = new ProjectAllowDupPrel(child.getCluster(), child.getTraitSet(), child, exprs, newRowType);
+      } else {
+        child = new ProjectPrel(child.getCluster(), child.getTraitSet(), child, exprs, newRowType);
+      }
 
       List<RelNode> children = Lists.newArrayList();
       children.add( child);
       return (Prel) root.copy(root.getTraitSet(), children);
 
-    }else{
+    } else {
       return root;
     }
 
   }
 
-
   @Override
-  public Prel visitPrel(Prel prel, boolean [] renamedForStar) throws RuntimeException {
+  public Prel visitPrel(Prel prel, boolean [] prefixedForStar) throws RuntimeException {
+    // there exists other expression, in addition to a star column: require prefixRename.
+    if (StarColumnHelper.containsStarColumn(prel.getRowType()) && prel.getRowType().getFieldNames().size() > 1) {
+      prefixedForStar[0] = true;
+    }
+
     List<RelNode> children = Lists.newArrayList();
     for (Prel child : prel) {
-      child = child.accept(this, renamedForStar);
+      child = child.accept(this, prefixedForStar);
       children.add(child);
     }
 
@@ -91,11 +106,14 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
     // when the project expression is RexInPutRef. This is necessary since Optiq may use
     // an arbitrary name for the project's field name.
     if (prel instanceof ProjectPrel) {
+
+      ProjectPrel proj = (ProjectPrel) prel;
+
       RelNode child = children.get(0);
 
       List<String> fieldNames = Lists.newArrayList();
 
-      for (Pair<String, RexNode> pair : Pair.zip(prel.getRowType().getFieldNames(), ((ProjectPrel) prel).getProjects())) {
+      for (Pair<String, RexNode> pair : Pair.zip(prel.getRowType().getFieldNames(), proj.getProjects())) {
         if (pair.right instanceof RexInputRef) {
           String name = child.getRowType().getFieldNames().get(((RexInputRef) pair.right).getIndex());
           fieldNames.add(name);
@@ -107,27 +125,17 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
       // Make sure the field names are unique : Optiq does not allow duplicate field names in a rowType.
       fieldNames = makeUniqueNames(fieldNames);
 
-      RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), ((ProjectPrel) prel).getProjects(), fieldNames);
+      RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), proj.getProjects(), fieldNames);
 
-      return (Prel) new ProjectPrel(prel.getCluster(), prel.getTraitSet(), children.get(0), ((ProjectPrel) prel).getProjects(), rowType);
+      return (Prel) proj.copy(proj.getTraitSet(),children.get(0), proj.getProjects(), rowType);
     } else {
       return (Prel) prel.copy(prel.getTraitSet(), children);
     }
   }
 
-
   @Override
-  public Prel visitJoin(JoinPrel prel, boolean [] renamedForStar) throws RuntimeException {
-    renamedForStar[0] = true;    // indicate there is a join, which may require top rename projet operator.
-    return visitPrel(prel, renamedForStar);
-  }
-
-
-  @Override
-  public Prel visitScan(ScanPrel scanPrel, boolean [] renamedForStar) throws RuntimeException {
-    if (StarColumnHelper.containsStarColumn(scanPrel.getRowType()) && renamedForStar[0] ) {
-
-      renamedForStar[1] = true;  // indicate there is * for a SCAN operator.
+  public Prel visitScan(ScanPrel scanPrel, boolean [] prefixedForStar) throws RuntimeException {
+    if (StarColumnHelper.containsStarColumn(scanPrel.getRowType()) && prefixedForStar[0] ) {
 
       List<RexNode> exprs = Lists.newArrayList();
 
@@ -141,15 +149,20 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
       long tableId = tableNumber.getAndIncrement();
 
       for (String name : scanPrel.getRowType().getFieldNames()) {
-        fieldNames.add("T" +  tableId + StarColumnHelper.PREFIX_DELIMITER + name);
+        if (StarColumnHelper.isNonPrefixedStarColumn(name)) {
+          fieldNames.add("T" +  tableId + StarColumnHelper.PREFIX_DELIMITER + name);  // Add prefix to * column.
+        } else {
+          fieldNames.add(name);  // Keep regular column as it is.
+        }
       }
       RelDataType rowType = RexUtil.createStructType(scanPrel.getCluster().getTypeFactory(), exprs, fieldNames);
 
+      // insert a PAS.
       ProjectPrel proj = new ProjectPrel(scanPrel.getCluster(), scanPrel.getTraitSet(), scanPrel, exprs, rowType);
 
       return proj;
     } else {
-      return visitPrel(scanPrel, renamedForStar);
+      return visitPrel(scanPrel, prefixedForStar);
     }
   }
 

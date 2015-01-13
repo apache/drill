@@ -19,6 +19,7 @@
 package org.apache.drill.exec.planner;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eigenbase.reltype.RelDataType;
@@ -32,6 +33,10 @@ public class StarColumnHelper {
   public final static String PREFIXED_STAR_COLUMN = PREFIX_DELIMITER + STAR_COLUMN;
 
   public static boolean containsStarColumn(RelDataType type) {
+    if (! type.isStruct()) {
+      return false;
+    }
+
     List<String> fieldNames = type.getFieldNames();
 
     for (String s : fieldNames) {
@@ -55,6 +60,14 @@ public class StarColumnHelper {
     return isPrefixedStarColumn(fieldName) || isNonPrefixedStarColumn(fieldName);
   }
 
+  // Expression in some sense is similar to regular columns. Expression (i.e. C1 + C2 + 10) is not
+  // associated with an alias, the project will have (C1 + C2 + 10) --> f1, column "f1" could be
+  // viewed as a regular column, and does not require prefix. If user put an alias, then,
+  // the project will have (C1 + C2 + 10) -> alias.
+  public static boolean isRegularColumnOrExp(String fieldName) {
+    return ! isStarColumn(fieldName);
+  }
+
   public static String extractStarColumnPrefix(String fieldName) {
 
     assert (isPrefixedStarColumn(fieldName));
@@ -71,12 +84,14 @@ public class StarColumnHelper {
   }
 
   // Given a set of prefixes, check if a regular column is subsumed by any of the prefixed star column in the set.
-  public static boolean subsumeRegColumn(Set<String> prefixes, String fieldName) {
-    if (isPrefixedStarColumn(fieldName)) {
-      return false;  // only applies to regular column.
-    }
+  public static boolean subsumeColumn(Map<String, String> prefixMap, String fieldName) {
+    String prefix = extractColumnPrefix(fieldName);
 
-    return prefixes.contains(extractColumnPrefix(fieldName));
+    if (isRegularColumnOrExp(fieldName)) {
+      return false;  // regular column or expression is not subsumed by any star column.
+    } else {
+      return prefixMap.containsKey(prefix) && ! fieldName.equals(prefixMap.get(prefix)); // t1*0 is subsumed by t1*.
+    }
   }
 
 }

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -71,27 +72,27 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
     return Pair.zip(exps, getRowType().getFieldNames());
   }
 
-  // By default, the project will not allow duplicate columns, caused by expanding from * column.
-  // For example, if we have T1_*, T1_Col1, T1_Col2, Col1 and Col2 will have two copies if we expand
-  // * into a list of regular columns.  For the intermediate project, the duplicate columns are not
-  // necessary; it will impact performance.
   protected List<NamedExpression> getProjectExpressions(DrillParseContext context) {
     List<NamedExpression> expressions = Lists.newArrayList();
 
-    HashSet<String> starColPrefixes = new HashSet<String>();
+    HashMap<String, String> starColPrefixes = new HashMap<String, String>();
 
-    // To remove duplicate columns caused by expanding from * column, we'll keep track of
-    // all the prefix in the project expressions. If a regular column C1 have the same prefix, that
-    // regular column is not included in the project expression, since at execution time, * will be
-    // expanded into a list of column, including column C1.
-    for (String fieldName : getRowType().getFieldNames()) {
-      if (StarColumnHelper.isPrefixedStarColumn(fieldName)) {
-        starColPrefixes.add(StarColumnHelper.extractStarColumnPrefix(fieldName));
+    // T1.* will subsume T1.*0, but will not subsume any regular column/expression.
+    // Select *, col1, *, col2 : the intermediate will output one set of regular columns expanded from star with prefix,
+    // plus col1 and col2 without prefix.
+    // This will allow us to differentiate the regular expanded from *, and the regular column referenced in the query.
+    for (Pair<RexNode, String> pair : projects()) {
+      if (StarColumnHelper.isPrefixedStarColumn(pair.right)) {
+        String prefix = StarColumnHelper.extractStarColumnPrefix(pair.right);
+
+        if (! starColPrefixes.containsKey(prefix)) {
+          starColPrefixes.put(prefix, pair.right);
+        }
       }
     }
 
     for (Pair<RexNode, String> pair : projects()) {
-      if (! StarColumnHelper.subsumeRegColumn(starColPrefixes, pair.right)) {
+      if (! StarColumnHelper.subsumeColumn(starColPrefixes, pair.right)) {
         LogicalExpression expr = DrillOptiq.toDrill(context, getChild(), pair.left);
         expressions.add(new NamedExpression(expr, FieldReference.getWithQuotedRef(pair.right)));
       }

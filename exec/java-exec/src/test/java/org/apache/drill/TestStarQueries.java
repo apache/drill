@@ -219,4 +219,12 @@ public class TestStarQueries extends BaseTestQuery{
         "order by cnt;" );
   }
 
+  @Test  // DRILL-1889
+  public void testStarWithOtherExpression() throws Exception {
+    test("select *  from cp.`tpch/nation.parquet` order by substr(n_name, 2, 5) limit 3");
+    test("select *, n_nationkey + 5 from cp.`tpch/nation.parquet` limit 3");
+    test("select *  from cp.`tpch/nation.parquet` where n_nationkey + 5 > 10 limit 3");
+    test("select * from cp.`tpch/nation.parquet` order by random()");
+  }
+
 }
