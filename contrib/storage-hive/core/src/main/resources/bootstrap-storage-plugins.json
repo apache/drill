@@ -5,7 +5,7 @@
       enabled: false,
       config : {
         "hive.metastore.uris" : "",
-        "javax.jdo.option.ConnectionURL" : "jdbc:derby:;databaseName=../../sample-data/drill_hive_db;create=true",
+        "javax.jdo.option.ConnectionURL" : "jdbc:derby:;databaseName=../sample-data/drill_hive_db;create=true",
         "hive.metastore.warehouse.dir" : "/tmp/drill_hive_wh",
         "fs.default.name" : "file:///",
         "hive.metastore.sasl.enabled" : "false"
