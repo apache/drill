@@ -32,14 +32,17 @@ public class FragmentStats {
   private List<OperatorStats> operators = Lists.newArrayList();
   private final long startTime;
   private final DrillbitEndpoint endpoint;
+  private final BufferAllocator allocator;
 
-  public FragmentStats(MetricRegistry metrics, DrillbitEndpoint endpoint) {
+  public FragmentStats(BufferAllocator allocator, MetricRegistry metrics, DrillbitEndpoint endpoint) {
     this.startTime = System.currentTimeMillis();
     this.endpoint = endpoint;
+    this.allocator = allocator;
   }
 
   public void addMetricsToStatus(MinorFragmentProfile.Builder prfB) {
     prfB.setStartTime(startTime);
+    prfB.setMaxMemoryUsed(allocator.getPeakMemoryAllocation());
     prfB.setEndTime(System.currentTimeMillis());
     prfB.setEndpoint(endpoint);
     for(OperatorStats o : operators){

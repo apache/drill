@@ -88,7 +88,7 @@ public class FragmentContext implements Closeable {
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
       FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
-    this.stats = new FragmentStats(dbContext.getMetrics(), fragment.getAssignment());
+
     this.context = dbContext;
     this.connection = connection;
     this.fragment = fragment;
@@ -109,14 +109,16 @@ public class FragmentContext implements Closeable {
     } catch (Exception e) {
       throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
+
     // Add the fragment context to the root allocator.
     // The QueryManager will call the root allocator to recalculate all the memory limits for all the fragments
     try {
-      this.allocator = context.getAllocator().getChildAllocator(this, fragment.getMemInitial(), fragment.getMemMax(), true);
+      this.allocator = dbContext.getAllocator().getChildAllocator(this, fragment.getMemInitial(), fragment.getMemMax(), true);
       assert (allocator != null);
     }catch(Throwable e){
       throw new ExecutionSetupException("Failure while getting memory allocator for fragment.", e);
     }
+    this.stats = new FragmentStats(allocator, dbContext.getMetrics(), fragment.getAssignment());
 
     this.loader = new QueryClassLoader(dbContext.getConfig(), fragmentOptions);
   }

@@ -106,7 +106,7 @@ public abstract class AbstractStatusReporter implements StatusReporter{
 
   @Override
   public final void fail(FragmentHandle handle, String message, Throwable excep) {
-    FragmentStatus.Builder status = getBuilder(FragmentState.FAILED, message, excep);
+    FragmentStatus.Builder status = getBuilder(context, FragmentState.FAILED, message, excep);
     fail(handle, status);
   }
 

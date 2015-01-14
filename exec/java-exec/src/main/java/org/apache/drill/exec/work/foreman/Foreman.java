@@ -486,7 +486,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
       case AWAITING_ALLOCATION:
       case RUNNING:
         if(data.isLocal()){
-          rootRunner.cancel();
+          if(rootRunner != null){
+            rootRunner.cancel();
+          }
         }else{
           bee.getContext().getController().getTunnel(data.getEndpoint()).cancelFragment(new CancelListener(data.getEndpoint(), handle), handle);
         }
