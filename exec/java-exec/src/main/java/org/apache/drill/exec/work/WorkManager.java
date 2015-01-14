@@ -20,6 +20,7 @@ package org.apache.drill.exec.work;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -29,11 +30,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
@@ -52,6 +57,7 @@ import org.apache.drill.exec.work.user.UserWorker;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 
@@ -79,6 +85,8 @@ public class WorkManager implements Closeable {
   private final WorkEventBus workBus;
   private ExecutorService executor;
   private final EventThread eventThread;
+  private final StatusThread statusThread;
+  private Controller controller;
 
   public WorkManager(BootStrapContext context) {
     this.bee = new WorkerBee();
@@ -87,6 +95,7 @@ public class WorkManager implements Closeable {
     this.controlMessageWorker = new ControlHandlerImpl(bee);
     this.userWorker = new UserWorker(bee);
     this.eventThread = new EventThread();
+    this.statusThread = new StatusThread();
     this.dataHandler = new DataResponseHandlerImpl(bee);
   }
 
@@ -94,8 +103,10 @@ public class WorkManager implements Closeable {
       DataConnectionCreator data, ClusterCoordinator coord, PStoreProvider provider) {
     this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider);
     // executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
-    executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
-    eventThread.start();
+    this.executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
+    this.controller = controller;
+    this.eventThread.start();
+    this.statusThread.start();
     // TODO remove try block once metrics moved from singleton, For now catch to avoid unit test failures
     try {
       dContext.getMetrics().register(
@@ -205,6 +216,44 @@ public class WorkManager implements Closeable {
 
     public DrillbitContext getContext() {
       return dContext;
+    }
+
+  }
+
+  private class StatusThread extends Thread {
+    public StatusThread() {
+      this.setDaemon(true);
+      this.setName("WorkManager Status Reporter");
+    }
+
+    @Override
+    public void run() {
+      while(true){
+        List<DrillRpcFuture<Ack>> futures = Lists.newArrayList();
+        for(FragmentExecutor e : runningFragments.values()){
+          FragmentStatus status = e.getStatus();
+          if(status == null){
+            continue;
+          }
+          DrillbitEndpoint ep = e.getContext().getForemanEndpoint();
+          futures.add(controller.getTunnel(ep).sendFragmentStatus(status));
+        }
+
+        for(DrillRpcFuture<Ack> future : futures){
+          try{
+            future.checkedGet();
+          }catch(RpcException ex){
+            logger.info("Failure while sending intermediate fragment status to Foreman", ex);
+          }
+        }
+
+        try{
+          Thread.sleep(5000);
+        }catch(InterruptedException e){
+          // exit status thread on interrupt.
+          break;
+        }
+      }
     }
 
   }

@@ -20,5 +20,10 @@ package org.apache.drill.exec.work;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 
 public interface StatusProvider {
+
+  /**
+   * Provides the current status of the FragmentExecutor's work.
+   * @return Status if currently.  Null if in another state.
+   */
   public FragmentStatus getStatus();
 }
