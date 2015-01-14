@@ -155,6 +155,8 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
   }
 
   private void cleanup(QueryResult result) {
+    logger.info("foreman cleaning up - status: {}", queryManager.getStatus());
+
     bee.retireForeman(this);
     context.getWorkBus().removeFragmentStatusListener(queryId);
     context.getClusterCoordinator().removeDrillbitStatusListener(queryManager);
@@ -384,7 +386,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
    * @return
    */
   private synchronized boolean moveToState(QueryState newState, Exception exception){
-    logger.debug("State change requested.  {} --> {}", state, newState);
+    logger.info("State change requested.  {} --> {}", state, newState, exception);
     outside: switch(state) {
 
     case PENDING:
@@ -413,7 +415,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
             .setIsLastChunk(true) //
             .build();
 
-        cleanup(result);
+        // immediately notify client that cancellation is taking place, final clean-up happens when foreman reaches to
+        // a terminal state(completed, failed)
+        initiatingClient.sendResult(responseListener, new QueryWritableBatch(result), true);
         return true;
       }
 
@@ -454,7 +458,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
     case COMPLETED:
     case FAILED: {
       // no op.
-      logger.info("Dropping request to move to {} state as query is already at {} state (which is terminal).", newState, state, exception);
+      logger.warn("Dropping request to move to {} state as query is already at {} state (which is terminal).", newState, state, exception);
       return false;
     }
 
@@ -635,9 +639,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
 
   public class StateListener {
     public boolean moveToState(QueryState newState, Exception ex){
-      try{
+      try {
         acceptExternalEvents.await();
-      }catch(InterruptedException e){
+      } catch(InterruptedException e){
         logger.warn("Interrupted while waiting to move state.", e);
         return false;
       }

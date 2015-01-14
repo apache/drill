@@ -54,7 +54,7 @@ public class WorkEventBus {
   }
 
   public void removeFragmentStatusListener(QueryId queryId) {
-    logger.debug("Removing framgent status listener for queryId {}.", queryId);
+    logger.debug("Removing fragment status listener for queryId {}.", queryId);
     listeners.remove(queryId);
   }
 
@@ -70,10 +70,7 @@ public class WorkEventBus {
   public void status(FragmentStatus status) {
     FragmentStatusListener l = listeners.get(status.getHandle().getQueryId());
     if (l == null) {
-
-      logger.error("A fragment message arrived but there was no registered listener for that message for handle {}.",
-          status.getHandle());
-      return;
+      logger.warn("A fragment message arrived but there was no registered listener for that message: {}.", status);
     } else {
       l.statusUpdate(status);
     }
@@ -102,15 +99,10 @@ public class WorkEventBus {
 
     // since non-leaf fragments are sent first, it is an error condition if the manager is unavailable.
     FragmentManager m = managers.get(handle);
-    if(m != null){
+    if(m != null) {
       return m;
     }
     throw new FragmentSetupException("Failed to receive plan fragment that was required for id: " + QueryIdHelper.getQueryIdentifier(handle));
-  }
-
-  public void cancelFragment(FragmentHandle handle) {
-    logger.debug("Fragment canceled: {}", QueryIdHelper.getQueryIdentifier(handle));
-    removeFragmentManager(handle);
   }
 
   public void removeFragmentManager(FragmentHandle handle) {

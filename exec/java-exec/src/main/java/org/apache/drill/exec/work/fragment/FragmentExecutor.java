@@ -25,7 +25,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
-import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -71,16 +70,13 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     updateState(FragmentState.CANCELLED);
     logger.debug("Cancelled Fragment {}", context.getHandle());
     context.cancel();
-
-    if (executionThread != null) {
-      executionThread.interrupt();
-    }
   }
 
   public void receivingFragmentFinished(FragmentHandle handle) {
-    updateState(FragmentState.CANCELLED);
-    context.cancel();
-    root.receivingFragmentFinished(handle);
+    cancel();
+    if (root != null) {
+      root.receivingFragmentFinished(handle);
+    }
   }
 
   public UserClientConnection getClient() {
@@ -104,8 +100,8 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       context.getDrillbitContext().getClusterCoordinator().addDrillbitStatusListener(drillbitStatusListener);
 
       logger.debug("Starting fragment runner. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
-      if (!updateState(FragmentState.AWAITING_ALLOCATION, FragmentState.RUNNING, false)) {
-        internalFail(new RuntimeException(String.format("Run was called when fragment was in %s state.  FragmentRunnables should only be started when they are currently in awaiting allocation state.", FragmentState.valueOf(state.get()))));
+      if (!updateStateOrFail(FragmentState.AWAITING_ALLOCATION, FragmentState.RUNNING)) {
+        logger.warn("Unable to set fragment state to RUNNING. Cancelled or failed?");
         return;
       }
 
@@ -117,7 +113,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
             closeOutResources(false);
           } else {
             closeOutResources(true); // make sure to close out resources before we report success.
-            updateState(FragmentState.RUNNING, FragmentState.FINISHED, false);
+            updateStateOrFail(FragmentState.RUNNING, FragmentState.FINISHED);
           }
 
           break;
@@ -166,22 +162,59 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     listener.fail(context.getHandle(), "Failure while running fragment.", excep);
   }
 
-  private void updateState(FragmentState update) {
-    state.set(update.getNumber());
-    listener.stateChanged(context.getHandle(), update);
+  /**
+   * Updates the fragment state with the given state
+   * @param to target state
+   */
+  protected void updateState(FragmentState to) {;
+    state.set(to.getNumber());
+    listener.stateChanged(context.getHandle(), to);
   }
 
-  private boolean updateState(FragmentState current, FragmentState update, boolean exceptionOnFailure) {
-    boolean success = state.compareAndSet(current.getNumber(), update.getNumber());
-    if (!success && exceptionOnFailure) {
-      internalFail(new RuntimeException(String.format(
-          "State was different than expected.  Attempting to update state from %s to %s however current state was %s.",
-          current.name(), update.name(), FragmentState.valueOf(state.get()))));
-      return false;
+  /**
+   * Updates the fragment state only if the current state matches the expected.
+   *
+   * @param expected expected current state
+   * @param to target state
+   * @return true only if update succeeds
+   */
+  protected boolean checkAndUpdateState(FragmentState expected, FragmentState to) {
+    boolean success = state.compareAndSet(expected.getNumber(), to.getNumber());
+    if (success) {
+      listener.stateChanged(context.getHandle(), to);
+    } else {
+      logger.debug("State change failed. Expected state: {} -- target state: {} -- current state: {}.",
+          expected.name(), to.name(), FragmentState.valueOf(state.get()));
     }
-    listener.stateChanged(context.getHandle(), update);
-    return true;
+    return success;
   }
+
+  /**
+   * Returns true if the fragment is in a terminal state
+   */
+  protected boolean isCompleted() {
+    return state.get() == FragmentState.CANCELLED_VALUE
+        || state.get() == FragmentState.FAILED_VALUE
+        || state.get() == FragmentState.FINISHED_VALUE;
+  }
+
+  /**
+   * Update the state if current state matches expected or fail the fragment if state transition fails even though
+   * fragment is not in a terminal state.
+   *
+   * @param expected current expected state
+   * @param to target state
+   * @return true only if update succeeds
+   */
+  protected boolean updateStateOrFail(FragmentState expected, FragmentState to) {
+    final boolean updated = checkAndUpdateState(expected, to);
+    if (!updated && !isCompleted()) {
+      final String msg = "State was different than expected while attempting to update state from %s to %s however current state was %s.";
+      internalFail(new StateTransitionException(String.format(msg, expected.name(), to.name(), FragmentState.valueOf(state.get()))));
+    }
+    return updated;
+  }
+
 
   @Override
   public int compareTo(Object o) {

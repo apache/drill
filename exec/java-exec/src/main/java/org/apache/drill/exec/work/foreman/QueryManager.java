@@ -21,11 +21,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
@@ -51,7 +53,6 @@ public class QueryManager implements FragmentStatusListener, DrillbitStatusListe
   private final QueryId queryId;
 
   public QueryManager(QueryId id, RunQuery query, PStoreProvider pStoreProvider, StateListener stateListener, Foreman foreman) {
-    super();
     this.stateListener = stateListener;
     this.queryId =  id;
     this.remainingFragmentCount = new AtomicInteger(0);
@@ -87,13 +88,14 @@ public class QueryManager implements FragmentStatusListener, DrillbitStatusListe
       updateFragmentStatus(status);
       break;
     case CANCELLED:
-      // we don't care about cancellation messages since we're the only entity that should drive cancellations.
+      //TODO: define a new query state to distinguish the state of early termination from cancellation
+      fragmentDone(status);
       break;
     case FAILED:
       stateListener.moveToState(QueryState.FAILED, new RemoteRpcException(status.getProfile().getError()));
       break;
     case FINISHED:
-      finished(status);
+      fragmentDone(status);
       break;
     case RUNNING:
       updateFragmentStatus(status);
@@ -107,11 +109,11 @@ public class QueryManager implements FragmentStatusListener, DrillbitStatusListe
     this.status.updateFragmentStatus(status);
   }
 
-  private void finished(FragmentStatus status){
+  private void fragmentDone(FragmentStatus status){
     this.status.incrementFinishedFragments();
     int remaining = remainingFragmentCount.decrementAndGet();
     updateFragmentStatus(status);
-
+    logger.debug("waiting for {} fragments", remaining);
     if(remaining == 0){
       stateListener.moveToState(QueryState.COMPLETED, null);
     }
@@ -119,6 +121,7 @@ public class QueryManager implements FragmentStatusListener, DrillbitStatusListe
 
   public void setup(FragmentHandle rootFragmentHandle, DrillbitEndpoint localIdentity, int countOfNonRootFragments){
     remainingFragmentCount.set(countOfNonRootFragments + 1);
+    logger.debug("foreman is waiting for {} fragments to finish", countOfNonRootFragments + 1);
     status.add(new FragmentData(rootFragmentHandle, localIdentity, true));
     this.status.setTotalFragments(countOfNonRootFragments + 1);
 
