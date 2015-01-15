@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -41,9 +42,10 @@ public class CodeCompiler {
 
   public CodeCompiler(DrillConfig config, OptionManager systemOptionManager){
     this.transformer = new ClassTransformer();
+    int cacheMaxSize = config.getInt(ExecConstants.MAX_LOADING_CACHE_SIZE_CONFIG);
     this.cache = CacheBuilder //
         .newBuilder() //
-        .maximumSize(1000) //
+        .maximumSize(cacheMaxSize) //
         .build(new Loader());
     this.systemOptionManager = systemOptionManager;
     this.config = config;
