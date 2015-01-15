@@ -13,6 +13,9 @@ baseurl: "/drill" # Base URL when hosted on GitHub Pages (drill repository under
 noindex: 1
 markdown: redcarpet
 
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
+
 collections:
   docs:
     output: true

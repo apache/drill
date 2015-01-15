@@ -1,0 +1,9 @@
+---
+title: "Ports Used by Drill"
+parent: "Manage Drill"
+---
+The following table provides a list of the ports that Drill uses, the port
+type, and a description of how Drill uses the port:
+
+<div class="table-wrap"><table class="confluenceTable"><tbody><tr><th class="confluenceTh">Port</th><th colspan="1" class="confluenceTh">Type</th><th class="confluenceTh">Description</th></tr><tr><td valign="top" class="confluenceTd">8047</td><td valign="top" colspan="1" class="confluenceTd">TCP</td><td valign="top" class="confluenceTd">Needed for <span style="color: rgb(34,34,34);">the Drill Web UI.</span><span style="color: rgb(34,34,34);"> </span></td></tr><tr><td valign="top" class="confluenceTd">31010</td><td valign="top" colspan="1" class="confluenceTd">TCP</td><td valign="top" class="confluenceTd">User port address. Used between nodes in a Drill cluster. <br />Needed for an external client, such as Tableau, to connect into the<br />cluster nodes. Also needed for the Drill Web UI.</td></tr><tr><td valign="top" class="confluenceTd">31011</td><td valign="top" colspan="1" class="confluenceTd">TCP</td><td valign="top" class="confluenceTd">Control port address. Used between nodes in a Drill cluster. <br />Needed for multi-node installation of Apache Drill.</td></tr><tr><td valign="top" colspan="1" class="confluenceTd">31012</td><td valign="top" colspan="1" class="confluenceTd">TCP</td><td valign="top" colspan="1" class="confluenceTd">Data port address. Used between nodes in a Drill cluster. <br />Needed for multi-node installation of Apache Drill.</td></tr><tr><td valign="top" colspan="1" class="confluenceTd">46655</td><td valign="top" colspan="1" class="confluenceTd">UDP</td><td valign="top" colspan="1" class="confluenceTd">Used for JGroups and Infinispan. Needed for multi-node installation of Apache Drill.</td></tr></tbody></table></div>
+
