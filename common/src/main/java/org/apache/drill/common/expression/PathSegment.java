@@ -99,7 +99,7 @@ public abstract class PathSegment{
 
     @Override
     public PathSegment clone() {
-      PathSegment seg = new ArraySegment(index);
+      PathSegment seg = index < 0 ? new ArraySegment(null) : new ArraySegment(index);
       if (child != null) {
         seg.setChild(child.clone());
       }
@@ -108,7 +108,7 @@ public abstract class PathSegment{
 
     @Override
     public ArraySegment cloneWithNewChild(PathSegment newChild) {
-      ArraySegment seg = new ArraySegment(index);
+      ArraySegment seg = index < 0 ? new ArraySegment(null) : new ArraySegment(index);
       if (child != null) {
         seg.setChild(child.cloneWithNewChild(newChild));
       } else {
