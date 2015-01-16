@@ -60,6 +60,9 @@ public abstract class FilterTemplate2 implements Filterer{
   }
 
   public void filterBatch(int recordCount){
+    if (recordCount == 0) {
+      return;
+    }
     if (! outgoingSelectionVector.allocateNew(recordCount)) {
       throw new UnsupportedOperationException("Unable to allocate filter batch");
     }

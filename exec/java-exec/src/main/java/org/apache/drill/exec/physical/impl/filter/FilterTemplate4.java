@@ -43,6 +43,9 @@ public abstract class FilterTemplate4 implements Filterer {
 
   @Override
   public void filterBatch(int recordCount){
+    if (recordCount == 0) {
+      return;
+    }
     int outPos = 0;
     for (int i = 0; i < incomingSelectionVector.getCount(); i++) {
       int index = incomingSelectionVector.get(i);
