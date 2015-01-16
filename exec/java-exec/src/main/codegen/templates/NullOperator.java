@@ -35,7 +35,7 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public class ${className} {
 
-  @FunctionTemplate(names = {"isNull", "isnull", "is null"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"isnull", "is null"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class IsNull implements DrillSimpleFunc {
 
     @Param ${mode.prefix}${minor.class}Holder input;
@@ -52,7 +52,7 @@ public class ${className} {
     }
   }
 
-  @FunctionTemplate(names = {"isNotNull", "isnotnull", "is not null"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"isnotnull", "is not null"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class IsNotNull implements DrillSimpleFunc {
 
     @Param ${mode.prefix}${minor.class}Holder input;

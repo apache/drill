@@ -18,6 +18,7 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -40,6 +41,12 @@ public class DrillFunctionRegistry {
 
   private ArrayListMultimap<String, DrillFuncHolder> methods = ArrayListMultimap.create();
 
+  /* Hash map to prevent registering functions with exactly matching signatures
+   * key: Function Name + Input's Major Type
+   * Value: Class name where function is implemented
+   */
+  private HashMap<String, String> functionSignatureMap = new HashMap<>();
+
   public DrillFunctionRegistry(DrillConfig config) {
     FunctionConverter converter = new FunctionConverter();
     Set<Class<? extends DrillFunc>> providerClasses = PathScanner.scanForImplementations(DrillFunc.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
@@ -48,8 +55,24 @@ public class DrillFunctionRegistry {
       if (holder != null) {
         // register handle for each name the function can be referred to
         String[] names = holder.getRegisteredNames();
+
+        // Create the string for input types
+        String functionInput = "";
+        for (DrillFuncHolder.ValueReference ref : holder.parameters) {
+          functionInput += ref.getType().toString();
+        }
         for (String name : names) {
-          methods.put(name.toLowerCase(), holder);
+          String functionName = name.toLowerCase();
+          methods.put(functionName, holder);
+          String functionSignature = functionName + functionInput;
+
+          String existingImplementation;
+          if ((existingImplementation = functionSignatureMap.get(functionSignature)) != null) {
+            throw new AssertionError(String.format("Conflicting functions with similar signature found. Func Name: %s, Class name: %s " +
+                " Class name: %s", functionName, clazz.getName(), existingImplementation));
+          } else {
+            functionSignatureMap.put(functionSignature, clazz.getName());
+          }
         }
       } else {
         logger.warn("Unable to initialize function for class {}", clazz.getName());

@@ -28,7 +28,7 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public class IsNotFalse {
 
-  @FunctionTemplate(names = {"isNotFalse", "isnotfalse", "is not false"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"isnotfalse", "is not false"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class Optional implements DrillSimpleFunc {
 
     @Param NullableBitHolder in;
@@ -45,7 +45,7 @@ public class IsNotFalse {
     }
   }
 
-  @FunctionTemplate(names = {"isNotFalse", "isnotfalse", "is not false"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"isnotfalse", "is not false"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class Required implements DrillSimpleFunc {
 
     @Param BitHolder in;
