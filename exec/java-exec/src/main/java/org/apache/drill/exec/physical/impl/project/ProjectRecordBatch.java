@@ -510,9 +510,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     // create a new name
     Integer newSeq = currentSeq + 1;
-    result.sequenceMap.put(name, newSeq);
-
     String newName = name + newSeq;
+    result.sequenceMap.put(name, newSeq);
+    result.sequenceMap.put(newName, -1);
+
     return newName;
   }
 
@@ -700,26 +701,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     else {
       // if the incoming schema's column name matches the expression name of the Project,
       // then we just want to pick the ref name as the output column name
-      result.outputNames = Lists.newArrayListWithCapacity(incomingSchemaSize);
-      for (int j=0; j < incomingSchemaSize; j++) {
-        result.outputNames.add(EMPTY_STRING);  // initialize
-      }
 
-      int k = 0;
+      result.outputNames = Lists.newArrayList();
       for (VectorWrapper<?> wrapper : incoming) {
         ValueVector vvIn = wrapper.getValueVector();
         String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
-
         if (expr.getPath().equals(incomingName)) {
           String newName = ref.getPath();
-          if (!result.outputMap.containsKey(newName)) {
-            result.outputNames.set(k, newName);
-            result.outputMap.put(newName,  newName);
-          }
+          addToResultMaps(newName, result, true);
         }
-        k++;
       }
     }
   }
-
 }

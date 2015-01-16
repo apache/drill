@@ -17,21 +17,101 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.types.TypeProtos;
 import org.junit.Test;
 import org.apache.drill.exec.rpc.RpcException;
 
 public class TestStarQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStarQueries.class);
 
+  @Test // see DRILL-2021
+  public void testSelStarCommaSameColumnRepeated() throws Exception {
+    testBuilder()
+      .sqlQuery("select n_name, *, n_name, n_name from cp.`tpch/nation.parquet`")
+      .ordered()
+      .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q1.tsv")
+      .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineColumns("n_name", "n_nationkey", "n_name0", "n_regionkey", "n_comment", "n_name00", "n_name1")
+      .build().run();
+
+    testBuilder()
+      .sqlQuery("select n_name, *, n_name, n_name from cp.`tpch/nation.parquet` limit 2")
+      .ordered()
+      .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q2.tsv")
+      .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineColumns("n_name", "n_nationkey", "n_name0", "n_regionkey", "n_comment", "n_name00", "n_name1")
+      .build().run();
+
+    testBuilder()
+      .sqlQuery("select *, n_name, *, n_name, n_name from cp.`tpch/nation.parquet`")
+      .ordered()
+      .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q3.tsv")
+      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
+            TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_name0",
+            "n_nationkey0", "n_name1", "n_regionkey0", "n_comment0", "n_name00", "n_name10")
+      .build().run();
+
+    testBuilder()
+      .sqlQuery("select *, n_name, *, n_name, n_name from cp.`tpch/nation.parquet` limit 2")
+      .ordered()
+      .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q4.tsv")
+      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
+            TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_name0",
+            "n_nationkey0", "n_name1", "n_regionkey0", "n_comment0", "n_name00", "n_name10")
+      .build().run();
+  }
+
+  @Test // see DRILL-1979
+  public void testSelStarMultipleStarsRegularColumnAsAlias() throws Exception {
+    testBuilder()
+      .sqlQuery("select *, n_name as extra, *, n_name as extra from cp.`tpch/nation.parquet`")
+      .ordered()
+      .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStarsRegularColumnAsAlias/q1.tsv")
+      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
+              TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "extra", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "extra0")
+      .build().run();
+
+      testBuilder()
+      .sqlQuery("select *, n_name as extra, *, n_name as extra from cp.`tpch/nation.parquet` limit 2")
+      .ordered()
+      .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStarsRegularColumnAsAlias/q2.tsv")
+      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
+              TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "extra", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "extra0")
+      .build().run();
+  }
+
   @Test // see DRILL-1828
   public void testSelStarMultipleStars() throws Exception {
-    test("select *, * from cp.`employee.json`;");
-    test("select *, * from cp.`employee.json` limit 2;");
+    testBuilder()
+    .sqlQuery("select *, *, n_name from cp.`tpch/nation.parquet`")
+    .ordered()
+    .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStars/q1.tsv")
+    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
+    .build().run();
+
+    testBuilder()
+    .sqlQuery("select *, *, n_name from cp.`tpch/nation.parquet` limit 2")
+    .ordered()
+    .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStars/q2.tsv")
+    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
+    .build().run();
   }
 
   @Test // see DRILL-1825
   public void testSelStarWithAdditionalColumnLimit() throws Exception {
-    test("select *, first_name, *, last_name from cp.`employee.json` limit 2;");
+    testBuilder()
+    .sqlQuery("select *, n_nationkey, *, n_name from cp.`tpch/nation.parquet` limit 2")
+    .ordered()
+    .csvBaselineFile("testframework/testStarQueries/testSelStarWithAdditionalColumnLimit/q1.tsv")
+    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_nationkey1", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
+    .build().run();
   }
 
   @Test
