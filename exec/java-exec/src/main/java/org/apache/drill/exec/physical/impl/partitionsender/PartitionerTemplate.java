@@ -148,15 +148,7 @@ public abstract class PartitionerTemplate implements Partitioner {
       case NONE:
         for (int recordId = 0; recordId < incoming.getRecordCount(); ++recordId) {
           OutgoingRecordBatch outgoingBatch = outgoingBatches.get(doEval(recordId));
-          if (!outgoingBatch.copy(recordId)) {
-            logger.trace(REWRITE_MSG, recordId);
-            outgoingBatch.flush();
-            if (!outgoingBatch.copy(recordId)) {
-              String msg = composeTooBigMsg(recordId, incoming);
-              logger.debug(msg);
-              throw new IOException(msg);
-            }
-          }
+          outgoingBatch.copy(recordId);
         }
         break;
 
@@ -164,15 +156,7 @@ public abstract class PartitionerTemplate implements Partitioner {
         for (int recordId = 0; recordId < incoming.getRecordCount(); ++recordId) {
           int svIndex = sv2.getIndex(recordId);
           OutgoingRecordBatch outgoingBatch = outgoingBatches.get(doEval(svIndex));
-          if (!outgoingBatch.copy(svIndex)) {
-            logger.trace(REWRITE_MSG, svIndex);
-            outgoingBatch.flush();
-            if (!outgoingBatch.copy(svIndex)) {
-              String msg = composeTooBigMsg(recordId, incoming);
-              logger.debug(msg);
-              throw new IOException(msg);
-            }
-          }
+          outgoingBatch.copy(svIndex);
         }
         break;
 
@@ -180,15 +164,7 @@ public abstract class PartitionerTemplate implements Partitioner {
         for (int recordId = 0; recordId < incoming.getRecordCount(); ++recordId) {
           int svIndex = sv4.get(recordId);
           OutgoingRecordBatch outgoingBatch = outgoingBatches.get(doEval(svIndex));
-          if (!outgoingBatch.copy(svIndex)) {
-            logger.trace(REWRITE_MSG, svIndex);
-            outgoingBatch.flush();
-            if (!outgoingBatch.copy(svIndex)) {
-              String msg = composeTooBigMsg(recordId, incoming);
-              logger.debug(msg);
-              throw new IOException(msg);
-            }
-          }
+          outgoingBatch.copy(svIndex);
         }
         break;
 
@@ -252,16 +228,13 @@ public abstract class PartitionerTemplate implements Partitioner {
       this.statusHandler = statusHandler;
     }
 
-    protected boolean copy(int inIndex) throws IOException {
-      if (doEval(inIndex, recordCount)) {
-        recordCount++;
-        totalRecords++;
-        if (recordCount == DEFAULT_RECORD_BATCH_SIZE) {
-          flush();
-        }
-        return true;
+    protected void copy(int inIndex) throws IOException {
+      doEval(inIndex, recordCount);
+      recordCount++;
+      totalRecords++;
+      if (recordCount == DEFAULT_RECORD_BATCH_SIZE) {
+        flush();
       }
-      return false;
     }
 
     @Override
@@ -273,7 +246,7 @@ public abstract class PartitionerTemplate implements Partitioner {
     protected void doSetup(@Named("incoming") RecordBatch incoming, @Named("outgoing") VectorAccessible outgoing) {};
 
     @RuntimeOverridden
-    protected boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex) { return false; };
+    protected void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex) { };
 
     public void flush() throws IOException {
       if (dropAll) {

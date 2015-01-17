@@ -164,13 +164,7 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
         }
 
         for (PojoWriter writer : writers) {
-          if (!writer.writeField(currentPojo, i)) {
-            doCurrent = true;
-            if (i == 0) {
-              throw new IllegalStateException("Got into a position where we can't write data but the batch is empty.");
-            }
-            break outside;
-          };
+          writer.writeField(currentPojo, i);
         }
         i++;
       }

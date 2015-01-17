@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JVar;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
@@ -49,6 +49,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -56,10 +57,15 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.eigenbase.rel.JoinRelType;
 
-import java.io.IOException;
-import java.util.List;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JVar;
 
 public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
+
+  public static final long ALLOCATOR_INITIAL_RESERVATION = 1 * 1024 * 1024;
+  public static final long ALLOCATOR_MAX_RESERVATION = 20L * 1000 * 1000 * 1000;
+
   // Probe side record batch
   private final RecordBatch left;
 
@@ -107,18 +113,18 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
       GeneratorMapping.create("doSetup"/* setup method */, "projectBuildRecord" /* eval method */, null /* reset */,
           null /* cleanup */);
   // Generator mapping for the build side : constant
-  private static final GeneratorMapping PROJECT_BUILD_CONSTANT =
-      GeneratorMapping.create("doSetup"/* setup method */, "doSetup" /* eval method */, null /* reset */,
-          null /* cleanup */);
+  private static final GeneratorMapping PROJECT_BUILD_CONSTANT = GeneratorMapping.create("doSetup"/* setup method */,
+      "doSetup" /* eval method */,
+      null /* reset */, null /* cleanup */);
 
   // Generator mapping for the probe side : scalar
   private static final GeneratorMapping PROJECT_PROBE =
       GeneratorMapping.create("doSetup" /* setup method */, "projectProbeRecord" /* eval method */, null /* reset */,
           null /* cleanup */);
   // Generator mapping for the probe side : constant
-  private static final GeneratorMapping PROJECT_PROBE_CONSTANT =
-      GeneratorMapping.create("doSetup" /* setup method */, "doSetup" /* eval method */, null /* reset */,
-          null /* cleanup */);
+  private static final GeneratorMapping PROJECT_PROBE_CONSTANT = GeneratorMapping.create("doSetup" /* setup method */,
+      "doSetup" /* eval method */,
+      null /* reset */, null /* cleanup */);
 
 
   // Mapping set for the build side
@@ -127,9 +133,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           "outgoing" /* write container */, PROJECT_BUILD_CONSTANT, PROJECT_BUILD);
 
   // Mapping set for the probe side
-  private final MappingSet projectProbeMapping =
-      new MappingSet("probeIndex" /* read index */, "outIndex" /* write index */, "probeBatch" /* read container */,
-          "outgoing" /* write container */, PROJECT_PROBE_CONSTANT, PROJECT_PROBE);
+  private final MappingSet projectProbeMapping = new MappingSet("probeIndex" /* read index */, "outIndex" /* write index */,
+      "probeBatch" /* read container */,
+      "outgoing" /* write container */,
+      PROJECT_PROBE_CONSTANT, PROJECT_PROBE);
+
+  // indicates if we have previously returned an output batch
+  boolean firstOutputBatch = true;
 
   IterOutcome leftUpstream = IterOutcome.NONE;
   IterOutcome rightUpstream = IterOutcome.NONE;
@@ -155,6 +165,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   public int getRecordCount() {
     return outputRecords;
   }
+
 
   @Override
   protected void buildSchema() throws SchemaChangeException {
@@ -341,9 +352,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
       case OK:
         int currentRecordCount = right.getRecordCount();
 
-        /* For every new build batch, we store some state in the helper context
-         * Add new state to the helper context
-         */
+                    /* For every new build batch, we store some state in the helper context
+                     * Add new state to the helper context
+                     */
         hjHelper.addNewBatch(currentRecordCount);
 
         // Holder contains the global index where the key is hashed into using the hash table
@@ -352,21 +363,19 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         // For every record in the build batch , hash the key columns
         for (int i = 0; i < currentRecordCount; i++) {
 
-          HashTable.PutStatus status = hashTable.put(i, htIndex, 1 /* retry count */);
+          hashTable.put(i, htIndex, 1 /* retry count */);
 
-          if (status != HashTable.PutStatus.PUT_FAILED) {
-            /* Use the global index returned by the hash table, to store
-             * the current record index and batch index. This will be used
-             * later when we probe and find a match.
-             */
-            hjHelper.setCurrentIndex(htIndex.value, buildBatchIndex, i);
-          }
+                        /* Use the global index returned by the hash table, to store
+                         * the current record index and batch index. This will be used
+                         * later when we probe and find a match.
+                         */
+          hjHelper.setCurrentIndex(htIndex.value, buildBatchIndex, i);
         }
 
-        /* Completed hashing all records in this batch. Transfer the batch
-         * to the hyper vector container. Will be used when we want to retrieve
-         * records that have matching keys on the probe side.
-         */
+                    /* Completed hashing all records in this batch. Transfer the batch
+                     * to the hyper vector container. Will be used when we want to retrieve
+                     * records that have matching keys on the probe side.
+                     */
         RecordBatchData nextBatch = new RecordBatchData(right);
         if (hyperContainer == null) {
           hyperContainer = new ExpandableHyperContainer(nextBatch.getContainer());
@@ -386,8 +395,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   public HashJoinProbe setupHashJoinProbe() throws ClassTransformationException, IOException {
 
 
-    final CodeGenerator<HashJoinProbe> cg =
-        CodeGenerator.get(HashJoinProbe.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final CodeGenerator<HashJoinProbe> cg = CodeGenerator.get(HashJoinProbe.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     ClassGenerator<HashJoinProbe> g = cg.getRoot();
 
     // Generate the code to project build side records
@@ -411,20 +419,18 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         }
 
         // Add the vector to our output container
-        //                ValueVector v = TypeHelper.getNewVector(MaterializedField.create(vv.getField().getPath(),
-        // outputType), context.getAllocator());
         container.addOrGet(MaterializedField.create(field.getPath(), outputType));
 
         JVar inVV = g.declareVectorValueSetupAndMember("buildBatch", new TypedFieldId(field.getType(), true, fieldId));
         JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, fieldId));
-        g.getEvalBlock()._if(outVV.invoke("copyFromSafe").arg(buildIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
-            .arg(outIndex).arg(inVV.component(buildIndex.shrz(JExpr.lit(16)))).not())._then()._return(JExpr.FALSE);
+        g.getEvalBlock().add(outVV.invoke("copyFromSafe")
+            .arg(buildIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
+            .arg(outIndex)
+            .arg(inVV.component(buildIndex.shrz(JExpr.lit(16)))));
 
         fieldId++;
       }
     }
-    g.rotateBlock();
-    g.getEvalBlock()._return(JExpr.TRUE);
 
     // Generate the code to project probe side records
     g.setMappingSet(projectProbeMapping);
@@ -432,6 +438,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     int outputFieldId = fieldId;
     fieldId = 0;
     JExpression probeIndex = JExpr.direct("probeIndex");
+    int recordCount = 0;
 
     if (leftUpstream == IterOutcome.OK || leftUpstream == IterOutcome.OK_NEW_SCHEMA) {
       for (VectorWrapper<?> vv : left) {
@@ -453,15 +460,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         JVar inVV = g.declareVectorValueSetupAndMember("probeBatch", new TypedFieldId(inputType, false, fieldId));
         JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, outputFieldId));
 
-        g.getEvalBlock()._if(outVV.invoke("copyFromSafe").arg(probeIndex).arg(outIndex).arg(inVV).not())._then()
-            ._return(JExpr.FALSE);
+        g.getEvalBlock().add(outVV.invoke("copyFromSafe").arg(probeIndex).arg(outIndex).arg(inVV));
 
         fieldId++;
         outputFieldId++;
       }
+      recordCount = left.getRecordCount();
     }
-    g.rotateBlock();
-    g.getEvalBlock()._return(JExpr.TRUE);
 
     HashJoinProbe hj = context.getImplementationClass(cg);
 
@@ -518,4 +523,5 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     right.cleanup();
     left.cleanup();
   }
+
 }

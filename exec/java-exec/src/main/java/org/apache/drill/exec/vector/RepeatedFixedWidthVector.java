@@ -47,7 +47,7 @@ public interface RepeatedFixedWidthVector extends ValueVector, RepeatedVector {
   }
   public interface RepeatedMutator extends Mutator {
     public void setValueCounts(int parentValueCount, int childValueCount);
-    public boolean setRepetitionAtIndexSafe(int index, int repetitionCount);
+    public void setRepetitionAtIndexSafe(int index, int repetitionCount);
     public BaseDataValueVector getDataVector();
   }
 }

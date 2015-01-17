@@ -68,7 +68,6 @@ public class DrillTextRecordReader extends AbstractRecordReader {
   private LongWritable key;
   private Text value;
   private int numCols = 0;
-  private boolean redoRecord = false;
 
   public DrillTextRecordReader(FileSplit split, FragmentContext context, char delimiter, List<SchemaPath> columns) {
     this.fragmentContext = context;
@@ -143,10 +142,7 @@ public class DrillTextRecordReader extends AbstractRecordReader {
     int batchSize = 0;
     try {
       int recordCount = 0;
-      while (redoRecord || (batchSize < 200*1000 && reader.next(key, value))) {
-        redoRecord = false;
-
-        // start and end together are used to split fields
+      while (recordCount < Character.MAX_VALUE && batchSize < 200*1000 && reader.next(key, value)) {
         int start;
         int end = -1;
 
@@ -169,21 +165,11 @@ public class DrillTextRecordReader extends AbstractRecordReader {
             }
           }
           if (numCols > 0 && i++ < columnIds.get(p)) {
-            if (!vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, 0)) {
-              redoRecord = true;
-              vector.getMutator().setValueCount(recordCount);
-              logger.debug("text scan batch size {}", batchSize);
-              return recordCount;
-            }
+            vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, 0);
             continue;
           }
           p++;
-          if (!vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, end - start - 1)) {
-            redoRecord = true;
-            vector.getMutator().setValueCount(recordCount);
-            logger.debug("text scan batch size {}", batchSize);
-            return recordCount;
-          }
+          vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, end - start - 1);
           batchSize += end - start;
         }
         recordCount++;

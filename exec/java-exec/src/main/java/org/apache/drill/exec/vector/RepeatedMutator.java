@@ -18,5 +18,5 @@
 package org.apache.drill.exec.vector;
 
 public interface RepeatedMutator extends ValueVector.Mutator {
-  public boolean startNewGroup(int index);
+  public void startNewGroup(int index);
 }

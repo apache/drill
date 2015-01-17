@@ -71,7 +71,9 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.CopyUtil;
+import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 
@@ -90,6 +92,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
   private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
   private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+  private static final int OUTGOING_BATCH_SIZE = 32 * 1024;
 
   private RecordBatchLoader[] batchLoaders;
   private RawFragmentBatchProvider[] fragProviders;
@@ -266,9 +269,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
         // allocate a new value vector
         ValueVector outgoingVector = outgoingContainer.addOrGet(v.getField());
-        outgoingVector.allocateNew();
         ++vectorCount;
       }
+      allocateOutgoing();
 
 
       schema = bldr.build();
@@ -559,7 +562,14 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   private void allocateOutgoing() {
-    outgoingContainer.allocateNew();
+    for (VectorWrapper w : outgoingContainer) {
+      ValueVector v = w.getValueVector();
+      if (v instanceof FixedWidthVector) {
+        AllocationHelper.allocate(v, OUTGOING_BATCH_SIZE, 1);
+      } else {
+        v.allocateNewSafe();
+      }
+    }
   }
 
 //  private boolean isOutgoingFull() {
@@ -648,12 +658,12 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
    */
   private boolean copyRecordToOutgoingBatch(Node node) {
     int inIndex = (node.batchId << 16) + node.valueIndex;
-    if (!merger.doCopy(inIndex, outgoingPosition)) {
+    merger.doCopy(inIndex, outgoingPosition);
+    outgoingPosition++;
+    if (outgoingPosition == OUTGOING_BATCH_SIZE) {
       return false;
-    } else {
-      outgoingPosition++;
-      return true;
     }
+    return true;
   }
 
   /**

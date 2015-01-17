@@ -54,7 +54,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
 
   public ${className}(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    this.bits = new UInt1Vector(null, allocator);
+    this.bits = new UInt1Vector(MaterializedField.create(field + "_bits", Types.required(MinorType.UINT1)), allocator);
     this.values = new ${minor.class}Vector(field, allocator);
     this.accessor = new Accessor();
     this.mutator = new Mutator();
@@ -288,8 +288,8 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     }
 
     @Override
-    public boolean copyValueSafe(int fromIndex, int toIndex) {
-      return to.copyFromSafe(fromIndex, toIndex, Nullable${minor.class}Vector.this);
+    public void copyValueSafe(int fromIndex, int toIndex) {
+      to.copyFromSafe(fromIndex, toIndex, Nullable${minor.class}Vector.this);
     }
   }
   
@@ -311,29 +311,27 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
 
   
-  protected void copyFrom(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
+  public void copyFrom(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
     if (!from.getAccessor().isNull(fromIndex)) {
       mutator.set(thisIndex, from.getAccessor().get(fromIndex));
     }
   }
 
   
-  public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
+  public void copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
     <#if type.major == "VarLen">
-    if(!mutator.fillEmpties(thisIndex)) return false;
+    mutator.fillEmpties(thisIndex);
     </#if>
-    boolean success = values.copyFromSafe(fromIndex, thisIndex, from);
-    success = success && bits.getMutator().setSafe(thisIndex, 1);
-    return success;    
+    values.copyFromSafe(fromIndex, thisIndex, from);
+    bits.getMutator().setSafe(thisIndex, 1);
   }
   
-  public boolean copyFromSafe(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
+  public void copyFromSafe(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
     <#if type.major == "VarLen">
-    if(!mutator.fillEmpties(thisIndex)) return false;
+    mutator.fillEmpties(thisIndex);
     </#if>
-    boolean b1 = bits.copyFromSafe(fromIndex, thisIndex, from.bits);
-    boolean b2 = values.copyFromSafe(fromIndex, thisIndex, from.values);
-    return b1 && b2;
+    bits.copyFromSafe(fromIndex, thisIndex, from.bits);
+    values.copyFromSafe(fromIndex, thisIndex, from.values);
   }
 
   public long getDataAddr(){
@@ -471,40 +469,36 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     }
 
     <#if type.major == "VarLen">
-    private boolean fillEmpties(int index){
+    private void fillEmpties(int index){
       for (int i = lastSet + 1; i < index; i++) {
-        if(!values.getMutator().setSafe(i, new byte[]{})) return false;
+        values.getMutator().setSafe(i, new byte[]{});
+      }
+      if (index > bits.getValueCapacity()) {
+        bits.reAlloc();
       }
       lastSet = index;
-
-      return true;
     }
 
-    public boolean setValueLengthSafe(int index, int length) {
-      return values.getMutator().setValueLengthSafe(index, length);
+    public void setValueLengthSafe(int index, int length) {
+      values.getMutator().setValueLengthSafe(index, length);
     }
     </#if>
     
-    public boolean setSafe(int index, byte[] value, int start, int length) {
+    public void setSafe(int index, byte[] value, int start, int length) {
       <#if type.major != "VarLen">
       throw new UnsupportedOperationException();
       <#else>
-      if(!fillEmpties(index)) return false;
+      fillEmpties(index);
 
-      boolean b1 = bits.getMutator().setSafe(index, 1);
-      boolean b2 = values.getMutator().setSafe(index, value, start, length);
-      if(b1 && b2){
-        setCount++;
-        <#if type.major == "VarLen">lastSet = index;</#if>
-        return true;
-      }else{
-        return false;
-      }
+      bits.getMutator().setSafe(index, 1);
+      values.getMutator().setSafe(index, value, start, length);
+      setCount++;
+      <#if type.major == "VarLen">lastSet = index;</#if>
       </#if>
     }
 
-    public boolean setNull(int index){
-      return bits.getMutator().setSafe(index, 0);
+    public void setNull(int index){
+      bits.getMutator().setSafe(index, 0);
     }
     
     public void setSkipNull(int index, ${minor.class}Holder holder){
@@ -542,8 +536,6 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       return outIndex < Nullable${minor.class}Vector.this.getValueCapacity();
     }
 
-    //public boolean setSafe(int index, int isSet<#if type.major == "VarLen" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
-
     <#assign fields = minor.fields!type.fields />
     public void set(int index, int isSet<#list fields as field><#if field.include!true >, ${field.type} ${field.name}Field</#if></#list> ){
       <#if type.major == "VarLen">
@@ -556,71 +548,48 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       <#if type.major == "VarLen">lastSet = index;</#if>
     }
     
-    public boolean setSafe(int index, int isSet<#list fields as field><#if field.include!true >, ${field.type} ${field.name}Field</#if></#list> ) {
+    public void setSafe(int index, int isSet<#list fields as field><#if field.include!true >, ${field.type} ${field.name}Field</#if></#list> ) {
       <#if type.major == "VarLen">
-      if(!fillEmpties(index)) return false;
+      fillEmpties(index);
       </#if>
       
-      boolean b1 = bits.getMutator().setSafe(index, isSet);
-      boolean b2 = values.getMutator().setSafe(index<#list fields as field><#if field.include!true >, ${field.name}Field</#if></#list>);
-      if(b1 && b2){
-        setCount++;
-        <#if type.major == "VarLen">lastSet = index;</#if>
-        return true;
-      }else{
-        return false;
-      }
-
+      bits.getMutator().setSafe(index, isSet);
+      values.getMutator().setSafe(index<#list fields as field><#if field.include!true >, ${field.name}Field</#if></#list>);
+      setCount++;
+      <#if type.major == "VarLen">lastSet = index;</#if>
     }
 
 
-    public boolean setSafe(int index, Nullable${minor.class}Holder value) {
+    public void setSafe(int index, Nullable${minor.class}Holder value) {
 
       <#if type.major == "VarLen">
-      if(!fillEmpties(index)) return false;
+      fillEmpties(index);
       </#if>
-      boolean b1 = bits.getMutator().setSafe(index, value.isSet);
-      boolean b2 = values.getMutator().setSafe(index, value);
-      if(b1 && b2){
-        setCount++;
-        <#if type.major == "VarLen">lastSet = index;</#if>
-        return true;
-      }else{
-        return false;
-      }
-
+      bits.getMutator().setSafe(index, value.isSet);
+      values.getMutator().setSafe(index, value);
+      setCount++;
+      <#if type.major == "VarLen">lastSet = index;</#if>
     }
 
-    public boolean setSafe(int index, ${minor.class}Holder value) {
+    public void setSafe(int index, ${minor.class}Holder value) {
 
       <#if type.major == "VarLen">
-      if(!fillEmpties(index)) return false;
+      fillEmpties(index);
       </#if>
-      boolean b1 = bits.getMutator().setSafe(index, 1);
-      boolean b2 = values.getMutator().setSafe(index, value);
-      if(b1 && b2){
-        setCount++;
-        <#if type.major == "VarLen">lastSet = index;</#if>
-        return true;
-      }else{
-        return false;
-      }
-
+      bits.getMutator().setSafe(index, 1);
+      values.getMutator().setSafe(index, value);
+      setCount++;
+      <#if type.major == "VarLen">lastSet = index;</#if>
     }
     
     <#if !(type.major == "VarLen" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay")>
-      public boolean setSafe(int index, ${minor.javaType!type.javaType} value) {
+      public void setSafe(int index, ${minor.javaType!type.javaType} value) {
         <#if type.major == "VarLen">
-        if(!fillEmpties(index)) return false;
+        fillEmpties(index);
         </#if>
-        boolean b1 = bits.getMutator().setSafe(index, 1);
-        boolean b2 = values.getMutator().setSafe(index, value);
-        if(b1 && b2){
-          setCount++;
-          return true;
-        }else{
-          return false;
-        }
+        bits.getMutator().setSafe(index, 1);
+        values.getMutator().setSafe(index, value);
+        setCount++;
       }
 
     </#if>

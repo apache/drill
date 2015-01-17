@@ -63,7 +63,11 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
   }
 
   public void checkValueCapacity(){
-    inform(container.getValueCapacity() > idx());
+    <#if mode == "Repeated">
+    if (container.getValueCapacity() <= idx()) {
+      container.reAlloc();
+    }
+    </#if>
   }
 
   public MapWriter map(String name){
@@ -146,10 +150,6 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
     }
   }
   public void start(){
-    // check capacity only after we have a non empty container
-    if(container.size() > 0 && ok()) {
-      checkValueCapacity();
-    }
   }
   
   public void end(){

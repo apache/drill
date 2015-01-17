@@ -243,14 +243,10 @@ public abstract class StreamingWindowFrameTemplate implements StreamingWindowFra
   }
 
   private final boolean outputToBatch(int inIndex) {
-    boolean success = outputRecordValues(outputCount)
-        && outputWindowValues(inIndex, outputCount);
+    outputRecordValues(outputCount);
+    outputWindowValues(inIndex, outputCount);
 
-    if (success) {
-      outputCount++;
-    }
-
-    return success;
+    return true;
   }
 
   @Override
@@ -278,8 +274,8 @@ public abstract class StreamingWindowFrameTemplate implements StreamingWindowFra
    */
   public abstract boolean isSameFromBatch(@Named("b1Index") int b1Index, @Named("b1") InternalBatch b1, @Named("b2Index") int index2);
   public abstract void addRecord(@Named("index") int index);
-  public abstract boolean outputRecordValues(@Named("outIndex") int outIndex);
-  public abstract boolean outputWindowValues(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void outputRecordValues(@Named("outIndex") int outIndex);
+  public abstract void outputWindowValues(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
   public abstract int getVectorIndex(@Named("recordIndex") int recordIndex);
 
   public abstract boolean resetValues();

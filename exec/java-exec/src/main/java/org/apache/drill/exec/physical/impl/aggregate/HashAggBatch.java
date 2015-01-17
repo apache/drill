@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JVar;
+import java.io.IOException;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -51,7 +51,8 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
-import java.io.IOException;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JVar;
 
 public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggBatch.class);
@@ -76,8 +77,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
           "aggrValuesContainer" /* workspace container */, UPDATE_AGGR_INSIDE, UPDATE_AGGR_OUTSIDE, UPDATE_AGGR_INSIDE);
 
 
-  public HashAggBatch(HashAggregate popConfig, RecordBatch incoming, FragmentContext context) throws
-      ExecutionSetupException {
+  public HashAggBatch(HashAggregate popConfig, RecordBatch incoming, FragmentContext context) throws ExecutionSetupException {
     super(popConfig, context);
     this.incoming = incoming;
   }
@@ -266,8 +266,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         new HashTableConfig(context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE_KEY).num_val.intValue(),
             HashTable.DEFAULT_LOAD_FACTOR, popConfig.getGroupByExprs(), null /* no probe exprs */);
 
-    agg.setup(popConfig, htConfig, context, this.stats, oContext.getAllocator(), incoming, this, aggrExprs,
-        cgInner.getWorkspaceTypes(), groupByOutFieldIds, this.container);
+    agg.setup(popConfig, htConfig, context, this.stats,
+        oContext.getAllocator(), incoming, this,
+        aggrExprs,
+        cgInner.getWorkspaceTypes(),
+        groupByOutFieldIds,
+        this.container);
 
     return agg;
   }
@@ -277,10 +281,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     for (LogicalExpression aggr : aggrExprs) {
       HoldingContainer hc = cg.addExpr(aggr);
-      cg.getBlock(BlockType.EVAL)._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
-
-    cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
 
   private void setupGetIndex(ClassGenerator<HashAggregator> cg) {
@@ -302,9 +303,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       return;
     }
 
-    default:
-      throw new IllegalStateException();
     }
+
   }
 
   @Override
@@ -320,4 +320,5 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
   }
+
 }

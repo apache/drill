@@ -42,4 +42,19 @@ public class AllocationHelper {
     allocatePrecomputedChildCount(v, valueCount, bytesPerValue, repeatedPerTop * valueCount);
   }
 
+  /**
+   * Allocates the exact amount if v is fixed width, otherwise falls back to dynamic allocation
+   * @param v
+   * @param valueCount
+   * @return
+   */
+  public static boolean allocateNew(ValueVector v, int valueCount){
+    if (v instanceof  FixedWidthVector) {
+      ((FixedWidthVector) v).allocateNew(valueCount);
+      return true;
+    } else {
+      return v.allocateNewSafe();
+    }
+  }
+
 }

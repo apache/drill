@@ -284,9 +284,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     cg.setMappingSet(EVAL);
     for (LogicalExpression ex : valueExprs) {
       HoldingContainer hc = cg.addExpr(ex);
-      cg.getBlock(BlockType.EVAL)._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
-    cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
 
   private final MappingSet RECORD_KEYS = new MappingSet(GeneratorMapping.create("setupInterior", "outputRecordKeys", null, null));
@@ -295,9 +293,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     cg.setMappingSet(RECORD_KEYS);
     for (int i =0; i < keyExprs.length; i++) {
       HoldingContainer hc = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], keyExprs[i], true));
-      cg.getBlock(BlockType.EVAL)._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
-    cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
 
   private final GeneratorMapping PREVIOUS_KEYS_OUT = GeneratorMapping.create("setupInterior", "outputRecordKeysPrev", null, null);
@@ -317,10 +313,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       HoldingContainer innerExpression = cg.addExpr(keyExprs[i], false);
       cg.setMappingSet(RECORD_KEYS_PREV_OUT);
       HoldingContainer outerExpression = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), false);
-      cg.getBlock(BlockType.EVAL)._if(outerExpression.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
 
     }
-    cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
 
   private void getIndex(ClassGenerator<StreamingAggregator> g) {

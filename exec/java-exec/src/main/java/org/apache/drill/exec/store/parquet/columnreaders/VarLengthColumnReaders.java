@@ -176,7 +176,6 @@ public class VarLengthColumnReaders {
 
     @Override
     public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
-      boolean success;
       if (index >= varCharVector.getValueCapacity()) {
         return false;
       }
@@ -189,16 +188,16 @@ public class VarLengthColumnReaders {
         holder.buffer=b;
         holder.start=0;
         holder.end=currDictValToWrite.length();
-        success = varCharVector.getMutator().setSafe(index, holder);
+        varCharVector.getMutator().setSafe(index, holder);
       }
       else {
         VarCharHolder holder = new VarCharHolder();
         holder.buffer=bytebuf;
         holder.start=start;
         holder.end=start+length;
-        success = varCharVector.getMutator().setSafe(index, holder);
+        varCharVector.getMutator().setSafe(index, holder);
       }
-      return success;
+      return true;
     }
 
     @Override
@@ -225,19 +224,18 @@ public class VarLengthColumnReaders {
 
     @Override
     public boolean setSafe(int index, DrillBuf value, int start, int length) {
-      boolean success;
       if (index >= vector.getValueCapacity()) {
         return false;
       }
 
       if (usingDictionary) {
         DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
-        success = mutator.setSafe(index, 1, 0, currDictValToWrite.length(), b);
+        mutator.setSafe(index, 1, 0, currDictValToWrite.length(), b);
       }
       else {
-        success = mutator.setSafe(index, 1, start, start+length, value);
+        mutator.setSafe(index, 1, start, start+length, value);
       }
-      return success;
+      return true;
     }
 
     @Override
@@ -260,7 +258,6 @@ public class VarLengthColumnReaders {
 
     @Override
     public boolean setSafe(int index, DrillBuf value, int start, int length) {
-      boolean success;
       if (index >= varBinaryVector.getValueCapacity()) {
         return false;
       }
@@ -273,16 +270,16 @@ public class VarLengthColumnReaders {
         holder.buffer=b;
         holder.start=0;
         holder.end=currDictValToWrite.length();
-        success = varBinaryVector.getMutator().setSafe(index, holder);
+        varBinaryVector.getMutator().setSafe(index, holder);
       }
       else {
         VarBinaryHolder holder = new VarBinaryHolder();
         holder.buffer=value;
         holder.start=start;
         holder.end=start+length;
-        success = varBinaryVector.getMutator().setSafe(index, holder);
+        varBinaryVector.getMutator().setSafe(index, holder);
       }
-      return success;
+      return true;
     }
 
     @Override
@@ -307,7 +304,6 @@ public class VarLengthColumnReaders {
 
     @Override
     public boolean setSafe(int index, DrillBuf value, int start, int length) {
-      boolean success;
       if (index >= nullableVarBinaryVector.getValueCapacity()) {
         return false;
       }
@@ -319,7 +315,7 @@ public class VarLengthColumnReaders {
         holder.start=0;
         holder.end=currDictValToWrite.length();
         holder.isSet=1;
-        success = nullableVarBinaryVector.getMutator().setSafe(index, holder);
+        nullableVarBinaryVector.getMutator().setSafe(index, holder);
       }
       else {
         NullableVarBinaryHolder holder = new NullableVarBinaryHolder();
@@ -327,9 +323,9 @@ public class VarLengthColumnReaders {
         holder.start=start;
         holder.end=start+length;
         holder.isSet=1;
-        success = nullableVarBinaryVector.getMutator().setSafe(index, holder);
+        nullableVarBinaryVector.getMutator().setSafe(index, holder);
       }
-      return  success;
+      return true;
     }
 
     @Override

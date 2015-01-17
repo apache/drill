@@ -120,9 +120,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
       // pick up a remainder batch if we have one.
       if (remainderBatch != null) {
-        if (!outputToBatch( previousIndex )) {
-          return tooBigFailure();
-        }
+        outputToBatch( previousIndex );
         remainderBatch.clear();
         remainderBatch = null;
         return setOkAndReturn();
@@ -136,9 +134,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         if (EXTRA_DEBUG) {
           logger.debug("Attempting to output remainder.");
         }
-        if (!outputToBatch( previousIndex)) {
-          return tooBigFailure();
-        }
+        outputToBatch( previousIndex);
       }
 
       if (newSchema) {
@@ -171,26 +167,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
             if (EXTRA_DEBUG) {
               logger.debug("Values were different, outputting previous batch.");
             }
-            if (outputToBatch(previousIndex)) {
-              if (EXTRA_DEBUG) {
-                logger.debug("Output successful.");
-              }
-              addRecordInc(currentIndex);
-            } else {
-              if (EXTRA_DEBUG) {
-                logger.debug("Output failed.");
-              }
-              if (outputCount == 0) {
-                return tooBigFailure();
-              }
-
-              // mark the pending output but move forward for the next cycle.
-              pendingOutput = true;
-              previousIndex = currentIndex;
-              incIndex();
-              return setOkAndReturn();
-
+            outputToBatch(previousIndex);
+            if (EXTRA_DEBUG) {
+              logger.debug("Output successful.");
             }
+            addRecordInc(currentIndex);
           }
           previousIndex = currentIndex;
         }
@@ -215,9 +196,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               if (first && addedRecordCount == 0) {
                 return setOkAndReturn();
               } else if(addedRecordCount > 0) {
-                if ( !outputToBatchPrev( previous, previousIndex, outputCount) ) {
-                  remainderBatch = previous;
-                }
+                outputToBatchPrev( previous, previousIndex, outputCount);
                 if (EXTRA_DEBUG) {
                   logger.debug("Received no more batches, returning.");
                 }
@@ -239,9 +218,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                 logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
               }
               if (addedRecordCount > 0) {
-                if ( !outputToBatchPrev( previous, previousIndex, outputCount) ) {
-                  remainderBatch = previous;
-                }
+                outputToBatchPrev( previous, previousIndex, outputCount);
                 if (EXTRA_DEBUG) {
                   logger.debug("Wrote out end of previous batch, returning.");
                 }
@@ -272,10 +249,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                   }
                   previousIndex = currentIndex;
                   if (addedRecordCount > 0) {
-                    if ( !outputToBatchPrev( previous, previousIndex, outputCount) ) {
-                      remainderBatch = previous;
-                      return setOkAndReturn();
-                    }
+                    outputToBatchPrev( previous, previousIndex, outputCount);
                     continue outside;
                   }
                 }
@@ -329,21 +303,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     return AggOutcome.RETURN_OUTCOME;
   }
 
-  private final boolean outputToBatch(int inIndex) {
+  private final void outputToBatch(int inIndex) {
 
-    if (!outputRecordKeys(inIndex, outputCount)) {
-      if(EXTRA_DEBUG) {
-        logger.debug("Failure while outputting keys {}", outputCount);
-      }
-      return false;
-    }
+    outputRecordKeys(inIndex, outputCount);
 
-    if (!outputRecordValues(outputCount)) {
-      if (EXTRA_DEBUG) {
-        logger.debug("Failure while outputting values {}", outputCount);
-      }
-      return false;
-    }
+    outputRecordValues(outputCount);
 
     if (EXTRA_DEBUG) {
       logger.debug("{} values output successfully", outputCount);
@@ -351,20 +315,15 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     resetValues();
     outputCount++;
     addedRecordCount = 0;
-    return true;
   }
 
-  private final boolean outputToBatchPrev(InternalBatch b1, int inIndex, int outIndex) {
-    boolean success = outputRecordKeysPrev(b1, inIndex, outIndex) //
-        && outputRecordValues(outIndex) //
-        && resetValues();
-    if (success) {
-      resetValues();
-      outputCount++;
-      addedRecordCount = 0;
-    }
-
-    return success;
+  private final void outputToBatchPrev(InternalBatch b1, int inIndex, int outIndex) {
+    outputRecordKeysPrev(b1, inIndex, outIndex);
+    outputRecordValues(outIndex);
+    resetValues();
+    resetValues();
+    outputCount++;
+    addedRecordCount = 0;
   }
 
   private void addRecordInc(int index) {
@@ -383,9 +342,9 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   public abstract boolean isSame(@Named("index1") int index1, @Named("index2") int index2);
   public abstract boolean isSamePrev(@Named("b1Index") int b1Index, @Named("b1") InternalBatch b1, @Named("b2Index") int b2Index);
   public abstract void addRecord(@Named("index") int index);
-  public abstract boolean outputRecordKeys(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-  public abstract boolean outputRecordKeysPrev(@Named("previous") InternalBatch previous, @Named("previousIndex") int previousIndex, @Named("outIndex") int outIndex);
-  public abstract boolean outputRecordValues(@Named("outIndex") int outIndex);
+  public abstract void outputRecordKeys(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void outputRecordKeysPrev(@Named("previous") InternalBatch previous, @Named("previousIndex") int previousIndex, @Named("outIndex") int outIndex);
+  public abstract void outputRecordValues(@Named("outIndex") int outIndex);
   public abstract int getVectorIndex(@Named("recordIndex") int recordIndex);
   public abstract boolean resetValues();
 

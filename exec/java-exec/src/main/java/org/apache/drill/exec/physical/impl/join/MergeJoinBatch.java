@@ -376,16 +376,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
                                                          new TypedFieldId(outputType,vectorId));
         // todo: check result of copyFromSafe and grow allocation
-        cg.getEvalBlock()._if(vvOut.invoke("copyFromSafe")
+        cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
                                      .arg(copyLeftMapping.getValueReadIndex())
                                      .arg(copyLeftMapping.getValueWriteIndex())
-                                     .arg(vvIn).eq(JExpr.FALSE))
-            ._then()
-            ._return(JExpr.FALSE);
+                                     .arg(vvIn));
         ++vectorId;
       }
     }
-    cg.getEvalBlock()._return(JExpr.lit(true));
 
     // generate copyRight()
     ///////////////////////
@@ -406,16 +403,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
                                                          new TypedFieldId(outputType,vectorId));
         // todo: check result of copyFromSafe and grow allocation
-        cg.getEvalBlock()._if(vvOut.invoke("copyFromSafe")
+        cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
                                    .arg(copyRightMappping.getValueReadIndex())
                                    .arg(copyRightMappping.getValueWriteIndex())
-                                   .arg(vvIn).eq(JExpr.FALSE))
-            ._then()
-            ._return(JExpr.FALSE);
+                                   .arg(vvIn));
         ++vectorId;
       }
     }
-    cg.getEvalBlock()._return(JExpr.lit(true));
 
     JoinWorker w = context.getImplementationClass(cg);
     w.setupJoin(context, status, this.container);
@@ -469,7 +463,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
 
     for (VectorWrapper w : container) {
-      AllocationHelper.allocate(w.getValueVector(), 5000, 50);
+      AllocationHelper.allocateNew(w.getValueVector(), Character.MAX_VALUE);
     }
 
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);

@@ -19,11 +19,14 @@ package org.apache.drill.exec.physical.impl.svremover;
 
 import javax.inject.Named;
 
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.AllocationHelper;
 
 public abstract class CopierTemplate4 implements Copier{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CopierTemplate4.class);
@@ -43,21 +46,24 @@ public abstract class CopierTemplate4 implements Copier{
   @Override
   public int copyRecords(int index, int recordCount){
     for(VectorWrapper<?> out : outgoing){
-      out.getValueVector().allocateNew();
+      MajorType type = out.getField().getType();
+      if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
+        out.getValueVector().allocateNew();
+      } else {
+        AllocationHelper.allocate(out.getValueVector(), recordCount, 1);
+      }
     }
 
     int outgoingPosition = 0;
     for(int svIndex = index; svIndex < index + recordCount; svIndex++, outgoingPosition++){
       int deRefIndex = sv4.get(svIndex);
-      if (!doEval(deRefIndex, outgoingPosition)) {
-        break;
-      }
+      doEval(deRefIndex, outgoingPosition);
     }
     return outgoingPosition;
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
 
 

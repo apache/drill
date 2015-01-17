@@ -153,7 +153,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
       return;
     }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer;
-    impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), vector));
+    impl.container.copyFromSafe(idx(), impl.idx(), vector);
   }
 
   public void copyAsValueSingle(MapWriter writer) {
@@ -161,7 +161,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
       return;
     }
     SingleMapWriter impl = (SingleMapWriter) writer;
-    impl.inform(impl.container.copyFromSafe(currentOffset, impl.idx(), vector));
+    impl.container.copyFromSafe(currentOffset, impl.idx(), vector);
   }
 
   @Override
@@ -170,7 +170,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
       return;
     }
     RepeatedMapWriter impl = (RepeatedMapWriter) writer.map(name);
-    impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), vector));
+    impl.container.copyFromSafe(idx(), impl.idx(), vector);
   }
 
 }

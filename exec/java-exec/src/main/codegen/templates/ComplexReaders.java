@@ -77,14 +77,14 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   public void copyAsValue(${minor.class?cap_first}Writer writer){
     if (writer.ok()) {
       Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer;
-      impl.inform(impl.vector.copyFromSafe(idx(), impl.idx(), vector));
+      impl.vector.copyFromSafe(idx(), impl.idx(), vector);
     }
   }
   
   public void copyAsField(String name, MapWriter writer){
     if (writer.ok()) {
       Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl)  writer.list(name).${lowerName}();
-      impl.inform(impl.vector.copyFromSafe(idx(), impl.idx(), vector));
+      impl.vector.copyFromSafe(idx(), impl.idx(), vector);
     }
   }
   
@@ -113,14 +113,14 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   public void copyAsValue(${minor.class?cap_first}Writer writer){
     if (writer.ok()) {
       ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer;
-      impl.inform(impl.vector.copyFromSafe(idx(), impl.idx(), vector));
+      impl.vector.copyFromSafe(idx(), impl.idx(), vector);
     }
   }
   
   public void copyAsField(String name, MapWriter writer){
     if (writer.ok()) {
       ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name);
-      impl.inform(impl.vector.copyFromSafe(idx(), impl.idx(), vector));
+      impl.vector.copyFromSafe(idx(), impl.idx(), vector);
     }
   }
   

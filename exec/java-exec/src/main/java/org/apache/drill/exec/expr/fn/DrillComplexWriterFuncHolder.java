@@ -87,11 +87,11 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
     addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, false);
 
 
-    JConditional jc = g.getEvalBlock()._if(complexWriter.invoke("ok").not());
+//    JConditional jc = g.getEvalBlock()._if(complexWriter.invoke("ok").not());
 
-    jc._then().add(complexWriter.invoke("reset"));
+//    jc._then().add(complexWriter.invoke("reset"));
     //jc._then().directStatement("System.out.println(\"debug : write ok fail!, inIndex = \" + inIndex);");
-    jc._then()._return(JExpr.FALSE);
+//    jc._then()._return(JExpr.FALSE);
 
     //jc._else().directStatement("System.out.println(\"debug : write successful, inIndex = \" + inIndex);");
 

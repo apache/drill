@@ -315,29 +315,11 @@ public class EvaluationVisitor {
       } else {
 
         final JInvocation setMeth = GetSetVectorHelper.write(e.getChild().getMajorType(), vv, inputContainer, outIndex, e.isSafe() ? "setSafe" : "set");
-        final String isSafeMethod = "isSafe";
-
-        if (e.isSafe()) {
-          HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
-          block.assign(outputContainer.getValue(), JExpr.lit(1));
           if (inputContainer.isOptional()) {
-            // block._if(vv.invoke("getMutator").invoke(setMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(),
-            // JExpr.lit(0));
-            JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
-            block = jc._then();
-            jc._else()._if(vv.invoke("getMutator").invoke(isSafeMethod).arg(outIndex).not())._then()
-                .assign(outputContainer.getValue(), JExpr.lit(0));
-          }
-          block._if(setMeth.not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
-          return outputContainer;
-        } else {
-          if (inputContainer.isOptional()) {
-            // block.add(vv.invoke("getMutator").invoke(setMethod).arg(outIndex));
             JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
             block = jc._then();
           }
           block.add(setMeth);
-        }
 
       }
 

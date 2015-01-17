@@ -23,5 +23,5 @@ public interface TransferPair {
   public void transfer();
   public void splitAndTransfer(int startIndex, int length);
   public ValueVector getTo();
-  public boolean copyValueSafe(int from, int to);
+  public void copyValueSafe(int from, int to);
 }

@@ -98,10 +98,8 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
     }
 
     // this should not fail
-    if (!variableWidthVector.getMutator().setValueLengthSafe((int) valuesReadInCurrentPass + pageReader.valuesReadyToRead,
-        dataTypeLengthInBits)) {
-      return true;
-    }
+    variableWidthVector.getMutator().setValueLengthSafe((int) valuesReadInCurrentPass + pageReader.valuesReadyToRead,
+        dataTypeLengthInBits);
     return false;
   }
 

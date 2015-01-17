@@ -327,12 +327,8 @@ public class HiveRecordReader extends AbstractRecordReader {
       Object hiveValue = sInspector.getStructFieldData(deSerializedValue, sInspector.getStructFieldRef(columnName));
 
       if (hiveValue != null) {
-        success = selectedColumnFieldConverters.get(i).setSafeValue(selectedColumnObjInspectors.get(i), hiveValue,
+        selectedColumnFieldConverters.get(i).setSafeValue(selectedColumnObjInspectors.get(i), hiveValue,
             vectors.get(i), outputRecordIndex);
-
-        if (!success) {
-          return false;
-        }
       }
     }
 

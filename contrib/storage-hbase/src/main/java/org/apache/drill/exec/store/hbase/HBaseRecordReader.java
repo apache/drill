@@ -204,10 +204,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
       KeyValue[] kvs = result.raw();
       byte[] bytes = result.getBytes().get();
       if (rowKeyVector != null) {
-        if (!rowKeyVector.getMutator().setSafe(rowCount, bytes, kvs[0].getRowOffset(), kvs[0].getRowLength())) {
-          leftOver = result;
-          break done;
-        }
+        rowKeyVector.getMutator().setSafe(rowCount, bytes, kvs[0].getRowOffset(), kvs[0].getRowLength());
       }
 
       for (KeyValue kv : kvs) {
@@ -221,10 +218,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
 
         int valueOffset = kv.getValueOffset();
         int valueLength = kv.getValueLength();
-        if (!v.getMutator().setSafe(rowCount, bytes, valueOffset, valueLength)) {
-          leftOver = result;
-          break done;
-        }
+        v.getMutator().setSafe(rowCount, bytes, valueOffset, valueLength);
       }
     }
 

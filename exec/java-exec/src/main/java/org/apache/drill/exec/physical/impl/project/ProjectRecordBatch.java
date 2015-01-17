@@ -64,6 +64,8 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.util.BatchPrinter;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
@@ -225,10 +227,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private boolean doAlloc() {
     //Allocate vv in the allocationVectors.
     for (ValueVector v : this.allocationVectors) {
-      //AllocationHelper.allocate(v, remainingRecordCount, 250);
-      if (!v.allocateNewSafe()) {
-        return false;
-      }
+      AllocationHelper.allocateNew(v, incoming.getRecordCount());
     }
 
     //Allocate vv for complexWriters.
@@ -363,8 +362,6 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
               TypedFieldId fid = container.getValueVectorId(outputField.getPath());
               ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
               HoldingContainer hc = cg.addExpr(write);
-
-              cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
             }
           }
           continue;
@@ -428,17 +425,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         ValueVector vector = container.addOrGet(outputField, callBack);
         allocationVectors.add(vector);
         TypedFieldId fid = container.getValueVectorId(outputField.getPath());
-        ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
+        boolean useSetSafe = !(vector instanceof FixedWidthVector);
+        ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, useSetSafe);
         HoldingContainer hc = cg.addExpr(write);
 
-        cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
         logger.debug("Added eval for project expression.");
       }
     }
-
-    cg.rotateBlock();
-    cg.getEvalBlock()._return(JExpr.TRUE);
-
 
     try {
       this.projector = context.getImplementationClass(cg.getCodeGenerator());

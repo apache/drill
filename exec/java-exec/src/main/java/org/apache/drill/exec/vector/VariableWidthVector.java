@@ -55,6 +55,6 @@ public interface VariableWidthVector extends ValueVector{
   public int getCurrentSizeInBytes();
 
   public interface VariableWidthMutator extends Mutator {
-    public boolean setValueLengthSafe(int index, int length);
+    public void setValueLengthSafe(int index, int length);
   }
 }

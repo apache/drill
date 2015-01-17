@@ -378,7 +378,7 @@ public class TypeHelper {
     }
   }
 
-  public static boolean setValueSafe(ValueVector vector, int index, ValueHolder holder) {
+  public static void setValueSafe(ValueVector vector, int index, ValueHolder holder) {
     MajorType type = vector.getField().getType();
 
     switch(type.getMinorType()) {
@@ -387,23 +387,20 @@ public class TypeHelper {
       case ${minor.class?upper_case} :
       switch (type.getMode()) {
         case REQUIRED:
-          return ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
+          ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
+          return;
         case OPTIONAL:
           if (((Nullable${minor.class}Holder) holder).isSet == 1) {
-            if (! ((Nullable${minor.class}Vector) vector).getMutator().setSafe(index, (Nullable${minor.class}Holder) holder) ) {
-              return false;
-            }
+            ((Nullable${minor.class}Vector) vector).getMutator().setSafe(index, (Nullable${minor.class}Holder) holder);
           } else {
-            if (!((Nullable${minor.class}Vector) vector).getMutator().isSafe(index)) {
-              return false;
-            }
+            ((Nullable${minor.class}Vector) vector).getMutator().isSafe(index);
           }
-          return true;
+          return;
       }
       </#list>
       </#list>
       case GENERIC_OBJECT:
-        return ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
+        ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
       default:
         throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
     }

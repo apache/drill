@@ -51,9 +51,7 @@ public abstract class ProjectorTemplate implements Projector {
     case TWO_BYTE:
       final int count = recordCount;
       for (int i = 0; i < count; i++, firstOutputIndex++) {
-        if (!doEval(vector2.getIndex(i), firstOutputIndex)) {
-          return i;
-        }
+        doEval(vector2.getIndex(i), firstOutputIndex);
       }
       return recordCount;
 
@@ -61,9 +59,7 @@ public abstract class ProjectorTemplate implements Projector {
       final int countN = recordCount;
       int i;
       for (i = startIndex; i < startIndex + countN; i++, firstOutputIndex++) {
-        if (!doEval(i, firstOutputIndex)) {
-          break;
-        }
+        doEval(i, firstOutputIndex);
       }
       if (i < startIndex + recordCount || startIndex > 0) {
         for (TransferPair t : transfers) {
@@ -98,6 +94,6 @@ public abstract class ProjectorTemplate implements Projector {
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
 }

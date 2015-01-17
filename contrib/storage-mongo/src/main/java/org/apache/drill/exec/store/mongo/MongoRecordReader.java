@@ -235,13 +235,8 @@ public class MongoRecordReader extends AbstractRecordReader {
       for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext(); rowCount++) {
         String doc = cursor.next().toString();
         byte[] record = doc.getBytes(Charsets.UTF_8);
-        if (!valueVector.getMutator().setSafe(rowCount, record, 0,
-            record.length)) {
-          logger.warn(errMsg, doc);
-          if (rowCount == 0) {
-            break;
-          }
-        }
+        valueVector.getMutator().setSafe(rowCount, record, 0,
+            record.length);
       }
       valueVector.getMutator().setValueCount(rowCount);
       logger.debug("Took {} ms to get {} records",

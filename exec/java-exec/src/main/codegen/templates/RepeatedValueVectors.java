@@ -152,8 +152,8 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     }
     
     @Override
-    public boolean copyValueSafe(int fromIndex, int toIndex) {
-      return to.copyFromSafe(fromIndex, toIndex, Repeated${minor.class}Vector.this);
+    public void copyValueSafe(int fromIndex, int toIndex) {
+      to.copyFromSafe(fromIndex, toIndex, Repeated${minor.class}Vector.this);
     }
   }
 
@@ -165,15 +165,12 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
       }
     }
 
-    public boolean copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
+    public void copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
       int count = v.getAccessor().getCount(inIndex);
-      if(!getMutator().startNewGroup(outIndex)) return false;
+      getMutator().startNewGroup(outIndex);
       for (int i = 0; i < count; i++) {
-        if (!getMutator().addSafe(outIndex, v.getAccessor().get(inIndex, i))) {
-          return false;
-        }
+        getMutator().addSafe(outIndex, v.getAccessor().get(inIndex, i));
       }
-      return true;
     }
 
   public boolean allocateNewSafe(){
@@ -403,8 +400,8 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     private Mutator(){
     }
 
-    public boolean setRepetitionAtIndexSafe(int index, int repetitionCount) {
-      return offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index) + repetitionCount);
+    public void setRepetitionAtIndexSafe(int index, int repetitionCount) {
+      offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index) + repetitionCount);
     }
 
     public BaseDataValueVector getDataVector() {
@@ -418,11 +415,8 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
       offsets.getMutator().setValueCount(parentValueCount == 0 ? 0 : parentValueCount + 1);
     }
 
-    public boolean startNewGroup(int index) {
-      if(getValueCapacity() <= index){
-        return false;
-      }
-      return offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
+    public void startNewGroup(int index) {
+      offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
     }
 
     /**
@@ -439,66 +433,53 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     }
 
     <#if type.major == "VarLen">
-    public boolean addSafe(int index, byte[] bytes) {
-      return addSafe(index, bytes, 0, bytes.length);
+    public void addSafe(int index, byte[] bytes) {
+      addSafe(index, bytes, 0, bytes.length);
     }
 
-    public boolean addSafe(int index, byte[] bytes, int start, int length) {
-      if(offsets.getValueCapacity() <= index+1) {
-        return false;
-      }
+    public void addSafe(int index, byte[] bytes, int start, int length) {
       int nextOffset = offsets.getAccessor().get(index+1);
-      boolean b1 = values.getMutator().setSafe(nextOffset, bytes, start, length);
-      boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
-      return (b1 && b2);
+      values.getMutator().setSafe(nextOffset, bytes, start, length);
+      offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
 
     <#else>
 
-    public boolean addSafe(int index, ${minor.javaType!type.javaType} srcValue) {
-      if(offsets.getValueCapacity() <= index+1) return false;
+    public void addSafe(int index, ${minor.javaType!type.javaType} srcValue) {
       int nextOffset = offsets.getAccessor().get(index+1);
-      boolean b1 = values.getMutator().setSafe(nextOffset, srcValue);
-      boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
-      return (b1 && b2);
+      values.getMutator().setSafe(nextOffset, srcValue);
+      offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
         
     </#if>
 
     
-    public boolean setSafe(int index, Repeated${minor.class}Holder h){
+    public void setSafe(int index, Repeated${minor.class}Holder h){
       ${minor.class}Holder ih = new ${minor.class}Holder();
       getMutator().startNewGroup(index);
       for(int i = h.start; i < h.end; i++){
         h.vector.getAccessor().get(i, ih);
-        if(!getMutator().addSafe(index, ih) ) return false;
+        getMutator().addSafe(index, ih);
       }
-      return true;
     }
     
-    public boolean addSafe(int index, ${minor.class}Holder holder){
-      if(offsets.getValueCapacity() <= index+1) return false;
+    public void addSafe(int index, ${minor.class}Holder holder){
       int nextOffset = offsets.getAccessor().get(index+1);
-      boolean b1 = values.getMutator().setSafe(nextOffset, holder);
-      boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
-      return (b1 && b2);
+      values.getMutator().setSafe(nextOffset, holder);
+      offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
     
-    public boolean addSafe(int index, Nullable${minor.class}Holder holder){
-      if(offsets.getValueCapacity() <= index+1) return false;
+    public void addSafe(int index, Nullable${minor.class}Holder holder){
       int nextOffset = offsets.getAccessor().get(index+1);
-      boolean b1 = values.getMutator().setSafe(nextOffset, holder);
-      boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
-      return (b1 && b2);
+      values.getMutator().setSafe(nextOffset, holder);
+      offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
     
     <#if (fields?size > 1) && !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
-    public boolean addSafe(int arrayIndex, <#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
-      if(offsets.getValueCapacity() <= arrayIndex+1) return false;
+    public void addSafe(int arrayIndex, <#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
       int nextOffset = offsets.getAccessor().get(arrayIndex+1);
-      boolean b1 = values.getMutator().setSafe(nextOffset, <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-      boolean b2 = offsets.getMutator().setSafe(arrayIndex+1, nextOffset+1);
-      return (b1 && b2);
+      values.getMutator().setSafe(nextOffset, <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
+      offsets.getMutator().setSafe(arrayIndex+1, nextOffset+1);
     }
     </#if>
     

@@ -78,10 +78,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
       int compoundIndex = vector4.get(0);
       int batch = compoundIndex >>> 16;
       assert batch < batchGroups.size() : String.format("batch: %d batchGroups: %d", batch, batchGroups.size());
-      if (!doCopy(compoundIndex, outgoingIndex)) {
-        setValueCount(outgoingIndex);
-        return outgoingIndex;
-      }
+      doCopy(compoundIndex, outgoingIndex);
       int nextIndex = batchGroups.get(batch).getNextIndex();
       if (nextIndex < 0) {
         vector4.set(0, vector4.get(--queueSize));
@@ -174,6 +171,6 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
   public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
-  public abstract boolean doCopy(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void doCopy(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
 }

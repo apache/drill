@@ -200,10 +200,8 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
       currentValueListLength += numLeftoverVals;
     }
     // this should not fail
-    if (!castedRepeatedVector.getMutator().setRepetitionAtIndexSafe(repeatedGroupsReadInCurrentPass,
-        currentValueListLength)) {
-      return true;
-    }
+    castedRepeatedVector.getMutator().setRepetitionAtIndexSafe(repeatedGroupsReadInCurrentPass,
+        currentValueListLength);
     // This field is being referenced in the superclass determineSize method, so we need to set it here
     // again going to make this the length in BYTES to avoid repetitive multiplication/division
     dataTypeLengthInBits = repeatedValuesInCurrentList * dataTypeLengthInBytes;

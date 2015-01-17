@@ -49,6 +49,6 @@ public interface HashJoinProbe {
                                           JoinRelType joinRelType);
   public abstract void doSetup(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch, RecordBatch outgoing);
   public abstract int  probeAndProject() throws SchemaChangeException, ClassTransformationException, IOException;
-  public abstract boolean projectBuildRecord(int buildIndex, int outIndex);
-  public abstract boolean projectProbeRecord(int probeIndex, int outIndex);
+  public abstract void projectBuildRecord(int buildIndex, int outIndex);
+  public abstract void projectProbeRecord(int probeIndex, int outIndex);
 }

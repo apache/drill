@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
@@ -229,7 +230,6 @@ class DrillAggFuncHolder extends DrillFuncHolder{
 
     Preconditions.checkNotNull(body);
     sub.directStatement(body);
-    JVar successVar = sub.decl(JType.parse(g.getModel(), "boolean"), "success", JExpr.lit(false));
 
     // reassign workspace variables back.
     for(int i =0; i < workspaceJVars.length; i++){
@@ -241,17 +241,20 @@ class DrillAggFuncHolder extends DrillFuncHolder{
       }
       //Change workspaceVar through workspace vector.
       JInvocation setMeth;
-      if (Types.usesHolderForGet(workspaceVars[i].majorType)) {
-        setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i]);
+      MajorType type = workspaceVars[i].majorType;
+      if (Types.usesHolderForGet(type)) {
+          setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i]);
       }else{
-        setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
+        if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
+          setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
+        } else {
+          setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("set").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
+        }
       }
 
-      sub.assign(successVar, setMeth);
+      sub.add(setMeth);
 
       JClass drillRunTimeException = g.getModel().ref(DrillRuntimeException.class);
-
-      sub._if(successVar.eq(JExpr.lit(false)))._then()._throw(JExpr._new(drillRunTimeException).arg(JExpr.lit("setsafe() failed; cannot set holder value into the vector")));
     }
 
   }

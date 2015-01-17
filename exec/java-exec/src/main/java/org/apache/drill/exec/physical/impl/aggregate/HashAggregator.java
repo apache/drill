@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -30,9 +33,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
-
-import java.io.IOException;
-import java.util.List;
 
 public interface HashAggregator {
 

@@ -95,7 +95,7 @@ public class SingleMapReaderImpl extends AbstractFieldReader{
   public void copyAsValue(MapWriter writer){
     if (writer.ok()) {
       SingleMapWriter impl = (SingleMapWriter) writer;
-      impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), vector));
+      impl.container.copyFromSafe(idx(), impl.idx(), vector);
     }
   }
 
@@ -103,7 +103,7 @@ public class SingleMapReaderImpl extends AbstractFieldReader{
   public void copyAsField(String name, MapWriter writer){
     if (writer.ok()) {
       SingleMapWriter impl = (SingleMapWriter) writer.map(name);
-      impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), vector));
+      impl.container.copyFromSafe(idx(), impl.idx(), vector);
     }
   }
 

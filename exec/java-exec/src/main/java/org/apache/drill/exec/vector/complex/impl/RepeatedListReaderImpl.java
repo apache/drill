@@ -52,7 +52,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
       return;
     }
     RepeatedListWriter impl = (RepeatedListWriter) writer;
-    impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), container));
+    impl.container.copyFromSafe(idx(), impl.idx(), container);
   }
 
   @Override
@@ -61,7 +61,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
       return;
     }
     RepeatedListWriter impl = (RepeatedListWriter) writer.list(name);
-    impl.inform(impl.container.copyFromSafe(idx(), impl.idx(), container));
+    impl.container.copyFromSafe(idx(), impl.idx(), container);
   }
 
   private int currentOffset;

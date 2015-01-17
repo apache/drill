@@ -69,18 +69,18 @@ public class MapVector extends AbstractContainerVector {
   transient private MapTransferPair ephPair;
   transient private MapSingleCopier ephPair2;
 
-  public boolean copyFromSafe(int fromIndex, int thisIndex, MapVector from) {
+  public void copyFromSafe(int fromIndex, int thisIndex, MapVector from) {
     if(ephPair == null || ephPair.from != from) {
       ephPair = (MapTransferPair) from.makeTransferPair(this);
     }
-    return ephPair.copyValueSafe(fromIndex, thisIndex);
+    ephPair.copyValueSafe(fromIndex, thisIndex);
   }
 
-  public boolean copyFromSafe(int fromSubIndex, int thisIndex, RepeatedMapVector from) {
+  public void copyFromSafe(int fromSubIndex, int thisIndex, RepeatedMapVector from) {
     if(ephPair2 == null || ephPair2.from != from) {
       ephPair2 = from.makeSingularCopier(this);
     }
-    return ephPair2.copySafe(fromSubIndex, thisIndex);
+    ephPair2.copySafe(fromSubIndex, thisIndex);
   }
 
   @Override
@@ -170,13 +170,10 @@ public class MapVector extends AbstractContainerVector {
     }
 
     @Override
-    public boolean copyValueSafe(int from, int to) {
+    public void copyValueSafe(int from, int to) {
       for (TransferPair p : pairs) {
-        if (!p.copyValueSafe(from, to)) {
-          return false;
-        }
+        p.copyValueSafe(from, to);
       }
-      return true;
     }
 
     @Override

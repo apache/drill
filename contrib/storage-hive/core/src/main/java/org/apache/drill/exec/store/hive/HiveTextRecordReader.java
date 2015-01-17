@@ -66,7 +66,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
     numCols = tableColumns.size();
   }
 
-  public boolean setValue(PrimitiveObjectInspector.PrimitiveCategory pCat, ValueVector vv, int index, byte[] bytes, int start) {
+  public void setValue(PrimitiveObjectInspector.PrimitiveCategory pCat, ValueVector vv, int index, byte[] bytes, int start) {
     switch(pCat) {
       case BINARY:
         throw new UnsupportedOperationException();
@@ -86,7 +86,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
         for (int i = start; (b = bytes[i]) != delimiter; i++) {
           value = (value * 10) + b - 48;
         }
-        return ((NullableIntVector) vv).getMutator().setSafe(index, value);
+        ((NullableIntVector) vv).getMutator().setSafe(index, value);
       }
       case LONG: {
         long value = 0;
@@ -94,7 +94,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
         for (int i = start; (b = bytes[i]) != delimiter; i++) {
           value = (value * 10) + b - 48;
         }
-        return ((NullableBigIntVector) vv).getMutator().setSafe(index, value);
+        ((NullableBigIntVector) vv).getMutator().setSafe(index, value);
       }
       case SHORT:
         throw new UnsupportedOperationException();
@@ -107,7 +107,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
           }
           end = bytes.length;
         }
-        return ((NullableVarCharVector) vv).getMutator().setSafe(index, bytes, start, end - start);
+        ((NullableVarCharVector) vv).getMutator().setSafe(index, bytes, start, end - start);
       }
       case TIMESTAMP:
         throw new UnsupportedOperationException();

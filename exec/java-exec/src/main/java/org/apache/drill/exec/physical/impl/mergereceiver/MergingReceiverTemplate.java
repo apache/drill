@@ -35,5 +35,5 @@ public abstract class MergingReceiverTemplate implements MergingReceiverGenerato
   public abstract int doEval(@Named("leftIndex") int leftIndex,
                                 @Named("rightIndex") int rightIndex);
 
-  public abstract boolean doCopy(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void doCopy(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 }

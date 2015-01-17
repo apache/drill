@@ -66,9 +66,7 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
     int counter = 0;
     for (int i = 0; i < countN; i++, firstOutputIndex++) {
       int partition = getPartition(i);
-      if (!partitionValues.getMutator().setSafe(i, partition)) {
-        throw new RuntimeException();
-      }
+      partitionValues.getMutator().setSafe(i, partition);
       counter++;
     }
     for(TransferPair t : transfers){

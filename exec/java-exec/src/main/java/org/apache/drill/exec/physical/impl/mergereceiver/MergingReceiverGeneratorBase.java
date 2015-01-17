@@ -34,7 +34,7 @@ public interface MergingReceiverGeneratorBase {
   public abstract int doEval(int leftIndex,
                                 int rightIndex);
 
-  public abstract boolean doCopy(int inIndex, int outIndex);
+  public abstract void doCopy(int inIndex, int outIndex);
 
   public static TemplateClassDefinition<MergingReceiverGeneratorBase> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(MergingReceiverGeneratorBase.class, MergingReceiverTemplate.class);

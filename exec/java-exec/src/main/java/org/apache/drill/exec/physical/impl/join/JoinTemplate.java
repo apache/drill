@@ -75,6 +75,8 @@ import org.eigenbase.rel.JoinRelType;
  */
 public abstract class JoinTemplate implements JoinWorker {
 
+  private static final int OUTPUT_BATCH_SIZE = 32*1024;
+
   @Override
   public void setupJoin(FragmentContext context, JoinStatus status, VectorContainer outgoing) throws SchemaChangeException {
     doSetup(context, status, outgoing);
@@ -86,7 +88,7 @@ public abstract class JoinTemplate implements JoinWorker {
    * @return  true of join succeeded; false if the worker needs to be regenerated
    */
   public final boolean doJoin(final JoinStatus status) {
-    while (true) {
+    for (int i = 0; i < OUTPUT_BATCH_SIZE; i++) {
       // for each record
 
       // validate input iterators (advancing to the next record batch if necessary)
@@ -94,9 +96,7 @@ public abstract class JoinTemplate implements JoinWorker {
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
           // we've hit the end of the right record batch; copy any remaining values from the left batch
           while (status.isLeftPositionAllowed()) {
-            if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition())) {
-              return false;
-            }
+            doCopyLeft(status.getLeftPosition(), status.getOutPosition());
 
             status.incOutputPos();
             status.advanceLeft();
@@ -114,9 +114,7 @@ public abstract class JoinTemplate implements JoinWorker {
       case -1:
         // left key < right key
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
-          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition())) {
-            return false;
-          }
+          doCopyLeft(status.getLeftPosition(), status.getOutPosition());
           status.incOutputPos();
         }
         status.advanceLeft();
@@ -142,13 +140,9 @@ public abstract class JoinTemplate implements JoinWorker {
         int initialRightPosition = status.getRightPosition();
         do {
           // copy all equal right keys to the output record batch
-          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition())) {
-            return false;
-          }
+          doCopyLeft(status.getLeftPosition(), status.getOutPosition());
 
-          if (!doCopyRight(status.getRightPosition(), status.getOutPosition())) {
-            return false;
-          }
+          doCopyRight(status.getRightPosition(), status.getOutPosition());
 
           status.incOutputPos();
 
@@ -197,6 +191,7 @@ public abstract class JoinTemplate implements JoinWorker {
         throw new IllegalStateException();
       }
     }
+    return false;
   }
 
   // Generated Methods
@@ -213,8 +208,8 @@ public abstract class JoinTemplate implements JoinWorker {
    * @param outIndex position of the output record batch
    * @return Whether or not the data was copied.
    */
-  public abstract boolean doCopyLeft(@Named("leftIndex") int leftIndex, @Named("outIndex") int outIndex);
-  public abstract boolean doCopyRight(@Named("rightIndex") int rightIndex, @Named("outIndex") int outIndex);
+  public abstract void doCopyLeft(@Named("leftIndex") int leftIndex, @Named("outIndex") int outIndex);
+  public abstract void doCopyRight(@Named("rightIndex") int rightIndex, @Named("outIndex") int outIndex);
 
 
   /**

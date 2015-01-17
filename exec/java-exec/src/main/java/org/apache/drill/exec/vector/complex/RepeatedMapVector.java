@@ -57,7 +57,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
 
-  private final UInt4Vector offsets;   // offsets to start of each record (considering record indices are 0-indexed)
+  final UInt4Vector offsets;   // offsets to start of each record (considering record indices are 0-indexed)
   private final RepeatedMapReaderImpl reader = new RepeatedMapReaderImpl(RepeatedMapVector.this);
   private final RepeatedMapAccessor accessor = new RepeatedMapAccessor();
   private final Mutator mutator = new Mutator();
@@ -78,6 +78,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     }
     mutator.reset();
     accessor.reset();
+  }
+
+  public void reAlloc() {
+    offsets.reAlloc();
   }
 
   public Iterator<String> fieldNameIterator() {
@@ -147,13 +151,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       }
     }
 
-    public boolean copySafe(int fromSubIndex, int toIndex) {
+    public void copySafe(int fromSubIndex, int toIndex) {
       for (TransferPair p : pairs) {
-        if (!p.copyValueSafe(fromSubIndex, toIndex)) {
-          return false;
-        }
+        p.copyValueSafe(fromSubIndex, toIndex);
       }
-      return true;
     }
   }
 
@@ -225,13 +226,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     }
 
     @Override
-    public boolean copyValueSafe(int from, int to) {
+    public void copyValueSafe(int from, int to) {
       for (TransferPair p : pairs) {
-        if (!p.copyValueSafe(from, to)) {
-          return false;
-        }
+        p.copyValueSafe(from, to);
       }
-      return true;
     }
 
     @Override
@@ -295,26 +293,18 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     }
 
     @Override
-    public boolean copyValueSafe(int srcIndex, int destIndex) {
+    public void copyValueSafe(int srcIndex, int destIndex) {
       RepeatedMapHolder holder = new RepeatedMapHolder();
       from.getAccessor().get(srcIndex, holder);
-      if(destIndex >= to.getValueCapacity()){
-        return false;
-      }
       to.populateEmpties(destIndex+1);
       int newIndex = to.offsets.getAccessor().get(destIndex);
       //todo: make these bulk copies
       for (int i = holder.start; i < holder.end; i++, newIndex++) {
         for (TransferPair p : pairs) {
-          if (!p.copyValueSafe(i, newIndex)) {
-            return false;
-          }
+          p.copyValueSafe(i, newIndex);
         }
       }
-      if (!to.offsets.getMutator().setSafe(destIndex+1, newIndex)) {
-        return false;
-      }
-      return true;
+      to.offsets.getMutator().setSafe(destIndex+1, newIndex);
     }
 
     @Override
@@ -349,11 +339,11 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   transient private RepeatedMapTransferPair ephPair;
 
-  public boolean copyFromSafe(int fromIndex, int thisIndex, RepeatedMapVector from) {
+  public void copyFromSafe(int fromIndex, int thisIndex, RepeatedMapVector from) {
     if (ephPair == null || ephPair.from != from) {
       ephPair = (RepeatedMapTransferPair) from.makeTransferPair(this);
     }
-    return ephPair.copyValueSafe(fromIndex, thisIndex);
+    ephPair.copyValueSafe(fromIndex, thisIndex);
   }
 
   @Override
@@ -509,15 +499,12 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
     public void startNewGroup(int index) {
       populateEmpties(index+1);
-      offsets.getMutator().set(index+1, offsets.getAccessor().get(index));
+      offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
     }
 
     public int add(int index) {
       int prevEnd = offsets.getAccessor().get(index+1);
-      boolean success = offsets.getMutator().setSafe(index+1, prevEnd+1);
-      if (!success) {
-        return -1;
-      }
+      offsets.getMutator().setSafe(index+1, prevEnd+1);
       return prevEnd;
     }
 
@@ -547,8 +534,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     }
 
     @Override
-    public boolean setRepetitionAtIndexSafe(int index, int repetitionCount) {
-      return false;  //To change body of implemented methods use File | Settings | File Templates.
+    public void setRepetitionAtIndexSafe(int index, int repetitionCount) {
     }
 
     @Override

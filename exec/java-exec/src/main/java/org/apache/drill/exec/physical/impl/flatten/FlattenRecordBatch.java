@@ -351,7 +351,6 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
         HoldingContainer hc = cg.addExpr(write);
 
-        cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
         logger.debug("Added eval for project expression.");
       }
     }

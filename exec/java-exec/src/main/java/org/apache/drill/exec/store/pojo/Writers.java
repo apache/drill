@@ -51,9 +51,9 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       int i = field.getInt(pojo);
-      return vector.getMutator().setSafe(outboundIndex, i);
+      vector.getMutator().setSafe(outboundIndex, i);
     }
 
   }
@@ -68,9 +68,9 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       boolean b = field.getBoolean(pojo);
-      return vector.getMutator().setSafe(outboundIndex, b ? 1 : 0);
+      vector.getMutator().setSafe(outboundIndex, b ? 1 : 0);
     }
 
   }
@@ -85,9 +85,9 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       long l = field.getLong(pojo);
-      return vector.getMutator().setSafe(outboundIndex, l);
+      vector.getMutator().setSafe(outboundIndex, l);
     }
 
   }
@@ -102,10 +102,10 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       double d = field.getDouble(pojo);
 
-      return vector.getMutator().setSafe(outboundIndex, d);
+      vector.getMutator().setSafe(outboundIndex, d);
     }
 
   }
@@ -128,9 +128,9 @@ public class Writers {
     public void cleanup() {
     }
 
-    public boolean writeString(String s, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeString(String s, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       if (s == null) {
-        return true;
+        return;
       } else {
         h.isSet = 1;
         byte[] bytes = s.getBytes(Charsets.UTF_8);
@@ -140,7 +140,7 @@ public class Writers {
         h.buffer = data;
         h.start = 0;
         h.end = bytes.length;
-        return vector.getMutator().setSafe(outboundIndex, h);
+        vector.getMutator().setSafe(outboundIndex, h);
       }
     }
 
@@ -155,12 +155,12 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       Enum<?> e= ((Enum<?>) field.get(pojo));
       if (e == null) {
-        return true;
+        return;
       }
-      return writeString(e.name(), outboundIndex);
+      writeString(e.name(), outboundIndex);
     }
   }
 
@@ -173,9 +173,9 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       String s = (String) field.get(pojo);
-      return writeString(s, outboundIndex);
+      writeString(s, outboundIndex);
     }
   }
 
@@ -189,12 +189,11 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       Integer i = (Integer) field.get(pojo);
       if (i != null) {
-        return vector.getMutator().setSafe(outboundIndex, i);
+        vector.getMutator().setSafe(outboundIndex, i);
       }
-      return true;
     }
 
   }
@@ -209,12 +208,11 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       Long o = (Long) field.get(pojo);
       if (o != null) {
-        return vector.getMutator().setSafe(outboundIndex, o);
+        vector.getMutator().setSafe(outboundIndex, o);
       }
-      return true;
     }
 
   }
@@ -229,12 +227,11 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       Boolean o = (Boolean) field.get(pojo);
       if (o != null) {
-        return vector.getMutator().setSafe(outboundIndex, o ? 1 : 0);
+        vector.getMutator().setSafe(outboundIndex, o ? 1 : 0);
       }
-      return true;
     }
 
   }
@@ -248,12 +245,11 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       Double o = (Double) field.get(pojo);
       if (o != null) {
-        return vector.getMutator().setSafe(outboundIndex, o);
+        vector.getMutator().setSafe(outboundIndex, o);
       }
-      return true;
     }
 
   }
@@ -268,12 +264,11 @@ public class Writers {
     }
 
     @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+    public void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       Timestamp o = (Timestamp) field.get(pojo);
       if (o != null) {
-        return vector.getMutator().setSafe(outboundIndex, o.getTime());
+        vector.getMutator().setSafe(outboundIndex, o.getTime());
       }
-      return true;
     }
   }
 }
