@@ -489,4 +489,19 @@ public class TestExampleQueries extends BaseTestQuery{
     test("alter session set `planner.slice_target` = 1; " + streamagg_only + query);
   }
 
+  @Test // DRILL-2019
+  public void testFilterInSubqueryAndOutside() throws Exception {
+    String query1 = "select r_regionkey from (select r_regionkey from cp.`tpch/region.parquet` o where r_regionkey < 2) where r_regionkey > 2";
+    String query2 = "select r_regionkey from (select r_regionkey from cp.`tpch/region.parquet` o where r_regionkey < 4) where r_regionkey > 1";
+    int actualRecordCount = 0;
+    int expectedRecordCount = 0;
+
+    actualRecordCount = testSql(query1);
+    assertEquals(expectedRecordCount, actualRecordCount);
+
+    expectedRecordCount = 2;
+    actualRecordCount = testSql(query2);
+    assertEquals(expectedRecordCount, actualRecordCount);
+  }
+
 }

@@ -81,7 +81,7 @@ public abstract class FilterTemplate2 implements Filterer{
     final int count = recordCount;
     for(int i = 0; i < count; i++){
       char index = incomingSelectionVector.getIndex(i);
-      if(doEval(i, 0)){
+      if(doEval(index, 0)){
         outgoingSelectionVector.setIndex(svIndex, index);
         svIndex++;
       }

@@ -34,7 +34,14 @@ public interface Prel extends DrillRelNode, Iterable<Prel>{
 
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E;
 
+  /**
+   * Supported 'encodings' of a Prel indicates what are the acceptable modes of SelectionVector
+   * of its child Prel
+   */
   public SelectionVectorMode[] getSupportedEncodings();
+  /**
+   * A Prel's own SelectionVector mode - i.e whether it generates an SV2, SV4 or None
+   */
   public SelectionVectorMode getEncoding();
   boolean needsFinalColumnReordering();
 

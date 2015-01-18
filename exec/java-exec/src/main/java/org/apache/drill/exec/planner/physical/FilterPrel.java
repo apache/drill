@@ -70,6 +70,9 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
     return SelectionVectorMode.NONE_AND_TWO;
   }
 
+  /**
+   * FilterPrel adds an SV2 (TWO_BYTE mode SelectionVector).
+   */
   @Override
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.TWO_BYTE;
