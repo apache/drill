@@ -134,6 +134,7 @@ class DrillClientQueryResult{
     status_t defaultQueryResultsListener(void* ctx, RecordBatch* b, DrillClientError* err);
     // Construct a DrillClientError object, set the appropriate state and signal any listeners, condition variables.
     // Also used when a query is cancelled or when a query completed response is received.
+    // Error object is now owned by the DrillClientQueryResult object.
     void signalError(DrillClientError* pErr);
     void clearAndDestroy();
 

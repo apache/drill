@@ -397,12 +397,14 @@ void DrillClientImpl::getNextResult(){
 }
 
 void DrillClientImpl::waitForResults(){
-    // do nothing. No we do not need to explicity wait for the listener thread to finish
-    delete this->m_pWork; this->m_pWork = NULL; // inform io_service that io_service is permited to exit
-    this->m_pListenerThread->join();
-    DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::waitForResults: Listener thread "
-        << this->m_pListenerThread << " exited." << std::endl;
-    delete this->m_pListenerThread; this->m_pListenerThread=NULL;
+    if(this->m_pListenerThread!=NULL){
+        // do nothing. No we do not need to explicity wait for the listener thread to finish
+        delete this->m_pWork; this->m_pWork = NULL; // inform io_service that io_service is permited to exit
+        this->m_pListenerThread->join();
+        DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::waitForResults: Listener thread "
+            << this->m_pListenerThread << " exited." << std::endl;
+        delete this->m_pListenerThread; this->m_pListenerThread=NULL;
+    }
 }
 
 status_t DrillClientImpl::readMsg(ByteBuf_t _buf,
@@ -638,7 +640,9 @@ status_t DrillClientImpl::processQueryId(AllocatedBufferPtr allocatedBuffer, InB
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
     std::map<int,DrillClientQueryResult*>::iterator it;
     for(it=this->m_queryIds.begin();it!=this->m_queryIds.end();it++){
-    DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::processQueryId: m_queryIds: " << it->first << std::endl;
+        std::string qidString = it->second->m_pQueryId!=NULL?debugPrintQid(*it->second->m_pQueryId):std::string("NULL");
+        DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::processQueryId: m_queryIds: coordinationId: " << it->first
+        << " QueryId: "<< qidString << std::endl;
     }
     if(msg.m_coord_id==0){
         DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryId: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;
@@ -855,22 +859,25 @@ status_t DrillClientImpl::validateMessage(InBoundRpcMessage& msg, exec::shared::
 connectionStatus_t DrillClientImpl::handleConnError(connectionStatus_t status, std::string msg){
     DrillClientError* pErr = new DrillClientError(status, DrillClientError::CONN_ERROR_START+status, msg);
     m_pendingRequests=0;
-    if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
-    m_pError=pErr;
-    broadcastError(this->m_pError);
+    if(!m_queryIds.empty()){
+        // set query error only if queries are running
+        broadcastError(pErr);
+    }else{
+        if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
+        m_pError=pErr;
+    }
     return status;
 }
 
 status_t DrillClientImpl::handleQryError(status_t status, std::string msg, DrillClientQueryResult* pQueryResult){
     DrillClientError* pErr = new DrillClientError(status, DrillClientError::QRY_ERROR_START+status, msg);
-    if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
-    m_pError=pErr;
+    // set query error only if queries are running
     if(pQueryResult!=NULL){
         m_pendingRequests--;
         pQueryResult->signalError(pErr);
     }else{
         m_pendingRequests=0;
-        broadcastError(this->m_pError);
+        broadcastError(pErr);
     }
     return status;
 }
@@ -879,9 +886,8 @@ status_t DrillClientImpl::handleQryError(status_t status,
         const exec::shared::DrillPBError& e,
         DrillClientQueryResult* pQueryResult){
     assert(pQueryResult!=NULL);
-    if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
-    this->m_pError = DrillClientError::getErrorObject(e);
-    pQueryResult->signalError(this->m_pError);
+    DrillClientError* pErr =  DrillClientError::getErrorObject(e);
+    pQueryResult->signalError(pErr);
     m_pendingRequests--;
     return status;
 }
@@ -904,10 +910,11 @@ status_t DrillClientImpl::handleTerminatedQryState(
         std::string msg,
         DrillClientQueryResult* pQueryResult){
     assert(pQueryResult!=NULL);
-    DrillClientError* pErr = new DrillClientError(status, DrillClientError::QRY_ERROR_START+status, msg);
-    if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
-    m_pError=pErr;
-    pQueryResult->signalError(pErr);
+    if(status!=QRY_COMPLETED){
+        // set query error only if queries did not complete successfully
+        DrillClientError* pErr = new DrillClientError(status, DrillClientError::QRY_ERROR_START+status, msg);
+        pQueryResult->signalError(pErr);
+    }
     return status;
 }
 
@@ -1109,6 +1116,9 @@ void DrillClientQueryResult::cancel() {
 void DrillClientQueryResult::signalError(DrillClientError* pErr){
     // Ignore return values from the listener.
     if(pErr!=NULL){
+        if(m_pError!=NULL){
+            delete m_pError; m_pError=NULL;
+        }
         m_pError=pErr;
         pfnQueryResultsListener pResultsListener=this->m_pResultsListener;
         if(pResultsListener!=NULL){
@@ -1157,6 +1167,9 @@ void DrillClientQueryResult::clearAndDestroy(){
             delete pR;
         }
     }
+    if(m_pError!=NULL){
+        delete m_pError; m_pError=NULL;
+}
 }
 
 char ZookeeperImpl::s_drillRoot[]="/drill/";
