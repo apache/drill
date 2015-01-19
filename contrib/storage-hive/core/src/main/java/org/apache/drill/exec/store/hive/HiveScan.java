@@ -45,6 +45,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputFormat;
@@ -129,55 +130,43 @@ public class HiveScan extends AbstractGroupScan {
       Table table = hiveReadEntry.getTable();
       if (partitions == null || partitions.size() == 0) {
         Properties properties = MetaStoreUtils.getTableMetadata(table);
-        JobConf job = new JobConf();
-        for (Object obj : properties.keySet()) {
-          job.set((String) obj, (String) properties.get(obj));
-        }
-        for (Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
-          job.set(entry.getKey(), entry.getValue());
-        }
-        InputFormat<?, ?> format = (InputFormat<?, ?>)
-            Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
-        job.setInputFormat(format.getClass());
-        Path path = new Path(table.getSd().getLocation());
-        FileSystem fs = FileSystem.get(job);
-        if (fs.exists(path)) {
-          FileInputFormat.addInputPath(job, path);
-          format = job.getInputFormat();
-          for (InputSplit split : format.getSplits(job, 1)) {
-            inputSplits.add(split);
-          }
-        }
-        for (InputSplit split : inputSplits) {
-          partitionMap.put(split, null);
-        }
+        splitInput(properties, table.getSd(), null);
       } else {
         for (Partition partition : partitions) {
           Properties properties = MetaStoreUtils.getPartitionMetadata(partition, table);
-          JobConf job = new JobConf();
-          for (Object obj : properties.keySet()) {
-            job.set((String) obj, (String) properties.get(obj));
-          }
-          for(Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
-            job.set(entry.getKey(), entry.getValue());
-          }
-          InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(partition.getSd().getInputFormat()).getConstructor().newInstance();
-          job.setInputFormat(format.getClass());
-          Path path = new Path(partition.getSd().getLocation());
-          FileSystem fs = FileSystem.get(job);
-          if (fs.exists(path)) {
-            FileInputFormat.addInputPath(job, path);
-            format = job.getInputFormat();
-            InputSplit[] splits = format.getSplits(job, 1);
-            for (InputSplit split : splits) {
-              inputSplits.add(split);
-              partitionMap.put(split, partition);
-            }
-          }
+          splitInput(properties, partition.getSd(), partition);
         }
       }
     } catch (ReflectiveOperationException | IOException e) {
       throw new ExecutionSetupException(e);
+    }
+  }
+
+  /* Split the input given in StorageDescriptor */
+  private void splitInput(Properties properties, StorageDescriptor sd, Partition partition)
+      throws ReflectiveOperationException, IOException {
+    JobConf job = new JobConf();
+    for (Object obj : properties.keySet()) {
+      job.set((String) obj, (String) properties.get(obj));
+    }
+    for (Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
+      job.set(entry.getKey(), entry.getValue());
+    }
+    InputFormat<?, ?> format = (InputFormat<?, ?>)
+        Class.forName(sd.getInputFormat()).getConstructor().newInstance();
+    job.setInputFormat(format.getClass());
+    Path path = new Path(sd.getLocation());
+    FileSystem fs = path.getFileSystem(job);
+
+    // Use new JobConf that has FS configuration
+    JobConf jobWithFsConf = new JobConf(fs.getConf());
+    if (fs.exists(path)) {
+      FileInputFormat.addInputPath(jobWithFsConf, path);
+      format = jobWithFsConf.getInputFormat();
+      for (InputSplit split : format.getSplits(jobWithFsConf, 1)) {
+        inputSplits.add(split);
+        partitionMap.put(split, partition);
+      }
     }
   }
 

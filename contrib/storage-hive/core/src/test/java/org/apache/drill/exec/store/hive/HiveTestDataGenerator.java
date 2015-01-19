@@ -26,6 +26,7 @@ import java.sql.Timestamp;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -40,13 +41,19 @@ public class HiveTestDataGenerator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveTestDataGenerator.class);
 
   static int RETRIES = 5;
+  private static final String HIVE_TEST_PLUGIN_NAME = "hive";
   private Driver hiveDriver = null;
   private static final String DB_DIR = "/tmp/drill_hive_db";
   private static final String WH_DIR = "/tmp/drill_hive_wh";
+  private final StoragePluginRegistry pluginRegistry;
 
-  public static void main(String[] args) throws Exception {
-    HiveTestDataGenerator htd = new HiveTestDataGenerator();
-    htd.generateTestData();
+  public HiveTestDataGenerator(StoragePluginRegistry pluginRegistry) {
+    this.pluginRegistry = pluginRegistry;
+  }
+
+  // TODO: Remove this once hive related tests in exec/jdbc are moved to contrib/storage-hive/core module
+  public HiveTestDataGenerator() {
+    this(null);
   }
 
   private void cleanDir(String dir) throws IOException{
@@ -57,7 +64,11 @@ public class HiveTestDataGenerator {
     }
   }
 
-  public void createAndAddHiveTestPlugin(StoragePluginRegistry pluginRegistry) throws Exception {
+  /**
+   * Create a Hive test storage plugin and add it to the plugin registry.
+   * @throws Exception
+   */
+  public void createAndAddHiveTestPlugin() throws Exception {
     // generate test tables and data
     generateTestData();
 
@@ -66,13 +77,43 @@ public class HiveTestDataGenerator {
     config.put("hive.metastore.uris", "");
     config.put("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", DB_DIR));
     config.put("hive.metastore.warehouse.dir", WH_DIR);
-    config.put("fs.default.name", "file:///");
+    config.put(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+
     HiveStoragePluginConfig pluginConfig = new HiveStoragePluginConfig(config);
     pluginConfig.setEnabled(true);
 
-    pluginRegistry.createOrUpdate("hive", pluginConfig, true);
+    pluginRegistry.createOrUpdate(HIVE_TEST_PLUGIN_NAME, pluginConfig, true);
   }
 
+  /**
+   * Update the current HiveStoragePlugin with new config.
+   *
+   * @param configOverride
+   * @throws DrillException if fails to update or no plugin exists.
+   */
+  public void updatePluginConfig(Map<String, String> configOverride)
+      throws DrillException {
+    HiveStoragePlugin storagePlugin = (HiveStoragePlugin) pluginRegistry.getPlugin(HIVE_TEST_PLUGIN_NAME);
+    if (storagePlugin == null) {
+      throw new DrillException(
+          "Hive test storage plugin doesn't exist. Add a plugin using createAndAddHiveTestPlugin()");
+    }
+
+    HiveStoragePluginConfig newPluginConfig = storagePlugin.getConfig();
+    newPluginConfig.getHiveConfigOverride().putAll(configOverride);
+
+    pluginRegistry.createOrUpdate(HIVE_TEST_PLUGIN_NAME, newPluginConfig, true);
+  }
+
+  /**
+   * Delete the Hive test plugin from registry.
+   */
+  public void deleteHiveTestPlugin() {
+    pluginRegistry.deletePlugin(HIVE_TEST_PLUGIN_NAME);
+  }
+
+  // TODO: Make this method private once hive related tests in exec/jdbc are moved to contrib/storage-hive/core module.
+  // Tests in exec/jdbc just need the Hive metastore and test data and don't need adding storage plugin to registry.
   public void generateTestData() throws Exception {
 
     // remove data from previous runs.

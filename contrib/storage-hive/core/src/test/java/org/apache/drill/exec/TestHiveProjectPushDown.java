@@ -19,18 +19,10 @@ package org.apache.drill.exec;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.drill.PlanTestBase;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
-import org.junit.BeforeClass;
+import org.apache.drill.exec.hive.HiveTestBase;
 import org.junit.Test;
 
-public class TestHiveProjectPushDown extends PlanTestBase {
-
-  @BeforeClass
-  public static void generateHive() throws Exception{
-    new HiveTestDataGenerator().createAndAddHiveTestPlugin(bit.getContext().getStorage());
-  }
-
+public class TestHiveProjectPushDown extends HiveTestBase {
   private void testHelper(String query, String expectedColNamesInPlan, int expectedRecordCount)throws Exception {
     testPhysicalPlan(query, expectedColNamesInPlan);
 

@@ -17,19 +17,11 @@
  */
 package org.apache.drill.exec;
 
-import org.apache.drill.PlanTestBase;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
-import org.junit.BeforeClass;
+import org.apache.drill.exec.hive.HiveTestBase;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestHivePartitionPruning extends PlanTestBase {
-
-  @BeforeClass
-  public static void generateHive() throws Exception{
-    new HiveTestDataGenerator().createAndAddHiveTestPlugin(bit.getContext().getStorage());
-  }
-
+public class TestHivePartitionPruning extends HiveTestBase {
   //Currently we do not have a good way to test plans so using a crude string comparison
   @Test
   public void testSimplePartitionFilter() throws Exception {

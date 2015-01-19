@@ -21,19 +21,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestSampleHiveUDFs extends BaseTestQuery {
-
-  @BeforeClass
-  public static void addStoragePlugins() throws Exception{
-    new HiveTestDataGenerator().createAndAddHiveTestPlugin(bit.getContext().getStorage());
-  }
+public class TestSampleHiveUDFs extends HiveTestBase {
 
   private void helper(String query, String expected) throws Exception {
     List<QueryResultBatch> results = testSqlWithResults(query);
