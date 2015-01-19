@@ -299,7 +299,7 @@ public class DrillTestWrapper {
    */
   protected void compareOrderedResults() throws Exception {
     if (highPerformanceComparison) {
-      if (baselineQueryType != null) {
+      if (baselineQueryType == null) {
         throw new Exception("Cannot do a high performance comparison without using a baseline file");
       }
       compareResultsHyperVector();

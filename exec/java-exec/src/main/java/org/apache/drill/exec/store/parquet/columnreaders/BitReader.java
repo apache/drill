@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import parquet.column.ColumnDescriptor;
@@ -28,10 +29,6 @@ import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 final class BitReader extends ColumnReader {
-
-  private byte currentByte;
-  private byte nextByte;
-  private ByteBuf bytebuf;
 
   BitReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
             boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
@@ -44,49 +41,23 @@ final class BitReader extends ColumnReader {
     recordsReadInThisIteration = Math.min(pageReader.currentPage.getValueCount()
         - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
 
-    readStartInBytes = pageReader.readPosInBytes;
-    readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-    readLength = (int) Math.ceil(readLengthInBits / 8.0);
-
-    bytebuf = pageReader.pageDataByteArray;
-    // standard read, using memory mapping
-    if (pageReader.bitShift == 0) {
-      ((BaseDataValueVector) valueVec).getData().writeBytes(bytebuf,
-          (int) readStartInBytes, (int) readLength);
-    } else { // read in individual values, because a bitshift is necessary with where the last page or batch ended
-
-      vectorData = ((BaseDataValueVector) valueVec).getData();
-      nextByte = bytebuf.getByte((int) Math.max(0, Math.ceil(pageReader.valuesRead / 8.0) - 1));
-      readLengthInBits = recordsReadInThisIteration + pageReader.bitShift;
-
-      int i = 0;
-      // read individual bytes with appropriate shifting
-      for (; i < (int) readLength; i++) {
-        currentByte = nextByte;
-        currentByte = (byte) (currentByte >>> pageReader.bitShift);
-        // mask the bits about to be added from the next byte
-        currentByte = (byte) (currentByte & ParquetRecordReader.startBitMasks[pageReader.bitShift - 1]);
-        // if we are not on the last byte
-        if ((int) Math.ceil(pageReader.valuesRead / 8.0) + i < pageReader.byteLength) {
-          // grab the next byte from the buffer, shift and mask it, and OR it with the leftover bits
-          nextByte = bytebuf.getByte((int) Math.ceil(pageReader.valuesRead / 8.0) + i);
-          currentByte = (byte) (currentByte | nextByte
-              << (8 - pageReader.bitShift)
-              & ParquetRecordReader.endBitMasks[8 - pageReader.bitShift - 1]);
-        }
-        vectorData.setByte(valuesReadInCurrentPass / 8 + i, currentByte);
-      }
-      vectorData.setIndex(0, (valuesReadInCurrentPass / 8)
-          + (int) readLength - 1);
-      vectorData.capacity(vectorData.writerIndex() + 1);
-    }
-
-    // check if the values in this page did not end on a byte boundary, store a number of bits the next page must be
-    // shifted by to read all of the values into the vector without leaving space
-    if (readLengthInBits % 8 != 0) {
-      pageReader.bitShift = (int) readLengthInBits % 8;
-    } else {
-      pageReader.bitShift = 0;
+    // A more optimized reader for bit columns was removed to fix the bug
+    // DRILL-2031. It attempted to copy large runs of values directly from the
+    // decompressed parquet stream into a BitVector. This was complicated by
+    // parquet not always breaking a page on a row number divisible by 8. In
+    // this case the batch would have to be cut off early or we would have to
+    // copy the next page byte-by-byte with a bit shift to move the values into
+    // the correct position (to make the value vector one contiguous buffer of
+    // data). As page boundaries do not line up across columns, cutting off a
+    // batch at every page boundary of a bit column could be costly with many
+    // such pages, so we opted to try to shift the bits when necessary.
+    //
+    // In the end, this was too much complexity for not enough performance
+    // benefit, for now this reader has been moved to use the higher level value
+    // by value reader provided by the parquet library.
+    for (int i = 0; i < recordsReadInThisIteration; i++){
+      ((BitVector)valueVec).getMutator().setSafe(i + valuesReadInCurrentPass,
+            pageReader.valueReader.readBoolean() ? 1 : 0 );
     }
   }
 }

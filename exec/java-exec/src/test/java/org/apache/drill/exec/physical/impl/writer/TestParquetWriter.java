@@ -204,6 +204,12 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate("*", "*", inputTable, "nullable_test");
   }
 
+  @Ignore("Binary file too large for version control, TODO - make available on S3 bucket or similar service")
+  @Test
+  public void testBitError_Drill_2031() throws Exception {
+    compareParquetReadersHyperVector("*", "dfs.`/tmp/wide2/0_0_3.parquet`");
+  }
+
   @Test
   public void testDecimal() throws Exception {
     String selection = "cast(salary as decimal(8,2)) as decimal8, cast(salary as decimal(15,2)) as decimal15, " +
