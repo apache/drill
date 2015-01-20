@@ -87,6 +87,12 @@ public class HiveScan extends AbstractGroupScan {
   @JsonIgnore
   Map<InputSplit, Partition> partitionMap = new HashMap();
 
+  /*
+   * total number of rows (obtained from metadata store)
+   */
+  @JsonIgnore
+  private long rowCount = 0;
+
   @JsonCreator
   public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry,
                   @JsonProperty("storage-plugin") String storagePluginName,
@@ -118,6 +124,7 @@ public class HiveScan extends AbstractGroupScan {
     this.partitionMap = that.partitionMap;
     this.storagePlugin = that.storagePlugin;
     this.storagePluginName = that.storagePluginName;
+    this.rowCount = that.rowCount;
   }
 
   public List<SchemaPath> getColumns() {
@@ -166,6 +173,16 @@ public class HiveScan extends AbstractGroupScan {
       for (InputSplit split : format.getSplits(jobWithFsConf, 1)) {
         inputSplits.add(split);
         partitionMap.put(split, partition);
+      }
+    }
+    final String numRowsProp = properties.getProperty("numRows");
+    logger.trace("HiveScan num rows property = {}", numRowsProp);
+    if (numRowsProp != null) {
+      final int numRows = Integer.valueOf(numRowsProp);
+      // starting from hive-0.13, when no statistics are available, this property is set to -1
+      // it's important to note that the value returned by hive may not be up to date
+      if (numRows > 0) {
+        rowCount += numRows;
       }
     }
   }
@@ -268,7 +285,12 @@ public class HiveScan extends AbstractGroupScan {
           data += split.getLength();
       }
 
-      long estRowCount = data/1024;
+      long estRowCount = rowCount;
+      if (estRowCount == 0) {
+        // having a rowCount of 0 can mean the statistics were never computed
+        estRowCount = data/1024;
+      }
+      logger.debug("estimated row count = {}, stats row count = {}", estRowCount, rowCount);
       return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, estRowCount, 1, data);
     } catch (IOException e) {
       throw new DrillRuntimeException(e);
