@@ -88,9 +88,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  <#elseif type.runningType?starts_with("BigInt")>
 	    value.value = Long.MIN_VALUE;
 	  <#elseif type.runningType?starts_with("Float4")>
-		value.value = Float.MIN_VALUE;
+		value.value = -Float.MAX_VALUE;
 	  <#elseif type.runningType?starts_with("Float8")>
-		value.value = Double.MIN_VALUE;	    
+		value.value = -Double.MAX_VALUE;
 	  </#if>
 	</#if>
 	  
@@ -163,9 +163,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  <#elseif type.runningType?starts_with("BigInt")>
 	    value.value = Long.MIN_VALUE;
 	  <#elseif type.runningType?starts_with("Float4")>
-		value.value = Float.MIN_VALUE;
+		value.value = -Float.MAX_VALUE;
 	  <#elseif type.runningType?starts_with("Float8")>
-		value.value = Double.MIN_VALUE;	    
+		value.value = -Double.MAX_VALUE;
 	  </#if>
 	</#if>
 	  

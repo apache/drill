@@ -46,4 +46,14 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineValues(2l)
         .build().run();
   }
+
+  @Test
+  public void testMaxWithZeroInput() throws Exception {
+    testBuilder()
+        .sqlQuery("select max(employee_id * 0.0) as max_val from cp.`employee.json`")
+        .unOrdered()
+        .baselineColumns("max_val")
+        .baselineValues(0.0d)
+        .go();
+  }
 }
