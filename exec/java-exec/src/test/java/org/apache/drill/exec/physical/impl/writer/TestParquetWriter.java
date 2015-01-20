@@ -224,6 +224,14 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate(selection, validateSelection, inputTable, "region_boolean_parquet");
   }
 
+  @Test //DRILL-2030
+  public void testWriterWithStarAndExp() throws Exception {
+    String selection = " *, r_regionkey + 1";
+    String validateSelection = "r_regionkey, r_name, r_comment, r_regionkey + 1";
+    String inputTable = "cp.`tpch/region.parquet`";
+    runTestAndValidate(selection, validateSelection, inputTable, "region_star_exp");
+  }
+
   public void compareParquetReadersColumnar(String selection, String table) throws Exception {
     String query = "select " + selection + " from " + table;
     testBuilder()

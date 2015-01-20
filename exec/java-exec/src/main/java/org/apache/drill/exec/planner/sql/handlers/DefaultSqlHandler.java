@@ -187,7 +187,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * duplicate columns, since user could "explicitly" ask for duplicate columns ( select *, col, *).
      * The rest of projects will remove the duplicate column when we generate POP in json format.
      */
-    phyRelNode = StarColumnConverter.insertRenameProject(phyRelNode, phyRelNode.getRowType());
+    phyRelNode = StarColumnConverter.insertRenameProject(phyRelNode);
 
     /*
      * 1.)
