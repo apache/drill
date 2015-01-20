@@ -18,11 +18,14 @@
 package org.apache.drill;
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
 import org.apache.drill.exec.rpc.RpcException;
 
 public class TestStarQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStarQueries.class);
+  static final String WORKING_PATH = TestTools.getWorkingPath();
+  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   @Test // see DRILL-2021
   public void testSelStarCommaSameColumnRepeated() throws Exception {
@@ -305,6 +308,19 @@ public class TestStarQueries extends BaseTestQuery{
     test("select *, n_nationkey + 5 from cp.`tpch/nation.parquet` limit 3");
     test("select *  from cp.`tpch/nation.parquet` where n_nationkey + 5 > 10 limit 3");
     test("select * from cp.`tpch/nation.parquet` order by random()");
+  }
+
+  @Test // DRILL-1500
+  public void testStarPartitionFilterOrderBy() throws Exception {
+    String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where dir0=1994 and dir1='Q1' order by dir0 limit 1", TEST_RES_PATH);
+    org.joda.time.DateTime mydate = new org.joda.time.DateTime("1994-01-20T00:00:00.000-08:00");
+
+    testBuilder()
+    .sqlQuery(query)
+    .ordered()
+    .baselineColumns("dir0", "dir1", "o_clerk", "o_comment", "o_custkey", "o_orderdate", "o_orderkey",  "o_orderpriority", "o_orderstatus", "o_shippriority",  "o_totalprice")
+    .baselineValues("1994", "Q1", "Clerk#000000743", "y pending requests integrate", 1292, mydate, 66, "5-LOW", "F",  0, 104190.66)
+    .build().run();
   }
 
 }
