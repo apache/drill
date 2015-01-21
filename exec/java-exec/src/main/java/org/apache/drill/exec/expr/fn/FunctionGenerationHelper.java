@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -42,6 +43,10 @@ public class FunctionGenerationHelper {
   public static FunctionHolderExpression getComparator(HoldingContainer left,
     HoldingContainer right,
     FunctionImplementationRegistry registry) {
+    if (! isComparableType(left.getMajorType()) || ! isComparableType(right.getMajorType()) ){
+      throw new UnsupportedOperationException(formatCanNotCompareMsg(left.getMajorType(), right.getMajorType()));
+    }
+
     return getFunctionExpression(COMPARE_TO, Types.required(MinorType.INT), registry, left, right);
   }
 
@@ -78,6 +83,28 @@ public class FunctionGenerationHelper {
     sb.append(mt.getMinorType().name());
     sb.append(":");
     sb.append(mt.getMode().name());
+  }
+
+  protected static boolean isComparableType(MajorType type) {
+    if (type.getMinorType() == MinorType.MAP ||
+        type.getMinorType() == MinorType.LIST ||
+        type.getMode() == TypeProtos.DataMode.REPEATED ) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  private static String formatCanNotCompareMsg(MajorType left, MajorType right) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Map, Array or repeated scalar type should not be used in group by, order by or in a comparison operator. Drill does not support compare between ");
+
+    appendType(left, sb);
+    sb.append(" and ");
+    appendType(right, sb);
+    sb.append(".");
+
+    return sb.toString();
   }
 
 }
