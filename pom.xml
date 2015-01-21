@@ -26,7 +26,7 @@
 
   <name>Apache Drill Root POM</name>
   <description>Apache Drill is an open source, low latency SQL query engine for Hadoop and NoSQL.</description>
-  <url>http://incubator.apache.org/drill/</url>
+  <url>http://drill.apache.org/</url>
 
   <properties>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
@@ -36,38 +36,39 @@
   </properties>
 
   <scm>
-    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-drill.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-drill.git</developerConnection>
-    <url>https://github.com/apache/incubator-drill</url>
+    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/drill.git</connection>
+    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/drill.git</developerConnection>
+    <url>https://github.com/apache/drill</url>
     <tag>HEAD</tag>
   </scm>
 
   <mailingLists>
     <mailingList>
       <name>User List</name>
-      <subscribe>drill-user-subscribe@incubator.apache.org</subscribe>
-      <unsubscribe>drill-user-unsubscribe@incubator.apache.org</unsubscribe>
-      <post>drill-user@incubator.apache.org</post>
-      <archive>https://mail-archives.apache.org/mod_mbox/incubator-drill-user/</archive>
+      <subscribe>user-subscribe@drill.apache.org</subscribe>
+      <unsubscribe>user-unsubscribe@drill.apache.org</unsubscribe>
+      <post>user@drill.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/drill-user/</archive>
     </mailingList>
     <mailingList>
       <name>Developer List</name>
-      <subscribe>drill-dev-subscribe@incubator.apache.org</subscribe>
-      <unsubscribe>drill-dev-unsubscribe@incubator.apache.org</unsubscribe>
-      <post>drill-dev@incubator.apache.org</post>
-      <archive>https://mail-archives.apache.org/mod_mbox/incubator-drill-dev/</archive>
+      <subscribe>dev-subscribe@drill.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@drill.apache.org</unsubscribe>
+      <post>dev@drill.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/drill-dev/</archive>
     </mailingList>
     <mailingList>
       <name>Commits List</name>
-      <subscribe>drill-commits-subscribe@incubator.apache.org</subscribe>
-      <unsubscribe>drill-commits-unsubscribe@incubator.apache.org</unsubscribe>
-      <archive>https://mail-archives.apache.org/mod_mbox/incubator-drill-commits/</archive>
+      <subscribe>commits-subscribe@drill.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@drill.apache.org</unsubscribe>
+      <post>commits@drill.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/drill-commits/</archive>
     </mailingList>
     <mailingList>
       <name>Issues List</name>
-      <subscribe>issues-subscribe@drill.incubator.apache.org</subscribe>
-      <unsubscribe>issues-unsubscribe@drill.incubator.apache.org</unsubscribe>
-      <archive>https://mail-archives.apache.org/mod_mbox/incubator-drill-issues/</archive>
+      <subscribe>issues-subscribe@drill.apache.org</subscribe>
+      <unsubscribe>issues-unsubscribe@drill.apache.org</unsubscribe>
+      <archive>http://mail-archives.apache.org/mod_mbox/drill-issues/</archive>
     </mailingList>
   </mailingLists>
 
@@ -243,7 +244,7 @@
             <manifestEntries>
               <Extension-Name>org.apache.drill</Extension-Name>
               <Built-By>${username}</Built-By>
-              <url>http://incubator.apache.org/drill/</url>
+              <url>http://drill.apache.org/</url>
             </manifestEntries>
           </archive>
         </configuration>

@@ -17,11 +17,11 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
 
 ## Checkout
 
-    git clone https://github.com/apache/incubator-drill.git
+    git clone https://github.com/apache/drill.git
     
 ## Build
 
-    cd incubator-drill
+    cd drill
     mvn clean install
 
 ## Explode tarball in installation directory
