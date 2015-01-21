@@ -20,7 +20,8 @@
   <module name="TreeWalker">
 
     <module name="IllegalImport">
-      <property name="illegalPkgs" value="com.google.hive12,com.beust.jcommander.internal,jersey.repackaged"/>
+      <!-- For "org.apache.commons.lang.*" classes use the corresponding class from "org.apache.commons.lang3.*" -->
+      <property name="illegalPkgs" value="com.google.hive12,com.beust.jcommander.internal,jersey.repackaged,org.apache.commons.lang"/>
     </module>
 
     <module name="AvoidStarImport">

@@ -20,6 +20,7 @@ package org.apache.drill.common.util;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class DrillStringUtils {
 
@@ -92,6 +93,16 @@ public class DrillStringUtils {
       }
     }
     return result.toString();
+  }
+
+  /**
+   * Copied form commons-lang 2.x code as common-lang 3.x has this API removed.
+   * (http://commons.apache.org/proper/commons-lang/article3_0.html#StringEscapeUtils.escapeSql)
+   * @param str
+   * @return
+   */
+  public static String escapeSql(String str) {
+    return (str == null) ? null : StringUtils.replace(str, "'", "''");
   }
 
   /**

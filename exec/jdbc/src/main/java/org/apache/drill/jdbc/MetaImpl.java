@@ -27,8 +27,8 @@ import net.hydromatic.avatica.AvaticaStatement;
 import net.hydromatic.avatica.Cursor;
 import net.hydromatic.avatica.Meta;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.util.DrillStringUtils;
 
 
 public class MetaImpl implements Meta {
@@ -97,15 +97,15 @@ public class MetaImpl implements Meta {
         + "FROM INFORMATION_SCHEMA.`TABLES` WHERE 1=1 ");
 
     if (catalog != null) {
-      sb.append(" AND TABLE_CATALOG = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
+      sb.append(" AND TABLE_CATALOG = '" + DrillStringUtils.escapeSql(catalog) + "' ");
     }
 
     if (schemaPattern.s != null) {
-      sb.append(" AND TABLE_SCHEMA like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
+      sb.append(" AND TABLE_SCHEMA like '" + DrillStringUtils.escapeSql(schemaPattern.s) + "'");
     }
 
     if (tableNamePattern.s != null) {
-      sb.append(" AND TABLE_NAME like '" + StringEscapeUtils.escapeSql(tableNamePattern.s) + "'");
+      sb.append(" AND TABLE_NAME like '" + DrillStringUtils.escapeSql(tableNamePattern.s) + "'");
     }
 
     if (typeList != null && typeList.size() > 0) {
@@ -114,7 +114,7 @@ public class MetaImpl implements Meta {
         if (t != 0) {
           sb.append(" OR ");
         }
-        sb.append(" TABLE_TYPE LIKE '" + StringEscapeUtils.escapeSql(typeList.get(t)) + "' ");
+        sb.append(" TABLE_TYPE LIKE '" + DrillStringUtils.escapeSql(typeList.get(t)) + "' ");
       }
       sb.append(")");
     }
@@ -155,18 +155,18 @@ public class MetaImpl implements Meta {
         + "WHERE 1=1 ");
 
     if (catalog != null) {
-      sb.append(" AND TABLE_CATALOG = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
+      sb.append(" AND TABLE_CATALOG = '" + DrillStringUtils.escapeSql(catalog) + "' ");
     }
     if (schemaPattern.s != null) {
-      sb.append(" AND TABLE_SCHEMA like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
+      sb.append(" AND TABLE_SCHEMA like '" + DrillStringUtils.escapeSql(schemaPattern.s) + "'");
     }
 
     if (tableNamePattern.s != null) {
-      sb.append(" AND TABLE_NAME like '" + StringEscapeUtils.escapeSql(tableNamePattern.s) + "'");
+      sb.append(" AND TABLE_NAME like '" + DrillStringUtils.escapeSql(tableNamePattern.s) + "'");
     }
 
     if (columnNamePattern.s != null) {
-      sb.append(" AND COLUMN_NAME like '" + StringEscapeUtils.escapeSql(columnNamePattern.s) + "'");
+      sb.append(" AND COLUMN_NAME like '" + DrillStringUtils.escapeSql(columnNamePattern.s) + "'");
     }
 
     sb.append(" ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME");
@@ -182,10 +182,10 @@ public class MetaImpl implements Meta {
         + " FROM INFORMATION_SCHEMA.SCHEMATA WHERE 1=1 ");
 
     if (catalog != null) {
-      sb.append(" AND CATALOG_NAME = '" + StringEscapeUtils.escapeSql(catalog) + "' ");
+      sb.append(" AND CATALOG_NAME = '" + DrillStringUtils.escapeSql(catalog) + "' ");
     }
     if (schemaPattern.s != null) {
-      sb.append(" AND SCHEMA_NAME like '" + StringEscapeUtils.escapeSql(schemaPattern.s) + "'");
+      sb.append(" AND SCHEMA_NAME like '" + DrillStringUtils.escapeSql(schemaPattern.s) + "'");
     }
     sb.append(" ORDER BY CATALOG_NAME, SCHEMA_NAME");
 
