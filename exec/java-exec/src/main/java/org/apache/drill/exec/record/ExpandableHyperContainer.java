@@ -19,6 +19,8 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.vector.ValueVector;
 
+import java.util.LinkedList;
+
 public class ExpandableHyperContainer extends VectorContainer {
 
   public ExpandableHyperContainer() {

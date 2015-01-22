@@ -470,6 +470,10 @@ public final class UserBitShared {
      * <code>WINDOW = 34;</code>
      */
     WINDOW(34, 34),
+    /**
+     * <code>NESTED_LOOP_JOIN = 35;</code>
+     */
+    NESTED_LOOP_JOIN(35, 35),
     ;
 
     /**
@@ -612,6 +616,10 @@ public final class UserBitShared {
      * <code>WINDOW = 34;</code>
      */
     public static final int WINDOW_VALUE = 34;
+    /**
+     * <code>NESTED_LOOP_JOIN = 35;</code>
+     */
+    public static final int NESTED_LOOP_JOIN_VALUE = 35;
 
 
     public final int getNumber() { return value; }
@@ -653,6 +661,7 @@ public final class UserBitShared {
         case 32: return PRODUCER_CONSUMER;
         case 33: return HBASE_SUB_SCAN;
         case 34: return WINDOW;
+        case 35: return NESTED_LOOP_JOIN;
         default: return null;
       }
     }

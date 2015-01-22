@@ -230,4 +230,5 @@ enum CoreOperatorType {
   PRODUCER_CONSUMER = 32;
   HBASE_SUB_SCAN = 33;
   WINDOW = 34;
+  NESTED_LOOP_JOIN = 35;
 }
