@@ -100,6 +100,7 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
   }
   
   public void transferTo(Repeated${minor.class}Vector target){
+    target.clear();
     offsets.transferTo(target.offsets);
     values.transferTo(target.values);
     target.parentValueCount = parentValueCount;

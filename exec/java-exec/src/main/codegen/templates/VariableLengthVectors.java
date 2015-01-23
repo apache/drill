@@ -161,6 +161,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   public void transferTo(${minor.class}Vector target){
+    target.clear();
     this.offsetVector.transferTo(target.offsetVector);
     target.data = data;
     target.data.retain();

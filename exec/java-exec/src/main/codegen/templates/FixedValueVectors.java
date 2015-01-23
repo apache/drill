@@ -159,6 +159,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   public void transferTo(${minor.class}Vector target){
+    target.clear();
     target.data = data;
     target.data.retain();
     target.data.writerIndex(data.writerIndex());
