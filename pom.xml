@@ -168,7 +168,7 @@
             <exclude>**/*.css</exclude>
             <exclude>**/*.js</exclude>
             <exclude>**/*.md</exclude>
-            <exclude>sandbox/**</exclude>
+            <exclude>**/*.eps</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/*.parquet</exclude>
             <exclude>**/*.sql</exclude>
