@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.fragment;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 /**
@@ -29,8 +28,9 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Fragment, ForemanSetupException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MakeFragmentsVisitor.class);
 
+  public final static MakeFragmentsVisitor INSTANCE = new MakeFragmentsVisitor();
 
-  public MakeFragmentsVisitor() {
+  private MakeFragmentsVisitor() {
   }
 
   @Override
@@ -41,15 +41,9 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
     }
     Fragment next = getNextBuilder();
     value.addReceiveExchange(exchange, next);
-    next.addSendExchange(exchange);
+    next.addSendExchange(exchange, value);
     exchange.getChild().accept(this, next);
     return value;
-  }
-
-  @Override
-  public Fragment visitSubScan(SubScan subScan, Fragment value) throws ForemanSetupException {
-    // TODO - implement this
-    return super.visitOp(subScan, value);
   }
 
   @Override

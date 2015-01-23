@@ -20,18 +20,28 @@ package org.apache.drill.exec.physical.base;
 import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 
 public abstract class AbstractReceiver extends AbstractBase implements Receiver{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractReceiver.class);
 
   private final int oppositeMajorFragmentId;
+  private final List<MinorFragmentEndpoint> senders;
 
-  public AbstractReceiver(int oppositeMajorFragmentId){
+  /**
+   * @param oppositeMajorFragmentId MajorFragmentId of fragments that are sending data to this receiver.
+   * @param senders List of sender MinorFragmentEndpoints each containing sender MinorFragmentId and Drillbit endpoint
+   *                where it is running.
+   */
+  public AbstractReceiver(int oppositeMajorFragmentId, List<MinorFragmentEndpoint> senders){
     this.oppositeMajorFragmentId = oppositeMajorFragmentId;
+    this.senders = ImmutableList.copyOf(senders);
   }
 
   @Override
@@ -56,5 +66,14 @@ public abstract class AbstractReceiver extends AbstractBase implements Receiver{
     return oppositeMajorFragmentId;
   }
 
+  @JsonProperty("senders")
+  public List<MinorFragmentEndpoint> getProvidingEndpoints() {
+    return senders;
+  }
+
+  @JsonIgnore
+  public int getNumSenders() {
+    return senders.size();
+  }
 }
 

@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.physical.config;
 
+import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -37,21 +40,14 @@ public class RangeSender extends AbstractSender{
 
   @JsonCreator
   public RangeSender(@JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId, @JsonProperty("child") PhysicalOperator child, @JsonProperty("partitions") List<EndpointPartition> partitions) {
-    super(oppositeMajorFragmentId, child);
+    super(oppositeMajorFragmentId, child, Collections.<MinorFragmentEndpoint>emptyList());
     this.partitions = partitions;
   }
-
-  @Override
-  public List<DrillbitEndpoint> getDestinations() {
-    return null;
-  }
-
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new RangeSender(oppositeMajorFragmentId, child, partitions);
   }
-
 
   public static class EndpointPartition{
     private final PartitionRange range;

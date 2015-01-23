@@ -50,6 +50,7 @@ import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
+import org.apache.drill.exec.planner.physical.visitor.InsertLocalExchangeVisitor;
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.MemoryEstimationVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
@@ -290,13 +291,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
 
     /* 4.)
-     * Next, we add any required selection vector removers given the supported encodings of each
-     * operator. This will ultimately move to a new trait but we're managing here for now to avoid
-     * introducing new issues in planning before the next release
-     */
-    phyRelNode = SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
-
-    /* 5.)
      * Add ProducerConsumer after each scan if the option is set
      * Use the configured queueSize
      */
@@ -308,7 +302,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     */
 
 
-    /* 6.)
+    /* 5.)
      * if the client does not support complex types (Map, Repeated)
      * insert a project which which would convert
      */
@@ -317,7 +311,21 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       phyRelNode = ComplexToJsonPrelVisitor.addComplexToJsonPrel(phyRelNode);
     }
 
+
+    /* 6.)
+     * Insert LocalExchange (mux and/or demux) nodes
+     */
+    phyRelNode = InsertLocalExchangeVisitor.insertLocalExchanges(phyRelNode, queryOptions);
+
+
     /* 7.)
+     * Next, we add any required selection vector removers given the supported encodings of each
+     * operator. This will ultimately move to a new trait but we're managing here for now to avoid
+     * introducing new issues in planning before the next release
+     */
+    phyRelNode = SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
+
+    /* 8.)
      * Finally, Make sure that the no rels are repeats.
      * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
      */

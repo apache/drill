@@ -19,47 +19,37 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.exec.physical.base.AbstractExchange;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalOperatorUtil;
 import org.apache.drill.exec.physical.base.Receiver;
-import org.apache.drill.exec.physical.base.Sender;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("hash-to-random-exchange")
-public class HashToRandomExchange extends AbstractExchange{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashToRandomExchange.class);
+/**
+ * UnorderedMuxExchange is a version of MuxExchange where the incoming batches are not sorted.
+ */
+@JsonTypeName("unordered-mux-exchange")
+public class UnorderedMuxExchange extends AbstractMuxExchange {
 
-  private final LogicalExpression expr;
-
-  @JsonCreator
-  public HashToRandomExchange(@JsonProperty("child") PhysicalOperator child, @JsonProperty("expr") LogicalExpression expr) {
+  public UnorderedMuxExchange(@JsonProperty("child") PhysicalOperator child) {
     super(child);
-    this.expr = expr;
-  }
-
-  @Override
-  public Sender getSender(int minorFragmentId, PhysicalOperator child) {
-    return new HashPartitionSender(receiverMajorFragmentId, child, expr,
-        PhysicalOperatorUtil.getIndexOrderedEndpoints(receiverLocations));
   }
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new UnorderedReceiver(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations));
+    createSenderReceiverMapping();
+
+    List<MinorFragmentEndpoint> senders = receiverToSenderMapping.get(minorFragmentId);
+    if (senders == null || senders.size() <= 0) {
+      throw new IllegalStateException(String.format("Failed to find senders for receiver [%d]", minorFragmentId));
+    }
+
+    return new UnorderedReceiver(senderMajorFragmentId, senders);
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new HashToRandomExchange(child, expr);
-  }
-
-  @JsonProperty("expr")
-  public LogicalExpression getExpression(){
-    return expr;
+    return new UnorderedMuxExchange(child);
   }
 }

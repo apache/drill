@@ -167,7 +167,6 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
-    assert chunks != null && chunks.size() > 0;
     if (endpointAffinities == null) {
         logger.debug("chunks: {}", chunks.size());
         endpointAffinities = AffinityCreator.getAffinityMap(chunks);

@@ -147,8 +147,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
 
     List<QueryResultBatch> result = testSqlWithResults("select sum(a) as total_sum from dfs.`/tmp/parquet_with_nulls_should_sum_100000_nulls_first.parquet`");
     assertEquals("Only expected one batch with data, and then the empty finishing batch.", 2, result.size());
-    RecordBatchLoader loader = new RecordBatchLoader(bit.getContext()
-        .getAllocator());
+    RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
 
     QueryResultBatch b = result.get(0);
     loader.load(b.getHeader().getDef(), b.getData());
@@ -166,8 +165,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   public void testNullableFilter() throws Exception {
     List<QueryResultBatch> result = testSqlWithResults("select count(wr_return_quantity) as row_count from dfs.`/tmp/web_returns` where wr_return_quantity = 1");
     assertEquals("Only expected one batch with data, and then the empty finishing batch.", 2, result.size());
-    RecordBatchLoader loader = new RecordBatchLoader(bit.getContext()
-        .getAllocator());
+    RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
 
     QueryResultBatch b = result.get(0);
     loader.load(b.getHeader().getDef(), b.getData());

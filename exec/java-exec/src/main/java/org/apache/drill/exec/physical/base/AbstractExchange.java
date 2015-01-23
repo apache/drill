@@ -17,16 +17,26 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
+import org.apache.drill.exec.planner.fragment.ParallelizationInfo;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 public abstract class AbstractExchange extends AbstractSingle implements Exchange {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractExchange.class);
 
+  // Ephemeral info for generating execution fragments.
   protected int senderMajorFragmentId;
   protected int receiverMajorFragmentId;
+  protected List<DrillbitEndpoint> senderLocations;
+  protected List<DrillbitEndpoint> receiverLocations;
 
   public AbstractExchange(PhysicalOperator child) {
     super(child);
@@ -41,13 +51,58 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
     return false;
   }
 
+  /**
+   * Default sender parallelization width range is [1, Integer.MAX_VALUE] and no endpoint affinity
+   * @param receiverFragmentEndpoints Endpoints assigned to receiver fragment if available, otherwise an empty list.
+   * @return
+   */
   @Override
-  public int getMaxReceiveWidth() {
-    return Integer.MAX_VALUE;
+  public ParallelizationInfo getSenderParallelizationInfo(List<DrillbitEndpoint> receiverFragmentEndpoints) {
+    return ParallelizationInfo.UNLIMITED_WIDTH_NO_ENDPOINT_AFFINITY;
   }
 
-  protected abstract void setupSenders(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException ;
-  protected abstract void setupReceivers(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException ;
+  /**
+   * Default receiver parallelization width range is [1, Integer.MAX_VALUE] and affinity to nodes where sender
+   * fragments are running.
+   * @param senderFragmentEndpoints Endpoints assigned to receiver fragment if available, otherwise an empty list.
+   * @return
+   */
+  @Override
+  public ParallelizationInfo getReceiverParallelizationInfo(List<DrillbitEndpoint> senderFragmentEndpoints) {
+    Preconditions.checkArgument(senderFragmentEndpoints != null && senderFragmentEndpoints.size() > 0,
+        "Sender fragment endpoint list should not be empty");
+
+    return ParallelizationInfo.create(1, Integer.MAX_VALUE, getDefaultAffinityMap(senderFragmentEndpoints));
+  }
+
+  /**
+   * Get a default endpoint affinity map where affinity of a Drillbit is proportional to the number of its occurrances
+   * in given endpoint list.
+   *
+   * @param fragmentEndpoints Drillbit endpoint assignments of fragments.
+   * @return List of EndpointAffinity objects for each Drillbit endpoint given <i>fragmentEndpoints</i>.
+   */
+  protected static List<EndpointAffinity> getDefaultAffinityMap(List<DrillbitEndpoint> fragmentEndpoints) {
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = Maps.newHashMap();
+    final double affinityPerOccurrence = 1.0d / fragmentEndpoints.size();
+    for(DrillbitEndpoint sender : fragmentEndpoints) {
+      if (affinityMap.containsKey(sender)) {
+        affinityMap.get(sender).addAffinity(affinityPerOccurrence);
+      } else {
+        affinityMap.put(sender, new EndpointAffinity(sender, affinityPerOccurrence));
+      }
+    }
+
+    return new ArrayList(affinityMap.values());
+  }
+
+  protected void setupSenders(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException {
+    this.senderLocations = ImmutableList.copyOf(senderLocations);
+  }
+
+  protected void setupReceivers(List<DrillbitEndpoint> receiverLocations) throws PhysicalOperatorSetupException {
+    this.receiverLocations = ImmutableList.copyOf(receiverLocations);
+  }
 
   @Override
   public final void setupSenders(int majorFragmentId, List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException {
@@ -72,5 +127,8 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
     throw new UnsupportedOperationException();
   }
 
-
+  @Override
+  public ParallelizationDependency getParallelizationDependency() {
+    return ParallelizationDependency.RECEIVER_DEPENDS_ON_SENDER;
+  }
 }

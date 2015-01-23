@@ -48,7 +48,7 @@ public class Screen extends AbstractStore {
 
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
-    return Collections.singletonList(new EndpointAffinity(endpoint, 1000000000000l));
+    return Collections.singletonList(new EndpointAffinity(endpoint, Double.POSITIVE_INFINITY));
   }
 
   @Override

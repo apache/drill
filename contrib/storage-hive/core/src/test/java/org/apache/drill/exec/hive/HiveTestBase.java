@@ -31,7 +31,7 @@ public class HiveTestBase extends PlanTestBase {
 
   @BeforeClass
   public static void generateHive() throws Exception{
-    hiveTest = new HiveTestDataGenerator(bit.getContext().getStorage());
+    hiveTest = new HiveTestDataGenerator(getDrillbitContext().getStorage());
     hiveTest.createAndAddHiveTestPlugin();
   }
 

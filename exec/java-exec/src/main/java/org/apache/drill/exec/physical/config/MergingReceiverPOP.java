@@ -20,13 +20,12 @@ package org.apache.drill.exec.physical.config;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.Order.Ordering;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractReceiver;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -38,22 +37,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class MergingReceiverPOP extends AbstractReceiver{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergingReceiverPOP.class);
 
-  private final List<DrillbitEndpoint> senders;
   private final List<Ordering> orderings;
 
   @JsonCreator
   public MergingReceiverPOP(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
-                            @JsonProperty("senders") List<DrillbitEndpoint> senders,
+                            @JsonProperty("senders") List<MinorFragmentEndpoint> senders,
                             @JsonProperty("orderings") List<Ordering> orderings) {
-    super(oppositeMajorFragmentId);
-    this.senders = senders;
+    super(oppositeMajorFragmentId, senders);
     this.orderings = orderings;
-  }
-
-  @Override
-  @JsonProperty("senders")
-  public List<DrillbitEndpoint> getProvidingEndpoints() {
-    return senders;
   }
 
   @Override
@@ -73,10 +64,5 @@ public class MergingReceiverPOP extends AbstractReceiver{
   @Override
   public int getOperatorType() {
     return CoreOperatorType.MERGING_RECEIVER_VALUE;
-  }
-
-  @JsonIgnore
-  public int getNumSenders() {
-    return senders.size();
   }
 }

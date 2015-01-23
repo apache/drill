@@ -167,11 +167,6 @@ public class MockGroupScanPOP extends AbstractGroupScan {
 
   }
 
-  @Override
-  public List<EndpointAffinity> getOperatorAffinity() {
-    return Collections.emptyList();
-  }
-
   @SuppressWarnings("unchecked")
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) {

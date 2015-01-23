@@ -27,21 +27,10 @@ import com.google.common.collect.Maps;
 public class PlanningSet implements Iterable<Wrapper> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningSet.class);
 
-  private Map<Fragment, Wrapper> fragmentMap = Maps.newHashMap();
+  private final Map<Fragment, Wrapper> fragmentMap = Maps.newHashMap();
   private int majorFragmentIdIndex = 0;
 
-  PlanningSet() {
-  }
-
-  public void addAffinity(Fragment n, DrillbitEndpoint endpoint, float affinity) {
-    get(n).addEndpointAffinity(endpoint, affinity);
-  }
-
-  public void setWidth(Fragment n, int width) {
-    get(n).setWidth(width);
-  }
-
-  Wrapper get(Fragment node) {
+  public Wrapper get(Fragment node) {
     Wrapper wrapper = fragmentMap.get(node);
     if (wrapper == null) {
 

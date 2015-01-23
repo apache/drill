@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,14 +25,19 @@ import org.apache.drill.common.expression.SchemaPath;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Iterators;
+import org.apache.drill.exec.physical.EndpointAffinity;
 
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractGroupScan.class);
 
-
   @Override
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.emptyIterator();
+  }
+
+  @Override
+  public List<EndpointAffinity> getOperatorAffinity() {
+    return Collections.emptyList();
   }
 
   @Override

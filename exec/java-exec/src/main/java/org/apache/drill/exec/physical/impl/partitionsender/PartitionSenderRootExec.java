@@ -34,10 +34,10 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.FragmentWritableBatch;
@@ -268,17 +268,16 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
   public void sendEmptyBatch(boolean isLast) {
     FragmentHandle handle = context.getHandle();
-    int fieldId = 0;
     StatusHandler statusHandler = new StatusHandler(sendCount, context);
-    for (DrillbitEndpoint endpoint : popConfig.getDestinations()) {
-      DataTunnel tunnel = context.getDataTunnel(endpoint);
+    for (MinorFragmentEndpoint destination : popConfig.getDestinations()) {
+      DataTunnel tunnel = context.getDataTunnel(destination.getEndpoint());
       FragmentWritableBatch writableBatch = FragmentWritableBatch.getEmptyBatchWithSchema(
           isLast,
           handle.getQueryId(),
           handle.getMajorFragmentId(),
           handle.getMinorFragmentId(),
           operator.getOppositeMajorFragmentId(),
-          fieldId,
+          destination.getId(),
           incoming.getSchema());
       stats.startWait();
       try {
@@ -287,7 +286,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
         stats.stopWait();
       }
       sendCount.increment();
-      fieldId++;
     }
   }
 

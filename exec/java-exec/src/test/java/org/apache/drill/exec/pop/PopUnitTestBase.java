@@ -54,11 +54,16 @@ public abstract class PopUnitTestBase  extends ExecTest{
     return i;
   }
 
-  public Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException, IOException, ForemanSetupException {
-    MakeFragmentsVisitor f = new MakeFragmentsVisitor();
+  public static Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException,
+      IOException, ForemanSetupException {
+    return getRootFragmentFromPlanString(reader, Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
+  }
 
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
+
+  public static Fragment getRootFragmentFromPlanString(PhysicalPlanReader reader, String planString)
+      throws FragmentSetupException, IOException, ForemanSetupException {
+    PhysicalPlan plan = reader.readPhysicalPlan(planString);
     PhysicalOperator o = plan.getSortedOperators(false).iterator().next();
-    return o.accept(f, null);
+    return o.accept(MakeFragmentsVisitor.INSTANCE, null);
   }
 }

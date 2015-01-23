@@ -17,50 +17,86 @@
  */
 package org.apache.drill.exec.physical;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.protobuf.TextFormat;
 
-
-public class EndpointAffinity implements Comparable<EndpointAffinity>{
+/**
+ * EndpointAffinity captures affinity value for a given single Drillbit endpoint.
+ */
+public class EndpointAffinity {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EndpointAffinity.class);
 
-  private DrillbitEndpoint endpoint;
-  private float affinity = 0.0f;
+  private final DrillbitEndpoint endpoint;
+  private double affinity = 0.0d;
 
+  /**
+   * Create EndpointAffinity instance for given Drillbit endpoint. Affinity is initialized to 0. Affinity can be added
+   * after EndpointAffinity object creation using {@link #addAffinity(double)}.
+   *
+   * @param endpoint Drillbit endpoint.
+   */
   public EndpointAffinity(DrillbitEndpoint endpoint) {
-    super();
     this.endpoint = endpoint;
   }
 
-  public EndpointAffinity(DrillbitEndpoint endpoint, float affinity) {
-    super();
+  /**
+   * Create EndpointAffinity instance for given Drillbit endpoint and affinity initialized to given affinity value.
+   * Affinity can be added after EndpointAffinity object creation using {@link #addAffinity(double)}.
+   *
+   * @param endpoint Drillbit endpoint.
+   * @param affinity Initial affinity value.
+   */
+  public EndpointAffinity(DrillbitEndpoint endpoint, double affinity) {
     this.endpoint = endpoint;
     this.affinity = affinity;
   }
 
+  /**
+   * Return the Drillbit endpoint in this instance.
+   *
+   * @return Drillbit endpoint.
+   */
   public DrillbitEndpoint getEndpoint() {
     return endpoint;
   }
-  public void setEndpoint(DrillbitEndpoint endpoint) {
-    this.endpoint = endpoint;
-  }
-  public float getAffinity() {
+
+  /**
+   * Get the affinity value. Affinity value is Double.POSITIVE_INFINITY if the Drillbit endpoint requires an assignment.
+   *
+   * @return affinity value
+   */
+  public double getAffinity() {
     return affinity;
   }
 
-  @Override
-  public int compareTo(EndpointAffinity o) {
-    return Float.compare(affinity, o.affinity);
+  /**
+   * Add given affinity value to existing affinity value.
+   *
+   * @param f Affinity value (must be a non-negative value).
+   * @throws java.lang.IllegalArgumentException If the given affinity value is negative.
+   */
+  public void addAffinity(double f){
+    Preconditions.checkArgument(f >= 0.0d, "Affinity should not be negative");
+    if (Double.POSITIVE_INFINITY == f) {
+      affinity = f;
+    } else if (Double.POSITIVE_INFINITY != affinity) {
+      affinity += f;
+    }
   }
 
-  public void addAffinity(float f){
-    affinity += f;
+  /**
+   * Is this endpoint required to be in fragment endpoint assignment list?
+   *
+   * @return Returns true for mandatory assignment, false otherwise.
+   */
+  public boolean isAssignmentRequired() {
+    return Double.POSITIVE_INFINITY == affinity;
   }
 
   @Override
   public String toString() {
     return "EndpointAffinity [endpoint=" + TextFormat.shortDebugString(endpoint) + ", affinity=" + affinity + "]";
   }
-
 }

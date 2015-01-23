@@ -100,12 +100,6 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan{
   }
 
   @Override
-  public List<EndpointAffinity> getOperatorAffinity() {
-    return Collections.emptyList();
-  }
-
-
-  @Override
   public int getOperatorType() {
     return CoreOperatorType.SYSTEM_TABLE_SCAN_VALUE;
   }

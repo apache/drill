@@ -25,11 +25,11 @@ import org.apache.drill.exec.physical.base.Receiver;
 public class PartitionedCollector extends AbstractDataCollector{
 
   public PartitionedCollector(AtomicInteger parentAccounter, Receiver receiver, FragmentContext context) {
-    super(parentAccounter, receiver, receiver.getProvidingEndpoints().size(), context);
+    super(parentAccounter, receiver, receiver.getProvidingEndpoints().size(), 1, context);
   }
 
   @Override
   protected RawBatchBuffer getBuffer(int minorFragmentId) {
-    return buffers[minorFragmentId];
+    return buffers[fragmentMap.get(minorFragmentId)];
   }
 }

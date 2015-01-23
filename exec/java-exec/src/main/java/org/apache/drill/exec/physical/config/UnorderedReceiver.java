@@ -19,13 +19,12 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractReceiver;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -33,19 +32,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class UnorderedReceiver extends AbstractReceiver{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiver.class);
 
-  private List<DrillbitEndpoint> senders;
-
   @JsonCreator
   public UnorderedReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
-                        @JsonProperty("senders") List<DrillbitEndpoint> senders) {
-    super(oppositeMajorFragmentId);
-    this.senders = senders;
-  }
-
-  @Override
-  @JsonProperty("senders")
-  public List<DrillbitEndpoint> getProvidingEndpoints() {
-    return senders;
+                           @JsonProperty("senders") List<MinorFragmentEndpoint> senders) {
+    super(oppositeMajorFragmentId, senders);
   }
 
   @Override
@@ -61,10 +51,5 @@ public class UnorderedReceiver extends AbstractReceiver{
   @Override
   public int getOperatorType() {
     return CoreOperatorType.UNORDERED_RECEIVER_VALUE;
-  }
-
-  @JsonIgnore
-  public int getNumSenders() {
-    return senders.size();
   }
 }

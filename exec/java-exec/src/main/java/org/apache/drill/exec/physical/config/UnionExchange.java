@@ -19,11 +19,14 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractExchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.PhysicalOperatorUtil;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.physical.base.Sender;
+import org.apache.drill.exec.planner.fragment.ParallelizationInfo;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,11 +37,16 @@ public class UnionExchange extends AbstractExchange{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionExchange.class);
 
-  private List<DrillbitEndpoint> senderLocations;
-  private DrillbitEndpoint destinationLocation;
-
   public UnionExchange(@JsonProperty("child") PhysicalOperator child) {
     super(child);
+  }
+
+  @Override
+  public ParallelizationInfo getReceiverParallelizationInfo(List<DrillbitEndpoint> senderFragmentEndpoints) {
+    Preconditions.checkArgument(senderFragmentEndpoints != null && senderFragmentEndpoints.size() > 0,
+        "Sender fragment endpoint list should not be empty");
+
+    return ParallelizationInfo.create(1, 1, getDefaultAffinityMap(senderFragmentEndpoints));
   }
 
   @Override
@@ -48,30 +56,20 @@ public class UnionExchange extends AbstractExchange{
 
   @Override
   protected void setupReceivers(List<DrillbitEndpoint> receiverLocations) throws PhysicalOperatorSetupException {
-    if (receiverLocations.size() != 1) {
-      throw new PhysicalOperatorSetupException("A Union Exchange only supports a single receiver endpoint.");
-    }
-    this.destinationLocation = receiverLocations.iterator().next();
+    Preconditions.checkArgument(receiverLocations.size() == 1,
+        "Union Exchange only supports a single receiver endpoint.");
+
+    super.setupReceivers(receiverLocations);
   }
 
   @Override
   public Sender getSender(int minorFragmentId, PhysicalOperator child) {
-    return new SingleSender(this.receiverMajorFragmentId, child, destinationLocation);
+    return new SingleSender(receiverMajorFragmentId, child, receiverLocations.get(0));
   }
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new UnorderedReceiver(this.senderMajorFragmentId, senderLocations);
-  }
-
-  @Override
-  public int getMaxSendWidth() {
-    return Integer.MAX_VALUE;
-  }
-
-  @Override
-  public int getMaxReceiveWidth() {
-    return 1;
+    return new UnorderedReceiver(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations));
   }
 
   @Override

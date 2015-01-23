@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
@@ -45,6 +46,7 @@ import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.AfterClass;
@@ -59,6 +61,13 @@ import com.google.common.io.Resources;
 
 public class BaseTestQuery extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+
+  /**
+   * Number of Drillbits in test cluster. Default is 1.
+   *
+   * Tests can update the cluster size through {@link #setDrillbitCount(int)}
+   */
+  private static int drillbitCount = 1;
 
   private int[] columnWidths = new int[] { 8 };
 
@@ -84,11 +93,36 @@ public class BaseTestQuery extends ExecTest{
   };
 
   protected static DrillClient client;
-  protected static Drillbit bit;
+  protected static Drillbit[] bits;
   protected static RemoteServiceSet serviceSet;
   protected static DrillConfig config;
   protected static QuerySubmitter submitter = new QuerySubmitter();
   protected static BufferAllocator allocator;
+
+  protected static void setDrillbitCount(int newDrillbitCount) {
+    Preconditions.checkArgument(newDrillbitCount > 0, "Number of Drillbits must be at least one");
+    if (drillbitCount != newDrillbitCount) {
+      // TODO: Currently we have to shutdown the existing Drillbit cluster before starting a new one with the given
+      // Drillbit count. Revisit later to avoid stopping the cluster.
+      try {
+        closeClient();
+        drillbitCount = newDrillbitCount;
+        openClient();
+      } catch(Exception e) {
+        throw new RuntimeException("Failure while changing the number of Drillbits in test cluster.", e);
+      }
+    }
+  }
+
+  /**
+   * Useful for tests that require a DrillbitContext to get/add storage plugins, options etc.
+   *
+   * @return DrillbitContext of first Drillbit in the cluster.
+   */
+  protected static DrillbitContext getDrillbitContext() {
+    Preconditions.checkState(bits != null && bits[0] != null, "Drillbits are not setup.");
+    return bits[0].getContext();
+  }
 
   static void resetClientAndBit() throws Exception{
     closeClient();
@@ -104,8 +138,13 @@ public class BaseTestQuery extends ExecTest{
     } else {
       serviceSet = RemoteServiceSet.getLocalServiceSet();
     }
-    bit = new Drillbit(config, serviceSet);
-    bit.run();
+
+    bits = new Drillbit[drillbitCount];
+    for(int i=0; i<drillbitCount; i++) {
+      bits[i] = new Drillbit(config, serviceSet);
+      bits[i].run();
+    }
+
     client = new DrillClient(config, serviceSet.getCoordinator());
     client.connect();
     List<QueryResultBatch> results = client.runQuery(QueryType.SQL, String.format("alter session set `%s` = 2", ExecConstants.MAX_WIDTH_PER_NODE_KEY));
@@ -118,11 +157,11 @@ public class BaseTestQuery extends ExecTest{
     return allocator;
   }
 
-  public TestBuilder newTest() {
+  public static TestBuilder newTest() {
     return testBuilder();
   }
 
-  public TestBuilder testBuilder() {
+  public static TestBuilder testBuilder() {
     return new TestBuilder(allocator);
   }
 
@@ -131,9 +170,15 @@ public class BaseTestQuery extends ExecTest{
     if (client != null) {
       client.close();
     }
-    if (bit != null) {
-      bit.close();
+
+    if (bits != null) {
+      for(Drillbit bit : bits) {
+        if (bit != null) {
+          bit.close();
+        }
+      }
     }
+
     if(serviceSet != null) {
       serviceSet.close();
     }
@@ -142,21 +187,21 @@ public class BaseTestQuery extends ExecTest{
     }
   }
 
-  protected void runSQL(String sql) throws Exception {
+  protected static void runSQL(String sql) throws Exception {
     SilentListener listener = new SilentListener();
     testWithListener(QueryType.SQL, sql, listener);
     listener.waitForCompletion();
   }
 
-  protected List<QueryResultBatch> testSqlWithResults(String sql) throws Exception{
+  protected static List<QueryResultBatch> testSqlWithResults(String sql) throws Exception{
     return testRunAndReturn(QueryType.SQL, sql);
   }
 
-  protected List<QueryResultBatch> testLogicalWithResults(String logical) throws Exception{
+  protected static List<QueryResultBatch> testLogicalWithResults(String logical) throws Exception{
     return testRunAndReturn(QueryType.LOGICAL, logical);
   }
 
-  protected List<QueryResultBatch> testPhysicalWithResults(String physical) throws Exception{
+  protected static List<QueryResultBatch> testPhysicalWithResults(String physical) throws Exception{
     return testRunAndReturn(QueryType.PHYSICAL, physical);
   }
 
@@ -172,7 +217,7 @@ public class BaseTestQuery extends ExecTest{
     return resultListener.await();
   }
 
-  protected void testWithListener(QueryType type, String query, UserResultsListener resultListener) {
+  protected static void testWithListener(QueryType type, String query, UserResultsListener resultListener) {
     query = normalizeQuery(query);
     client.runQuery(type, query, resultListener);
   }
@@ -216,15 +261,15 @@ public class BaseTestQuery extends ExecTest{
     return query;
   }
 
-  protected int testLogical(String query) throws Exception{
+  protected static int testLogical(String query) throws Exception{
     return testRunAndPrint(QueryType.LOGICAL, query);
   }
 
-  protected int testPhysical(String query) throws Exception{
+  protected static int testPhysical(String query) throws Exception{
     return testRunAndPrint(QueryType.PHYSICAL, query);
   }
 
-  protected int testSql(String query) throws Exception{
+  protected static int testSql(String query) throws Exception{
     return testRunAndPrint(QueryType.SQL, query);
   }
 

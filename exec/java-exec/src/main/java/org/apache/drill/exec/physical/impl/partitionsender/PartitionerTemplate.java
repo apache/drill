@@ -31,10 +31,10 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec.Metric;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -93,12 +93,12 @@ public abstract class PartitionerTemplate implements Partitioner {
       outgoingRecordBatchSize = (DEFAULT_RECORD_BATCH_SIZE + 1)/2 - 1;
     }
 
-    int fieldId = 0;
-    for (DrillbitEndpoint endpoint : popConfig.getDestinations()) {
-      FragmentHandle opposite = context.getHandle().toBuilder().setMajorFragmentId(popConfig.getOppositeMajorFragmentId()).setMinorFragmentId(fieldId).build();
+    for (MinorFragmentEndpoint destination : popConfig.getDestinations()) {
+      FragmentHandle opposite = context.getHandle().toBuilder()
+          .setMajorFragmentId(popConfig.getOppositeMajorFragmentId())
+          .setMinorFragmentId(destination.getId()).build();
       outgoingBatches.add(new OutgoingRecordBatch(stats, sendingAccountor, popConfig,
-          context.getDataTunnel(endpoint), context, oContext.getAllocator(), fieldId, statusHandler));
-      fieldId++;
+          context.getDataTunnel(destination.getEndpoint()), context, oContext.getAllocator(), destination.getId(), statusHandler));
     }
 
     for (OutgoingRecordBatch outgoingRecordBatch : outgoingBatches) {

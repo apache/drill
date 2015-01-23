@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 import java.util.List;
 
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,10 +31,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public interface Receiver extends FragmentLeaf {
 
   /**
-   * A receiver is expecting streams from one or more providing endpoints.  This method should return a list of the expected sending endpoints.
-   * @return List of counterpart sending DrillbitEndpoints.
+   * A receiver is expecting streams from one or more providing endpoints.
+   * @return List of sender MinorFragmentEndpoints each containing sender fragment MinorFragmentId and endpoint where
+   * it is running.
    */
-  public abstract List<DrillbitEndpoint> getProvidingEndpoints();
+  public abstract List<MinorFragmentEndpoint> getProvidingEndpoints();
 
   /**
    * Whether or not this receive supports out of order exchange. This provides a hint for the scheduling node on whether

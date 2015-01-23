@@ -47,9 +47,7 @@ import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
-import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
-import org.apache.drill.exec.planner.fragment.StatsCollector;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
@@ -370,15 +368,11 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
 
   private QueryWorkUnit getQueryWorkUnit(PhysicalPlan plan) throws ExecutionSetupException {
     PhysicalOperator rootOperator = plan.getSortedOperators(false).iterator().next();
-    MakeFragmentsVisitor makeFragmentsVisitor = new MakeFragmentsVisitor();
-    Fragment rootFragment = rootOperator.accept(makeFragmentsVisitor, null);
-    PlanningSet planningSet = StatsCollector.collectStats(rootFragment);
+    Fragment rootFragment = rootOperator.accept(MakeFragmentsVisitor.INSTANCE, null);
+
     SimpleParallelizer parallelizer = new SimpleParallelizer(context);
-
-
     return parallelizer.getFragments(context.getOptions().getOptionList(), context.getCurrentEndpoint(),
-        queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, planningSet,
-        initiatingClient.getSession());
+        queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, initiatingClient.getSession());
   }
 
   /**

@@ -20,13 +20,16 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractExchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.PhysicalOperatorUtil;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.physical.base.Sender;
-import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.planner.fragment.ParallelizationInfo;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,10 +41,6 @@ public class SingleMergeExchange extends AbstractExchange {
 
   private final List<Ordering> orderExpr;
 
-  // ephemeral for setup tasks
-  private List<CoordinationProtos.DrillbitEndpoint> senderLocations;
-  private CoordinationProtos.DrillbitEndpoint receiverLocation;
-
   @JsonCreator
   public SingleMergeExchange(@JsonProperty("child") PhysicalOperator child,
                              @JsonProperty("orderings") List<Ordering> orderExpr) {
@@ -50,39 +49,30 @@ public class SingleMergeExchange extends AbstractExchange {
   }
 
   @Override
-  public int getMaxSendWidth() {
-    return Integer.MAX_VALUE;
+  public ParallelizationInfo getReceiverParallelizationInfo(List<DrillbitEndpoint> senderFragmentEndpoints) {
+    Preconditions.checkArgument(senderFragmentEndpoints != null && senderFragmentEndpoints.size() > 0,
+        "Sender fragment endpoint list should not be empty");
+
+    return ParallelizationInfo.create(1, 1, getDefaultAffinityMap(senderFragmentEndpoints));
   }
 
   @Override
-  public int getMaxReceiveWidth() {
-    return 1;
-  }
-
-  @Override
-  protected void setupSenders(List<CoordinationProtos.DrillbitEndpoint> senderLocations) {
-    this.senderLocations = senderLocations;
-  }
-
-  @Override
-  protected void setupReceivers(List<CoordinationProtos.DrillbitEndpoint> receiverLocations)
+  protected void setupReceivers(List<DrillbitEndpoint> receiverLocations)
       throws PhysicalOperatorSetupException {
+    Preconditions.checkArgument(receiverLocations.size() == 1,
+      "SingleMergeExchange only supports a single receiver endpoint.");
 
-    if (receiverLocations.size() != 1) {
-      throw new PhysicalOperatorSetupException("SingleMergeExchange only supports a single receiver endpoint");
-    }
-    receiverLocation = receiverLocations.iterator().next();
-
+    super.setupReceivers(receiverLocations);
   }
 
   @Override
   public Sender getSender(int minorFragmentId, PhysicalOperator child) {
-    return new SingleSender(receiverMajorFragmentId, child, receiverLocation);
+    return new SingleSender(receiverMajorFragmentId, child, receiverLocations.iterator().next());
   }
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new MergingReceiverPOP(senderMajorFragmentId, senderLocations, orderExpr);
+    return new MergingReceiverPOP(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), orderExpr);
   }
 
   @Override

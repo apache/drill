@@ -21,10 +21,10 @@ import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -38,7 +38,6 @@ public class OrderedPartitionSender extends AbstractSender {
 
   private final List<Ordering> orderings;
   private final FieldReference ref;
-  private final List<DrillbitEndpoint> endpoints;
   private final int sendingWidth;
 
   private int recordsToSample;
@@ -46,18 +45,22 @@ public class OrderedPartitionSender extends AbstractSender {
   private float completionFactor;
 
   @JsonCreator
-  public OrderedPartitionSender(@JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("ref") FieldReference ref, @JsonProperty("child") PhysicalOperator child,
-                                @JsonProperty("destinations") List<DrillbitEndpoint> endpoints, @JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId,
-                                @JsonProperty("sending-fragment-width") int sendingWidth, @JsonProperty("recordsToSample") int recordsToSample,
-                                @JsonProperty("samplingFactor") int samplingFactor, @JsonProperty("completionFactor") float completionFactor) {
-    super(oppositeMajorFragmentId, child);
+  public OrderedPartitionSender(@JsonProperty("orderings") List<Ordering> orderings,
+                                @JsonProperty("ref") FieldReference ref,
+                                @JsonProperty("child") PhysicalOperator child,
+                                @JsonProperty("destinations") List<MinorFragmentEndpoint> endpoints,
+                                @JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId,
+                                @JsonProperty("sending-fragment-width") int sendingWidth,
+                                @JsonProperty("recordsToSample") int recordsToSample,
+                                @JsonProperty("samplingFactor") int samplingFactor,
+                                @JsonProperty("completionFactor") float completionFactor) {
+    super(oppositeMajorFragmentId, child, endpoints);
     if (orderings == null) {
       this.orderings = Lists.newArrayList();
     } else {
       this.orderings = orderings;
     }
     this.ref = ref;
-    this.endpoints = endpoints;
     this.sendingWidth = sendingWidth;
     this.recordsToSample = recordsToSample;
     this.samplingFactor = samplingFactor;
@@ -66,10 +69,6 @@ public class OrderedPartitionSender extends AbstractSender {
 
   public int getSendingWidth() {
     return sendingWidth;
-  }
-
-  public List<DrillbitEndpoint> getDestinations() {
-    return endpoints;
   }
 
   public List<Ordering> getOrderings() {
@@ -87,8 +86,8 @@ public class OrderedPartitionSender extends AbstractSender {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new OrderedPartitionSender(orderings, ref, child, endpoints, oppositeMajorFragmentId, sendingWidth, recordsToSample, samplingFactor,
-            completionFactor);
+    return new OrderedPartitionSender(orderings, ref, child, destinations, oppositeMajorFragmentId,
+        sendingWidth, recordsToSample, samplingFactor, completionFactor);
   }
 
   public int getRecordsToSample() {

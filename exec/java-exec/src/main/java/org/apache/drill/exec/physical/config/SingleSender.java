@@ -19,7 +19,10 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -38,23 +41,45 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class SingleSender extends AbstractSender {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSender.class);
 
-  private final DrillbitEndpoint destination;
-
+  /**
+   * Create a SingleSender which sends data to fragment identified by given MajorFragmentId and MinorFragmentId,
+   * and running at given endpoint
+   *
+   * @param oppositeMajorFragmentId MajorFragmentId of the receiver fragment.
+   * @param oppositeMinorFragmentId MinorFragmentId of the receiver fragment.
+   * @param child Child operator
+   * @param destination Drillbit endpoint where the receiver fragment is running.
+   */
   @JsonCreator
-  public SingleSender(@JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId, @JsonProperty("child") PhysicalOperator child, @JsonProperty("destination") DrillbitEndpoint destination) {
-    super(oppositeMajorFragmentId, child);
-    this.destination = destination;
+  public SingleSender(@JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId,
+                      @JsonProperty("receiver-minor-fragment") int oppositeMinorFragmentId,
+                      @JsonProperty("child") PhysicalOperator child,
+                      @JsonProperty("destination") DrillbitEndpoint destination) {
+    super(oppositeMajorFragmentId, child,
+        Collections.singletonList(new MinorFragmentEndpoint(oppositeMinorFragmentId, destination)));
+  }
+
+  /**
+   * Create a SingleSender which sends data to fragment with MinorFragmentId as <i>0</i> in given opposite major
+   * fragment.
+   *
+   * @param oppositeMajorFragmentId MajorFragmentId of the receiver fragment.
+   * @param child Child operator
+   * @param destination Drillbit endpoint where the receiver fragment is running.
+   */
+  public SingleSender(int oppositeMajorFragmentId, PhysicalOperator child, DrillbitEndpoint destination) {
+    this(oppositeMajorFragmentId, 0 /* default opposite minor fragment id*/, child, destination);
   }
 
   @Override
-  @JsonIgnore
-  public List<DrillbitEndpoint> getDestinations() {
-    return Collections.singletonList(destination);
+  @JsonIgnore // Destination endpoint is exported via getDestination() and getOppositeMinorFragmentId()
+  public List<MinorFragmentEndpoint> getDestinations() {
+    return destinations;
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new SingleSender(oppositeMajorFragmentId, child, destination);
+    return new SingleSender(oppositeMajorFragmentId, getOppositeMinorFragmentId(), child, getDestination());
   }
 
   @Override
@@ -62,9 +87,14 @@ public class SingleSender extends AbstractSender {
     return physicalVisitor.visitSingleSender(this, value);
   }
 
-
+  @JsonProperty("destination")
   public DrillbitEndpoint getDestination() {
-    return destination;
+    return getDestinations().get(0).getEndpoint();
+  }
+
+  @JsonProperty("receiver-minor-fragment")
+  public int getOppositeMinorFragmentId() {
+    return getDestinations().get(0).getId();
   }
 
   @Override

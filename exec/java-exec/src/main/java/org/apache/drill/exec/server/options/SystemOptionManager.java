@@ -51,6 +51,8 @@ public class SystemOptionManager implements OptionManager {
       PlannerSettings.BROADCAST_THRESHOLD,
       PlannerSettings.BROADCAST_FACTOR,
       PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR,
+      PlannerSettings.MUX_EXCHANGE,
+      PlannerSettings.DEMUX_EXCHANGE,
       PlannerSettings.PRODUCER_CONSUMER,
       PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE,
       PlannerSettings.HASH_SINGLE_KEY,

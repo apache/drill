@@ -30,22 +30,26 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Fragment.class);
 
   private PhysicalOperator root;
-  private Exchange sendingExchange;
+  private ExchangeFragmentPair sendingExchange;
   private final List<ExchangeFragmentPair> receivingExchangePairs = Lists.newLinkedList();
-  private Stats stats = new Stats();
 
+  /**
+   * Set the given operator as root operator of this fragment. If root operator is already set,
+   * then this method call is a no-op.
+   * @param o new root operator
+   */
   public void addOperator(PhysicalOperator o) {
     if (root == null) {
       root = o;
     }
   }
 
-  public void addSendExchange(Exchange e) throws ForemanSetupException{
+  public void addSendExchange(Exchange e, Fragment sendingToFragment) throws ForemanSetupException{
     if (sendingExchange != null) {
       throw new ForemanSetupException("Fragment was trying to add a second SendExchange.  ");
     }
     addOperator(e);
-    sendingExchange = e;
+    sendingExchange = new ExchangeFragmentPair(e, sendingToFragment);
   }
 
   public void addReceiveExchange(Exchange e, Fragment fragment) {
@@ -66,16 +70,20 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
   }
 
   public Exchange getSendingExchange() {
+    if (sendingExchange != null) {
+      return sendingExchange.exchange;
+    }
+
+    return null;
+  }
+
+  public ExchangeFragmentPair getSendingExchangePair() {
     return sendingExchange;
   }
 
 //  public <T, V> T accept(FragmentVisitor<T, V> visitor, V extra) {
 //    return visitor.visit(this, extra);
 //  }
-
-  public Stats getStats() {
-    return stats;
-  }
 
   public class ExchangeFragmentPair {
     private Exchange exchange;
@@ -117,8 +125,7 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
     int result = 1;
     result = prime * result + ((receivingExchangePairs == null) ? 0 : receivingExchangePairs.hashCode());
     result = prime * result + ((root == null) ? 0 : root.hashCode());
-    result = prime * result + ((sendingExchange == null) ? 0 : sendingExchange.hashCode());
-    result = prime * result + ((stats == null) ? 0 : stats.hashCode());
+    result = prime * result + ((sendingExchange == null) ? 0 : sendingExchange.getExchange().hashCode());
     return result;
   }
 
@@ -155,20 +162,14 @@ public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
     } else if (!sendingExchange.equals(other.sendingExchange)) {
       return false;
     }
-    if (stats == null) {
-      if (other.stats != null) {
-        return false;
-      }
-    } else if (!stats.equals(other.stats)) {
-      return false;
-    }
+
     return true;
   }
 
   @Override
   public String toString() {
     return "FragmentNode [root=" + root + ", sendingExchange=" + sendingExchange + ", receivingExchangePairs="
-        + receivingExchangePairs + ", stats=" + stats + "]";
+        + receivingExchangePairs + "]";
   }
 
 }

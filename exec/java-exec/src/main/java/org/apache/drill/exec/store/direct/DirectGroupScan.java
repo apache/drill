@@ -69,11 +69,6 @@ public class DirectGroupScan extends AbstractGroupScan{
   }
 
   @Override
-  public List<EndpointAffinity> getOperatorAffinity() {
-    return Collections.emptyList();
-  }
-
-  @Override
   public String getDigest() {
     return String.valueOf(reader);
   }

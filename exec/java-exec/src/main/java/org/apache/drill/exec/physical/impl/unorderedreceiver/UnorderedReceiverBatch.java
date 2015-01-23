@@ -30,6 +30,7 @@ import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.ops.OpProfileDef;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -209,15 +210,15 @@ public class UnorderedReceiverBatch implements RecordBatch {
             .setMajorFragmentId(config.getOppositeMajorFragmentId())
             .setQueryId(context.getHandle().getQueryId())
             .build();
-    for (int i = 0; i < config.getNumSenders(); i++) {
+    for (MinorFragmentEndpoint providingEndpoint : config.getProvidingEndpoints()) {
       FragmentHandle sender = FragmentHandle.newBuilder(handlePrototype)
-              .setMinorFragmentId(i)
+              .setMinorFragmentId(providingEndpoint.getId())
               .build();
       FinishedReceiver finishedReceiver = FinishedReceiver.newBuilder()
               .setReceiver(context.getHandle())
               .setSender(sender)
               .build();
-      context.getControlTunnel(config.getProvidingEndpoints().get(i)).informReceiverFinished(new OutcomeListener(), finishedReceiver);
+      context.getControlTunnel(providingEndpoint.getEndpoint()).informReceiverFinished(new OutcomeListener(), finishedReceiver);
     }
   }
 

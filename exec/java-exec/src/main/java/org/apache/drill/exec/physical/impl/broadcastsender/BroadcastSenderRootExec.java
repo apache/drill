@@ -21,18 +21,16 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.List;
 
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.BroadcastSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
@@ -52,9 +50,9 @@ import com.google.common.collect.ArrayListMultimap;
  */
 public class BroadcastSenderRootExec extends BaseRootExec {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BroadcastSenderRootExec.class);
+  private final StatusHandler statusHandler = new StatusHandler();
   private final FragmentContext context;
   private final BroadcastSender config;
-
   private final int[][] receivingMinorFragments;
   private final DataTunnel[] tunnels;
   private final ExecProtos.FragmentHandle handle;
@@ -79,11 +77,11 @@ public class BroadcastSenderRootExec extends BaseRootExec {
     this.incoming = incoming;
     this.config = config;
     this.handle = context.getHandle();
-    List<DrillbitEndpoint> destinations = config.getDestinations();
+    List<MinorFragmentEndpoint> destinations = config.getDestinations();
     ArrayListMultimap<DrillbitEndpoint, Integer> dests = ArrayListMultimap.create();
 
-    for(int i = 0; i < destinations.size(); ++i) {
-      dests.put(destinations.get(i), i);
+    for(MinorFragmentEndpoint destination : destinations) {
+      dests.put(destination.getEndpoint(), destination.getId());
     }
 
     int destCount = dests.keySet().size();
@@ -102,11 +100,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
       tunnels[i] = context.getDataTunnel(ep);
       i++;
     }
-
-
   }
-
-
 
   @Override
   public boolean innerNext() {
@@ -121,7 +115,12 @@ public class BroadcastSenderRootExec extends BaseRootExec {
       case STOP:
       case NONE:
         for (int i = 0; i < tunnels.length; ++i) {
-          FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLast(handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), receivingMinorFragments[i]);
+          FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLast(
+              handle.getQueryId(),
+              handle.getMajorFragmentId(),
+              handle.getMinorFragmentId(),
+              config.getOppositeMajorFragmentId(),
+              receivingMinorFragments[i]);
           stats.startWait();
           try {
             tunnels[i].sendRecordBatch(this.statusHandler, b2);
@@ -129,9 +128,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
           } finally {
             stats.stopWait();
           }
-
         }
-
         return false;
 
       case OK_NEW_SCHEMA:
@@ -141,7 +138,14 @@ public class BroadcastSenderRootExec extends BaseRootExec {
           writableBatch.retainBuffers(tunnels.length - 1);
         }
         for (int i = 0; i < tunnels.length; ++i) {
-          FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), receivingMinorFragments[i], writableBatch);
+          FragmentWritableBatch batch = new FragmentWritableBatch(
+              false,
+              handle.getQueryId(),
+              handle.getMajorFragmentId(),
+              handle.getMinorFragmentId(),
+              config.getOppositeMajorFragmentId(),
+              receivingMinorFragments[i],
+              writableBatch);
           updateStats(batch);
           stats.startWait();
           try {
@@ -173,7 +177,6 @@ public class BroadcastSenderRootExec extends BaseRootExec {
       incoming.cleanup();
   }
 
-  private StatusHandler statusHandler = new StatusHandler();
   private class StatusHandler extends BaseRpcOutcomeListener<GeneralRPCProtos.Ack> {
     volatile RpcException ex;
     private final SendingAccountor sendCount = new SendingAccountor();
@@ -193,5 +196,4 @@ public class BroadcastSenderRootExec extends BaseRootExec {
       this.ex = ex;
     }
   }
-
 }

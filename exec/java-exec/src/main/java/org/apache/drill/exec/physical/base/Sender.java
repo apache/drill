@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 import java.util.List;
 
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -31,9 +31,10 @@ public interface Sender extends FragmentRoot {
 
   /**
    * Get the list of destination endpoints that this Sender will be communicating with.
-   * @return List of DrillbitEndpoints.
+   * @return List of receiver MinorFragmentEndpoints each containing receiver fragment MinorFragmentId and endpoint
+   * where it is running.
    */
-  public abstract List<DrillbitEndpoint> getDestinations();
+  public abstract List<MinorFragmentEndpoint> getDestinations();
 
   /**
    * Get the receiver major fragment id that is opposite this sender.

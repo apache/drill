@@ -23,9 +23,9 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.AbstractExchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.PhysicalOperatorUtil;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.physical.base.Sender;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,16 +36,11 @@ import com.google.common.base.Preconditions;
 public class OrderedPartitionExchange extends AbstractExchange {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionExchange.class);
 
-
   private final List<Ordering> orderings;
   private final FieldReference ref;
   private int recordsToSample = 10000; // How many records must be received before analyzing
   private int samplingFactor = 10; // Will collect SAMPLING_FACTOR * number of partitions to send to distributed cache
   private float completionFactor = .75f; // What fraction of fragments must be completed before attempting to build partition table
-
-  //ephemeral for setup tasks.
-  private List<DrillbitEndpoint> senderLocations;
-  private List<DrillbitEndpoint> receiverLocations;
 
   @JsonCreator
   public OrderedPartitionExchange(@JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("ref") FieldReference ref,
@@ -70,30 +65,15 @@ public class OrderedPartitionExchange extends AbstractExchange {
   }
 
   @Override
-  public int getMaxSendWidth() {
-    return Integer.MAX_VALUE;
-  }
-
-
-  @Override
-  protected void setupSenders(List<DrillbitEndpoint> senderLocations) {
-    this.senderLocations = senderLocations;
-  }
-
-  @Override
-  protected void setupReceivers(List<DrillbitEndpoint> receiverLocations) {
-    this.receiverLocations = receiverLocations;
-  }
-
-  @Override
   public Sender getSender(int minorFragmentId, PhysicalOperator child) {
-    return new OrderedPartitionSender(orderings, ref, child, receiverLocations, receiverMajorFragmentId, senderLocations.size(), recordsToSample,
-            samplingFactor, completionFactor);
+    return new OrderedPartitionSender(orderings, ref, child,
+        PhysicalOperatorUtil.getIndexOrderedEndpoints(receiverLocations),
+        receiverMajorFragmentId, senderLocations.size(), recordsToSample, samplingFactor, completionFactor);
   }
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new UnorderedReceiver(senderMajorFragmentId, senderLocations);
+    return new UnorderedReceiver(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations));
   }
 
   @Override
