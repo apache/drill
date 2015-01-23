@@ -152,7 +152,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     // inside of the the flattener for the current batch
     setFlattenVector();
 
-    int childCount = flattener.getFlattenField().getAccessor().getValueCount();
+    int childCount = incomingRecordCount == 0 ? 0 : flattener.getFlattenField().getAccessor().getValueCount();
     int outputRecords = flattener.flattenRecords(0, incomingRecordCount, 0);
     // TODO - change this to be based on the repeated vector length
     if (outputRecords < childCount) {
