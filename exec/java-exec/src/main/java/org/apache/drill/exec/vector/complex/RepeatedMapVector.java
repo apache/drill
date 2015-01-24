@@ -358,6 +358,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
+    int expectedBufferSize = getBufferSize();
+    int actualBufferSize = super.getBufferSize();
+
+    Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
     return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
   }
 

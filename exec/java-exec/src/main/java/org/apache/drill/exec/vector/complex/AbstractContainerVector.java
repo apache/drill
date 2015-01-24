@@ -363,20 +363,27 @@ public abstract class AbstractContainerVector implements ValueVector {
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
     List<DrillBuf> buffers = Lists.newArrayList();
-    int expectedBufSize = getBufferSize();
-    int actualBufSize = 0 ;
 
     for (ValueVector v : vectors.values()) {
       for (DrillBuf buf : v.getBuffers(clear)) {
         buffers.add(buf);
-        actualBufSize += buf.writerIndex();
       }
     }
 
-    Preconditions.checkArgument(actualBufSize == expectedBufSize);
     return buffers.toArray(new DrillBuf[buffers.size()]);
   }
 
+  @Override
+  public int getBufferSize() {
+    int actualBufSize = 0 ;
+
+    for (ValueVector v : vectors.values()) {
+      for (DrillBuf buf : v.getBuffers(false)) {
+        actualBufSize += buf.writerIndex();
+      }
+    }
+    return actualBufSize;
+  }
 
   protected boolean supportsDirectRead() {
     return false;

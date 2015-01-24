@@ -106,6 +106,15 @@ public class MapVector extends AbstractContainerVector {
   }
 
   @Override
+  public DrillBuf[] getBuffers(boolean clear) {
+    int expectedSize = getBufferSize();
+    int actualSize   = super.getBufferSize();
+
+    Preconditions.checkArgument(expectedSize == actualSize);
+    return super.getBuffers(clear);
+  }
+
+  @Override
   public TransferPair getTransferPair() {
     return new MapTransferPair(this, getField().getPath());
   }
