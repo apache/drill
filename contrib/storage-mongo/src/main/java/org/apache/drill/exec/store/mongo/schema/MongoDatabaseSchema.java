@@ -18,10 +18,14 @@
 package org.apache.drill.exec.store.mongo.schema;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 
+import com.google.common.collect.Maps;
 import net.hydromatic.optiq.Table;
 
+import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.mongo.MongoStoragePluginConfig;
 import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory.MongoSchema;
@@ -32,23 +36,34 @@ public class MongoDatabaseSchema extends AbstractSchema {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(MongoDatabaseSchema.class);
   private final MongoSchema mongoSchema;
-  private final Set<String> tables;
+  private final Set<String> tableNames;
+
+  private final Map<String, DrillTable> drillTables = Maps.newHashMap();
 
   public MongoDatabaseSchema(List<String> tableList, MongoSchema mongoSchema,
       String name) {
     super(mongoSchema.getSchemaPath(), name);
     this.mongoSchema = mongoSchema;
-    this.tables = Sets.newHashSet(tableList);
+    this.tableNames = Sets.newHashSet(tableList);
   }
 
   @Override
   public Table getTable(String tableName) {
-    return mongoSchema.getDrillTable(this.name, tableName);
+    if (!tableNames.contains(tableName)) { // table does not exist
+      return null;
+    }
+
+    if (! drillTables.containsKey(tableName)) {
+      drillTables.put(tableName, mongoSchema.getDrillTable(this.name, tableName));
+    }
+
+    return drillTables.get(tableName);
+
   }
 
   @Override
   public Set<String> getTableNames() {
-    return tables;
+    return tableNames;
   }
 
   @Override

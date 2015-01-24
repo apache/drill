@@ -21,10 +21,12 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Maps;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
@@ -34,6 +36,7 @@ import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.drill.exec.store.mongo.MongoCnxnManager;
 import org.apache.drill.exec.store.mongo.MongoScanSpec;
 import org.apache.drill.exec.store.mongo.MongoStoragePlugin;
@@ -126,6 +129,8 @@ public class MongoSchemaFactory implements SchemaFactory {
 
   class MongoSchema extends AbstractSchema {
 
+    private final Map<String, MongoDatabaseSchema> schemaMap = Maps.newHashMap();
+
     public MongoSchema(String name) {
       super(ImmutableList.<String> of(), name);
     }
@@ -134,8 +139,14 @@ public class MongoSchemaFactory implements SchemaFactory {
     public Schema getSubSchema(String name) {
       List<String> tables;
       try {
-        tables = tableNameLoader.get(name);
-        return new MongoDatabaseSchema(tables, this, name);
+        if (! schemaMap.containsKey(name)) {
+          tables = tableNameLoader.get(name);
+          schemaMap.put(name, new MongoDatabaseSchema(tables, this, name));
+        }
+
+        return schemaMap.get(name);
+
+        //return new MongoDatabaseSchema(tables, this, name);
       } catch (ExecutionException e) {
         logger.warn("Failure while attempting to access MongoDataBase '{}'.",
             name, e.getCause());
