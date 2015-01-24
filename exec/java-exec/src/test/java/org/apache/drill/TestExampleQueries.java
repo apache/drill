@@ -518,4 +518,19 @@ public class TestExampleQueries extends BaseTestQuery{
     assertEquals(expectedRecordCount, actualRecordCount);
   }
 
+  @Test // DRILL-2063
+  public void testAggExpressionWithGroupBy() throws Exception {
+    String query = "select l_suppkey, sum(l_extendedprice)/sum(l_quantity) as avg_price \n" +
+           " from cp.`tpch/lineitem.parquet` where l_orderkey in \n" +
+           " (select o_orderkey from cp.`tpch/orders.parquet` where o_custkey = 2) \n" +
+           " and l_suppkey = 4 group by l_suppkey";
+
+    testBuilder()
+    .sqlQuery(query)
+    .ordered()
+    .baselineColumns("l_suppkey", "avg_price")
+    .baselineValues(4, 1374.47)
+    .build().run();
+
+  }
 }
