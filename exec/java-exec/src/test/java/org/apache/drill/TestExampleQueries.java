@@ -533,4 +533,20 @@ public class TestExampleQueries extends BaseTestQuery{
     .build().run();
 
   }
+
+  @Test // DRILL-1888
+  public void testAggExpressionWithGroupByHaving() throws Exception {
+    String query = "select l_suppkey, sum(l_extendedprice)/sum(l_quantity) as avg_price \n" +
+        " from cp.`tpch/lineitem.parquet` where l_orderkey in \n" +
+        " (select o_orderkey from cp.`tpch/orders.parquet` where o_custkey = 2) \n" +
+        " group by l_suppkey having sum(l_extendedprice)/sum(l_quantity) > 1850.0";
+
+    testBuilder()
+    .sqlQuery(query)
+    .ordered()
+    .baselineColumns("l_suppkey", "avg_price")
+    .baselineValues(98, 1854.95)
+    .build().run();
+  }
+
 }
