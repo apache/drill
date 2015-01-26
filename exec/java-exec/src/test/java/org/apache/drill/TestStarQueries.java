@@ -119,52 +119,116 @@ public class TestStarQueries extends BaseTestQuery{
 
   @Test
   public void testSelStarOrderBy() throws Exception{
-    test("select * from cp.`employee.json` order by last_name");
+    testBuilder()
+        .ordered()
+        .sqlQuery(" select * from cp.`employee.json` order by last_name")
+        .sqlBaselineQuery(" select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
+            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
+            " from cp.`employee.json` " +
+            " order by last_name ")
+        .build().run();
+
   }
 
   @Test
   public void testSelStarOrderByLimit() throws Exception{
-    test("select * from cp.`employee.json` order by last_name limit 2;");
+    testBuilder()
+        .ordered()
+        .sqlQuery(" select * from cp.`employee.json` order by last_name limit 2")
+        .sqlBaselineQuery(" select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
+            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
+            " from cp.`employee.json` " +
+            " order by last_name limit 2")
+        .build().run();
+
   }
 
   @Test
   public void testSelStarPlusRegCol() throws Exception{
-    test("select *, n_nationkey from cp.`tpch/nation.parquet` limit 2;");
+    testBuilder()
+        .unOrdered()
+        .sqlQuery("select *, n_nationkey as key2 from cp.`tpch/nation.parquet` order by n_name limit 2")
+        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey, n_nationkey as key2 from cp.`tpch/nation.parquet` order by n_name limit 2")
+        .build().run();
+
   }
 
   @Test
   public void testSelStarWhereOrderBy() throws Exception{
-    test("select * from cp.`employee.json` where first_name = 'James' order by last_name");
+    testBuilder()
+        .ordered()
+        .sqlQuery("select * from cp.`employee.json` where first_name = 'James' order by last_name")
+        .sqlBaselineQuery("select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
+            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
+            " from cp.`employee.json` " +
+            " where first_name = 'James' order by last_name")
+        .build().run();
+
   }
 
   @Test
   public void testSelStarJoin() throws Exception {
-    test("select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+    testBuilder()
+        .ordered()
+        .sqlQuery("select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlBaselineQuery("select n.n_nationkey, n.n_name,n.n_regionkey,n.n_comment,r.r_regionkey,r.r_name, r.r_comment from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .build().run();
+
   }
 
   @Test
   public void testSelLeftStarJoin() throws Exception {
-    test("select n.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+    testBuilder()
+        .ordered()
+        .sqlQuery("select n.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlBaselineQuery("select n.n_nationkey, n.n_name, n.n_regionkey, n.n_comment from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .build().run();
+
   }
 
   @Test
   public void testSelRightStarJoin() throws Exception {
-    test("select r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+    testBuilder()
+        .ordered()
+        .sqlQuery("select r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlBaselineQuery("select r.r_regionkey, r.r_name, r.r_comment from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .build().run();
+
   }
 
   @Test
   public void testSelStarRegColConstJoin() throws Exception {
-    test("select *, n.n_nationkey as n_nationkey0, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+    testBuilder()
+        .ordered()
+        .sqlQuery("select *, n.n_nationkey as n_nationkey0, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlBaselineQuery(" select n.n_nationkey, n.n_name, n.n_regionkey, n.n_comment, r.r_regionkey, r.r_name, r.r_comment, " +
+            " n.n_nationkey as n_nationkey0, 1 + 2 as constant " +
+            " from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+            " where n.n_regionkey = r.r_regionkey " +
+            " order by n.n_name")
+        .build().run();
+
   }
 
   @Test
   public void testSelStarBothSideJoin() throws Exception {
-    test("select n.*, r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey;");
+    testBuilder()
+        .unOrdered()
+        .sqlQuery("select n.*, r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey")
+        .sqlBaselineQuery("select n.n_nationkey,n.n_name,n.n_regionkey,n.n_comment,r.r_regionkey,r.r_name,r.r_comment from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .build().run();
+
   }
 
   @Test
   public void testSelStarJoinSameColName() throws Exception {
-    test("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey;");
+    testBuilder()
+        .unOrdered()
+        .sqlQuery("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey")
+        .sqlBaselineQuery("select n1.n_nationkey,n1.n_name,n1.n_regionkey,n1.n_comment,n2.n_nationkey,n2.n_name,n2.n_regionkey, n2.n_comment " +
+            "from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey")
+        .build().run();
+
   }
 
   @Test // DRILL-1293
@@ -304,10 +368,23 @@ public class TestStarQueries extends BaseTestQuery{
 
   @Test  // DRILL-1889
   public void testStarWithOtherExpression() throws Exception {
-    test("select *  from cp.`tpch/nation.parquet` order by substr(n_name, 2, 5) limit 3");
-    test("select *, n_nationkey + 5 from cp.`tpch/nation.parquet` limit 3");
-    test("select *  from cp.`tpch/nation.parquet` where n_nationkey + 5 > 10 limit 3");
-    test("select * from cp.`tpch/nation.parquet` order by random()");
+    testBuilder()
+        .ordered()
+        .sqlQuery("select *  from cp.`tpch/nation.parquet` order by substr(n_name, 2, 5) limit 3")
+        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by substr(n_name, 2, 5) limit 3 ")
+        .build().run();
+
+    testBuilder()
+        .ordered()
+        .sqlQuery("select *, n_nationkey + 5 as myexpr from cp.`tpch/nation.parquet` limit 3")
+        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey, n_nationkey + 5 as myexpr from cp.`tpch/nation.parquet` order by n_nationkey limit 3")
+        .build().run();
+
+    testBuilder()
+        .ordered()
+        .sqlQuery("select *  from cp.`tpch/nation.parquet` where n_nationkey + 5 > 10 limit 3")
+        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey  from cp.`tpch/nation.parquet` where n_nationkey + 5 > 10 order by n_nationkey limit 3")
+        .build().run();
   }
 
   @Test // DRILL-1500
@@ -323,4 +400,52 @@ public class TestStarQueries extends BaseTestQuery{
     .build().run();
   }
 
+  @Test // DRILL-2069
+  public void testStarInSubquery() throws Exception {
+    testBuilder()
+        .unOrdered()
+        .sqlQuery("select * from cp.`tpch/nation.parquet` where n_regionkey in (select r_regionkey from cp.`tpch/region.parquet`)")
+        .sqlBaselineQuery("select n_nationkey, n_name, n_regionkey, n_comment from cp.`tpch/nation.parquet` where n_regionkey in (select r_regionkey from cp.`tpch/region.parquet`)")
+        .build().run();
+
+    // multiple columns in "IN" subquery predicates.
+    testBuilder()
+        .unOrdered()
+        .sqlQuery("select * from cp.`tpch/nation.parquet` where (n_nationkey, n_name) in ( select n_nationkey, n_name from cp.`tpch/nation.parquet`)")
+        .sqlBaselineQuery("select n_nationkey, n_name, n_regionkey, n_comment from cp.`tpch/nation.parquet` where (n_nationkey, n_name) in ( select n_nationkey, n_name from cp.`tpch/nation.parquet`)")
+        .build().run();
+
+    // Multiple in subquery predicates.
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(
+            "select * from cp.`tpch/nation.parquet` " +
+            "where n_regionkey in ( select r_regionkey from cp.`tpch/region.parquet`) and " +
+            "      n_name in (select n_name from cp.`tpch/nation.parquet`)")
+        .sqlBaselineQuery("select n_nationkey, n_name, n_regionkey, n_comment from cp.`tpch/nation.parquet` " +
+            "where n_regionkey in ( select r_regionkey from cp.`tpch/region.parquet`) and " +
+            "      n_name in (select n_name from cp.`tpch/nation.parquet`)")
+        .build().run();
+
+
+    // Both the out QB and SUBQ are join.
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(
+            "select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+            "where n.n_regionkey = r.r_regionkey and " +
+            "       (n.n_nationkey, n.n_name) in " +
+            "          ( select n2.n_nationkey, n2.n_name " +
+            "            from cp.`tpch/nation.parquet` n2, cp.`tpch/region.parquet` r2 " +
+            "            where n2.n_regionkey = r2.r_regionkey)")
+        .sqlBaselineQuery(
+            "select n.n_nationkey, n.n_name, n.n_regionkey, n.n_comment, r.r_regionkey, r.r_name, r.r_comment " +
+            "from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+            "where n.n_regionkey = r.r_regionkey and " +
+            "       (n.n_nationkey, n.n_name) in " +
+            "          ( select n2.n_nationkey, n2.n_name " +
+            "            from cp.`tpch/nation.parquet` n2, cp.`tpch/region.parquet` r2 " +
+            "            where n2.n_regionkey = r2.r_regionkey)")
+        .build().run();
+  }
 }

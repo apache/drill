@@ -32,6 +32,7 @@ import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexInputRef;
@@ -113,6 +114,50 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
   }
 
   @Override
+  public Prel visitProject(ProjectPrel prel, boolean[] prefixedForStar) throws RuntimeException {
+    ProjectPrel proj = (ProjectPrel) prel;
+
+    // Require prefix rename : there exists other expression, in addition to a star column.
+    if (!prefixedForStar[0]  // not set yet.
+        && StarColumnHelper.containsStarColumnInProject(prel.getChild().getRowType(), proj.getProjects())
+        && prel.getRowType().getFieldNames().size() > 1) {
+      prefixedForStar[0] = true;
+    }
+
+    // For project, we need make sure that the project's field name is same as the input,
+    // when the project expression is RexInPutRef, since we may insert a PAS which will
+    // rename the projected fields.
+
+
+
+    RelNode child = ((Prel) prel.getInput(0)).accept(INSTANCE, prefixedForStar);
+
+    List<String> fieldNames = Lists.newArrayList();
+
+    for (Pair<String, RexNode> pair : Pair.zip(prel.getRowType().getFieldNames(), proj.getProjects())) {
+      if (pair.right instanceof RexInputRef) {
+        String name = child.getRowType().getFieldNames().get(((RexInputRef) pair.right).getIndex());
+        fieldNames.add(name);
+      } else {
+        fieldNames.add(pair.left);
+      }
+    }
+
+    // Make sure the field names are unique : no allow of duplicate field names in a rowType.
+    fieldNames = makeUniqueNames(fieldNames);
+
+    RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), proj.getProjects(), fieldNames);
+
+    ProjectPrel newProj = (ProjectPrel) proj.copy(proj.getTraitSet(), child, proj.getProjects(), rowType);
+
+    if (RemoveTrivialProjectRule.isTrivial(newProj)) {
+      return (Prel) child;
+    } else {
+      return newProj;
+    }
+  }
+
+  @Override
   public Prel visitPrel(Prel prel, boolean [] prefixedForStar) throws RuntimeException {
     // Require prefix rename : there exists other expression, in addition to a star column.
     if (!prefixedForStar[0]  // not set yet.
@@ -127,35 +172,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, boolean[], Runtim
       children.add(child);
     }
 
-    // For project, we need make sure that the project's field name is same as the input,
-    // when the project expression is RexInPutRef, since we may insert a PAS which will
-    // rename the projected fields.
-    if (prel instanceof ProjectPrel) {
-
-      ProjectPrel proj = (ProjectPrel) prel;
-
-      RelNode child = children.get(0);
-
-      List<String> fieldNames = Lists.newArrayList();
-
-      for (Pair<String, RexNode> pair : Pair.zip(prel.getRowType().getFieldNames(), proj.getProjects())) {
-        if (pair.right instanceof RexInputRef) {
-          String name = child.getRowType().getFieldNames().get(((RexInputRef) pair.right).getIndex());
-          fieldNames.add(name);
-        } else {
-          fieldNames.add(pair.left);
-        }
-      }
-
-      // Make sure the field names are unique : no allow of duplicate field names in a rowType.
-      fieldNames = makeUniqueNames(fieldNames);
-
-      RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), proj.getProjects(), fieldNames);
-
-      return (Prel) proj.copy(proj.getTraitSet(),children.get(0), proj.getProjects(), rowType);
-    } else {
-      return (Prel) prel.copy(prel.getTraitSet(), children);
-    }
+    return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 
   @Override

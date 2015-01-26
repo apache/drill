@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexNode;
 
 public class StarColumnHelper {
 
@@ -48,12 +50,30 @@ public class StarColumnHelper {
     return false;
   }
 
+  public static boolean containsStarColumnInProject(RelDataType inputRowType, List<RexNode> projExprs) {
+    if (! inputRowType.isStruct()) {
+      return false;
+    }
+
+    for (RexNode expr : projExprs) {
+      if (expr instanceof RexInputRef) {
+        String name = inputRowType.getFieldNames().get(((RexInputRef) expr).getIndex());
+
+        if (name.startsWith(STAR_COLUMN)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   public static boolean isPrefixedStarColumn(String fieldName) {
     return fieldName.indexOf(PREFIXED_STAR_COLUMN) > 0 ; // the delimiter * starts at none-zero position.
   }
 
   public static boolean isNonPrefixedStarColumn(String fieldName) {
-    return fieldName.startsWith("*");
+    return fieldName.startsWith(STAR_COLUMN);
   }
 
   public static boolean isStarColumn(String fieldName) {
