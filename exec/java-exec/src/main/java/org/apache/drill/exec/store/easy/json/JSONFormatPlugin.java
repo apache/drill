@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -45,20 +47,18 @@ import org.apache.hadoop.fs.FileSystem;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Maps;
 
-public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
+public class
+        JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   private static final boolean IS_COMPRESSIBLE = true;
   private static final String DEFAULT_NAME = "json";
-  private static final List<String> DEFAULT_EXTS = ImmutableList.of("json");
 
   public JSONFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
     this(name, context, fsConf, storageConfig, new JSONFormatConfig());
   }
 
-  public JSONFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config,
-      JSONFormatConfig formatPluginConfig) {
-    super(name, context, fsConf, config, formatPluginConfig, true, false, false, IS_COMPRESSIBLE,
-        DEFAULT_EXTS, DEFAULT_NAME);
+  public JSONFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, JSONFormatConfig formatPluginConfig) {
+    super(name, context, fsConf, config, formatPluginConfig, true, false, false, IS_COMPRESSIBLE, formatPluginConfig.getExtensions(), DEFAULT_NAME);
   }
 
   @Override
@@ -92,6 +92,18 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   @JsonTypeName("json")
   public static class JSONFormatConfig implements FormatPluginConfig {
 
+    public List<String> extensions;
+    private static final List<String> DEFAULT_EXTS = ImmutableList.of("json");
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public List<String> getExtensions() {
+      if (extensions == null) {
+        // when loading an old JSONFormatConfig that doesn't contain an "extensions" attribute
+        return DEFAULT_EXTS;
+      }
+      return extensions;
+    }
+
     @Override
     public int hashCode() {
       return 31;
@@ -106,9 +118,9 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
       } else if (getClass() == obj.getClass()) {
         return true;
       }
+
       return false;
     }
-
   }
 
   @Override

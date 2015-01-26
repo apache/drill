@@ -89,15 +89,18 @@ public class BasicFormatMatcher extends FormatMatcher{
     if (compressible) {
       codec = codecFactory.getCodec(status.getPath());
     }
-    String fileName;
+    String fileName = status.getPath().toString();
+    String fileNameHacked = null;
     if (codec != null) {
-      String path = status.getPath().toString();
-      fileName = path.substring(0, path.lastIndexOf('.'));
-    } else {
-      fileName = status.getPath().toString();
+        fileNameHacked = fileName.substring(0, fileName.lastIndexOf('.'));
     }
+
+    // Check for a matching pattern for compressed and uncompressed file name
     for (Pattern p : patterns) {
       if (p.matcher(fileName).matches()) {
+        return true;
+      }
+      if (fileNameHacked != null  &&  p.matcher(fileNameHacked).matches()) {
         return true;
       }
     }
