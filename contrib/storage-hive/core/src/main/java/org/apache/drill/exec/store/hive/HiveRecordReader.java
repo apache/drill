@@ -45,6 +45,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.DateVector;
@@ -61,7 +62,6 @@ import org.apache.drill.exec.vector.TinyIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -281,7 +281,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   @Override
   public int next() {
     for (ValueVector vv : vectors) {
-      VectorAllocator.getAllocator(vv, FIELD_SIZE).alloc(TARGET_RECORD_COUNT);
+      AllocationHelper.allocateNew(vv, TARGET_RECORD_COUNT);
     }
     if (empty) {
       setValueCountAndPopulatePartitionVectors(0);
@@ -427,7 +427,7 @@ public class HiveRecordReader extends AbstractRecordReader {
         size = ((byte[]) selectedPartitionValues.get(i)).length;
       }
 
-      VectorAllocator.getAllocator(vector, size).alloc(recordCount);
+      AllocationHelper.allocateNew(vector, recordCount);
 
       switch(pCat) {
         case BINARY: {

@@ -24,11 +24,11 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
@@ -121,7 +121,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
   @Override
   public int next() {
     for (ValueVector vv : vectors) {
-      VectorAllocator.getAllocator(vv, 50).alloc(TARGET_RECORD_COUNT);
+      AllocationHelper.allocateNew(vv, TARGET_RECORD_COUNT);
     }
     try {
       int recordCount = 0;

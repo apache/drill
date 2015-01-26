@@ -52,7 +52,6 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -62,7 +61,6 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -646,13 +644,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         copier.cleanup();
       }
 
-      List<VectorAllocator> allocators = Lists.newArrayList();
       for (VectorWrapper<?> i : batch) {
         ValueVector v = TypeHelper.getNewVector(i.getField(), copierAllocator);
         outputContainer.add(v);
-        allocators.add(VectorAllocator.getAllocator(v, 110));
       }
-      copier.setup(context, copierAllocator, batch, batchGroupList, outputContainer, allocators);
+      copier.setup(context, copierAllocator, batch, batchGroupList, outputContainer);
     } catch (ClassTransformationException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {

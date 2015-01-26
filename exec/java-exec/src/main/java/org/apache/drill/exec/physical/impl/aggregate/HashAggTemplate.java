@@ -57,7 +57,6 @@ import org.apache.drill.exec.vector.ObjectVector;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 import com.google.common.collect.Lists;
 
@@ -95,7 +94,6 @@ public abstract class HashAggTemplate implements HashAggregator {
   private IndexPointer outNumRecordsHolder;
   private int numGroupByOutFields = 0; // Note: this should be <= number of group-by fields
 
-  List<VectorAllocator> wsAllocators = Lists.newArrayList();  // allocators for the workspace vectors
   ErrorCollector collector = new ErrorCollectorImpl();
 
   private MaterializedField[] materializedValueFields;

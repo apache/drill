@@ -24,13 +24,11 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public interface PriorityQueueCopier {
   public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
-                    VectorAccessible outgoing, List<VectorAllocator> allocators) throws SchemaChangeException;
+                    VectorAccessible outgoing) throws SchemaChangeException;
   public int next(int targetRecordCount);
-  public List<VectorAllocator> getAllocators();
   public void cleanup();
 
   public static TemplateClassDefinition<PriorityQueueCopier> TEMPLATE_DEFINITION = new TemplateClassDefinition<PriorityQueueCopier>(PriorityQueueCopier.class, PriorityQueueCopierTemplate.class);

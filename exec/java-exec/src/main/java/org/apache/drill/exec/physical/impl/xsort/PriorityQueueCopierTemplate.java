@@ -27,7 +27,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
@@ -38,20 +37,18 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   private FragmentContext context;
   private BufferAllocator allocator;
   private VectorAccessible outgoing;
-  private List<VectorAllocator> allocators;
   private int size;
   private int queueSize = 0;
   private int targetRecordCount = ExternalSortBatch.SPILL_TARGET_RECORD_COUNT;
 
   @Override
   public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
-                    VectorAccessible outgoing, List<VectorAllocator> allocators) throws SchemaChangeException {
+                    VectorAccessible outgoing) throws SchemaChangeException {
     this.context = context;
     this.allocator = allocator;
     this.hyperBatch = hyperBatch;
     this.batchGroups = batchGroups;
     this.outgoing = outgoing;
-    this.allocators = allocators;
     this.size = batchGroups.size();
 
     BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
@@ -110,11 +107,6 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     for (VectorWrapper w : hyperBatch) {
       w.clear();
     }
-  }
-
-  @Override
-  public List<VectorAllocator> getAllocators() {
-    return allocators;
   }
 
   private void siftUp() {
