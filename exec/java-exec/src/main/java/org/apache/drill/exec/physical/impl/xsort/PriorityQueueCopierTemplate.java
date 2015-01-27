@@ -27,6 +27,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.AllocationHelper;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
@@ -123,7 +124,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
 
   private void allocateVectors(int targetRecordCount) {
     for (VectorWrapper w: outgoing) {
-      w.getValueVector().allocateNew();
+      AllocationHelper.allocateNew(w.getValueVector(), targetRecordCount);
     }
   }
 
