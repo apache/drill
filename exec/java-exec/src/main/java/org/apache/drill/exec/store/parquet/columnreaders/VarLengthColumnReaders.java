@@ -181,6 +181,7 @@ public class VarLengthColumnReaders {
       }
 
       if (usingDictionary) {
+        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
         DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
         int st=0;
         int len=currDictValToWrite.length();
@@ -263,6 +264,7 @@ public class VarLengthColumnReaders {
       }
 
       if (usingDictionary) {
+        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
         DrillBuf b = DrillBuf.wrapByteBuffer(currDictValToWrite.toByteBuffer());
         int st=0;
         int len=currDictValToWrite.length();
