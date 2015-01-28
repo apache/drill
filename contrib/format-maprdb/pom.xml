@@ -33,24 +33,25 @@
   </properties>
 
   <dependencies>
-   <dependency>
-      <groupId>org.apache.drill.contrib</groupId>
-      <artifactId>drill-storage-hbase</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
-
-      <dependency>
-          <groupId>org.apache.drill.contrib</groupId>
-          <artifactId>drill-storage-hbase</artifactId>
-          <version>${project.version}</version>
-      </dependency>
+    <dependency>
+      <groupId>org.apache.drill.contrib</groupId>
+      <artifactId>drill-storage-hbase</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mapr.fs</groupId>
+      <artifactId>mapr-hbase</artifactId>
+      <version>4.0.1.28318-mapr</version>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
@@ -73,78 +74,22 @@
       <version>2.1.1</version>
       <scope>test</scope>
     </dependency>
-      <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase</artifactId>
-          <version>0.94.13-mapr-1401-m7-3.0.2</version>
-          <exclusions>
-              <exclusion>
-                  <artifactId>commons-logging</artifactId>
-                  <groupId>commons-logging</groupId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>slf4j-log4j12</artifactId>
-                  <groupId>org.slf4j</groupId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>slf4j-log4j12</artifactId>
-                  <groupId>org.slf4j</groupId>
-              </exclusion>
-              <exclusion>
-                  <groupId>com.sun.jersey</groupId>
-                  <artifactId>jersey-core</artifactId>
-              </exclusion>
-              <exclusion>
-                  <groupId>com.sun.jersey</groupId>
-                  <artifactId>jersey-server</artifactId>
-              </exclusion>
-              <exclusion>
-                  <groupId>com.sun.jersey</groupId>
-                  <artifactId>jersey-json</artifactId>
-              </exclusion>
-              <exclusion>
-                  <groupId>com.sun.jersey</groupId>
-                  <artifactId>jersey-client</artifactId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>asm</artifactId>
-                  <groupId>asm</groupId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>libthrift</artifactId>
-                  <groupId>org.apache.thrift</groupId>
-              </exclusion>
-              <exclusion>
-                  <artifactId>jruby-complete</artifactId>
-                  <groupId>org.jruby</groupId>
-              </exclusion>
-          </exclusions>
-      </dependency>
-      <dependency>
-          <groupId>com.mapr.hadoop</groupId>
-          <artifactId>maprfs</artifactId>
-      </dependency>
-      <dependency>
-          <groupId>com.mapr.fs</groupId>
-          <artifactId>mapr-hbase</artifactId>
-          <version>4.0.1.28318-mapr</version>
-      </dependency>
   </dependencies>
-    <repositories>
-      <repository>
-        <id>mapr-releases</id>
-          <url>http://maven.corp.maprtech.com/nexus/content/repositories/public</url>
-        <snapshots>
-          <enabled>true</enabled>
-        </snapshots>
-        <releases>
-          <enabled>true</enabled>
-        </releases>
-      </repository>
-    </repositories>
 
+  <repositories>
+    <repository>
+      <id>mapr-releases</id>
+        <url>http://maven.corp.maprtech.com/nexus/content/repositories/public</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+  </repositories>
 
-    <build>
+  <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -167,4 +112,5 @@
       </plugin>
     </plugins>
   </build>
+
 </project>
