@@ -20,6 +20,7 @@ package org.apache.drill;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -549,4 +550,20 @@ public class TestExampleQueries extends BaseTestQuery{
     .build().run();
   }
 
+  @Test
+  public void testExchangeRemoveForJoinPlan() throws Exception {
+    final String WORKING_PATH = TestTools.getWorkingPath();
+    final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+
+    String sql = String.format("select t2.n_nationkey from dfs_test.`%s/tpchmulti/region` t1 join dfs_test.`%s/tpchmulti/nation` t2 on t2.n_regionkey = t1.r_regionkey", TEST_RES_PATH, TEST_RES_PATH);
+
+    testBuilder()
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 10; alter session set `planner.join.row_count_estimate_factor` = 0.1")  // Enforce exchange will be inserted.
+        .sqlQuery(sql)
+        .optionSettingQueriesForBaseline("alter session set `planner.slice_target` = 100000; alter session set `planner.join.row_count_estimate_factor` = 1.0") // Use default option setting.
+        .sqlBaselineQuery(sql)
+        .build().run();
+
+  }
 }

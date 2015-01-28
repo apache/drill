@@ -72,6 +72,15 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   public Prel visitPrel(Prel prel, MajorFragmentStat s) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
     s.add(prel);
+
+    // Add all children to MajorFragmentStat, before we visit each child.
+    // Since MajorFramentStat keeps track of maxRows of Prels in MajorFrag, it's fine to add prel multiple times.
+    // Doing this will ensure MajorFragmentStat is same when visit each individual child, in order to make
+    // consistent decision.
+    for (Prel p : prel) {
+      s.add(p);
+    }
+
     for(Prel p : prel) {
       children.add(p.accept(this, s));
     }
