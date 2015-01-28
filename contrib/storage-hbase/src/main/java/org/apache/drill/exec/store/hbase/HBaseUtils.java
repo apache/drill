@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.store.hbase;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.util.List;
@@ -30,7 +26,8 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.ParseFilter;
-import org.apache.hadoop.hbase.io.HbaseObjectWritable;
+import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
+import org.apache.hadoop.hbase.protobuf.generated.FilterProtos;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.collect.Lists;
@@ -60,9 +57,9 @@ public class HBaseUtils {
     if (filter == null) {
       return null;
     }
-    try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream(); DataOutputStream out = new DataOutputStream(byteStream)) {
-      HbaseObjectWritable.writeObject(out, filter, filter.getClass(), null);
-      return byteStream.toByteArray();
+    try {
+      FilterProtos.Filter pbFilter = ProtobufUtil.toFilter(filter);
+      return pbFilter.toByteArray();
     } catch (IOException e) {
       throw new DrillRuntimeException("Error serializing filter: " + filter, e);
     }
@@ -72,8 +69,9 @@ public class HBaseUtils {
     if (filterBytes == null) {
       return null;
     }
-    try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(filterBytes));) {
-      return (Filter) HbaseObjectWritable.readObject(dis, null);
+    try {
+      FilterProtos.Filter pbFilter = FilterProtos.Filter.parseFrom(filterBytes);
+      return ProtobufUtil.toFilter(pbFilter);
     } catch (Exception e) {
       throw new DrillRuntimeException("Error deserializing filter: " + filterBytes, e);
     }

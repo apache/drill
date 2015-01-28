@@ -119,6 +119,7 @@ public class HBasePStoreProvider implements PStoreProvider {
 
 
   @Override
+  @SuppressWarnings("deprecation")
   public void start() throws IOException {
     this.connection = HConnectionManager.createConnection(hbaseConf);
 

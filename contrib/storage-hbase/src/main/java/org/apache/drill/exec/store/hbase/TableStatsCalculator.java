@@ -26,10 +26,12 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.ClusterStatus;
 import org.apache.hadoop.hbase.HRegionInfo;
-import org.apache.hadoop.hbase.HServerLoad;
-import org.apache.hadoop.hbase.HServerLoad.RegionLoad;
+import org.apache.hadoop.hbase.RegionLoad;
+import org.apache.hadoop.hbase.ServerLoad;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -84,7 +86,12 @@ public class TableStatsCalculator {
             break;
           }
           numColumnsSum += row.size();
-          rowSizeSum += row.getBytes().getLength();
+          Cell[] cells = row.rawCells();
+          if (cells != null) {
+            for (Cell cell : cells) {
+              rowSizeSum += CellUtil.estimatedSizeOf(cell);
+            }
+          }
         }
         if (rowCount > 0) {
           avgRowSizeInBytes = (int) (rowSizeSum/rowCount);
@@ -123,7 +130,7 @@ public class TableStatsCalculator {
       Collection<ServerName> servers = clusterStatus.getServers();
       //iterate all cluster regions, filter regions from our table and compute their size
       for (ServerName serverName : servers) {
-        HServerLoad serverLoad = clusterStatus.getLoad(serverName);
+        ServerLoad serverLoad = clusterStatus.getLoad(serverName);
 
         for (RegionLoad regionLoad : serverLoad.getRegionsLoad().values()) {
           byte[] regionId = regionLoad.getName();

@@ -26,13 +26,13 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.NullComparator;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
-import org.apache.hadoop.hbase.filter.WritableByteArrayComparable;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -169,7 +169,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
 
     CompareOp compareOp = null;
     boolean isNullTest = false;
-    WritableByteArrayComparable comparator = new BinaryComparator(fieldValue);
+    ByteArrayComparable comparator = new BinaryComparator(fieldValue);
     byte[] startRow = HConstants.EMPTY_START_ROW;
     byte[] stopRow = HConstants.EMPTY_END_ROW;
     switch (functionName) {

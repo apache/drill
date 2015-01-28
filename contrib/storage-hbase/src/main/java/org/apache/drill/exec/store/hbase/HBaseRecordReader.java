@@ -42,8 +42,8 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -70,10 +70,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   private String hbaseTableName;
   private Scan hbaseScan;
   private Configuration hbaseConf;
-  private Result leftOver;
-  private FragmentContext fragmentContext;
   private OperatorContext operatorContext;
-
 
   public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) throws OutOfMemoryException {
@@ -178,19 +175,14 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     for (; rowCount < TARGET_RECORD_COUNT; rowCount++) {
       Result result = null;
       try {
-        if (leftOver != null) {
-          result = leftOver;
-          leftOver = null;
-        } else {
+        if (operatorContext != null) {
+          operatorContext.getStats().startWait();
+        }
+        try {
+          result = resultScanner.next();
+        } finally {
           if (operatorContext != null) {
-            operatorContext.getStats().startWait();
-          }
-          try {
-            result = resultScanner.next();
-          } finally {
-            if (operatorContext != null) {
-              operatorContext.getStats().stopWait();
-            }
+            operatorContext.getStats().stopWait();
           }
         }
       } catch (IOException e) {
@@ -201,24 +193,26 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
       }
 
       // parse the result and populate the value vectors
-      KeyValue[] kvs = result.raw();
-      byte[] bytes = result.getBytes().get();
+      Cell[] cells = result.rawCells();
       if (rowKeyVector != null) {
-        rowKeyVector.getMutator().setSafe(rowCount, bytes, kvs[0].getRowOffset(), kvs[0].getRowLength());
+        rowKeyVector.getMutator().setSafe(rowCount, cells[0].getRowArray(), cells[0].getRowOffset(), cells[0].getRowLength());
       }
 
-      for (KeyValue kv : kvs) {
-        int familyOffset = kv.getFamilyOffset();
-        int familyLength = kv.getFamilyLength();
-        MapVector mv = getOrCreateFamilyVector(new String(bytes, familyOffset, familyLength), true);
+      for (Cell cell : cells) {
+        int familyOffset = cell.getFamilyOffset();
+        int familyLength = cell.getFamilyLength();
+        byte[] familyArray = cell.getFamilyArray();
+        MapVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength), true);
 
-        int qualifierOffset = kv.getQualifierOffset();
-        int qualifierLength = kv.getQualifierLength();
-        NullableVarBinaryVector v = getOrCreateColumnVector(mv, new String(bytes, qualifierOffset, qualifierLength));
+        int qualifierOffset = cell.getQualifierOffset();
+        int qualifierLength = cell.getQualifierLength();
+        byte[] qualifierArray = cell.getQualifierArray();
+        NullableVarBinaryVector v = getOrCreateColumnVector(mv, new String(qualifierArray, qualifierOffset, qualifierLength));
 
-        int valueOffset = kv.getValueOffset();
-        int valueLength = kv.getValueLength();
-        v.getMutator().setSafe(rowCount, bytes, valueOffset, valueLength);
+        int valueOffset = cell.getValueOffset();
+        int valueLength = cell.getValueLength();
+        byte[] valueArray = cell.getValueArray();
+        v.getMutator().setSafe(rowCount, valueArray, valueOffset, valueLength);
       }
     }
 
