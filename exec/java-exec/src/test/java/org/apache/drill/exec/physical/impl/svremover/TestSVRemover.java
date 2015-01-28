@@ -18,71 +18,20 @@
 package org.apache.drill.exec.physical.impl.svremover;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.compile.CodeCompiler;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.physical.base.FragmentRoot;
-import org.apache.drill.exec.physical.impl.ImplCreator;
-import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
-import org.apache.drill.exec.physical.impl.SimpleRootExec;
-import org.apache.drill.exec.planner.PhysicalPlanReader;
-import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.BaseTestQuery;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
-public class TestSVRemover extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSVRemover.class);
-  DrillConfig c = DrillConfig.create();
-
-
+public class TestSVRemover extends BaseTestQuery {
   @Test
-  public void testSelectionVectorRemoval(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
-//    System.out.println(System.getProperty("java.class.path"));
-
-
-    new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
-    }};
-
-
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/remover/test1.json"), Charsets.UTF_8));
-    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    while(exec.next()){
-      int count = exec.getRecordCount();
-      for(ValueVector v : exec){
-        ValueVector.Accessor a = v.getAccessor();
-        assertEquals(count, a.getValueCount());
-      }
-    }
-
-    if(context.getFailureCause() != null){
-      throw context.getFailureCause();
-    }
-    assertTrue(!context.isFailed());
-
+  public void testSelectionVectorRemoval() throws Exception {
+    int numOutputRecords = testPhysical(getFile("remover/test1.json"));
+    assertEquals(50, numOutputRecords);
   }
 
+  @Test
+  public void testSVRWithNoFilter() throws Exception {
+    int numOutputRecords = testPhysical(getFile("remover/sv_with_no_filter.json"));
+    assertEquals(100, numOutputRecords);
+  }
 }

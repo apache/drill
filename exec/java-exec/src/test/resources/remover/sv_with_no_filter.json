@@ -13,26 +13,20 @@
             url: "http://apache.org",
             entries:[
                 {records: 100, types: [
-                  {name: "blue", type: "INT", mode: "REQUIRED"},
+                  {name: "blue", type: "BIT", mode: "REQUIRED"},
                   {name: "red", type: "BIGINT", mode: "REQUIRED"},
-                  {name: "green", type: "INT", mode: "REQUIRED"}
+                  {name: "green", type: "INT", mode: "OPTIONAL"}
                 ]}
             ]
         },
         {
             @id:2,
             child: 1,
-            pop:"filter",
-            expr: "alternate()"
-        },
-        {
-            @id:3,
-            child: 2,
             pop:"selection-vector-remover"
         },
         {
-            @id: 4,
-            child: 3,
+            @id: 3,
+            child: 2,
             pop: "screen"
         }
     ]

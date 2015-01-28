@@ -44,8 +44,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   private int allocationValueCount = INITIAL_VALUE_ALLOCATION;
   private int allocationMonitor = 0;
 
-  private int valueCapacity;
-
   public BitVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
   }
@@ -60,6 +58,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   private int getSizeFromCount(int valueCount) {
     return (int) Math.ceil(valueCount / 8.0);
+  }
+
+  @Override
+  public int getValueCapacity() {
+    return data.capacity() * 8;
   }
 
   private int getByteIndex(int index) {
@@ -83,7 +86,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
 
     clear();
-    valueCapacity = allocationValueCount;
     int valueSize = getSizeFromCount(allocationValueCount);
     data = allocator.buffer(valueSize);
     if (data == null) {
@@ -101,7 +103,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
    */
   public void allocateNew(int valueCount) {
     clear();
-    valueCapacity = valueCount;
     int valueSize = getSizeFromCount(valueCount);
     data = allocator.buffer(valueSize);
     zeroVector();
@@ -117,7 +118,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     newBuf.setBytes(0, data, 0, data.capacity());
     data.release();
     data = newBuf;
-    valueCapacity = allocationValueCount;
   }
 
   /**
@@ -156,11 +156,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     assert this.field.matches(metadata);
     int loaded = load(metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
-  }
-
-  @Override
-  public int getValueCapacity() {
-    return valueCapacity;
   }
 
   public Mutator getMutator() {
@@ -381,7 +376,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       } else if (allocationMonitor > 0) {
         allocationMonitor = 0;
       }
-      data.readerIndex(data.writerIndex());
       VectorTrimmer.trim(data, idx);
     }
 

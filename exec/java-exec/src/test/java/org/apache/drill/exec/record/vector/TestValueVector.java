@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.record.vector;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.Charset;
@@ -308,4 +309,90 @@ public class TestValueVector extends ExecTest {
     assertEquals(0, v.getAccessor().get(3));
   }
 
+
+  @Test
+  public void testReAllocNullableFixedWidthVector() throws Exception {
+    // Build an optional float field definition
+    MajorType floatType = MajorType.newBuilder()
+        .setMinorType(MinorType.FLOAT4)
+        .setMode(DataMode.OPTIONAL)
+        .setWidth(4).build();
+
+    MaterializedField field = MaterializedField.create(
+        SerializedField.newBuilder()
+            .setMajorType(floatType)
+            .build());
+
+    // Create a new value vector for 1024 integers
+    NullableFloat4Vector v = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator);
+    NullableFloat4Vector.Mutator m = v.getMutator();
+    v.allocateNew(1024);
+
+    assertEquals(1024, v.getValueCapacity());
+
+    // Put values in indexes that fall within the initial allocation
+    m.setSafe(0, 100.1f);
+    m.setSafe(100, 102.3f);
+    m.setSafe(1023, 104.5f);
+
+    // Now try to put values in space that falls beyond the initial allocation
+    m.setSafe(2000, 105.5f);
+
+    // Check valueCapacity is more than initial allocation
+    assertEquals(1024*2, v.getValueCapacity());
+
+    assertEquals(100.1f, v.getAccessor().get(0), 0);
+    assertEquals(102.3f, v.getAccessor().get(100), 0);
+    assertEquals(104.5f, v.getAccessor().get(1023), 0);
+    assertEquals(105.5f, v.getAccessor().get(2000), 0);
+
+
+    // Set the valueCount to be more than valueCapacity of current allocation. This is possible for NullableValueVectors
+    // as we don't call setSafe for null values, but we do call setValueCount when all values are inserted into the
+    // vector
+    m.setValueCount(v.getValueCapacity() + 200);
+  }
+
+  @Test
+  public void testReAllocNullableVariableWidthVector() throws Exception {
+    // Build an optional float field definition
+    MajorType floatType = MajorType.newBuilder()
+        .setMinorType(MinorType.VARCHAR)
+        .setMode(DataMode.OPTIONAL)
+        .setWidth(4).build();
+
+    MaterializedField field = MaterializedField.create(
+        SerializedField.newBuilder()
+            .setMajorType(floatType)
+            .build());
+
+    // Create a new value vector for 1024 integers
+    NullableVarCharVector v = (NullableVarCharVector) TypeHelper.getNewVector(field, allocator);
+    NullableVarCharVector.Mutator m = v.getMutator();
+    v.allocateNew();
+
+    int initialCapacity = v.getValueCapacity();
+
+    // Put values in indexes that fall within the initial allocation
+    byte[] str1 = new String("AAAAA1").getBytes(Charset.forName("UTF-8"));
+    byte[] str2 = new String("BBBBBBBBB2").getBytes(Charset.forName("UTF-8"));
+    byte[] str3 = new String("CCCC3").getBytes(Charset.forName("UTF-8"));
+
+    m.setSafe(0, str1, 0, str1.length);
+    m.setSafe(initialCapacity - 1, str2, 0, str2.length);
+
+    // Now try to put values in space that falls beyond the initial allocation
+    m.setSafe(initialCapacity + 200, str3, 0, str3.length);
+
+    // Check valueCapacity is more than initial allocation
+    assertEquals((initialCapacity+1)*2-1, v.getValueCapacity());
+
+    assertArrayEquals(str1, v.getAccessor().get(0));
+    assertArrayEquals(str2, v.getAccessor().get(initialCapacity-1));
+    assertArrayEquals(str3, v.getAccessor().get(initialCapacity + 200));
+
+    // Set the valueCount to be more than valueCapacity of current allocation. This is possible for NullableValueVectors
+    // as we don't call setSafe for null values, but we do call setValueCount when the current batch is processed.
+    m.setValueCount(v.getValueCapacity() + 200);
+  }
 }

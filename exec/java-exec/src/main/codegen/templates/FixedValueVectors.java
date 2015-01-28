@@ -803,6 +803,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      int currentValueCapacity = getValueCapacity();
      ${minor.class}Vector.this.valueCount = valueCount;
      int idx = (${type.width} * valueCount);
+     while(valueCount > getValueCapacity()) {
+       reAlloc();
+     }
      if (valueCount > 0 && currentValueCapacity > valueCount * 2) {
        incrementAllocationMonitor();
      } else if (allocationMonitor > 0) {
