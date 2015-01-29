@@ -99,7 +99,7 @@ public class MergeJoinPrel  extends JoinPrel {
 
     List<JoinCondition> conditions = Lists.newArrayList();
 
-    buildJoinConditions(conditions, leftFields, rightFields);
+    buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
 
     MergeJoinPOP mjoin = new MergeJoinPOP(leftPop, rightPop, conditions, jtype);
     return creator.addMetadata(this, mjoin);

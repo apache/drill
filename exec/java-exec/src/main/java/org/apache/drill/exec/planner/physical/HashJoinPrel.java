@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical;
 import java.io.IOException;
 import java.util.List;
 
+import net.hydromatic.optiq.runtime.FlatLists;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.ExecConstants;
@@ -46,18 +47,24 @@ import com.google.common.collect.Lists;
 
 public class HashJoinPrel  extends JoinPrel {
 
-  public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType) throws InvalidRelException {
-    super(cluster, traits, left, right, condition, joinType);
+  private boolean swapped = false;
 
-    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
+  public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+                      JoinRelType joinType) throws InvalidRelException {
+    this(cluster, traits, left, right, condition, joinType, false);
   }
 
+  public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+      JoinRelType joinType, boolean swapped) throws InvalidRelException {
+    super(cluster, traits, left, right, condition, joinType);
+    this.swapped = swapped;
+    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
+  }
 
   @Override
   public JoinRelBase copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
     try {
-      return new HashJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType);
+      return new HashJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType, this.swapped);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
@@ -100,23 +107,13 @@ public class HashJoinPrel  extends JoinPrel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    final List<String> fields = getRowType().getFieldNames();
-    assert isUnique(fields);
-    final int leftCount = left.getRowType().getFieldCount();
-    final List<String> leftFields = fields.subList(0, leftCount);
-    final List<String> rightFields = fields.subList(leftCount, fields.size());
-
-    PhysicalOperator leftPop = ((Prel)left).getPhysicalOperator(creator);
-    PhysicalOperator rightPop = ((Prel)right).getPhysicalOperator(creator);
-
-    JoinRelType jtype = this.getJoinType();
-
-    List<JoinCondition> conditions = Lists.newArrayList();
-
-    buildJoinConditions(conditions, leftFields, rightFields);
-
-    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype);
-    return creator.addMetadata(this, hjoin);
+    // Depending on whether the left/right is swapped for hash inner join, pass in different
+    // combinations of parameters.
+    if (! swapped) {
+      return getHashJoinPop(creator, left, right, leftKeys, rightKeys);
+    } else {
+      return getHashJoinPop(creator, right, left, rightKeys, leftKeys);
+    }
   }
 
   @Override
@@ -127,6 +124,35 @@ public class HashJoinPrel  extends JoinPrel {
   @Override
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
+  }
+
+  private PhysicalOperator getHashJoinPop(PhysicalPlanCreator creator, RelNode left, RelNode right,
+                                          List<Integer> leftKeys, List<Integer> rightKeys) throws IOException{
+    final List<String> fields = getRowType().getFieldNames();
+    assert isUnique(fields);
+
+    final List<String> leftFields = left.getRowType().getFieldNames();
+    final List<String> rightFields = right.getRowType().getFieldNames();
+
+    PhysicalOperator leftPop = ((Prel)left).getPhysicalOperator(creator);
+    PhysicalOperator rightPop = ((Prel)right).getPhysicalOperator(creator);
+
+    JoinRelType jtype = this.getJoinType();
+
+    List<JoinCondition> conditions = Lists.newArrayList();
+
+    buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
+
+    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype);
+    return creator.addMetadata(this, hjoin);
+  }
+
+  public void setSwapped(boolean swapped) {
+    this.swapped = swapped;
+  }
+
+  public boolean isSwapped() {
+    return this.swapped;
   }
 
 }

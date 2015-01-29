@@ -49,6 +49,9 @@ public class PlannerSettings implements Context{
   public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer", false);
   public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size", 10);
   public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key", true);
+  public static final OptionValidator HASH_JOIN_SWAP = new BooleanValidator("planner.enable_hashjoin_swap", true);
+  public static final OptionValidator HASH_JOIN_SWAP_MARGIN_FACTOR = new RangeDoubleValidator("planner.join.hash_join_swap_margin_factor", 0, 100, 10d);
+
   public static final OptionValidator IDENTIFIER_MAX_LENGTH =
       new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
                               Integer.MAX_VALUE, DEFAULT_IDENTIFIER_MAX_LENGTH);
@@ -115,6 +118,14 @@ public class PlannerSettings implements Context{
 
   public boolean isHashSingleKey() {
     return options.getOption(HASH_SINGLE_KEY.getOptionName()).bool_val;
+  }
+
+  public boolean isHashJoinSwapEnabled() {
+    return options.getOption(HASH_JOIN_SWAP.getOptionName()).bool_val;
+  }
+
+  public double getHashJoinSwapMarginFactor() {
+    return options.getOption(HASH_JOIN_SWAP_MARGIN_FACTOR.getOptionName()).float_val / 100d;
   }
 
   public long getBroadcastThreshold() {

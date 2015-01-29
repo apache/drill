@@ -23,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 import net.hydromatic.linq4j.Ord;
+import net.hydromatic.optiq.runtime.FlatLists;
 import net.hydromatic.optiq.runtime.Spacer;
 
+import org.apache.drill.exec.planner.physical.HashJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 import org.eigenbase.rel.RelNode;
@@ -62,6 +64,10 @@ class NumberingRelWriter implements RelWriter {
       RelNode rel,
       List<Pair<String, Object>> values) {
     List<RelNode> inputs = rel.getInputs();
+    if (rel instanceof HashJoinPrel && ((HashJoinPrel) rel).isSwapped()) {
+      HashJoinPrel joinPrel = (HashJoinPrel) rel;
+      inputs = FlatLists.of(joinPrel.getRight(), joinPrel.getLeft());
+    }
 
     if (!RelMetadataQuery.isVisibleInExplain(
         rel,
@@ -106,6 +112,7 @@ class NumberingRelWriter implements RelWriter {
       }
     }
     if (detailLevel == SqlExplainLevel.ALL_ATTRIBUTES) {
+      s.append(" : rowType = " + rel.getRowType().toString());
       s.append(": rowcount = ")
           .append(RelMetadataQuery.getRowCount(rel))
           .append(", cumulative cost = ")

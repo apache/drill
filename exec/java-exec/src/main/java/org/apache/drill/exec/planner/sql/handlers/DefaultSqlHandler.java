@@ -56,6 +56,7 @@ import org.apache.drill.exec.planner.physical.visitor.RewriteProjectToFlatten;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.SplitUpComplexExpressions;
 import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
+import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinVisitor;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -246,12 +247,20 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     phyRelNode = JoinPrelRenameVisitor.insertRenameProject(phyRelNode);
 
     /*
-     * 1.1) Break up all expressions with complex outputs into their own project operations
+     * 1.1) Swap left / right for INNER hash join, if left's row count is < (1 + margin) right's row count.
+     * We want to have smaller dataset on the right side, since hash table builds on right side.
+     */
+    if (context.getPlannerSettings().isHashJoinSwapEnabled()) {
+      phyRelNode = SwapHashJoinVisitor.swapHashJoin(phyRelNode, new Double(context.getPlannerSettings().getHashJoinSwapMarginFactor()));
+    }
+
+    /*
+     * 1.2) Break up all expressions with complex outputs into their own project operations
      */
     phyRelNode = ((Prel) phyRelNode).accept(new SplitUpComplexExpressions(planner.getTypeFactory(), context.getDrillOperatorTable(), context.getPlannerSettings().functionImplementationRegistry), null);
 
     /*
-     * 1.2) Projections that contain reference to flatten are rewritten as Flatten operators followed by Project
+     * 1.3) Projections that contain reference to flatten are rewritten as Flatten operators followed by Project
      */
     phyRelNode = ((Prel) phyRelNode).accept(new RewriteProjectToFlatten(planner.getTypeFactory(), context.getDrillOperatorTable()), null);
 

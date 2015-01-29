@@ -118,7 +118,9 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
    */
   protected void buildJoinConditions(List<JoinCondition> conditions,
       List<String> leftFields,
-      List<String> rightFields) {
+      List<String> rightFields,
+      List<Integer> leftKeys,
+      List<Integer> rightKeys) {
     List<RexNode> conjuncts = RelOptUtil.conjunctions(this.getCondition());
     short i=0;
 
