@@ -67,7 +67,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
           throw new SQLException("Running Drill in embedded mode using the JDBC jar alone is not supported.");
         }
 
-        DrillConfig dConfig = DrillConfig.create();
+        final DrillConfig dConfig = DrillConfig.create(info);
         this.allocator = new TopLevelAllocator(dConfig);
         RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
         if (set == null) {
@@ -87,7 +87,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
         this.client = new DrillClient(dConfig, set.getCoordinator());
         this.client.connect(null, info);
       } else {
-        DrillConfig dConfig = DrillConfig.createClient();
+        final DrillConfig dConfig = DrillConfig.forClient();
         this.allocator = new TopLevelAllocator(dConfig);
         this.client = new DrillClient();
         this.client.connect(config.getZookeeperConnectionString(), info);

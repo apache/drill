@@ -63,7 +63,7 @@ public class ReplaceMethodInvoke {
     check(output);
 
 
-    DrillConfig c = DrillConfig.createClient();
+    DrillConfig c = DrillConfig.forClient();
     SystemOptionManager m = new SystemOptionManager(c, new LocalPStoreProvider(c));
     m.init();
     QueryClassLoader ql = new QueryClassLoader(DrillConfig.create(), m);

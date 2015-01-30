@@ -33,6 +33,7 @@ public class DrillConnectionConfig extends ConnectionConfigImpl {
   public boolean isLocal(){
     return "local".equals(props.getProperty("zk"));
   }
+
   public String getZookeeperConnectionString(){
     return props.getProperty("zk");
   }
