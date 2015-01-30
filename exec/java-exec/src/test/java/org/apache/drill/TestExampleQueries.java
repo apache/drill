@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
@@ -26,6 +27,42 @@ import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
+
+  @Test // see DRILL-2054
+  public void testConcatOperator() throws Exception {
+    testBuilder()
+        .sqlQuery("select n_nationkey || '+' || n_name || '=' as CONCAT, n_nationkey, '+' as PLUS, n_name from cp.`tpch/nation.parquet`")
+        .ordered()
+        .csvBaselineFile("testframework/testExampleQueries/testConcatOperator.tsv")
+        .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("CONCAT", "n_nationkey", "PLUS", "n_name")
+        .build().run();
+
+    testBuilder()
+        .sqlQuery("select (n_nationkey || n_name) as CONCAT from cp.`tpch/nation.parquet`")
+        .ordered()
+        .csvBaselineFile("testframework/testExampleQueries/testConcatOperatorInputTypeCombination.tsv")
+        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("CONCAT")
+        .build().run();
+
+
+    testBuilder()
+        .sqlQuery("select (n_nationkey || cast(n_name as varchar(30))) as CONCAT from cp.`tpch/nation.parquet`")
+        .ordered()
+        .csvBaselineFile("testframework/testExampleQueries/testConcatOperatorInputTypeCombination.tsv")
+        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("CONCAT")
+        .build().run();
+
+    testBuilder()
+        .sqlQuery("select (cast(n_nationkey as varchar(30)) || n_name) as CONCAT from cp.`tpch/nation.parquet`")
+        .ordered()
+        .csvBaselineFile("testframework/testExampleQueries/testConcatOperatorInputTypeCombination.tsv")
+        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("CONCAT")
+        .build().run();
+  }
 
   @Test // see DRILL-985
   public void testViewFileName() throws Exception {

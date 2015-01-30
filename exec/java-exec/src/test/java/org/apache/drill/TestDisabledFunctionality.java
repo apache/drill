@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package org.apache.drill;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
@@ -24,6 +25,26 @@ import org.junit.Test;
 
 public class TestDisabledFunctionality extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
+
+  @Test(expected = RpcException.class)  // see DRILL-2054
+  public void testBooleanORExpression() throws Exception {
+        test("select (1 = 1) || (1 > 0) from cp.`tpch/nation.parquet` ");
+    }
+
+  @Test(expected = RpcException.class)  // see DRILL-2054
+  public void testBooleanORSelectClause() throws Exception {
+    test("select true || true from cp.`tpch/nation.parquet` ");
+  }
+
+  @Test(expected = RpcException.class)  // see DRILL-2054
+  public void testBooleanORWhereClause() throws Exception {
+    test("select * from cp.`tpch/nation.parquet` where (true || true) ");
+  }
+
+  @Test(expected = RpcException.class)  // see DRILL-2054
+  public void testBooleanAND() throws Exception {
+    test("select true && true from cp.`tpch/nation.parquet` ");
+  }
 
   @Test(expected = UnsupportedFunctionException.class)  // see DRILL-1937
   public void testDisabledExplainplanForComparisonWithNonscalarSubquery() throws Exception {
