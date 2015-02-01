@@ -43,6 +43,7 @@ import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
+import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
 import org.apache.drill.exec.physical.impl.join.JoinWorker.JoinOutcome;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
@@ -111,6 +112,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private final JoinRelType joinType;
   private JoinWorker worker;
   public MergeJoinBatchBuilder batchBuilder;
+  private boolean areNullsEqual = false; // whether nulls compare equal
 
   protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
     super(popConfig, context, true);
@@ -124,6 +126,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     this.status = new JoinStatus(left, right, this);
     this.batchBuilder = new MergeJoinBatchBuilder(oContext.getAllocator(), status);
     this.conditions = popConfig.getConditions();
+
+    JoinComparator comparator = JoinComparator.NONE;
+    for (JoinCondition condition : conditions) {
+      comparator = JoinUtils.checkAndSetComparison(condition, comparator);
+    }
+    assert comparator != JoinComparator.NONE;
+    areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM) ? true : false;
   }
 
   public JoinRelType getJoinType() {
@@ -521,7 +530,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
         // If not 0, it means not equal. We return this out value.
         // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.
-        if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()) {
+        if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()
+            && ! areNullsEqual) {
           JConditional jc = cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)).
                                       cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))));
           jc._then()._return(JExpr.lit(1));

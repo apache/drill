@@ -125,7 +125,8 @@ public class ChainedHashTable {
   private final boolean areNullsEqual;
 
   public ChainedHashTable(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
-                          RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing, boolean areNullsEqual) {
+                          RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing,
+                          boolean areNullsEqual) {
 
     this.htConfig = htConfig;
     this.context = context;

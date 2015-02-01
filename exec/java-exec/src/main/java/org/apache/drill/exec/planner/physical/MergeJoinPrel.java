@@ -99,9 +99,7 @@ public class MergeJoinPrel  extends JoinPrel {
 
     List<JoinCondition> conditions = Lists.newArrayList();
 
-    for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
-      conditions.add(new JoinCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right))));
-    }
+    buildJoinConditions(conditions, leftFields, rightFields);
 
     MergeJoinPOP mjoin = new MergeJoinPOP(leftPop, rightPop, conditions, jtype);
     return creator.addMetadata(this, mjoin);

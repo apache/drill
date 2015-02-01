@@ -113,9 +113,7 @@ public class HashJoinPrel  extends JoinPrel {
 
     List<JoinCondition> conditions = Lists.newArrayList();
 
-    for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
-      conditions.add(new JoinCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right))));
-    }
+    buildJoinConditions(conditions, leftFields, rightFields);
 
     HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype);
     return creator.addMetadata(this, hjoin);

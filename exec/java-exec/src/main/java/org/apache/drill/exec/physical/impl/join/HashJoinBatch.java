@@ -42,6 +42,7 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
+import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
@@ -281,14 +282,18 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     NamedExpression rightExpr[] = new NamedExpression[conditionsSize];
     NamedExpression leftExpr[] = new NamedExpression[conditionsSize];
 
+    JoinComparator comparator = JoinComparator.NONE;
     // Create named expressions from the conditions
     for (int i = 0; i < conditionsSize; i++) {
       rightExpr[i] = new NamedExpression(conditions.get(i).getRight(), new FieldReference("build_side_" + i));
       leftExpr[i] = new NamedExpression(conditions.get(i).getLeft(), new FieldReference("probe_side_" + i));
 
-      // Hash join only supports equality currently.
-      assert conditions.get(i).getRelationship().equals("==");
+      // Hash join only supports certain types of comparisons
+      comparator = JoinUtils.checkAndSetComparison(conditions.get(i), comparator);
     }
+
+    assert comparator != JoinComparator.NONE;
+    boolean areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM) ? true : false;
 
     // Set the left named expression to be null if the probe batch is empty.
     if (leftUpstream != IterOutcome.OK_NEW_SCHEMA && leftUpstream != IterOutcome.OK) {
@@ -306,7 +311,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     // Create the chained hash table
     ChainedHashTable ht =
         new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null,
-            false /* nulls are not equal */);
+            areNullsEqual);
     hashTable = ht.createAndSetupHashTable(null);
   }
 
