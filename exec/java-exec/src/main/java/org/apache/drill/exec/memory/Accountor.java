@@ -110,8 +110,18 @@ public class Accountor {
   }
 
   public boolean transferTo(Accountor target, DrillBuf buf, long size) {
+    return transfer(target, buf, size, true);
+  }
+
+  public boolean transferIn(DrillBuf buf, long size) {
+    return transfer(this, buf, size, false);
+  }
+
+  private boolean transfer(Accountor target, DrillBuf buf, long size, boolean release) {
     boolean withinLimit = target.forceAdditionalReservation(size);
-    release(buf, size);
+    if(release){
+      release(buf, size);
+    }
 
     if (ENABLE_ACCOUNTING) {
       target.buffers.put(buf, new DebugStackTrace(buf.capacity(), Thread.currentThread().getStackTrace()));

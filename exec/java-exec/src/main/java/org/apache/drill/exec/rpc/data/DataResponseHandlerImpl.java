@@ -50,27 +50,21 @@ public class DataResponseHandlerImpl implements DataResponseHandler{
   }
 
 
-  public void handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, DrillBuf data, ResponseSender sender) throws RpcException {
+  public void handle(FragmentManager manager, FragmentRecordBatch fragmentBatch, DrillBuf data, AckSender sender) throws FragmentSetupException, IOException {
 //    logger.debug("Fragment Batch received {}", fragmentBatch);
-    try {
-      boolean canRun = manager.handle(new RawFragmentBatch(connection, fragmentBatch, data, sender));
-      if (canRun) {
+
+    boolean canRun = manager.handle(new RawFragmentBatch(fragmentBatch, data, sender));
+    if (canRun) {
 //        logger.debug("Arriving batch means local batch can run, starting local batch.");
-        // if we've reached the canRun threshold, we'll proceed. This expects handler.handle() to only return a single
-        // true.
-        bee.startFragmentPendingRemote(manager);
-      }
-      if (fragmentBatch.getIsLastBatch() && !manager.isWaiting()) {
+      // if we've reached the canRun threshold, we'll proceed. This expects handler.handle() to only return a single
+      // true.
+      bee.startFragmentPendingRemote(manager);
+    }
+    if (fragmentBatch.getIsLastBatch() && !manager.isWaiting()) {
 //        logger.debug("Removing handler.  Is Last Batch {}.  Is Waiting for more {}", fragmentBatch.getIsLastBatch(),
 //            manager.isWaiting());
-        bee.getContext().getWorkBus().removeFragmentManager(manager.getHandle());
-      }
-
-    } catch (FragmentSetupException e) {
-      logger.error("Failure while attempting to setup new fragment.", e);
-      sender.send(new Response(RpcType.ACK, Acks.FAIL));
-    } catch (IOException e) {
-      throw new RpcException(e);
+      bee.getContext().getWorkBus().removeFragmentManager(manager.getHandle());
     }
+
   }
 }

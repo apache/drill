@@ -55,7 +55,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
     this.softlimit = bufferSizePerSocket * fragmentCount;
     this.startlimit = Math.max(softlimit/2, 1);
-    logger.debug("softLimit: {}, startLimit: {}", softlimit, startlimit);
+    logger.trace("softLimit: {}, startLimit: {}", softlimit, startlimit);
     this.buffer = Queues.newLinkedBlockingDeque();
     this.fragmentCount = fragmentCount;
     this.streamCounter = fragmentCount;
@@ -75,7 +75,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
       }
     }
     if (batch.getHeader().getIsOutOfMemory()) {
-      logger.debug("Setting autoread false");
+      logger.trace("Setting autoread false");
       RawFragmentBatch firstBatch = buffer.peekFirst();
       FragmentRecordBatch header = firstBatch == null ? null :firstBatch.getHeader();
       if (!outOfMemory.get() && !(header == null) && header.getIsOutOfMemory()) {
@@ -86,7 +86,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     }
     buffer.add(batch);
     if (buffer.size() >= softlimit) {
-      logger.debug("buffer.size: {}", buffer.size());
+      logger.trace("buffer.size: {}", buffer.size());
       overlimit.set(true);
       readController.enqueueResponse(batch.getSender());
     } else {
@@ -147,7 +147,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   public RawFragmentBatch getNext() {
 
     if (outOfMemory.get() && buffer.size() < 10) {
-      logger.debug("Setting autoread true");
+      logger.trace("Setting autoread true");
       outOfMemory.set(false);
       readController.flushResponses();
     }
@@ -177,7 +177,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
       int flushCount = softlimit - buffer.size();
       if ( flushCount > 0 ) {
         int flushed = readController.flushResponses(flushCount);
-        logger.debug("flush {} entries, flushed {} entries ", flushCount, flushed);
+        logger.trace("flush {} entries, flushed {} entries ", flushCount, flushed);
         if ( flushed == 0 ) {
           // queue is empty - nothing to do for now
           overlimit.set(false);

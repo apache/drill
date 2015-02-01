@@ -49,7 +49,6 @@ public final class BitClientHandshake implements Externalizable, Message<BitClie
     
     private int rpcVersion;
     private RpcChannel channel;
-    private FragmentHandle handle;
 
     public BitClientHandshake()
     {
@@ -81,19 +80,6 @@ public final class BitClientHandshake implements Externalizable, Message<BitClie
     public BitClientHandshake setChannel(RpcChannel channel)
     {
         this.channel = channel;
-        return this;
-    }
-
-    // handle
-
-    public FragmentHandle getHandle()
-    {
-        return handle;
-    }
-
-    public BitClientHandshake setHandle(FragmentHandle handle)
-    {
-        this.handle = handle;
         return this;
     }
 
@@ -157,10 +143,6 @@ public final class BitClientHandshake implements Externalizable, Message<BitClie
                 case 2:
                     message.channel = RpcChannel.valueOf(input.readEnum());
                     break;
-                case 3:
-                    message.handle = input.mergeObject(message.handle, FragmentHandle.getSchema());
-                    break;
-
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -175,10 +157,6 @@ public final class BitClientHandshake implements Externalizable, Message<BitClie
 
         if(message.channel != null)
              output.writeEnum(2, message.channel.number, false);
-
-        if(message.handle != null)
-             output.writeObject(3, message.handle, FragmentHandle.getSchema(), false);
-
     }
 
     public String getFieldName(int number)
@@ -187,7 +165,6 @@ public final class BitClientHandshake implements Externalizable, Message<BitClie
         {
             case 1: return "rpcVersion";
             case 2: return "channel";
-            case 3: return "handle";
             default: return null;
         }
     }
@@ -203,7 +180,6 @@ public final class BitClientHandshake implements Externalizable, Message<BitClie
     {
         __fieldMap.put("rpcVersion", 1);
         __fieldMap.put("channel", 2);
-        __fieldMap.put("handle", 3);
     }
     
 }

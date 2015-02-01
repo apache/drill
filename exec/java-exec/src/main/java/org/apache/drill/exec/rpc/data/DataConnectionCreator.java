@@ -57,8 +57,8 @@ public class DataConnectionCreator implements Closeable {
     return completeEndpoint;
   }
 
-  public DataTunnel getTunnel(DrillbitEndpoint endpoint, FragmentHandle handle) {
-    DataConnectionManager newManager = new DataConnectionManager(handle, endpoint, context);
+  public DataTunnel getTunnel(DrillbitEndpoint endpoint) {
+    DataConnectionManager newManager = new DataConnectionManager(endpoint, context);
     DataConnectionManager oldManager = connectionManager.putIfAbsent(endpoint, newManager);
     if(oldManager != null){
       newManager = oldManager;

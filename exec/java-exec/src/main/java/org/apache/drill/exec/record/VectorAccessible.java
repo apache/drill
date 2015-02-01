@@ -19,13 +19,6 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
 
-/**
- * Created with IntelliJ IDEA.
- * User: sphillips
- * Date: 9/30/13
- * Time: 1:40 PM
- * To change this template use File | Settings | File Templates.
- */
 public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
   public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds);
   public TypedFieldId getValueVectorId(SchemaPath path);

@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.proto.helper;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -39,4 +41,10 @@ public class QueryIdHelper {
   public static String getQueryIdentifier(FragmentHandle h) {
     return getQueryId(h.getQueryId()) + ":" + h.getMajorFragmentId() + ":" + h.getMinorFragmentId();
   }
+
+  public static String getQueryIdentifiers(QueryId queryId, int majorFragmentId, List<Integer> minorFragmentIds) {
+    String fragmentIds = minorFragmentIds.size() == 1 ? minorFragmentIds.get(0).toString() : minorFragmentIds.toString();
+    return getQueryId(queryId) + ":" + majorFragmentId + ":" + fragmentIds;
+  }
+
 }

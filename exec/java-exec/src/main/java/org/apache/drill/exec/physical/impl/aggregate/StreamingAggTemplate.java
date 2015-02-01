@@ -29,7 +29,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 public abstract class StreamingAggTemplate implements StreamingAggregator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggregator.class);
   private static final boolean EXTRA_DEBUG = false;
-  private static final String TOO_BIG_ERROR = "Couldn't add value to an empty batch.  This likely means that a single value is too long for a varlen field.";
+  private static final int OUTPUT_BATCH_SIZE = 32*1024;
+
   private IterOutcome lastOutcome = null;
   private boolean first = true;
   private boolean newSchema = false;
@@ -37,14 +38,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   private int underlyingIndex = 0;
   private int currentIndex;
   private int addedRecordCount = 0;
-  private boolean pendingOutput = false;
   private IterOutcome outcome;
   private int outputCount = 0;
   private RecordBatch incoming;
-  private BatchSchema schema;
   private StreamingAggBatch outgoing;
   private FragmentContext context;
-  private InternalBatch remainderBatch;
   private boolean done = false;
 
 
@@ -52,7 +50,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   public void setup(FragmentContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException {
     this.context = context;
     this.incoming = incoming;
-    this.schema = incoming.getSchema();
     this.outgoing = outgoing;
     setupInterior(incoming, outgoing);
   }
@@ -72,12 +69,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   @Override
   public int getOutputCount() {
     return outputCount;
-  }
-
-  private AggOutcome tooBigFailure() {
-    context.fail(new Exception(TOO_BIG_ERROR));
-    this.outcome = IterOutcome.STOP;
-    return AggOutcome.CLEANUP_AND_RETURN;
   }
 
   @Override
@@ -118,25 +109,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         }
       }
 
-      // pick up a remainder batch if we have one.
-      if (remainderBatch != null) {
-        outputToBatch( previousIndex );
-        remainderBatch.clear();
-        remainderBatch = null;
-        return setOkAndReturn();
-      }
-
-
-      // setup for new output and pick any remainder.
-      if (pendingOutput) {
-        allocateOutgoing();
-        pendingOutput = false;
-        if (EXTRA_DEBUG) {
-          logger.debug("Attempting to output remainder.");
-        }
-        outputToBatch( previousIndex);
-      }
-
       if (newSchema) {
         return AggOutcome.UPDATE_AGGREGATOR;
       }
@@ -167,18 +139,27 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
             if (EXTRA_DEBUG) {
               logger.debug("Values were different, outputting previous batch.");
             }
-            outputToBatch(previousIndex);
-            if (EXTRA_DEBUG) {
-              logger.debug("Output successful.");
+            if(!outputToBatch(previousIndex)) {
+              // There is still space in outgoing container, so proceed to the next input.
+              if (EXTRA_DEBUG) {
+                logger.debug("Output successful.");
+              }
+              addRecordInc(currentIndex);
+            } else {
+              if (EXTRA_DEBUG) {
+                logger.debug("Output container has reached its capacity. Flushing it.");
+              }
+
+              // Update the indices to set the state for processing next record in incoming batch in subsequent doWork calls.
+              previousIndex = currentIndex;
+              incIndex();
+              return setOkAndReturn();
             }
-            addRecordInc(currentIndex);
           }
           previousIndex = currentIndex;
         }
 
-
         InternalBatch previous = null;
-
         try {
           while (true) {
             if (previous != null) {
@@ -196,7 +177,8 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               if (first && addedRecordCount == 0) {
                 return setOkAndReturn();
               } else if(addedRecordCount > 0) {
-                outputToBatchPrev( previous, previousIndex, outputCount);
+                outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
+                // (output container full or not) as we are not going to insert anymore records.
                 if (EXTRA_DEBUG) {
                   logger.debug("Received no more batches, returning.");
                 }
@@ -218,7 +200,8 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                 logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
               }
               if (addedRecordCount > 0) {
-                outputToBatchPrev( previous, previousIndex, outputCount);
+                outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
+                // (output container full or not) as we are not going to insert anymore records.
                 if (EXTRA_DEBUG) {
                   logger.debug("Wrote out end of previous batch, returning.");
                 }
@@ -249,7 +232,12 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                   }
                   previousIndex = currentIndex;
                   if (addedRecordCount > 0) {
-                    outputToBatchPrev( previous, previousIndex, outputCount);
+                    if (!outputToBatchPrev(previous, previousIndex, outputCount)) {
+                      if (EXTRA_DEBUG) {
+                        logger.debug("Output container is full. flushing it.");
+                        return setOkAndReturn();
+                      }
+                    }
                     continue outside;
                   }
                 }
@@ -263,8 +251,8 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
         }
         } finally {
-          // make sure to clear previous if we haven't saved it.
-          if (remainderBatch == null && previous != null) {
+          // make sure to clear previous
+          if (previous != null) {
             previous.clear();
           }
         }
@@ -303,7 +291,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     return AggOutcome.RETURN_OUTCOME;
   }
 
-  private final void outputToBatch(int inIndex) {
+  // Returns output container status after insertion of the given record. Caller must check the return value if it
+  // plans to insert more records into outgoing container.
+  private final boolean outputToBatch(int inIndex) {
+    assert outputCount < OUTPUT_BATCH_SIZE:
+        "Outgoing RecordBatch is not flushed. It reached its max capacity in the last update";
 
     outputRecordKeys(inIndex, outputCount);
 
@@ -315,15 +307,24 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     resetValues();
     outputCount++;
     addedRecordCount = 0;
+
+    return outputCount == OUTPUT_BATCH_SIZE;
   }
 
-  private final void outputToBatchPrev(InternalBatch b1, int inIndex, int outIndex) {
+  // Returns output container status after insertion of the given record. Caller must check the return value if it
+  // plans to inserts more record into outgoing container.
+  private final boolean outputToBatchPrev(InternalBatch b1, int inIndex, int outIndex) {
+    assert outputCount < OUTPUT_BATCH_SIZE:
+        "Outgoing RecordBatch is not flushed. It reached its max capacity in the last update";
+
     outputRecordKeysPrev(b1, inIndex, outIndex);
     outputRecordValues(outIndex);
     resetValues();
     resetValues();
     outputCount++;
     addedRecordCount = 0;
+
+    return outputCount == OUTPUT_BATCH_SIZE;
   }
 
   private void addRecordInc(int index) {
@@ -333,9 +334,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
   @Override
   public void cleanup() {
-    if (remainderBatch != null) {
-      remainderBatch.clear();
-    }
   }
 
   public abstract void setupInterior(@Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;

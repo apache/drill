@@ -75,8 +75,6 @@ import org.eigenbase.rel.JoinRelType;
  */
 public abstract class JoinTemplate implements JoinWorker {
 
-  private static final int OUTPUT_BATCH_SIZE = 32*1024;
-
   @Override
   public void setupJoin(FragmentContext context, JoinStatus status, VectorContainer outgoing) throws SchemaChangeException {
     doSetup(context, status, outgoing);
@@ -88,7 +86,7 @@ public abstract class JoinTemplate implements JoinWorker {
    * @return  true of join succeeded; false if the worker needs to be regenerated
    */
   public final boolean doJoin(final JoinStatus status) {
-    for (int i = 0; i < OUTPUT_BATCH_SIZE; i++) {
+    while(!status.isOutgoingBatchFull()) {
       // for each record
 
       // validate input iterators (advancing to the next record batch if necessary)
@@ -96,6 +94,9 @@ public abstract class JoinTemplate implements JoinWorker {
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
           // we've hit the end of the right record batch; copy any remaining values from the left batch
           while (status.isLeftPositionAllowed()) {
+            if (status.isOutgoingBatchFull()) {
+              return false;
+            }
             doCopyLeft(status.getLeftPosition(), status.getOutPosition());
 
             status.incOutputPos();
@@ -139,6 +140,9 @@ public abstract class JoinTemplate implements JoinWorker {
         boolean crossedBatchBoundaries = false;
         int initialRightPosition = status.getRightPosition();
         do {
+          if (status.isOutgoingBatchFull()) {
+            return false;
+          }
           // copy all equal right keys to the output record batch
           doCopyLeft(status.getLeftPosition(), status.getOutPosition());
 

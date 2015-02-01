@@ -31,8 +31,14 @@ public class DataConnectionManager extends ReconnectingConnection<DataClientConn
   private final DrillbitEndpoint endpoint;
   private final BootStrapContext context;
 
-  public DataConnectionManager(FragmentHandle handle, DrillbitEndpoint endpoint, BootStrapContext context) {
-    super(hs(handle), endpoint.getAddress(), endpoint.getDataPort());
+  private final static BitClientHandshake HANDSHAKE = BitClientHandshake //
+      .newBuilder() //
+      .setRpcVersion(DataRpcConfig.RPC_VERSION) //
+      .setChannel(RpcChannel.BIT_DATA) //
+      .build();
+
+  public DataConnectionManager(DrillbitEndpoint endpoint, BootStrapContext context) {
+    super(HANDSHAKE, endpoint.getAddress(), endpoint.getDataPort());
     this.endpoint = endpoint;
     this.context = context;
   }
@@ -42,12 +48,4 @@ public class DataConnectionManager extends ReconnectingConnection<DataClientConn
     return new DataClient(endpoint, context, new CloseHandlerCreator());
   }
 
-  private static BitClientHandshake hs(FragmentHandle handle){
-    return BitClientHandshake //
-        .newBuilder() //
-        .setRpcVersion(DataRpcConfig.RPC_VERSION) //
-        .setChannel(RpcChannel.BIT_DATA) //
-        .setHandle(handle) //
-        .build();
-  }
 }

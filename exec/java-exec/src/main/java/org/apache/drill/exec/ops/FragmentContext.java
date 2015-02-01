@@ -60,7 +60,7 @@ public class FragmentContext implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContext.class);
 
 
-  private Map<FragmentHandle, DataTunnel> tunnels = Maps.newHashMap();
+  private Map<DrillbitEndpoint, DataTunnel> tunnels = Maps.newHashMap();
 
   private final DrillbitContext context;
   private final UserClientConnection connection;
@@ -239,11 +239,11 @@ public class FragmentContext implements Closeable {
     return context.getController().getTunnel(endpoint);
   }
 
-  public DataTunnel getDataTunnel(DrillbitEndpoint endpoint, FragmentHandle remoteHandle) {
-    DataTunnel tunnel = tunnels.get(remoteHandle);
+  public DataTunnel getDataTunnel(DrillbitEndpoint endpoint) {
+    DataTunnel tunnel = tunnels.get(endpoint);
     if (tunnel == null) {
-      tunnel = context.getDataConnectionsPool().getTunnel(endpoint, remoteHandle);
-      tunnels.put(remoteHandle, tunnel);
+      tunnel = context.getDataConnectionsPool().getTunnel(endpoint);
+      tunnels.put(endpoint, tunnel);
     }
     return tunnel;
   }

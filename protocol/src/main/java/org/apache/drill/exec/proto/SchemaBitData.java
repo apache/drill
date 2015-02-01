@@ -39,9 +39,6 @@ public final class SchemaBitData
                     output.writeInt32(1, message.getRpcVersion(), false);
                 if(message.hasChannel())
                     output.writeEnum(2, message.getChannel().getNumber(), false);
-                if(message.hasHandle())
-                    output.writeObject(3, message.getHandle(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.WRITE, false);
-
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitData.BitClientHandshake message)
             {
@@ -87,10 +84,6 @@ public final class SchemaBitData
                         case 2:
                             builder.setChannel(org.apache.drill.exec.proto.UserBitShared.RpcChannel.valueOf(input.readEnum()));
                             break;
-                        case 3:
-                            builder.setHandle(input.mergeObject(org.apache.drill.exec.proto.ExecProtos.FragmentHandle.newBuilder(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.MERGE));
-
-                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -133,7 +126,6 @@ public final class SchemaBitData
             {
                 case 1: return "rpcVersion";
                 case 2: return "channel";
-                case 3: return "handle";
                 default: return null;
             }
         }
@@ -147,7 +139,6 @@ public final class SchemaBitData
         {
             fieldMap.put("rpcVersion", 1);
             fieldMap.put("channel", 2);
-            fieldMap.put("handle", 3);
         }
     }
 
@@ -273,20 +264,24 @@ public final class SchemaBitData
         {
             public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitData.FragmentRecordBatch message) throws java.io.IOException
             {
-                if(message.hasHandle())
-                    output.writeObject(1, message.getHandle(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.WRITE, false);
+                if(message.hasQueryId())
+                    output.writeObject(1, message.getQueryId(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.WRITE, false);
 
+                if(message.hasReceivingMajorFragmentId())
+                    output.writeInt32(2, message.getReceivingMajorFragmentId(), false);
+                for(int receivingMinorFragmentId : message.getReceivingMinorFragmentIdList())
+                    output.writeInt32(3, receivingMinorFragmentId, true);
                 if(message.hasSendingMajorFragmentId())
-                    output.writeInt32(2, message.getSendingMajorFragmentId(), false);
+                    output.writeInt32(4, message.getSendingMajorFragmentId(), false);
                 if(message.hasSendingMinorFragmentId())
-                    output.writeInt32(3, message.getSendingMinorFragmentId(), false);
+                    output.writeInt32(5, message.getSendingMinorFragmentId(), false);
                 if(message.hasDef())
-                    output.writeObject(4, message.getDef(), org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.WRITE, false);
+                    output.writeObject(6, message.getDef(), org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.WRITE, false);
 
                 if(message.hasIsLastBatch())
-                    output.writeBool(5, message.getIsLastBatch(), false);
+                    output.writeBool(7, message.getIsLastBatch(), false);
                 if(message.hasIsOutOfMemory())
-                    output.writeBool(6, message.getIsOutOfMemory(), false);
+                    output.writeBool(8, message.getIsOutOfMemory(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitData.FragmentRecordBatch message)
             {
@@ -327,23 +322,29 @@ public final class SchemaBitData
                         case 0:
                             return;
                         case 1:
-                            builder.setHandle(input.mergeObject(org.apache.drill.exec.proto.ExecProtos.FragmentHandle.newBuilder(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.MERGE));
+                            builder.setQueryId(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.MERGE));
 
                             break;
                         case 2:
-                            builder.setSendingMajorFragmentId(input.readInt32());
+                            builder.setReceivingMajorFragmentId(input.readInt32());
                             break;
                         case 3:
-                            builder.setSendingMinorFragmentId(input.readInt32());
+                            builder.addReceivingMinorFragmentId(input.readInt32());
                             break;
                         case 4:
+                            builder.setSendingMajorFragmentId(input.readInt32());
+                            break;
+                        case 5:
+                            builder.setSendingMinorFragmentId(input.readInt32());
+                            break;
+                        case 6:
                             builder.setDef(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.MERGE));
 
                             break;
-                        case 5:
+                        case 7:
                             builder.setIsLastBatch(input.readBool());
                             break;
-                        case 6:
+                        case 8:
                             builder.setIsOutOfMemory(input.readBool());
                             break;
                         default:
@@ -386,12 +387,14 @@ public final class SchemaBitData
         {
             switch(number)
             {
-                case 1: return "handle";
-                case 2: return "sendingMajorFragmentId";
-                case 3: return "sendingMinorFragmentId";
-                case 4: return "def";
-                case 5: return "isLastBatch";
-                case 6: return "isOutOfMemory";
+                case 1: return "queryId";
+                case 2: return "receivingMajorFragmentId";
+                case 3: return "receivingMinorFragmentId";
+                case 4: return "sendingMajorFragmentId";
+                case 5: return "sendingMinorFragmentId";
+                case 6: return "def";
+                case 7: return "isLastBatch";
+                case 8: return "isOutOfMemory";
                 default: return null;
             }
         }
@@ -403,12 +406,14 @@ public final class SchemaBitData
         private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
         static
         {
-            fieldMap.put("handle", 1);
-            fieldMap.put("sendingMajorFragmentId", 2);
-            fieldMap.put("sendingMinorFragmentId", 3);
-            fieldMap.put("def", 4);
-            fieldMap.put("isLastBatch", 5);
-            fieldMap.put("isOutOfMemory", 6);
+            fieldMap.put("queryId", 1);
+            fieldMap.put("receivingMajorFragmentId", 2);
+            fieldMap.put("receivingMinorFragmentId", 3);
+            fieldMap.put("sendingMajorFragmentId", 4);
+            fieldMap.put("sendingMinorFragmentId", 5);
+            fieldMap.put("def", 6);
+            fieldMap.put("isLastBatch", 7);
+            fieldMap.put("isOutOfMemory", 8);
         }
     }
 

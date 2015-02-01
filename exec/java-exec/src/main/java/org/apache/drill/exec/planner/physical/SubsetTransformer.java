@@ -18,6 +18,8 @@
 package org.apache.drill.exec.planner.physical;
 
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.ConventionTraitDef;
+import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelTraitSet;
@@ -49,19 +51,23 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
     }
 
     boolean transform = false;
-
     for (RelNode rel : ((RelSubset)candidateSet).getRelList()) {
-      if (!isDefaultDist(rel)) {
-        RelNode out = convertChild(n, rel);
+      if (isPhysical(rel)) {
+        RelNode newRel = RelOptRule.convert(candidateSet, rel.getTraitSet().plus(Prel.DRILL_PHYSICAL));
+        RelNode out = convertChild(n, newRel);
         if (out != null) {
           call.transformTo(out);
           transform = true;
-
         }
       }
     }
 
+
     return transform;
+  }
+
+  private boolean isPhysical(RelNode n){
+    return n.getTraitSet().getTrait(ConventionTraitDef.INSTANCE).equals(Prel.DRILL_PHYSICAL);
   }
 
   private boolean isDefaultDist(RelNode n) {

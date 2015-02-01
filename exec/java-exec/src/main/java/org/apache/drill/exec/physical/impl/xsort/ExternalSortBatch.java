@@ -65,7 +65,6 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.eigenbase.rel.RelFieldCollation.Direction;
-import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterators;
@@ -77,27 +76,24 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
 
   private static final long MAX_SORT_BYTES = 1L * 1024 * 1024 * 1024;
-  public static int SPILL_TARGET_RECORD_COUNT;
-  public static int TARGET_RECORD_COUNT;
-  public static int SPILL_BATCH_GROUP_SIZE;
-  public static int SPILL_THRESHOLD;
-  public static List<String> SPILL_DIRECTORIES;
-  private Iterator<String> dirs;
+  private static final GeneratorMapping COPIER_MAPPING = new GeneratorMapping("doSetup", "doCopy", null, null);
+  private static final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+  private static final MappingSet LEFT_MAPPING = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+  private static final MappingSet RIGHT_MAPPING = new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+  private static final MappingSet COPIER_MAPPING_SET = new MappingSet(COPIER_MAPPING, COPIER_MAPPING);
 
-  public final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet LEFT_MAPPING = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet RIGHT_MAPPING = new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
-  GeneratorMapping COPIER_MAPPING = new GeneratorMapping("doSetup", "doCopy", null, null);
-  public final MappingSet COPIER_MAPPING_SET = new MappingSet(COPIER_MAPPING, COPIER_MAPPING);
-
-
+  private final int SPILL_BATCH_GROUP_SIZE;
+  private final int SPILL_THRESHOLD;
+  private final List<String> SPILL_DIRECTORIES;
+  private final Iterator<String> dirs;
   private final RecordBatch incoming;
+  private final BufferAllocator copierAllocator;
+
   private BatchSchema schema;
   private SingleBatchSorter sorter;
   private SortRecordBatchBuilder builder;
   private MSorter mSorter;
   private PriorityQueueCopier copier;
-  private BufferAllocator copierAllocator;
   private LinkedList<BatchGroup> batchGroups = Lists.newLinkedList();
   private LinkedList<BatchGroup> spilledBatchGroups = Lists.newLinkedList();
   private SelectionVector4 sv4;
@@ -105,12 +101,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private int spillCount = 0;
   private int batchesSinceLastSpill = 0;
   private long uid;//used for spill files to ensure multiple sorts within same fragment don't clobber each others' files
-  private boolean useIncomingSchema = false;
   private boolean first = true;
   private long totalSizeInMemory = 0;
   private long highWaterMark = Long.MAX_VALUE;
   private int targetRecordCount;
-  private boolean stop = false;
 
   public ExternalSortBatch(ExternalSort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, true);
@@ -123,52 +117,27 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    SPILL_TARGET_RECORD_COUNT = config.getInt(ExecConstants.EXTERNAL_SORT_TARGET_SPILL_BATCH_SIZE);
-    TARGET_RECORD_COUNT = config.getInt(ExecConstants.EXTERNAL_SORT_TARGET_BATCH_SIZE);
     SPILL_BATCH_GROUP_SIZE = config.getInt(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE);
     SPILL_THRESHOLD = config.getInt(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD);
     SPILL_DIRECTORIES = config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS);
     dirs = Iterators.cycle(Lists.newArrayList(SPILL_DIRECTORIES));
     uid = System.nanoTime();
-    copierAllocator = oContext.getAllocator().getChildAllocator(context, 10000000, 20000000, true);
+    copierAllocator = oContext.getAllocator().getChildAllocator(
+        context, PriorityQueueCopier.initialAllocation, PriorityQueueCopier.maxAllocation, true);
   }
 
   @Override
   public int getRecordCount() {
     if (sv4 != null) {
       return sv4.getCount();
-    } else {
-      return container.getRecordCount();
     }
-  }
-
-  @Override
-  public void kill(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
-  }
-
-  @Override
-  public SelectionVector2 getSelectionVector2() {
-    throw new UnsupportedOperationException();
+    return container.getRecordCount();
   }
 
   @Override
   public SelectionVector4 getSelectionVector4() {
-    return this.sv4;
+    return sv4;
   }
-
-  @Override
-  public BatchSchema getSchema() {
-    if (useIncomingSchema) {
-      List<MaterializedField> fields = Lists.newArrayList();
-      for (MaterializedField field : incoming.getSchema()) {
-        fields.add(field);
-      }
-      return BatchSchema.newBuilder().addFields(fields).setSelectionVectorMode(SelectionVectorMode.FOUR_BYTE).build();
-    }
-    return super.getSchema();
-  }
-
 
   @Override
   public void cleanup() {
@@ -203,16 +172,15 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         for (VectorWrapper w : incoming) {
           ValueVector v = container.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {
-            w.getValueVector().makeTransferPair(v);
+            w.getValueVector().makeTransferPair(v); // Can we remove this hack?
             v.clear();
           }
-          v.allocateNew();
+          v.allocateNew(); // Can we remove this? - SVR fails with NPE (TODO)
         }
         container.buildSchema(SelectionVectorMode.NONE);
         container.setRecordCount(0);
         return;
       case STOP:
-        stop = true;
       case NONE:
         state = BatchState.DONE;
       default:
@@ -224,13 +192,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   public IterOutcome innerNext() {
     if (schema != null) {
       if (spillCount == 0) {
-        if (schema != null) {
-          if (getSelectionVector4().next()) {
-            return IterOutcome.OK;
-          } else {
-            return IterOutcome.NONE;
-          }
-        }
+        return (getSelectionVector4().next()) ? IterOutcome.OK : IterOutcome.NONE;
       } else {
         Stopwatch w = new Stopwatch();
         w.start();
@@ -247,7 +209,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }
     }
 
-    long totalcount = 0;
+    int totalCount = 0;
 
     try{
       container.clear();
@@ -309,7 +271,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             }
           }
           int count = sv2.getCount();
-          totalcount += count;
+          totalCount += count;
 //          if (count == 0) {
 //            break outer;
 //          }
@@ -324,10 +286,18 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           }
           batchGroups.add(new BatchGroup(rbd.getContainer(), rbd.getSv2()));
           batchesSinceLastSpill++;
-          if ((spillCount > 0 && totalSizeInMemory > .75 * highWaterMark) ||
-                  (totalSizeInMemory > .95 * popConfig.getMaxAllocation()) ||
-                  (totalSizeInMemory > .95 * oContext.getAllocator().getFragmentLimit()) ||
-                  (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE)) {
+          if (// We have spilled at least once and the current memory used is more than the 75% of peak memory used.
+              (spillCount > 0 && totalSizeInMemory > .75 * highWaterMark) ||
+              // If we haven't spilled so far, do we have enough memory for MSorter if this turns out to be the last incoming batch?
+              (spillCount == 0 && !hasMemoryForInMemorySort(totalCount)) ||
+              // current memory used is more than 95% of memory usage limit of this operator
+              (totalSizeInMemory > .95 * popConfig.getMaxAllocation()) ||
+              // current memory used is more than 95% of memory usage limit of this fragment
+              (totalSizeInMemory > .95 * oContext.getAllocator().getFragmentLimit()) ||
+              // Number of incoming batches (BatchGroups) exceed the limit and number of incoming batches accumulated
+              // since the last spill exceed the defined limit
+              (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE)) {
+
             mergeAndSpill();
             batchesSinceLastSpill = 0;
           }
@@ -346,7 +316,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         }
       }
 
-      if (totalcount == 0) {
+      if (totalCount == 0) {
         return IterOutcome.NONE;
       }
       if (spillCount == 0) {
@@ -378,10 +348,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         logger.warn("Starting to merge. {} batch groups. Current allocated memory: {}", batchGroups.size(), oContext.getAllocator().getAllocatedMemory());
         VectorContainer hyperBatch = constructHyperBatch(batchGroups);
         createCopier(hyperBatch, batchGroups, container);
-        int inMemoryRecordCount = 0;
-        for (BatchGroup g : batchGroups) {
-          inMemoryRecordCount += g.getRecordCount();
-        }
+
         int estimatedRecordSize = 0;
         for (VectorWrapper w : batchGroups.get(0)) {
           try {
@@ -390,7 +357,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             estimatedRecordSize += 50;
           }
         }
-        targetRecordCount = (int) Math.max(1, 250 * 1000 / estimatedRecordSize);
+        targetRecordCount = Math.min(MAX_BATCH_SIZE, Math.max(1, 250 * 1000 / estimatedRecordSize));
         int count = copier.next(targetRecordCount);
         container.buildSchema(SelectionVectorMode.NONE);
         container.setRecordCount(count);
@@ -406,6 +373,15 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     } catch (UnsupportedOperationException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private boolean hasMemoryForInMemorySort(int currentRecordCount) {
+    long currentlyAvailable =  popConfig.getMaxAllocation() - oContext.getAllocator().getAllocatedMemory();
+
+    long neededForInMemorySort = SortRecordBatchBuilder.memoryNeeded(currentRecordCount) +
+        MSortTemplate.memoryNeeded(currentRecordCount);
+
+    return currentlyAvailable > neededForInMemorySort;
   }
 
   public void mergeAndSpill() throws SchemaChangeException {

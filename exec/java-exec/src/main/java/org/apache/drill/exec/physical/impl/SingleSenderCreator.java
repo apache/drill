@@ -80,7 +80,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       this.config = config;
       this.recMajor = config.getOppositeMajorFragmentId();
       FragmentHandle opposite = handle.toBuilder().setMajorFragmentId(config.getOppositeMajorFragmentId()).setMinorFragmentId(0).build();
-      this.tunnel = context.getDataTunnel(config.getDestination(), opposite);
+      this.tunnel = context.getDataTunnel(config.getDestination());
       this.context = context;
     }
 

@@ -19,11 +19,12 @@ package org.apache.drill.exec.memory;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DrillBuf;
+import io.netty.buffer.UnsafeDirectLittleEndian;
 
 import java.io.Closeable;
 
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.util.Pointer;
 
 /**
  * Wrapper class to deal with byte buffer allocation. Ensures users only use designated methods. Also allows inser
@@ -63,6 +64,12 @@ public interface BufferAllocator extends Closeable {
    */
   public boolean takeOwnership(DrillBuf buf) ;
 
+  /**
+   * Take over ownership of fragment accounting.  Always takes over ownership.
+   * @param buf
+   * @return false if over allocation.
+   */
+  public boolean takeOwnership(DrillBuf buf, Pointer<DrillBuf> bufOut);
 
   public PreAllocator getNewPreAllocator();
 

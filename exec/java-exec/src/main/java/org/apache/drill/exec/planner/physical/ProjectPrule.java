@@ -82,7 +82,7 @@ public class ProjectPrule extends Prule {
 
       DrillDistributionTrait newDist = convertDist(childDist, inToOut);
       RelCollation newCollation = convertRelCollation(childCollation, inToOut);
-      RelTraitSet newProjectTraits = rel.getTraitSet().plus(newDist).plus(newCollation);
+      RelTraitSet newProjectTraits = newTraitSet(Prel.DRILL_PHYSICAL, newDist, newCollation);
       return new ProjectPrel(project.getCluster(), newProjectTraits, rel, project.getProjects(), project.getRowType());
     }
 

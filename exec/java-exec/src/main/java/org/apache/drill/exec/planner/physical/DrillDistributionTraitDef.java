@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitDef;
+import org.eigenbase.relopt.volcano.RelSubset;
 
 public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrait>{
   public static final DrillDistributionTraitDef INSTANCE = new DrillDistributionTraitDef();
@@ -67,7 +68,7 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
     // Source trait is "ANY", which is abstract type of distribution.
     // We do not want to convert from "ANY", since it's abstract.
     // Source trait should be concrete type: SINGLETON, HASH_DISTRIBUTED, etc.
-    if (currentDist.equals(DrillDistributionTrait.DEFAULT)) {
+    if (currentDist.equals(DrillDistributionTrait.DEFAULT) && !(rel instanceof RelSubset) ) {
         return null;
     }
 

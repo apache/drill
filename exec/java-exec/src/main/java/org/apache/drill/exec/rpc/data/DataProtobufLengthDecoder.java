@@ -26,9 +26,10 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 
-public class DataProtobufLengthDecoder extends ProtobufLengthDecoder{
+public class DataProtobufLengthDecoder{
 
-  public DataProtobufLengthDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
+  public static class Client extends ProtobufLengthDecoder{
+  public Client(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
     super(allocator, outOfMemoryHandler);
 
   }
@@ -36,5 +37,19 @@ public class DataProtobufLengthDecoder extends ProtobufLengthDecoder{
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
     super.decode(ctx, in, out);
+  }
+  }
+
+  public static class Server extends ProtobufLengthDecoder{
+
+    public Server(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
+      super(allocator, outOfMemoryHandler);
+
+    }
+
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+      super.decode(ctx, in, out);
+    }
   }
 }

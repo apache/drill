@@ -24,6 +24,7 @@ import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
@@ -73,13 +74,11 @@ public abstract class JoinPruleBase extends Prule {
   }
 
   protected boolean checkBroadcastConditions(RelOptPlanner planner, DrillJoinRel join, RelNode left, RelNode right) {
-    if (! PrelUtil.getPlannerSettings(planner).isBroadcastJoinEnabled()) {
-      return false;
-    }
 
     double estimatedRightRowCount = RelMetadataQuery.getRowCount(right);
     if (estimatedRightRowCount < PrelUtil.getSettings(join.getCluster()).getBroadcastThreshold()
         && ! left.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.SINGLETON)
+        && (join.getJoinType() == JoinRelType.INNER || join.getJoinType() == JoinRelType.LEFT)
         ) {
       return true;
     }
@@ -175,43 +174,69 @@ public abstract class JoinPruleBase extends Prule {
 
     DrillDistributionTrait distBroadcastRight = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.BROADCAST_DISTRIBUTED);
     RelTraitSet traitsRight = null;
+    RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL);
+
     if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
       assert collationLeft != null && collationRight != null;
+      traitsLeft = traitsLeft.plus(collationLeft);
       traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationRight).plus(distBroadcastRight);
     } else {
       traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distBroadcastRight);
     }
 
-    final RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     final RelNode convertedLeft = convert(left, traitsLeft);
     final RelNode convertedRight = convert(right, traitsRight);
 
-    new SubsetTransformer<DrillJoinRel, InvalidRelException>(call) {
+    boolean traitProp = false;
 
-      @Override
-      public RelNode convertChild(final DrillJoinRel join, final RelNode rel) throws InvalidRelException {
-        DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
-        RelTraitSet newTraitsLeft;
-        if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
-          newTraitsLeft = newTraitSet(Prel.DRILL_PHYSICAL, collationLeft, toDist);
-        } else {
-          newTraitsLeft = newTraitSet(Prel.DRILL_PHYSICAL, toDist);
-        }
-        Character.digit(1, 1);
-        RelNode newLeft = convert(left, newTraitsLeft);
-        if (physicalJoinType == PhysicalJoinType.HASH_JOIN) {
-          return new HashJoinPrel(join.getCluster(), traitsLeft, newLeft, convertedRight, join.getCondition(),
-                                     join.getJoinType());
-        } else if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
-          return new MergeJoinPrel(join.getCluster(), traitsLeft, newLeft, convertedRight, join.getCondition(),
-                                      join.getJoinType());
-        } else{
-          return null;
-        }
+    if(traitProp){
+      if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
+        new SubsetTransformer<DrillJoinRel, InvalidRelException>(call) {
 
+          @Override
+          public RelNode convertChild(final DrillJoinRel join, final RelNode rel) throws InvalidRelException {
+            DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
+            RelTraitSet newTraitsLeft = newTraitSet(Prel.DRILL_PHYSICAL, collationLeft, toDist);
+
+            RelNode newLeft = convert(left, newTraitsLeft);
+              return new MergeJoinPrel(join.getCluster(), newTraitsLeft, newLeft, convertedRight, join.getCondition(),
+                                          join.getJoinType());
+          }
+
+        }.go(join, convertedLeft);
+
+
+      }else{
+
+
+        new SubsetTransformer<DrillJoinRel, InvalidRelException>(call) {
+
+          @Override
+          public RelNode convertChild(final DrillJoinRel join,  final RelNode rel) throws InvalidRelException {
+            DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
+            RelTraitSet newTraitsLeft = newTraitSet(Prel.DRILL_PHYSICAL, toDist);
+            RelNode newLeft = convert(left, newTraitsLeft);
+            return new HashJoinPrel(join.getCluster(), newTraitsLeft, newLeft, convertedRight, join.getCondition(),
+                                         join.getJoinType());
+
+          }
+
+        }.go(join, convertedLeft);
       }
 
-    }.go(join, convertedLeft);
+    }else{
+      if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
+        call.transformTo(new MergeJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft, convertedRight, join.getCondition(),
+            join.getJoinType()));
+
+      }else{
+        call.transformTo(new HashJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft, convertedRight, join.getCondition(),
+                                       join.getJoinType()));
+      }
+    }
+
+
 
   }
+
 }

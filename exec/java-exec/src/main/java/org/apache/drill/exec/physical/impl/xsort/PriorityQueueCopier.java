@@ -26,6 +26,9 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 
 public interface PriorityQueueCopier {
+  public static long initialAllocation = 10000000;
+  public static long maxAllocation = 20000000;
+
   public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
                     VectorAccessible outgoing) throws SchemaChangeException;
   public int next(int targetRecordCount);

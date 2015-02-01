@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,6 +35,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
+import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -50,6 +52,7 @@ import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
+import org.apache.drill.exec.rpc.data.AckSender;
 import org.apache.drill.exec.rpc.data.DataConnectionManager;
 import org.apache.drill.exec.rpc.data.DataResponseHandler;
 import org.apache.drill.exec.rpc.data.DataRpcConfig;
@@ -87,7 +90,7 @@ public class TestBitRpc extends ExecTest {
 
     port = server.bind(port, false);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
-    DataConnectionManager manager = new DataConnectionManager(FragmentHandle.getDefaultInstance(), ep, c2);
+    DataConnectionManager manager = new DataConnectionManager(ep, c2);
     DataTunnel tunnel = new DataTunnel(manager);
     AtomicLong max = new AtomicLong(0);
     for (int i = 0; i < 40; i++) {
@@ -152,8 +155,12 @@ public class TestBitRpc extends ExecTest {
     int v = 0;
 
     @Override
-    public void handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, DrillBuf data, ResponseSender sender)
-        throws RpcException {
+    public void informOutOfMemory() {
+    }
+
+    @Override
+    public void handle(FragmentManager manager, FragmentRecordBatch fragmentBatch, DrillBuf data, AckSender sender)
+        throws FragmentSetupException, IOException {
       // System.out.println("Received.");
       try {
         v++;
@@ -165,11 +172,7 @@ public class TestBitRpc extends ExecTest {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
-      sender.send(DataRpcConfig.OK);
-    }
-
-    @Override
-    public void informOutOfMemory() {
+      sender.sendOk();
     }
 
   }

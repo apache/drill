@@ -22,6 +22,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.util.Pointer;
 
 class FakeAllocator implements BufferAllocator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FakeAllocator.class);
@@ -153,6 +154,11 @@ class FakeAllocator implements BufferAllocator {
     }
 
 
+  }
+
+  @Override
+  public boolean takeOwnership(DrillBuf buf, Pointer<DrillBuf> bufOut) {
+    throw new UnsupportedOperationException();
   }
 
 }

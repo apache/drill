@@ -162,11 +162,20 @@ public class DrillRuleSets {
     }
 
     if (ps.isHashJoinEnabled()) {
-      ruleList.add(HashJoinPrule.INSTANCE);
+      ruleList.add(HashJoinPrule.DIST_INSTANCE);
+
+      if(ps.isBroadcastJoinEnabled()){
+        ruleList.add(HashJoinPrule.BROADCAST_INSTANCE);
+      }
     }
 
     if (ps.isMergeJoinEnabled()) {
-      ruleList.add(MergeJoinPrule.INSTANCE);
+      ruleList.add(MergeJoinPrule.DIST_INSTANCE);
+
+      if(ps.isBroadcastJoinEnabled()){
+        ruleList.add(MergeJoinPrule.BROADCAST_INSTANCE);
+      }
+
     }
 
     return new DrillRuleSet(ImmutableSet.copyOf(ruleList));

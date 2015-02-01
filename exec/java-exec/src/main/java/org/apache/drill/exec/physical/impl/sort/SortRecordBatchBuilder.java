@@ -20,6 +20,8 @@ package org.apache.drill.exec.physical.impl.sort;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.netty.buffer.DrillBuf;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.BufferAllocator.PreAllocator;
@@ -63,7 +65,8 @@ public class SortRecordBatchBuilder {
   }
 
   /**
-   * Add another record batch to the set of record batches.
+   * Add another record batch to the set of record batches. TODO: Refactor this and other {@link #add
+   * (RecordBatchData)} method into one method.
    * @param batch
    * @return True if the requested add completed successfully.  Returns false in the case that this builder is full and cannot receive additional packages.
    * @throws SchemaChangeException
@@ -98,19 +101,28 @@ public class SortRecordBatchBuilder {
     return true;
   }
 
-  public boolean add(RecordBatchData rbd) {
+  public void add(RecordBatchData rbd) {
     long batchBytes = getSize(rbd.getContainer());
     if (batchBytes == 0 && batches.size() > 0) {
-      return true;
+      return;
     }
+
     if(batchBytes + runningBytes > maxBytes) {
-      return false; // enough data memory.
+      final String errMsg = String.format("Adding this batch causes the total size to exceed max allowed size. " +
+          "Current runningBytes %d, Incoming batchBytes %d. maxBytes %d", runningBytes, batchBytes, maxBytes);
+      logger.error(errMsg);
+      throw new DrillRuntimeException(errMsg);
     }
-    if(runningBatches+1 > Character.MAX_VALUE) {
-      return false; // allowed in batch.
+    if(runningBatches >= Character.MAX_VALUE) {
+      final String errMsg = String.format("Tried to add more than %d number of batches.", Character.MAX_VALUE);
+      logger.error(errMsg);
+      throw new DrillRuntimeException(errMsg);
     }
     if(!svAllocator.preAllocate(rbd.getRecordCount()*4)) {
-      return false;  // sv allocation available.
+      final String errMsg = String.format("Failed to pre-allocate memory for SV. " + "Existing recordCount*4 = %d, " +
+          "incoming batch recordCount*4 = %d", recordCount * 4, rbd.getRecordCount() * 4);
+      logger.error(errMsg);
+      throw new DrillRuntimeException(errMsg);
     }
 
 
@@ -120,12 +132,11 @@ public class SortRecordBatchBuilder {
       if (sv2 != null) {
         sv2.clear();
       }
-      return true;
+      return;
     }
     runningBytes += batchBytes;
     batches.put(rbd.getContainer().getSchema(), rbd);
     recordCount += rbd.getRecordCount();
-    return true;
   }
 
   public void canonicalize() {
@@ -149,7 +160,12 @@ public class SortRecordBatchBuilder {
     if (batches.keys().size() < 1) {
       assert false : "Invalid to have an empty set of batches with no schemas.";
     }
-    sv4 = new SelectionVector4(svAllocator.getAllocation(), recordCount, Character.MAX_VALUE);
+
+    final DrillBuf svBuffer = svAllocator.getAllocation();
+    if (svBuffer == null) {
+      throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
+    }
+    sv4 = new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE);
     BatchSchema schema = batches.keySet().iterator().next();
     List<RecordBatchData> data = batches.get(schema);
 
@@ -225,4 +241,15 @@ public class SortRecordBatchBuilder {
     return containerList;
   }
 
+  /**
+   * For given recordcount how muchmemory does SortRecordBatchBuilder needs for its own purpose. This is used in
+   * ExternalSortBatch to make decisions about whether to spill or not.
+   *
+   * @param recordCount
+   * @return
+   */
+  public static long memoryNeeded(int recordCount) {
+    // We need 4 bytes (SV4) for each record.
+    return recordCount * 4;
+  }
 }

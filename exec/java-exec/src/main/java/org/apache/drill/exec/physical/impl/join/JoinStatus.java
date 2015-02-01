@@ -29,7 +29,9 @@ import org.eigenbase.rel.JoinRelType;
  * The status of the current join.  Maintained outside the individually compiled join templates so that we can carry status across multiple schemas.
  */
 public final class JoinStatus {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinStatus.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinStatus.class);
+
+  private static final int OUTPUT_BATCH_SIZE = 32*1024;
 
   public static enum RightSourceMode {
     INCOMING, SV4;
@@ -163,6 +165,10 @@ public final class JoinStatus {
 
   public final void resetOutputPos() {
     outputPosition = 0;
+  }
+
+  public final boolean isOutgoingBatchFull() {
+    return outputPosition == OUTPUT_BATCH_SIZE;
   }
 
   public final void incOutputPos() {

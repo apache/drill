@@ -49,6 +49,7 @@ public class SystemOptionManager implements OptionManager {
       PlannerSettings.MULTIPHASE,
       PlannerSettings.BROADCAST,
       PlannerSettings.BROADCAST_THRESHOLD,
+      PlannerSettings.BROADCAST_FACTOR,
       PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR,
       PlannerSettings.PRODUCER_CONSUMER,
       PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE,

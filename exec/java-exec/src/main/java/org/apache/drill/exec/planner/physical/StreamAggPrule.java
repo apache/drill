@@ -54,7 +54,7 @@ public class StreamAggPrule extends AggPruleBase {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
-    final RelNode input = aggregate.getChild();
+    RelNode input = aggregate.getChild();
     final RelCollation collation = getCollation(aggregate);
     RelTraitSet traits = null;
 
@@ -78,7 +78,7 @@ public class StreamAggPrule extends AggPruleBase {
             public RelNode convertChild(final DrillAggregateRel join, final RelNode rel) throws InvalidRelException {
               DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
               RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, toDist);
-              RelNode newInput = convert(input, traits);
+              RelNode newInput = convert(rel, traits);
 
               StreamAggPrel phase1Agg = new StreamAggPrel(aggregate.getCluster(), traits, newInput,
                   aggregate.getGroupSet(),
@@ -130,7 +130,7 @@ public class StreamAggPrule extends AggPruleBase {
             public RelNode convertChild(final DrillAggregateRel aggregate, final RelNode rel) throws InvalidRelException {
               DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
               RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, collation, toDist);
-              RelNode newInput = convert(input, traits);
+              RelNode newInput = convert(rel, traits);
 
               StreamAggPrel phase1Agg = new StreamAggPrel(aggregate.getCluster(), traits, newInput,
                   aggregate.getGroupSet(),

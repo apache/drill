@@ -27,6 +27,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.exec.memory.Accountor;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -43,7 +44,7 @@ public final class DrillBuf extends AbstractByteBuf {
   private final long addr;
   private final int offset;
   private final boolean rootBuffer;
-
+  private final AtomicLong rootRefCnt = new AtomicLong(1);
   private volatile BufferAllocator allocator;
   private volatile Accountor acct;
   private volatile int length;
@@ -83,11 +84,36 @@ public final class DrillBuf extends AbstractByteBuf {
     this.acct = a;
     this.length = 0;
     this.addr = 0;
-    this.rootBuffer = true;
+    this.rootBuffer = false;
     this.offset = 0;
   }
 
+  /**
+   * Special constructor used for RPC ownership transfer.  Takes a snapshot slice of the current buf
+   *  but points directly to the underlying UnsafeLittleEndian buffer.  Does this by calling unwrap()
+   *  twice on the provided DrillBuf and expecting an UnsafeDirectLittleEndian buffer. This operation
+   *  includes taking a new reference count on the underlying buffer and maintaining returning with a
+   *  current reference count for itself (masking the underlying reference count).
+   * @param allocator
+   * @param a Allocator used when users try to receive allocator from buffer.
+   * @param b Accountor used for accounting purposes.
+   */
+  public DrillBuf(BufferAllocator allocator, Accountor a, DrillBuf b) {
+    this(allocator, a, getUnderlying(b), b, 0, b.length, true);
+    assert b.unwrap().unwrap() instanceof UnsafeDirectLittleEndian;
+    b.unwrap().unwrap().retain();
+  }
+
+
   private DrillBuf(DrillBuf buffer, int index, int length) {
+    this(buffer.allocator, null, buffer, buffer, index, length, false);
+  }
+
+  private static ByteBuf getUnderlying(DrillBuf b){
+    ByteBuf underlying = b.unwrap().unwrap();
+    return underlying.slice((int) (b.memoryAddress() - underlying.memoryAddress()), b.length);
+  }
+  private DrillBuf(BufferAllocator allocator, Accountor a, ByteBuf replacement, DrillBuf buffer, int index, int length, boolean root) {
     super(length);
     if (index < 0 || index > buffer.capacity() - length) {
       throw new IndexOutOfBoundsException(buffer.toString() + ".slice(" + index + ", " + length + ')');
@@ -96,13 +122,13 @@ public final class DrillBuf extends AbstractByteBuf {
     this.length = length;
     writerIndex(length);
 
-    this.b = buffer;
+    this.b = replacement;
     this.addr = buffer.memoryAddress() + index;
     this.offset = index;
-    this.acct = null;
+    this.acct = a;
     this.length = length;
-    this.rootBuffer = false;
-    this.allocator = buffer.allocator;
+    this.rootBuffer = root;
+    this.allocator = allocator;
   }
 
   public void setOperatorContext(OperatorContext c) {
@@ -132,7 +158,12 @@ public final class DrillBuf extends AbstractByteBuf {
 
   @Override
   public int refCnt() {
-    return b.refCnt();
+    if(rootBuffer){
+      return (int) this.rootRefCnt.get();
+    }else{
+      return b.refCnt();
+    }
+
   }
 
   private long addr(int index) {
@@ -203,20 +234,26 @@ public final class DrillBuf extends AbstractByteBuf {
 
   @Override
   public synchronized boolean release() {
-    if (b.release() && rootBuffer) {
-      acct.release(this, length);
-      return true;
-    }
-    return false;
+    return release(1);
   }
 
+  /**
+   * Release the provided number of reference counts.  If this is a root buffer, will decrease accounting if the local reference count returns to zero.
+   */
   @Override
   public synchronized boolean release(int decrement) {
-    if (b.release(decrement) && rootBuffer) {
-      acct.release(this, length);
-      return true;
+
+    if(rootBuffer){
+      if(0 == this.rootRefCnt.addAndGet(-decrement)){
+        b.release(decrement);
+        acct.release(this, length);
+        return true;
+      }else{
+        return false;
+      }
+    }else{
+      return b.release(decrement);
     }
-    return false;
   }
 
   @Override
@@ -405,14 +442,17 @@ public final class DrillBuf extends AbstractByteBuf {
 
   @Override
   public ByteBuf retain(int increment) {
-    b.retain(increment);
+    if(rootBuffer){
+      this.rootRefCnt.addAndGet(increment);
+    }else{
+      b.retain(increment);
+    }
     return this;
   }
 
   @Override
   public ByteBuf retain() {
-    b.retain();
-    return this;
+    return retain(1);
   }
 
   @Override

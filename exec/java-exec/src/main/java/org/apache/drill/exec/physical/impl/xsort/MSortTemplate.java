@@ -36,7 +36,6 @@ import com.google.common.collect.Queues;
 public abstract class MSortTemplate implements MSorter, IndexedSortable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MSortTemplate.class);
 
-  private BufferAllocator allocator;
   private SelectionVector4 vector4;
   private SelectionVector4 aux;
   private long compares;
@@ -46,7 +45,6 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
 
   @Override
   public void setup(FragmentContext context, BufferAllocator allocator, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException{
-    this.allocator = allocator;
     // we pass in the local hyperBatch since that is where we'll be reading data.
     Preconditions.checkNotNull(vector4);
     this.vector4 = vector4.createNewWrapperCurrent();
@@ -68,6 +66,18 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
     BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
     preAlloc.preAllocate(4 * this.vector4.getTotalCount());
     aux = new SelectionVector4(preAlloc.getAllocation(), this.vector4.getTotalCount(), Character.MAX_VALUE);
+  }
+
+  /**
+   * For given recordCount how much memory does MSorter needs for its own purpose. This is used in
+   * ExternalSortBatch to make decisions about whether to spill or not.
+   *
+   * @param recordCount
+   * @return
+   */
+  public static long memoryNeeded(int recordCount) {
+    // We need 4 bytes (SV4) for each record.
+    return recordCount * 4;
   }
 
   private int merge(int leftStart, int rightStart, int rightEnd, int outStart) {

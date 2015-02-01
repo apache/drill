@@ -95,6 +95,6 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
 
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
-    return new DataProtobufLengthDecoder(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
+    return new DataProtobufLengthDecoder.Client(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
   }
 }

@@ -18,7 +18,6 @@ enum RpcType {
 message BitClientHandshake{
   optional int32 rpc_version = 1;
   optional exec.shared.RpcChannel channel = 2 [default = BIT_DATA];
-  optional FragmentHandle handle = 3;
 }
 
 message BitServerHandshake{
@@ -26,10 +25,12 @@ message BitServerHandshake{
 }
 
 message FragmentRecordBatch{
-  optional FragmentHandle handle = 1;
-  optional int32 sending_major_fragment_id = 2;
-  optional int32 sending_minor_fragment_id = 3;
-  optional exec.shared.RecordBatchDef def = 4;
-  optional bool isLastBatch = 5;
-  optional bool isOutOfMemory = 6 [ default = false ];
+  optional exec.shared.QueryId query_id = 1;
+  optional int32 receiving_major_fragment_id = 2;
+  repeated int32 receiving_minor_fragment_id = 3; 
+  optional int32 sending_major_fragment_id = 4;
+  optional int32 sending_minor_fragment_id = 5;
+  optional exec.shared.RecordBatchDef def = 6;
+  optional bool isLastBatch = 7;
+  optional bool isOutOfMemory = 8 [ default = false ];
 }

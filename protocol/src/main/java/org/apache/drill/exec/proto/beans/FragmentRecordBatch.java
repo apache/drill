@@ -24,6 +24,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -48,7 +50,9 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
 
     static final Boolean DEFAULT_IS_OUT_OF_MEMORY = new Boolean(false);
     
-    private FragmentHandle handle;
+    private QueryId queryId;
+    private int receivingMajorFragmentId;
+    private List<Integer> receivingMinorFragmentId;
     private int sendingMajorFragmentId;
     private int sendingMinorFragmentId;
     private RecordBatchDef def;
@@ -62,16 +66,42 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
 
     // getters and setters
 
-    // handle
+    // queryId
 
-    public FragmentHandle getHandle()
+    public QueryId getQueryId()
     {
-        return handle;
+        return queryId;
     }
 
-    public FragmentRecordBatch setHandle(FragmentHandle handle)
+    public FragmentRecordBatch setQueryId(QueryId queryId)
     {
-        this.handle = handle;
+        this.queryId = queryId;
+        return this;
+    }
+
+    // receivingMajorFragmentId
+
+    public int getReceivingMajorFragmentId()
+    {
+        return receivingMajorFragmentId;
+    }
+
+    public FragmentRecordBatch setReceivingMajorFragmentId(int receivingMajorFragmentId)
+    {
+        this.receivingMajorFragmentId = receivingMajorFragmentId;
+        return this;
+    }
+
+    // receivingMinorFragmentId
+
+    public List<Integer> getReceivingMinorFragmentIdList()
+    {
+        return receivingMinorFragmentId;
+    }
+
+    public FragmentRecordBatch setReceivingMinorFragmentIdList(List<Integer> receivingMinorFragmentId)
+    {
+        this.receivingMinorFragmentId = receivingMinorFragmentId;
         return this;
     }
 
@@ -195,23 +225,31 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
                 case 0:
                     return;
                 case 1:
-                    message.handle = input.mergeObject(message.handle, FragmentHandle.getSchema());
+                    message.queryId = input.mergeObject(message.queryId, QueryId.getSchema());
                     break;
 
                 case 2:
-                    message.sendingMajorFragmentId = input.readInt32();
+                    message.receivingMajorFragmentId = input.readInt32();
                     break;
                 case 3:
-                    message.sendingMinorFragmentId = input.readInt32();
+                    if(message.receivingMinorFragmentId == null)
+                        message.receivingMinorFragmentId = new ArrayList<Integer>();
+                    message.receivingMinorFragmentId.add(input.readInt32());
                     break;
                 case 4:
+                    message.sendingMajorFragmentId = input.readInt32();
+                    break;
+                case 5:
+                    message.sendingMinorFragmentId = input.readInt32();
+                    break;
+                case 6:
                     message.def = input.mergeObject(message.def, RecordBatchDef.getSchema());
                     break;
 
-                case 5:
+                case 7:
                     message.isLastBatch = input.readBool();
                     break;
-                case 6:
+                case 8:
                     message.isOutOfMemory = input.readBool();
                     break;
                 default:
@@ -223,37 +261,51 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
 
     public void writeTo(Output output, FragmentRecordBatch message) throws IOException
     {
-        if(message.handle != null)
-             output.writeObject(1, message.handle, FragmentHandle.getSchema(), false);
+        if(message.queryId != null)
+             output.writeObject(1, message.queryId, QueryId.getSchema(), false);
 
+
+        if(message.receivingMajorFragmentId != 0)
+            output.writeInt32(2, message.receivingMajorFragmentId, false);
+
+        if(message.receivingMinorFragmentId != null)
+        {
+            for(Integer receivingMinorFragmentId : message.receivingMinorFragmentId)
+            {
+                if(receivingMinorFragmentId != null)
+                    output.writeInt32(3, receivingMinorFragmentId, true);
+            }
+        }
 
         if(message.sendingMajorFragmentId != 0)
-            output.writeInt32(2, message.sendingMajorFragmentId, false);
+            output.writeInt32(4, message.sendingMajorFragmentId, false);
 
         if(message.sendingMinorFragmentId != 0)
-            output.writeInt32(3, message.sendingMinorFragmentId, false);
+            output.writeInt32(5, message.sendingMinorFragmentId, false);
 
         if(message.def != null)
-             output.writeObject(4, message.def, RecordBatchDef.getSchema(), false);
+             output.writeObject(6, message.def, RecordBatchDef.getSchema(), false);
 
 
         if(message.isLastBatch != null)
-            output.writeBool(5, message.isLastBatch, false);
+            output.writeBool(7, message.isLastBatch, false);
 
         if(message.isOutOfMemory != null && message.isOutOfMemory != DEFAULT_IS_OUT_OF_MEMORY)
-            output.writeBool(6, message.isOutOfMemory, false);
+            output.writeBool(8, message.isOutOfMemory, false);
     }
 
     public String getFieldName(int number)
     {
         switch(number)
         {
-            case 1: return "handle";
-            case 2: return "sendingMajorFragmentId";
-            case 3: return "sendingMinorFragmentId";
-            case 4: return "def";
-            case 5: return "isLastBatch";
-            case 6: return "isOutOfMemory";
+            case 1: return "queryId";
+            case 2: return "receivingMajorFragmentId";
+            case 3: return "receivingMinorFragmentId";
+            case 4: return "sendingMajorFragmentId";
+            case 5: return "sendingMinorFragmentId";
+            case 6: return "def";
+            case 7: return "isLastBatch";
+            case 8: return "isOutOfMemory";
             default: return null;
         }
     }
@@ -267,12 +319,14 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
     private static final java.util.HashMap<String,Integer> __fieldMap = new java.util.HashMap<String,Integer>();
     static
     {
-        __fieldMap.put("handle", 1);
-        __fieldMap.put("sendingMajorFragmentId", 2);
-        __fieldMap.put("sendingMinorFragmentId", 3);
-        __fieldMap.put("def", 4);
-        __fieldMap.put("isLastBatch", 5);
-        __fieldMap.put("isOutOfMemory", 6);
+        __fieldMap.put("queryId", 1);
+        __fieldMap.put("receivingMajorFragmentId", 2);
+        __fieldMap.put("receivingMinorFragmentId", 3);
+        __fieldMap.put("sendingMajorFragmentId", 4);
+        __fieldMap.put("sendingMinorFragmentId", 5);
+        __fieldMap.put("def", 6);
+        __fieldMap.put("isLastBatch", 7);
+        __fieldMap.put("isOutOfMemory", 8);
     }
     
 }

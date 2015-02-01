@@ -97,7 +97,7 @@ public abstract class PartitionerTemplate implements Partitioner {
     for (DrillbitEndpoint endpoint : popConfig.getDestinations()) {
       FragmentHandle opposite = context.getHandle().toBuilder().setMajorFragmentId(popConfig.getOppositeMajorFragmentId()).setMinorFragmentId(fieldId).build();
       outgoingBatches.add(new OutgoingRecordBatch(stats, sendingAccountor, popConfig,
-          context.getDataTunnel(endpoint, opposite), context, oContext.getAllocator(), fieldId, statusHandler));
+          context.getDataTunnel(endpoint), context, oContext.getAllocator(), fieldId, statusHandler));
       fieldId++;
     }
 

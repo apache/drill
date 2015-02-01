@@ -29,18 +29,21 @@ import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.Lists;
 
 public class MergeJoinPrule extends JoinPruleBase {
-  public static final RelOptRule INSTANCE = new MergeJoinPrule();
+  public static final RelOptRule DIST_INSTANCE = new MergeJoinPrule("Prel.MergeJoinDistPrule", RelOptHelper.any(DrillJoinRel.class), true);
+  public static final RelOptRule BROADCAST_INSTANCE = new MergeJoinPrule("Prel.MergeJoinBroadcastPrule", RelOptHelper.any(DrillJoinRel.class), false);
+
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
-  private MergeJoinPrule() {
-    super(
-        RelOptHelper.any(DrillJoinRel.class),
-        "Prel.MergeJoinPrule");
+  final boolean isDist;
+  private MergeJoinPrule(String name, RelOptRuleOperand operand, boolean isDist) {
+    super(operand, name);
+    this.isDist = isDist;
   }
 
   @Override
@@ -64,10 +67,12 @@ public class MergeJoinPrule extends JoinPruleBase {
       RelCollation collationLeft = getCollation(join.getLeftKeys());
       RelCollation collationRight = getCollation(join.getRightKeys());
 
-      createDistBothPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight, hashSingleKey);
-
-      if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
-        createBroadcastPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight);
+      if(isDist){
+        createDistBothPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight, hashSingleKey);
+      }else{
+        if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
+          createBroadcastPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight);
+        }
       }
 
     } catch (InvalidRelException e) {

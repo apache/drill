@@ -25,15 +25,19 @@ import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.trace.EigenbaseTrace;
 
 public class HashJoinPrule extends JoinPruleBase {
-  public static final RelOptRule INSTANCE = new HashJoinPrule();
+  public static final RelOptRule DIST_INSTANCE = new HashJoinPrule("Prel.HashJoinDistPrule", RelOptHelper.any(DrillJoinRel.class), true);
+  public static final RelOptRule BROADCAST_INSTANCE = new HashJoinPrule("Prel.HashJoinBroadcastPrule", RelOptHelper.any(DrillJoinRel.class), false);
+
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
-  private HashJoinPrule() {
-    super(
-        RelOptHelper.any(DrillJoinRel.class), "Prel.HashJoinPrule");
+  private final boolean isDist;
+  private HashJoinPrule(String name, RelOptRuleOperand operand, boolean isDist) {
+    super(operand, name);
+    this.isDist = isDist;
   }
 
   @Override
@@ -60,13 +64,14 @@ public class HashJoinPrule extends JoinPruleBase {
 
     try {
 
-      createDistBothPlan(call, join, PhysicalJoinType.HASH_JOIN, left, right, null /* left collation */, null /* right collation */, hashSingleKey);
-
-      if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
-        createBroadcastPlan(call, join, PhysicalJoinType.HASH_JOIN, left, right, null /* left collation */, null /* right collation */);
-
-        // createBroadcastPlan1(call, join, PhysicalJoinType.HASH_JOIN, left, right, null, null);
+      if(isDist){
+        createDistBothPlan(call, join, PhysicalJoinType.HASH_JOIN, left, right, null /* left collation */, null /* right collation */, hashSingleKey);
+      }else{
+        if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
+          createBroadcastPlan(call, join, PhysicalJoinType.HASH_JOIN, left, right, null /* left collation */, null /* right collation */);
+        }
       }
+
 
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());

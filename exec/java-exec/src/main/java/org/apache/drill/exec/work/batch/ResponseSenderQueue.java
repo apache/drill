@@ -21,6 +21,7 @@ import java.util.Queue;
 
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.data.DataRpcConfig;
+import org.apache.drill.exec.rpc.data.AckSender;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Queues;
@@ -28,9 +29,9 @@ import com.google.common.collect.Queues;
 public class ResponseSenderQueue {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResponseSenderQueue.class);
 
-  private Queue<ResponseSender> q = Queues.newConcurrentLinkedQueue();
+  private Queue<AckSender> q = Queues.newConcurrentLinkedQueue();
 
-  public void enqueueResponse(ResponseSender sender){
+  public void enqueueResponse(AckSender sender){
     q.add(sender);
   }
 
@@ -44,12 +45,12 @@ public class ResponseSenderQueue {
    * @return
    */
   public int flushResponses(int count){
-    logger.debug("queue.size: {}, count: {}", q.size(), count);
+    logger.trace("queue.size: {}, count: {}", q.size(), count);
     int i = 0;
     while(!q.isEmpty() && i < count){
-      ResponseSender s = q.poll();
+      AckSender s = q.poll();
       if(s != null){
-        s.send(DataRpcConfig.OK);
+        s.sendOk();
       }
       i++;
     }

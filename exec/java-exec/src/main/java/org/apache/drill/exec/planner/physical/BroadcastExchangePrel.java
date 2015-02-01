@@ -52,11 +52,14 @@ public class BroadcastExchangePrel extends ExchangePrel{
 
     RelNode child = this.getChild();
 
-    double inputRows = RelMetadataQuery.getRowCount(child);
-    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
-    double cpuCost = DrillCostBase.SVR_CPU_COST * inputRows ;
-    int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
-    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth * numEndPoints;
+    final int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
+    final double broadcastFactor = PrelUtil.getSettings(getCluster()).getBroadcastFactor();
+    final double inputRows = RelMetadataQuery.getRowCount(child);
+
+    final int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
+    final double cpuCost = broadcastFactor * DrillCostBase.SVR_CPU_COST * inputRows ;
+    final double networkCost = broadcastFactor * DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth * numEndPoints;
+
     return new DrillCostBase(inputRows, cpuCost, 0, networkCost);
   }
 

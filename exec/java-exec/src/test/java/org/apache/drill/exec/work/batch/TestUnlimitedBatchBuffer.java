@@ -29,6 +29,7 @@ import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
+import org.apache.drill.exec.rpc.data.AckSender;
 import org.apache.drill.exec.rpc.data.DataRpcConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,21 +50,24 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
 
   private static int FRAGMENT_COUNT = 5;
   private DrillConfig dc = DrillConfig.create();
-  private MySender mySender;
+  private MyAckSender myAckSender;
   private UnlimitedRawBatchBuffer rawBuffer;
   private RawFragmentBatch batch;
   private FragmentContext context;
   private int softLimit;
 
-  private static class MySender implements ResponseSender {
+  private static class MyAckSender extends AckSender {
 
     private int sendCount = 0;
 
-    @Override
-    public void send(Response r) {
-      sendCount++;
+    public MyAckSender() {
+      super(null);
     }
 
+    @Override
+    public void sendOk() {
+      sendCount++;
+    }
 
     public int getSendCount() {
       return sendCount;
@@ -76,7 +80,7 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
 
   @Before
   public void setUp() {
-    mySender = new MySender();
+    myAckSender = new MyAckSender();
     context = Mockito.mock(FragmentContext.class);
 
     Mockito.when(context.getConfig()).thenReturn(dc);
@@ -85,10 +89,10 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
 
     batch = Mockito.mock(RawFragmentBatch.class);
 
-    Mockito.when(batch.getSender()).thenReturn(mySender);
+    Mockito.when(batch.getSender()).thenReturn(myAckSender);
     Mockito.doAnswer(new Answer<Void>() {
       public Void answer(InvocationOnMock ignore) throws Throwable {
-        mySender.send(DataRpcConfig.OK);
+        myAckSender.sendOk();
         return null;
       }
     }).when(batch).sendOk();
@@ -109,11 +113,11 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
     }
 
     // number of responses sent == number of enqueued elements
-    assertEquals(softLimit - 1, mySender.getSendCount());
+    assertEquals(softLimit - 1, myAckSender.getSendCount());
     rawBuffer.getNext();
 
     // set senderCount to 0
-    mySender.resetSender();
+    myAckSender.resetSender();
 
     // test back pressure
     // number of elements in the queue = softLimit -2
@@ -122,7 +126,7 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
       rawBuffer.enqueue(batch);
     }
     // we are exceeding softlimit, so senderCount should not increase
-    assertEquals(1, mySender.getSendCount());
+    assertEquals(1, myAckSender.getSendCount());
 
     // other responses should be saved in the responsequeue
     for (int i = 0; i < softLimit-2; i++ ) {
@@ -130,14 +134,14 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
     }
 
     // still should not send responses, as queue.size should higher then softLimit
-    assertEquals(1, mySender.getSendCount());
+    assertEquals(1, myAckSender.getSendCount());
 
     // size of the queue == softLimit now
     for (int i = softLimit; i > 0 ; i-- ) {
-      int senderCount = mySender.getSendCount();
+      int senderCount = myAckSender.getSendCount();
       rawBuffer.getNext();
       int expectedCountNumber = softLimit - i + senderCount+1;
-      assertEquals((expectedCountNumber < softLimit ? expectedCountNumber : softLimit), mySender.getSendCount());
+      assertEquals((expectedCountNumber < softLimit ? expectedCountNumber : softLimit), myAckSender.getSendCount());
     }
   }
 
@@ -147,7 +151,7 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
     for ( int i = 0; i < 2*softLimit; i++) {
       rawBuffer.enqueue(batch);
     }
-    assertEquals(softLimit - 1, mySender.getSendCount());
+    assertEquals(softLimit - 1, myAckSender.getSendCount());
     assertTrue(!rawBuffer.getReadController().isEmpty());
 
     rawBuffer.kill(context);
@@ -159,6 +163,6 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
     assertTrue(rawBuffer.getReadController().isEmpty());
 
     // all acks should be sent
-    assertEquals(2*softLimit, mySender.getSendCount());
+    assertEquals(2*softLimit, myAckSender.getSendCount());
   }
 }
