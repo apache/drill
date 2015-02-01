@@ -55,6 +55,7 @@ import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor
 import org.apache.drill.exec.planner.physical.visitor.SplitUpComplexExpressions;
 import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
+import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.Pointer;
@@ -120,7 +121,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
-
     SqlNode rewrittenSqlNode = rewrite(sqlNode);
     SqlNode validated = validateNode(rewrittenSqlNode);
     RelNode rel = convertToRel(validated);
@@ -142,7 +142,21 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   protected SqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException, ForemanSetupException {
-    return planner.validate(sqlNode);
+    SqlNode sqlNodeValidated = planner.validate(sqlNode);
+
+    // Check if the unsupported functionality is used
+    UnsupportedOperatorsVisitor visitor = UnsupportedOperatorsVisitor.getVisitor();
+    try {
+      sqlNodeValidated.accept(visitor);
+    } catch (UnsupportedOperationException ex) {
+      // If the exception due to the unsupported functionalities
+      visitor.convertException();
+
+      // If it is not, let this exception move forward to higher logic
+      throw ex;
+    }
+
+    return sqlNodeValidated;
   }
 
   protected RelNode convertToRel(SqlNode node) throws RelConversionException {
