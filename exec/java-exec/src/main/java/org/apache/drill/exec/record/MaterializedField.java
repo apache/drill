@@ -181,10 +181,10 @@ public class MaterializedField {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
     int result = 1;
-    result = prime * result + ((children == null) ? 0 : children.hashCode());
-    result = prime * result + ((key == null) ? 0 : key.hashCode());
+    // DRILL-1872: Compute hashCode only on key. See also the comment
+    // in MapVector$MapTransferPair
+    result = ((key == null) ? 0 : key.hashCode());
     return result;
   }
 
@@ -200,13 +200,9 @@ public class MaterializedField {
       return false;
     }
     MaterializedField other = (MaterializedField) obj;
-    if (children == null) {
-      if (other.children != null) {
-        return false;
-      }
-    } else if (!children.equals(other.children)) {
-      return false;
-    }
+    // DRILL-1872: Compute equals only on key. See also the comment
+    // in MapVector$MapTransferPair
+
     if (key == null) {
       if (other.key != null) {
         return false;

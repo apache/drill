@@ -155,6 +155,15 @@ public class MapVector extends AbstractMapVector {
         if (vector == null) {
           continue;
         }
+        //DRILL-1872: we add the child fields for the vector, looking up the field by name. For a map vector,
+        // the child fields may be nested fields of the top level child. For example if the structure
+        // of a child field is oa.oab.oabc then we add oa, then add oab to oa then oabc to oab.
+        // But the children member of a Materialized field is a HashSet. If the fields are added in the
+        // children HashSet, and the hashCode of the Materialized field includes the hash code of the
+        // children, the hashCode value of oa changes *after* the field has been added to the HashSet.
+        // (This is similar to what happens in ScanBatch where the children cannot be added till they are
+        // read). To take care of this, we ensure that the hashCode of the MaterializedField does not
+        // include the hashCode of the children but is based only on MaterializedField$key.
         ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
         if (allocate && to.size() != preSize) {
           newVector.allocateNew();
