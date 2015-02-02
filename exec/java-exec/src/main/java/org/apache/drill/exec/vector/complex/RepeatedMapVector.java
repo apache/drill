@@ -51,7 +51,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
-public class RepeatedMapVector extends AbstractContainerVector implements RepeatedFixedWidthVector {
+public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixedWidthVector {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RepeatedMapVector.class);
 
