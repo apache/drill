@@ -62,7 +62,7 @@ public class HBaseSchemaFactory implements SchemaFactory {
     }
 
     @Override
-    public Schema getSubSchema(String name) {
+    public AbstractSchema getSubSchema(String name) {
       return null;
     }
 

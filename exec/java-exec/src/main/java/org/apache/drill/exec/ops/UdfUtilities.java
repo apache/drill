@@ -19,6 +19,7 @@ package org.apache.drill.exec.ops;
 
 import com.google.common.collect.ImmutableMap;
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.exec.store.PartitionExplorer;
 
 /**
  * Defines the query state and shared resources available to UDFs through
@@ -34,6 +35,7 @@ public interface UdfUtilities {
       new ImmutableMap.Builder<Class, String>()
           .put(DrillBuf.class, "getManagedBuffer")
           .put(QueryDateTimeInfo.class, "getQueryDateTimeInfo")
+          .put(PartitionExplorer.class, "getPartitionExplorer")
           .build();
 
   /**
@@ -54,4 +56,26 @@ public interface UdfUtilities {
    *           for memory management
    */
   DrillBuf getManagedBuffer();
+
+  /**
+   * A partition explorer allows UDFs to view the sub-partitions below a
+   * particular partition. This allows for the implementation of UDFs to
+   * query against the partition information, without having to read
+   * the actual data contained in the partition. This interface is designed
+   * for UDFs that take only constant inputs, as this interface will only
+   * be useful if we can evaluate the constant UDF at planning time.
+   *
+   * Any function defined to use this interface that is not evaluated
+   * at planning time by the constant folding rule will be querying
+   * the storage plugin for meta-data for each record processed.
+   *
+   * Be sure to check the query plans to see that this expression has already
+   * been evaluated during planning if you write UDFs against this interface.
+   *
+   * See {@link org.apache.drill.exec.expr.fn.impl.DirectoryExplorers} for
+   * example usages of this interface.
+   *
+   * @return - an object for exploring partitions of all available schemas
+   */
+  PartitionExplorer getPartitionExplorer();
 }

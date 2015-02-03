@@ -18,10 +18,10 @@
 package org.apache.drill.exec.store;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import net.hydromatic.optiq.Function;
-import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.Table;
 
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
@@ -40,6 +40,14 @@ public class SubSchemaWrapper extends AbstractSchema {
   @Override
   public boolean showInInformationSchema() {
     return false;
+  }
+
+  @Override
+  public Iterable<String> getSubPartitions(String table,
+                                           List<String> partitionColumns,
+                                           List<String> partitionValues
+  ) throws PartitionNotFoundException {
+    return getDefaultSchema().getSubPartitions(table, partitionColumns, partitionValues);
   }
 
   @Override
@@ -63,7 +71,7 @@ public class SubSchemaWrapper extends AbstractSchema {
   }
 
   @Override
-  public Schema getSubSchema(String name) {
+  public AbstractSchema getSubSchema(String name) {
     return innerSchema.getSubSchema(name);
   }
 

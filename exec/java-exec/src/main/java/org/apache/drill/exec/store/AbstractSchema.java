@@ -34,7 +34,7 @@ import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
-public abstract class AbstractSchema implements Schema{
+public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
   protected final List<String> schemaPath;
@@ -46,6 +46,17 @@ public abstract class AbstractSchema implements Schema{
     schemaPath.addAll(parentSchemaPath);
     schemaPath.add(name);
     this.name = name;
+  }
+
+  @Override
+  public Iterable<String> getSubPartitions(String table,
+                                           List<String> partitionColumns,
+                                           List<String> partitionValues
+                                          ) throws PartitionNotFoundException {
+    throw new UnsupportedOperationException(
+        String.format("Schema of type: %s " +
+                      "does not support retrieving sub-partition information.",
+                      this.getClass().getSimpleName()));
   }
 
   public String getName() {
@@ -96,7 +107,7 @@ public abstract class AbstractSchema implements Schema{
   }
 
   @Override
-  public Schema getSubSchema(String name) {
+  public AbstractSchema getSubSchema(String name) {
     return null;
   }
 

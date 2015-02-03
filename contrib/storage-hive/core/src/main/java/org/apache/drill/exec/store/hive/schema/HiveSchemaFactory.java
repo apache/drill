@@ -202,7 +202,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     }
 
     @Override
-    public Schema getSubSchema(String name) {
+    public AbstractSchema getSubSchema(String name) {
       List<String> tables;
       try {
         List<String> dbs = databases.get(DATABASES);

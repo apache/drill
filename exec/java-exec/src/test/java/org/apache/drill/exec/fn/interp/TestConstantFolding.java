@@ -18,6 +18,8 @@
 package org.apache.drill.exec.fn.interp;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.hadoop.io.Text;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,22 +37,38 @@ public class TestConstantFolding extends PlanTestBase {
   // Unfortunately, the temporary folder with an @Rule annotation cannot be static, this issue
   // has been fixed in a newer version of JUnit
   // http://stackoverflow.com/questions/2722358/junit-rule-temporaryfolder
-  public void createFiles(int smallFileLines, int bigFileLines) throws Exception{
-    File bigFolder = folder.newFolder("bigfile");
-    File bigFile = new File (bigFolder, "bigfile.csv");
-    PrintWriter out = new PrintWriter(bigFile);
-    for (int i = 0; i < bigFileLines; i++ ) {
-      out.println("1,2,3");
-    }
-    out.close();
 
-    File smallFolder = folder.newFolder("smallfile");
-    File smallFile = new File (smallFolder, "smallfile.csv");
-    out = new PrintWriter(smallFile);
-    for (int i = 0; i < smallFileLines; i++ ) {
-      out.println("1,2,3");
+  public static class SmallFileCreator {
+
+    private final TemporaryFolder folder;
+
+    public SmallFileCreator(TemporaryFolder folder) {
+      this.folder = folder;
     }
-    out.close();
+
+    public void createFiles(int smallFileLines, int bigFileLines) throws Exception{
+      PrintWriter out;
+      for (String fileAndFolderName : new String[]{"bigfile", "BIGFILE_2"}) {
+        File bigFolder = folder.newFolder(fileAndFolderName);
+        File bigFile = new File (bigFolder, fileAndFolderName + ".csv");
+        out = new PrintWriter(bigFile);
+        for (int i = 0; i < bigFileLines; i++ ) {
+          out.println("1,2,3");
+        }
+        out.close();
+      }
+
+      for (String fileAndFolderName : new String[]{"smallfile", "SMALLFILE_2"}) {
+        File smallFolder = folder.newFolder(fileAndFolderName);
+        File smallFile = new File (smallFolder, fileAndFolderName + ".csv");
+        out = new PrintWriter(smallFile);
+        for (int i = 0; i < smallFileLines; i++ ) {
+          out.println("1,2,3");
+        }
+        out.close();
+      }
+    }
+
   }
 
   @Test
@@ -108,7 +126,7 @@ public class TestConstantFolding extends PlanTestBase {
   @Ignore("DRILL-2553")
   @Test
   public void testConstExprFolding_withPartitionPrune_verySmallFiles() throws Exception {
-    createFiles(1, 8);
+    new SmallFileCreator(folder).createFiles(1, 8);
     String path = folder.getRoot().toPath().toString();
     testPlanOneExpectedPatternOneExcluded(
         "select * from dfs.`" + path + "/*/*.csv` where dir0 = concat('small','file')",
@@ -118,7 +136,7 @@ public class TestConstantFolding extends PlanTestBase {
 
   @Test
   public void testConstExprFolding_withPartitionPrune() throws Exception {
-    createFiles(1, 1000);
+    new SmallFileCreator(folder).createFiles(1, 1000);
     String path = folder.getRoot().toPath().toString();
     testPlanOneExpectedPatternOneExcluded(
         "select * from dfs.`" + path + "/*/*.csv` where dir0 = concat('small','file')",

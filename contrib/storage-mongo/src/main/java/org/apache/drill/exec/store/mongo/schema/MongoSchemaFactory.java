@@ -136,7 +136,7 @@ public class MongoSchemaFactory implements SchemaFactory {
     }
 
     @Override
-    public Schema getSubSchema(String name) {
+    public AbstractSchema getSubSchema(String name) {
       List<String> tables;
       try {
         if (! schemaMap.containsKey(name)) {
