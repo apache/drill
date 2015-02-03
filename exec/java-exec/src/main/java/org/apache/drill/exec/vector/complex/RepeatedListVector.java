@@ -66,6 +66,16 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
 
   public RepeatedListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
     super(field, allocator, callBack);
+    int childrenSize = field.getChildren().size();
+
+    // repeated list vector should not have more than one child
+    assert childrenSize <= 1;
+
+    if (childrenSize > 0) {
+      MaterializedField child = field.getChildren().iterator().next();
+      vector = TypeHelper.getNewVector(child, allocator, callBack);
+    }
+
     this.offsets = new UInt4Vector(null, allocator);
   }
 
@@ -235,7 +245,8 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
 
     @Override
     public int getGroupCount() {
-      return offsets.getAccessor().getValueCount() - 1;
+      final int valueCount = offsets.getAccessor().getValueCount();
+      return valueCount == 0 ? 0 : valueCount - 1;
     }
   }
 

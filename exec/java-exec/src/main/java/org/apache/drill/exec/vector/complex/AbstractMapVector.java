@@ -42,6 +42,12 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   protected AbstractMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field, allocator, callBack);
+    // create the hierarchy of the child vectors based on the materialized field
+    for (MaterializedField child : field.getChildren()) {
+      String fieldName = child.getLastName();
+      ValueVector  v = TypeHelper.getNewVector(child, allocator, callBack);
+      putVector(fieldName, v);
+    }
   }
 
   @Override
@@ -139,6 +145,16 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    * Note that this method does not enforce any vector type check nor throws a schema change exception.
    */
   protected void putChild(String name, ValueVector vector) {
+    putVector(name, vector);
+    field.addChild(vector.getField());
+  }
+
+  /**
+   * Inserts the input vector into the map if it does not exist, replaces if it exists already
+   * @param name  field name
+   * @param vector  vector to be inserted
+   */
+  protected void putVector(String name, ValueVector vector) {
     ValueVector old = vectors.put(
         Preconditions.checkNotNull(name, "field name cannot be null").toLowerCase(),
         Preconditions.checkNotNull(vector, "vector cannot be null")
@@ -147,8 +163,6 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       logger.debug("Field [%s] mutated from [%s] to [%s]", name, old.getClass().getSimpleName(),
           vector.getClass().getSimpleName());
     }
-
-    field.addChild(vector.getField());
   }
 
   /**
