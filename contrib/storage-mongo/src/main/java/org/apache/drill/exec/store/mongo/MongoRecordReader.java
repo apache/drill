@@ -100,8 +100,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     Map<String, List<BasicDBObject>> mergedFilters = MongoUtils.mergeFilters(
         subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
     buildFilters(subScanSpec.getFilter(), mergedFilters);
-    enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager()
-        .getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
+    enableAllTextMode = fragmentContext.getOptions().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
     init(subScanSpec);
   }
 

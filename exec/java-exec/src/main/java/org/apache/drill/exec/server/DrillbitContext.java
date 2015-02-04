@@ -87,6 +87,10 @@ public class DrillbitContext {
     return workBus;
   }
 
+  /**
+   * @return the system options manager. It is important to note that this manager only contains options at the
+   * "system" level and not "session" level.
+   */
   public SystemOptionManager getOptionManager() {
     return systemOptions;
   }

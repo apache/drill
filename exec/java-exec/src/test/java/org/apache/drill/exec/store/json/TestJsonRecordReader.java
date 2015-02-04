@@ -57,4 +57,10 @@ public class TestJsonRecordReader extends BaseTestQuery{
     final String sql = "select * from cp.`store/json/value-capacity.json`";
     test(sql);
   }
+
+  @Test
+  public void testEnableAllTextMode() throws Exception {
+    testNoResult("alter session set `store.json.all_text_mode`= true");
+    test("select * from cp.`jsoninput/big_numeric.json`");
+  }
 }

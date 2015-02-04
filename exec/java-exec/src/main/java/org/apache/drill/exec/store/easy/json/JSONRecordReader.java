@@ -70,7 +70,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
     this.columns = columns;
-    this.enableAllTextMode = fragmentContext.getDrillbitContext().getOptionManager().getOption(ExecConstants.JSON_ALL_TEXT_MODE).bool_val;
+    this.enableAllTextMode = fragmentContext.getOptions().getOption(ExecConstants.JSON_ALL_TEXT_MODE).bool_val;
   }
 
   @Override
