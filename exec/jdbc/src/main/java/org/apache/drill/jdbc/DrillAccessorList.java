@@ -23,6 +23,8 @@ import net.hydromatic.avatica.Cursor.Accessor;
 
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.BoundCheckingAccessor;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 
 public class DrillAccessorList extends BasicList<Accessor>{
@@ -35,7 +37,8 @@ public class DrillAccessorList extends BasicList<Accessor>{
     int cnt = currentBatch.getSchema().getFieldCount();
     accessors = new Accessor[cnt];
     for(int i =0; i < cnt; i++){
-      SqlAccessor acc = TypeHelper.getSqlAccessor(currentBatch.getValueAccessorById(null, i).getValueVector());
+      final ValueVector vector = currentBatch.getValueAccessorById(null, i).getValueVector();
+      final SqlAccessor acc = new BoundCheckingAccessor(vector, TypeHelper.getSqlAccessor(vector));
       accessors[i] = new AvaticaDrillSqlAccessor(acc, cursor);
     }
   }
