@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +30,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -55,7 +56,7 @@ public class QueryResources {
   @Path("/query.json")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public List<Map<String, Object>> submitQueryJSON(QueryWrapper query) throws Exception {
+  public QueryWrapper.QueryResult submitQueryJSON(QueryWrapper query) throws Exception {
     final DrillConfig config = work.getContext().getConfig();
     final ClusterCoordinator coordinator = work.getContext().getClusterCoordinator();
     final BufferAllocator allocator = work.getContext().getAllocator();
@@ -67,58 +68,43 @@ public class QueryResources {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_HTML)
   public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType) throws Exception {
-    List<Map<String, Object>> result = submitQueryJSON(new QueryWrapper(query, queryType));
-
-    List<String> columnNames;
-    if (result.isEmpty()) {
-      columnNames = Lists.newArrayList();
-    } else {
-      columnNames = Lists.newArrayList(result.get(0).keySet());
-    }
-    List<List<Object>> records = new ArrayList<>();
-
-    if(!isEmptyResult(result)) {
-      for (Map m : result) {
-        records.add(new ArrayList<Object>(m.values()));
-      }
-    }
-
-    Table table = new Table(columnNames, records);
-
-    return new Viewable("/rest/query/result.ftl", table);
+    final QueryWrapper.QueryResult result = submitQueryJSON(new QueryWrapper(query, queryType));
+    return new Viewable("/rest/query/result.ftl", new TabularResult(result));
   }
 
-  private boolean isEmptyResult(List<Map<String, Object>> result) {
-    if (result.size() > 1) {
-      return false;
-    } else {
-      for(Object col : result.get(0).values()) {
-        if(col != null) {
-          return false;
+  public static class TabularResult {
+    private final List<String> columns;
+    private final List<List<String>> rows;
+
+    public TabularResult(QueryWrapper.QueryResult result) {
+      final List<List<String>> rows = Lists.newArrayList();
+      for (Map<String, String> rowMap:result.rows) {
+        final List<String> row = Lists.newArrayList();
+        for (String col:result.columns) {
+          row.add(rowMap.get(col));
         }
+        rows.add(row);
       }
 
-      return true;
-    }
-  }
-
-  public class Table {
-    private List<String> columnNames;
-    private List<List<Object>> records;
-
-    public Table(List<String> columnNames, List<List<Object>> records) {
-      this.columnNames = columnNames;
-      this.records = records;
+      this.columns = ImmutableList.copyOf(result.columns);
+      this.rows = rows;
     }
 
-    public boolean isEmpty() { return getColumnNames().isEmpty(); }
-
-    public List<String> getColumnNames() {
-      return columnNames;
+    public TabularResult(List<String> columns, List<List<String>> rows) {
+      this.columns = columns;
+      this.rows = rows;
     }
 
-    public List<List<Object>> getRecords() {
-      return records;
+    public boolean isEmpty() {
+      return columns.isEmpty();
+    }
+
+    public List<String> getColumns() {
+      return columns;
+    }
+
+    public List<List<String>> getRows() {
+      return rows;
     }
   }
 }

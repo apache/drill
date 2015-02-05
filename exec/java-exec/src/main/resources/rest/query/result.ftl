@@ -33,16 +33,16 @@
     <table id="result" class="table table-striped table-bordered table-condensed" style="table-layout: auto; width=100%;">
       <thead>
         <tr>
-          <#list model.getColumnNames() as value>
-          <th>${value}</th>
+          <#list model.getColumns() as value>
+          <th>${value?html}</th>
           </#list>
         </tr>
       </thead>
       <tbody>
-      <#list model.getRecords() as record>
+      <#list model.getRows() as record>
         <tr>
           <#list record as value>
-          <td><#if value??>${value}<#else>null</#if></td>
+          <td>${value!"null"?html}</td>
           </#list>
         </tr>
       </#list>

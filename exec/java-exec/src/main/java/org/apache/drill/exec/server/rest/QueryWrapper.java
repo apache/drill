@@ -18,24 +18,23 @@
 
 package org.apache.drill.exec.server.rest;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.physical.impl.flatten.FlattenRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
@@ -43,10 +42,10 @@ import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import parquet.Preconditions;
 
 @XmlRootElement
 public class QueryWrapper {
@@ -80,24 +79,36 @@ public class QueryWrapper {
     return type;
   }
 
-  public List<Map<String, Object>> run(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator)
+  public QueryResult run(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator)
     throws Exception {
     try(DrillClient client = new DrillClient(config, coordinator, allocator)){
-      Listener listener = new Listener(new RecordBatchLoader(allocator));
+      Listener listener = new Listener(allocator);
 
       client.connect();
       client.runQuery(getType(), query, listener);
 
-      List<Map<String, Object>> result = listener.waitForCompletion();
-      if (result.isEmpty()) {
-        Map<String, Object> dumbRecord = new HashMap<>();
-        for (String columnName : listener.getColumnNames()) {
-          dumbRecord.put(columnName, null);
+      listener.waitForCompletion();
+      if (listener.results.isEmpty()) {
+        listener.results.add(Maps.<String, String>newHashMap());
+      }
+      final Map<String, String> first = listener.results.get(0);
+      for (String columnName : listener.columns) {
+        if (!first.containsKey(columnName)) {
+          first.put(columnName, null);
         }
-        result.add(dumbRecord);
       }
 
-      return result;
+      return new QueryResult(listener.columns, listener.results);
+    }
+  }
+
+  public static class QueryResult {
+    public final Collection<String> columns;
+    public final List<Map<String, String>> rows;
+
+    public QueryResult(Collection<String> columns, List<Map<String, String>> rows) {
+      this.columns = columns;
+      this.rows = rows;
     }
   }
 
@@ -109,15 +120,13 @@ public class QueryWrapper {
 
   private static class Listener implements UserResultsListener {
     private volatile Exception exception;
-    private AtomicInteger count = new AtomicInteger();
-    private CountDownLatch latch = new CountDownLatch(1);
-    private List<Map<String, Object>> output = new LinkedList<>();
-    private ArrayList<String> columnNames;
-    private RecordBatchLoader loader;
-    private boolean schemaAdded = false;
+    private final CountDownLatch latch = new CountDownLatch(1);
+    private final BufferAllocator allocator;
+    public final List<Map<String, String>> results = Lists.newArrayList();
+    public final Set<String> columns = Sets.newLinkedHashSet();
 
-    Listener(RecordBatchLoader loader) {
-      this.loader = loader;
+    Listener(BufferAllocator allocator) {
+      this.allocator = Preconditions.checkNotNull(allocator, "allocator cannot be null");
     }
 
     @Override
@@ -129,51 +138,33 @@ public class QueryWrapper {
 
     @Override
     public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
-      int rows = result.getHeader().getRowCount();
-      if (result.hasData()) {
-        count.addAndGet(rows);
-        try {
+      try {
+        final int rows = result.getHeader().getRowCount();
+        if (result.hasData()) {
+          final RecordBatchLoader loader = new RecordBatchLoader(allocator);
           loader.load(result.getHeader().getDef(), result.getData());
-          if (!schemaAdded || output.isEmpty()) {
-                columnNames = new ArrayList<>();
-            for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
-              columnNames.add(loader.getSchema().getColumn(i).getPath().getAsUnescapedPath());
-            }
-            schemaAdded = true;
+          for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
+            columns.add(loader.getSchema().getColumn(i).getPath().getAsUnescapedPath());
           }
-        } catch (SchemaChangeException e) {
-          throw new RuntimeException(e);
-        }
-        for (int i = 0; i < rows; ++i) {
-          Map<String, Object> record = new HashMap<>();
-          int j = 0;
-          for (VectorWrapper<?> vw : loader) {
-            ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
-            Object object = accessor.getObject(i);
-            if (object != null && (! object.getClass().getName().startsWith("java.lang"))) {
-              object = object.toString();
+          for (int i = 0; i < rows; ++i) {
+            final Map<String, String> record = Maps.newHashMap();
+            for (VectorWrapper<?> vw : loader) {
+              final String field = vw.getValueVector().getMetadata().getNamePart().getName();
+              final ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
+              final Object value = i < accessor.getValueCount() ? accessor.getObject(i) : null;
+              final String display = value == null ? null : value.toString();
+              record.put(field, display);
             }
-            if (object != null) {
-              record.put(columnNames.get(j), object);
-            } else {
-              record.put(columnNames.get(j), null);
-            }
-            ++j;
+            results.add(record);
           }
-          output.add(record);
         }
-      } else if (!schemaAdded) {
-        columnNames = new ArrayList<>();
-        schemaAdded = true;
-        for (SerializedField fmd : result.getHeader().getDef().getFieldList()) {
-          MaterializedField fieldDef = MaterializedField.create(fmd);
-          columnNames.add(fieldDef.getPath().getAsUnescapedPath());
+      } catch (SchemaChangeException e) {
+        throw new RuntimeException(e);
+      } finally {
+        result.release();
+        if (result.getHeader().getIsLastChunk()) {
+          latch.countDown();
         }
-      }
-
-      result.release();
-      if (result.getHeader().getIsLastChunk()) {
-        latch.countDown();
       }
     }
 
@@ -181,16 +172,11 @@ public class QueryWrapper {
     public void queryIdArrived(UserBitShared.QueryId queryId) {
     }
 
-    public List<Map<String, Object>> waitForCompletion() throws Exception {
+    public void waitForCompletion() throws Exception {
       latch.await();
       if (exception != null) {
         throw exception;
       }
-      return output;
-    }
-
-    public List<String> getColumnNames() {
-      return new ArrayList<String> (columnNames);
     }
   }
 }
