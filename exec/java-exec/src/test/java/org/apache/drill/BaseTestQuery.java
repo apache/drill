@@ -49,6 +49,7 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -67,6 +68,7 @@ public class BaseTestQuery extends ExecTest{
   private static final Properties TEST_CONFIGURATIONS = new Properties() {
     {
       put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
+      put(ExecConstants.HTTP_ENABLE, "false");
     }
   };
 
