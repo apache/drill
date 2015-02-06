@@ -64,20 +64,4 @@ public class QueryWritableBatch {
   public String toString() {
     return "QueryWritableBatch [header=" + header + ", buffers=" + Arrays.toString(buffers) + "]";
   }
-
-  public static QueryWritableBatch getEmptyBatchWithSchema(QueryId queryId, int rowCount, boolean isLastChunk, BatchSchema schema) {
-    List<SerializedField> fields = Lists.newArrayList();
-    for (MaterializedField field : schema) {
-      fields.add(field.getAsBuilder().build());
-    }
-    RecordBatchDef def = RecordBatchDef.newBuilder().addAllField(fields).build();
-    QueryResult header = QueryResult.newBuilder() //
-            .setQueryId(queryId) //
-            .setRowCount(rowCount) //
-            .setDef(def) //
-            .setIsLastChunk(isLastChunk) //
-            .build();
-    return new QueryWritableBatch(header);
-  }
-
 }

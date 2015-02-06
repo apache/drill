@@ -23,34 +23,50 @@ import static org.junit.Assert.assertEquals;
 import java.nio.charset.Charset;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
+import org.apache.drill.exec.expr.holders.NullableUInt4Holder;
+import org.apache.drill.exec.expr.holders.NullableVar16CharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.RepeatedFloat4Holder;
+import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
+import org.apache.drill.exec.expr.holders.RepeatedVarBinaryHolder;
+import org.apache.drill.exec.expr.holders.UInt4Holder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BitVector;
+import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableUInt4Vector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableVector;
+import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
+import org.apache.drill.exec.vector.RepeatedVariableWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.vector.VariableWidthVector.VariableWidthAccessor;
+import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.RepeatedListVector;
+import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.junit.Test;
 
 public class TestValueVector extends ExecTest {
+  private final static SchemaPath EMPTY_SCHEMA_PATH = SchemaPath.getSimplePath("");
+
+  private final static byte[] STR1 = new String("AAAAA1").getBytes(Charset.forName("UTF-8"));
+  private final static byte[] STR2 = new String("BBBBBBBBB2").getBytes(Charset.forName("UTF-8"));
+  private final static byte[] STR3 = new String("CCCC3").getBytes(Charset.forName("UTF-8"));
 
   TopLevelAllocator allocator = new TopLevelAllocator();
 
   @Test
   public void testFixedType() {
-    // Build a required uint field definition
-    MajorType.Builder typeBuilder = MajorType.newBuilder();
-    typeBuilder
-        .setMinorType(MinorType.UINT4)
-        .setMode(DataMode.REQUIRED)
-        .setWidth(4);
-        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(""), typeBuilder.build());
+    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
 
     // Create a new value vector for 1024 integers
     UInt4Vector v = new UInt4Vector(field, allocator);
@@ -73,34 +89,21 @@ public class TestValueVector extends ExecTest {
 
   @Test
   public void testNullableVarLen2() {
-    // Build an optional varchar field definition
-    MajorType.Builder typeBuilder = MajorType.newBuilder();
-    SerializedField.Builder defBuilder = SerializedField.newBuilder();
-    typeBuilder
-        .setMinorType(MinorType.VARCHAR)
-        .setMode(DataMode.OPTIONAL)
-        .setWidth(2);
-    defBuilder
-        .setMajorType(typeBuilder.build());
-    MaterializedField field = MaterializedField.create(defBuilder.build());
+    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
 
     // Create a new value vector for 1024 integers
     NullableVarCharVector v = new NullableVarCharVector(field, allocator);
     NullableVarCharVector.Mutator m = v.getMutator();
     v.allocateNew(1024*10, 1024);
 
-    // Create and set 3 sample strings
-    String str1 = new String("AAAAA1");
-    String str2 = new String("BBBBBBBBB2");
-    String str3 = new String("CCCC3");
-    m.set(0, str1.getBytes(Charset.forName("UTF-8")));
-    m.set(1, str2.getBytes(Charset.forName("UTF-8")));
-    m.set(2, str3.getBytes(Charset.forName("UTF-8")));
+    m.set(0, STR1);
+    m.set(1, STR2);
+    m.set(2, STR3);
 
     // Check the sample strings
-    assertEquals(str1, new String(v.getAccessor().get(0), Charset.forName("UTF-8")));
-    assertEquals(str2, new String(v.getAccessor().get(1), Charset.forName("UTF-8")));
-    assertEquals(str3, new String(v.getAccessor().get(2), Charset.forName("UTF-8")));
+    assertArrayEquals(STR1, v.getAccessor().get(0));
+    assertArrayEquals(STR2, v.getAccessor().get(1));
+    assertArrayEquals(STR3, v.getAccessor().get(2));
 
     // Ensure null value throws
     boolean b = false;
@@ -119,16 +122,7 @@ public class TestValueVector extends ExecTest {
 
   @Test
   public void testNullableFixedType() {
-    // Build an optional uint field definition
-    MajorType.Builder typeBuilder = MajorType.newBuilder();
-    SerializedField.Builder defBuilder = SerializedField.newBuilder();
-    typeBuilder
-        .setMinorType(MinorType.UINT4)
-        .setMode(DataMode.OPTIONAL)
-        .setWidth(4);
-    defBuilder
-        .setMajorType(typeBuilder.build());
-    MaterializedField field = MaterializedField.create(defBuilder.build());
+    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableUInt4Holder.TYPE);
 
     // Create a new value vector for 1024 integers
     NullableUInt4Vector v = new NullableUInt4Vector(field, allocator);
@@ -206,16 +200,7 @@ public class TestValueVector extends ExecTest {
 
   @Test
   public void testNullableFloat() {
-    // Build an optional float field definition
-    MajorType.Builder typeBuilder = MajorType.newBuilder();
-    SerializedField.Builder defBuilder = SerializedField.newBuilder();
-    typeBuilder
-        .setMinorType(MinorType.FLOAT4)
-        .setMode(DataMode.OPTIONAL)
-        .setWidth(4);
-    defBuilder
-        .setMajorType(typeBuilder.build());
-    MaterializedField field = MaterializedField.create(defBuilder.build());
+    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableFloat4Holder.TYPE);
 
     // Create a new value vector for 1024 integers
     NullableFloat4Vector v = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator);
@@ -265,16 +250,7 @@ public class TestValueVector extends ExecTest {
 
   @Test
   public void testBitVector() {
-    // Build a required boolean field definition
-    MajorType.Builder typeBuilder = MajorType.newBuilder();
-    SerializedField.Builder defBuilder = SerializedField.newBuilder();
-    typeBuilder
-        .setMinorType(MinorType.BIT)
-        .setMode(DataMode.REQUIRED)
-        .setWidth(4);
-    defBuilder
-        .setMajorType(typeBuilder.build());
-    MaterializedField field = MaterializedField.create(defBuilder.build());
+    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, BitHolder.TYPE);
 
     // Create a new value vector for 1024 integers
     BitVector v = new BitVector(field, allocator);
@@ -312,16 +288,7 @@ public class TestValueVector extends ExecTest {
 
   @Test
   public void testReAllocNullableFixedWidthVector() throws Exception {
-    // Build an optional float field definition
-    MajorType floatType = MajorType.newBuilder()
-        .setMinorType(MinorType.FLOAT4)
-        .setMode(DataMode.OPTIONAL)
-        .setWidth(4).build();
-
-    MaterializedField field = MaterializedField.create(
-        SerializedField.newBuilder()
-            .setMajorType(floatType)
-            .build());
+    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableFloat4Holder.TYPE);
 
     // Create a new value vector for 1024 integers
     NullableFloat4Vector v = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator);
@@ -355,16 +322,7 @@ public class TestValueVector extends ExecTest {
 
   @Test
   public void testReAllocNullableVariableWidthVector() throws Exception {
-    // Build an optional float field definition
-    MajorType floatType = MajorType.newBuilder()
-        .setMinorType(MinorType.VARCHAR)
-        .setMode(DataMode.OPTIONAL)
-        .setWidth(4).build();
-
-    MaterializedField field = MaterializedField.create(
-        SerializedField.newBuilder()
-            .setMajorType(floatType)
-            .build());
+    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
 
     // Create a new value vector for 1024 integers
     NullableVarCharVector v = (NullableVarCharVector) TypeHelper.getNewVector(field, allocator);
@@ -374,25 +332,60 @@ public class TestValueVector extends ExecTest {
     int initialCapacity = v.getValueCapacity();
 
     // Put values in indexes that fall within the initial allocation
-    byte[] str1 = new String("AAAAA1").getBytes(Charset.forName("UTF-8"));
-    byte[] str2 = new String("BBBBBBBBB2").getBytes(Charset.forName("UTF-8"));
-    byte[] str3 = new String("CCCC3").getBytes(Charset.forName("UTF-8"));
-
-    m.setSafe(0, str1, 0, str1.length);
-    m.setSafe(initialCapacity - 1, str2, 0, str2.length);
+    m.setSafe(0, STR1, 0, STR1.length);
+    m.setSafe(initialCapacity - 1, STR2, 0, STR2.length);
 
     // Now try to put values in space that falls beyond the initial allocation
-    m.setSafe(initialCapacity + 200, str3, 0, str3.length);
+    m.setSafe(initialCapacity + 200, STR3, 0, STR3.length);
 
     // Check valueCapacity is more than initial allocation
     assertEquals((initialCapacity+1)*2-1, v.getValueCapacity());
 
-    assertArrayEquals(str1, v.getAccessor().get(0));
-    assertArrayEquals(str2, v.getAccessor().get(initialCapacity-1));
-    assertArrayEquals(str3, v.getAccessor().get(initialCapacity + 200));
+    assertArrayEquals(STR1, v.getAccessor().get(0));
+    assertArrayEquals(STR2, v.getAccessor().get(initialCapacity-1));
+    assertArrayEquals(STR3, v.getAccessor().get(initialCapacity + 200));
 
     // Set the valueCount to be more than valueCapacity of current allocation. This is possible for NullableValueVectors
     // as we don't call setSafe for null values, but we do call setValueCount when the current batch is processed.
     m.setValueCount(v.getValueCapacity() + 200);
+  }
+
+  @Test
+  public void testVVInitialCapacity() {
+    final MaterializedField[] fields = new MaterializedField[9];
+    final ValueVector[] valueVectors = new ValueVector[9];
+
+    fields[0] = MaterializedField.create(EMPTY_SCHEMA_PATH, BitHolder.TYPE);
+    fields[1] = MaterializedField.create(EMPTY_SCHEMA_PATH, IntHolder.TYPE);
+    fields[2] = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+    fields[3] = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVar16CharHolder.TYPE);
+    fields[4] = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedFloat4Holder.TYPE);
+    fields[5] = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedVarBinaryHolder.TYPE);
+
+    fields[6] = MaterializedField.create(EMPTY_SCHEMA_PATH, MapVector.TYPE);
+    fields[6].addChild(fields[0] /*bit*/);
+    fields[6].addChild(fields[2] /*varchar*/);
+
+    fields[7] = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedMapVector.TYPE);
+    fields[7].addChild(fields[1] /*int*/);
+    fields[7].addChild(fields[3] /*optional var16char*/);
+
+    fields[8] = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedListVector.TYPE);
+    fields[8].addChild(fields[1] /*int*/);
+
+    final int initialCapacity = 1024;
+
+    for(int i=0; i<valueVectors.length; i++) {
+      valueVectors[i] = TypeHelper.getNewVector(fields[i], allocator);
+      valueVectors[i].setInitialCapacity(initialCapacity);
+      valueVectors[i].allocateNew();
+    }
+
+    for(int i=0; i<valueVectors.length; i++) {
+      final ValueVector vv = valueVectors[i];
+      final int vvCapacity = vv.getValueCapacity();
+      assertEquals(String.format("Incorrect value capacity for %s [%d]", vv.getField(), vvCapacity),
+          initialCapacity, vvCapacity);
+    }
   }
 }

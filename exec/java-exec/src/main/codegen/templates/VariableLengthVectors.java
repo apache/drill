@@ -50,7 +50,8 @@ package org.apache.drill.exec.vector;
 public final class ${minor.class}Vector extends BaseDataValueVector implements VariableWidthVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${minor.class}Vector.class);
 
-  private static final int INITIAL_BYTE_COUNT = 32768;
+  private static final int DEFAULT_RECORD_BYTE_COUNT = 8;
+  private static final int INITIAL_BYTE_COUNT = 4096 * DEFAULT_RECORD_BYTE_COUNT;
   private static final int MIN_BYTE_COUNT = 4096;
   
   private final UInt${type.width}Vector offsetVector;
@@ -239,6 +240,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     public void copyValueSafe(int fromIndex, int toIndex) {
       to.copyFromSafe(fromIndex, toIndex, ${minor.class}Vector.this);
     }
+  }
+
+  @Override
+  public void setInitialCapacity(int numRecords) {
+    allocationTotalByteCount = numRecords * DEFAULT_RECORD_BYTE_COUNT;
+    offsetVector.setInitialCapacity(numRecords + 1);
   }
 
   public void allocateNew() {

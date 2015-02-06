@@ -29,7 +29,6 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
@@ -51,6 +50,18 @@ public class MaterializedField {
     }
     return field;
   }
+
+  /**
+   * Create and return a serialized field based on the current state.
+   */
+  public SerializedField getSerializedField() {
+    SerializedField.Builder serializedFieldBuilder = getAsBuilder();
+    for(MaterializedField childMaterializedField : getChildren()) {
+      serializedFieldBuilder.addChild(childMaterializedField.getSerializedField());
+    }
+    return serializedFieldBuilder.build();
+  }
+
 
   public SerializedField.Builder getAsBuilder(){
     return SerializedField.newBuilder() //

@@ -174,6 +174,12 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
       }
     }
 
+  @Override
+  public void setInitialCapacity(int numRecords) {
+    offsets.setInitialCapacity(numRecords + 1);
+    values.setInitialCapacity(numRecords * DEFAULT_REPEAT_PER_RECORD);
+  }
+
   public boolean allocateNewSafe(){
     if(!offsets.allocateNewSafe()) return false;
     offsets.zeroVector();

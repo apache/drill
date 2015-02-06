@@ -100,6 +100,12 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     return values;
   }
 
+  @Override
+  public void setInitialCapacity(int numRecords) {
+    bits.setInitialCapacity(numRecords);
+    values.setInitialCapacity(numRecords);
+  }
+
   <#if type.major == "VarLen">
   @Override
   public SerializedField getMetadata() {

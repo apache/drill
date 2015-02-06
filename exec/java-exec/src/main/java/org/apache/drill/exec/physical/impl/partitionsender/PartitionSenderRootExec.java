@@ -90,7 +90,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
                                  RecordBatch incoming,
                                  HashPartitionSender operator) throws OutOfMemoryException {
     super(context, new OperatorContext(operator, context, null, false), operator);
-    //super(context, operator);
     this.incoming = incoming;
     this.operator = operator;
     this.context = context;
@@ -99,24 +98,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
     this.statusHandler = new StatusHandler(sendCount, context);
     this.remainingReceivers = new AtomicIntegerArray(outGoingBatchCount);
     this.remaingReceiverCount = new AtomicInteger(outGoingBatchCount);
-  }
-
-  private boolean done() {
-    for (int i = 0; i < remainingReceivers.length(); i++) {
-      if (remainingReceivers.get(i) == 0) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private void buildSchema() throws SchemaChangeException {
-    createPartitioner();
-    try {
-      partitioner.flushOutgoingBatches(false, true);
-    } catch (IOException e) {
-      throw new SchemaChangeException(e);
-    }
   }
 
   @Override
@@ -147,7 +128,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
           if(partitioner != null) {
             partitioner.flushOutgoingBatches(true, false);
           } else {
-            sendEmptyBatch();
+            sendEmptyBatch(true);
           }
         } catch (IOException e) {
           incoming.kill(false);
@@ -170,10 +151,11 @@ public class PartitionSenderRootExec extends BaseRootExec {
             partitioner.clear();
           }
           createPartitioner();
-          // flush to send schema downstream
+
           if (first) {
+            // Send an empty batch for fast schema
             first = false;
-            partitioner.flushOutgoingBatches(false, true);
+            sendEmptyBatch(false);
           }
         } catch (IOException e) {
           incoming.kill(false);
@@ -233,7 +215,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
     try {
       // compile and setup generated code
-//      partitioner = context.getImplementationClassMultipleOutput(cg);
       partitioner = context.getImplementationClass(cg);
       partitioner.setup(context, incoming, popConfig, stats, sendCount, oContext, statusHandler);
 
@@ -285,27 +266,28 @@ public class PartitionSenderRootExec extends BaseRootExec {
     incoming.cleanup();
   }
 
-  public void sendEmptyBatch() {
+  public void sendEmptyBatch(boolean isLast) {
     FragmentHandle handle = context.getHandle();
     int fieldId = 0;
     StatusHandler statusHandler = new StatusHandler(sendCount, context);
     for (DrillbitEndpoint endpoint : popConfig.getDestinations()) {
       FragmentHandle opposite = context.getHandle().toBuilder().setMajorFragmentId(popConfig.getOppositeMajorFragmentId()).setMinorFragmentId(fieldId).build();
       DataTunnel tunnel = context.getDataTunnel(endpoint, opposite);
-      FragmentWritableBatch writableBatch = FragmentWritableBatch.getEmptyLastWithSchema(
-              handle.getQueryId(),
-              handle.getMajorFragmentId(),
-              handle.getMinorFragmentId(),
-              operator.getOppositeMajorFragmentId(),
-              fieldId,
-              incoming.getSchema());
+      FragmentWritableBatch writableBatch = FragmentWritableBatch.getEmptyBatchWithSchema(
+          isLast,
+          handle.getQueryId(),
+          handle.getMajorFragmentId(),
+          handle.getMinorFragmentId(),
+          operator.getOppositeMajorFragmentId(),
+          fieldId,
+          incoming.getSchema());
       stats.startWait();
       try {
         tunnel.sendRecordBatch(statusHandler, writableBatch);
       } finally {
         stats.stopWait();
       }
-      this.sendCount.increment();
+      sendCount.increment();
       fieldId++;
     }
   }

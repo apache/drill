@@ -93,6 +93,13 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
+  public void setInitialCapacity(int numRecords) {
+    for (ValueVector v : this) {
+      v.setInitialCapacity(numRecords);
+    }
+  }
+
+  @Override
   public int getBufferSize() {
     if (valueCount == 0 || size() == 0) {
       return 0;

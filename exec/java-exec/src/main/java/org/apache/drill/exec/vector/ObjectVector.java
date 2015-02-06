@@ -92,6 +92,12 @@ public class ObjectVector extends BaseValueVector{
     public void generateTestData(int values) {
     }
   }
+
+  @Override
+  public void setInitialCapacity(int numRecords) {
+    // NoOp
+  }
+
   @Override
   public void allocateNew() throws OutOfMemoryRuntimeException {
     addNewArray();

@@ -100,6 +100,13 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     return mutator;
   }
 
+  public void setInitialCapacity(int numRecords) {
+    offsets.setInitialCapacity(numRecords + 1);
+    if (vector != null) {
+      vector.setInitialCapacity(numRecords * DEFAULT_REPEAT_PER_RECORD);
+    }
+  }
+
   @Override
   public boolean allocateNewSafe() {
     if (!offsets.allocateNewSafe()) {

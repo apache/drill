@@ -69,6 +69,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return (int) Math.floor(index / 8.0);
   }
 
+  @Override
+  public void setInitialCapacity(int numRecords) {
+    allocationValueCount = numRecords;
+  }
+
   public void allocateNew() {
     if (!allocateNewSafe()) {
       throw new OutOfMemoryRuntimeException();

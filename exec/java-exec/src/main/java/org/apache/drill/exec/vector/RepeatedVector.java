@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.DrillBuf;
-
 public interface RepeatedVector {
+  public static final int DEFAULT_REPEAT_PER_RECORD = 4;
 
   public RepeatedFixedWidthVector.RepeatedAccessor getAccessor();
 

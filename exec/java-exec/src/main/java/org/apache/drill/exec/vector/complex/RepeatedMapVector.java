@@ -69,6 +69,13 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
     this.emptyPopulator = new EmptyValuePopulator(offsets);
   }
 
+  public void setInitialCapacity(int numRecords) {
+    offsets.setInitialCapacity(numRecords + 1);
+    for(ValueVector v : this) {
+      v.setInitialCapacity(numRecords * DEFAULT_REPEAT_PER_RECORD);
+    }
+  }
+
   @Override
   public void allocateNew(int groupCount, int valueCount) {
     clear();

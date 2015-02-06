@@ -66,24 +66,20 @@ public class FragmentWritableBatch{
 
   public static FragmentWritableBatch getEmptyLastWithSchema(QueryId queryId, int sendMajorFragmentId, int sendMinorFragmentId,
                                                              int receiveMajorFragmentId, int receiveMinorFragmentId, BatchSchema schema){
-
-    List<SerializedField> fields = Lists.newArrayList();
-    for (MaterializedField field : schema) {
-      fields.add(field.getAsBuilder().build());
-    }
-    RecordBatchDef def = RecordBatchDef.newBuilder().addAllField(fields).build();
-    return new FragmentWritableBatch(true, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentId, def);
+    return getEmptyBatchWithSchema(true, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId,
+        receiveMinorFragmentId, schema);
   }
 
-  public static FragmentWritableBatch getEmptyBatchWithSchema(QueryId queryId, int sendMajorFragmentId, int sendMinorFragmentId,
-                                                             int receiveMajorFragmentId, int receiveMinorFragmentId, BatchSchema schema){
+  public static FragmentWritableBatch getEmptyBatchWithSchema(boolean isLast, QueryId queryId, int sendMajorFragmentId,
+      int sendMinorFragmentId, int receiveMajorFragmentId, int receiveMinorFragmentId, BatchSchema schema){
 
     List<SerializedField> fields = Lists.newArrayList();
     for (MaterializedField field : schema) {
-      fields.add(field.getAsBuilder().build());
+      fields.add(field.getSerializedField());
     }
     RecordBatchDef def = RecordBatchDef.newBuilder().addAllField(fields).build();
-    return new FragmentWritableBatch(false, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentId, def);
+    return new FragmentWritableBatch(isLast, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId,
+        receiveMinorFragmentId, def);
   }
 
   public ByteBuf[] getBuffers(){

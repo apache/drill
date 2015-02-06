@@ -41,7 +41,6 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.SchemaBuilder;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
@@ -52,19 +51,20 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public abstract class PartitionerTemplate implements Partitioner {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionerTemplate.class);
+
+  // Always keep the recordCount as (2^x) - 1 to better utilize the memory allocation in ValueVectors
+  private static final int DEFAULT_RECORD_BATCH_SIZE = (1 << 10) - 1;
 
   private SelectionVector2 sv2;
   private SelectionVector4 sv4;
   private RecordBatch incoming;
   private List<OutgoingRecordBatch> outgoingBatches = Lists.newArrayList();
 
-  private static final String REWRITE_MSG = "Failed to write the record {} in available space. Attempting to rewrite.";
-  private static final String RECORD_TOO_BIG_MSG = "Record {} is too big to fit into the allocated memory of ValueVector.";
+  private int outgoingRecordBatchSize = DEFAULT_RECORD_BATCH_SIZE;
 
   public PartitionerTemplate() throws SchemaChangeException {
   }
@@ -85,6 +85,13 @@ public abstract class PartitionerTemplate implements Partitioner {
 
     this.incoming = incoming;
     doSetup(context, incoming, null);
+
+    // Half the outgoing record batch size if the number of senders exceeds 1000 to reduce the total amount of memory
+    // allocated.
+    if (popConfig.getDestinations().size() > 1000) {
+      // Always keep the recordCount as (2^x) - 1 to better utilize the memory allocation in ValueVectors
+      outgoingRecordBatchSize = (DEFAULT_RECORD_BATCH_SIZE + 1)/2 - 1;
+    }
 
     int fieldId = 0;
     for (DrillbitEndpoint endpoint : popConfig.getDestinations()) {
@@ -131,7 +138,7 @@ public abstract class PartitionerTemplate implements Partitioner {
       if (isLastBatch) {
         batch.setIsLast();
       }
-      batch.flush();
+      batch.flush(schemaChanged);
       if (schemaChanged) {
         batch.resetBatch();
         batch.initializeBatch();
@@ -202,18 +209,14 @@ public abstract class PartitionerTemplate implements Partitioner {
     private final VectorContainer vectorContainer = new VectorContainer();
     private final SendingAccountor sendCount;
     private final int oppositeMinorFragmentId;
+    private final StatusHandler statusHandler;
+    private final OperatorStats stats;
 
     private boolean isLast = false;
-    private boolean isFirst = true;
     private volatile boolean terminated = false;
     private boolean dropAll = false;
-    private BatchSchema outSchema;
     private int recordCount;
     private int totalRecords;
-    private OperatorStats stats;
-    private static final int DEFAULT_RECORD_BATCH_SIZE = 1000;
-
-    private final StatusHandler statusHandler;
 
     public OutgoingRecordBatch(OperatorStats stats, SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel,
                                FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId,
@@ -232,8 +235,8 @@ public abstract class PartitionerTemplate implements Partitioner {
       doEval(inIndex, recordCount);
       recordCount++;
       totalRecords++;
-      if (recordCount == DEFAULT_RECORD_BATCH_SIZE) {
-        flush();
+      if (recordCount == outgoingRecordBatchSize) {
+        flush(false);
       }
     }
 
@@ -248,74 +251,70 @@ public abstract class PartitionerTemplate implements Partitioner {
     @RuntimeOverridden
     protected void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex) { };
 
-    public void flush() throws IOException {
+    public void flush(boolean schemaChanged) throws IOException {
       if (dropAll) {
         vectorContainer.zeroVectors();
         return;
       }
       final FragmentHandle handle = context.getHandle();
 
-      if (recordCount != 0 && !terminated) {
+      // We need to send the last batch when
+      //   1. we are actually done processing the incoming RecordBatches and no more input available
+      //   2. receiver wants to terminate (possible in case of queries involving limit clause)
+      final boolean isLastBatch = isLast || terminated;
 
-        for(VectorWrapper<?> w : vectorContainer){
+      // if the batch is not the last batch and the current recordCount is zero, then no need to send any RecordBatches
+      if (!isLastBatch && recordCount == 0) {
+        return;
+      }
+
+      if (recordCount != 0) {
+        for (VectorWrapper<?> w : vectorContainer) {
           w.getValueVector().getMutator().setValueCount(recordCount);
         }
-
-        FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
-                handle.getQueryId(),
-                handle.getMajorFragmentId(),
-                handle.getMinorFragmentId(),
-                operator.getOppositeMajorFragmentId(),
-                oppositeMinorFragmentId,
-                getWritableBatch());
-
-        updateStats(writableBatch);
-        stats.startWait();
-        try {
-          tunnel.sendRecordBatch(statusHandler, writableBatch);
-        } finally {
-          stats.stopWait();
-        }
-        this.sendCount.increment();
-      } else {
-        logger.debug("Flush requested on an empty outgoing record batch" + (isLast ? " (last batch)" : ""));
-        if (isFirst || isLast || terminated) {
-          // send final (empty) batch
-          FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast || terminated,
-                  handle.getQueryId(),
-                  handle.getMajorFragmentId(),
-                  handle.getMinorFragmentId(),
-                  operator.getOppositeMajorFragmentId(),
-                  oppositeMinorFragmentId,
-                  getWritableBatch());
-          stats.startWait();
-          try {
-            tunnel.sendRecordBatch(statusHandler, writableBatch);
-          } finally {
-            stats.stopWait();
-          }
-          this.sendCount.increment();
-          vectorContainer.zeroVectors();
-          if (!isFirst) {
-            dropAll = true;
-          }
-          if (isFirst) {
-            isFirst = !isFirst;
-          }
-          return;
-        }
       }
 
-      // reset values and reallocate the buffer for each value vector based on the incoming batch.
-      // NOTE: the value vector is directly referenced by generated code; therefore references
-      // must remain valid.
-      recordCount = 0;
-      vectorContainer.zeroVectors();
-      for (VectorWrapper<?> v : vectorContainer) {
-        v.getValueVector().allocateNew();
+      FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLastBatch,
+          handle.getQueryId(),
+          handle.getMajorFragmentId(),
+          handle.getMinorFragmentId(),
+          operator.getOppositeMajorFragmentId(),
+          oppositeMinorFragmentId,
+          getWritableBatch());
+
+      updateStats(writableBatch);
+      stats.startWait();
+      try {
+        tunnel.sendRecordBatch(statusHandler, writableBatch);
+      } finally {
+        stats.stopWait();
       }
+      sendCount.increment();
+
+      // If the current batch is the last batch, then set a flag to ignore any requests to flush the data
+      // This is possible when the receiver is terminated, but we still get data from input operator
+      if (isLastBatch) {
+        dropAll = true;
+      }
+
+      // If this flush is not due to schema change, allocate space for existing vectors.
+      if (!schemaChanged) {
+        // reset values and reallocate the buffer for each value vector based on the incoming batch.
+        // NOTE: the value vector is directly referenced by generated code; therefore references
+        // must remain valid.
+        recordCount = 0;
+        vectorContainer.zeroVectors();
+        allocateOutgoingRecordBatch();
+      }
+
       if (!statusHandler.isOk()) {
         throw new IOException(statusHandler.getException());
+      }
+    }
+
+    private void allocateOutgoingRecordBatch() {
+      for (VectorWrapper<?> v : vectorContainer) {
+        v.getValueVector().allocateNew();
       }
     }
 
@@ -325,32 +324,24 @@ public abstract class PartitionerTemplate implements Partitioner {
       stats.addLongStat(Metric.RECORDS_SENT, writableBatch.getHeader().getDef().getRecordCount());
     }
 
+    /**
+     * Initialize the OutgoingBatch based on the current schema in incoming RecordBatch
+     */
     public void initializeBatch() {
-      isLast = false;
-      vectorContainer.clear();
-
-      SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
       for (VectorWrapper<?> v : incoming) {
-
-        // add field to the output schema
-        bldr.addField(v.getField());
-
-        // allocate a new value vector
+        // create new vector
         ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), allocator);
-        v.getValueVector().makeTransferPair(outgoingVector);
-        outgoingVector.allocateNew();
+        outgoingVector.setInitialCapacity(outgoingRecordBatchSize);
         vectorContainer.add(outgoingVector);
       }
-      outSchema = bldr.build();
+      allocateOutgoingRecordBatch();
       doSetup(incoming, vectorContainer);
     }
 
     public void resetBatch() {
       isLast = false;
       recordCount = 0;
-      for (VectorWrapper<?> v : vectorContainer){
-        v.getValueVector().clear();
-      }
+      vectorContainer.clear();
     }
 
     public void setIsLast() {
@@ -359,8 +350,7 @@ public abstract class PartitionerTemplate implements Partitioner {
 
     @Override
     public BatchSchema getSchema() {
-      Preconditions.checkNotNull(outSchema);
-      return outSchema;
+      return incoming.getSchema();
     }
 
     @Override
