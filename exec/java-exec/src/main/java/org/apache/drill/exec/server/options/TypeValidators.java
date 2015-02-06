@@ -18,6 +18,8 @@
 package org.apache.drill.exec.server.options;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
@@ -128,6 +130,29 @@ public class TypeValidators {
       if (v.num_val > max || v.num_val < min) {
         throw new ExpressionParsingException(String.format("Option %s must be between %d and %d.", getOptionName(), min,
             max));
+      }
+    }
+
+  }
+
+  /**
+   * Validator that checks if the given value is included in a list of acceptable values. Case insensitive.
+   */
+  public static class EnumeratedStringValidator extends StringValidator {
+    Set<String> valuesSet = new HashSet<>();
+
+    public EnumeratedStringValidator(String name, String def, String... values) {
+      super(name, def);
+      for (String value : values) {
+        valuesSet.add(value.toLowerCase());
+      }
+    }
+
+    @Override
+    public void validate(OptionValue v) throws ExpressionParsingException {
+      super.validate(v);
+      if (!valuesSet.contains(v.string_val.toLowerCase())) {
+        throw new ExpressionParsingException(String.format("Option %s must be one of: %s", getOptionName(), valuesSet));
       }
     }
 

@@ -108,6 +108,26 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
     blockSize = Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_BLOCK_SIZE));
+    String codecName = writerOptions.get(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).toLowerCase();
+    switch(codecName) {
+    case "snappy":
+      codec = CompressionCodecName.SNAPPY;
+      break;
+    case "lzo":
+      codec = CompressionCodecName.LZO;
+      break;
+    case "gzip":
+      codec = CompressionCodecName.GZIP;
+      break;
+    case "none":
+    case "uncompressed":
+      codec = CompressionCodecName.UNCOMPRESSED;
+      break;
+    default:
+      throw new UnsupportedOperationException(String.format("Unknown compression type: %s", codecName));
+    }
+
+    enableDictionary = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
   }
 
   @Override

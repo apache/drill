@@ -132,6 +132,12 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
     options.put(ExecConstants.PARQUET_BLOCK_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_BLOCK_SIZE).num_val.toString());
 
+    options.put(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE,
+        context.getOptions().getOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).string_val);
+
+    options.put(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING,
+        context.getOptions().getOption(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING).bool_val.toString());
+
     RecordWriter recordWriter = new ParquetRecordWriter(context, writer);
     recordWriter.init(options);
 

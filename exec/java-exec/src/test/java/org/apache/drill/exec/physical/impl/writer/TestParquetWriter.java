@@ -152,6 +152,24 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate("*", "*", inputTable, "supplier_parquet");
   }
 
+  @Test
+  public void testTPCHReadWriteNoDictUncompressed() throws Exception {
+    test(String.format("alter session set `%s` = false;", ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
+    test(String.format("alter session set `%s` = 'none'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE));
+    String inputTable = "cp.`tpch/supplier.parquet`";
+    runTestAndValidate("*", "*", inputTable, "supplier_parquet_no_dict_uncompressed");
+    test(String.format("alter session set `%s` = true;", ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
+    test(String.format("alter session set `%s` = 'snappy'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE));
+  }
+
+  @Test
+  public void testTPCHReadWriteDictGzip() throws Exception {
+    test(String.format("alter session set `%s` = 'gzip'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE));
+    String inputTable = "cp.`tpch/supplier.parquet`";
+    runTestAndValidate("*", "*", inputTable, "supplier_parquet_dict_gzip");
+    test(String.format("alter session set `%s` = 'snappy'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE));
+  }
+
   // working to create an exhaustive test of the format for this one. including all convertedTypes
   // will not be supporting interval for Beta as of current schedule
   // Types left out:

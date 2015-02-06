@@ -131,7 +131,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-column</artifactId>
-      <version>1.5.1-drill-r5</version>
+      <version>1.5.1-drill-r6</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
