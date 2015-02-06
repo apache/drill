@@ -20,11 +20,12 @@ package org.apache.drill.jdbc.test;
 
 
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
+import org.apache.drill.jdbc.JdbcTest;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestHiveScalarUDFs {
+public class TestHiveScalarUDFs extends JdbcTest {
 
   @BeforeClass
   public static void generateHive() throws Exception{

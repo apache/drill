@@ -75,7 +75,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
 
   @Test
   public void testShowTables() throws Exception{
-    JdbcAssert.withFull("hive_test.default")
+    JdbcAssert.withFull("hive_test.`default`")
         .sql("SHOW TABLES")
         .returnsSet(ImmutableSet.of(
             "TABLE_SCHEMA=hive_test.default; TABLE_NAME=readtest",

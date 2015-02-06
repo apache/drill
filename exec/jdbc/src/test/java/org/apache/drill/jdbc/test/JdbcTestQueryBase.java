@@ -48,10 +48,10 @@ public class JdbcTestQueryBase extends JdbcTest {
 
   protected void testQuery(String sql) throws Exception{
     boolean success = false;
-    try (Connection c = DriverManager.getConnection("jdbc:drill:zk=local", null);) {
+    try (Connection conn = connect("jdbc:drill:zk=local")) {
       for (int x = 0; x < 1; x++) {
         Stopwatch watch = new Stopwatch().start();
-        Statement s = c.createStatement();
+        Statement s = conn.createStatement();
         ResultSet r = s.executeQuery(sql);
         System.out.println(String.format("QueryId: %s", ((DrillResultSet) r).getQueryId()));
         boolean first = true;

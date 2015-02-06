@@ -18,7 +18,6 @@
 package org.apache.drill.jdbc.test;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -36,6 +35,9 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.util.Hook;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.jdbc.ConnectionFactory;
+import org.apache.drill.jdbc.ConnectionInfo;
 import org.junit.Assert;
 
 import com.google.common.base.Function;
@@ -48,21 +50,38 @@ import com.google.common.collect.Iterables;
  * Fluent interface for writing JDBC and query-planning tests.
  */
 public class JdbcAssert {
-  public static ModelAndSchema withModel(String model, String schema) {
-    final Properties info = new Properties();
-    info.setProperty("schema", schema);
-    info.setProperty("model", "inline:" + model);
-    return new ModelAndSchema(info);
+
+  private static ConnectionFactory factory = null;
+
+  public static void setFactory(ConnectionFactory factory) {
+    JdbcAssert.factory = factory;
   }
 
-  public static ModelAndSchema withFull(String schema) {
-    final Properties info = new Properties();
+  /**
+   * Returns default bag of properties that is passed to JDBC connection.
+   * By default, includes an option to turn off the web server.
+   */
+  public static Properties getDefaultProperties() {
+    final Properties properties = new Properties();
+    properties.setProperty(ExecConstants.HTTP_ENABLE, "false");
+    return properties;
+  }
+
+  public static ModelAndSchema withModel(final String model, final String schema) {
+    final Properties info = getDefaultProperties();
     info.setProperty("schema", schema);
-    return new ModelAndSchema(info);
+    info.setProperty("model", "inline:" + model);
+    return new ModelAndSchema(info, factory);
+  }
+
+  public static ModelAndSchema withFull(final String schema) {
+    final Properties info = getDefaultProperties();
+    info.setProperty("schema", schema);
+    return new ModelAndSchema(info, factory);
   }
 
   public static ModelAndSchema withNoDefaultSchema() {
-    return new ModelAndSchema();
+    return new ModelAndSchema(getDefaultProperties(), factory);
   }
 
   static String toString(ResultSet resultSet, int expectedRecordCount) throws SQLException {
@@ -135,30 +154,25 @@ public class JdbcAssert {
 
   public static class ModelAndSchema {
     private final Properties info;
-    private final ConnectionFactory connectionFactory;
+    private final ConnectionFactoryAdapter adapter;
 
-    public ModelAndSchema() {
-      this(null);
-    }
-
-    public ModelAndSchema(Properties info) {
+    public ModelAndSchema(final Properties info, final ConnectionFactory factory) {
       this.info = info;
-      this.connectionFactory = new ConnectionFactory() {
+      this.adapter = new ConnectionFactoryAdapter() {
         public Connection createConnection() throws Exception {
-          Class.forName("org.apache.drill.jdbc.Driver");
-          return DriverManager.getConnection("jdbc:drill:zk=local", ModelAndSchema.this.info);
+          return factory.createConnection(new ConnectionInfo("jdbc:drill:zk=local", ModelAndSchema.this.info));
         }
       };
     }
 
     public TestDataConnection sql(String sql) {
-      return new TestDataConnection(connectionFactory, sql);
+      return new TestDataConnection(adapter, sql);
     }
 
     public <T> T withConnection(Function<Connection, T> function) throws Exception {
       Connection connection = null;
       try {
-        connection = connectionFactory.createConnection();
+        connection = adapter.createConnection();
         return function.apply(connection);
       } finally {
         if (connection != null) {
@@ -169,11 +183,11 @@ public class JdbcAssert {
   }
 
   public static class TestDataConnection {
-    private final ConnectionFactory connectionFactory;
+    private final ConnectionFactoryAdapter adapter;
     private final String sql;
 
-    TestDataConnection(ConnectionFactory connectionFactory, String sql) {
-      this.connectionFactory = connectionFactory;
+    TestDataConnection(ConnectionFactoryAdapter adapter, String sql) {
+      this.adapter = adapter;
       this.sql = sql;
     }
 
@@ -184,7 +198,7 @@ public class JdbcAssert {
       Connection connection = null;
       Statement statement = null;
       try {
-        connection = connectionFactory.createConnection();
+        connection = adapter.createConnection();
         statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
         expected = expected.trim();
@@ -209,7 +223,7 @@ public class JdbcAssert {
       Connection connection = null;
       Statement statement = null;
       try {
-        connection = connectionFactory.createConnection();
+        connection = adapter.createConnection();
         statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
         Set<String> result = JdbcAssert.toStringSet(resultSet);
@@ -238,7 +252,7 @@ public class JdbcAssert {
       Connection connection = null;
       Statement statement = null;
       try {
-        connection = connectionFactory.createConnection();
+        connection = adapter.createConnection();
         statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
         Assert.assertEquals(unsortedList(Arrays.asList(expecteds)), unsortedList(JdbcAssert.toStrings(resultSet)));
@@ -260,7 +274,7 @@ public class JdbcAssert {
       Connection connection = null;
       Statement statement = null;
       try {
-        connection = connectionFactory.createConnection();
+        connection = adapter.createConnection();
         statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
         System.out.println(JdbcAssert.toString(resultSet, recordCount));
@@ -296,7 +310,7 @@ public class JdbcAssert {
         }
       });
       try {
-        connection = connectionFactory.createConnection();
+        connection = adapter.createConnection();
         statement = connection.prepareStatement(sql);
         statement.close();
         final String plan = plan0[0].trim();
@@ -332,9 +346,10 @@ public class JdbcAssert {
     }
   }
 
-  private static interface ConnectionFactory {
+  private static interface ConnectionFactoryAdapter {
     Connection createConnection() throws Exception;
   }
+
 }
 
 // End JdbcAssert.java

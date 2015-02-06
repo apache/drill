@@ -52,7 +52,7 @@ public class TestHiveStorage extends JdbcTestQueryBase{
     testQuery("SELECT * FROM hive_test.`default`.readtest");
 
     /*
-    JdbcAssert.withFull("hive_test.default")
+    JdbcAssert.withFull("hive_test.`default`")
         .sql("SELECT * FROM readtest")
         .returns(
             "binary_field=[B@7005f08f; " + // know issues with binary display
@@ -86,7 +86,7 @@ public class TestHiveStorage extends JdbcTestQueryBase{
 
   @Test
   public void testOrderByOnHiveTable() throws Exception {
-    JdbcAssert.withFull("hive_test.default")
+    JdbcAssert.withFull("hive_test.`default`")
         .sql("SELECT * FROM kv ORDER BY `value` DESC")
         .returns(
             "key=5; value= key_5\n" +

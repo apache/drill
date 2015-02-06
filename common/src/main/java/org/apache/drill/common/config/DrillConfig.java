@@ -96,9 +96,9 @@ public final class DrillConfig extends NestedConfig{
   }
 
   /**
-   * Creates a {{@link DrillConfig configuration}} disabling server specific configuration options.
+   * Creates a {@link DrillConfig configuration} disabling server specific configuration options.
    *
-   * @return {{@link DrillConfig}} instance
+   * @return {@link DrillConfig} instance
    */
   public static DrillConfig forClient() {
     return create(null, false);
