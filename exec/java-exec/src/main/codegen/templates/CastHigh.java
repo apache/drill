@@ -49,7 +49,7 @@ public class CastHighFunctions {
       @Output ${type.to}Holder out;
     </#if>
 
-    public void setup(RecordBatch incoming) {}
+    public void setup() {}
 
     public void eval() {
       <#if type.value >

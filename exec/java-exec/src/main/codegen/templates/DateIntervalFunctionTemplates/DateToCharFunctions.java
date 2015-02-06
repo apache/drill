@@ -53,7 +53,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
     @Workspace org.joda.time.format.DateTimeFormatter format;
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
         temp = new org.joda.time.MutableDateTime(0, org.joda.time.DateTimeZone.UTC);
         buffer = buffer.reallocIfNeeded(100);
 

@@ -25,7 +25,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @FunctionTemplate(name = "convert_fromINT_HADOOPV", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class IntVIntConvertFrom implements DrillSimpleFunc {
@@ -34,7 +33,7 @@ public class IntVIntConvertFrom implements DrillSimpleFunc {
   @Output IntHolder out;
 
   @Override
-  public void setup(RecordBatch incoming) { }
+  public void setup() { }
 
   @Override
   public void eval() {

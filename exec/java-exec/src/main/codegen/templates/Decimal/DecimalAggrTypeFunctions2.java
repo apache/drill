@@ -65,7 +65,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace IntHolder outputScale;
   @Output ${type.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
     buffer.reallocIfNeeded(${type.outputType}Holder.WIDTH);
     value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;

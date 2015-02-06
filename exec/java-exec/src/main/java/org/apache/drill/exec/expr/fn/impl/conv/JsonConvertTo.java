@@ -29,7 +29,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 public class JsonConvertTo {
@@ -45,7 +44,7 @@ public class JsonConvertTo {
     @Output VarBinaryHolder out;
     @Inject DrillBuf buffer;
 
-    public void setup(RecordBatch incoming){
+    public void setup(){
     }
 
     public void eval(){

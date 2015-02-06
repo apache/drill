@@ -29,7 +29,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @FunctionTemplate(name = "convert_toINT_BE", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class IntBEConvertTo implements DrillSimpleFunc {
@@ -40,7 +39,7 @@ public class IntBEConvertTo implements DrillSimpleFunc {
 
 
   @Override
-  public void setup(RecordBatch incoming) {
+  public void setup() {
     buffer = buffer.reallocIfNeeded(4);
   }
 

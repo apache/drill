@@ -26,7 +26,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.TinyIntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @FunctionTemplate(names = {"convert_fromTINYINT", "convert_fromTINYINT_BE"},
     scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
@@ -36,7 +35,7 @@ public class TinyIntConvertFrom implements DrillSimpleFunc {
   @Output TinyIntHolder out;
 
   @Override
-  public void setup(RecordBatch incoming) { }
+  public void setup() { }
 
   @Override
   public void eval() {

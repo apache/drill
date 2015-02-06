@@ -55,7 +55,6 @@ import org.apache.drill.exec.expr.holders.UInt4Holder;
 import org.apache.drill.exec.expr.holders.NullableUInt4Holder;
 import org.apache.drill.exec.expr.holders.UInt8Holder;
 import org.apache.drill.exec.expr.holders.NullableUInt8Holder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 
@@ -75,7 +74,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace ${type.outputType}Holder inter;
   @Output ${type.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   inter = new ${type.outputType}Holder();
 
     // Initialize the workspace variables

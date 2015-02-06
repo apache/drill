@@ -52,7 +52,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {
@@ -125,7 +125,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {
@@ -169,7 +169,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Inject DrillBuf buffer;
     @Output ${type.to}Holder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
       int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
       buffer = buffer.reallocIfNeeded(size);
     }

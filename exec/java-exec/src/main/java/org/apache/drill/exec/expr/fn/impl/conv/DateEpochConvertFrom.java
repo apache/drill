@@ -26,7 +26,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @FunctionTemplate(name = "convert_fromDATE_EPOCH", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class DateEpochConvertFrom implements DrillSimpleFunc {
@@ -35,7 +34,7 @@ public class DateEpochConvertFrom implements DrillSimpleFunc {
   @Output DateHolder out;
 
   @Override
-  public void setup(RecordBatch incoming) { }
+  public void setup() { }
 
   @Override
   public void eval() {

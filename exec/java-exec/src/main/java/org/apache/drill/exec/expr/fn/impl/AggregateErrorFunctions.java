@@ -25,7 +25,6 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 public class AggregateErrorFunctions {
 
@@ -36,7 +35,7 @@ public class AggregateErrorFunctions {
     @Workspace BigIntHolder value;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
       if (true) {
         throw new RuntimeException("Only COUNT aggregate function supported for Boolean type");
       }
@@ -63,7 +62,7 @@ public class AggregateErrorFunctions {
     @Workspace BigIntHolder value;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
       if (true) {
         throw new RuntimeException("Only COUNT aggregate function supported for Boolean type");
       }

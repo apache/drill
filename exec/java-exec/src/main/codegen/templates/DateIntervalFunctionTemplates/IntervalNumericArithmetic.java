@@ -96,7 +96,7 @@ public class ${intervaltype}${numerictype}Functions {
     @Param ${numerictype}Holder right;
     @Output IntervalHolder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
 
         public void eval() {
@@ -115,7 +115,7 @@ public class ${intervaltype}${numerictype}Functions {
     @Param ${intervaltype}Holder left;
     @Output IntervalHolder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
 
         public void eval() {
@@ -134,7 +134,7 @@ public class ${intervaltype}${numerictype}Functions {
     @Param ${numerictype}Holder right;
     @Output IntervalHolder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
 
         public void eval() {

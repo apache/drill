@@ -26,7 +26,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.UInt8Holder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @FunctionTemplate(name = "convert_fromUINT8", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class UInt8ConvertFrom implements DrillSimpleFunc {
@@ -35,7 +34,7 @@ public class UInt8ConvertFrom implements DrillSimpleFunc {
   @Output UInt8Holder out;
 
   @Override
-  public void setup(RecordBatch incoming) { }
+  public void setup() { }
 
   @Override
   public void eval() {

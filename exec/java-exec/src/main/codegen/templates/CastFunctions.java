@@ -45,7 +45,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
   @Param ${type.from}Holder in;
   @Output ${type.to}Holder out;
 
-  public void setup(RecordBatch incoming) {}
+  public void setup() {}
 
   public void eval() {
     <#if (type.from.startsWith("Float") && type.to.endsWith("Int"))>

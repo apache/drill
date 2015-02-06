@@ -57,7 +57,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   @Inject DrillBuf buffer;
   @Output ${type.to}Holder out;
 
-  public void setup(RecordBatch incoming) {
+  public void setup() {
     buffer = buffer.reallocIfNeeded((int) len.value);
   }
 

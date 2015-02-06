@@ -25,7 +25,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 /**
  * Function templates for Bit/BOOLEAN functions other than comparison
@@ -44,7 +43,7 @@ public class BitFunctions {
     @Param BitHolder right;
     @Output BitHolder out;
 
-    public void setup(RecordBatch incoming) {}
+    public void setup() {}
 
     public void eval() {
       out.value = left.value | right.value;
@@ -60,7 +59,7 @@ public class BitFunctions {
     @Param BitHolder right;
     @Output BitHolder out;
 
-    public void setup(RecordBatch incoming) {}
+    public void setup() {}
 
     public void eval() {
       out.value = left.value & right.value;
@@ -77,7 +76,7 @@ public class BitFunctions {
     @Param IntHolder right;
     @Output IntHolder out;
 
-    public void setup(RecordBatch incoming) {}
+    public void setup() {}
 
     public void eval() {
       out.value = left.value ^ right.value;

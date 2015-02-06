@@ -50,7 +50,7 @@ public static class G${type}Difference implements DrillSimpleFunc {
     @Param  ${type}Holder right;
     @Output IntervalDayHolder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
     }
 
     public void eval() {

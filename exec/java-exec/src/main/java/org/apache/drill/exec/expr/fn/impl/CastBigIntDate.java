@@ -24,7 +24,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"castDATE", "to_date"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
@@ -36,7 +35,7 @@ public class CastBigIntDate implements DrillSimpleFunc {
   DateHolder out;
 
   @Override
-  public void setup(RecordBatch incoming) {
+  public void setup() {
   }
 
   @Override

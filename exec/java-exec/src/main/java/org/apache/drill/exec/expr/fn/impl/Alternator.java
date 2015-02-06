@@ -23,7 +23,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 public class Alternator {
 
@@ -32,7 +31,7 @@ public class Alternator {
     @Workspace int val;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
       val = 0;
     }
 
@@ -52,7 +51,7 @@ public class Alternator {
     @Workspace int val;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
       val = 0;
     }
 

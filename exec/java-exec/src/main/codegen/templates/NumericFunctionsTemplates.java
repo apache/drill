@@ -81,7 +81,7 @@ public static class ${type.inputType}${numericFunc.className} implements DrillSi
   @Workspace java.util.regex.Matcher matcher;
   </#if>
 
- public void setup(RecordBatch b) {
+ public void setup() {
    <#if type.intype != "numeric">
    pattern = java.util.regex.Pattern.compile("[-+]?\\d+(\\.\\d+)?");
    matcher = pattern.matcher("");

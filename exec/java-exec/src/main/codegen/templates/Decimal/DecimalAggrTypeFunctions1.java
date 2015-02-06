@@ -74,7 +74,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   </#if>
   @Output ${type.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
 	<#if aggrtype.funcName == "count">
   	value = new ${type.runningType}Holder();
     value.value = 0;

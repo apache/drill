@@ -32,7 +32,6 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"castVAR16CHAR", "to_var16char", "to_string"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
@@ -44,7 +43,7 @@ public class CastVarCharVar16Char implements DrillSimpleFunc {
   @Inject DrillBuf buffer;
 
   @Override
-  public void setup(RecordBatch incoming) {
+  public void setup() {
     charset = java.nio.charset.Charset.forName("UTF-16");
   }
 

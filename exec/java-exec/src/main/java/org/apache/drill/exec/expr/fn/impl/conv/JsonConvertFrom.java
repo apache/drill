@@ -32,7 +32,6 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 public class JsonConvertFrom {
@@ -50,7 +49,7 @@ public class JsonConvertFrom {
 
     @Output ComplexWriter writer;
 
-    public void setup(RecordBatch incoming){
+    public void setup(){
       jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false);
     }
 
@@ -76,7 +75,7 @@ public class JsonConvertFrom {
 
     @Output ComplexWriter writer;
 
-    public void setup(RecordBatch incoming){
+    public void setup(){
       jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false);
     }
 

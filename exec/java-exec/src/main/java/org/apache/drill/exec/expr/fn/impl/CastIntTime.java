@@ -24,7 +24,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"castTIME", "to_time"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
@@ -36,7 +35,7 @@ public class CastIntTime implements DrillSimpleFunc {
     TimeHolder out;
 
     @Override
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     @Override

@@ -30,7 +30,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @FunctionTemplate(name = "convert_toBIGINT", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class BigIntConvertTo implements DrillSimpleFunc {
@@ -41,7 +40,7 @@ public class BigIntConvertTo implements DrillSimpleFunc {
 
 
   @Override
-  public void setup(RecordBatch incoming) {
+  public void setup() {
     buffer = buffer.reallocIfNeeded(8);
   }
 

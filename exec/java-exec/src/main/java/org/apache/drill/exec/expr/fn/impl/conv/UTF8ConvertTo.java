@@ -26,7 +26,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @FunctionTemplate(name = "convert_toUTF8", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class UTF8ConvertTo implements DrillSimpleFunc {
@@ -35,7 +34,7 @@ public class UTF8ConvertTo implements DrillSimpleFunc {
   @Output VarBinaryHolder out;
 
   @Override
-  public void setup(RecordBatch incoming) { }
+  public void setup() { }
 
   @Override
   public void eval() {

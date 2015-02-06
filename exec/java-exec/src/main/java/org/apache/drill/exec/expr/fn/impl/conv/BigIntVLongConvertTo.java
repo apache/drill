@@ -29,7 +29,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @FunctionTemplate(name = "convert_toBIGINT_HADOOPV", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class BigIntVLongConvertTo implements DrillSimpleFunc {
@@ -40,7 +39,7 @@ public class BigIntVLongConvertTo implements DrillSimpleFunc {
 
 
   @Override
-  public void setup(RecordBatch incoming) {
+  public void setup() {
     /* Hadoop Variable length integer (represented in the same way as a long)
      * occupies between 1-9 bytes.
      */

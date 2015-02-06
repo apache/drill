@@ -40,7 +40,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 
@@ -55,7 +54,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace ${type.runningType}Holder value;
   @Output ${type.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
 	value = new ${type.runningType}Holder();
     <#if type.runningType == "Interval">
     value.months = ${type.initialValue};

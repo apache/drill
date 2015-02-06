@@ -51,7 +51,7 @@ public class ${intervaltype}Functions {
     @Param ${intervaltype}Holder right;
     @Output ${intervaltype}Holder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
 
         public void eval() {
@@ -75,7 +75,7 @@ public class ${intervaltype}Functions {
     @Param ${intervaltype}Holder right;
     @Output ${intervaltype}Holder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
 
         public void eval() {
@@ -97,7 +97,7 @@ public class ${intervaltype}Functions {
     @Param ${intervaltype}Holder left;
     @Output ${intervaltype}Holder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
 
         public void eval() {

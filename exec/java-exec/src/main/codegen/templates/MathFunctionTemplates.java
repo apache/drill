@@ -58,7 +58,7 @@ public class ${inputType.className}Functions {
     @Param ${type.input2}Holder in2;
     @Output ${type.outputType}Holder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
     }
 
     public void eval() {

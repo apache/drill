@@ -31,7 +31,6 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 public class BooleanAggrFunctions {
@@ -45,7 +44,7 @@ public static class BitBooleanOr implements DrillAggFunc{
   @Workspace BitHolder inter;
   @Output BitHolder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   inter = new BitHolder();
 
     // Initialize the workspace variables
@@ -77,7 +76,7 @@ public static class NullableBitBooleanOr implements DrillAggFunc{
   @Workspace BitHolder inter;
   @Output BitHolder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   inter = new BitHolder();
 
     // Initialize the workspace variables
@@ -116,7 +115,7 @@ public static class BitBooleanAnd implements DrillAggFunc{
   @Workspace BitHolder inter;
   @Output BitHolder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   inter = new BitHolder();
 
     // Initialize the workspace variables
@@ -149,7 +148,7 @@ public static class NullableBitBooleanAnd implements DrillAggFunc{
   @Workspace BitHolder inter;
   @Output BitHolder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   inter = new BitHolder();
 
     // Initialize the workspace variables

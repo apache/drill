@@ -41,7 +41,7 @@ public class ${className} {
     @Param ${mode.prefix}${minor.class}Holder input;
     @Output BitHolder out;
 
-    public void setup(RecordBatch incoming) { }
+    public void setup() { }
 
     public void eval() {
     <#if mode.name == "Optional">
@@ -58,7 +58,7 @@ public class ${className} {
     @Param ${mode.prefix}${minor.class}Holder input;
     @Output BitHolder out;
 
-    public void setup(RecordBatch incoming) { }
+    public void setup() { }
 
     public void eval() {
     <#if mode.name == "Optional">

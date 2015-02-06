@@ -27,7 +27,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 import javax.inject.Inject;
 
@@ -40,7 +39,7 @@ public class DoubleBEConvertTo implements DrillSimpleFunc {
 
 
   @Override
-  public void setup(RecordBatch incoming) {
+  public void setup() {
     buffer = buffer.reallocIfNeeded(8);
   }
 

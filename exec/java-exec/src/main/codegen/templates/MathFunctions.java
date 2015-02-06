@@ -62,7 +62,7 @@ public class GMathFunctions{
     @Param ${type.input}Holder in;
     @Output ${type.outputType}Holder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
     }
 
     public void eval() {
@@ -97,7 +97,7 @@ public class GMathFunctions{
     @Param ${type.input}Holder input2;
     @Output ${type.outputType}Holder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
     }
 
     public void eval() {
@@ -128,7 +128,7 @@ public class GMathFunctions{
     @Param IntHolder input2;
     @Output Float8Holder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
     }
 
     public void eval() {
@@ -198,7 +198,7 @@ public static class ${func.className}${type.input} implements DrillSimpleFunc {
   @Param ${type.input}Holder in;
   @Output ${func.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   }
 
   public void eval() {
@@ -228,7 +228,7 @@ public static class ${func.className}${type.input} implements DrillSimpleFunc {
   @Param ${type.input}Holder val;
   @Output ${func.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   }
 
   public void eval() {
@@ -297,7 +297,7 @@ public class TrigoMathFunctions{
     @Param ${type.input}Holder in;
     @Output ${func.outputType}Holder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
     }
 
     public void eval() {

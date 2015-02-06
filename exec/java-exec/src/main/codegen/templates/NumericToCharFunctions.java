@@ -55,7 +55,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
     @Workspace java.text.NumberFormat outputFormat;
     @Output VarCharHolder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
         buffer = buffer.reallocIfNeeded(100);
         byte[] buf = new byte[right.end - right.start];
         right.buffer.getBytes(right.start, buf, 0, right.end - right.start);

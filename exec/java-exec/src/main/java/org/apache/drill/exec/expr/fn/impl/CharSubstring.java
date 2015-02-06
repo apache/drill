@@ -23,7 +23,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 /**
  * Evaluate a substring expression for a given UTF-8 value; specifying the start
@@ -56,7 +55,7 @@ public class CharSubstring implements DrillSimpleFunc {
   @Output VarCharHolder out;
 
   @Override
-  public void setup(RecordBatch incoming) { }
+  public void setup() { }
 
   @Override
   public void eval() {

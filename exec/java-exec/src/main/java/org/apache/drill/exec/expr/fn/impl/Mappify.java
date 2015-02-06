@@ -22,7 +22,6 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
@@ -57,7 +56,7 @@ public class Mappify {
     @Inject DrillBuf buffer;
     @Output ComplexWriter writer;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {

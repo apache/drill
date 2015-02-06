@@ -49,7 +49,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
   @Param BigIntHolder length;
   @Output ${type.to}Holder out;
 
-  public void setup(RecordBatch incoming) {
+  public void setup() {
   }
 
   public void eval() {

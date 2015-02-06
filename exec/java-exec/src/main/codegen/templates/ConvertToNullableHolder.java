@@ -42,7 +42,7 @@ public class ${className} implements DrillSimpleFunc {
   @Param ${minor.class}Holder input;
   @Output Nullable${minor.class}Holder output;
 
-  public void setup(RecordBatch incoming) { }
+  public void setup() { }
 
   public void eval() {
     output.isSet = 1;

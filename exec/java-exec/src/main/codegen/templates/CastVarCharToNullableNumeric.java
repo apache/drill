@@ -51,7 +51,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
   @Param ${type.from}Holder in;
   @Output Nullable${type.to}Holder out;
 
-  public void setup(RecordBatch incoming) {}
+  public void setup() {}
 
   public void eval() {
   <#if type.to == "Float4" || type.to == "Float8">

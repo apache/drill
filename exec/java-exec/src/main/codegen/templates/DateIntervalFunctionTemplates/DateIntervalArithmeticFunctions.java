@@ -94,7 +94,7 @@ public class ${datetype}${intervaltype}Functions {
     @Output ${datetype}Holder out;
     </#if>
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
             <#if datetype == "TimeStampTZ">
             temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
             <#else>
@@ -120,7 +120,7 @@ public class ${datetype}${intervaltype}Functions {
     <#else>
     @Output ${datetype}Holder out;
     </#if>
-        public void setup(RecordBatch incoming) {
+        public void setup() {
             <#if datetype == "TimeStampTZ">
             temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
             <#else>
@@ -142,7 +142,7 @@ public class ${datetype}${intervaltype}Functions {
     @Workspace org.joda.time.MutableDateTime temp;
     @Output ${datetype}Holder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
             <#if datetype == "TimeStampTZ">
             temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
             <#else>
@@ -200,7 +200,7 @@ public class ${datetype}${intervaltype}Functions {
     @Param ${intervaltype}Holder right;
     @Output ${datetype}Holder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
 
         public void eval() {
@@ -215,7 +215,7 @@ public class ${datetype}${intervaltype}Functions {
     @Param ${datetype}Holder left;
     @Output ${datetype}Holder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
         public void eval() {
             <@timeIntervalArithmeticBlock left="left" right="right" temp = "temp" op = "+" output="out.value" intervaltype=intervaltype />
@@ -229,7 +229,7 @@ public class ${datetype}${intervaltype}Functions {
     @Param ${intervaltype}Holder right;
     @Output ${datetype}Holder out;
 
-        public void setup(RecordBatch incoming) {
+        public void setup() {
         }
 
         public void eval() {

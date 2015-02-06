@@ -28,7 +28,6 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.record.RecordBatch;
 
 public class GeneratorFunctions extends ExecTest {
 
@@ -42,7 +41,7 @@ public class GeneratorFunctions extends ExecTest {
     @Workspace long current;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
       current = 0;
     }
 
@@ -58,7 +57,7 @@ public class GeneratorFunctions extends ExecTest {
     @Param BigIntHolder range;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {
@@ -74,7 +73,7 @@ public class GeneratorFunctions extends ExecTest {
     @Param BigIntHolder max;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {
@@ -90,7 +89,7 @@ public class GeneratorFunctions extends ExecTest {
     @Output
     Float8Holder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {
@@ -106,7 +105,7 @@ public class GeneratorFunctions extends ExecTest {
     @Param BigIntHolder max;
     @Output Float8Holder out;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {

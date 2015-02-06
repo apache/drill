@@ -48,7 +48,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   @Param ${type.from}Holder in;
   @Output ${type.to}Holder out;
 
-  public void setup(RecordBatch incoming) {
+  public void setup() {
   }
 
   public void eval() {

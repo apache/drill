@@ -24,7 +24,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "castTIMESTAMP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
@@ -36,7 +35,7 @@ public class CastBigIntTimeStamp implements DrillSimpleFunc {
   TimeStampHolder out;
 
   @Override
-  public void setup(RecordBatch incoming) {
+  public void setup() {
   }
 
   @Override

@@ -41,7 +41,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 
@@ -60,7 +59,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace ${type.countRunningType}Holder count;
   @Output ${type.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   	sum = new ${type.sumRunningType}Holder();
     count = new ${type.countRunningType}Holder();
     sum.value = 0;

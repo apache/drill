@@ -40,7 +40,6 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 
@@ -64,7 +63,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace BigIntHolder nonNullCount;
   @Output ${type.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
   	avg = new ${type.movingAverageType}Holder();
     dev = new ${type.movingDeviationType}Holder();
     count = new ${type.countRunningType}Holder();

@@ -29,7 +29,6 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 public class SimpleCastFunctions {
   public static final byte[] TRUE = {'t','r','u','e'};
@@ -42,7 +41,7 @@ public class SimpleCastFunctions {
     @Param VarCharHolder in;
     @Output BitHolder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
 
     }
 
@@ -68,7 +67,7 @@ public class SimpleCastFunctions {
     @Output VarCharHolder out;
     @Inject DrillBuf buffer;
 
-    public void setup(RecordBatch b) {}
+    public void setup() {}
 
     public void eval() {
       byte[] outB = in.value == 1 ? org.apache.drill.exec.expr.fn.impl.SimpleCastFunctions.TRUE : org.apache.drill.exec.expr.fn.impl.SimpleCastFunctions.FALSE;

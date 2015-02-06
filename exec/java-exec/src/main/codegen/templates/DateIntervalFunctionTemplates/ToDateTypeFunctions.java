@@ -46,7 +46,7 @@ public class GTo${type} implements DrillSimpleFunc {
     @Workspace org.joda.time.format.DateTimeFormatter format;
     @Output ${type}Holder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
         // Get the desired output format
         byte[] buf = new byte[right.end - right.start];
         right.buffer.getBytes(right.start, buf, 0, right.end - right.start);

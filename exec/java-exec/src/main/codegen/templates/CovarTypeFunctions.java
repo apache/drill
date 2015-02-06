@@ -88,7 +88,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace ${type.countRunningType}Holder count;
   @Output ${type.outputType}Holder out;
 
-  public void setup(RecordBatch b) {
+  public void setup() {
     xMean = new ${type.movingAverageType}Holder();
     yMean = new ${type.movingAverageType}Holder();
     xyMean = new ${type.movingDeviationType}Holder();

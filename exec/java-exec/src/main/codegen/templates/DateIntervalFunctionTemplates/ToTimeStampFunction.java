@@ -49,7 +49,7 @@ public class G${numerics}ToTimeStamp implements DrillSimpleFunc {
     </#if>
     @Output TimeStampHolder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
       <#if numerics.startsWith("Decimal")>
       millisConstant = java.math.BigInteger.valueOf(1000);
       </#if>

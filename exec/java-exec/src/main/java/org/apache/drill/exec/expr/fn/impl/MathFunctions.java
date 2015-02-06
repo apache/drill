@@ -29,7 +29,6 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.record.RecordBatch;
 
 public class MathFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathFunctions.class);
@@ -42,7 +41,7 @@ public class MathFunctions{
     @Param BigIntHolder input;
     @Output BigIntHolder out;
 
-    public void setup(RecordBatch b){}
+    public void setup(){}
 
     public void eval(){
       out.value = -input.value;
@@ -58,7 +57,7 @@ public class MathFunctions{
     @Param Float8Holder b;
     @Output  Float8Holder out;
 
-    public void setup(RecordBatch b){}
+    public void setup(){}
 
     public void eval(){
       out.value = java.lang.Math.pow(a.value, b.value);
@@ -71,7 +70,7 @@ public class MathFunctions{
   public static class Random implements DrillSimpleFunc{
     @Output  Float8Holder out;
 
-    public void setup(RecordBatch b){}
+    public void setup(){}
 
     public void eval(){
       out.value = java.lang.Math.random();
@@ -87,7 +86,7 @@ public class MathFunctions{
     @Workspace int decimalDigits;
     @Output Float8Holder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
       byte[] buf = new byte[right.end - right.start];
       right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
       inputFormat = new DecimalFormat(new String(buf));
@@ -115,7 +114,7 @@ public class MathFunctions{
 
     @Output Float8Holder out;
 
-    public void setup(RecordBatch b) {
+    public void setup() {
     }
 
     public void eval() {

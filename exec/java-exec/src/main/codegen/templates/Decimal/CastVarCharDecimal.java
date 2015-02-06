@@ -66,7 +66,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
     @Output Nullable${type.to}Holder out;
     </#if>
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {
@@ -240,7 +240,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
     @Output Nullable${type.to}Holder out;
     </#if>
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
         int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize);
         buffer = buffer.reallocIfNeeded(size);
     }

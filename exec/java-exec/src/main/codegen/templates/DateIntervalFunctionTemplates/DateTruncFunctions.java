@@ -50,7 +50,7 @@ public static class G${type}DateTrunc implements DrillSimpleFunc {
     @Output ${type}Holder out;
     @Workspace org.joda.time.MutableDateTime dateTime;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
       dateTime = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
     }
 

@@ -47,7 +47,7 @@ public class ${className} {
     </#if>
     @Workspace org.joda.time.MutableDateTime dateTime;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
       dateTime = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
     }
 
@@ -87,7 +87,7 @@ public class ${className} {
     @Output BigIntHolder out;
     </#if>
 
-    public void setup(RecordBatch incoming) { }
+    public void setup() { }
 
     public void eval() {
   <#if fromUnit == "Interval">
