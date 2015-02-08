@@ -65,12 +65,12 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   private static final long ALLOCATOR_INITIAL_RESERVATION = 1 * 1024 * 1024;
   private static final long ALLOCATOR_MAX_RESERVATION = 20L * 1000 * 1000 * 1000;
+  private static final int VARIABLE_WIDTH_VALUE_SIZE = 50;
 
   private static final boolean EXTRA_DEBUG_1 = false;
   private static final boolean EXTRA_DEBUG_2 = false;
   private static final String TOO_BIG_ERROR =
       "Couldn't add value to an empty batch.  This likely means that a single value is too long for a varlen field.";
-  private boolean first = true;
   private boolean newSchema = false;
   private int underlyingIndex = 0;
   private int currentIndex = 0;
@@ -370,9 +370,6 @@ public abstract class HashAggTemplate implements HashAggregator {
         }
       }
     } finally {
-      if (first) {
-        first = !first;
-      }
     }
   }
 
@@ -386,11 +383,13 @@ public abstract class HashAggTemplate implements HashAggregator {
     while (outgoingIter.hasNext()) {
       ValueVector vv = outgoingIter.next().getValueVector();
       MajorType type = vv.getField().getType();
-      if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
-        vv.allocateNew();
-      } else {
-        AllocationHelper.allocate(vv, records, 1);
-      }
+
+      /*
+       * In build schema we use the allocation model that specifies exact record count
+       * so we need to stick with that allocation model until DRILL-2211 is resolved. Using
+       * 50 as the average bytes per value as is used in HashTable.
+       */
+      AllocationHelper.allocatePrecomputedChildCount(vv, records, VARIABLE_WIDTH_VALUE_SIZE, 0);
     }
   }
 
@@ -426,11 +425,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   private final AggOutcome setOkAndReturn() {
-    if (first) {
-      this.outcome = IterOutcome.OK_NEW_SCHEMA;
-    } else {
-      this.outcome = IterOutcome.OK;
-    }
+    this.outcome = IterOutcome.OK;
     for (VectorWrapper<?> v : outgoing) {
       v.getValueVector().getMutator().setValueCount(outputCount);
     }
@@ -471,7 +466,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     // get the number of records in the batch holder that are pending output
     int numPendingOutput = batchHolders.get(outBatchIndex).getNumPendingOutput();
 
-    if (!first && numPendingOutput == 0) {
+    if (numPendingOutput == 0) {
       this.outcome = IterOutcome.NONE;
       return outcome;
     }
@@ -493,11 +488,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     outputCount += numOutputRecords;
 
-    if (first) {
-      this.outcome = IterOutcome.OK_NEW_SCHEMA;
-    } else {
-      this.outcome = IterOutcome.OK;
-    }
+    this.outcome = IterOutcome.OK;
 
     logger.debug("HashAggregate: Output current batch index {} with {} records.", outBatchIndex, numOutputRecords);
 

@@ -49,6 +49,7 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.sun.codemodel.JExpr;
@@ -101,47 +102,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       state = BatchState.DONE;
     }
     for (VectorWrapper w : container) {
-      w.getValueVector().allocateNew();
+      AllocationHelper.allocatePrecomputedChildCount(w.getValueVector(), 0, 0, 0);
     }
   }
 
   @Override
   public IterOutcome innerNext() {
-    // this is only called on the first batch. Beyond this, the aggregator manages batches.
-    if (aggregator == null || state == BatchState.FIRST) {
-      if (aggregator != null) {
-        aggregator.cleanup();
-      }
-      IterOutcome outcome;
-      if (state == BatchState.FIRST) {
-        state = BatchState.NOT_FIRST;
-        outcome = IterOutcome.OK;
-      } else {
-        outcome = next(incoming);
-      }
-      if (outcome == IterOutcome.OK) {
-        outcome = IterOutcome.OK_NEW_SCHEMA;
-      }
-      logger.debug("Next outcome of {}", outcome);
-      switch (outcome) {
-      case NONE:
-        //        throw new UnsupportedOperationException("Received NONE on first batch");
-        return outcome;
-      case NOT_YET:
-      case STOP:
-        return outcome;
-      case OK_NEW_SCHEMA:
-        if (!createAggregator()) {
-          state = BatchState.DONE;
-          return IterOutcome.STOP;
-        }
-        break;
-      case OK:
-        break;
-      default:
-        throw new IllegalStateException(String.format("unknown outcome %s", outcome));
-      }
-    }
 
     if (aggregator.allFlushed()) {
       return IterOutcome.NONE;
