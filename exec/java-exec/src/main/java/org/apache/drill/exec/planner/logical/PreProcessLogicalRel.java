@@ -20,7 +20,11 @@ package org.apache.drill.exec.planner.logical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
+import org.eigenbase.rel.AggregateCall;
+import org.eigenbase.rel.AggregateRel;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelShuttleImpl;
@@ -31,6 +35,7 @@ import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.fun.SqlSingleValueAggFunction;
 import org.eigenbase.util.NlsString;
 
 /**
@@ -41,20 +46,48 @@ import org.eigenbase.util.NlsString;
  * With the actual method name we can find out if the function has a complex
  * output type and we will fire/ ignore certain rules (merge project rule) based on this fact.
  */
-public class RewriteProjectRel extends RelShuttleImpl {
+public class PreProcessLogicalRel extends RelShuttleImpl {
+  private RelDataTypeFactory factory;
+  private DrillOperatorTable table;
+  private UnsupportedOperatorCollector unsupportedOperatorCollector;
+  private static PreProcessLogicalRel INSTANCE = null;
 
-  RelDataTypeFactory factory;
-  DrillOperatorTable table;
+  public static void initialize(RelDataTypeFactory factory, DrillOperatorTable table) {
+    if(INSTANCE == null) {
+      INSTANCE = new PreProcessLogicalRel(factory, table);
+    }
+  }
 
-  public RewriteProjectRel(RelDataTypeFactory factory, DrillOperatorTable table) {
+  public static PreProcessLogicalRel getVisitor() {
+    if(INSTANCE == null) {
+      throw new IllegalStateException("RewriteProjectRel is not initialized properly");
+    }
+
+    return INSTANCE;
+  }
+
+  private PreProcessLogicalRel(RelDataTypeFactory factory, DrillOperatorTable table) {
     super();
     this.factory = factory;
     this.table = table;
+    this.unsupportedOperatorCollector = new UnsupportedOperatorCollector();
+  }
+
+  @Override
+  public RelNode visit(AggregateRel aggregate) {
+    for(AggregateCall aggregateCall : aggregate.getAggCallList()) {
+      if(aggregateCall.getAggregation() instanceof SqlSingleValueAggFunction) {
+        unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+            "1937", "Non-scalar sub-query used in an expression");
+        throw new UnsupportedOperationException();
+      }
+    }
+
+    return visitChild(aggregate, 0, aggregate.getChild());
   }
 
   @Override
   public RelNode visit(ProjectRel project) {
-
     List<RexNode> exprList = new ArrayList<>();
     boolean rewrite = false;
 
@@ -102,5 +135,9 @@ public class RewriteProjectRel extends RelShuttleImpl {
     }
 
     return visitChild(project, 0, project.getChild());
+  }
+
+  public void convertException() throws SqlUnsupportedException {
+    unsupportedOperatorCollector.convertException();
   }
 }

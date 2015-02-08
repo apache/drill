@@ -23,40 +23,47 @@ import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 
 public class UnsupportedOperatorCollector {
-    private SqlUnsupportedException.ExceptionType exceptionType;
-    private String jiraNumber;
-    private String message;
+  private SqlUnsupportedException.ExceptionType exceptionType;
+  private String jiraNumber;
+  private String message;
 
-    public UnsupportedOperatorCollector() {
-        exceptionType = SqlUnsupportedException.ExceptionType.NONE;
+  public UnsupportedOperatorCollector() {
+    exceptionType = SqlUnsupportedException.ExceptionType.NONE;
+  }
+
+  public boolean convertException() throws SqlUnsupportedException {
+    switch (exceptionType) {
+      case RELATIONAL:
+        clean();
+        throw new UnsupportedRelOperatorException(jiraNumber, message);
+      case DATA_TYPE:
+        clean();
+        throw new UnsupportedDataTypeException(jiraNumber, message);
+      case FUNCTION:
+        clean();
+        throw new UnsupportedFunctionException(jiraNumber, message);
+      default:
+        break;
     }
 
-    public boolean convertException() throws SqlUnsupportedException {
-      switch (exceptionType) {
-        case RELATIONAL:
-          throw new UnsupportedRelOperatorException(jiraNumber, message);
-        case DATA_TYPE:
-          throw new UnsupportedDataTypeException(jiraNumber, message);
-        case FUNCTION:
-          throw new UnsupportedFunctionException(jiraNumber, message);
-        default:
-          break;
-      }
+    return false;
+  }
 
-      return false;
+  public void setException(SqlUnsupportedException.ExceptionType exceptionType, String jiraNumber, String message) {
+    if(this.exceptionType != SqlUnsupportedException.ExceptionType.NONE) {
+      throw new IllegalStateException("Exception was set already");
     }
 
-    public void setException(SqlUnsupportedException.ExceptionType exceptionType, String jiraNumber, String message) {
-      if(this.exceptionType != SqlUnsupportedException.ExceptionType.NONE) {
-        throw new IllegalStateException("Exception was set already");
-      }
+    this.exceptionType = exceptionType;
+    this.jiraNumber = jiraNumber;
+    this.message = message;
+  }
 
-      this.exceptionType = exceptionType;
-      this.jiraNumber = jiraNumber;
-      this.message = message;
-    }
+  public void setException(SqlUnsupportedException.ExceptionType exceptionType) {
+    setException(exceptionType, "", "");
+  }
 
-    public void clean() {
+   public void clean() {
       exceptionType = SqlUnsupportedException.ExceptionType.NONE;
     }
 }

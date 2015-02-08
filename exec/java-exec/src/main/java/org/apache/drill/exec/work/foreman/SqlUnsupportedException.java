@@ -18,14 +18,40 @@
 
 package org.apache.drill.exec.work.foreman;
 
+import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
+
 public abstract class SqlUnsupportedException extends ForemanSetupException {
-  public enum ExceptionType {
-    NONE, RELATIONAL, DATA_TYPE, FUNCTION
+  public static enum ExceptionType {
+    NONE("NONE"),
+    RELATIONAL(UnsupportedRelOperatorException.class.getSimpleName()),
+    DATA_TYPE(UnsupportedDataTypeException.class.getSimpleName()),
+    FUNCTION(UnsupportedFunctionException.class.getSimpleName());
+
+    private String exceptionType;
+    ExceptionType(String exceptionType) {
+      this.exceptionType = exceptionType;
+    }
+
+    @Override
+    public String toString() {
+      return exceptionType;
+    }
   }
 
   public SqlUnsupportedException(String jiraNumber, String disabledFunctionality) {
     super(disabledFunctionality + " is not supported\n" +
         "See Apache Drill JIRA: DRILL-" + jiraNumber);
+  }
+
+  public static void errorMessageToException(String errorMessage) throws SqlUnsupportedException {
+    UnsupportedOperatorCollector collector = new UnsupportedOperatorCollector();
+    for(ExceptionType ex : ExceptionType.values()) {
+      if(errorMessage.startsWith(ex.toString())) {
+        collector.setException(ex);
+        collector.convertException();
+        collector.clean();
+      }
+    }
   }
 }
 

@@ -16,69 +16,158 @@
  * limitations under the License.
  */
 package org.apache.drill;
-import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
+import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
+import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
+import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
 
 public class TestDisabledFunctionality extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
-  @Test(expected = RpcException.class) // see DRILL-1921
+  @Test(expected = UnsupportedFunctionException.class)  // see DRILL-1937
+  public void testDisabledExplainplanForComparisonWithNonscalarSubquery() throws Exception {
+    try {
+      test("explain plan for select n_name from cp.`tpch/nation.parquet` " +
+           "where n_nationkey = " +
+           "(select r_regionkey from cp.`tpch/region.parquet` " +
+           "where r_regionkey = 1)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedFunctionException.class)  // see DRILL-1937
+  public void testDisabledComparisonWithNonscalarSubquery() throws Exception {
+    try {
+      test("select n_name from cp.`tpch/nation.parquet` " +
+           "where n_nationkey = " +
+           "(select r_regionkey from cp.`tpch/region.parquet` " +
+           "where r_regionkey = 1)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedRelOperatorException.class)  // see DRILL-1921
   public void testDisabledUnion() throws Exception {
-    test("(select n_name as name from cp.`tpch/nation.parquet`) UNION (select r_name as name from cp.`tpch/region.parquet`)");
+    try {
+      test("(select n_name as name from cp.`tpch/nation.parquet`) UNION (select r_name as name from cp.`tpch/region.parquet`)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1921
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledUnionDistinct() throws Exception {
-    test("(select n_name as name from cp.`tpch/nation.parquet`) UNION DISTINCT (select r_name as name from cp.`tpch/region.parquet`)");
+    try {
+      test("(select n_name as name from cp.`tpch/nation.parquet`) UNION DISTINCT (select r_name as name from cp.`tpch/region.parquet`)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1921
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledIntersect() throws Exception {
-    test("(select n_name as name from cp.`tpch/nation.parquet`) INTERSECT (select r_name as name from cp.`tpch/region.parquet`)");
+    try {
+      test("(select n_name as name from cp.`tpch/nation.parquet`) INTERSECT (select r_name as name from cp.`tpch/region.parquet`)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1921
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledIntersectALL() throws Exception {
-    test("(select n_name as name from cp.`tpch/nation.parquet`) INTERSECT ALL (select r_name as name from cp.`tpch/region.parquet`)");
+    try {
+      test("(select n_name as name from cp.`tpch/nation.parquet`) INTERSECT ALL (select r_name as name from cp.`tpch/region.parquet`)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1921
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledExceptALL() throws Exception {
-    test("(select n_name as name from cp.`tpch/nation.parquet`) EXCEPT ALL (select r_name as name from cp.`tpch/region.parquet`)");
+    try {
+      test("(select n_name as name from cp.`tpch/nation.parquet`) EXCEPT ALL (select r_name as name from cp.`tpch/region.parquet`)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1921
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledExcept() throws Exception {
-    test("(select n_name as name from cp.`tpch/nation.parquet`) EXCEPT (select r_name as name from cp.`tpch/region.parquet`)");
+    try {
+      test("(select n_name as name from cp.`tpch/nation.parquet`) EXCEPT (select r_name as name from cp.`tpch/region.parquet`)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1921
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledNaturalJoin() throws Exception {
-    test("select * from cp.`tpch/nation.parquet` NATURAL JOIN cp.`tpch/region.parquet`");
+    try {
+      test("select * from cp.`tpch/nation.parquet` NATURAL JOIN cp.`tpch/region.parquet`");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1921
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledCrossJoin() throws Exception {
-    test("select * from cp.`tpch/nation.parquet` CROSS JOIN cp.`tpch/region.parquet`");
+    try {
+      test("select * from cp.`tpch/nation.parquet` CROSS JOIN cp.`tpch/region.parquet`");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1959
+  @Test(expected = UnsupportedDataTypeException.class) // see DRILL-1959
   public void testDisabledCastTINYINT() throws Exception {
-    test("select cast(n_name as tinyint) from cp.`tpch/nation.parquet`;");
+    try {
+      test("select cast(n_name as tinyint) from cp.`tpch/nation.parquet`;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1959
+  @Test(expected = UnsupportedDataTypeException.class) // see DRILL-1959
   public void testDisabledCastSMALLINT() throws Exception {
-    test("select cast(n_name as smallint) from cp.`tpch/nation.parquet`;");
+    try {
+      test("select cast(n_name as smallint) from cp.`tpch/nation.parquet`;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-1959
+  @Test(expected = UnsupportedDataTypeException.class) // see DRILL-1959
   public void testDisabledCastREAL() throws Exception {
-    test("select cast(n_name as real) from cp.`tpch/nation.parquet`;");
+    try {
+      test("select cast(n_name as real) from cp.`tpch/nation.parquet`;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 
-  @Test(expected = RpcException.class) // see DRILL-2115
+  @Test(expected = UnsupportedFunctionException.class) // see DRILL-2115
   public void testDisabledCardinality() throws Exception {
-    test("select cardinality(employee_id) from cp.`employee.json`;");
+    try {
+      test("select cardinality(employee_id) from cp.`employee.json`;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
   }
 }

@@ -50,7 +50,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
   }
 
   public static UnsupportedOperatorsVisitor getVisitor() {
-    visitor.unsupportedOperatorCollector.clean();
     return visitor;
   }
 
