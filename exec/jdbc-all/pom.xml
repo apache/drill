@@ -224,10 +224,12 @@
             <option>-keep class org.apache.drill.jdbc.Driver { *; }</option>
             <option>-keep class org.apache.drill.jdbc.DrillJdbc40Factory { *; }</option>
             <option>-keep class org.apache.drill.jdbc.DrillJdbc41Factory { *; }</option>
+            <option>-keep class org.apache.drill.jdbc.proxy.TracingProxyDriver { *; }</option>
             <option>-keep class org.apache.drill.common.config.CommonConstants { *; }</option>
             <option>-keep class org.apache.drill.common.config.ConfigProvider { *; }</option>
             <option>-keep class org.apache.drill.common.config.DrillConfig { *; }</option>
             <option>-keep class org.apache.drill.common.config.NestedConfig { *; }</option>
+
             <option>-keep class ch.qos.logback.** { *; }</option>
             <option>-keep class org.slf4j.** { *; }</option>
             <option>-keep class * implements com.fasterxml.jackson.databind.cfg.ConfigFeature { *; }</option>
