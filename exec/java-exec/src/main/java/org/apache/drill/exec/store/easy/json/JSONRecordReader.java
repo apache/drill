@@ -58,6 +58,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final FragmentContext fragmentContext;
   private OperatorContext operatorContext;
   private final boolean enableAllTextMode;
+  private final boolean readNumbersAsDouble;
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.
@@ -75,7 +76,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   /**
    * Create a new JSON Record Reader that uses a in memory materialized JSON stream.
    * @param fragmentContext
-   * @param inputPath
+   * @param embeddedContent
    * @param fileSystem
    * @param columns
    * @throws OutOfMemoryException
@@ -105,6 +106,7 @@ public class JSONRecordReader extends AbstractRecordReader {
 
     // only enable all text mode if we aren't using embedded content mode.
     this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
+    this.readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE).bool_val;
     setColumns(columns);
   }
 
@@ -120,7 +122,7 @@ public class JSONRecordReader extends AbstractRecordReader {
       if (isSkipQuery()) {
         this.jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer());
       } else {
-        this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), ImmutableList.copyOf(getColumns()), enableAllTextMode, true);
+        this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), ImmutableList.copyOf(getColumns()), enableAllTextMode, true, readNumbersAsDouble);
       }
       setupParser();
     }catch(final Exception e){

@@ -73,6 +73,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   private OperatorContext operatorContext;
 
   private Boolean enableAllTextMode;
+  private Boolean readNumbersAsDouble;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context,
@@ -89,6 +90,7 @@ public class MongoRecordReader extends AbstractRecordReader {
         subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
     buildFilters(subScanSpec.getFilter(), mergedFilters);
     enableAllTextMode = fragmentContext.getOptions().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
+    readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE).bool_val;
     init(subScanSpec);
   }
 
@@ -150,7 +152,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     this.operatorContext = context;
     this.writer = new VectorContainerWriter(output);
-    this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()), enableAllTextMode, false);
+    this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()), enableAllTextMode, false, readNumbersAsDouble);
     logger.info("Filters Applied : " + filters);
     logger.info("Fields Selected :" + fields);
     cursor = collection.find(filters, fields);

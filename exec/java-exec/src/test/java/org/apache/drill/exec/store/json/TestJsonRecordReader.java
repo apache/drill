@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 
+import static org.junit.Assert.assertTrue;
 
 public class TestJsonRecordReader extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonRecordReader.class);
@@ -110,4 +111,47 @@ public class TestJsonRecordReader extends BaseTestQuery{
             .go();
   }
 
+  @Test
+  public void testMixedNumberTypes() throws Exception {
+    try {
+      testBuilder()
+          .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
+          .unOrdered()
+          .jsonBaselineFile("jsoninput/mixed_number_types.json")
+          .build().run();
+    } catch (Exception ex) {
+      assertTrue(ex.getMessage().contains("DATA_READ ERROR: Error parsing JSON - You tried to write a BigInt type when you are using a ValueWriter of type NullableFloat8WriterImpl."));
+      // this indicates successful completion of the test
+      return;
+    }
+    throw new Exception("Mixed number types verification failed, expected failure on conflicting number types.");
+  }
+
+  @Test
+  public void testMixedNumberTypesInAllTextMode() throws Exception {
+    testNoResult("alter session set `store.json.all_text_mode`= true");
+    testBuilder()
+        .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues("5.2")
+        .baselineValues("6")
+        .build().run();
+  }
+
+  @Test
+  public void testMixedNumberTypesWhenReadingNumbersAsDouble() throws Exception {
+    try {
+    testNoResult("alter session set `store.json.read_numbers_as_double`= true");
+    testBuilder()
+        .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(5.2D)
+        .baselineValues(6D)
+        .build().run();
+    } finally {
+      testNoResult("alter session set `store.json.read_numbers_as_double`= false");
+    }
+  }
 }
