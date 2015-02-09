@@ -144,7 +144,9 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               ByteBuf buf = allocator.buffer(pageHeader.compressed_page_size);
               lastPage = buf;
               ByteBuffer buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
-              CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
+              while (buffer.remaining() > 0) {
+                CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
+              }
               return new Page(
                       decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
                       pageHeader.data_page_header.num_values,
