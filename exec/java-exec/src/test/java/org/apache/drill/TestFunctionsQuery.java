@@ -1,0 +1,698 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill;
+
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.joda.time.DateTime;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import java.math.BigDecimal;
+
+public class TestFunctionsQuery extends BaseTestQuery {
+
+  @Test
+  public void testAbsDecimalFunction() throws Exception{
+    String query = "SELECT " +
+        "abs(cast('1234.4567' as decimal(9, 5))) as DEC9_ABS_1, " +
+        "abs(cast('-1234.4567' as decimal(9, 5))) DEC9_ABS_2, " +
+        "abs(cast('99999912399.4567' as decimal(18, 5))) DEC18_ABS_1, " +
+        "abs(cast('-99999912399.4567' as decimal(18, 5))) DEC18_ABS_2, " +
+        "abs(cast('12345678912345678912.4567' as decimal(28, 5))) DEC28_ABS_1, " +
+        "abs(cast('-12345678912345678912.4567' as decimal(28, 5))) DEC28_ABS_2, " +
+        "abs(cast('1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_ABS_1, " +
+        "abs(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_ABS_2 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC9_ABS_1", "DEC9_ABS_2", "DEC18_ABS_1", "DEC18_ABS_2", "DEC28_ABS_1", "DEC28_ABS_2", "DEC38_ABS_1", "DEC38_ABS_2")
+        .baselineValues(new BigDecimal("1234.45670"), new BigDecimal("1234.45670"), new BigDecimal("99999912399.45670"), new BigDecimal("99999912399.45670"),
+            new BigDecimal("12345678912345678912.45670"), new BigDecimal("12345678912345678912.45670"), new BigDecimal("1234567891234567891234567891234567891.4"),
+            new BigDecimal("1234567891234567891234567891234567891.4"))
+        .go();
+  }
+
+
+  @Test
+  public void testCeilDecimalFunction() throws Exception {
+    String query = "SELECT " +
+        "ceil(cast('1234.4567' as decimal(9, 5))) as DEC9_1, " +
+        "ceil(cast('1234.0000' as decimal(9, 5))) as DEC9_2, " +
+        "ceil(cast('-1234.4567' as decimal(9, 5))) as DEC9_3, " +
+        "ceil(cast('-1234.000' as decimal(9, 5))) as DEC9_4, " +
+        "ceil(cast('99999912399.4567' as decimal(18, 5))) DEC18_1, " +
+        "ceil(cast('99999912399.0000' as decimal(18, 5))) DEC18_2, " +
+        "ceil(cast('-99999912399.4567' as decimal(18, 5))) DEC18_3, " +
+        "ceil(cast('-99999912399.0000' as decimal(18, 5))) DEC18_4, " +
+        "ceil(cast('12345678912345678912.4567' as decimal(28, 5))) DEC28_1, " +
+        "ceil(cast('999999999999999999.4567' as decimal(28, 5))) DEC28_2, " +
+        "ceil(cast('12345678912345678912.0000' as decimal(28, 5))) DEC28_3, " +
+        "ceil(cast('-12345678912345678912.4567' as decimal(28, 5))) DEC28_4, " +
+        "ceil(cast('-12345678912345678912.0000' as decimal(28, 5))) DEC28_5, " +
+        "ceil(cast('1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_1, " +
+        "ceil(cast('999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_2, " +
+        "ceil(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
+        "ceil(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
+        "ceil(cast('-1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_5 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC9_1", "DEC9_2", "DEC9_3", "DEC9_4", "DEC18_1", "DEC18_2", "DEC18_3", "DEC18_4", "DEC28_1",
+            "DEC28_2", "DEC28_3", "DEC28_4", "DEC28_5", "DEC38_1", "DEC38_2", "DEC38_3", "DEC38_4", "DEC38_5")
+        .baselineValues(new BigDecimal("1235"), new BigDecimal("1234"), new BigDecimal("-1234"), new BigDecimal("-1234"),
+            new BigDecimal("99999912400"), new BigDecimal("99999912399"), new BigDecimal("-99999912399"), new BigDecimal("-99999912399"),
+            new BigDecimal("12345678912345678913"), new BigDecimal("1000000000000000000"), new BigDecimal("12345678912345678912"), new BigDecimal("-12345678912345678912"),
+            new BigDecimal("-12345678912345678912"), new BigDecimal("1234567891234567891234567891234567892"), new BigDecimal("1000000000000000000000000000000000000"),
+            new BigDecimal("1234567891234567891234567891234567891"), new BigDecimal("-1234567891234567891234567891234567891"),
+            new BigDecimal("-1234567891234567891234567891234567891"))
+        .go();
+  }
+
+  @Test
+  public void testFloorDecimalFunction() throws Exception {
+    String query = "SELECT " +
+        "floor(cast('1234.4567' as decimal(9, 5))) as DEC9_1, " +
+        "floor(cast('1234.0000' as decimal(9, 5))) as DEC9_2, " +
+        "floor(cast('-1234.4567' as decimal(9, 5))) as DEC9_3, " +
+        "floor(cast('-1234.000' as decimal(9, 5))) as DEC9_4, " +
+        "floor(cast('99999912399.4567' as decimal(18, 5))) DEC18_1, " +
+        "floor(cast('99999912399.0000' as decimal(18, 5))) DEC18_2, " +
+        "floor(cast('-99999912399.4567' as decimal(18, 5))) DEC18_3, " +
+        "floor(cast('-99999912399.0000' as decimal(18, 5))) DEC18_4, " +
+        "floor(cast('12345678912345678912.4567' as decimal(28, 5))) DEC28_1, " +
+        "floor(cast('999999999999999999.4567' as decimal(28, 5))) DEC28_2, " +
+        "floor(cast('12345678912345678912.0000' as decimal(28, 5))) DEC28_3, " +
+        "floor(cast('-12345678912345678912.4567' as decimal(28, 5))) DEC28_4, " +
+        "floor(cast('-12345678912345678912.0000' as decimal(28, 5))) DEC28_5, " +
+        "floor(cast('1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_1, " +
+        "floor(cast('999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_2, " +
+        "floor(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
+        "floor(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
+        "floor(cast('-999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_5 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC9_1", "DEC9_2", "DEC9_3", "DEC9_4", "DEC18_1", "DEC18_2", "DEC18_3", "DEC18_4", "DEC28_1",
+            "DEC28_2", "DEC28_3", "DEC28_4", "DEC28_5", "DEC38_1", "DEC38_2", "DEC38_3", "DEC38_4", "DEC38_5")
+        .baselineValues(new BigDecimal("1234"), new BigDecimal("1234"), new BigDecimal("-1235"), new BigDecimal("-1234"),
+            new BigDecimal("99999912399"), new BigDecimal("99999912399"), new BigDecimal("-99999912400"), new BigDecimal("-99999912399"),
+            new BigDecimal("12345678912345678912"), new BigDecimal("999999999999999999"), new BigDecimal("12345678912345678912"),
+            new BigDecimal("-12345678912345678913"), new BigDecimal("-12345678912345678912"), new BigDecimal("1234567891234567891234567891234567891"),
+            new BigDecimal("999999999999999999999999999999999999"), new BigDecimal("1234567891234567891234567891234567891"),
+            new BigDecimal("-1234567891234567891234567891234567892"), new BigDecimal("-1000000000000000000000000000000000000"))
+        .go();
+  }
+
+  @Test
+  public void testTruncateDecimalFunction() throws Exception {
+    String query = "SELECT " +
+        "trunc(cast('1234.4567' as decimal(9, 5))) as DEC9_1, " +
+        "trunc(cast('1234.0000' as decimal(9, 5))) as DEC9_2, " +
+        "trunc(cast('-1234.4567' as decimal(9, 5))) as DEC9_3, " +
+        "trunc(cast('0.111' as decimal(9, 5))) as DEC9_4, " +
+        "trunc(cast('99999912399.4567' as decimal(18, 5))) DEC18_1, " +
+        "trunc(cast('99999912399.0000' as decimal(18, 5))) DEC18_2, " +
+        "trunc(cast('-99999912399.4567' as decimal(18, 5))) DEC18_3, " +
+        "trunc(cast('-99999912399.0000' as decimal(18, 5))) DEC18_4, " +
+        "trunc(cast('12345678912345678912.4567' as decimal(28, 5))) DEC28_1, " +
+        "trunc(cast('999999999999999999.4567' as decimal(28, 5))) DEC28_2, " +
+        "trunc(cast('12345678912345678912.0000' as decimal(28, 5))) DEC28_3, " +
+        "trunc(cast('-12345678912345678912.4567' as decimal(28, 5))) DEC28_4, " +
+        "trunc(cast('-12345678912345678912.0000' as decimal(28, 5))) DEC28_5, " +
+        "trunc(cast('1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_1, " +
+        "trunc(cast('999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_2, " +
+        "trunc(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
+        "trunc(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
+        "trunc(cast('-999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_5 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC9_1", "DEC9_2", "DEC9_3", "DEC9_4", "DEC18_1", "DEC18_2", "DEC18_3", "DEC18_4", "DEC28_1",
+            "DEC28_2", "DEC28_3", "DEC28_4", "DEC28_5", "DEC38_1", "DEC38_2", "DEC38_3", "DEC38_4", "DEC38_5")
+        .baselineValues(new BigDecimal("1234"), new BigDecimal("1234"), new BigDecimal("-1234"), new BigDecimal("0"),
+            new BigDecimal("99999912399"), new BigDecimal("99999912399"), new BigDecimal("-99999912399"),
+            new BigDecimal("-99999912399"), new BigDecimal("12345678912345678912"), new BigDecimal("999999999999999999"),
+            new BigDecimal("12345678912345678912"), new BigDecimal("-12345678912345678912"), new BigDecimal("-12345678912345678912"),
+            new BigDecimal("1234567891234567891234567891234567891"), new BigDecimal("999999999999999999999999999999999999"),
+            new BigDecimal("1234567891234567891234567891234567891"), new BigDecimal("-1234567891234567891234567891234567891"),
+            new BigDecimal("-999999999999999999999999999999999999"))
+        .go();
+  }
+
+  @Test
+  public void testTruncateWithParamDecimalFunction() throws Exception {
+    String query = "SELECT " +
+        "trunc(cast('1234.4567' as decimal(9, 5)), 2) as DEC9_1, " +
+        "trunc(cast('1234.45' as decimal(9, 2)), 4) as DEC9_2, " +
+        "trunc(cast('-1234.4567' as decimal(9, 5)), 0) as DEC9_3, " +
+        "trunc(cast('0.111' as decimal(9, 5)), 2) as DEC9_4, " +
+        "trunc(cast('99999912399.4567' as decimal(18, 5)), 2) DEC18_1, " +
+        "trunc(cast('99999912399.0000' as decimal(18, 5)), 2) DEC18_2, " +
+        "trunc(cast('-99999912399.45' as decimal(18, 2)), 6) DEC18_3, " +
+        "trunc(cast('-99999912399.0000' as decimal(18, 5)), 4) DEC18_4, " +
+        "trunc(cast('12345678912345678912.4567' as decimal(28, 5)), 1) DEC28_1, " +
+        "trunc(cast('999999999999999999.456' as decimal(28, 3)), 6) DEC28_2, " +
+        "trunc(cast('12345678912345678912.0000' as decimal(28, 5)), 2) DEC28_3, " +
+        "trunc(cast('-12345678912345678912.45' as decimal(28, 2)), 0) DEC28_4, " +
+        "trunc(cast('-12345678912345678912.0000' as decimal(28, 5)), 1) DEC28_5, " +
+        "trunc(cast('999999999.123456789' as decimal(38, 9)), 7) DEC38_1, " +
+        "trunc(cast('999999999.4' as decimal(38, 1)), 8) DEC38_2, " +
+        "trunc(cast('999999999.1234' as decimal(38, 4)), 12) DEC38_3, " +
+        "trunc(cast('-123456789123456789.4' as decimal(38, 1)), 10) DEC38_4, " +
+        "trunc(cast('-999999999999999999999999999999999999.4' as decimal(38, 1)), 1) DEC38_5 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC9_1", "DEC9_2", "DEC9_3", "DEC9_4", "DEC18_1", "DEC18_2", "DEC18_3", "DEC18_4", "DEC28_1",
+            "DEC28_2", "DEC28_3", "DEC28_4", "DEC28_5", "DEC38_1", "DEC38_2", "DEC38_3", "DEC38_4", "DEC38_5")
+        .baselineValues(new BigDecimal("1234.45"), new BigDecimal("1234.4500"), new BigDecimal("-1234"), new BigDecimal("0.11"),
+            new BigDecimal("99999912399.45"), new BigDecimal("99999912399.00"), new BigDecimal("-99999912399.450000"),
+            new BigDecimal("-99999912399.0000"), new BigDecimal("12345678912345678912.4"), new BigDecimal("999999999999999999.456000"),
+            new BigDecimal("12345678912345678912.00"), new BigDecimal("-12345678912345678912"), new BigDecimal("-12345678912345678912.0"),
+            new BigDecimal("999999999.1234567"), new BigDecimal("999999999.40000000"), new BigDecimal("999999999.123400000000"),
+            new BigDecimal("-123456789123456789.4000000000"), new BigDecimal("-999999999999999999999999999999999999.4"))
+        .go();
+  }
+
+  @Test
+  public void testRoundDecimalFunction() throws Exception {
+    String query = "SELECT " +
+        "round(cast('1234.5567' as decimal(9, 5))) as DEC9_1, " +
+        "round(cast('1234.1000' as decimal(9, 5))) as DEC9_2, " +
+        "round(cast('-1234.5567' as decimal(9, 5))) as DEC9_3, " +
+        "round(cast('-1234.1234' as decimal(9, 5))) as DEC9_4, " +
+        "round(cast('99999912399.9567' as decimal(18, 5))) DEC18_1, " +
+        "round(cast('99999912399.0000' as decimal(18, 5))) DEC18_2, " +
+        "round(cast('-99999912399.5567' as decimal(18, 5))) DEC18_3, " +
+        "round(cast('-99999912399.0000' as decimal(18, 5))) DEC18_4, " +
+        "round(cast('12345678912345678912.5567' as decimal(28, 5))) DEC28_1, " +
+        "round(cast('999999999999999999.5567' as decimal(28, 5))) DEC28_2, " +
+        "round(cast('12345678912345678912.0000' as decimal(28, 5))) DEC28_3, " +
+        "round(cast('-12345678912345678912.5567' as decimal(28, 5))) DEC28_4, " +
+        "round(cast('-12345678912345678912.0000' as decimal(28, 5))) DEC28_5, " +
+        "round(cast('999999999999999999999999999.5' as decimal(38, 1))) DEC38_1, " +
+        "round(cast('99999999.512345678123456789' as decimal(38, 18))) DEC38_2, " +
+        "round(cast('999999999999999999999999999999999999.5' as decimal(38, 1))) DEC38_3, " +
+        "round(cast('1234567891234567891234567891234567891.2' as decimal(38, 1))) DEC38_4, " +
+        "round(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_5, " +
+        "round(cast('-999999999999999999999999999999999999.9' as decimal(38, 1))) DEC38_6 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC9_1", "DEC9_2", "DEC9_3", "DEC9_4", "DEC18_1", "DEC18_2", "DEC18_3", "DEC18_4", "DEC28_1",
+            "DEC28_2", "DEC28_3", "DEC28_4", "DEC28_5", "DEC38_1", "DEC38_2", "DEC38_3", "DEC38_4", "DEC38_5", "DEC38_6")
+        .baselineValues(new BigDecimal("1235"), new BigDecimal("1234"), new BigDecimal("-1235"), new BigDecimal("-1234"),
+            new BigDecimal("99999912400"), new BigDecimal("99999912399"), new BigDecimal("-99999912400"), new BigDecimal("-99999912399"),
+            new BigDecimal("12345678912345678913"), new BigDecimal("1000000000000000000"), new BigDecimal("12345678912345678912"),
+            new BigDecimal("-12345678912345678913"), new BigDecimal("-12345678912345678912"), new BigDecimal("1000000000000000000000000000"),
+            new BigDecimal("100000000"), new BigDecimal("1000000000000000000000000000000000000"), new BigDecimal("1234567891234567891234567891234567891"),
+            new BigDecimal("-1234567891234567891234567891234567891"), new BigDecimal("-1000000000000000000000000000000000000"))
+        .go();
+  }
+
+  @Test
+  public void testRoundWithScaleDecimalFunction() throws Exception {
+    String query = "SELECT " +
+        "round(cast('1234.5567' as decimal(9, 5)), 3) as DEC9_1, " +
+        "round(cast('1234.1000' as decimal(9, 5)), 2) as DEC9_2, " +
+        "round(cast('-1234.5567' as decimal(9, 5)), 4) as DEC9_3, " +
+        "round(cast('-1234.1234' as decimal(9, 5)), 3) as DEC9_4, " +
+        "round(cast('-1234.1234' as decimal(9, 2)), 4) as DEC9_5, " +
+        "round(cast('99999912399.9567' as decimal(18, 5)), 3) DEC18_1, " +
+        "round(cast('99999912399.0000' as decimal(18, 5)), 2) DEC18_2, " +
+        "round(cast('-99999912399.5567' as decimal(18, 5)), 2) DEC18_3, " +
+        "round(cast('-99999912399.0000' as decimal(18, 5)), 0) DEC18_4, " +
+        "round(cast('12345678912345678912.5567' as decimal(28, 5)), 2) DEC28_1, " +
+        "round(cast('999999999999999999.5567' as decimal(28, 5)), 1) DEC28_2, " +
+        "round(cast('12345678912345678912.0000' as decimal(28, 5)), 8) DEC28_3, " +
+        "round(cast('-12345678912345678912.5567' as decimal(28, 5)), 3) DEC28_4, " +
+        "round(cast('-12345678912345678912.0000' as decimal(28, 5)), 0) DEC28_5, " +
+        "round(cast('999999999999999999999999999.5' as decimal(38, 1)), 1) DEC38_1, " +
+        "round(cast('99999999.512345678923456789' as decimal(38, 18)), 9) DEC38_2, " +
+        "round(cast('999999999.9999999995678' as decimal(38, 18)), 9) DEC38_3, " +
+        "round(cast('999999999.9999999995678' as decimal(38, 18)), 11) DEC38_4, " +
+        "round(cast('999999999.9999999995678' as decimal(38, 18)), 21) DEC38_5, " +
+        "round(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1)), 1) DEC38_6, " +
+        "round(cast('-999999999999999999999999999999999999.9' as decimal(38, 1)), 0) DEC38_7 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC9_1", "DEC9_2", "DEC9_3", "DEC9_4", "DEC9_5", "DEC18_1", "DEC18_2", "DEC18_3", "DEC18_4", "DEC28_1",
+            "DEC28_2", "DEC28_3", "DEC28_4", "DEC28_5", "DEC38_1", "DEC38_2", "DEC38_3", "DEC38_4", "DEC38_5", "DEC38_6", "DEC38_7")
+        .baselineValues(new BigDecimal("1234.557"), new BigDecimal("1234.10"), new BigDecimal("-1234.5567"), new BigDecimal("-1234.123"),
+            new BigDecimal("-1234.1200"), new BigDecimal("99999912399.957"), new BigDecimal("99999912399.00"), new BigDecimal("-99999912399.56"),
+            new BigDecimal("-99999912399"), new BigDecimal("12345678912345678912.56"), new BigDecimal("999999999999999999.6"),
+            new BigDecimal("12345678912345678912.00000000"), new BigDecimal("-12345678912345678912.557"), new BigDecimal("-12345678912345678912"),
+            new BigDecimal("999999999999999999999999999.5"), new BigDecimal("99999999.512345679"), new BigDecimal("1000000000.000000000"),
+            new BigDecimal("999999999.99999999957"), new BigDecimal("999999999.999999999567800000000"), new BigDecimal("-1234567891234567891234567891234567891.4"),
+            new BigDecimal("-1000000000000000000000000000000000000"))
+        .go();
+  }
+
+  @Ignore("we don't have decimal division")
+  @Test
+  public void testCastDecimalDivide() throws Exception {
+    String query = "select  (cast('9' as decimal(9, 1)) / cast('2' as decimal(4, 1))) as DEC9_DIV, " +
+        "cast('999999999' as decimal(9,0)) / cast('0.000000000000000000000000001' as decimal(28,28)) as DEC38_DIV, " +
+        "cast('123456789.123456789' as decimal(18, 9)) * cast('123456789.123456789' as decimal(18, 9)) as DEC18_MUL " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC9_DIV", "DEC38_DIV", "DEC18_MUL")
+        .baselineValues(new BigDecimal("4.500000000"), new BigDecimal("999999999000000000000000000000000000.0"),
+            new BigDecimal("15241578780673678.515622620750190521"))
+        .go();
+  }
+
+  @Test
+  public void testDecimalMultiplicationOverflowHandling() throws Exception {
+    String query = "select cast('1' as decimal(9, 5)) * cast ('999999999999999999999999999.999999999' as decimal(38, 9)) as DEC38_1, " +
+        "cast('1000000000000000001.000000000000000000' as decimal(38, 18)) * cast('0.999999999999999999' as decimal(38, 18)) as DEC38_2, " +
+        "cast('3' as decimal(9, 8)) * cast ('333333333.3333333333333333333' as decimal(38, 19)) as DEC38_3 " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC38_1", "DEC38_2", "DEC38_3")
+        .baselineValues(new BigDecimal("1000000000000000000000000000.00000"), new BigDecimal("1000000000000000000"), new BigDecimal("1000000000.000000000000000000"))
+        .go();
+  }
+
+  @Test
+  public void testDecimalRoundUp() throws Exception {
+    String query = "select cast('999999999999999999.9999999999999999995' as decimal(38, 18)) as DEC38_1, " +
+        "cast('999999999999999999.9999999999999999994' as decimal(38, 18)) as DEC38_2, " +
+        "cast('999999999999999999.1234567895' as decimal(38, 9)) as DEC38_3, " +
+        "cast('99999.12345' as decimal(18, 4)) as DEC18_1, " +
+        "cast('99999.99995' as decimal(18, 4)) as DEC18_2 " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC38_1", "DEC38_2", "DEC38_3", "DEC18_1", "DEC18_2")
+        .baselineValues(new BigDecimal("1000000000000000000.000000000000000000"), new BigDecimal("999999999999999999.999999999999999999"),
+            new BigDecimal("999999999999999999.123456790"), new BigDecimal("99999.1235"), new BigDecimal("100000.0000"))
+        .go();
+  }
+
+  @Test
+  public void testDecimalDownwardCast() throws Exception {
+    String query = "select cast((cast('12345.6789' as decimal(18, 4))) as decimal(9, 4)) as DEC18_DEC9_1, " +
+        "cast((cast('12345.6789' as decimal(18, 4))) as decimal(9, 2)) as DEC18_DEC9_2, " +
+        "cast((cast('-12345.6789' as decimal(18, 4))) as decimal(9, 0)) as DEC18_DEC9_3, " +
+        "cast((cast('999999999.6789' as decimal(38, 4))) as decimal(9, 0)) as DEC38_DEC19_1, " +
+        "cast((cast('-999999999999999.6789' as decimal(38, 4))) as decimal(18, 2)) as DEC38_DEC18_1, " +
+        "cast((cast('-999999999999999.6789' as decimal(38, 4))) as decimal(18, 0)) as DEC38_DEC18_2, " +
+        "cast((cast('100000000999999999.6789' as decimal(38, 4))) as decimal(28, 0)) as DEC38_DEC28_1 " +
+        "from cp.`employee.json` where employee_id = 1";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC18_DEC9_1", "DEC18_DEC9_2", "DEC18_DEC9_3", "DEC38_DEC19_1", "DEC38_DEC18_1", "DEC38_DEC18_2", "DEC38_DEC28_1")
+        .baselineValues(new BigDecimal("12345.6789"), new BigDecimal("12345.68"), new BigDecimal("-12346"), new BigDecimal("1000000000"),
+            new BigDecimal("-999999999999999.68"), new BigDecimal("-1000000000000000"), new BigDecimal("100000001000000000"))
+        .go();
+  }
+
+  @Test
+  public void testTruncateWithParamFunction() throws Exception {
+    String query = "SELECT " +
+        "trunc(1234.4567, 2) as T_1, " +
+        "trunc(-1234.4567, 2) as T_2, " +
+        "trunc(1234.4567, -2) as T_3, " +
+        "trunc(-1234.4567, -2) as T_4, " +
+        "trunc(1234, 4) as T_5, " +
+        "trunc(-1234, 4) as T_6, " +
+        "trunc(1234, -4) as T_7, " +
+        "trunc(-1234, -4) as T_8, " +
+        "trunc(8124674407369523212, 0) as T_9, " +
+        "trunc(81246744073695.395, 1) as T_10 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("T_1", "T_2", "T_3", "T_4", "T_5", "T_6", "T_7", "T_8", "T_9", "T_10")
+        .baselineValues(new Double("1234.45"), new Double("-1234.45"), new Double("1200.0"), new Double("-1200.0"), new Double("1234.0"),
+            new Double("-1234.0"), new Double("0.0"), new Double("0.0"), new Double("8.1246744073695232E18"), new Double("8.12467440736953E13"))
+        .go();
+  }
+
+  @Test
+  public void testRoundWithParamFunction() throws Exception {
+    String query = "SELECT " +
+        "round(1234.4567, 2) as T_1, " +
+        "round(-1234.4567, 2) as T_2, " +
+        "round(1234.4567, -2) as T_3, " +
+        "round(-1234.4567, -2) as T_4, " +
+        "round(1234, 4) as T_5, " +
+        "round(-1234, 4) as T_6, " +
+        "round(1234, -4) as T_7, " +
+        "round(-1234, -4) as T_8, " +
+        "round(8124674407369523212, -4) as T_9, " +
+        "round(81246744073695.395, 1) as T_10 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("T_1", "T_2", "T_3", "T_4", "T_5", "T_6", "T_7", "T_8", "T_9", "T_10")
+        .baselineValues(new Double("1234.46"), new Double("-1234.46"), new Double("1200.0"), new Double("-1200.0"), new Double("1234.0"),
+            new Double("-1234.0"), new Double("0.0"), new Double("0.0"), new Double("8.1246744073695201E18"), new Double("8.12467440736954E13"))
+        .go();
+
+  }
+
+  @Test
+  public void testToCharFunction() throws Exception {
+    String query = "SELECT " +
+        "to_char(1234.5567, '#,###.##') as FLOAT8_1, " +
+        "to_char(1234.5, '$#,###.00') as FLOAT8_2, " +
+        "to_char(cast('1234.5567' as decimal(9, 5)), '#,###.##') as DEC9_1, " +
+        "to_char(cast('99999912399.9567' as decimal(18, 5)), '#.#####') DEC18_1, " +
+        "to_char(cast('12345678912345678912.5567' as decimal(28, 5)), '#,###.#####') DEC28_1, " +
+        "to_char(cast('999999999999999999999999999.5' as decimal(38, 1)), '#.#') DEC38_1 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("FLOAT8_1", "FLOAT8_2", "DEC9_1", "DEC18_1", "DEC28_1", "DEC38_1")
+        .baselineValues("1,234.56", "$1,234.50", "1,234.56", "99999912399.9567", "12,345,678,912,345,678,912.5567", "999999999999999999999999999.5")
+        .go();
+  }
+
+  @Test
+  public void testConcatFunction() throws Exception {
+    String query = "SELECT " +
+        "concat('1234', ' COL_VALUE ', R_REGIONKEY, ' - STRING') as STR_1 " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("STR_1")
+        .baselineValues("1234 COL_VALUE 0 - STRING")
+        .go();
+  }
+
+  @Test
+  public void testTimeStampConstant() throws Exception {
+    String query = "SELECT " +
+        "timestamp '2008-2-23 12:23:23' as TS " +
+        "FROM cp.`tpch/region.parquet` limit 1";
+
+    DateTime date = DateUtility.formatTimeStamp.parseDateTime("2008-02-23 12:23:23.0");
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("TS")
+        .baselineValues(date)
+        .go();
+  }
+
+  @Test
+  public void testNullConstantsTimeTimeStampAndDate() throws Exception {
+    String query = "SELECT " +
+        "CAST(NULL AS TIME) AS t, " +
+        "CAST(NULL AS TIMESTAMP) AS ts, " +
+        "CAST(NULL AS DATE) AS d " +
+        "FROM cp.`region.json` LIMIT 1";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("t", "ts", "d")
+        .baselineValues(null, null, null)
+        .go();
+  }
+
+  @Test
+  public void testIntMinToDecimal() throws Exception {
+    String query = "select cast((employee_id - employee_id + -2147483648) as decimal(28, 2)) as DEC_28," +
+        "cast((employee_id - employee_id + -2147483648) as decimal(18, 2)) as DEC_18 from " +
+        "cp.`employee.json` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC_28", "DEC_18")
+        .baselineValues(new BigDecimal("-2147483648.00"), new BigDecimal("-2147483648.00"))
+        .go();
+  }
+
+  @Test
+  public void testHashFunctions() throws Exception {
+    String query = "select " +
+        "hash(cast(hire_date as date)) hash_date, " +
+        "hash(cast(employee_id as decimal(9, 2))) as hash_dec9, " +
+        "hash(cast(employee_id as decimal(38, 11))) as hash_dec38 " +
+        "from cp.`employee.json` where employee_id = 1 limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("hash_date", "hash_dec9", "hash_dec38")
+        .baselineValues(818600896, 262164233, 1799649913)
+        .go();
+  }
+
+  @Test
+  public void testDecimalAddConstant() throws Exception {
+    String query = "select (cast('-1' as decimal(37, 3)) + cast (employee_id as decimal(37, 3))) as CNT " +
+        "from cp.`employee.json` where employee_id <= 4";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("CNT")
+        .baselineValues(new BigDecimal("0.000"))
+        .baselineValues(new BigDecimal("1.000"))
+        .baselineValues(new BigDecimal("3.000"))
+        .go();
+  }
+
+  @Test
+  public void testDecimalAddIntConstant() throws Exception {
+    String query = "select 1 + cast(employee_id as decimal(9, 3)) as DEC_9 , 1 + cast(employee_id as decimal(37, 5)) as DEC_38 " +
+        "from cp.`employee.json` where employee_id <= 2";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC_9", "DEC_38")
+        .baselineValues(new BigDecimal("2.000"), new BigDecimal("2.00000"))
+        .baselineValues(new BigDecimal("3.000"), new BigDecimal("3.00000"))
+        .go();
+  }
+
+  @Test
+  public void testSignFunction() throws Exception {
+    String query = "select sign(cast('1.23' as float)) as SIGN_FLOAT, sign(-1234.4567) as SIGN_DOUBLE, sign(23) as SIGN_INT " +
+        "from cp.`employee.json` where employee_id < 2";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("SIGN_FLOAT", "SIGN_DOUBLE", "SIGN_INT")
+        .baselineValues(1, -1, 1)
+        .go();
+  }
+
+
+  @Test
+  public void testPadFunctions() throws Exception {
+    String query = "select rpad(first_name, 10) as RPAD_DEF, rpad(first_name, 10, '*') as RPAD_STAR, lpad(first_name, 10) as LPAD_DEF, lpad(first_name, 10, '*') as LPAD_STAR, " +
+        "lpad(first_name, 2) as LPAD_TRUNC, rpad(first_name, 2) as RPAD_TRUNC " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("RPAD_DEF", "RPAD_STAR", "LPAD_DEF", "LPAD_STAR", "LPAD_TRUNC", "RPAD_TRUNC")
+        .baselineValues("Sheri     ", "Sheri*****", "     Sheri", "*****Sheri", "Sh", "Sh")
+        .go();
+
+  }
+
+  @Test
+  public void testExtractSecond() throws Exception {
+    String query = "select extract(second from date '2008-2-23') as DATE_EXT, extract(second from timestamp '2008-2-23 10:00:20.123') as TS_EXT, " +
+        "extract(second from time '10:20:30.303') as TM_EXT " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DATE_EXT", "TS_EXT", "TM_EXT")
+        .baselineValues(0.0d, 20.123d, 30.303d)
+        .go();
+  }
+
+  @Test
+  public void testCastDecimalDouble() throws Exception {
+    String query = "select cast((cast('1.0001' as decimal(18, 9))) as double) DECIMAL_DOUBLE_CAST " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DECIMAL_DOUBLE_CAST")
+        .baselineValues(1.0001d)
+        .go();
+  }
+
+  @Test
+  public void testExtractSecondFromInterval() throws Exception {
+    String query = "select extract (second from interval '1 2:30:45.100' day to second) as EXT_INTDAY " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("EXT_INTDAY")
+        .baselineValues(45.1d)
+        .go();
+  }
+
+  @Test
+  public void testFunctionCaseInsensitiveNames() throws Exception {
+    String query = "SELECT to_date('2003/07/09', 'yyyy/MM/dd') as col1, " +
+        "TO_DATE('2003/07/09', 'yyyy/MM/dd') as col2, " +
+        "To_DaTe('2003/07/09', 'yyyy/MM/dd') as col3 " +
+        "from cp.`employee.json` LIMIT 1";
+
+    DateTime date = DateUtility.formatDate.parseDateTime("2003-07-09");
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3")
+        .baselineValues(date, date, date)
+        .go();
+  }
+
+  @Test
+  public void testDecimal18Decimal38Comparison() throws Exception {
+    String query = "select cast('-999999999.999999999' as decimal(18, 9)) = cast('-999999999.999999999' as decimal(38, 18)) as CMP " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("CMP")
+        .baselineValues(true)
+        .go();
+  }
+
+  @Test
+  public void testOptiqDecimalCapping() throws Exception {
+    String query = "select  cast('12345.678900000' as decimal(18, 9))=cast('12345.678900000' as decimal(38, 9)) as CMP " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("CMP")
+        .baselineValues(true)
+        .go();
+  }
+
+  @Test
+  public void testNegative() throws Exception {
+    String query = "select  negative(2) as NEG " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("NEG")
+        .baselineValues(-2l)
+        .go();
+  }
+
+  @Test
+  public void testOptiqValidationFunctions() throws Exception {
+    String query = "select trim(first_name) as TRIM_STR, substring(first_name, 2) as SUB_STR " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("TRIM_STR", "SUB_STR")
+        .baselineValues("Sheri", "heri")
+        .go();
+  }
+
+  @Test
+  public void testToTimeStamp() throws Exception {
+    String query = "select to_timestamp(cast('800120400.12312' as decimal(38, 5))) as DEC38_TS, to_timestamp(200120400) as INT_TS " +
+        "from cp.`employee.json` where employee_id < 2";
+
+    DateTime result1 = new DateTime(800120400123l);
+    DateTime result2 = new DateTime(200120400000l);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("DEC38_TS", "INT_TS")
+        .baselineValues(result1, result2)
+        .go();
+  }
+
+  @Test
+  public void testDateTrunc() throws Exception {
+    String query = "select "
+        + "date_trunc('MINUTE', time '2:30:21.5') as TIME1, "
+        + "date_trunc('SECOND', time '2:30:21.5') as TIME2, "
+        + "date_trunc('HOUR', timestamp '1991-05-05 10:11:12.100') as TS1, "
+        + "date_trunc('SECOND', timestamp '1991-05-05 10:11:12.100') as TS2, "
+        + "date_trunc('MONTH', date '2011-2-2') as DATE1, "
+        + "date_trunc('YEAR', date '2011-2-2') as DATE2 "
+        + "from cp.`employee.json` where employee_id < 2";
+
+    DateTime time1 = DateUtility.formatTime.parseDateTime("2:30:00.0");
+    DateTime time2 = DateUtility.formatTime.parseDateTime("2:30:21.0");
+    DateTime ts1 = DateUtility.formatTimeStamp.parseDateTime("1991-05-05 10:00:00.0");
+    DateTime ts2 = DateUtility.formatTimeStamp.parseDateTime("1991-05-05 10:11:12.0");
+    DateTime date1 = DateUtility.formatDate.parseDateTime("2011-02-01");
+    DateTime date2 = DateUtility.formatDate.parseDateTime("2011-01-01");
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("TIME1", "TIME2", "TS1", "TS2", "DATE1", "DATE2")
+        .baselineValues(time1, time2, ts1, ts2, date1, date2)
+        .go();
+  }
+}
