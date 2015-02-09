@@ -243,7 +243,10 @@ public class TestFlatten extends BaseTestQuery {
 
   @Test
   public void testDrill_2013() throws Exception {
-    test("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json` where rownum > 5");
+    testBuilder()
+            .sqlQuery("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json` where rownum > 5")
+            .expectsEmptyResultSet()
+            .build().run();
   }
 
 }
