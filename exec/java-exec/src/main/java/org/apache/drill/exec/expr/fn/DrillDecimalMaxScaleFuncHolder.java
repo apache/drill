@@ -39,19 +39,22 @@ public class DrillDecimalMaxScaleFuncHolder extends DrillSimpleFuncHolder{
     public MajorType getReturnType(List<LogicalExpression> args) {
 
         TypeProtos.DataMode mode = returnValue.type.getMode();
+        boolean nullInput = false;
         int scale = 0;
         int precision = 0;
 
-        if (nullHandling == NullHandling.NULL_IF_NULL) {
-            // if any one of the input types is nullable, then return nullable return type
-            for (LogicalExpression e : args) {
-                if (e.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
-                    mode = TypeProtos.DataMode.OPTIONAL;
-                }
-                scale = Math.max(scale, e.getMajorType().getScale());
-                precision = Math.max(precision, e.getMajorType().getPrecision());
+        for (LogicalExpression e : args) {
+            if (e.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
+                nullInput = true;
             }
+            scale = Math.max(scale, e.getMajorType().getScale());
+            precision = Math.max(precision, e.getMajorType().getPrecision());
         }
+
+        if (nullHandling == NullHandling.NULL_IF_NULL && nullInput) {
+            mode = TypeProtos.DataMode.OPTIONAL;
+        }
+
         return (TypeProtos.MajorType.newBuilder().setMinorType(returnValue.type.getMinorType()).setScale(scale).setPrecision(precision).setMode(mode).build());
     }
 }

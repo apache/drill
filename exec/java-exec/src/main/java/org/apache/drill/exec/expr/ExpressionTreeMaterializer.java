@@ -58,6 +58,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.common.util.CoreDecimalUtility;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
@@ -108,20 +109,19 @@ public class ExpressionTreeMaterializer {
 
     if (!Types.isFixedWidthType(toType)) {
 
-        /* We are implicitly casting to VARCHAR so we don't have a max length,
-         * using an arbitrary value. We trim down the size of the stored bytes
-         * to the actual size so this size doesn't really matter.
-         */
+      /* We are implicitly casting to VARCHAR so we don't have a max length,
+       * using an arbitrary value. We trim down the size of the stored bytes
+       * to the actual size so this size doesn't really matter.
+       */
       castArgs.add(new ValueExpressions.LongExpression(65536, null));
     }
-    else if (toType.getMinorType().name().startsWith("DECIMAL")) {
+    else if (CoreDecimalUtility.isDecimalType(toType)) {
       // Add the scale and precision to the arguments of the implicit cast
-      castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getPrecision(), null));
-      castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getScale(), null));
+      castArgs.add(new ValueExpressions.LongExpression(toType.getPrecision(), null));
+      castArgs.add(new ValueExpressions.LongExpression(toType.getScale(), null));
     }
-
     FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
-    FunctionResolver resolver = FunctionResolverFactory.getResolver(castCall);
+    FunctionResolver resolver = FunctionResolverFactory.getExactResolver(castCall);
     DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
 
     if (matchedCastFuncHolder == null) {
@@ -241,7 +241,12 @@ public class ExpressionTreeMaterializer {
             argsWithCast.add(currentArg);
           } else {
             //Case 3: insert cast if param type is different from arg type.
-            argsWithCast.add(addCastExpression(call.args.get(i), parmType, registry, errorCollector));
+            if (CoreDecimalUtility.isDecimalType(parmType)) {
+              // We are implicitly promoting a decimal type, set the required scale and precision
+              parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
+                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build();
+            }
+            argsWithCast.add(addCastExpression(currentArg, parmType, registry, errorCollector));
           }
         }
 
@@ -262,6 +267,11 @@ public class ExpressionTreeMaterializer {
             extArgsWithCast.add(currentArg);
           } else {
             // Insert cast if param type is different from arg type.
+            if (CoreDecimalUtility.isDecimalType(parmType)) {
+              // We are implicitly promoting a decimal type, set the required scale and precision
+              parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
+                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build();
+            }
             extArgsWithCast.add(addCastExpression(call.args.get(i), parmType, registry, errorCollector));
           }
         }
@@ -271,38 +281,6 @@ public class ExpressionTreeMaterializer {
 
       logFunctionResolutionError(errorCollector, call);
       return NullExpression.INSTANCE;
-    }
-
-    public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionImplementationRegistry registry, ErrorCollector errorCollector) {
-      String castFuncName = CastFunctions.getCastFunc(toType.getMinorType());
-      List<LogicalExpression> castArgs = Lists.newArrayList();
-      castArgs.add(fromExpr);  //input_expr
-
-      if (!Types.isFixedWidthType(toType)) {
-
-        /* We are implicitly casting to VARCHAR so we don't have a max length,
-         * using an arbitrary value. We trim down the size of the stored bytes
-         * to the actual size so this size doesn't really matter.
-         */
-        castArgs.add(new ValueExpressions.LongExpression(65536, null));
-      }
-      else if (toType.getMinorType().name().startsWith("DECIMAL")) {
-        // Add the scale and precision to the arguments of the implicit cast
-        castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getPrecision(), null));
-        castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getScale(), null));
-      }
-
-      FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
-      FunctionResolver resolver = FunctionResolverFactory.getExactResolver(castCall);
-      DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
-
-      if (matchedCastFuncHolder == null) {
-        logFunctionResolutionError(errorCollector, castCall);
-        return NullExpression.INSTANCE;
-      }
-
-      return matchedCastFuncHolder.getExpr(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
-
     }
 
     @Override
@@ -546,7 +524,7 @@ public class ExpressionTreeMaterializer {
         //VarLen type
         if (!Types.isFixedWidthType(type)) {
           newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
-        } else if (type.getMinorType().name().startsWith("DECIMAL")) {
+        }  if (CoreDecimalUtility.isDecimalType(type)) {
             newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
             newArgs.add(new ValueExpressions.LongExpression(type.getScale(), null));
         }

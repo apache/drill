@@ -695,4 +695,18 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineValues(time1, time2, ts1, ts2, date1, date2)
         .go();
   }
+
+  @Test
+  public void testCaseWithDecimalExpressions() throws Exception {
+    String query = "select " +
+        "case when true then cast(employee_id as decimal(15, 5)) else cast('0.0' as decimal(2, 1)) end as col1 " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(new BigDecimal("1.00000"))
+        .go();
+  }
 }

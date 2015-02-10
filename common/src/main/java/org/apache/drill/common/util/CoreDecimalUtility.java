@@ -73,4 +73,16 @@ public class CoreDecimalUtility {
 
     return (input.unscaledValue().intValue());
   }
+
+  /*
+   * Helper function to detect if the given data type is Decimal
+   */
+  public static boolean isDecimalType(TypeProtos.MajorType type) {
+    TypeProtos.MinorType minorType = type.getMinorType();
+    if (minorType == TypeProtos.MinorType.DECIMAL9 || minorType == TypeProtos.MinorType.DECIMAL18 ||
+        minorType == TypeProtos.MinorType.DECIMAL28SPARSE || minorType == TypeProtos.MinorType.DECIMAL38SPARSE) {
+      return true;
+    }
+    return false;
+  }
 }
