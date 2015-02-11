@@ -22,14 +22,14 @@ public class Stats {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Stats.class);
 
   private int maxWidth = Integer.MAX_VALUE;
-  private double totalCost;
+  private double maxCost = 0.0;
 
   public void addMaxWidth(int maxWidth){
     this.maxWidth = Math.min(this.maxWidth, maxWidth);
   }
 
   public void addCost(double cost){
-    totalCost += cost;
+    maxCost = Math.max(maxCost, cost);
   }
 
   public int getMaxWidth() {
@@ -38,12 +38,11 @@ public class Stats {
 
   @Override
   public String toString() {
-    return "Stats [maxWidth=" + maxWidth + ", totalCost=" + totalCost + "]";
+    return "Stats [maxWidth=" + maxWidth + ", maxCost=" + maxCost + "]";
   }
 
-  public double getTotalCost(){
-    return totalCost;
+  public double getMaxCost() {
+    return maxCost;
   }
-
 
 }

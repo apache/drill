@@ -94,4 +94,23 @@ public class TestAggregateFunctions extends BaseTestQuery {
 
   }
 
+  @Test // DRILL-2170: Subquery has group-by, order-by on aggregate function and limit
+  public void testDrill2170() throws Exception {
+    String query =
+        "select count(*) as cnt from "
+        + "cp.`tpch/orders.parquet` o inner join\n"
+        + "(select l_orderkey, sum(l_quantity), sum(l_extendedprice) \n"
+        + "from cp.`tpch/lineitem.parquet` \n"
+        + "group by l_orderkey order by 3 limit 100) sq \n"
+        + "on sq.l_orderkey = o.o_orderkey";
+
+    testBuilder()
+    .sqlQuery(query)
+    .ordered()
+    .optionSettingQueriesForTestQuery("alter system set `planner.slice_target` = 1000")
+    .baselineColumns("cnt")
+    .baselineValues(100l)
+    .build().run();
+  }
+
 }

@@ -182,7 +182,9 @@ public class SimpleParallelizer {
 
       Stats stats = wrapper.getStats();
 
-      double targetSlices = stats.getTotalCost()/parallelizationThreshold;
+      // Use max cost of all operators in this fragment; this is consistent with the
+      // calculation that ExcessiveExchangeRemover uses
+      double targetSlices = stats.getMaxCost()/parallelizationThreshold;
       int targetIntSlices = (int) Math.ceil(targetSlices);
 
       // figure out width.
