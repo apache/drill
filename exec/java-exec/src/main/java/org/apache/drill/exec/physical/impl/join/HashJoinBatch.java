@@ -50,7 +50,6 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -167,7 +166,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     return outputRecords;
   }
 
-
   @Override
   protected void buildSchema() throws SchemaChangeException {
     leftUpstream = next(left);
@@ -176,17 +174,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     hjHelper = new HashJoinHelper(context, oContext.getAllocator());
     try {
       rightSchema = right.getSchema();
-      VectorContainer c = new VectorContainer(oContext);
+      VectorContainer vectors = new VectorContainer(oContext);
       for (VectorWrapper w : right) {
-        ValueVector v = c.addOrGet(w.getField());
-        if (v instanceof AbstractContainerVector) {
-          w.getValueVector().makeTransferPair(v);
-          v.clear();
-        }
+        vectors.addOrGet(w.getField());
       }
-      c.buildSchema(SelectionVectorMode.NONE);
-      c.setRecordCount(0);
-      hyperContainer = new ExpandableHyperContainer(c);
+      vectors.buildSchema(SelectionVectorMode.NONE);
+      vectors.setRecordCount(0);
+      hyperContainer = new ExpandableHyperContainer(vectors);
       hjHelper.addNewBatch(0);
       buildBatchIndex++;
       setupHashTable();
@@ -397,6 +391,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
   }
 
+
   public HashJoinProbe setupHashJoinProbe() throws ClassTransformationException, IOException {
 
 
@@ -423,8 +418,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           outputType = inputType;
         }
 
+        // make sure to project field with children for children to show up in the schema
+        final MaterializedField projected = field.cloneWithType(outputType);
         // Add the vector to our output container
-        container.addOrGet(MaterializedField.create(field.getPath(), outputType));
+        container.addOrGet(projected);
 
         JVar inVV = g.declareVectorValueSetupAndMember("buildBatch", new TypedFieldId(field.getType(), true, fieldId));
         JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, fieldId));

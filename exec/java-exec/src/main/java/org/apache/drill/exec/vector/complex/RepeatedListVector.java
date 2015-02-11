@@ -74,7 +74,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
 
     if (childrenSize > 0) {
       MaterializedField child = field.getChildren().iterator().next();
-      vector = TypeHelper.getNewVector(child, allocator, callBack);
+      setVector(TypeHelper.getNewVector(child, allocator, callBack));
     }
 
     this.offsets = new UInt4Vector(null, allocator);
@@ -345,9 +345,9 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     return ArrayUtils.addAll(offsets.getBuffers(clear), vector.getBuffers(clear));
   }
 
-  private void setVector(ValueVector v) {
-    getField().addChild(v.getField());
-    this.vector = v;
+  protected void setVector(ValueVector newVector) {
+    vector = Preconditions.checkNotNull(newVector);
+    getField().addChild(newVector.getField());
   }
 
   @Override
@@ -388,7 +388,9 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     Preconditions.checkArgument(name == null);
 
     if(vector == null){
-      vector = TypeHelper.getNewVector(MaterializedField.create(getField().getPath().getUnindexedArrayChild(), type), allocator, callBack);
+      final MaterializedField child =  MaterializedField.create(SchemaPath.getSimplePath("").getUnindexedArrayChild(), type);
+      vector = TypeHelper.getNewVector(child, allocator, callBack);
+      setVector(vector);
       if (callBack != null) {
         callBack.doWork();
       }

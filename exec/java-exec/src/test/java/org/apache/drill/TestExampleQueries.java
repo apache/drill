@@ -566,4 +566,19 @@ public class TestExampleQueries extends BaseTestQuery{
         .build().run();
 
   }
+
+  @Test //DRILL-2163
+  public void testNestedTypesPastJoinReportsValidResult() throws Exception {
+    final String query = "select t1.uid, t1.events, t1.events[0].evnt_id as event_id, t2.transactions, " +
+        "t2.transactions[0] as trans, t1.odd, t2.even from cp.`project/complex/a.json` t1, " +
+        "cp.`project/complex/b.json` t2 where t1.uid = t2.uid";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .jsonBaselineFile("project/complex/drill-2163-result.json")
+        .build()
+        .run();
+  }
+
 }

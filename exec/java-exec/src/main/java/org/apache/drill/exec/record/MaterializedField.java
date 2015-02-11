@@ -66,6 +66,12 @@ public class MaterializedField {
     children.add(field);
   }
 
+  public MaterializedField cloneWithType(MajorType type) {
+    final MaterializedField clone = new MaterializedField(key.path, type);
+    clone.children = Sets.newLinkedHashSet(children);
+    return clone;
+  }
+
   public MaterializedField clone(FieldReference ref){
     return create(ref, key.type);
   }
