@@ -40,6 +40,7 @@ static Drill::ErrorMessages errorMessages[]={
     {ERR_CONN_ZKNODBIT, ERR_CATEGORY_CONN, 0, "No drillbit found with this Zookeeper."},
     {ERR_CONN_ZKNOAUTH, ERR_CATEGORY_CONN, 0, "Authentication failed."},
     {ERR_CONN_ZKEXP, ERR_CATEGORY_CONN, 0, "Session expired."},
+    {ERR_CONN_HSHAKETIMOUT, ERR_CATEGORY_CONN, 0, "Handshake Timeout."},
     {ERR_QRY_OUTOFMEM, ERR_CATEGORY_QRY, 0, "Out of memory."},
     {ERR_QRY_COMMERR, ERR_CATEGORY_QRY, 0, "Communication error. %s"},
     {ERR_QRY_INVREADLEN, ERR_CATEGORY_QRY, 0, "Internal Error: Received a message with an invalid read length."},

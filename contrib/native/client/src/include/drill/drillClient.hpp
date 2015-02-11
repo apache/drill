@@ -99,7 +99,11 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         static void setBufferLimit(uint64_t l);
         static uint64_t getBufferLimit();
         static void setSocketTimeout(int32_t l);
+        static void setHandshakeTimeout(int32_t l);
+        static void setQueryTimeout(int32_t l);
         static int32_t getSocketTimeout();
+        static int32_t getHandshakeTimeout();
+        static int32_t getQueryTimeout();
         static logLevel_t getLogLevel();
     private:
         // The logging level
@@ -107,8 +111,26 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         // The total amount of memory to be allocated by an instance of DrillClient.
         // For future use. Currently, not enforced.
         static uint64_t s_bufferLimit;
-        // Timeout (in seconds) for asynchronous read operations. Default is 180 seconds
+
+        /**
+         * DrillClient configures timeout (in seconds) in a fine granularity.
+         * Disabled by setting the value to zero.
+         *
+         * s_socketTimout: (default 0)
+         *      set SO_RCVTIMEO and SO_SNDTIMEO socket options and place a
+         *		timeout on socket receives and sends. It is disabled by default.
+         *
+         * s_handshakeTimeout: (default 5)
+         *      place a timeout on validating handshake. When an endpoint (host:port)
+         *		is reachable but drillbit hangs or running another service. It will
+         *		avoid the client hanging.
+         *
+         * s_queryTimeout: (default 180)
+         *      place a timeout on waiting result of querying.
+         */
         static int32_t s_socketTimeout;
+        static int32_t s_handshakeTimeout;
+        static int32_t s_queryTimeout;
         static boost::mutex s_mutex;
 };
 

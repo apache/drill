@@ -43,9 +43,12 @@ DrillClientInitializer::~DrillClientInitializer(){
     google::protobuf::ShutdownProtobufLibrary();
 }
 
+// Initialize static member of DrillClientConfig
 logLevel_t DrillClientConfig::s_logLevel=LOG_ERROR;
 uint64_t DrillClientConfig::s_bufferLimit=MAX_MEM_ALLOC_SIZE;
-int32_t DrillClientConfig::s_socketTimeout=180;
+int32_t DrillClientConfig::s_socketTimeout=0;
+int32_t DrillClientConfig::s_handshakeTimeout=5;
+int32_t DrillClientConfig::s_queryTimeout=180;
 boost::mutex DrillClientConfig::s_mutex;
 
 DrillClientConfig::DrillClientConfig(){
@@ -82,9 +85,33 @@ void DrillClientConfig::setSocketTimeout(int32_t t){
     s_socketTimeout=t;
 }
 
+void DrillClientConfig::setHandshakeTimeout(int32_t t){
+    if (t > 0) {
+        boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+        s_handshakeTimeout = t;
+    }
+}
+
+void DrillClientConfig::setQueryTimeout(int32_t t){
+    if (t>0){
+        boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+        s_queryTimeout=t;
+    }
+}
+
 int32_t DrillClientConfig::getSocketTimeout(){
     boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     return s_socketTimeout;
+}
+
+int32_t DrillClientConfig::getHandshakeTimeout(){
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+    return  s_handshakeTimeout;
+}
+
+int32_t DrillClientConfig::getQueryTimeout(){
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+    return s_queryTimeout;
 }
 
 logLevel_t DrillClientConfig::getLogLevel(){
@@ -263,7 +290,7 @@ connectionStatus_t DrillClient::connect(const char* connectStr, const char* defa
     ret=this->m_pImpl->connect(connectStr);
 
     if(ret==CONN_SUCCESS)
-        ret=this->m_pImpl->validateHandShake(defaultSchema)?CONN_SUCCESS:CONN_HANDSHAKE_FAILED;
+        ret=this->m_pImpl->validateHandShake(defaultSchema);
     return ret;
 
 }

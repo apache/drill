@@ -78,7 +78,8 @@ typedef enum{
     QRY_COMPLETED = 11,
     QRY_CANCELED = 12,
     QRY_FAILED = 13,
-    QRY_UNKNOWN_QUERY = 14
+    QRY_UNKNOWN_QUERY = 14,
+    QRY_TIMEOUT = 15
 } status_t;
 
 typedef enum{
@@ -86,7 +87,8 @@ typedef enum{
     CONN_FAILURE=1,
     CONN_HANDSHAKE_FAILED=2,
     CONN_INVALID_INPUT=3,
-    CONN_ZOOKEEPER_ERROR=4
+    CONN_ZOOKEEPER_ERROR=4,
+    CONN_HANDSHAKE_TIMEOUT=5
 } connectionStatus_t;
 
 typedef enum{
