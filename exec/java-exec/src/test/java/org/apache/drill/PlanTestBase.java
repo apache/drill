@@ -18,10 +18,14 @@
 
 package org.apache.drill;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.TestTools;
@@ -34,12 +38,17 @@ import org.eigenbase.sql.SqlExplain.Depth;
 import org.eigenbase.sql.SqlExplainLevel;
 
 import com.google.common.base.Strings;
+import org.junit.Test;
 
 public class PlanTestBase extends BaseTestQuery {
 
   protected static final String OPTIQ_FORMAT = "text";
   protected static final String JSON_FORMAT = "json";
+  protected static final String EXPECTED_NOT_FOUND = "Did not find expected pattern in plan: ";
+  protected static final String UNEXPECTED_FOUND = "Found unwanted pattern in plan: ";
 
+  // TODO - enhance this to support regex, and excluded patterns like the
+  // check method below for optiq format plans
   /**
    * This method will take a SQL string statement, get the PHYSICAL plan in json
    * format. Then check the physical plan against the list expected substrs.
@@ -54,6 +63,56 @@ public class PlanTestBase extends BaseTestQuery {
     for (String colNames : expectedSubstrs) {
       assertTrue(String.format("Unable to find expected string %s in plan: %s!", colNames, planStr), planStr.contains(colNames));
     }
+  }
+
+  /**
+   * Runs an explain plan query and check for expected regex patterns (in optiq
+   * text format), also ensure excluded patterns are not found. Either list can
+   * be empty or null to skip that part of the check.
+   *
+   * See the convenience methods for passing a single string in either the
+   * excluded list, included list or both.
+   *
+   * @param query - an explain query, this method does not add it for you
+   * @param expectedPatterns - list of patterns that should appear in the plan
+   * @param excludedPatterns - list of patterns that should not appear in the plan
+   * @throws Exception - if an inclusion or exclusion check fails, or the
+   *                     planning process throws an exception
+   */
+  public void testPlanMatchingPatterns(String query, String[] expectedPatterns, String[] excludedPatterns) throws Exception {
+    String plan = getPlanInString("EXPLAIN PLAN for " + normalizeQuery(query), OPTIQ_FORMAT);
+
+    Pattern p;
+    Matcher m;
+    // Check and make sure all expected patterns are in the plan
+    if (expectedPatterns != null) {
+      for (String s : expectedPatterns) {
+        p = Pattern.compile(s);
+        m = p.matcher(plan);
+        assert m.find() : EXPECTED_NOT_FOUND + s;
+      }
+    }
+
+    // Check and make sure all excluded patterns are not in the plan
+    if (excludedPatterns != null) {
+      for (String s : excludedPatterns) {
+        p = Pattern.compile(s);
+        m = p.matcher(plan);
+        assert ! m.find() : UNEXPECTED_FOUND + s;
+      }
+    }
+  }
+
+  public void testPlanOneExpectedPatternOneExcluded(String query, String expectedPattern, String excludedPattern) throws Exception {
+    testPlanMatchingPatterns(query, new String[]{expectedPattern}, new String[]{excludedPattern});
+  }
+
+  public void testPlanOneExpectedPattern(String query, String expectedPattern) throws Exception {
+    testPlanMatchingPatterns(query, new String[]{expectedPattern}, new String[]{});
+  }
+
+  public void testPlanOneExcludedPattern(String query, String excludedPattern) throws Exception {
+    testPlanMatchingPatterns(query, new String[]{}, new String[]{excludedPattern});
   }
 
   /**
@@ -208,10 +267,15 @@ public class PlanTestBase extends BaseTestQuery {
 
       loader.load(b.getHeader().getDef(), b.getData());
 
-      VectorWrapper<?> vw = loader.getValueAccessorById(
-          NullableVarCharVector.class, //
-          loader.getValueVectorId(SchemaPath.getSimplePath(columnName)).getFieldIds() //
-          );
+      VectorWrapper<?> vw;
+      try {
+          vw = loader.getValueAccessorById(
+              NullableVarCharVector.class, //
+              loader.getValueVectorId(SchemaPath.getSimplePath(columnName)).getFieldIds() //
+              );
+      } catch (Throwable t) {
+        throw new Exception("Looks like you did not provide an explain plan query, please add EXPLAIN PLAN FOR to the beginning of your query.");
+      }
 
       System.out.println(vw.getValueVector().getField().toExpr());
       ValueVector vv = vw.getValueVector();
