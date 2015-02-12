@@ -1134,7 +1134,9 @@ void DrillClientQueryResult::clearAndDestroy(){
         }
         m_columnDefs->clear();
     }
-    DRILL_LOG(LOG_TRACE) << "Clearing state for Query Id - " << debugPrintQid(*this->m_pQueryId) << std::endl;
+    if(this->m_pQueryId!=NULL){
+        DRILL_LOG(LOG_TRACE) << "Clearing state for Query Id - " << debugPrintQid(*this->m_pQueryId) << std::endl;
+    }
     //Tell the parent to remove this from its lists
     m_pClient->clearMapEntries(this);
 
