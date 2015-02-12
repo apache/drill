@@ -113,4 +113,19 @@ public class TestAggregateFunctions extends BaseTestQuery {
     .build().run();
   }
 
+  @Test // DRILL-2168
+  public void testGBExprWithDrillFunc() throws Exception {
+    testBuilder()
+        .ordered()
+        .sqlQuery("select concat(n_name, cast(n_nationkey as varchar(10))) as name, count(*) as cnt " +
+            "from cp.`tpch/nation.parquet` " +
+            "group by concat(n_name, cast(n_nationkey as varchar(10))) " +
+            "having concat(n_name, cast(n_nationkey as varchar(10))) > 'UNITED'" +
+            "order by concat(n_name, cast(n_nationkey as varchar(10)))")
+        .baselineColumns("name", "cnt")
+        .baselineValues("UNITED KINGDOM23", 1L)
+        .baselineValues("UNITED STATES24", 1L)
+        .baselineValues("VIETNAM21", 1L)
+        .build().run();
+  }
 }
