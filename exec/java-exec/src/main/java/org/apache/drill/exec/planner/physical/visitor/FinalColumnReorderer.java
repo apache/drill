@@ -20,9 +20,11 @@ package org.apache.drill.exec.planner.physical.visitor;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
+import org.apache.drill.exec.planner.physical.UnionPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
@@ -43,12 +45,11 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
   @Override
   public Prel visitScreen(ScreenPrel prel, Void value) throws RuntimeException {
     Prel newChild = ((Prel) prel.getChild()).accept(this, value);
-    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel( newChild )));
+    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel(newChild)));
   }
 
   private Prel addTrivialOrderedProjectPrel(Prel prel) {
-
-    if ( !prel.needsFinalColumnReordering()) {
+    if (!prel.needsFinalColumnReordering()) {
       return prel;
     }
 
@@ -72,11 +73,15 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
   @Override
   public Prel visitWriter(WriterPrel prel, Void value) throws RuntimeException {
     Prel newChild = ((Prel) prel.getChild()).accept(this, null);
-    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel( newChild )));
+    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel(newChild)));
   }
 
   @Override
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
+    if(prel instanceof UnionPrel) {
+      return addColumnOrderingBelowUnion(prel);
+    }
+
     List<RelNode> children = Lists.newArrayList();
     boolean changed = false;
     for (Prel p : prel) {
@@ -93,4 +98,19 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
     }
   }
 
+  private Prel addColumnOrderingBelowUnion(Prel prel) {
+    List<RelNode> children = Lists.newArrayList();
+    for (Prel p : prel) {
+      Prel child = p.accept(this, null);
+
+      boolean needProjectBelowUnion = !(p instanceof ProjectPrel);
+      if(needProjectBelowUnion) {
+        child = addTrivialOrderedProjectPrel(child);
+      }
+
+      children.add(child);
+    }
+
+    return (Prel) prel.copy(prel.getTraitSet(), children);
+  }
 }

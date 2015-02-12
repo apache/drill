@@ -17,12 +17,17 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
+import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
+import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlJoin;
 import org.eigenbase.sql.JoinType;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlNodeList;
+import org.eigenbase.sql.SqlSelect;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.util.SqlShuttle;
 import org.eigenbase.sql.SqlDataTypeSpec;
@@ -71,7 +76,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
   }
 
   @Override
-  public SqlNode visit(org.eigenbase.sql.SqlCall sqlCall) {
+  public SqlNode visit(SqlCall sqlCall) {
     // Disable unsupported Intersect, Except
     if(sqlCall.getKind() == SqlKind.INTERSECT || sqlCall.getKind() == SqlKind.EXCEPT) {
       unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
@@ -82,7 +87,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     // Disable unsupported Union
     if(sqlCall.getKind() == SqlKind.UNION) {
       SqlSetOperator op = (SqlSetOperator) sqlCall.getOperator();
-      if (!op.isAll()) {
+      if(!op.isAll()) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
             "1921", sqlCall.getOperator().getName());
         throw new UnsupportedOperationException();

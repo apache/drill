@@ -786,7 +786,25 @@ public class TypeCastRules {
         (rules.get(to) == null ? false : rules.get(to).contains(from));
   }
 
-  /*
+  public static DataMode getLeastRestrictiveDataMode(List<DataMode> dataModes) {
+    boolean hasOptional = false;
+    for(DataMode dataMode : dataModes) {
+      switch (dataMode) {
+        case REPEATED:
+          return dataMode;
+        case OPTIONAL:
+          hasOptional = true;
+      }
+    }
+
+    if(hasOptional) {
+      return DataMode.OPTIONAL;
+    } else {
+      return DataMode.REQUIRED;
+    }
+  }
+
+    /*
    * Function checks if casting is allowed from the 'from' -> 'to' minor type. If its allowed
    * we also check if the precedence map allows such a cast and return true if both cases are satisfied
    */

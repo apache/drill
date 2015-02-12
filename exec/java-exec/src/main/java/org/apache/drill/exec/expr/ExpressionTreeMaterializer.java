@@ -102,6 +102,23 @@ public class ExpressionTreeMaterializer {
     }
   }
 
+  public static LogicalExpression convertToNullableType(LogicalExpression fromExpr, MinorType toType, FunctionImplementationRegistry registry, ErrorCollector errorCollector) {
+    String funcName = "convertToNullable" + toType.toString();
+    List<LogicalExpression> args = Lists.newArrayList();
+    args.add(fromExpr);
+    FunctionCall funcCall = new FunctionCall(funcName, args, ExpressionPosition.UNKNOWN);
+    FunctionResolver resolver = FunctionResolverFactory.getResolver(funcCall);
+
+    DrillFuncHolder matchedConvertToNullableFuncHolder = registry.findDrillFunction(resolver, funcCall);
+    if (matchedConvertToNullableFuncHolder == null) {
+      logFunctionResolutionError(errorCollector, funcCall);
+      return NullExpression.INSTANCE;
+    }
+
+    return matchedConvertToNullableFuncHolder.getExpr(funcName, args, ExpressionPosition.UNKNOWN);
+  }
+
+
   public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionImplementationRegistry registry, ErrorCollector errorCollector) {
     String castFuncName = CastFunctions.getCastFunc(toType.getMinorType());
     List<LogicalExpression> castArgs = Lists.newArrayList();
@@ -198,7 +215,7 @@ public class ExpressionTreeMaterializer {
       return new BooleanOperator(op.getName(), args, op.getPosition());
     }
 
-   @Override
+    @Override
     public LogicalExpression visitFunctionCall(FunctionCall call, FunctionImplementationRegistry registry) {
       List<LogicalExpression> args = Lists.newArrayList();
       for (int i = 0; i < call.args.size(); ++i) {

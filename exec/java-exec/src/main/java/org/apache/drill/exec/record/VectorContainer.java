@@ -318,5 +318,4 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     }
     return true;
   }
-
 }

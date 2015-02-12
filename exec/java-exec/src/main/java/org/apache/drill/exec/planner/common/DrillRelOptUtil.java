@@ -57,7 +57,7 @@ public abstract class DrillRelOptUtil {
         || type2.getSqlTypeName() == SqlTypeName.ANY) {
         continue;
       }
-      if (!type1.equals(type2)) {
+      if (type1.getSqlTypeName() != type2.getSqlTypeName()) {
         if (allowSubstring
             && (type1.getSqlTypeName() == SqlTypeName.CHAR && type2.getSqlTypeName() == SqlTypeName.CHAR)
             && (type1.getPrecision() <= type2.getPrecision())) {
