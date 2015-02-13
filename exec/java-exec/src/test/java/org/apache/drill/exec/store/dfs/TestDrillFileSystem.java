@@ -63,23 +63,36 @@ public class TestDrillFileSystem {
 
   @Test
   public void testIOStats() throws Exception {
+    DrillFileSystem dfs = null;
+    InputStream is = null;
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
     OpProfileDef profileDef = new OpProfileDef(0 /*operatorId*/, 0 /*operatorType*/, 0 /*inputCount*/);
     OperatorStats stats = new OperatorStats(profileDef, null /*allocator*/);
+
     // start wait time method in OperatorStats expects the OperatorStats state to be in "processing"
     stats.startProcessing();
-    DrillFileSystem dfs = new DrillFileSystem(FileSystem.get(conf), stats);
 
-    InputStream is = dfs.open(new Path(tempFilePath));
+    try {
+      dfs = new DrillFileSystem(FileSystem.get(conf), stats);
+      is = dfs.open(new Path(tempFilePath));
 
-    byte[] buf = new byte[8000];
-    while (is.read(buf, 0, buf.length) != -1) { }
+      byte[] buf = new byte[8000];
+      while (is.read(buf, 0, buf.length) != -1) {
+      }
+    } finally {
+      stats.stopProcessing();
 
-    stats.stopProcessing();
+      if (is != null) {
+        is.close();
+      }
+
+      if (dfs != null) {
+        dfs.close();
+      }
+    }
 
     OperatorProfile operatorProfile = stats.getProfile();
-
     assertTrue("Expected wait time is non-zero, but got zero wait time", operatorProfile.getWaitNanos() > 0);
   }
 

@@ -22,10 +22,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
@@ -58,18 +61,42 @@ import org.apache.hadoop.util.Progressable;
 /**
  * DrillFileSystem is the wrapper around the actual FileSystem implementation.
  *
- * If {@link org.apache.drill.exec.ops.OperatorStats} are provided it returns a instrumented FSDataInputStream to
- * measure IO wait time.
+ * If {@link org.apache.drill.exec.ops.OperatorStats} are provided it returns an instrumented FSDataInputStream to
+ * measure IO wait time and tracking file open/close operations.
  */
-public class DrillFileSystem extends FileSystem {
+public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFileSystem.class);
+  private final static boolean TRACKING_ENABLED = AssertionUtil.isAssertionsEnabled();
+  private final static ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = Maps.newConcurrentMap();
+
+  static {
+    if (TRACKING_ENABLED) {
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        public void run() {
+          if (openedFiles.size() != 0) {
+            final StringBuffer errMsgBuilder = new StringBuffer();
+
+            errMsgBuilder.append(String.format("Not all files opened using this FileSystem are closed. " + "There are" +
+                " still [%d] files open.\n", openedFiles.size()));
+
+            for(DebugStackTrace stackTrace : openedFiles.values()) {
+              stackTrace.addToStringBuilder(errMsgBuilder);
+            }
+
+            final String errMsg = errMsgBuilder.toString();
+            logger.error(errMsg);
+            throw new IllegalStateException(errMsg);
+          }
+        }
+      });
+    }
+  }
 
   private final FileSystem underlyingFs;
   private final OperatorStats operatorStats;
 
   public DrillFileSystem(Configuration fsConf) throws IOException {
-    this.underlyingFs = FileSystem.get(fsConf);
-    this.operatorStats = null;
+    this(FileSystem.get(fsConf), null);
   }
 
   public DrillFileSystem(FileSystem fs, OperatorStats operatorStats) {
@@ -96,11 +123,17 @@ public class DrillFileSystem extends FileSystem {
    */
   @Override
   public FSDataInputStream open(Path f, int bufferSize) throws IOException {
-    if (operatorStats != null) {
-      return new DrillFSDataInputStream(underlyingFs.open(f, bufferSize), operatorStats);
+    if (operatorStats == null) {
+      return underlyingFs.open(f, bufferSize);
     }
 
-    return underlyingFs.open(f, bufferSize);
+    if (TRACKING_ENABLED) {
+      DrillFSDataInputStream is = new DrillFSDataInputStream(underlyingFs.open(f, bufferSize), operatorStats, this);
+      fileOpened(f, is);
+      return is;
+    }
+
+    return new DrillFSDataInputStream(underlyingFs.open(f, bufferSize), operatorStats);
   }
 
   /**
@@ -108,11 +141,17 @@ public class DrillFileSystem extends FileSystem {
    */
   @Override
   public FSDataInputStream open(Path f) throws IOException {
-    if (operatorStats != null) {
-      return new DrillFSDataInputStream(underlyingFs.open(f), operatorStats);
+    if (operatorStats == null) {
+      return underlyingFs.open(f);
     }
 
-    return underlyingFs.open(f);
+    if (TRACKING_ENABLED) {
+      DrillFSDataInputStream is = new DrillFSDataInputStream(underlyingFs.open(f), operatorStats, this);
+      fileOpened(f, is);
+      return is;
+    }
+
+    return new DrillFSDataInputStream(underlyingFs.open(f), operatorStats);
   }
 
   @Override
@@ -678,5 +717,37 @@ public class DrillFileSystem extends FileSystem {
     }
   }
 
+  @Override
+  public void fileOpened(Path path, DrillFSDataInputStream fsDataInputStream) {
+    openedFiles.put(fsDataInputStream, new DebugStackTrace(path, Thread.currentThread().getStackTrace()));
+  }
 
+  @Override
+  public void fileClosed(DrillFSDataInputStream fsDataInputStream) {
+    openedFiles.remove(fsDataInputStream);
+  }
+
+  public static class DebugStackTrace {
+    final private StackTraceElement[] elements;
+    final private Path path;
+
+    public DebugStackTrace(Path path, StackTraceElement[] elements) {
+      this.path = path;
+      this.elements = elements;
+    }
+
+    public void addToStringBuilder(StringBuffer sb) {
+      sb.append("File '");
+      sb.append(path.toString());
+      sb.append("' opened at callstack:\n");
+
+      // add all stack elements except the top three as they point to DrillFileSystem.open() and inner stack elements.
+      for (int i = 3; i < elements.length; i++) {
+        sb.append("\t");
+        sb.append(elements[i]);
+        sb.append("\n");
+      }
+      sb.append("\n");
+    }
+  }
 }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.ReadOption;
@@ -35,11 +36,20 @@ import java.util.EnumSet;
  * Wrapper around FSDataInputStream to collect IO Stats.
  */
 public class DrillFSDataInputStream extends FSDataInputStream {
-  private FSDataInputStream underlyingIs;
+  private final FSDataInputStream underlyingIs;
+  private final OpenFileTracker openFileTracker;
+  private final OperatorStats operatorStats;
 
   public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats) throws IOException {
+    this(in, operatorStats, null);
+  }
+
+  public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats,
+      OpenFileTracker openFileTracker) throws IOException {
     super(new WrappedInputStream(in, operatorStats));
-    this.underlyingIs = in;
+    underlyingIs = in;
+    this.openFileTracker = openFileTracker;
+    this.operatorStats = operatorStats;
   }
 
   @Override
@@ -54,17 +64,32 @@ public class DrillFSDataInputStream extends FSDataInputStream {
 
   @Override
   public int read(long position, byte[] buffer, int offset, int length) throws IOException {
-    return underlyingIs.read(position, buffer, offset, length);
+    operatorStats.startWait();
+    try {
+      return underlyingIs.read(position, buffer, offset, length);
+    } finally {
+      operatorStats.stopWait();
+    }
   }
 
   @Override
   public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
-    underlyingIs.readFully(position, buffer, offset, length);
+    operatorStats.startWait();
+    try {
+      underlyingIs.readFully(position, buffer, offset, length);
+    } finally {
+      operatorStats.stopWait();
+    }
   }
 
   @Override
   public void readFully(long position, byte[] buffer) throws IOException {
-    underlyingIs.readFully(position, buffer);
+    operatorStats.startWait();
+    try {
+      underlyingIs.readFully(position, buffer);
+    } finally {
+      operatorStats.stopWait();
+    }
   }
 
   @Override
@@ -73,13 +98,19 @@ public class DrillFSDataInputStream extends FSDataInputStream {
   }
 
   @Override
+  @LimitedPrivate({"HDFS"})
   public InputStream getWrappedStream() {
     return underlyingIs.getWrappedStream();
   }
 
   @Override
   public int read(ByteBuffer buf) throws IOException {
-    return underlyingIs.read(buf);
+    operatorStats.startWait();
+    try {
+      return underlyingIs.read(buf);
+    } finally {
+      operatorStats.stopWait();
+    }
   }
 
   @Override
@@ -99,12 +130,55 @@ public class DrillFSDataInputStream extends FSDataInputStream {
 
   @Override
   public ByteBuffer read(ByteBufferPool bufferPool, int maxLength, EnumSet<ReadOption> opts) throws IOException, UnsupportedOperationException {
-    return underlyingIs.read(bufferPool, maxLength, opts);
+    operatorStats.startWait();
+    try {
+      return underlyingIs.read(bufferPool, maxLength, opts);
+    } finally {
+      operatorStats.stopWait();
+    }
   }
 
   @Override
   public void releaseBuffer(ByteBuffer buffer) {
     underlyingIs.releaseBuffer(buffer);
+  }
+
+  @Override
+  public int read() throws IOException {
+    return underlyingIs.read();
+  }
+
+  @Override
+  public long skip(long n) throws IOException {
+    return underlyingIs.skip(n);
+  }
+
+  @Override
+  public int available() throws IOException {
+    return underlyingIs.available();
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (openFileTracker != null) {
+      openFileTracker.fileClosed(this);
+    }
+    underlyingIs.close();
+  }
+
+  @Override
+  public void mark(int readlimit) {
+    underlyingIs.mark(readlimit);
+  }
+
+  @Override
+  public void reset() throws IOException {
+    underlyingIs.reset();
+  }
+
+  @Override
+  public boolean markSupported() {
+    return underlyingIs.markSupported();
   }
 
   /**
@@ -133,14 +207,51 @@ public class DrillFSDataInputStream extends FSDataInputStream {
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
       operatorStats.startWait();
-      int numBytesRead;
       try {
-        numBytesRead = is.read(b, off, len);
+        return is.read(b, off, len);
       } finally {
         operatorStats.stopWait();
       }
+    }
 
-      return numBytesRead;
+    @Override
+    public int read(byte[] b) throws IOException {
+      operatorStats.startWait();
+      try {
+        return is.read(b);
+      } finally {
+        operatorStats.stopWait();
+      }
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+      return is.skip(n);
+    }
+
+    @Override
+    public int available() throws IOException {
+      return is.available();
+    }
+
+    @Override
+    public void close() throws IOException {
+      is.close();
+    }
+
+    @Override
+    public synchronized void mark(int readlimit) {
+      is.mark(readlimit);
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+      is.reset();
+    }
+
+    @Override
+    public boolean markSupported() {
+      return is.markSupported();
     }
 
     @Override
