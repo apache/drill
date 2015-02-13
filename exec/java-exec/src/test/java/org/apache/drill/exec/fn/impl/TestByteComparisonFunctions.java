@@ -19,11 +19,12 @@ package org.apache.drill.exec.fn.impl;
 
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -32,16 +33,16 @@ import org.junit.Test;
 public class TestByteComparisonFunctions extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestByteComparisonFunctions.class);
 
-  static TopLevelAllocator allocator;
+  static RootAllocator allocator;
   static VarCharHolder hello;
   static VarCharHolder goodbye;
   static VarCharHolder helloLong;
   static VarCharHolder goodbyeLong;
 
   @BeforeClass
-  public static void setup(){
-    DrillConfig c= DrillConfig.create();
-    allocator = new TopLevelAllocator(c);
+  public static void setup() throws Exception {
+    final DrillConfig c = DrillConfig.create();
+    allocator = new RootAllocator(c);
     hello = ValueHolderHelper.getVarCharHolder(allocator, "hello");
     goodbye = ValueHolderHelper.getVarCharHolder(allocator, "goodbye");
     helloLong = ValueHolderHelper.getVarCharHolder(allocator, "hellomyfriend");
@@ -54,7 +55,7 @@ public class TestByteComparisonFunctions extends ExecTest{
     helloLong.buffer.release();
     goodbye.buffer.release();
     goodbyeLong.buffer.release();
-    allocator.close();
+    DrillAutoCloseables.closeNoChecked(allocator);
   }
 
   @Test

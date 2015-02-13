@@ -33,12 +33,13 @@ import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.common.util.DataOutputOutputStream;
 
 /**
- * Helper class that holds the basic functionality to interchangably use the different Drill serializble interfaces.
- * This is package private as users should utilize either AbstractDataSerializable or AbstractStreamSerializable instead
- * to avoid infinite loops.
+ * Helper class that holds the basic functionality to interchangeably use
+ * the different Drill serializble interfaces. This is package private as
+ * users should utilize either AbstractDataSerializable or AbstractStreamSerializable
+ * instead to avoid infinite loops.
  */
 abstract class LoopedAbstractDrillSerializable implements DrillSerializable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoopedAbstractDrillSerializable.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoopedAbstractDrillSerializable.class);
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
@@ -48,7 +49,6 @@ abstract class LoopedAbstractDrillSerializable implements DrillSerializable {
     out.writeInt(ba.length);
     out.write(ba);
   }
-
 
   @Override
   public void read(DataInput input) throws IOException {

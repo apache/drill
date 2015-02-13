@@ -42,8 +42,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -54,7 +53,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 public class ExpressionTest extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTest.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTest.class);
 
   DrillConfig c = DrillConfig.create();
   FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -87,7 +86,7 @@ public class ExpressionTest extends ExecTest {
         batch.getValueAccessorById(IntVector.class, tfid.getFieldIds());
         result = wrapper;
         wrapper.getValueVector();
-        result = new IntVector(MaterializedField.create("result", type), new TopLevelAllocator(0));
+        result = new IntVector(MaterializedField.create("result", type), new RootAllocator(DrillConfig.create()));
       }
 
     };

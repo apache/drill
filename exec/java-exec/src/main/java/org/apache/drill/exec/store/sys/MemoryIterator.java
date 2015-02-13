@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.store.sys;
 
-
 import java.lang.management.BufferPoolMXBean;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
@@ -63,7 +63,7 @@ public class MemoryIterator implements Iterator<Object> {
 
 
     memoryInfo.direct_current = context.getDrillbitContext().getAllocator().getAllocatedMemory();
-    memoryInfo.direct_max = TopLevelAllocator.MAXIMUM_DIRECT_MEMORY;
+    memoryInfo.direct_max = RootAllocator.getMaxDirect();
     return memoryInfo;
   }
 

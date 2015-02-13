@@ -60,6 +60,15 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
     this.context = context;
   }
 
+  /**
+   * Return the fragment count from construction time.
+   *
+   * @return the fragment count
+   */
+  protected int getFragmentCount() {
+    return fragmentCount;
+  }
+
   @Override
   public synchronized void enqueue(final RawFragmentBatch batch) throws IOException {
 

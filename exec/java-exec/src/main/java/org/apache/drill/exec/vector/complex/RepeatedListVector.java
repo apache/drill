@@ -47,7 +47,6 @@ import org.apache.drill.exec.vector.complex.impl.NullReader;
 import org.apache.drill.exec.vector.complex.impl.RepeatedListReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-
 public class RepeatedListVector extends AbstractContainerVector
     implements RepeatedValueVector, RepeatedFixedWidthVectorLike {
 
@@ -180,7 +179,7 @@ public class RepeatedListVector extends AbstractContainerVector
 
     public DelegateRepeatedVector(MaterializedField field, BufferAllocator allocator) {
       super(field, allocator);
-      this.emptyPopulator = new EmptyValuePopulator(getOffsetVector());
+      emptyPopulator = new EmptyValuePopulator(getOffsetVector());
     }
 
     @Override
@@ -423,5 +422,4 @@ public class RepeatedListVector extends AbstractContainerVector
   public void copyFromSafe(int fromIndex, int thisIndex, RepeatedListVector from) {
     delegate.copyFromSafe(fromIndex, thisIndex, from.delegate);
   }
-
 }

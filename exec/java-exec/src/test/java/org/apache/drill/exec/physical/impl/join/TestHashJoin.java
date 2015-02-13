@@ -32,7 +32,7 @@ import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -61,13 +61,12 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-
 public class TestHashJoin extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
 
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100000);
 
-  DrillConfig c = DrillConfig.create();
+  private final DrillConfig c = DrillConfig.create();
 
   private void testHJMockScanCommon(final DrillbitContext bitContext, UserServer.UserClientConnection connection, String physicalPlan, int expectedRows) throws Throwable {
     final LocalPStoreProvider provider = new LocalPStoreProvider(c);
@@ -76,7 +75,7 @@ public class TestHashJoin extends PopUnitTestBase {
     opt.init();
     new NonStrictExpectations() {{
         bitContext.getMetrics(); result = new MetricRegistry();
-        bitContext.getAllocator(); result = new TopLevelAllocator();
+        bitContext.getAllocator(); result = new RootAllocator(c);
         bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
         bitContext.getConfig(); result = c;
         bitContext.getOptionManager(); result = opt;
@@ -105,21 +104,18 @@ public class TestHashJoin extends PopUnitTestBase {
   @Test
   public void multiBatchEqualityJoin(@Injectable final DrillbitContext bitContext,
                                  @Injectable UserServer.UserClientConnection connection) throws Throwable {
-
     testHJMockScanCommon(bitContext, connection, "/join/hash_join_multi_batch.json", 200000);
   }
 
   @Test
   public void multiBatchRightOuterJoin(@Injectable final DrillbitContext bitContext,
                                        @Injectable UserServer.UserClientConnection connection) throws Throwable {
-
     testHJMockScanCommon(bitContext, connection, "/join/hj_right_outer_multi_batch.json", 100000);
   }
 
   @Test
   public void multiBatchLeftOuterJoin(@Injectable final DrillbitContext bitContext,
                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
-
     testHJMockScanCommon(bitContext, connection, "/join/hj_left_outer_multi_batch.json", 100000);
   }
 
@@ -151,7 +147,6 @@ public class TestHashJoin extends PopUnitTestBase {
       // Check the output of decimal9
       ValueVector.Accessor intAccessor1 = itr.next().getValueVector().getAccessor();
 
-
       for (int i = 0; i < intAccessor1.getValueCount(); i++) {
         assertEquals(intAccessor1.getObject(i), colA[i]);
       }
@@ -167,7 +162,6 @@ public class TestHashJoin extends PopUnitTestBase {
   @Test
   public void hjWithExchange(@Injectable final DrillbitContext bitContext,
                              @Injectable UserServer.UserClientConnection connection) throws Throwable {
-
     // Function tests with hash join with exchanges
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
       Drillbit bit = new Drillbit(CONFIG, serviceSet);
@@ -224,7 +218,6 @@ public class TestHashJoin extends PopUnitTestBase {
       ValueVector.Accessor intAccessor1 = itr.next().getValueVector().getAccessor();
       ValueVector.Accessor intAccessor2 = itr.next().getValueVector().getAccessor();
 
-
       for (int i = 0; i < intAccessor1.getValueCount(); i++) {
         assertEquals(intAccessor1.getObject(i), colA[i]);
         assertEquals(intAccessor2.getObject(i), colC[i]);
@@ -238,11 +231,9 @@ public class TestHashJoin extends PopUnitTestBase {
     }
   }
 
-
   @Test
   public void hjWithExchange1(@Injectable final DrillbitContext bitContext,
                               @Injectable UserServer.UserClientConnection connection) throws Throwable {
-
     // Another test for hash join with exchanges
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
          Drillbit bit = new Drillbit(CONFIG, serviceSet);
@@ -267,14 +258,12 @@ public class TestHashJoin extends PopUnitTestBase {
     }
   }
 
-
   @Test
   public void testHashJoinExprInCondition() throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
-
+    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
@@ -289,5 +278,4 @@ public class TestHashJoin extends PopUnitTestBase {
       assertEquals(10, count);
     }
   }
-
 }

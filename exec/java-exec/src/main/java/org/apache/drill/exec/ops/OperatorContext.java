@@ -29,7 +29,6 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.conf.Configuration;
 
 public abstract class OperatorContext {
-
   public abstract DrillBuf replace(DrillBuf old, int newSize);
 
   public abstract DrillBuf getManagedBuffer();
@@ -57,5 +56,4 @@ public abstract class OperatorContext {
     }
     return i;
   }
-
 }

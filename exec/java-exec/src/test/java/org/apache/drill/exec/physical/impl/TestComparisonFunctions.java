@@ -26,7 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -54,9 +54,9 @@ public class TestComparisonFunctions extends ExecTest {
 
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
@@ -154,5 +154,4 @@ public class TestComparisonFunctions extends ExecTest {
     runTest(bitContext, connection, "bigIntNullableColumn >= bigIntNullableColumn", 50);
     runTest(bitContext, connection, "bigIntNullableColumn <= bigIntNullableColumn", 50);
   }
-
 }

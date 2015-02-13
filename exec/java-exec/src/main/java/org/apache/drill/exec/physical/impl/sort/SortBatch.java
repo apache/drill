@@ -64,7 +64,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   public SortBatch(Sort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
-    this.builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
+    builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
   }
 
   @Override
@@ -83,8 +83,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   @Override
-  public void close() {
-    builder.clear();
+  public void close() throws Exception {
     builder.close();
     super.close();
   }

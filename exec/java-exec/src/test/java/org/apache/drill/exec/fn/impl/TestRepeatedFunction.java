@@ -29,7 +29,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -50,23 +50,18 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestRepeatedFunction extends ExecTest{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRepeatedFunction.class);
-  DrillConfig c = DrillConfig.create();
-
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRepeatedFunction.class);
+  final DrillConfig c = DrillConfig.create();
 
   @Test
   public void testRepeated(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
-//    System.out.println(System.getProperty("java.class.path"));
-
-
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
-
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/physical_repeated_1.json"), Charsets.UTF_8));
@@ -108,7 +103,5 @@ public class TestRepeatedFunction extends ExecTest{
       throw context.getFailureCause();
     }
     assertTrue(!context.isFailed());
-
   }
-
 }

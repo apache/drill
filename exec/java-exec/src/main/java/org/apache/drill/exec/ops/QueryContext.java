@@ -93,12 +93,9 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaName());
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
 
-    try {
-      allocator = drillbitContext.getAllocator().getChildAllocator(null, INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES,
+    allocator = drillbitContext.getAllocator().getChildAllocator(null, INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES,
           MAX_OFF_HEAP_ALLOCATION_IN_BYTES, false);
-    } catch (OutOfMemoryException e) {
-      throw new DrillRuntimeException("Error creating off-heap allocator for planning context.",e);
-    }
+
     // TODO(DRILL-1942) the new allocator has this capability built-in, so this can be removed once that is available
     bufferManager = new BufferManager(this.allocator, null);
     viewExpansionContext = new ViewExpansionContext(this);

@@ -21,10 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.DrillBuf;
+
+import org.apache.drill.common.AutoCloseablePointer;
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.AllocationReservation;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.BufferAllocator.PreAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -40,24 +43,23 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 
 public class SortRecordBatchBuilder implements AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
 
   private final ArrayListMultimap<BatchSchema, RecordBatchData> batches = ArrayListMultimap.create();
 
   private int recordCount;
   private long runningBytes;
-  private long runningBatches;
+  private long runningBatches; // TODO this is never used for anything real; never modified, conditions false
   private final long maxBytes;
-  private SelectionVector4 sv4;
-  final PreAllocator svAllocator;
-  private boolean svAllocatorUsed = false;
+  private final AutoCloseablePointer<SelectionVector4> pSV4 = new AutoCloseablePointer<>();
+  private final AllocationReservation allocationReservation;
 
-  public SortRecordBatchBuilder(BufferAllocator a, long maxBytes) {
+  public SortRecordBatchBuilder(final BufferAllocator allocator, final long maxBytes) {
     this.maxBytes = maxBytes;
-    this.svAllocator = a.getNewPreAllocator();
+    allocationReservation = allocator.newReservation();
   }
 
-  private long getSize(VectorAccessible batch) {
+  private long getSize(final VectorAccessible batch) {
     long bytes = 0;
     for (VectorWrapper<?> v : batch) {
       bytes += v.getValueVector().getBufferSize();
@@ -72,69 +74,73 @@ public class SortRecordBatchBuilder implements AutoCloseable {
    * @return True if the requested add completed successfully.  Returns false in the case that this builder is full and cannot receive additional packages.
    * @throws SchemaChangeException
    */
-  public boolean add(VectorAccessible batch) {
+  // TODO it looks like the two add()s could share a majority of their code in a local private function
+  public boolean add(final VectorAccessible batch) {
     if (batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) {
       throw new UnsupportedOperationException("A sort cannot currently work against a sv4 batch.");
     }
+
     if (batch.getRecordCount() == 0 && batches.size() > 0) {
       return true; // skip over empty record batches.
     }
 
-    long batchBytes = getSize(batch);
+    final long batchBytes = getSize(batch);
     if (batchBytes == 0 && batches.size() > 0) {
       return true;
     }
     if (batchBytes + runningBytes > maxBytes) {
       return false; // enough data memory.
     }
-    if (runningBatches+1 > Character.MAX_VALUE) {
+    if (runningBatches + 1 > Character.MAX_VALUE) {
       return false; // allowed in batch.
     }
-    if (!svAllocator.preAllocate(batch.getRecordCount()*4)) {
+
+    if (!allocationReservation.add(batch.getRecordCount() * 4)) {
       return false;  // sv allocation available.
     }
 
-
-    RecordBatchData bd = new RecordBatchData(batch);
+    final RecordBatchData bd = new RecordBatchData(batch);
     runningBytes += batchBytes;
     batches.put(batch.getSchema(), bd);
     recordCount += bd.getRecordCount();
     return true;
   }
 
-  public void add(RecordBatchData rbd) {
-    long batchBytes = getSize(rbd.getContainer());
+  public void add(final RecordBatchData rbd) {
+    final long batchBytes = getSize(rbd.getContainer());
     if (batchBytes == 0 && batches.size() > 0) {
       return;
     }
 
-    if(batchBytes + runningBytes > maxBytes) {
+    if (batchBytes + runningBytes > maxBytes) {
       final String errMsg = String.format("Adding this batch causes the total size to exceed max allowed size. " +
           "Current runningBytes %d, Incoming batchBytes %d. maxBytes %d", runningBytes, batchBytes, maxBytes);
       logger.error(errMsg);
       throw new DrillRuntimeException(errMsg);
     }
-    if(runningBatches >= Character.MAX_VALUE) {
+
+    if (runningBatches >= Character.MAX_VALUE) {
       final String errMsg = String.format("Tried to add more than %d number of batches.", Character.MAX_VALUE);
       logger.error(errMsg);
       throw new DrillRuntimeException(errMsg);
     }
-    if(!svAllocator.preAllocate(rbd.getRecordCount()*4)) {
+
+    if (!allocationReservation.add(rbd.getRecordCount() * 4)) {
       final String errMsg = String.format("Failed to pre-allocate memory for SV. " + "Existing recordCount*4 = %d, " +
           "incoming batch recordCount*4 = %d", recordCount * 4, rbd.getRecordCount() * 4);
       logger.error(errMsg);
       throw new DrillRuntimeException(errMsg);
     }
 
-
     if (rbd.getRecordCount() == 0 && batches.size() > 0) {
       rbd.getContainer().zeroVectors();
-      SelectionVector2 sv2 = rbd.getSv2();
+      final SelectionVector2 sv2 = rbd.getSv2();
       if (sv2 != null) {
         sv2.clear();
       }
       return;
     }
+
     runningBytes += batchBytes;
     batches.put(rbd.getContainer().getSchema(), rbd);
     recordCount += rbd.getRecordCount();
@@ -150,26 +156,28 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     return batches.isEmpty();
   }
 
-  public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException{
+  public void build(final FragmentContext context, final VectorContainer outputContainer)
+      throws SchemaChangeException{
     outputContainer.clear();
     if (batches.keySet().size() > 1) {
       throw new SchemaChangeException("Sort currently only supports a single schema.");
     }
     if (batches.size() > Character.MAX_VALUE) {
-      throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
+      throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.",
+          (int) Character.MAX_VALUE);
     }
     if (batches.keys().size() < 1) {
       assert false : "Invalid to have an empty set of batches with no schemas.";
     }
 
-    final DrillBuf svBuffer = svAllocator.getAllocation();
+    final DrillBuf svBuffer = allocationReservation.buffer();
     if (svBuffer == null) {
       throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
     }
-    svAllocatorUsed = true;
-    sv4 = new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE);
-    BatchSchema schema = batches.keySet().iterator().next();
-    List<RecordBatchData> data = batches.get(schema);
+    pSV4.assignNoChecked(new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE));
+    final BatchSchema schema = batches.keySet().iterator().next();
+    final List<RecordBatchData> data = batches.get(schema);
+    final SelectionVector4 sv4 = pSV4.get();
 
     // now we're going to generate the sv4 pointers
     switch (schema.getSelectionVectorMode()) {
@@ -202,7 +210,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     }
 
     // next, we'll create lists of each of the vector types.
-    ArrayListMultimap<MaterializedField, ValueVector> vectors = ArrayListMultimap.create();
+    final ArrayListMultimap<MaterializedField, ValueVector> vectors = ArrayListMultimap.create();
     for (RecordBatchData rbd : batches.values()) {
       for (ValueVector v : rbd.getVectors()) {
         vectors.put(v.getField(), v);
@@ -210,7 +218,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     }
 
     for (MaterializedField f : schema) {
-      List<ValueVector> v = vectors.get(f);
+      final List<ValueVector> v = vectors.get(f);
       outputContainer.addHyperList(v, false);
     }
 
@@ -218,34 +226,23 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   }
 
   public SelectionVector4 getSv4() {
-    return sv4;
+    return pSV4.get();
   }
 
   public void clear() {
+    DrillAutoCloseables.closeNoChecked(allocationReservation);
     for (RecordBatchData d : batches.values()) {
       d.container.clear();
     }
-    if (sv4 != null) {
-      sv4.clear();
-    }
-  }
-
-  @Override
-  public void close() {
-    // Don't leak unused pre-allocated memory.
-    if (!svAllocatorUsed) {
-      final DrillBuf drillBuf = svAllocator.getAllocation();
-      if (drillBuf != null) {
-        drillBuf.release();
-      }
-    }
+    batches.clear();
+    pSV4.assignNoChecked(null);
   }
 
   public List<VectorContainer> getHeldRecordBatches() {
-    ArrayList<VectorContainer> containerList = Lists.newArrayList();
+    final ArrayList<VectorContainer> containerList = Lists.newArrayList();
     for (BatchSchema bs : batches.keySet()) {
       for (RecordBatchData bd : batches.get(bs)) {
-        VectorContainer c = bd.getContainer();
+        final VectorContainer c = bd.getContainer();
         c.setRecordCount(bd.getRecordCount());
         containerList.add(c);
       }
@@ -255,14 +252,22 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   }
 
   /**
-   * For given recordcount how muchmemory does SortRecordBatchBuilder needs for its own purpose. This is used in
-   * ExternalSortBatch to make decisions about whether to spill or not.
+   * For given record count, return how much memory does SortRecordBatchBuilder
+   * needs for its own use. This is used in ExternalSortBatch to make decisions about
+   * whether to spill or not.
    *
    * @param recordCount
-   * @return
+   * @return number of bytes we need
    */
   public static long memoryNeeded(int recordCount) {
     // We need 4 bytes (SV4) for each record.
     return recordCount * 4;
+  }
+
+  @Override
+  public void close() throws Exception {
+    clear();
+    allocationReservation.close();
+    pSV4.close();
   }
 }

@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -34,8 +35,10 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapper<?>>{
   private final static Logger logger = LoggerFactory.getLogger(RecordBatchLoader.class);
@@ -63,7 +66,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   public boolean load(RecordBatchDef def, DrillBuf buf) throws SchemaChangeException {
     if (logger.isTraceEnabled()) {
       logger.trace("Loading record batch with def {} and data {}", def, buf);
-      logger.trace("Load, ThreadID: {}", Thread.currentThread().getId(), new RuntimeException("For Stack Trace Only"));
+      logger.trace("Load, ThreadID: {}\n{}", Thread.currentThread().getId(), new StackTrace());
     }
     container.zeroVectors();
     valueCount = def.getRecordCount();
@@ -132,11 +135,10 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     return schemaChanged;
   }
 
+  @Override
   public TypedFieldId getValueVectorId(SchemaPath path) {
     return container.getValueVectorId(path);
   }
-
-
 
 //
 //  @SuppressWarnings("unchecked")
@@ -152,10 +154,12 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
 //    return (T) v;
 //  }
 
+  @Override
   public int getRecordCount() {
     return valueCount;
   }
 
+  @Override
   public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids){
     return container.getValueAccessorById(clazz, ids);
   }
@@ -170,11 +174,12 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     return this.container.iterator();
   }
 
-  public BatchSchema getSchema(){
+  @Override
+  public BatchSchema getSchema() {
     return schema;
   }
 
-  public void clear(){
+  public void clear() {
     container.clear();
   }
 

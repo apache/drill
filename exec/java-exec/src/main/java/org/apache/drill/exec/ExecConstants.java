@@ -76,6 +76,8 @@ public interface ExecConstants {
   public static final String TEXT_LINE_READER_BUFFER_SIZE = "drill.exec.storage.file.text.buffer.size";
   public static final String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";
   public static final String TOP_LEVEL_MAX_ALLOC = "drill.exec.memory.top.max";
+  public static final String DEBUG_ALLOCATOR = "drill.exec.memory.debug";
+  public static final String ALLOCATION_POLICY = "drill.exec.memory.allocation-policy";
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";

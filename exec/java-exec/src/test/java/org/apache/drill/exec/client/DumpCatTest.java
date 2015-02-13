@@ -30,7 +30,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -58,17 +58,16 @@ import com.google.common.io.Files;
  * which will produce a dump file.  The dump file will be input into DumpCat to test query mode and batch mode.
  */
 
-public class DumpCatTest  extends ExecTest{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DumpCatTest.class);
-  DrillConfig c = DrillConfig.create();
+public class DumpCatTest  extends ExecTest {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DumpCatTest.class);
+  private final DrillConfig c = DrillConfig.create();
 
   @Test
   public void testDumpCat(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable
   {
-
       new NonStrictExpectations(){{
           bitContext.getMetrics(); result = new MetricRegistry();
-          bitContext.getAllocator(); result = new TopLevelAllocator();
+          bitContext.getAllocator(); result = new RootAllocator(c);
           bitContext.getConfig(); result = c;
           bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
           bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
@@ -127,5 +126,4 @@ public class DumpCatTest  extends ExecTest{
 
       input.close();
   }
-
 }

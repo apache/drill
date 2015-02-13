@@ -45,7 +45,7 @@ import org.apache.drill.exec.vector.ValueVector;
  * This class implements common functionality of composite vectors.
  */
 public abstract class AbstractContainerVector implements ValueVector {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
 
   protected final MaterializedField field;
   protected final BufferAllocator allocator;
@@ -97,7 +97,8 @@ public abstract class AbstractContainerVector implements ValueVector {
    */
  @Override
   public void close() {
-    for (ValueVector vector:(Iterable<ValueVector>)this) {
+   final Iterable<ValueVector> vectors = (Iterable<ValueVector>) this;
+    for (final ValueVector vector : vectors) {
       vector.close();
     }
   }

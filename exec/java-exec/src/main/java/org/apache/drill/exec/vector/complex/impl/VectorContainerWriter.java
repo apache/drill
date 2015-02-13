@@ -26,19 +26,20 @@ import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 public class VectorContainerWriter extends AbstractFieldWriter implements ComplexWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainerWriter.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainerWriter.class);
 
-  SingleMapWriter mapRoot;
-  SpecialMapVector mapVector;
-  OutputMutator mutator;
+  private final SingleMapWriter mapRoot;
+  private final SpecialMapVector mapVector;
+  private final OutputMutator mutator;
 
   public VectorContainerWriter(OutputMutator mutator) {
     super(null);
     this.mutator = mutator;
-    this.mapVector = new SpecialMapVector();
-    this.mapRoot = new SingleMapWriter(mapVector, this);
+    mapVector = new SpecialMapVector();
+    mapRoot = new SingleMapWriter(mapVector, this);
   }
 
+  @Override
   public MaterializedField getField() {
     return mapVector.getField();
   }
@@ -52,10 +53,19 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
     return mapVector;
   }
 
+  @Override
   public void reset() {
     setPosition(0);
   }
 
+  @Override
+  public void close() throws Exception {
+    clear();
+    mapRoot.close();
+    mapVector.close();
+  }
+
+  @Override
   public void clear() {
     mapRoot.clear();
   }
@@ -64,6 +74,7 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
     return mapRoot;
   }
 
+  @Override
   public void setValueCount(int count) {
     mapRoot.setValueCount(count);
   }
@@ -88,15 +99,13 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
     @Override
     public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
       try {
-        ValueVector v = mutator.addField(MaterializedField.create(name, type), clazz);
+        final ValueVector v = mutator.addField(MaterializedField.create(name, type), clazz);
         putChild(name, v);
         return this.typeify(v, clazz);
       } catch (SchemaChangeException e) {
         throw new IllegalStateException(e);
       }
-
     }
-
   }
 
   @Override

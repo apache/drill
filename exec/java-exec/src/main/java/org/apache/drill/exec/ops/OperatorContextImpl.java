@@ -18,14 +18,17 @@
 package org.apache.drill.exec.ops;
 
 import com.google.common.base.Preconditions;
+
 import io.netty.buffer.DrillBuf;
 
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.memory.AllocatorOwner;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
 import com.carrotsearch.hppc.LongObjectOpenHashMap;
+
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.conf.Configuration;
@@ -33,20 +36,31 @@ import org.apache.hadoop.conf.Configuration;
 import java.io.IOException;
 
 class OperatorContextImpl extends OperatorContext implements AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContextImpl.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContextImpl.class);
 
   private final BufferAllocator allocator;
   private final ExecutionControls executionControls;
   private boolean closed = false;
-  private PhysicalOperator popConfig;
-  private OperatorStats stats;
-  private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
-  private final boolean applyFragmentLimit;
+  private final PhysicalOperator popConfig;
+  private final OperatorStats stats;
+  private final LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
   private DrillFileSystem fs;
 
-  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, boolean applyFragmentLimit) throws OutOfMemoryException {
-    this.applyFragmentLimit=applyFragmentLimit;
-    this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
+  private final AllocatorOwner allocatorOwner = new AllocatorOwner() {
+    @Override
+    public ExecutionControls getExecutionControls() {
+      return executionControls;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("OperatorContextImpl %s", System.identityHashCode(OperatorContextImpl.this));
+    }
+  };
+
+  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, boolean applyFragmentLimit) {
+    this.allocator = context.newChildAllocator(allocatorOwner,
+        popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
     this.popConfig = popConfig;
 
     OpProfileDef def = new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(), getChildCount(popConfig));
@@ -54,14 +68,15 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     executionControls = context.getExecutionControls();
   }
 
-  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats, boolean applyFragmentLimit) throws OutOfMemoryException {
-    this.applyFragmentLimit=applyFragmentLimit;
-    this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
+  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats, boolean applyFragmentLimit) {
+    this.allocator = context.newChildAllocator(allocatorOwner,
+        popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
     this.popConfig = popConfig;
     this.stats     = stats;
     executionControls = context.getExecutionControls();
   }
 
+  @Override
   public DrillBuf replace(DrillBuf old, int newSize) {
     if (managedBuffers.remove(old.memoryAddress()) == null) {
       throw new IllegalStateException("Tried to remove unmanaged buffer.");
@@ -70,10 +85,12 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     return getManagedBuffer(newSize);
   }
 
+  @Override
   public DrillBuf getManagedBuffer() {
     return getManagedBuffer(256);
   }
 
+  @Override
   public DrillBuf getManagedBuffer(int size) {
     DrillBuf newBuf = allocator.buffer(size);
     managedBuffers.put(newBuf.memoryAddress(), newBuf);
@@ -81,10 +98,12 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     return newBuf;
   }
 
+  @Override
   public ExecutionControls getExecutionControls() {
     return executionControls;
   }
 
+  @Override
   public BufferAllocator getAllocator() {
     if (allocator == null) {
       throw new UnsupportedOperationException("Operator context does not have an allocator");
@@ -99,10 +118,14 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   @Override
   public void close() {
     if (closed) {
-      logger.debug("Attempted to close Operator context for {}, but context is already closed", popConfig != null ? popConfig.getClass().getName() : null);
+      logger.debug("Attempted to close Operator context for {}, but context is already closed",
+          popConfig != null ? popConfig.getClass().getName() : null);
       return;
     }
-    logger.debug("Closing context for {}", popConfig != null ? popConfig.getClass().getName() : null);
+    logger.debug("Closing context for {}, allocatorOwner {}, allocator[{}]",
+        popConfig != null ? popConfig.getClass().getName() : null,
+        allocatorOwner,
+        allocator != null ? allocator.getId() : "<null>");
 
     // release managed buffers.
     Object[] buffers = ((LongObjectOpenHashMap<Object>)(Object)managedBuffers).values;
@@ -113,7 +136,7 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     }
 
     if (allocator != null) {
-      allocator.close();
+      DrillAutoCloseables.closeNoChecked(allocator);
     }
 
     if (fs != null) {
@@ -126,6 +149,7 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     closed = true;
   }
 
+  @Override
   public OperatorStats getStats() {
     return stats;
   }
@@ -136,5 +160,4 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     fs = new DrillFileSystem(conf, getStats());
     return fs;
   }
-
 }

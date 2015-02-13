@@ -31,7 +31,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -60,9 +60,8 @@ import com.google.common.io.Files;
 
 
 public class TestMergeJoin extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
-
-  DrillConfig c = DrillConfig.create();
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
+  private final DrillConfig c = DrillConfig.create();
 
   @Test
   @Ignore // this doesn't have a sort.  it also causes an infinite loop.  these may or may not be related.
@@ -71,7 +70,7 @@ public class TestMergeJoin extends PopUnitTestBase {
 
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -126,7 +125,7 @@ public class TestMergeJoin extends PopUnitTestBase {
 
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -184,7 +183,7 @@ public class TestMergeJoin extends PopUnitTestBase {
 
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -242,7 +241,7 @@ public class TestMergeJoin extends PopUnitTestBase {
 
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -296,7 +295,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void testJoinBatchSize(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();;
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -412,5 +411,4 @@ public class TestMergeJoin extends PopUnitTestBase {
       assertEquals(10, count);
     }
   }
-
 }

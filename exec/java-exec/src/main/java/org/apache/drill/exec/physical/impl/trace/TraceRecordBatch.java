@@ -53,12 +53,12 @@ import org.apache.hadoop.fs.Path;
  * batch
  */
 public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceRecordBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceRecordBatch.class);
 
   private SelectionVector2 sv = null;
 
   /* Tag associated with each trace operator */
-  final String traceTag;
+  private final String traceTag;
 
   /* Location where the log should be dumped */
   private final String logLocation;
@@ -68,16 +68,16 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
 
   public TraceRecordBatch(Trace pop, RecordBatch incoming, FragmentContext context) throws ExecutionSetupException {
     super(pop, context, incoming);
-    this.traceTag = pop.traceTag;
+    traceTag = pop.traceTag;
     logLocation = context.getConfig().getString(ExecConstants.TRACE_DUMP_DIRECTORY);
 
-    String fileName = getFileName();
+    final String fileName = getFileName();
 
     /* Create the log file we will dump to and initialize the file descriptors */
     try {
-      Configuration conf = new Configuration();
+      final Configuration conf = new Configuration();
       conf.set(FileSystem.FS_DEFAULT_NAME_KEY, context.getConfig().getString(ExecConstants.TRACE_DUMP_FILESYSTEM));
-      FileSystem fs = FileSystem.get(conf);
+      final FileSystem fs = FileSystem.get(conf);
 
       /* create the file */
       fos = fs.create(new Path(fileName));
@@ -102,14 +102,15 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
   @Override
   protected IterOutcome doWork() {
 
-    boolean incomingHasSv2 = incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE;
+    final boolean incomingHasSv2 = incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE;
     if (incomingHasSv2) {
       sv = incoming.getSelectionVector2();
     } else {
       sv = null;
     }
-    WritableBatch batch = WritableBatch.getBatchNoHVWrap(incoming.getRecordCount(), incoming, incomingHasSv2);
-    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, sv, oContext.getAllocator());
+    final WritableBatch batch = WritableBatch.getBatchNoHVWrap(
+        incoming.getRecordCount(), incoming, incomingHasSv2);
+    final VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, sv, oContext.getAllocator());
 
     try {
       wrap.writeToStreamAndRetain(fos);
@@ -137,7 +138,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
 
     /* Add all the value vectors in the container */
     for (VectorWrapper<?> vv : incoming) {
-      TransferPair tp = vv.getValueVector().getTransferPair();
+      final TransferPair tp = vv.getValueVector().getTransferPair();
       container.add(tp.getTo());
     }
     container.buildSchema(incoming.getSchema().getSelectionVectorMode());
@@ -154,7 +155,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
   }
 
   @Override
-  public void close() {
+  public void close() throws Exception {
     /* Release the selection vector */
     if (sv != null) {
       sv.clear();
@@ -166,7 +167,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     } catch (IOException e) {
       logger.error("Unable to close file descriptors for file: " + getFileName());
     }
+
     super.close();
   }
-
 }

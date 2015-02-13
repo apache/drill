@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.nio.charset.Charset;
 import java.util.List;
 
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -41,9 +41,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestSimpleFragmentRun extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFragmentRun.class);
-
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFragmentRun.class);
 
   @Test
   public void runNoExchangeFragment() throws Exception {
@@ -121,7 +119,8 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       );
 
       // look at records
-      RecordBatchLoader batchLoader = new RecordBatchLoader(new TopLevelAllocator(CONFIG));
+      final BufferAllocator allocator = new RootAllocator(CONFIG);
+      RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
       int recordCount = 0;
 
       //int expectedBatchCount = 2;
@@ -139,17 +138,11 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         }
 
         assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-        boolean firstColumn = true;
 
         // print headers.
         System.out.println("\n\n========NEW SCHEMA=========\n\n");
-        for (VectorWrapper<?> v : batchLoader) {
-
-          if (firstColumn) {
-            firstColumn = false;
-          } else {
-            System.out.print("\t");
-          }
+        for (final VectorWrapper<?> v : batchLoader) {
+          System.out.print("\t"); // always use for r[N] pseudo-column used for record number below
           System.out.print(v.getField().toExpr());
           System.out.print("[");
           System.out.print(v.getField().getType().getMinorType());
@@ -159,20 +152,22 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         System.out.println();
 
 
-        for (int r = 0; r < batchLoader.getRecordCount(); r++) {
-          boolean first = true;
+        final int loaderRecordCount = batchLoader.getRecordCount();
+        for (int r = 0; r < loaderRecordCount; r++) {
+          boolean firstColumn = true;
           recordCount++;
-          for (VectorWrapper<?> v : batchLoader) {
-            if (first) {
-              first = false;
+          for (final VectorWrapper<?> v : batchLoader) {
+            if (firstColumn) {
+              firstColumn = false;
+              System.out.print("r[" + r + "]\t");
             } else {
               System.out.print("\t");
             }
 
-            ValueVector.Accessor accessor = v.getValueVector().getAccessor();
+            final ValueVector.Accessor accessor = v.getValueVector().getAccessor();
             System.out.print(accessor.getObject(r));
           }
-          if (!first) {
+          if (!firstColumn) {
             System.out.println();
           }
         }
@@ -183,5 +178,4 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       assertEquals(2, recordCount);
     }
   }
-
 }

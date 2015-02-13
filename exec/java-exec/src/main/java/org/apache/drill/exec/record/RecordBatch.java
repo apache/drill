@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.record;
 
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -30,7 +29,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  * A key thing to know is that the Iterator provided by record batch must align with the rank positions of the field ids
  * provided utilizing getValueVectorId();
  */
-public interface RecordBatch extends VectorAccessible {
+public interface RecordBatch extends VectorAccessible, AutoCloseable {
 
   /* max batch size, limited by 2-byte-length in SV2 : 65536 = 2^16 */
   public static final int MAX_BATCH_SIZE = 65536;
@@ -58,48 +57,19 @@ public interface RecordBatch extends VectorAccessible {
    *
    * @return
    */
-  public FragmentContext getContext();
-
-  /**
-   * Provide the schema of the current RecordBatch. This changes if and only if a *_NEW_SCHEMA IterOutcome is provided.
-   *
-   * @return
-   */
-  public BatchSchema getSchema();
-
-  /**
-   * Provide the number of records that are within this record count
-   *
-   * @return
-   */
-  public int getRecordCount();
+  FragmentContext getContext();
 
   /**
    * Inform child nodes that this query should be terminated. Child nodes should utilize the QueryContext to determine
    * what has happened.
    */
-  public void kill(boolean sendUpstream);
+  void kill(boolean sendUpstream);
 
-  public abstract SelectionVector2 getSelectionVector2();
+  SelectionVector2 getSelectionVector2();
 
-  public abstract SelectionVector4 getSelectionVector4();
+  SelectionVector4 getSelectionVector4();
 
-
-  public VectorContainer getOutgoingContainer();
-
-  /**
-   * Get the value vector type and id for the given schema path. The TypedFieldId should store a fieldId which is the
-   * same as the ordinal position of the field within the Iterator provided this classes implementation of
-   * Iterable<ValueVector>.
-   *
-   * @param path
-   *          The path where the vector should be located.
-   * @return The local field id associated with this vector. If no field matches this path, this will return a null
-   *         TypedFieldId
-   */
-  public abstract TypedFieldId getValueVectorId(SchemaPath path);
-  @Override
-  public abstract VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids);
+  VectorContainer getOutgoingContainer();
 
   /**
    * Update the data in each Field reading interface for the next range of records. Once a RecordBatch returns an
@@ -108,13 +78,12 @@ public interface RecordBatch extends VectorAccessible {
    *
    * @return An IterOutcome describing the result of the iteration.
    */
-  public IterOutcome next();
+  IterOutcome next();
 
   /**
    * Get a writable version of this batch. Takes over owernship of existing buffers.
    *
    * @return
    */
-  public WritableBatch getWritableBatch();
-
+  WritableBatch getWritableBatch();
 }

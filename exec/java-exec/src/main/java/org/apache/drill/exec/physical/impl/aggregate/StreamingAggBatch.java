@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
 
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -58,7 +59,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JVar;
 
 public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggBatch.class);
 
   private StreamingAggregator aggregator;
   private final RecordBatch incoming;
@@ -113,14 +114,13 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     if (!createAggregator()) {
       state = BatchState.DONE;
     }
-    for (VectorWrapper w : container) {
+    for (VectorWrapper<?> w : container) {
       w.getValueVector().allocateNew();
     }
   }
 
   @Override
   public IterOutcome innerNext() {
-
     // if a special batch has been sent, we have no data in the incoming so exit early
     if (specialBatchSent) {
       return IterOutcome.NONE;
@@ -189,7 +189,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       context.fail(UserException.unsupportedError()
         .message("Streaming aggregate does not support schema changes")
         .build(logger));
-      close();
+      DrillAutoCloseables.closeNoChecked(this);
       killIncoming(false);
       return IterOutcome.STOP;
     default:
@@ -206,8 +206,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
    */
   private void constructSpecialBatch() {
     int exprIndex = 0;
-    for (VectorWrapper vw: container) {
-      ValueVector vv = vw.getValueVector();
+    for (final VectorWrapper<?> vw: container) {
+      final ValueVector vv = vw.getValueVector();
       AllocationHelper.allocateNew(vv, SPECIAL_BATCH_COUNT);
       vv.getMutator().setValueCount(SPECIAL_BATCH_COUNT);
       if (vv.getField().getType().getMode() == TypeProtos.DataMode.REQUIRED) {
@@ -273,7 +273,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       }
       keyExprs[i] = expr;
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+      final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       keyOutputIds[i] = container.add(vector);
     }
 
@@ -285,7 +285,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       }
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+      final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       TypedFieldId id = container.add(vector);
       valueExprs[i] = new ValueVectorWriteExpression(id, expr, true);
     }
@@ -361,7 +361,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private void addRecordValues(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] valueExprs) {
     cg.setMappingSet(EVAL);
     for (LogicalExpression ex : valueExprs) {
-      HoldingContainer hc = cg.addExpr(ex);
+      cg.addExpr(ex);
     }
   }
 
@@ -370,7 +370,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private void outputRecordKeys(ClassGenerator<StreamingAggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs) {
     cg.setMappingSet(RECORD_KEYS);
     for (int i =0; i < keyExprs.length; i++) {
-      HoldingContainer hc = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], keyExprs[i], true));
+      cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], keyExprs[i], true));
     }
   }
 
@@ -390,8 +390,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       cg.setMappingSet(RECORD_KEYS_PREV);
       HoldingContainer innerExpression = cg.addExpr(keyExprs[i], false);
       cg.setMappingSet(RECORD_KEYS_PREV_OUT);
-      HoldingContainer outerExpression = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), false);
-
+      cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), false);
     }
   }
 
@@ -420,13 +419,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   }
 
   @Override
-  public void close() {
-    super.close();
-  }
-
-  @Override
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
   }
-
 }

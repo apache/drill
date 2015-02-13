@@ -33,9 +33,9 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.VectorValidator;
 
 public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidatorBatchIterator.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidatorBatchIterator.class);
 
-  static final boolean VALIDATE_VECTORS = false;
+  private static final boolean VALIDATE_VECTORS = false;
 
   private IterOutcome state = IterOutcome.NOT_YET;
   private final RecordBatch incoming;
@@ -52,10 +52,10 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
       return;
     default:
       throw new IllegalStateException(
-          String
-              .format(
-                  "You tried to do a batch data read operation when you were in a state of %s.  You can only do this type of operation when you are in a state of OK or OK_NEW_SCHEMA.",
-                  state.name()));
+          String.format(
+              "You tried to do a batch data read operation when you were in a state of %s. "
+                  + "You can only do this type of operation when you are in a state of OK or OK_NEW_SCHEMA.",
+              state.name()));
     }
   }
 
@@ -121,7 +121,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
     }
 
     if (state == IterOutcome.OK || state == IterOutcome.OK_NEW_SCHEMA) {
-      BatchSchema schema = incoming.getSchema();
+      final BatchSchema schema = incoming.getSchema();
       if (schema == null) {
         return state;
       }
@@ -153,7 +153,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
 
   @Override
   public VectorContainer getOutgoingContainer() {
-    throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
+    throw new UnsupportedOperationException(String.format(
+        " You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
   }
-
 }

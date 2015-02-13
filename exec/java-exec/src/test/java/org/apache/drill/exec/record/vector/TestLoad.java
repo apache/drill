@@ -23,6 +23,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.util.List;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -30,12 +31,13 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -45,31 +47,36 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 public class TestLoad extends ExecTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestLoad.class);
 
   @Test
   public void testLoadValueVector() throws Exception {
-    BufferAllocator allocator = new TopLevelAllocator();
-    ValueVector fixedV = new IntVector(MaterializedField.create(new SchemaPath("ints", ExpressionPosition.UNKNOWN),
+    final BufferAllocator allocator = new RootAllocator(DrillConfig.create());
+    final ValueVector fixedV = new IntVector(
+        MaterializedField.create(new SchemaPath("ints", ExpressionPosition.UNKNOWN),
         Types.required(MinorType.INT)), allocator);
-    ValueVector varlenV = new VarCharVector(MaterializedField.create(
+    final ValueVector varlenV = new VarCharVector(MaterializedField.create(
         new SchemaPath("chars", ExpressionPosition.UNKNOWN), Types.required(MinorType.VARCHAR)), allocator);
-    ValueVector nullableVarlenV = new NullableVarCharVector(MaterializedField.create(new SchemaPath("chars",
-        ExpressionPosition.UNKNOWN), Types.optional(MinorType.VARCHAR)), allocator);
+    final ValueVector nullableVarlenV = new NullableVarCharVector(
+        MaterializedField.create(new SchemaPath("chars", ExpressionPosition.UNKNOWN),
+            Types.optional(MinorType.VARCHAR)), allocator);
 
-    List<ValueVector> vectors = Lists.newArrayList(fixedV, varlenV, nullableVarlenV);
-    for (ValueVector v : vectors) {
+    final List<ValueVector> vectors = Lists.newArrayList(fixedV, varlenV, nullableVarlenV);
+    for (final ValueVector v : vectors) {
       AllocationHelper.allocate(v, 100, 50);
+      BaseValueVector.checkBufRefs(v);
       v.getMutator().generateTestData(100);
+      BaseValueVector.checkBufRefs(v);
     }
 
-    WritableBatch writableBatch = WritableBatch.getBatchNoHV(100, vectors, false);
-    RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
-    ByteBuf[] byteBufs = writableBatch.getBuffers();
+    final WritableBatch writableBatch = WritableBatch.getBatchNoHV(100, vectors, false);
+    final RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
+    final ByteBuf[] byteBufs = writableBatch.getBuffers();
     int bytes = 0;
-    for (int i = 0; i < byteBufs.length; i++) {
-      bytes += byteBufs[i].writerIndex();
+    for(final ByteBuf writableBuf : byteBufs) {
+      bytes += writableBuf.writerIndex();
     }
-    DrillBuf byteBuf = allocator.buffer(bytes);
+    final DrillBuf byteBuf = allocator.buffer(bytes);
     int index = 0;
     for (int i = 0; i < byteBufs.length; i++) {
       byteBufs[i].readBytes(byteBuf, index, byteBufs[i].writerIndex());
@@ -96,15 +103,15 @@ public class TestLoad extends ExecTest {
     for (int r = 0; r < batchLoader.getRecordCount(); r++) {
       boolean first = true;
       recordCount++;
-      for (VectorWrapper<?> v : batchLoader) {
+      for (final VectorWrapper<?> v : batchLoader) {
         if (first) {
           first = false;
         } else {
           System.out.print("\t");
         }
-        ValueVector.Accessor accessor = v.getValueVector().getAccessor();
+        final ValueVector.Accessor accessor = v.getValueVector().getAccessor();
         if (v.getField().getType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
-          Object obj = accessor.getObject(r);
+          final Object obj = accessor.getObject(r);
           if (obj != null) {
             System.out.print(accessor.getObject(r));
           } else {
@@ -122,5 +129,4 @@ public class TestLoad extends ExecTest {
     batchLoader.clear();
     writableBatch.clear();
   }
-
 }

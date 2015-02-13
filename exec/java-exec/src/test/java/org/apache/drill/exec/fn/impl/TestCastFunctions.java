@@ -17,15 +17,11 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.FileUtils;
 import org.junit.Test;
 
-import java.util.Date;
-
 public class TestCastFunctions extends BaseTestQuery {
-
   @Test
   public void testVarbinaryToDate() throws Exception {
     testBuilder()
@@ -51,5 +47,4 @@ public class TestCastFunctions extends BaseTestQuery {
       .baselineValues(false)
       .build().run();
   }
-
 }

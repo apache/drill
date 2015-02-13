@@ -32,7 +32,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.AllocationHelper;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
 
   private SelectionVector4 vector4;
   private List<BatchGroup> batchGroups;
@@ -42,8 +42,8 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   private int queueSize = 0;
 
   @Override
-  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
-                    VectorAccessible outgoing) throws SchemaChangeException {
+  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch,
+      List<BatchGroup> batchGroups, VectorAccessible outgoing) throws SchemaChangeException {
     this.hyperBatch = hyperBatch;
     this.batchGroups = batchGroups;
     this.outgoing = outgoing;
@@ -66,7 +66,12 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     allocateVectors(targetRecordCount);
     for (int outgoingIndex = 0; outgoingIndex < targetRecordCount; outgoingIndex++) {
       if (queueSize == 0) {
-        cleanup();
+        // TODO replace with AutoCloseables.closeNoChecked() when that is merged
+        try {
+          close();
+        } catch(Exception e) {
+          throw new RuntimeException("Exception caught from close", e);
+        }
         return 0;
       }
       int compoundIndex = vector4.get(0);
@@ -90,18 +95,18 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   }
 
   private void setValueCount(int count) {
-    for (VectorWrapper w: outgoing) {
+    for (VectorWrapper<?> w: outgoing) {
       w.getValueVector().getMutator().setValueCount(count);
     }
   }
 
   @Override
-  public void cleanup() {
+  public void close() throws Exception {
     vector4.clear();
-    for (VectorWrapper w: outgoing) {
+    for (VectorWrapper<?> w: outgoing) {
       w.getValueVector().clear();
     }
-    for (VectorWrapper w : hyperBatch) {
+    for (VectorWrapper<?> w : hyperBatch) {
       w.clear();
     }
   }
@@ -119,7 +124,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   }
 
   private void allocateVectors(int targetRecordCount) {
-    for (VectorWrapper w: outgoing) {
+    for (VectorWrapper<?> w: outgoing) {
       AllocationHelper.allocateNew(w.getValueVector(), targetRecordCount);
     }
   }

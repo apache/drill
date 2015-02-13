@@ -19,7 +19,7 @@ package org.apache.drill.exec.server;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -285,11 +285,12 @@ public class Drillbit implements AutoCloseable {
       }
     }
 
+    // TODO these should use a DeferredException
     Closeables.closeQuietly(engine);
-    AutoCloseables.close(storeProvider, logger);
+    DrillAutoCloseables.closeNoChecked(storeProvider);
     Closeables.closeQuietly(coord);
-    AutoCloseables.close(manager, logger);
-    Closeables.closeQuietly(context);
+    DrillAutoCloseables.closeNoChecked(manager);
+    DrillAutoCloseables.closeNoChecked(context);
 
     logger.info("Shutdown completed ({} ms).", System.currentTimeMillis() - startTime);
     isClosed = true;
@@ -326,7 +327,12 @@ public class Drillbit implements AutoCloseable {
     public void run() {
       logger.info("Received shutdown request.");
       try {
-        synchronized (idCounter) {
+        /*
+         * We can avoid metrics deregistration concurrency issues by only closing
+         * one drillbit at a time. To enforce that, we synchronize on a convenient
+         * singleton object.
+         */
+        synchronized(idCounter) {
           drillbit.close();
         }
       } catch(final Exception e) {

@@ -24,7 +24,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -38,23 +37,19 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 public class MockRecordReader extends AbstractRecordReader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
 
-  private OutputMutator output;
-  private MockScanEntry config;
-  private FragmentContext context;
-  private BufferAllocator alcator;
+  private final MockScanEntry config;
+  private final FragmentContext context;
   private ValueVector[] valueVectors;
   private int recordsRead;
   private int batchRecordCount;
-  private FragmentContext fragmentContext;
   private OperatorContext operatorContext;
 
 
-  public MockRecordReader(FragmentContext context, MockScanEntry config) throws OutOfMemoryException {
+  public MockRecordReader(FragmentContext context, MockScanEntry config) {
     this.context = context;
     this.config = config;
-    this.fragmentContext=context;
   }
 
   private int getEstimatedRecordSize(MockColumn[] types) {
@@ -67,38 +62,26 @@ public class MockRecordReader extends AbstractRecordReader {
 
   private MaterializedField getVector(String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
-    MaterializedField f = MaterializedField.create(SchemaPath.getSimplePath(name), type);
-
+    final MaterializedField f = MaterializedField.create(SchemaPath.getSimplePath(name), type);
     return f;
-
-  }
-
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
-  }
-
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
   }
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     try {
-      this.output = output;
-      int estimateRowSize = getEstimatedRecordSize(config.getTypes());
+      final int estimateRowSize = getEstimatedRecordSize(config.getTypes());
       valueVectors = new ValueVector[config.getTypes().length];
       batchRecordCount = 250000 / estimateRowSize;
 
       for (int i = 0; i < config.getTypes().length; i++) {
-        MajorType type = config.getTypes()[i].getMajorType();
-        MaterializedField field = getVector(config.getTypes()[i].getName(), type, batchRecordCount);
-        Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
+        final MajorType type = config.getTypes()[i].getMajorType();
+        final MaterializedField field = getVector(config.getTypes()[i].getName(), type, batchRecordCount);
+        final Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         valueVectors[i] = output.addField(field, vvClass);
       }
     } catch (SchemaChangeException e) {
       throw new ExecutionSetupException("Failure while setting up fields", e);
     }
-
   }
 
   @Override
@@ -107,23 +90,20 @@ public class MockRecordReader extends AbstractRecordReader {
       return 0;
     }
 
-    int recordSetSize = Math.min(batchRecordCount, this.config.getRecords() - recordsRead);
-
+    final int recordSetSize = Math.min(batchRecordCount, this.config.getRecords() - recordsRead);
     recordsRead += recordSetSize;
-    for (ValueVector v : valueVectors) {
-
-//      logger.debug(String.format("MockRecordReader:  Generating %d records of random data for VV of type %s.", recordSetSize, v.getClass().getName()));
-      ValueVector.Mutator m = v.getMutator();
+    for (final ValueVector v : valueVectors) {
+      final ValueVector.Mutator m = v.getMutator();
       m.generateTestData(recordSetSize);
-
     }
+
     return recordSetSize;
   }
 
   @Override
   public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
     try {
-      for (ValueVector v : vectorMap.values()) {
+      for (final ValueVector v : vectorMap.values()) {
         AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
       }
     } catch (NullPointerException e) {
@@ -132,7 +112,6 @@ public class MockRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
   }
-
 }

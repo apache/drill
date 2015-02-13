@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.LinkedList;
@@ -44,10 +43,10 @@ import com.google.common.collect.Lists;
  * Create RecordBatch tree (PhysicalOperator implementations) for a given PhysicalOperator tree.
  */
 public class ImplCreator {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImplCreator.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImplCreator.class);
 
   private RootExec root = null;
-  private LinkedList<CloseableRecordBatch> operators = Lists.newLinkedList();
+  private final LinkedList<CloseableRecordBatch> operators = Lists.newLinkedList();
 
   private ImplCreator() {}
 

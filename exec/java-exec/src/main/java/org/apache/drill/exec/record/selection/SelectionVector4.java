@@ -22,8 +22,8 @@ import io.netty.buffer.ByteBuf;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.DeadBuf;
 
-public class SelectionVector4 {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
+public class SelectionVector4 implements AutoCloseable {
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
 
   private ByteBuf data;
   private int recordCount;
@@ -73,7 +73,7 @@ public class SelectionVector4 {
   public SelectionVector4 createNewWrapperCurrent(int batchRecordCount) {
     try {
       data.retain();
-      SelectionVector4 sv4 = new SelectionVector4(data, recordCount, batchRecordCount);
+      final SelectionVector4 sv4 = new SelectionVector4(data, recordCount, batchRecordCount);
       sv4.start = this.start;
       return sv4;
     } catch (SchemaChangeException e) {
@@ -116,4 +116,8 @@ public class SelectionVector4 {
     }
   }
 
+  @Override
+  public void close() {
+    clear();
+  }
 }

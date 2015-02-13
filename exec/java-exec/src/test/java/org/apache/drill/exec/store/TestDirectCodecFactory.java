@@ -23,9 +23,10 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.drill.common.DeferredException;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory.ByteBufBytesInput;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory.DirectBytesDecompressor;
@@ -38,16 +39,17 @@ import parquet.hadoop.CodecFactory.BytesCompressor;
 import parquet.hadoop.metadata.CompressionCodecName;
 
 public class TestDirectCodecFactory extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDirectCodecFactory.class);
+    // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDirectCodecFactory.class);
 
   private static enum Decompression {
     ON_HEAP, OFF_HEAP, DRILLBUF
   }
 
-  private void test(int size, CompressionCodecName codec, boolean useOnHeapCompression, Decompression decomp) {
+  private void test(int size, CompressionCodecName codec, boolean useOnHeapCompression, Decompression decomp) throws Exception {
     DrillBuf rawBuf = null;
     DrillBuf outBuf = null;
-    try (BufferAllocator allocator = new TopLevelAllocator();
+    final DrillConfig drillConfig = DrillConfig.create();
+    try (BufferAllocator allocator = new RootAllocator(drillConfig);
         DirectCodecFactory codecFactory = new DirectCodecFactory(new Configuration(), allocator)) {
       try {
         rawBuf = allocator.buffer(size);

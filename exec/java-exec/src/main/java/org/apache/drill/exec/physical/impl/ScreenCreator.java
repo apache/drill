@@ -43,14 +43,15 @@ public class ScreenCreator implements RootCreator<Screen>{
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScreenCreator.class);
 
   @Override
-  public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children) throws ExecutionSetupException {
+  public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkNotNull(children);
     Preconditions.checkArgument(children.size() == 1);
     return new ScreenRoot(context, children.iterator().next(), config);
   }
 
-
   static class ScreenRoot extends BaseRootExec {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     private final RecordBatch incoming;
     private final FragmentContext context;
     private final AccountingUserConnection userConnection;
@@ -71,7 +72,7 @@ public class ScreenCreator implements RootCreator<Screen>{
       super(context, config);
       this.context = context;
       this.incoming = incoming;
-      this.userConnection = context.getUserDataTunnel();
+      userConnection = context.getUserDataTunnel();
     }
 
     @Override
@@ -87,10 +88,10 @@ public class ScreenCreator implements RootCreator<Screen>{
         if (firstBatch) {
           // this is the only data message sent to the client and may contain the schema
           QueryWritableBatch batch;
-          QueryData header = QueryData.newBuilder() //
-            .setQueryId(context.getHandle().getQueryId()) //
-            .setRowCount(0) //
-            .setDef(RecordBatchDef.getDefaultInstance()) //
+          QueryData header = QueryData.newBuilder()
+            .setQueryId(context.getHandle().getQueryId())
+            .setRowCount(0)
+            .setDef(RecordBatchDef.getDefaultInstance())
             .build();
           batch = new QueryWritableBatch(header);
 
@@ -109,7 +110,7 @@ public class ScreenCreator implements RootCreator<Screen>{
         //$FALL-THROUGH$
       case OK:
         injector.injectPause(context.getExecutionControls(), "sending-data", logger);
-        QueryWritableBatch batch = materializer.convertNext();
+        final QueryWritableBatch batch = materializer.convertNext();
         updateStats(batch);
         stats.startWait();
         try {
@@ -133,13 +134,10 @@ public class ScreenCreator implements RootCreator<Screen>{
       return incoming;
     }
 
-
     @Override
     public void close() throws Exception {
       injector.injectPause(context.getExecutionControls(), "send-complete", logger);
       super.close();
     }
   }
-
-
 }

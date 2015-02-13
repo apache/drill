@@ -40,7 +40,6 @@ public class FieldInfo {
       throw new IllegalStateException("generator is designed to use 3 values");
     }
     this.values = values;
-
     this.type = type;
   }
 }

@@ -29,7 +29,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -50,15 +50,15 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestSimpleProjection extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleProjection.class);
-  DrillConfig c = DrillConfig.create();
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleProjection.class);
+  private final DrillConfig c = DrillConfig.create();
 
   @Test
   public void project(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
 
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -92,5 +92,4 @@ public class TestSimpleProjection extends ExecTest {
     }
     assertTrue(!context.isFailed());
   }
-
 }

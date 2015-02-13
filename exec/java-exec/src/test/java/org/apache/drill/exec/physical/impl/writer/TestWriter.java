@@ -62,17 +62,14 @@ public class TestWriter extends BaseTestQuery {
       fs.delete(path, true);
     }
 
-    String plan = Files.toString(FileUtils.getResourceAsFile("/writer/simple_csv_writer.json"), Charsets.UTF_8);
-
-    List<QueryDataBatch> results = testPhysicalWithResults(plan);
-
-    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-
-    QueryDataBatch batch = results.get(0);
+    final String plan = Files.toString(FileUtils.getResourceAsFile("/writer/simple_csv_writer.json"), Charsets.UTF_8);
+    final List<QueryDataBatch> results = testPhysicalWithResults(plan);
+    final RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
+    final QueryDataBatch batch = results.get(0);
     assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-    VarCharVector fragmentIdV = (VarCharVector) batchLoader.getValueAccessorById(VarCharVector.class, 0).getValueVector();
-    BigIntVector recordWrittenV = (BigIntVector) batchLoader.getValueAccessorById(BigIntVector.class, 1).getValueVector();
+    final VarCharVector fragmentIdV = (VarCharVector) batchLoader.getValueAccessorById(VarCharVector.class, 0).getValueVector();
+    final BigIntVector recordWrittenV = (BigIntVector) batchLoader.getValueAccessorById(BigIntVector.class, 1).getValueVector();
 
     // expected only one row in output
     assertEquals(1, batchLoader.getRecordCount());
@@ -84,10 +81,10 @@ public class TestWriter extends BaseTestQuery {
     assertTrue(fs.exists(path));
 
     // expect two files
-    FileStatus[] fileStatuses = fs.globStatus(new Path(path.toString(), "*.csv"));
+    final FileStatus[] fileStatuses = fs.globStatus(new Path(path.toString(), "*.csv"));
     assertTrue(2 == fileStatuses.length);
 
-    for (QueryDataBatch b : results) {
+    for (final QueryDataBatch b : results) {
       b.release();
     }
     batchLoader.clear();

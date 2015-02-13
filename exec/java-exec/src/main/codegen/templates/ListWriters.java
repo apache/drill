@@ -36,9 +36,11 @@ package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
 
-/* This class is generated using freemarker and the ListWriters.java template */
+/*
+ * This class is generated using FreeMarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
-public class ${mode}ListWriter extends AbstractFieldWriter{
+public class ${mode}ListWriter extends AbstractFieldWriter {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${mode}ListWriter.class);
 
   static enum Mode { INIT, IN_MAP, IN_LIST <#list vv.types as type><#list type.minor as minor>, IN_${minor.class?upper_case}</#list></#list> }
@@ -48,7 +50,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   private Mode mode = Mode.INIT;
   private FieldWriter writer;
   protected RepeatedValueVector innerVector;
-  
+
   <#if mode == "Repeated">private int currentChildIndex = 0;</#if>
   public ${mode}ListWriter(String name, ${containerClass} container, FieldWriter parent){
     super(parent);
@@ -62,36 +64,53 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     this.container = container;
   }
 
-  public void allocate(){
-    if(writer != null){
+  @Override
+  public void allocate() {
+    if(writer != null) {
       writer.allocate();
     }
-    
+
     <#if mode == "Repeated">
     container.allocateNew();
     </#if>
   }
-  
-  public void clear(){
-    writer.clear();
+
+  @Override
+  public void clear() {
+    if (writer != null) {
+      writer.clear();
+    }
   }
 
+  @Override
+  public void close() {
+    clear();
+    container.close();
+    if (innerVector != null) {
+      innerVector.close();
+    }
+  }
+
+  @Override
   public int getValueCapacity() {
-    return innerVector==null ? 0:innerVector.getValueCapacity();
+    return innerVector == null ? 0 : innerVector.getValueCapacity();
   }
 
   public void setValueCount(int count){
     if(innerVector != null) innerVector.getMutator().setValueCount(count);
   }
-  
-  public MapWriter map(){
-    switch(mode){
+
+  @Override
+  public MapWriter map() {
+    switch(mode) {
     case INIT:
       int vectorCount = container.size();
-      RepeatedMapVector vector = container.addOrGet(name, RepeatedMapVector.TYPE, RepeatedMapVector.class);
+      final RepeatedMapVector vector = container.addOrGet(name, RepeatedMapVector.TYPE, RepeatedMapVector.class);
       innerVector = vector;
       writer = new RepeatedMapWriter(vector, this);
-      if(vectorCount != container.size()) writer.allocate();
+      if(vectorCount != container.size()) {
+        writer.allocate();
+      }
       writer.setPosition(${index});
       mode = Mode.IN_MAP;
       return writer;
@@ -102,15 +121,18 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   throw UserException.unsupportedError().message(getUnsupportedErrorMsg("MAP", mode.name())).build(logger);
 
   }
-  
-  public ListWriter list(){
-    switch(mode){
+
+  @Override
+  public ListWriter list() {
+    switch(mode) {
     case INIT:
-      int vectorCount = container.size();
-      RepeatedListVector vector = container.addOrGet(name, RepeatedListVector.TYPE, RepeatedListVector.class);
+      final int vectorCount = container.size();
+      final RepeatedListVector vector = container.addOrGet(name, RepeatedListVector.TYPE, RepeatedListVector.class);
       innerVector = vector;
       writer = new RepeatedListWriter(null, vector, this);
-      if(vectorCount != container.size()) writer.allocate();
+      if(vectorCount != container.size()) {
+        writer.allocate();
+      }
       writer.setPosition(${index});
       mode = Mode.IN_LIST;
       return writer;
@@ -121,23 +143,26 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   throw UserException.unsupportedError().message(getUnsupportedErrorMsg("LIST", mode.name())).build(logger);
 
   }
-  
+
   <#list vv.types as type><#list type.minor as minor>
   <#assign lowerName = minor.class?uncap_first />
   <#assign upperName = minor.class?upper_case />
   <#assign capName = minor.class?cap_first />
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
-  
+
   private static final MajorType ${upperName}_TYPE = Types.repeated(MinorType.${upperName});
-  
-  public ${capName}Writer ${lowerName}(){
-    switch(mode){
+
+  @Override
+  public ${capName}Writer ${lowerName}() {
+    switch(mode) {
     case INIT:
-      int vectorCount = container.size();
-      Repeated${capName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, Repeated${capName}Vector.class);   
+      final int vectorCount = container.size();
+      final Repeated${capName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, Repeated${capName}Vector.class);
       innerVector = vector;
       writer = new Repeated${capName}WriterImpl(vector, this);
-      if(vectorCount != container.size()) writer.allocate();
+      if(vectorCount != container.size()) {
+        writer.allocate();
+      }
       writer.setPosition(${index});
       mode = Mode.IN_${upperName};
       return writer;
@@ -155,60 +180,55 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   }
 
   <#if mode == "Repeated">
-  
-  public void start(){
-    
+
+  public void start() {
     final RepeatedListVector list = (RepeatedListVector) container;
     final RepeatedListVector.RepeatedMutator mutator = list.getMutator();
-    
+
     // make sure that the current vector can support the end position of this list.
-    if(container.getValueCapacity() <= idx()){
+    if(container.getValueCapacity() <= idx()) {
       mutator.setValueCount(idx()+1);
     }
-    
+
     // update the repeated vector to state that there is current+1 objects.
-    RepeatedListHolder h = new RepeatedListHolder();
+    final RepeatedListHolder h = new RepeatedListHolder();
     list.getAccessor().get(idx(), h);
-    if(h.start >= h.end){
-      mutator.startNewValue(idx());  
+    if (h.start >= h.end) {
+      mutator.startNewValue(idx());
     }
     currentChildIndex = container.getMutator().add(idx());
-    if(writer != null){
-      writer.setPosition(currentChildIndex);  
+    if(writer != null) {
+      writer.setPosition(currentChildIndex);
     }
   }
-  
-  
-  
-  public void end(){
+
+  public void end() {
     // noop, we initialize state at start rather than end.
   }
   <#else>
-  
-  
-  public void setPosition(int index){
+
+  public void setPosition(int index) {
     super.setPosition(index);
-    if(writer != null) writer.setPosition(index);
+    if(writer != null) {
+      writer.setPosition(index);
+    }
   }
-  
-  public void start(){
+
+  public void start() {
     // noop
   }
-  
-  public void end(){
+
+  public void end() {
     // noop
   }
   </#if>
 
-  private String getUnsupportedErrorMsg(String expected, String found ){
-    String f = found.substring(3);
+  private String getUnsupportedErrorMsg(String expected, String found) {
+    final String f = found.substring(3);
     return String.format("In a list of type %s, encountered a value of type %s. "+
       "Drill does not support lists of different types.",
        f, expected
     );
   }
-
-  }
+}
 </#list>
-
-

@@ -148,17 +148,17 @@ public class QueryResultHandler {
                             ByteBuf pBody, ByteBuf dBody ) throws RpcException {
     final QueryData queryData = RpcBus.get( pBody, QueryData.PARSER );
     // Current batch coming in.
-    final QueryDataBatch batch = new QueryDataBatch( queryData, (DrillBuf) dBody );
+    final DrillBuf drillBuf = (DrillBuf) dBody;
+    final QueryDataBatch batch = new QueryDataBatch( queryData, drillBuf );
 
     final QueryId queryId = queryData.getQueryId();
 
     logger.debug( "batchArrived: queryId = {}", queryId );
     logger.trace( "batchArrived: batch = {}", batch );
 
-    UserResultsListener resultsListener = newUserResultsListener(queryId);
+    final UserResultsListener resultsListener = newUserResultsListener(queryId);
 
     // A data case--pass on via dataArrived
-
     try {
       resultsListener.dataArrived(batch, throttle);
       // That releases batch if successful.

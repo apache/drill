@@ -34,7 +34,6 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -153,7 +152,6 @@ public class TestJsonReader extends BaseTestQuery {
   }
 
   public static void gzipIt(File sourceFile) throws IOException {
-
     // modified from: http://www.mkyong.com/java/how-to-compress-a-file-in-gzip-format/
     byte[] buffer = new byte[1024];
     GZIPOutputStream gzos =
@@ -296,7 +294,7 @@ public class TestJsonReader extends BaseTestQuery {
     batchLoader.clear();
   }
 
-  private void testExistentColumns(RecordBatchLoader batchLoader) throws SchemaChangeException {
+  private void testExistentColumns(RecordBatchLoader batchLoader) {
     VectorWrapper<?> vw = batchLoader.getValueAccessorById(
         RepeatedBigIntVector.class, //
         batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_1")).getFieldIds() //
@@ -329,6 +327,4 @@ public class TestJsonReader extends BaseTestQuery {
     assertEquals("[1,2,3]", vw.getValueVector().getAccessor().getObject(1).toString());
     assertEquals("[4,5,6]", vw.getValueVector().getAccessor().getObject(2).toString());
   }
-
-
 }

@@ -22,6 +22,7 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -68,7 +69,6 @@ import com.sun.codemodel.JVar;
  * A merge join combining to incoming in-order batches.
  */
 public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
-
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinBatch.class);
 
   public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
@@ -110,7 +110,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private final List<JoinCondition> conditions;
   private final JoinRelType joinType;
   private JoinWorker worker;
-  public MergeJoinBatchBuilder batchBuilder;
+  MergeJoinBatchBuilder batchBuilder; // used by the template
   private boolean areNullsEqual = false; // whether nulls compare equal
 
   private static final String LEFT_INPUT = "LEFT INPUT";
@@ -124,10 +124,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
     this.left = left;
     this.right = right;
-    this.joinType = popConfig.getJoinType();
-    this.status = new JoinStatus(left, right, this);
-    this.batchBuilder = new MergeJoinBatchBuilder(oContext.getAllocator(), status);
-    this.conditions = popConfig.getConditions();
+    joinType = popConfig.getJoinType();
+    status = new JoinStatus(left, right, this);
+    batchBuilder = new MergeJoinBatchBuilder(oContext.getAllocator(), status);
+    conditions = popConfig.getConditions();
 
     JoinComparator comparator = JoinComparator.NONE;
     for (JoinCondition condition : conditions) {
@@ -135,6 +135,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
     assert comparator != JoinComparator.NONE;
     areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM);
+  }
+
+  @Override
+  public void close() throws Exception {
+    batchBuilder.close();
+    super.close();
   }
 
   public JoinRelType getJoinType() {
@@ -249,14 +255,14 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   private void setRecordCountInContainer() {
-    for (VectorWrapper vw : container) {
+    for (VectorWrapper<?> vw : container) {
       Preconditions.checkArgument(!vw.isHyper());
       vw.getValueVector().getMutator().setValueCount(getRecordCount());
     }
   }
 
   public void resetBatchBuilder() {
-    batchBuilder.close();
+    DrillAutoCloseables.closeNoChecked(batchBuilder);
     batchBuilder = new MergeJoinBatchBuilder(oContext.getAllocator(), status);
   }
 
@@ -493,7 +499,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       }
     }
 
-    for (VectorWrapper w : container) {
+    for (VectorWrapper<?> w : container) {
       AllocationHelper.allocateNew(w.getValueVector(), Character.MAX_VALUE);
     }
 

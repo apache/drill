@@ -19,20 +19,19 @@ package org.apache.drill.exec.server;
 
 import io.netty.channel.EventLoopGroup;
 
-import java.io.Closeable;
-
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.rpc.TransportCheck;
 
 import com.codahale.metrics.MetricRegistry;
 
 // TODO:  Doc.  What kind of context?  (For what aspects, RPC?  What kind of data?)
-public class BootStrapContext implements Closeable{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
+public class BootStrapContext implements AutoCloseable {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
 
   private final DrillConfig config;
   private final EventLoopGroup loop;
@@ -41,12 +40,15 @@ public class BootStrapContext implements Closeable{
   private final BufferAllocator allocator;
 
   public BootStrapContext(DrillConfig config) {
-    super();
     this.config = config;
-    this.loop = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitServer-");
-    this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
-    this.metrics = DrillMetrics.getInstance();
-    this.allocator = new TopLevelAllocator(config);
+    loop = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitServer-");
+    loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
+    metrics = DrillMetrics.getInstance();
+    try {
+      allocator = new RootAllocator(config);
+    } catch(final Exception e) {
+      throw new RuntimeException("Couldn't create root allocator", e);
+    }
   }
 
   public DrillConfig getConfig() {
@@ -69,10 +71,10 @@ public class BootStrapContext implements Closeable{
     return allocator;
   }
 
+  @Override
   public void close() {
     DrillMetrics.resetMetrics();
     loop.shutdownGracefully();
-    allocator.close();
+    DrillAutoCloseables.closeNoChecked(allocator);
   }
-
 }

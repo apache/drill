@@ -22,14 +22,14 @@ import java.net.URL;
 
 import mockit.Mocked;
 import mockit.NonStrictExpectations;
+
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.jdbc.SimpleCalciteSchema;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -53,7 +53,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
-public class PlanningBase extends ExecTest{
+public class PlanningBase extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningBase.class);
 
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(10000);
@@ -63,7 +63,11 @@ public class PlanningBase extends ExecTest{
 
   @Mocked QueryContext context;
 
-  TopLevelAllocator allocator = new TopLevelAllocator();
+  final RootAllocator allocator;
+
+  public PlanningBase() throws Exception {
+    allocator = new RootAllocator(config);
+  }
 
   protected void testSqlPlanFromFile(String file) throws Exception {
     testSqlPlan(getFile(file));
@@ -91,6 +95,8 @@ public class PlanningBase extends ExecTest{
         result = allocator;
         dbContext.getConfig();
         result = config;
+        dbContext.getAllocator();
+        result = new RootAllocator(config);
         dbContext.getOptionManager();
         result = systemOptions;
         dbContext.getPersistentStoreProvider();
@@ -141,7 +147,6 @@ public class PlanningBase extends ExecTest{
       DrillSqlWorker worker = new DrillSqlWorker(context);
       PhysicalPlan p = worker.getPlan(sql);
     }
-
   }
 
   protected String getFile(String resource) throws IOException{

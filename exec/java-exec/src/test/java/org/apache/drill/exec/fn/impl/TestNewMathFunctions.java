@@ -29,7 +29,7 @@ import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -50,17 +50,16 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class TestNewMathFunctions {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestNewMathFunctions.class);
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestNewMathFunctions.class);
-
-  DrillConfig c = DrillConfig.create();
+  final DrillConfig c = DrillConfig.create();
   PhysicalPlanReader reader;
   FunctionImplementationRegistry registry;
   FragmentContext context;
 
   public Object[] getRunResult(SimpleRootExec exec) {
     int size = 0;
-    for (ValueVector v : exec) {
+    for (@SuppressWarnings("unused") ValueVector v : exec) {
       size++;
     }
 
@@ -81,9 +80,9 @@ public class TestNewMathFunctions {
 
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
@@ -147,5 +146,4 @@ public class TestNewMathFunctions {
    Object [] expected = new Object[] {1, 1, 1, 0};
    runTest(bitContext, connection, expected, "functions/testIsNumericFunction.json");
  }
-
 }

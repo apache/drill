@@ -44,7 +44,6 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.AllocationHelper;
@@ -94,8 +93,7 @@ import org.joda.time.DateTimeZone;
 import com.google.common.collect.Lists;
 
 public class HiveRecordReader extends AbstractRecordReader {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveRecordReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveRecordReader.class);
 
   protected Table table;
   protected Partition partition;
@@ -166,7 +164,7 @@ public class HiveRecordReader extends AbstractRecordReader {
     String inputFormatName = (partition == null) ? table.getSd().getInputFormat() : partition.getSd().getInputFormat();
     try {
       format = (InputFormat) Class.forName(inputFormatName).getConstructor().newInstance();
-      Class c = Class.forName(sLib);
+      Class<?> c = Class.forName(sLib);
       serde = (SerDe) c.getConstructor().newInstance();
       serde.initialize(job, properties);
     } catch (ReflectiveOperationException | SerDeException e) {
@@ -317,7 +315,6 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   private boolean readHiveRecordAndInsertIntoRecordBatch(Object deSerializedValue, int outputRecordIndex) {
-    boolean success;
     for (int i = 0; i < selectedColumnNames.size(); i++) {
       String columnName = selectedColumnNames.get(i);
       Object hiveValue = sInspector.getStructFieldData(deSerializedValue, sInspector.getStructFieldRef(columnName));
@@ -342,7 +339,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     try {
       if (reader != null) {
         reader.close();

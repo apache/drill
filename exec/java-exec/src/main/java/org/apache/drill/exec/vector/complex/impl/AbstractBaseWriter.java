@@ -20,33 +20,35 @@ package org.apache.drill.exec.vector.complex.impl;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 
-abstract class AbstractBaseWriter implements FieldWriter{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBaseWriter.class);
+abstract class AbstractBaseWriter implements FieldWriter {
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBaseWriter.class);
 
   final FieldWriter parent;
   private int index;
 
   public AbstractBaseWriter(FieldWriter parent) {
-    super();
     this.parent = parent;
   }
 
+  @Override
   public FieldWriter getParent() {
     return parent;
   }
 
-  public boolean isRoot(){
+  public boolean isRoot() {
     return parent == null;
   }
 
-  int idx(){
+  int idx() {
     return index;
   }
 
-  public void setPosition(int index){
+  @Override
+  public void setPosition(int index) {
     this.index = index;
   }
 
-  public void end(){
+  @Override
+  public void end() {
   }
 }

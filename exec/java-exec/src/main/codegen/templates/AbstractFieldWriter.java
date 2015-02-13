@@ -26,58 +26,66 @@ package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
 
-/* This class is generated using freemarker and the AbstractFieldWriter.java template */
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
-abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWriter{
-  
-  AbstractFieldWriter(FieldWriter parent){
+abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWriter {
+  AbstractFieldWriter(FieldWriter parent) {
     super(parent);
   }
-  
-  public void start(){
+
+  @Override
+  public void start() {
     throw new IllegalStateException(String.format("You tried to start when you are using a ValueWriter of type %s.", this.getClass().getSimpleName()));
   }
-  
-  public void end(){
+
+  @Override
+  public void end() {
     throw new IllegalStateException(String.format("You tried to end when you are using a ValueWriter of type %s.", this.getClass().getSimpleName()));
   }
-  
+
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign fields = minor.fields!type.fields />
-  public void write(${name}Holder holder){
+  @Override
+  public void write(${name}Holder holder) {
     fail("${name}");
   }
-  
-  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
+
+  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
     fail("${name}");
   }
-  
+
   </#list></#list>
 
-  public void writeNull(){
+  public void writeNull() {
     fail("${name}");
   }
-  
-  public MapWriter map(){
+
+  @Override
+  public MapWriter map() {
     fail("Map");
     return null;
   }
-  
-  public ListWriter list(){
+
+  @Override
+  public ListWriter list() {
     fail("List");
     return null;
   }
-  
-  public MapWriter map(String name){
+
+  @Override
+  public MapWriter map(String name) {
     fail("Map");
     return null;
   }
-  
-  public ListWriter list(String name){
+
+  @Override
+  public ListWriter list(String name) {
     fail("List");
     return null;
   }
-  
+
   <#list vv.types as type><#list type.minor as minor>
   <#assign lowerName = minor.class?uncap_first />
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
@@ -89,32 +97,30 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
     return null;
   }
   </#if>
+
+  @Override
   public ${capName}Writer ${lowerName}(String name) {
     fail("${capName}");
     return null;
   }
-  public ${capName}Writer ${lowerName}(){
+
+  @Override
+  public ${capName}Writer ${lowerName}() {
     fail("${capName}");
     return null;
   }
-  
-  
+
   </#list></#list>
-  
-  
-  public void copyReader(FieldReader reader){
+
+  public void copyReader(FieldReader reader) {
     fail("Copy FieldReader");
   }
-  public void copyReaderToField(String name, FieldReader reader){
+
+  public void copyReaderToField(String name, FieldReader reader) {
     fail("Copy FieldReader to STring");
   }
-  
-  private void fail(String name){
+
+  private void fail(String name) {
     throw new IllegalArgumentException(String.format("You tried to write a %s type when you are using a ValueWriter of type %s.", name, this.getClass().getSimpleName()));
   }
-  
-  
 }
-
-
-

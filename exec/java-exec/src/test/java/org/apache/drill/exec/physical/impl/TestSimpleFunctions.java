@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +43,7 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -62,15 +61,14 @@ import org.junit.Test;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.sun.codemodel.JClassAlreadyExistsException;
 
 public class TestSimpleFunctions extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
 
-  DrillConfig c = DrillConfig.create();
+  final DrillConfig c = DrillConfig.create();
 
   @Test
-  public void testHashFunctionResolution(@Injectable DrillConfig config) throws JClassAlreadyExistsException, IOException {
+  public void testHashFunctionResolution(@Injectable DrillConfig config) {
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(config);
     // test required vs nullable Int input
     resolveHash(config,
@@ -135,10 +133,9 @@ public class TestSimpleFunctions extends ExecTest {
 
   public void resolveHash(DrillConfig config, LogicalExpression arg, TypeProtos.MajorType expectedArg,
                                     TypeProtos.MajorType expectedOut, TypeProtos.DataMode expectedBestInputMode,
-                                    FunctionImplementationRegistry registry) throws JClassAlreadyExistsException, IOException {
+                                    FunctionImplementationRegistry registry) {
     List<LogicalExpression> args = new ArrayList<>();
     args.add(arg);
-    String[] registeredNames = { "hash" };
     FunctionCall call = new FunctionCall(
         "hash",
         args,
@@ -155,7 +152,7 @@ public class TestSimpleFunctions extends ExecTest {
 
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -197,7 +194,7 @@ public class TestSimpleFunctions extends ExecTest {
 
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -240,7 +237,7 @@ public class TestSimpleFunctions extends ExecTest {
 
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -273,7 +270,5 @@ public class TestSimpleFunctions extends ExecTest {
       throw context.getFailureCause();
     }
     assertTrue(!context.isFailed());
-
   }
-
 }

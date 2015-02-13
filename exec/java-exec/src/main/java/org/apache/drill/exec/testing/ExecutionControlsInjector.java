@@ -50,10 +50,11 @@ public class ExecutionControlsInjector implements ControlsInjector {
 
   @Override
   public void injectUnchecked(final ExecutionControls executionControls, final String desc) {
-    Preconditions.checkNotNull(executionControls);
-    final ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
-    if (exceptionInjection != null) {
-      exceptionInjection.throwUnchecked();
+    if (executionControls != null) {
+      final ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
+      if (exceptionInjection != null) {
+        exceptionInjection.throwUnchecked();
+      }
     }
   }
 

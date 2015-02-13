@@ -33,19 +33,19 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import com.google.common.collect.Lists;
 
 public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
-
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
 
   private SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
   private int recordsToSkip;
   private int recordsLeft;
-  private boolean noEndLimit;
+  private final boolean noEndLimit;
   private boolean skipBatch;
   private boolean first = true;
-  List<TransferPair> transfers = Lists.newArrayList();
+  private final List<TransferPair> transfers = Lists.newArrayList();
 
-  public LimitRecordBatch(Limit popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
+  public LimitRecordBatch(Limit popConfig, FragmentContext context, RecordBatch incoming)
+      throws OutOfMemoryException {
     super(popConfig, context, incoming);
     outgoingSv = new SelectionVector2(oContext.getAllocator());
     recordsToSkip = popConfig.getFirst();
@@ -61,14 +61,12 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     container.zeroVectors();
     transfers.clear();
 
-
-    for(VectorWrapper<?> v : incoming){
-      TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField()));
+    for(final VectorWrapper<?> v : incoming) {
+      final TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField()));
       transfers.add(pair);
     }
 
-    BatchSchema.SelectionVectorMode svMode = incoming.getSchema().getSelectionVectorMode();
-
+    final BatchSchema.SelectionVectorMode svMode = incoming.getSchema().getSelectionVectorMode();
     switch(svMode){
       case NONE:
         break;
@@ -126,7 +124,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       first = false;
     }
     skipBatch = false;
-    int recordCount = incoming.getRecordCount();
+    final int recordCount = incoming.getRecordCount();
     if (recordCount == 0) {
       skipBatch = true;
       return IterOutcome.OK;
@@ -134,7 +132,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     for(TransferPair tp : transfers) {
       tp.transfer();
     }
-    if(recordCount <= recordsToSkip) {
+    if (recordCount <= recordsToSkip) {
       recordsToSkip -= recordCount;
       skipBatch = true;
     } else {
@@ -149,8 +147,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     return IterOutcome.OK;
   }
 
+  // These two functions are identical except for the computation of the index; merge
   private void limitWithNoSV(int recordCount) {
-    int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
+    final int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
     recordsToSkip -= offset;
     int fetch;
 
@@ -162,15 +161,14 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     }
 
     int svIndex = 0;
-    for(char i = (char) offset; i < fetch; i++) {
+    for(char i = (char) offset; i < fetch; svIndex++, i++) {
       outgoingSv.setIndex(svIndex, i);
-      svIndex++;
     }
     outgoingSv.setRecordCount(svIndex);
   }
 
   private void limitWithSV(int recordCount) {
-    int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
+    final int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
     recordsToSkip -= offset;
     int fetch;
 
@@ -182,10 +180,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     }
 
     int svIndex = 0;
-    for(int i = offset; i < fetch; i++) {
-      char index = incomingSv.getIndex(i);
+    for(int i = offset; i < fetch; svIndex++, i++) {
+      final char index = incomingSv.getIndex(i);
       outgoingSv.setIndex(svIndex, index);
-      svIndex++;
     }
     outgoingSv.setRecordCount(svIndex);
   }
@@ -196,9 +193,8 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   @Override
-  public void close(){
+  public void close() throws Exception {
     outgoingSv.clear();
     super.close();
   }
-
 }

@@ -690,11 +690,15 @@ public class StringFunctions{
 
     @Output VarCharHolder out;
 
+    @Override
     public void setup() {
     }
 
+    @Override
     public void eval() {
-      buffer = buffer.reallocIfNeeded((int) length.value*2);
+      final long theLength = length.value;
+      final int lengthNeeded = (int) (theLength <= 0 ? 0 : theLength * 2);
+      buffer = buffer.reallocIfNeeded(lengthNeeded);
       byte currentByte = 0;
       int id = 0;
       //get the char length of text.
@@ -703,29 +707,29 @@ public class StringFunctions{
       //get the char length of fill.
       int fillCharCount = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(fill.buffer, fill.start, fill.end);
 
-      if (length.value <= 0) {
+      if (theLength <= 0) {
         //case 1: target length is <=0, then return an empty string.
         out.buffer = buffer;
         out.start = out.end = 0;
-      } else if (length.value == textCharCount || (length.value > textCharCount  && fillCharCount == 0) ) {
+      } else if (theLength == textCharCount || (theLength > textCharCount  && fillCharCount == 0) ) {
         //case 2: target length is same as text's length, or need fill into text but "fill" is empty, then return text directly.
         out.buffer = text.buffer;
         out.start = text.start;
         out.end = text.end;
-      } else if (length.value < textCharCount) {
+      } else if (theLength < textCharCount) {
         //case 3: truncate text on the right side. It's same as substring(text, 1, length).
         out.buffer = text.buffer;
         out.start = text.start;
-        out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(text.buffer, text.start, text.end, (int)length.value);
-      } else if (length.value > textCharCount) {
-        //case 4: copy "fill" on left. Total # of char to copy : length.value - textCharCount
+        out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(text.buffer, text.start, text.end, (int) theLength);
+      } else if (theLength > textCharCount) {
+        //case 4: copy "fill" on left. Total # of char to copy : theLength - textCharCount
         int count = 0;
         out.buffer = buffer;
         out.start = out.end = 0;
 
-        while (count < length.value - textCharCount) {
+        while (count < theLength - textCharCount) {
           for (id = fill.start; id < fill.end; id++) {
-            if (count == length.value - textCharCount) {
+            if (count == theLength - textCharCount) {
               break;
             }
 
@@ -763,11 +767,15 @@ public class StringFunctions{
 
     @Output VarCharHolder out;
 
+    @Override
     public void setup() {
     }
 
+    @Override
     public void eval() {
-      buffer = buffer.reallocIfNeeded((int) length.value*2);
+      final long theLength = length.value;
+      final int lengthNeeded = (int) (theLength <= 0 ? 0 : theLength * 2);
+      buffer = buffer.reallocIfNeeded(lengthNeeded);
 
       byte currentByte = 0;
       int id = 0;
@@ -777,21 +785,21 @@ public class StringFunctions{
       //get the char length of fill.
       int fillCharCount = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(fill.buffer, fill.start, fill.end);
 
-      if (length.value <= 0) {
+      if (theLength <= 0) {
         //case 1: target length is <=0, then return an empty string.
         out.buffer = buffer;
         out.start = out.end = 0;
-      } else if (length.value == textCharCount || (length.value > textCharCount  && fillCharCount == 0) ) {
+      } else if (theLength == textCharCount || (theLength > textCharCount  && fillCharCount == 0) ) {
         //case 2: target length is same as text's length, or need fill into text but "fill" is empty, then return text directly.
         out.buffer = text.buffer;
         out.start = text.start;
         out.end = text.end;
-      } else if (length.value < textCharCount) {
+      } else if (theLength < textCharCount) {
         //case 3: truncate text on the right side. It's same as substring(text, 1, length).
         out.buffer = text.buffer;
         out.start = text.start;
-        out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(text.buffer, text.start, text.end, (int)length.value);
-      } else if (length.value > textCharCount) {
+        out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(text.buffer, text.start, text.end, (int) theLength);
+      } else if (theLength > textCharCount) {
         //case 4: copy "text" into "out", then copy "fill" on the right.
         out.buffer = buffer;
         out.start = out.end = 0;
@@ -800,12 +808,12 @@ public class StringFunctions{
           out.buffer.setByte(out.end++, text.buffer.getByte(id));
         }
 
-        //copy "fill" on right. Total # of char to copy : length.value - textCharCount
+        //copy "fill" on right. Total # of char to copy : theLength - textCharCount
         int count = 0;
 
-        while (count < length.value - textCharCount) {
+        while (count < theLength - textCharCount) {
           for (id = fill.start; id < fill.end; id++) {
-            if (count == length.value - textCharCount) {
+            if (count == theLength - textCharCount) {
               break;
             }
 

@@ -347,10 +347,10 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       cg.setMappingSet(rightMapping);
       ClassGenerator.HoldingContainer second = cg.addExpr(expr, false);
 
-      LogicalExpression fh =
+      final LogicalExpression fh =
         FunctionGenerationHelper
           .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
-      ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
+      final ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
     cg.getEvalBlock()._return(JExpr.TRUE);
@@ -365,7 +365,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
    */
   private void setupOutputAggregatedValues(ClassGenerator<WindowFramer> cg, List<LogicalExpression> valueExprs) {
     cg.setMappingSet(eval);
-    for (LogicalExpression ex : valueExprs) {
+    for (final LogicalExpression ex : valueExprs) {
       cg.addExpr(ex);
     }
   }
@@ -399,7 +399,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   }
 
   @Override
-  public void close() {
+  public void close() throws Exception {
     cleanup();
     super.close();
   }

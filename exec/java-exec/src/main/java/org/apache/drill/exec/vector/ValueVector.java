@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.DrillBuf;
-
 import java.io.Closeable;
+
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
@@ -64,8 +64,9 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   int getValueCapacity();
 
   /**
-   * Alternative to clear(). Allows use as closeable in try-with-resources.
+   * Alternative to clear(). Allows use as an AutoCloseable in try-with-resources.
    */
+  @Override
   void close();
 
   /**
@@ -126,9 +127,8 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    * Return the underlying buffers associated with this vector. Note that this doesn't impact the reference counts for
    * this buffer so it only should be used for in-context access. Also note that this buffer changes regularly thus
    * external classes shouldn't hold a reference to it (unless they change it).
-   *
-   * @param clear
-   *          Whether to clear vector
+   * @param clear Whether to clear vector before returning; the buffers will still be refcounted;
+   *   but the returned array will be the only reference to them
    *
    * @return The underlying {@link io.netty.buffer.DrillBuf buffers} that is used by this vector instance.
    */
@@ -189,5 +189,4 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
     @Deprecated
     void generateTestData(int values);
   }
-
 }

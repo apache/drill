@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.trace;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
@@ -28,7 +30,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -68,17 +70,15 @@ import com.google.common.io.Files;
  * known value.
  */
 public class TestTraceOutputDump extends ExecTest {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTraceOutputDump.class);
-    DrillConfig c = DrillConfig.create();
-
+//    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTraceOutputDump.class);
+    private final DrillConfig c = DrillConfig.create();
 
     @Test
     public void testFilter(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable
     {
-
         new NonStrictExpectations(){{
             bitContext.getMetrics(); result = new MetricRegistry();
-            bitContext.getAllocator(); result = new TopLevelAllocator();
+            bitContext.getAllocator(); result = new RootAllocator(c);
             bitContext.getConfig(); result = c;
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
             bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
@@ -98,7 +98,7 @@ public class TestTraceOutputDump extends ExecTest {
         if(context.getFailureCause() != null){
             throw context.getFailureCause();
         }
-        assertTrue(!context.isFailed());
+        assertFalse(context.isFailed());
 
         FragmentHandle handle = context.getHandle();
 
@@ -116,10 +116,10 @@ public class TestTraceOutputDump extends ExecTest {
 
       System.out.println("File Name: " + filename);
 
-        Configuration conf = new Configuration();
+      Configuration conf = new Configuration();
       conf.set(FileSystem.FS_DEFAULT_NAME_KEY, c.getString(ExecConstants.TRACE_DUMP_FILESYSTEM));
 
-        FileSystem fs = FileSystem.get(conf);
+      FileSystem fs = FileSystem.get(conf);
       Path path = new Path(filename);
       assertTrue("Trace file does not exist", fs.exists(path));
       FSDataInputStream in = fs.open(path);
@@ -128,15 +128,14 @@ public class TestTraceOutputDump extends ExecTest {
       wrap.readFromStream(in);
       VectorAccessible container = wrap.get();
 
-        /* Assert there are no selection vectors */
+      /* Assert there are no selection vectors */
       assertTrue(wrap.getSv2() == null);
 
-        /* Assert there is only one record */
-        assertTrue(container.getRecordCount() == 1);
+      /* Assert there is only one record */
+      assertTrue(container.getRecordCount() == 1);
 
-        /* Read the Integer value and ASSERT its Integer.MIN_VALUE */
-        int value = (int) container.iterator().next().getValueVector().getAccessor().getObject(0);
-        assertTrue(value == Integer.MIN_VALUE);
+      /* Read the Integer value and ASSERT its Integer.MIN_VALUE */
+      final int value = (int) container.iterator().next().getValueVector().getAccessor().getObject(0);
+      assertEquals(Integer.MIN_VALUE, value);
     }
-
 }

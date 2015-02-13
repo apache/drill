@@ -63,24 +63,33 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
   private List<MaterializedField> outputFields;
   private UnionAller unionall;
-  private UnionAllInput unionAllInput;
+  private final UnionAllInput unionAllInput;
   private RecordBatch current;
 
   private final List<TransferPair> transfers = Lists.newArrayList();
   private List<ValueVector> allocationVectors;
-  protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
+  protected final SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private int recordCount = 0;
   private boolean schemaAvailable = false;
 
-  public UnionAllRecordBatch(UnionAll config, List<RecordBatch> children, FragmentContext context) throws OutOfMemoryException {
+  public UnionAllRecordBatch(UnionAll config, List<RecordBatch> children, FragmentContext context)
+      throws OutOfMemoryException {
     super(config, context, false);
-    assert (children.size() == 2) : "The number of the operands of Union must be 2";
+    assert children.size() == 2 : "The number of the operands of Union must be 2";
     unionAllInput = new UnionAllInput(this, children.get(0), children.get(1));
   }
 
   @Override
   public int getRecordCount() {
     return recordCount;
+  }
+
+  @Override
+  public void kill(boolean sendUpstream) {
+    if(current != null) {
+      current.kill(sendUpstream);
+      current = null;
+    }
   }
 
   @Override
@@ -136,14 +145,14 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   }
 
   private void setValueCount(int count) {
-    for (ValueVector v : allocationVectors) {
-      ValueVector.Mutator m = v.getMutator();
+    for (final ValueVector v : allocationVectors) {
+      final ValueVector.Mutator m = v.getMutator();
       m.setValueCount(count);
     }
   }
 
   private boolean doAlloc() {
-    for (ValueVector v : allocationVectors) {
+    for (final ValueVector v : allocationVectors) {
       try {
         AllocationHelper.allocateNew(v, current.getRecordCount());
       } catch (OutOfMemoryRuntimeException ex) {
@@ -155,7 +164,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
   private IterOutcome doWork() throws ClassTransformationException, IOException, SchemaChangeException {
     if (allocationVectors != null) {
-      for (ValueVector v : allocationVectors) {
+      for (final ValueVector v : allocationVectors) {
         v.clear();
       }
     }
@@ -166,11 +175,11 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     int index = 0;
     for(VectorWrapper<?> vw : current) {
-      ValueVector vvIn = vw.getValueVector();
+      final ValueVector vvIn = vw.getValueVector();
       // get the original input column names
-      SchemaPath inputPath = vvIn.getField().getPath();
+      final SchemaPath inputPath = vvIn.getField().getPath();
       // get the renamed column names
-      SchemaPath outputPath = outputFields.get(index).getPath();
+      final SchemaPath outputPath = outputFields.get(index).getPath();
 
       final ErrorCollector collector = new ErrorCollectorImpl();
       // According to input data names, Minortypes, Datamodes, choose to
@@ -185,9 +194,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
             throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
           }
 
-          ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
-          ValueVector vvOut = container.addOrGet(MaterializedField.create(outputPath, vectorRead.getMajorType()));
-          TransferPair tp = vvIn.makeTransferPair(vvOut);
+          final ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
+          final ValueVector vvOut = container.addOrGet(MaterializedField.create(outputPath, vectorRead.getMajorType()));
+          final TransferPair tp = vvIn.makeTransferPair(vvOut);
           transfers.add(tp);
         // Copy data in order to rename the column
         } else {
@@ -196,11 +205,11 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
             throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
           }
 
-          MaterializedField outputField = MaterializedField.create(outputPath, expr.getMajorType());
-          ValueVector vv = container.addOrGet(outputField, callBack);
+          final MaterializedField outputField = MaterializedField.create(outputPath, expr.getMajorType());
+          final ValueVector vv = container.addOrGet(outputField, callBack);
           allocationVectors.add(vv);
-          TypedFieldId fid = container.getValueVectorId(outputField.getPath());
-          ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
+          final TypedFieldId fid = container.getValueVectorId(outputField.getPath());
+          final ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
           cg.addExpr(write);
         }
       // Cast is necessary
@@ -230,11 +239,11 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         }
 
         final MaterializedField outputField = MaterializedField.create(outputPath, expr.getMajorType());
-        ValueVector vector = container.addOrGet(outputField, callBack);
+        final ValueVector vector = container.addOrGet(outputField, callBack);
         allocationVectors.add(vector);
-        TypedFieldId fid = container.getValueVectorId(outputField.getPath());
+        final TypedFieldId fid = container.getValueVectorId(outputField.getPath());
 
-        boolean useSetSafe = !(vector instanceof FixedWidthVector);
+        final boolean useSetSafe = !(vector instanceof FixedWidthVector);
         ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, useSetSafe);
         cg.addExpr(write);
       }
@@ -270,12 +279,14 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
   // This method is used by inner class to clear the current record batch
   private void clearCurrentRecordBatch() {
-    for(VectorWrapper<?> v: current) {
-      v.clear();
+    if (current != null) {
+      for(final VectorWrapper<?> v: current) {
+        v.clear();
+      }
     }
   }
 
-  public static class UnionAllInput {
+  public static class UnionAllInput implements AutoCloseable {
     private UnionAllRecordBatch unionAllRecordBatch;
     private List<MaterializedField> outputFields;
     private OneSideInput leftSide;
@@ -293,6 +304,10 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       this.unionAllRecordBatch = unionAllRecordBatch;
       leftSide = new OneSideInput(left);
       rightSide = new OneSideInput(right);
+    }
+
+    @Override
+    public void close() throws Exception {
     }
 
     public IterOutcome nextBatch() throws SchemaChangeException {
@@ -506,7 +521,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
     private class OneSideInput {
       private IterOutcome upstream = IterOutcome.NOT_YET;
-      private RecordBatch recordBatch;
+      private final RecordBatch recordBatch;
 
       public OneSideInput(RecordBatch recordBatch) {
         this.recordBatch = recordBatch;

@@ -19,31 +19,26 @@ package org.apache.drill.exec.memory;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 
-public class OutOfMemoryRuntimeException extends DrillRuntimeException{
+public class OutOfMemoryRuntimeException extends DrillRuntimeException {
+  private static final long serialVersionUID = 1241552417096596818L;
 
   public OutOfMemoryRuntimeException() {
-    super();
-
   }
 
   public OutOfMemoryRuntimeException(String message, Throwable cause, boolean enableSuppression,
       boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
-
   }
 
   public OutOfMemoryRuntimeException(String message, Throwable cause) {
     super(message, cause);
-
   }
 
   public OutOfMemoryRuntimeException(String message) {
     super(message);
-
   }
 
   public OutOfMemoryRuntimeException(Throwable cause) {
     super(cause);
-
   }
 }

@@ -27,7 +27,6 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.store.easy.json.JsonProcessor;
 import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.ListVectorOutput;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput;
@@ -36,16 +35,14 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 public class JsonReader extends BaseJsonProcessor {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
   public final static int MAX_RECORD_SIZE = 128 * 1024;
 
   private final WorkingBuffer workingBuffer;
@@ -466,7 +463,7 @@ public class JsonReader extends BaseJsonProcessor {
     writer.varChar().writeVarChar(0, workingBuffer.prepareVarCharHolder(parser.getText()), workingBuffer.getBuf());
   }
 
-  private void writeData(ListWriter list) throws IOException {
+  private void writeData(ListWriter list) {
     list.start();
     outside: while (true) {
       try {

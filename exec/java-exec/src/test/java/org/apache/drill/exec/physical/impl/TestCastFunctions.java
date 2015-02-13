@@ -40,7 +40,7 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -69,18 +69,14 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestCastFunctions extends PopUnitTestBase{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
 
-  DrillConfig c = DrillConfig.create();
-
+  private final DrillConfig c = DrillConfig.create();
 
   @Test
-  // cast to bigint.
   public void testCastBigInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-
-    final BufferAllocator allocator = new TopLevelAllocator();
-
+    final BufferAllocator allocator = new RootAllocator(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -123,12 +119,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   }
 
   @Test
-  //cast to int
   public void testCastInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new TopLevelAllocator();
-
+    final BufferAllocator allocator = new RootAllocator(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -171,10 +165,9 @@ public class TestCastFunctions extends PopUnitTestBase{
   }
 
   @Test
-  //cast to float4
   public void testCastFloat4(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    final BufferAllocator allocator = new TopLevelAllocator();
+    final BufferAllocator allocator = new RootAllocator(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -217,11 +210,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   }
 
   @Test
-  //cast to float8
   public void testCastFloat8(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new TopLevelAllocator();
+    final BufferAllocator allocator = new RootAllocator(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -264,11 +256,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   }
 
   @Test
-  //cast to varchar(length)
   public void testCastVarChar(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new TopLevelAllocator();
+    final BufferAllocator allocator = new RootAllocator(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -311,11 +302,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   }
 
   @Test
-  //cast to varbinary(length)
   public void testCastVarBinary(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new TopLevelAllocator();
+    final BufferAllocator allocator = new RootAllocator(c);
 
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
@@ -361,8 +351,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   //nested: cast is nested in another cast, or another function.
   public void testCastNested(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-
-    final BufferAllocator allocator = new TopLevelAllocator();
+    final BufferAllocator allocator = new RootAllocator(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -409,7 +398,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastNumException(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new TopLevelAllocator();
+    final BufferAllocator allocator = new RootAllocator(c);
 
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
@@ -442,7 +431,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   }
 
   @Test
-  public void testCastFromNullablCol() throws Throwable {
+  public void testCastFromNullableCol() throws Throwable {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try(Drillbit bit = new Drillbit(CONFIG, serviceSet);
@@ -486,15 +475,15 @@ public class TestCastFunctions extends PopUnitTestBase{
 
   private Object[][] getRunResult(VectorAccessible va) {
     int size = 0;
-    for (VectorWrapper v : va) {
+    for (@SuppressWarnings("unused") final VectorWrapper<?> v : va) {
       size++;
     }
 
-    Object[][] res = new Object [va.getRecordCount()][size];
+    final Object[][] res = new Object[va.getRecordCount()][size];
     for (int j = 0; j < va.getRecordCount(); j++) {
       int i = 0;
-      for (VectorWrapper v : va) {
-        Object o =  v.getValueVector().getAccessor().getObject(j);
+      for (final VectorWrapper<?> v : va) {
+        final Object o =  v.getValueVector().getAccessor().getObject(j);
         if (o instanceof byte[]) {
           res[j][i++] =  new String((byte[]) o);
         } else {
@@ -504,5 +493,4 @@ public class TestCastFunctions extends PopUnitTestBase{
     }
     return res;
  }
-
 }

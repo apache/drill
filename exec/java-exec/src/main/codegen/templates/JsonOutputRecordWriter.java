@@ -37,7 +37,6 @@ import parquet.io.api.RecordConsumer;
 import parquet.schema.MessageType;
 import parquet.io.api.Binary;
 import io.netty.buffer.ByteBuf;
-import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.fn.JsonOutput;
@@ -61,6 +60,8 @@ import java.util.Map;
  * to output the data in string format instead of implementing addField for each type holder.
  *
  * This is useful for text format writers such as CSV, TSV etc.
+ *
+ * NB: Source code generated using FreeMarker template ${.template_name}
  */
 public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implements RecordWriter {
 

@@ -19,14 +19,15 @@ package org.apache.drill.exec.exception;
 
 import org.apache.drill.exec.work.foreman.ForemanException;
 
-public class FragmentSetupException extends ForemanException{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentSetupException.class);
+public class FragmentSetupException extends ForemanException {
+  private static final long serialVersionUID = -7593886431264516650L;
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentSetupException.class);
 
   public FragmentSetupException() {
-    super();
   }
 
-  public FragmentSetupException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+  public FragmentSetupException(String message, Throwable cause, boolean enableSuppression,
+      boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
   }
 

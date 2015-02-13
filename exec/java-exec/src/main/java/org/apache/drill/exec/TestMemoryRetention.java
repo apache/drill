@@ -25,12 +25,13 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 
 import com.google.common.collect.Lists;
 
 public class TestMemoryRetention {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMemoryRetention.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMemoryRetention.class);
 
   static final int SMALL_AVERAGE_BYTES = 1024 * 32;
   static final int LARGE_BYTES = 32 * 1024 * 1024;
@@ -61,9 +62,8 @@ public class TestMemoryRetention {
   }
 
   public static void main(String[] args) throws Exception {
-
     final DrillConfig config = DrillConfig.create();
-    final TopLevelAllocator a = new TopLevelAllocator(config);
+    final BufferAllocator a = new RootAllocator(config);
     for (int i = 0; i < PARALLEL_THREADS; i++) {
       Alloc alloc = new Alloc(a);
       alloc.start();
@@ -71,9 +71,9 @@ public class TestMemoryRetention {
   }
 
   private static class Alloc extends Thread {
-    final TopLevelAllocator allocator;
+    final BufferAllocator allocator;
 
-    Alloc(TopLevelAllocator allocator) {
+    Alloc(BufferAllocator allocator) {
       this.allocator = allocator;
     }
 
@@ -107,16 +107,14 @@ public class TestMemoryRetention {
       } else {
         d.run();
       }
-
     }
-
   }
 
   private static class Dealloc extends Thread {
     final List<DrillBuf> bufs;
-    final TopLevelAllocator a;
+    final BufferAllocator a;
 
-    public Dealloc(List<DrillBuf> bufs, TopLevelAllocator a) {
+    public Dealloc(List<DrillBuf> bufs, BufferAllocator a) {
       this.bufs = bufs;
       this.a = a;
     }
@@ -139,6 +137,4 @@ public class TestMemoryRetention {
       alloc.start();
     }
   }
-
-
 }

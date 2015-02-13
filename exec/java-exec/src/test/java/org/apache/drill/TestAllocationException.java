@@ -18,14 +18,17 @@
 package org.apache.drill;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.testing.Controls;
 import org.apache.drill.exec.testing.ControlsInjectionUtil;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
 /**
@@ -33,31 +36,30 @@ import org.junit.Test;
  * be propagated downstream. Make sure the proper "memory error" message is sent to the client.
  */
 public class TestAllocationException extends BaseTestQuery {
-
   private static final String SINGLE_MODE = "ALTER SESSION SET `planner.disable_exchanges` = true";
 
-  private void testWithException(final String fileName) throws Exception{
+  private void testWithException(final String fileName) throws Exception {
     test(SINGLE_MODE);
 
     final String controls = Controls.newBuilder()
-      .addException(TopLevelAllocator.class,
-        TopLevelAllocator.CHILD_BUFFER_INJECTION_SITE,
+      .addException(BaseAllocator.class,
+        RootAllocator.CHILD_BUFFER_INJECTION_SITE,
         OutOfMemoryRuntimeException.class,
         200,
         1
       ).build();
     ControlsInjectionUtil.setControls(client, controls);
 
-    String query = getFile(fileName);
+    final String query = getFile(fileName);
 
     try {
       test(query);
       fail("The query should have failed!");
-    } catch(UserException uex) {
-      DrillPBError error = uex.getOrCreatePBError(false);
+    } catch(final UserException uex) {
+      final DrillPBError error = uex.getOrCreatePBError(false);
       assertEquals(DrillPBError.ErrorType.RESOURCE, error.getErrorType());
       assertTrue("Error message isn't related to memory error",
-        uex.getMessage().contains(UserException.MEMORY_ERROR_MSG));
+          uex.getMessage().contains(UserException.MEMORY_ERROR_MSG));
     }
   }
 

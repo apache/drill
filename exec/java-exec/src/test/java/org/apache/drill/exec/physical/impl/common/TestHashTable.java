@@ -24,7 +24,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -42,20 +42,18 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestHashTable extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestHashTable.class);
-  DrillConfig c = DrillConfig.create();
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestHashTable.class);
+  final DrillConfig c = DrillConfig.create();
 
   @SuppressWarnings("deprecation")
 private SimpleRootExec doTest(final DrillbitContext bitContext, UserClientConnection connection, String plan_path) throws Exception{
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
-
-
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(plan_path), Charsets.UTF_8));

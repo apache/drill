@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
 
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -31,7 +32,6 @@ import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
-import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -56,9 +56,10 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JVar;
 
 public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggBatch.class);
 
   private HashAggregator aggregator;
+
   private final RecordBatch incoming;
   private LogicalExpression[] aggrExprs;
   private TypedFieldId[] groupByOutFieldIds;
@@ -110,7 +111,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     if (!createAggregator()) {
       state = BatchState.DONE;
     }
-    for (VectorWrapper w : container) {
+    for (VectorWrapper<?> w : container) {
       AllocationHelper.allocatePrecomputedChildCount(w.getValueVector(), 0, 0, 0);
     }
   }
@@ -142,7 +143,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     case UPDATE_AGGREGATOR:
       context.fail(UserException.unsupportedError()
         .message("Hash aggregate does not support schema changes").build(logger));
-      close();
+      DrillAutoCloseables.closeNoChecked(this);
       killIncoming(false);
       return IterOutcome.STOP;
     default:
@@ -200,7 +201,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       }
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+      final ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
 
       // add this group-by vector to the output container
       groupByOutFieldIds[i] = container.add(vv);
@@ -220,7 +221,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       }
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+      final ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       aggrOutFieldIds[i] = container.add(vv);
 
       aggrExprs[i] = new ValueVectorWriteExpression(aggrOutFieldIds[i], expr, true);
@@ -249,9 +250,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   private void setupUpdateAggrValues(ClassGenerator<HashAggregator> cg) {
     cg.setMappingSet(UpdateAggrValuesMapping);
-
-    for (LogicalExpression aggr : aggrExprs) {
-      HoldingContainer hc = cg.addExpr(aggr);
+    for (final LogicalExpression aggr : aggrExprs) {
+      cg.addExpr(aggr);
     }
   }
 
@@ -279,7 +279,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   @Override
-  public void close() {
+  public void close() throws Exception {
     if (aggregator != null) {
       aggregator.cleanup();
     }
@@ -290,5 +290,4 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
   }
-
 }

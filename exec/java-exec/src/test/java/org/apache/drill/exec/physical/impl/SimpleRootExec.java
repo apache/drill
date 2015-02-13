@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.DeferredException;
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.FragmentContext.ExecutorState;
@@ -134,5 +135,4 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
   public RecordBatch getIncoming() {
     return incoming;
   }
-
 }

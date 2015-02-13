@@ -338,6 +338,10 @@ public class FragmentExecutor implements Runnable {
       // Say executor was cancelled before setup. Now when executor actually runs, root is not initialized, but this
       // method is called in finally. So root can be null.
       if (root != null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("closing root %s %d",
+              root.getClass().getName(), System.identityHashCode(root)));
+        }
         root.close();
       }
     } catch (final Exception e) {
@@ -360,7 +364,7 @@ public class FragmentExecutor implements Runnable {
 
   private synchronized boolean updateState(FragmentState target) {
     final FragmentState current = fragmentState.get();
-    logger.info(fragmentName + ": State change requested {} --> {}", current, target);
+    logger.info(fragmentName + ": State change requested from {} --> {}", current, target);
     switch (target) {
     case CANCELLATION_REQUESTED:
       switch (current) {

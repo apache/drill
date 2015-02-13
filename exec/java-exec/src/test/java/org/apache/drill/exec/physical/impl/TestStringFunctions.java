@@ -26,7 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -44,7 +44,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class TestStringFunctions extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStringFunctions.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStringFunctions.class);
 
   DrillConfig c = DrillConfig.create();
   PhysicalPlanReader reader;
@@ -53,7 +53,7 @@ public class TestStringFunctions extends ExecTest {
 
   public Object[] getRunResult(SimpleRootExec exec) {
     int size = 0;
-    for (ValueVector v : exec) {
+    for (@SuppressWarnings("unused") ValueVector v : exec) {
       size++;
     }
 
@@ -73,7 +73,7 @@ public class TestStringFunctions extends ExecTest {
                       @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = new RootAllocator(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);

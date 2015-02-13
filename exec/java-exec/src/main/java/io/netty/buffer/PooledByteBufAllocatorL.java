@@ -32,9 +32,10 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Preconditions;
 
-public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PooledByteBufAllocatorL.class);
+public class PooledByteBufAllocatorL extends PooledByteBufAllocator {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PooledByteBufAllocatorL.class);
 
   private static final org.slf4j.Logger memoryLogger = org.slf4j.LoggerFactory.getLogger("drill.allocator");
   private static final int MEMORY_LOGGER_FREQUENCY_SECONDS = 60;
@@ -56,9 +57,9 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
   private PooledByteBufAllocatorL() {
     super(true);
     try {
-      Field f = PooledByteBufAllocator.class.getDeclaredField("directArenas");
+      final Field f = PooledByteBufAllocator.class.getDeclaredField("directArenas");
       f.setAccessible(true);
-      this.directArenas = (PoolArena<ByteBuffer>[]) f.get(this);
+      directArenas = (PoolArena<ByteBuffer>[]) f.get(this);
     } catch (Exception e) {
       throw new RuntimeException("Failure while initializing allocator.  Unable to retrieve direct arenas field.", e);
     }
@@ -114,20 +115,19 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
   }
 
   @Override
-  protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
+  protected ByteBuf newHeapBuffer(final int initialCapacity, final int maxCapacity) {
     throw new UnsupportedOperationException("Drill doesn't support using heap buffers.");
   }
 
   @Override
-  protected UnsafeDirectLittleEndian newDirectBuffer(int initialCapacity, int maxCapacity) {
-    PoolThreadCache cache = threadCache.get();
-    PoolArena<ByteBuffer> directArena = cache.directArena;
+  protected UnsafeDirectLittleEndian newDirectBuffer(final int initialCapacity, final int maxCapacity) {
+    final PoolThreadCache cache = threadCache.get();
+    final PoolArena<ByteBuffer> directArena = cache.directArena;
 
     if (directArena != null) {
-
       if (initialCapacity > directArena.chunkSize) {
         // This is beyond chunk size so we'll allocate separately.
-        ByteBuf buf = UnpooledByteBufAllocator.DEFAULT.directBuffer(initialCapacity, maxCapacity);
+        final ByteBuf buf = UnpooledByteBufAllocator.DEFAULT.directBuffer(initialCapacity, maxCapacity);
 
         hugeBufferCount.incrementAndGet();
         hugeBufferSize.addAndGet(buf.capacity());
@@ -137,7 +137,7 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
 
       } else {
         // within chunk, use arena.
-        ByteBuf buf = directArena.allocate(cache, initialCapacity, maxCapacity);
+        final ByteBuf buf = directArena.allocate(cache, initialCapacity, maxCapacity);
         if (!(buf instanceof PooledUnsafeDirectByteBuf)) {
           fail();
         }
@@ -161,9 +161,8 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
         "Drill requries that the JVM used supports access sun.misc.Unsafe.  This platform didn't provide that functionality.");
   }
 
-
   @Override
-  public UnsafeDirectLittleEndian directBuffer(int initialCapacity, int maxCapacity) {
+  public UnsafeDirectLittleEndian directBuffer(final int initialCapacity, final int maxCapacity) {
       if (initialCapacity == 0 && maxCapacity == 0) {
           newDirectBuffer(initialCapacity, maxCapacity);
       }
@@ -172,28 +171,22 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
   }
 
   @Override
-  public ByteBuf heapBuffer(int initialCapacity, int maxCapacity) {
+  public ByteBuf heapBuffer(final int initialCapacity, final int maxCapacity) {
     throw new UnsupportedOperationException("Drill doesn't support using heap buffers.");
   }
 
-
-  private static void validate(int initialCapacity, int maxCapacity) {
-    if (initialCapacity < 0) {
-        throw new IllegalArgumentException("initialCapacity: " + initialCapacity + " (expectd: 0+)");
-    }
-    if (initialCapacity > maxCapacity) {
-        throw new IllegalArgumentException(String.format(
-                "initialCapacity: %d (expected: not greater than maxCapacity(%d)",
-                initialCapacity, maxCapacity));
-    }
+  private static void validate(final int initialCapacity, final int maxCapacity) {
+    Preconditions.checkArgument(initialCapacity >= 0,
+        "initialCapacity(%d) was < 0", initialCapacity);
+    Preconditions.checkArgument(initialCapacity <= maxCapacity,
+        "initialCapacity(%d) exceeds maxCapacity(%d)", initialCapacity, maxCapacity);
   }
 
   private class MemoryStatusThread extends Thread {
-
     public MemoryStatusThread() {
       super("memory-status-logger");
-      this.setDaemon(true);
-      this.setName("allocation.logger");
+      setDaemon(true);
+      setName("allocation.logger");
     }
 
     @Override
@@ -205,15 +198,13 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
         } catch (InterruptedException e) {
           return;
         }
-
       }
     }
-
   }
 
   public void checkAndReset() {
     if (hugeBufferCount.get() != 0 || normalBufferCount.get() != 0) {
-      StringBuilder buf = new StringBuilder();
+      final StringBuilder buf = new StringBuilder();
       buf.append("Large buffers outstanding: ");
       buf.append(hugeBufferCount.get());
       buf.append(" totaling ");
@@ -233,8 +224,9 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
     }
   }
 
+  @Override
   public String toString() {
-    StringBuilder buf = new StringBuilder();
+    final StringBuilder buf = new StringBuilder();
     buf.append(directArenas.length);
     buf.append(" direct arena(s):");
     buf.append(StringUtil.NEWLINE);

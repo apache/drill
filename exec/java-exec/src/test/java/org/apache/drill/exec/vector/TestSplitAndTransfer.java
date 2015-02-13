@@ -17,59 +17,64 @@
  */
 package org.apache.drill.exec.vector;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.NullableVarCharVector.Accessor;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class TestSplitAndTransfer {
-
   @Test
   public void test() throws Exception {
-    BufferAllocator allocator = new TopLevelAllocator();
-    MaterializedField field = MaterializedField.create("field", Types.optional(MinorType.VARCHAR));
-    NullableVarCharVector varCharVector = new NullableVarCharVector(field, allocator);
+    final DrillConfig drillConfig = DrillConfig.create();
+    final BufferAllocator allocator = new RootAllocator(drillConfig);
+    final MaterializedField field = MaterializedField.create("field", Types.optional(MinorType.VARCHAR));
+    final NullableVarCharVector varCharVector = new NullableVarCharVector(field, allocator);
     varCharVector.allocateNew(10000, 1000);
 
-    String[] compareArray = new String[500];
+    final int valueCount = 500;
+    final String[] compareArray = new String[valueCount];
 
-    for (int i = 0; i < 500; i += 3) {
-      String s = String.format("%010d", i);
-      varCharVector.getMutator().set(i, s.getBytes());
+    final NullableVarCharVector.Mutator mutator = varCharVector.getMutator();
+    for (int i = 0; i < valueCount; i += 3) {
+      final String s = String.format("%010d", i);
+      mutator.set(i, s.getBytes());
       compareArray[i] = s;
     }
-    varCharVector.getMutator().setValueCount(500);
+    mutator.setValueCount(valueCount);
 
-    TransferPair tp = varCharVector.getTransferPair();
-    NullableVarCharVector newVarCharVector = (NullableVarCharVector) tp.getTo();
-    Accessor accessor = newVarCharVector.getAccessor();
-    int[][] startLengths = {{0, 201}, {201, 200}, {401, 99}};
+    final TransferPair tp = varCharVector.getTransferPair();
+    final NullableVarCharVector newVarCharVector = (NullableVarCharVector) tp.getTo();
+    final Accessor accessor = newVarCharVector.getAccessor();
+    final int[][] startLengths = {{0, 201}, {201, 200}, {401, 99}};
 
-    for (int[] startLength : startLengths) {
-      int start = startLength[0];
-      int length = startLength[1];
+    for (final int[] startLength : startLengths) {
+      final int start = startLength[0];
+      final int length = startLength[1];
       tp.splitAndTransfer(start, length);
       newVarCharVector.getMutator().setValueCount(length);
       for (int i = 0; i < length; i++) {
-        boolean expectedSet = ((start + i) % 3) == 0;
+        final boolean expectedSet = ((start + i) % 3) == 0;
         if (expectedSet) {
-          byte[] expectedValue = compareArray[start + i].getBytes();
-          Assert.assertFalse(accessor.isNull(i));
-//          System.out.println(new String(accessor.get(i)));
-          Assert.assertArrayEquals(expectedValue, accessor.get(i));
+          final byte[] expectedValue = compareArray[start + i].getBytes();
+          assertFalse(accessor.isNull(i));
+          assertArrayEquals(expectedValue, accessor.get(i));
         } else {
-          Assert.assertTrue(accessor.isNull(i));
+          assertTrue(accessor.isNull(i));
         }
       }
       newVarCharVector.clear();
     }
 
-    varCharVector.clear();
+    varCharVector.close();
     allocator.close();
   }
 }

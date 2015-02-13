@@ -17,9 +17,6 @@
  */
 package org.apache.drill.common;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Arrays;
 
 /**
@@ -38,36 +35,35 @@ public class StackTrace {
   }
 
   /**
-   * Write the stack trace.
+   * Write the stack trace to a StringBuilder.
    *
-   * @param writer where to write it
+   * @param sb where to write it
    * @param indent how many spaces to indent each line
    */
-  public void write(final Writer writer, final int indent) {
+  public void writeToBuilder(final StringBuilder sb, final int indent) {
     // create the indentation string
     final char[] indentation = new char[indent];
     Arrays.fill(indentation, ' ');
 
-    try {
-      // write the stack trace
-      for(StackTraceElement ste : stackTraceElements) {
-        writer.write(indentation);
-        writer.write(ste.getClassName());
-        writer.write('.');
-        writer.write(ste.getMethodName());
-        writer.write(':');
-        writer.write(Integer.toString(ste.getLineNumber()));
-        writer.write('\n');
-      }
-    } catch(IOException e) {
-      throw new RuntimeException("couldn't write", e);
+    // write the stack trace in standard Java format
+    for(StackTraceElement ste : stackTraceElements) {
+      sb.append(indentation)
+          .append("at ")
+          .append(ste.getClassName())
+          .append('.')
+          .append(ste.getMethodName())
+          .append('(')
+          .append(ste.getFileName())
+          .append(':')
+          .append(Integer.toString(ste.getLineNumber()))
+          .append(")\n");
     }
   }
 
   @Override
   public String toString() {
-    final StringWriter sw = new StringWriter();
-    write(sw, 0);
-    return sw.toString();
+    final StringBuilder sb = new StringBuilder();
+    writeToBuilder(sb, 0);
+    return sb.toString();
   }
 }

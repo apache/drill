@@ -26,7 +26,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -54,17 +54,15 @@ import com.google.common.io.Files;
  * incoming container of the trace operator.
  */
 public class TestTraceMultiRecordBatch extends ExecTest {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTraceOutputDump.class);
-    DrillConfig c = DrillConfig.create();
-
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTraceOutputDump.class);
+    private final   DrillConfig c = DrillConfig.create();
 
     @Test
     public void testFilter(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable
     {
-
         new NonStrictExpectations(){{
             bitContext.getMetrics(); result = new MetricRegistry();
-            bitContext.getAllocator(); result = new TopLevelAllocator();
+            bitContext.getAllocator(); result = new RootAllocator(c);
             bitContext.getConfig(); result = c;
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
             bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);

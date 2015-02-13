@@ -20,32 +20,26 @@ package org.apache.drill.exec.memory;
 import org.apache.drill.exec.exception.FragmentSetupException;
 
 public class OutOfMemoryException extends FragmentSetupException{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OutOfMemoryException.class);
+  private static final long serialVersionUID = -8089365467173775228L;
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OutOfMemoryException.class);
 
   public OutOfMemoryException() {
-    super();
-
   }
 
-  public OutOfMemoryException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+  public OutOfMemoryException(String message, Throwable cause, boolean enableSuppression,
+      boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
-
   }
 
   public OutOfMemoryException(String message, Throwable cause) {
     super(message, cause);
-
   }
 
   public OutOfMemoryException(String message) {
     super(message);
-
   }
 
   public OutOfMemoryException(Throwable cause) {
     super(cause);
-
   }
-
-
 }

@@ -71,18 +71,12 @@ public abstract class AbstractDataCollector implements DataCollector{
 
     final boolean spooling = collector.getIsSpooling();
 
-    try {
-
-      for (int i = 0; i < numBuffers; i++) {
-        if (spooling) {
-          buffers[i] = new SpoolingRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId(), i);
-        } else {
-          buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId());
-        }
+    for (int i = 0; i < numBuffers; i++) {
+      if (spooling) {
+        buffers[i] = new SpoolingRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId(), i);
+      } else {
+        buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId());
       }
-    } catch (IOException | OutOfMemoryException e) {
-      logger.error("Exception", e);
-      context.fail(e);
     }
   }
 

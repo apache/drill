@@ -61,9 +61,55 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 
 public class DrillRuleSets {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
-  public static RuleSet DRILL_BASIC_RULES = null;
+  private final static ImmutableSet<RelOptRule> staticRuleSet = ImmutableSet.<RelOptRule>builder().add(
+      // Add support for Distinct Union (by using Union-All followed by Distinct)
+      UnionToDistinctRule.INSTANCE,
+
+      // Add support for WHERE style joins.
+      DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
+      DrillFilterJoinRules.DRILL_JOIN,
+      // End support for WHERE style joins.
+
+      /*
+       Filter push-down related rules
+       */
+      DrillPushFilterPastProjectRule.INSTANCE,
+      FilterSetOpTransposeRule.INSTANCE,
+
+      FilterMergeRule.INSTANCE,
+      AggregateRemoveRule.INSTANCE,
+      ProjectRemoveRule.NAME_CALC_INSTANCE,
+      SortRemoveRule.INSTANCE,
+
+      AggregateExpandDistinctAggregatesRule.INSTANCE,
+      DrillReduceAggregatesRule.INSTANCE,
+
+      /*
+       Projection push-down related rules
+       */
+      DrillPushProjectPastFilterRule.INSTANCE,
+      DrillPushProjectPastJoinRule.INSTANCE,
+      DrillPushProjIntoScan.INSTANCE,
+      DrillProjectSetOpTransposeRule.INSTANCE,
+
+      /*
+       Convert from Calcite Logical to Drill Logical Rules.
+       */
+      ExpandConversionRule.INSTANCE,
+      DrillScanRule.INSTANCE,
+      DrillFilterRule.INSTANCE,
+      DrillProjectRule.INSTANCE,
+      DrillWindowRule.INSTANCE,
+      DrillAggregateRule.INSTANCE,
+
+      DrillLimitRule.INSTANCE,
+      DrillSortRule.INSTANCE,
+      DrillJoinRule.INSTANCE,
+      DrillUnionAllRule.INSTANCE,
+      DrillValuesRule.INSTANCE
+      ).build();
 
   /**
    * Get a list of logical rules that can be turned on or off by session/system options.
@@ -119,65 +165,23 @@ public class DrillRuleSets {
    * Note : Join permutation rule is excluded here.
    */
   public static RuleSet getDrillBasicRules(QueryContext context) {
-    if (DRILL_BASIC_RULES == null) {
+    /*
+     * We have to create another copy of the ruleset with the context dependent elements;
+     * this cannot be reused across queries.
+     */
+    final ImmutableSet<RelOptRule> basicRules = ImmutableSet.<RelOptRule>builder()
+        .addAll(staticRuleSet)
+        .add(
+             DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
 
-      DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
-      // Add support for Distinct Union (by using Union-All followed by Distinct)
-      UnionToDistinctRule.INSTANCE,
+             PruneScanRule.getFilterOnProject(context),
+             PruneScanRule.getFilterOnScan(context),
+             PruneScanRule.getFilterOnProjectParquet(context),
+             PruneScanRule.getFilterOnScanParquet(context)
+             )
+        .build();
 
-      // Add support for WHERE style joins.
-      DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
-      DrillFilterJoinRules.DRILL_JOIN,
-      // End support for WHERE style joins.
-
-      /*
-       Filter push-down related rules
-       */
-      DrillPushFilterPastProjectRule.INSTANCE,
-      FilterSetOpTransposeRule.INSTANCE,
-
-      FilterMergeRule.INSTANCE,
-      AggregateRemoveRule.INSTANCE,
-      ProjectRemoveRule.NAME_CALC_INSTANCE,
-      SortRemoveRule.INSTANCE,
-
-      DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
-      AggregateExpandDistinctAggregatesRule.INSTANCE,
-      DrillReduceAggregatesRule.INSTANCE,
-
-      /*
-       Projection push-down related rules
-       */
-      DrillPushProjectPastFilterRule.INSTANCE,
-      DrillPushProjectPastJoinRule.INSTANCE,
-      DrillPushProjIntoScan.INSTANCE,
-      DrillProjectSetOpTransposeRule.INSTANCE,
-
-      PruneScanRule.getFilterOnProject(context),
-      PruneScanRule.getFilterOnScan(context),
-      PruneScanRule.getFilterOnProjectParquet(context),
-      PruneScanRule.getFilterOnScanParquet(context),
-
-      /*
-       Convert from Calcite Logical to Drill Logical Rules.
-       */
-      ExpandConversionRule.INSTANCE,
-      DrillScanRule.INSTANCE,
-      DrillFilterRule.INSTANCE,
-      DrillProjectRule.INSTANCE,
-      DrillWindowRule.INSTANCE,
-      DrillAggregateRule.INSTANCE,
-
-      DrillLimitRule.INSTANCE,
-      DrillSortRule.INSTANCE,
-      DrillJoinRule.INSTANCE,
-      DrillUnionAllRule.INSTANCE,
-      DrillValuesRule.INSTANCE
-      )
-      .build());
-    }
-
-    return DRILL_BASIC_RULES;
+    return new DrillRuleSet(basicRules);
   }
 
   // Ruleset for join permutation, used only in VolcanoPlanner.
@@ -266,7 +270,6 @@ public class DrillRuleSets {
     final ImmutableSet<RelOptRule> rules;
 
     public DrillRuleSet(ImmutableSet<RelOptRule> rules) {
-      super();
       this.rules = rules;
     }
 

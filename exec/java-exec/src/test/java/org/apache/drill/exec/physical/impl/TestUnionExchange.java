@@ -33,24 +33,24 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestUnionExchange extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionExchange.class);
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionExchange.class);
 
   @Test
   public void twoBitTwoExchangeTwoEntryRun() throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+        final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
       bit2.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Files.toString(FileUtils.getResourceAsFile("/sender/union_exchange.json"),
               Charsets.UTF_8));
       int count = 0;
-      for (QueryDataBatch b : results) {
+      for (final QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }
@@ -59,5 +59,4 @@ public class TestUnionExchange extends PopUnitTestBase {
       assertEquals(150, count);
     }
   }
-
 }
