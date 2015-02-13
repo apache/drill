@@ -58,6 +58,8 @@ import com.google.common.collect.Sets;
 
 public class PrelUtil {
 
+  public static final String HASH_EXPR_NAME = "E_X_P_R_H_A_S_H_F_I_E_L_D";
+
   public static List<Ordering> getOrdering(RelCollation collation, RelDataType rowType) {
     List<Ordering> orderExpr = Lists.newArrayList();
 
@@ -78,6 +80,11 @@ public class PrelUtil {
     assert fields.size() > 0;
 
     final List<String> childFields = rowType.getFieldNames();
+
+    // If we already included a field with hash - no need to calculate hash further down
+    if ( childFields.contains(HASH_EXPR_NAME)) {
+      return new FieldReference(HASH_EXPR_NAME);
+    }
 
     FieldReference fr = new FieldReference(childFields.get(fields.get(0).getFieldId()), ExpressionPosition.UNKNOWN);
     FunctionCall func = new FunctionCall("hash",  ImmutableList.of((LogicalExpression)fr), ExpressionPosition.UNKNOWN);

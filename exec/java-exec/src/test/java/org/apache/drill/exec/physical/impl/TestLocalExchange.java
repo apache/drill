@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.TestBuilder;
@@ -31,6 +32,7 @@ import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -40,6 +42,9 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.QueryWorkUnit;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -70,6 +75,9 @@ public class TestLocalExchange extends PlanTestBase {
   private final static int CLUSTER_SIZE = 3;
   private final static String MUX_EXCHANGE = "\"unordered-mux-exchange\"";
   private final static String DEMUX_EXCHANGE = "\"unordered-demux-exchange\"";
+  private final static String MUX_EXCHANGE_CONST = "unordered-mux-exchange";
+  private final static String DEMUX_EXCHANGE_CONST = "unordered-demux-exchange";
+  private static final String HASH_EXCHANGE = "hash-to-random-exchange";
   private final static UserSession USER_SESSION = UserSession.Builder.newBuilder()
       .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
       .build();
@@ -82,6 +90,8 @@ public class TestLocalExchange extends PlanTestBase {
 
   private final static int NUM_DEPTS = 40;
   private final static int NUM_EMPLOYEES = 1000;
+  private final static int NUM_MNGRS = 1;
+  private final static int NUM_IDS = 1;
 
   private static String empTableLocation;
   private static String deptTableLocation;
@@ -119,8 +129,8 @@ public class TestLocalExchange extends PlanTestBase {
       File file = new File(empTableLocation + File.separator + fileIndex + ".json");
       PrintWriter printWriter = new PrintWriter(file);
       for (int recordIndex = fileIndex*empNumRecsPerFile; recordIndex < (fileIndex+1)*empNumRecsPerFile; recordIndex++) {
-        String record = String.format("{ \"emp_id\" : %d, \"emp_name\" : \"Employee %d\", \"dept_id\" : %d }",
-            recordIndex, recordIndex, recordIndex % NUM_DEPTS);
+        String record = String.format("{ \"emp_id\" : %d, \"emp_name\" : \"Employee %d\", \"dept_id\" : %d, \"mng_id\" : %d, \"some_id\" : %d }",
+            recordIndex, recordIndex, recordIndex % NUM_DEPTS, recordIndex % NUM_MNGRS, recordIndex % NUM_IDS);
         printWriter.println(record);
       }
       printWriter.close();
@@ -178,6 +188,37 @@ public class TestLocalExchange extends PlanTestBase {
     test("ALTER SESSION SET `planner.enable_broadcast_join`=false");
     test("ALTER SESSION SET `planner.enable_mux_exchange`=" + isMuxOn);
     test("ALTER SESSION SET `planner.enable_demux_exchange`=" + isDeMuxOn);
+  }
+
+  @Test
+  public void testGroupByMultiFields() throws Exception {
+    // Test multifield hash generation
+
+    test("ALTER SESSION SET `planner.slice_target`=1");
+    test("ALTER SESSION SET `planner.enable_mux_exchange`=" + true);
+    test("ALTER SESSION SET `planner.enable_demux_exchange`=" + false);
+
+    final String groupByMultipleQuery = String.format("SELECT dept_id, mng_id, some_id, count(*) as numEmployees FROM dfs.`%s` e GROUP BY dept_id, mng_id, some_id", empTableLocation);
+    final String[] groupByMultipleQueryBaselineColumns = new String[] { "dept_id", "mng_id", "some_id", "numEmployees" };
+
+    final int numOccurrances = NUM_EMPLOYEES/NUM_DEPTS;
+
+    final String plan = getPlanInString("EXPLAIN PLAN FOR " + groupByMultipleQuery, JSON_FORMAT);
+    System.out.println("Plan: " + plan);
+
+    jsonExchangeOrderChecker(plan, false, 1, "xor\\(xor\\(hash\\(.*\\) , hash\\(.*\\) \\) , hash\\(.*\\) \\) ");
+
+    // Run the query and verify the output
+    final TestBuilder testBuilder = testBuilder()
+        .sqlQuery(groupByMultipleQuery)
+        .unOrdered()
+        .baselineColumns(groupByMultipleQueryBaselineColumns);
+
+    for(int i = 0; i < NUM_DEPTS; i++) {
+      testBuilder.baselineValues(new Object[] { (long)i, (long)0, (long)0, (long)numOccurrances});
+    }
+
+    testBuilder.go();
   }
 
   @Test
@@ -240,6 +281,14 @@ public class TestLocalExchange extends PlanTestBase {
     String plan = getPlanInString("EXPLAIN PLAN FOR " + query, JSON_FORMAT);
     System.out.println("Plan: " + plan);
 
+    if ( isMuxOn ) {
+      // # of hash exchanges should be = # of mux exchanges + # of demux exchanges
+      assertEquals("HashExpr on the hash column should not happen", 2*expectedNumMuxes+expectedNumDeMuxes, StringUtils.countMatches(plan, PrelUtil.HASH_EXPR_NAME));
+      jsonExchangeOrderChecker(plan, isDeMuxOn, expectedNumMuxes, "hash(.*) ");
+    } else {
+      assertEquals("HashExpr on the hash column should not happen", 0, StringUtils.countMatches(plan, PrelUtil.HASH_EXPR_NAME));
+    }
+
     // Make sure the plan has mux and demux exchanges (TODO: currently testing is rudimentary,
     // need to move it to sophisticated testing once we have better planning test tools are available)
     assertEquals("Wrong number of MuxExchanges are present in the plan",
@@ -261,6 +310,81 @@ public class TestLocalExchange extends PlanTestBase {
     testBuilder.go();
 
     testHelperVerifyPartitionSenderParallelization(plan, isMuxOn, isDeMuxOn);
+  }
+
+  private static void jsonExchangeOrderChecker(String plan, boolean isDemuxEnabled, int expectedNumMuxes, String hashExprPattern) throws Exception {
+    final JSONObject planObj = (JSONObject) new JSONParser().parse(plan);
+    assertNotNull("Corrupted query plan: null", planObj);
+    final JSONArray graphArray = (JSONArray) planObj.get("graph");
+    assertNotNull("No graph array present", graphArray);
+    int i = 0;
+    int k = 0;
+    int prevExprsArraySize = 0;
+    boolean foundExpr = false;
+    int muxesCount = 0;
+    for (Object object : graphArray) {
+      final JSONObject popObj = (JSONObject) object;
+      if ( popObj.containsKey("pop") && popObj.get("pop").equals("project")) {
+        if ( popObj.containsKey("exprs")) {
+          final JSONArray exprsArray = (JSONArray) popObj.get("exprs");
+          for (Object exprObj : exprsArray) {
+            final JSONObject expr = (JSONObject) exprObj;
+            if ( expr.containsKey("ref") && expr.get("ref").equals("`"+PrelUtil.HASH_EXPR_NAME +"`")) {
+              // found a match. Let's see if next one is the one we need
+              final String hashField = (String) expr.get("expr");
+              assertNotNull("HashExpr field can not be null", hashField);
+              assertTrue("HashExpr field does not match pattern",hashField.matches(hashExprPattern));
+              k = i;
+              foundExpr = true;
+              muxesCount++;
+              break;
+            }
+          }
+          if ( foundExpr ) {
+            // will be reset to prevExprsArraySize-1 on the last project of the whole stanza
+            prevExprsArraySize = exprsArray.size();
+          }
+        }
+      }
+      if ( !foundExpr ) {
+        continue;
+      }
+      // next after project with hashexpr
+      if ( k == i-1) {
+        assertTrue("UnorderedMux should follow Project with HashExpr",
+            popObj.containsKey("pop") && popObj.get("pop").equals(MUX_EXCHANGE_CONST));
+      }
+      if ( k == i-2) {
+        assertTrue("HashToRandomExchange should follow UnorderedMux which should follow Project with HashExpr",
+            popObj.containsKey("pop") && popObj.get("pop").equals(HASH_EXCHANGE));
+        // is HashToRandom is using HashExpr
+        assertTrue("HashToRandomExchnage should use hashExpr",
+            popObj.containsKey("expr") && popObj.get("expr").equals("`"+PrelUtil.HASH_EXPR_NAME +"`"));
+      }
+      // if Demux is enabled it also should use HashExpr
+      if ( isDemuxEnabled && k == i-3) {
+        assertTrue("UnorderdDemuxExchange should follow HashToRandomExchange",
+            popObj.containsKey("pop") && popObj.get("pop").equals(DEMUX_EXCHANGE_CONST));
+        // is HashToRandom is using HashExpr
+        assertTrue("UnorderdDemuxExchange should use hashExpr",
+            popObj.containsKey("expr") && popObj.get("expr").equals("`"+PrelUtil.HASH_EXPR_NAME +"`"));
+      }
+      if ( (isDemuxEnabled && k == i-4) || (!isDemuxEnabled && k == i-3) ) {
+        // it should be a project without hashexpr, check if number of exprs is 1 less then in first project
+        assertTrue("Should be project without hashexpr", popObj.containsKey("pop") && popObj.get("pop").equals("project"));
+        final JSONArray exprsArray = (JSONArray) popObj.get("exprs");
+        assertNotNull("Project should have some fields", exprsArray);
+        assertEquals("Number of fields in closing project should be one less then in starting project",
+            prevExprsArraySize, exprsArray.size());
+
+        // Now let's reset all the counters, flags if we are going to have another batch of those exchanges
+        k = 0;
+        foundExpr = false;
+        prevExprsArraySize = 0;
+      }
+      i++;
+    }
+    assertEquals("Number of Project/Mux/HashExchange/... ", expectedNumMuxes, muxesCount);
   }
 
   // Verify the number of partition senders in a major fragments is not more than the cluster size and each endpoint

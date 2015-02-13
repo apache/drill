@@ -39,6 +39,7 @@ import org.eigenbase.relopt.RelTraitSet;
 
 public class HashToRandomExchangePrel extends ExchangePrel {
 
+
   private final List<DistributionField> fields;
 
   public HashToRandomExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<DistributionField> fields) {
@@ -93,6 +94,7 @@ public class HashToRandomExchangePrel extends ExchangePrel {
       return childPOP;
     }
 
+    // TODO - refactor to different exchange name
     HashToRandomExchange g = new HashToRandomExchange(childPOP, PrelUtil.getHashExpression(this.fields, getChild().getRowType()));
     return creator.addMetadata(this, g);
   }
