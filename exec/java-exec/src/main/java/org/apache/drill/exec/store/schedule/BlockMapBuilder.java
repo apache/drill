@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -37,9 +38,12 @@ import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 
 public class BlockMapBuilder {
@@ -47,17 +51,15 @@ public class BlockMapBuilder {
   static final MetricRegistry metrics = DrillMetrics.getInstance();
   static final String BLOCK_MAP_BUILDER_TIMER = MetricRegistry.name(BlockMapBuilder.class, "blockMapBuilderTimer");
 
-  private HashMap<Path,ImmutableRangeMap<Long,BlockLocation>> blockMapMap = new HashMap<>();
-  private Collection<DrillbitEndpoint> endpoints;
-  private FileSystem fs;
-  private HashMap<String,DrillbitEndpoint> endPointMap;
-  private CompressionCodecFactory codecFactory;
+  private final Map<Path,ImmutableRangeMap<Long,BlockLocation>> blockMapMap = Maps.newConcurrentMap();
+  private final FileSystem fs;
+  private final ImmutableMap<String,DrillbitEndpoint> endPointMap;
+  private final CompressionCodecFactory codecFactory;
 
   public BlockMapBuilder(FileSystem fs, Collection<DrillbitEndpoint> endpoints) {
     this.fs = fs;
-    this.endpoints = endpoints;
-    codecFactory = new CompressionCodecFactory(fs.getConf());
-    buildEndpointMap();
+    this.codecFactory = new CompressionCodecFactory(fs.getConf());
+    this.endPointMap = buildEndpointMap(endpoints);
   }
 
   private boolean compressed(FileStatus fileStatus) {
@@ -65,15 +67,41 @@ public class BlockMapBuilder {
   }
 
   public List<CompleteFileWork> generateFileWork(List<FileStatus> files, boolean blockify) throws IOException {
-    List<CompleteFileWork> work = Lists.newArrayList();
-    boolean error = false;
-    for(FileStatus f : files) {
-      error = false;
-      if (blockify && !compressed(f)) {
+
+    List<TimedRunnable<List<CompleteFileWork>>> readers = Lists.newArrayList();
+    for(FileStatus status : files){
+      readers.add(new BlockMapReader(status, blockify));
+    }
+    List<List<CompleteFileWork>> work = TimedRunnable.run("Get block maps", logger, readers, 16);
+    List<CompleteFileWork> singleList = Lists.newArrayList();
+    for(List<CompleteFileWork> innerWorkList : work){
+      singleList.addAll(innerWorkList);
+    }
+
+    return singleList;
+
+  }
+
+  private class BlockMapReader extends TimedRunnable<List<CompleteFileWork>> {
+    final FileStatus status;
+    final boolean blockify;
+
+    public BlockMapReader(FileStatus status, boolean blockify) {
+      super();
+      this.status = status;
+      this.blockify = blockify;
+    }
+
+
+    @Override
+    protected List<CompleteFileWork> runInner() throws Exception {
+      final List<CompleteFileWork> work = Lists.newArrayList();
+      boolean error = false;
+      if (blockify && !compressed(status)) {
         try {
-          ImmutableRangeMap<Long, BlockLocation> rangeMap = getBlockMap(f);
+          ImmutableRangeMap<Long, BlockLocation> rangeMap = getBlockMap(status);
           for (Entry<Range<Long>, BlockLocation> l : rangeMap.asMapOfRanges().entrySet()) {
-            work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(f)), l.getValue().getOffset(), l.getValue().getLength(), f.getPath().toString()));
+            work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(status)), l.getValue().getOffset(), l.getValue().getLength(), status.getPath().toString()));
           }
         } catch (IOException e) {
           logger.warn("failure while generating file work.", e);
@@ -81,20 +109,27 @@ public class BlockMapBuilder {
         }
       }
 
-      if (!blockify || error || compressed(f)) {
-        work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(f)), 0, f.getLen(), f.getPath().toString()));
+
+      if (!blockify || error || compressed(status)) {
+        work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(status)), 0, status.getLen(), status.getPath().toString()));
       }
+
+      return work;
     }
-    return work;
+
+
+    @Override
+    protected IOException convertToIOException(Exception e) {
+      return new IOException("Failure while trying to get block map for " + status.getPath(), e);
+    }
+
   }
 
   private class FileStatusWork implements FileWork{
     private FileStatus status;
 
     public FileStatusWork(FileStatus status) {
-      if (status.isDir()) {
-        throw new IllegalStateException("FileStatus work only works with files, not directories.");
-      }
+      Preconditions.checkArgument(!status.isDir(), "FileStatus work only works with files, not directories.");
       this.status = status;
     }
 
@@ -199,7 +234,7 @@ public class BlockMapBuilder {
         if (endpoint != null) {
           endpointByteMap.add(endpoint, bytes);
         } else {
-          logger.debug("Failure finding Drillbit running on host {}.  Skipping affinity to that host.", host);
+          logger.info("Failure finding Drillbit running on host {}.  Skipping affinity to that host.", host);
         }
       }
     }
@@ -217,16 +252,17 @@ public class BlockMapBuilder {
   /**
    * Builds a mapping of Drillbit endpoints to hostnames
    */
-  private void buildEndpointMap() {
+  private static ImmutableMap<String, DrillbitEndpoint> buildEndpointMap(Collection<DrillbitEndpoint> endpoints) {
     Stopwatch watch = new Stopwatch();
     watch.start();
-    endPointMap = new HashMap<String, DrillbitEndpoint>();
+    HashMap<String, DrillbitEndpoint> endpointMap = Maps.newHashMap();
     for (DrillbitEndpoint d : endpoints) {
       String hostName = d.getAddress();
-      endPointMap.put(hostName, d);
+      endpointMap.put(hostName, d);
     }
     watch.stop();
     logger.debug("Took {} ms to build endpoint map", watch.elapsed(TimeUnit.MILLISECONDS));
+    return ImmutableMap.copyOf(endpointMap);
   }
 
 }

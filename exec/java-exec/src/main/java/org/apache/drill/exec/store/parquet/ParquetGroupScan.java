@@ -39,6 +39,7 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
@@ -53,7 +54,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.hadoop.Footer;
-import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
@@ -204,59 +204,55 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     columnValueCounts = new HashMap<SchemaPath, Long>();
 
     ColumnChunkMetaData columnChunkMetaData;
-    for (FileStatus status : statuses) {
-      List<Footer> footers = ParquetFileReader.readFooters(formatPlugin.getHadoopConfig(), status);
-      if (footers.size() == 0) {
-        throw new IOException(String.format("Unable to find footer for file %s", status.getPath().getName()));
-      }
 
-      for (Footer footer : footers) {
-        int index = 0;
-        ParquetMetadata metadata = footer.getParquetMetadata();
-        for (BlockMetaData rowGroup : metadata.getBlocks()) {
-          long valueCountInGrp = 0;
-          // need to grab block information from HDFS
-          columnChunkMetaData = rowGroup.getColumns().iterator().next();
-          start = columnChunkMetaData.getFirstDataPageOffset();
-          // this field is not being populated correctly, but the column chunks know their sizes, just summing them for
-          // now
-          // end = start + rowGroup.getTotalByteSize();
-          length = 0;
-          for (ColumnChunkMetaData col : rowGroup.getColumns()) {
-            length += col.getTotalSize();
-            valueCountInGrp = Math.max(col.getValueCount(), valueCountInGrp);
-            SchemaPath path = SchemaPath.getSimplePath(col.getPath().toString().replace("[", "").replace("]", "").toLowerCase());
+    List<Footer> footers = FooterGatherer.getFooters(formatPlugin.getHadoopConfig(), statuses, 16);
+    for (Footer footer : footers) {
+      int index = 0;
+      ParquetMetadata metadata = footer.getParquetMetadata();
+      for (BlockMetaData rowGroup : metadata.getBlocks()) {
+        long valueCountInGrp = 0;
+        // need to grab block information from HDFS
+        columnChunkMetaData = rowGroup.getColumns().iterator().next();
+        start = columnChunkMetaData.getFirstDataPageOffset();
+        // this field is not being populated correctly, but the column chunks know their sizes, just summing them for
+        // now
+        // end = start + rowGroup.getTotalByteSize();
+        length = 0;
+        for (ColumnChunkMetaData col : rowGroup.getColumns()) {
+          length += col.getTotalSize();
+          valueCountInGrp = Math.max(col.getValueCount(), valueCountInGrp);
+          SchemaPath path = SchemaPath.getSimplePath(col.getPath().toString().replace("[", "").replace("]", "").toLowerCase());
 
-            long previousCount = 0;
-            long currentCount = 0;
+          long previousCount = 0;
+          long currentCount = 0;
 
-            if (! columnValueCounts.containsKey(path)) {
-              // create an entry for this column
-              columnValueCounts.put(path, previousCount /* initialize to 0 */);
-            } else {
-              previousCount = columnValueCounts.get(path);
-            }
-
-            boolean statsAvail = (col.getStatistics() != null && !col.getStatistics().isEmpty());
-
-            if (statsAvail && previousCount != GroupScan.NO_COLUMN_STATS) {
-              currentCount = col.getValueCount() - col.getStatistics().getNumNulls(); // only count non-nulls
-              columnValueCounts.put(path, previousCount + currentCount);
-            } else {
-              // even if 1 chunk does not have stats, we cannot rely on the value count for this column
-              columnValueCounts.put(path, GroupScan.NO_COLUMN_STATS);
-            }
-
+          if (! columnValueCounts.containsKey(path)) {
+            // create an entry for this column
+            columnValueCounts.put(path, previousCount /* initialize to 0 */);
+          } else {
+            previousCount = columnValueCounts.get(path);
           }
 
-          String filePath = footer.getFile().toUri().getPath();
-          rowGroupInfos.add(new ParquetGroupScan.RowGroupInfo(filePath, start, length, index));
-          logger.debug("rowGroupInfo path: {} start: {} length {}", filePath, start, length);
-          index++;
+          boolean statsAvail = (col.getStatistics() != null && !col.getStatistics().isEmpty());
 
-          rowCount += rowGroup.getRowCount();
+          if (statsAvail && previousCount != GroupScan.NO_COLUMN_STATS) {
+            currentCount = col.getValueCount() - col.getStatistics().getNumNulls(); // only count non-nulls
+            columnValueCounts.put(path, previousCount + currentCount);
+          } else {
+            // even if 1 chunk does not have stats, we cannot rely on the value count for this column
+            columnValueCounts.put(path, GroupScan.NO_COLUMN_STATS);
+          }
+
         }
+
+        String filePath = footer.getFile().toUri().getPath();
+        rowGroupInfos.add(new ParquetGroupScan.RowGroupInfo(filePath, start, length, index));
+        logger.debug("rowGroupInfo path: {} start: {} length {}", filePath, start, length);
+        index++;
+
+        rowCount += rowGroup.getRowCount();
       }
+
     }
     Preconditions.checkState(!rowGroupInfos.isEmpty(), "No row groups found");
     tContext.stop();
@@ -330,10 +326,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     if (this.endpointAffinities == null) {
       BlockMapBuilder bmb = new BlockMapBuilder(fs, formatPlugin.getContext().getBits());
       try {
+        List<TimedRunnable<Void>> blockMappers = Lists.newArrayList();
         for (RowGroupInfo rgi : rowGroupInfos) {
-          EndpointByteMap ebm = bmb.getEndpointByteMap(rgi);
-          rgi.setEndpointByteMap(ebm);
+          blockMappers.add(new BlockMapper(bmb, rgi));
         }
+        TimedRunnable.run("Load Parquet RowGroup block maps", logger, blockMappers, 16);
       } catch (IOException e) {
         logger.warn("Failure while determining operator affinity.", e);
         return Collections.emptyList();
@@ -342,6 +339,30 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       this.endpointAffinities = AffinityCreator.getAffinityMap(rowGroupInfos);
     }
     return this.endpointAffinities;
+  }
+
+  private class BlockMapper extends TimedRunnable<Void> {
+    private final BlockMapBuilder bmb;
+    private final RowGroupInfo rgi;
+
+    public BlockMapper(BlockMapBuilder bmb, RowGroupInfo rgi) {
+      super();
+      this.bmb = bmb;
+      this.rgi = rgi;
+    }
+
+    @Override
+    protected Void runInner() throws Exception {
+      EndpointByteMap ebm = bmb.getEndpointByteMap(rgi);
+      rgi.setEndpointByteMap(ebm);
+      return null;
+    }
+
+    @Override
+    protected IOException convertToIOException(Exception e) {
+      return new IOException(String.format("Failure while trying to get block locations for file %s starting at %d.", rgi.getPath(), rgi.getStart()));
+    }
+
   }
 
   @Override
