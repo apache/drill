@@ -47,13 +47,13 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
 
   private final AtomicInteger state = new AtomicInteger(FragmentState.AWAITING_ALLOCATION_VALUE);
   private final FragmentRoot rootOperator;
-  private RootExec root;
   private final FragmentContext context;
   private final WorkerBee bee;
   private final StatusReporter listener;
-  private Thread executionThread;
-  private AtomicBoolean closed = new AtomicBoolean(false);
   private final DrillbitStatusListener drillbitStatusListener = new FragmentDrillbitStatusListener();
+
+  private RootExec root;
+  private boolean closed;
 
   public FragmentExecutor(FragmentContext context, WorkerBee bee, FragmentRoot rootOperator, StatusReporter listener) {
     this.context = context;
@@ -99,7 +99,6 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
           context.getHandle().getMinorFragmentId()
           );
       Thread.currentThread().setName(newThreadName);
-      executionThread = Thread.currentThread();
 
       root = ImplCreator.getExec(context, rootOperator);
 
@@ -133,12 +132,15 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       bee.removeFragment(context.getHandle());
       context.getDrillbitContext().getClusterCoordinator().removeDrillbitStatusListener(drillbitStatusListener);
 
+      // Final check to make sure RecordBatches are cleaned up.
+      closeOutResources(false);
+
       Thread.currentThread().setName(originalThread);
     }
   }
 
   private void closeOutResources(boolean throwFailure) {
-    if (closed.get()) {
+    if (closed) {
       return;
     }
 
@@ -160,7 +162,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       logger.warn("Failure while closing out resources.", e);
     }
 
-    closed.set(true);
+    closed = true;
   }
 
   private void internalFail(Throwable excep) {
