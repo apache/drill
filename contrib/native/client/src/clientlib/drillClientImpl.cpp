@@ -196,6 +196,12 @@ connectionStatus_t DrillClientImpl::recvHandshake(){
     if(m_rbuf!=NULL){
         Utils::freeBuffer(m_rbuf, MAX_SOCK_RD_BUFSIZE); m_rbuf=NULL;
     }
+#ifdef WIN32_SHUTDOWN_ON_TIMEOUT
+    if (m_pError != NULL) {
+        return static_cast<connectionStatus_t>(m_pError->status);
+    }
+#endif // WIN32_SHUTDOWN_ON_TIMEOUT
+
     return CONN_SUCCESS;
 }
 
@@ -731,7 +737,12 @@ void DrillClientImpl::handleReadTimeout(const boost::system::error_code & err){
             // to have the BOOST_ASIO_ENABLE_CANCELIO macro (as well as the BOOST_ASIO_DISABLE_IOCP macro?)
             // defined. To be really sure, we need to close the socket. Closing the socket is a bit
             // drastic and we will defer that till a later release.
+#ifdef WIN32_SHUTDOWN_ON_TIMEOUT
+            boost::system::error_code ignorederr;
+            m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignorederr);
+#else // NOT WIN32_SHUTDOWN_ON_TIMEOUT
             m_socket.cancel();
+#endif // WIN32_SHUTDOWN_ON_TIMEOUT
         }
     }
     return;

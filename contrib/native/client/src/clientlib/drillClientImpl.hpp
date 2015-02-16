@@ -20,15 +20,14 @@
 #ifndef DRILL_CLIENT_IMPL_H
 #define DRILL_CLIENT_IMPL_H
 
-/* Define some BOOST defines */
-#define BOOST_ASIO_ENABLE_CANCELIO
-// If we want to support older versions of windows than Windows 7, we should
-// disable IOCP
-//#ifdef _WIN32
-//#define BOOST_ASIO_DISABLE_IOCP
-//#endif // _WIN32
-
 #include "drill/common.hpp"
+
+// Define some BOOST defines
+// WIN32_SHUTDOWN_ON_TIMEOUT is defined in "drill/common.hpp" for Windows 32 bit platform
+#ifndef WIN32_SHUTDOWN_ON_TIMEOUT
+#define BOOST_ASIO_ENABLE_CANCELIO
+#endif //WIN32_SHUTDOWN_ON_TIMEOUT
+
 #include <stdlib.h>
 #include <time.h>
 #include <queue>

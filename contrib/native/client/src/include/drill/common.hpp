@@ -50,6 +50,14 @@
 #define CODER_DEBUGGING
 #endif
 
+// http://www.boost.org/doc/libs/1_54_0/doc/html/boost_asio/reference/basic_stream_socket/cancel/overload1.html
+// : "Calls to cancel() will always fail with boost::asio::error::operation_not_supported when run on Windows XP, Windows Server 2003, and earlier versions of Windows..."
+// As such, achieving cancel needs to be implemented differently;
+#if defined(_WIN32)  && !defined(_WIN64)
+#define WIN32_SHUTDOWN_ON_TIMEOUT
+#endif // _WIN32 && !_WIN64
+
+
 namespace Drill {
 
 typedef std::vector<uint8_t> DataBuf;
