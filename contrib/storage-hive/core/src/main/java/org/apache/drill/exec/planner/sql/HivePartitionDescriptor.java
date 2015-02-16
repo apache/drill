@@ -53,4 +53,10 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
   public int getMaxHierarchyLevel() {
     return MAX_NESTED_SUBDIRS;
   }
+
+  @Override
+  public Integer getIdIfValid(String name) {
+    return partitionMap.get(name);
+  }
+
 }

@@ -17,6 +17,11 @@
  */
 package org.apache.drill.exec.planner;
 
+import java.util.Map;
+
+import com.google.common.collect.Maps;
+
+
 // partition descriptor for file system based tables
 public class FileSystemPartitionDescriptor implements PartitionDescriptor {
 
@@ -24,10 +29,14 @@ public class FileSystemPartitionDescriptor implements PartitionDescriptor {
 
   private final String partitionLabel;
   private final int partitionLabelLength;
+  private final Map<String, Integer> partitions = Maps.newHashMap();
 
   public FileSystemPartitionDescriptor(String partitionLabel) {
     this.partitionLabel = partitionLabel;
     this.partitionLabelLength = partitionLabel.length();
+    for(int i =0; i < 10; i++){
+      partitions.put(partitionLabel + i, i);
+    }
   }
 
   @Override
@@ -38,11 +47,22 @@ public class FileSystemPartitionDescriptor implements PartitionDescriptor {
 
   @Override
   public boolean isPartitionName(String name) {
-    return name.matches(partitionLabel +"[0-9]");
+    return partitions.containsKey(name);
+  }
+
+  @Override
+  public Integer getIdIfValid(String name) {
+    return partitions.get(name);
   }
 
   @Override
   public int getMaxHierarchyLevel() {
     return MAX_NESTED_SUBDIRS;
   }
+
+  public String getName(int index){
+    return partitionLabel + index;
+  }
+
+
 }

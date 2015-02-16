@@ -31,6 +31,13 @@ public interface PartitionDescriptor {
   // Given a column name return boolean to indicate if its a partition column or not
   public boolean isPartitionName(String name);
 
+  /**
+   * Check to see if the name is a partition name.
+   * @param name The field name you want to compare to partition names.
+   * @return Return index if valid, otherwise return null;
+   */
+  public Integer getIdIfValid(String name);
+
   // Maximum level of partition nesting/ hierarchy supported
   public int getMaxHierarchyLevel();
 }
