@@ -101,9 +101,9 @@ public class WorkManager implements Closeable {
 
   public void start(DrillbitEndpoint endpoint, Controller controller,
       DataConnectionCreator data, ClusterCoordinator coord, PStoreProvider provider) {
-    this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider);
-    // executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
     this.executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
+    this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider, executor);
+    // executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
     this.controller = controller;
     this.eventThread.start();
     this.statusThread.start();
@@ -128,6 +128,10 @@ public class WorkManager implements Closeable {
     } catch (IllegalArgumentException e) {
       logger.warn("Exception while registering metrics", e);
     }
+  }
+
+  public ExecutorService getExecutor() {
+    return executor;
   }
 
   public WorkEventBus getWorkBus() {

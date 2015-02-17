@@ -61,6 +61,9 @@ public abstract class PartitionerTemplate implements Partitioner {
   private SelectionVector2 sv2;
   private SelectionVector4 sv4;
   private RecordBatch incoming;
+  private OperatorStats stats;
+  private int start;
+  private int end;
   private List<OutgoingRecordBatch> outgoingBatches = Lists.newArrayList();
 
   private int outgoingRecordBatchSize = DEFAULT_RECORD_BATCH_SIZE;
@@ -74,15 +77,27 @@ public abstract class PartitionerTemplate implements Partitioner {
   }
 
   @Override
+  public PartitionOutgoingBatch getOutgoingBatch(int index) {
+    if ( index >= start && index < end) {
+      return outgoingBatches.get(index - start);
+    }
+    return null;
+  }
+
+  @Override
   public final void setup(FragmentContext context,
                           RecordBatch incoming,
                           HashPartitionSender popConfig,
                           OperatorStats stats,
                           SendingAccountor sendingAccountor,
                           OperatorContext oContext,
-                          StatusHandler statusHandler) throws SchemaChangeException {
+                          StatusHandler statusHandler,
+                          int start, int end) throws SchemaChangeException {
 
     this.incoming = incoming;
+    this.stats = stats;
+    this.start = start;
+    this.end = end;
     doSetup(context, incoming, null);
 
     // Half the outgoing record batch size if the number of senders exceeds 1000 to reduce the total amount of memory
@@ -92,9 +107,15 @@ public abstract class PartitionerTemplate implements Partitioner {
       outgoingRecordBatchSize = (DEFAULT_RECORD_BATCH_SIZE + 1)/2 - 1;
     }
 
+    int fieldId = 0;
     for (MinorFragmentEndpoint destination : popConfig.getDestinations()) {
-      outgoingBatches.add(new OutgoingRecordBatch(stats, sendingAccountor, popConfig,
+      // create outgoingBatches only for subset of Destination Points
+      if ( fieldId >= start && fieldId < end ) {
+        logger.debug("start: {}, count: {}, fieldId: {}", start, end, fieldId);
+        outgoingBatches.add(new OutgoingRecordBatch(stats, sendingAccountor, popConfig,
           context.getDataTunnel(destination.getEndpoint()), context, oContext.getAllocator(), destination.getId(), statusHandler));
+      }
+      fieldId++;
     }
 
     for (OutgoingRecordBatch outgoingRecordBatch : outgoingBatches) {
@@ -117,6 +138,11 @@ public abstract class PartitionerTemplate implements Partitioner {
       default:
         throw new UnsupportedOperationException("Unknown selection vector mode: " + svMode.toString());
     }
+  }
+
+  @Override
+  public OperatorStats getStats() {
+    return stats;
   }
 
   /**
@@ -150,29 +176,40 @@ public abstract class PartitionerTemplate implements Partitioner {
     switch(svMode) {
       case NONE:
         for (int recordId = 0; recordId < incoming.getRecordCount(); ++recordId) {
-          OutgoingRecordBatch outgoingBatch = outgoingBatches.get(doEval(recordId));
-          outgoingBatch.copy(recordId);
+          doCopy(recordId);
         }
         break;
 
       case TWO_BYTE:
         for (int recordId = 0; recordId < incoming.getRecordCount(); ++recordId) {
           int svIndex = sv2.getIndex(recordId);
-          OutgoingRecordBatch outgoingBatch = outgoingBatches.get(doEval(svIndex));
-          outgoingBatch.copy(svIndex);
+          doCopy(svIndex);
         }
         break;
 
       case FOUR_BYTE:
         for (int recordId = 0; recordId < incoming.getRecordCount(); ++recordId) {
           int svIndex = sv4.get(recordId);
-          OutgoingRecordBatch outgoingBatch = outgoingBatches.get(doEval(svIndex));
-          outgoingBatch.copy(svIndex);
+          doCopy(svIndex);
         }
         break;
 
       default:
         throw new UnsupportedOperationException("Unknown selection vector mode: " + svMode.toString());
+    }
+  }
+
+  /**
+   * Helper method to copy data based on partition
+   * @param svIndex
+   * @param incoming
+   * @throws IOException
+   */
+  private void doCopy(int svIndex) throws IOException {
+    int index = doEval(svIndex);
+    if ( index >= start && index < end) {
+      OutgoingRecordBatch outgoingBatch = outgoingBatches.get(index - start);
+      outgoingBatch.copy(svIndex);
     }
   }
 
@@ -372,5 +409,6 @@ public abstract class PartitionerTemplate implements Partitioner {
     public void clear(){
       vectorContainer.clear();
     }
+
   }
 }

@@ -20,6 +20,7 @@ package org.apache.drill.exec.server;
 import io.netty.channel.EventLoopGroup;
 
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.CodeCompiler;
@@ -57,8 +58,10 @@ public class DrillbitContext {
   private final SystemOptionManager systemOptions;
   private final PStoreProvider provider;
   private final CodeCompiler compiler;
+  private final ExecutorService executor;
 
-  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, WorkEventBus workBus, PStoreProvider provider) {
+  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, WorkEventBus workBus, PStoreProvider provider,
+      ExecutorService executor) {
     super();
     Preconditions.checkNotNull(endpoint);
     Preconditions.checkNotNull(context);
@@ -71,6 +74,7 @@ public class DrillbitContext {
     this.connectionsPool = connectionsPool;
     this.endpoint = endpoint;
     this.provider = provider;
+    this.executor = executor;
     this.storagePlugins = new StoragePluginRegistry(this);
     this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storagePlugins);
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
@@ -153,5 +157,9 @@ public class DrillbitContext {
 
   public CodeCompiler getCompiler() {
     return compiler;
+  }
+
+  public ExecutorService getExecutor() {
+    return executor;
   }
 }

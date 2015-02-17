@@ -18,6 +18,7 @@
 package org.apache.drill.exec.compile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -32,6 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
 
 public class CodeCompiler {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeCompiler.class);
@@ -53,10 +55,19 @@ public class CodeCompiler {
 
   @SuppressWarnings("unchecked")
   public <T> T getImplementationClass(final CodeGenerator<?> cg) throws ClassTransformationException, IOException {
+    return (T) getImplementationClass(cg, 1).get(0);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> List<T> getImplementationClass(final CodeGenerator<?> cg, int instanceNumber) throws ClassTransformationException, IOException {
     cg.generate();
     try {
       final GeneratedClassEntry ce = cache.get(cg);
-      return (T) ce.clazz.newInstance();
+      List<T> tList = Lists.newArrayList();
+      for ( int i = 0; i < instanceNumber; i++) {
+        tList.add((T) ce.clazz.newInstance());
+      }
+      return tList;
     } catch (ExecutionException | InstantiationException | IllegalAccessException e) {
       throw new ClassTransformationException(e);
     }

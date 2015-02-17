@@ -26,7 +26,7 @@ public class IteratorValidator extends AbstractSingle{
 
   public IteratorValidator(PhysicalOperator child) {
     super(child);
-
+    setCost(child.getCost());
   }
 
   @Override

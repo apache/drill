@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl;
 
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Account for whether all messages sent have been completed. Necessary before finishing a task so we don't think
@@ -28,11 +29,11 @@ import java.util.concurrent.Semaphore;
 public class SendingAccountor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SendingAccountor.class);
 
-  private int batchesSent = 0;
+  private final AtomicInteger batchesSent = new AtomicInteger(0);
   private Semaphore wait = new Semaphore(0);
 
   public void increment() {
-    batchesSent++;
+    batchesSent.incrementAndGet();
   }
 
   public void decrement() {
@@ -41,8 +42,8 @@ public class SendingAccountor {
 
   public synchronized void waitForSendComplete() {
     try {
-      wait.acquire(batchesSent);
-      batchesSent = 0;
+      wait.acquire(batchesSent.get());
+      batchesSent.set(0);
     } catch (InterruptedException e) {
       logger.warn("Failure while waiting for send complete.", e);
     }
