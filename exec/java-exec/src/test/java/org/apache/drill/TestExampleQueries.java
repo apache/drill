@@ -369,7 +369,7 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testTopNWithSV2() throws Exception {
     int actualRecordCount = testSql("select N_NATIONKEY from cp.`tpch/nation.parquet` where N_NATIONKEY < 10 order by N_NATIONKEY limit 5");
     int expectedRecordCount = 5;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
@@ -382,7 +382,7 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testLikeEscape() throws Exception {
     int actualRecordCount = testSql("select id, name from cp.`jsoninput/specialchar.json` where name like '%#_%' ESCAPE '#'");
     int expectedRecordCount = 1;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
   }
@@ -391,7 +391,7 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testSimilarEscape() throws Exception {
     int actualRecordCount = testSql("select id, name from cp.`jsoninput/specialchar.json` where name similar to '(N|S)%#_%' ESCAPE '#'");
     int expectedRecordCount = 1;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
@@ -399,7 +399,7 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testImplicitDownwardCast() throws Exception {
     int actualRecordCount = testSql("select o_totalprice from cp.`tpch/orders.parquet` where o_orderkey=60000 and o_totalprice=299402");
     int expectedRecordCount = 0;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
@@ -408,26 +408,26 @@ public class TestExampleQueries extends BaseTestQuery{
     // cast from varchar with unknown length to a fixed length.
     int actualRecordCount = testSql("select first_name from cp.`employee.json` where cast(first_name as varchar(2)) = 'Sh'");
     int expectedRecordCount = 27;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     // cast from varchar with unknown length to varchar(5), then to varchar(10), then to varchar(2). Should produce the same result as the first query.
     actualRecordCount = testSql("select first_name from cp.`employee.json` where cast(cast(cast(first_name as varchar(5)) as varchar(10)) as varchar(2)) = 'Sh'");
     expectedRecordCount = 27;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
 
     // this long nested cast expression should be essentially equal to substr(), meaning the query should return every row in the table.
     actualRecordCount = testSql("select first_name from cp.`employee.json` where cast(cast(cast(first_name as varchar(5)) as varchar(10)) as varchar(2)) = substr(first_name, 1, 2)");
     expectedRecordCount = 1155;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     // cast is applied to a column from parquet file.
     actualRecordCount = testSql("select n_name from cp.`tpch/nation.parquet` where cast(n_name as varchar(2)) = 'UN'");
     expectedRecordCount = 2;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
@@ -476,28 +476,28 @@ public class TestExampleQueries extends BaseTestQuery{
     // source is JSON
     actualRecordCount = testSql("select EMPID from ( select employee_id as empid from cp.`employee.json` limit 2)");
     expectedRecordCount = 2;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     actualRecordCount = testSql("select EMPLOYEE_ID from ( select employee_id from cp.`employee.json` where Employee_id is not null limit 2)");
     expectedRecordCount = 2;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     actualRecordCount = testSql("select x.EMPLOYEE_ID from ( select employee_id from cp.`employee.json` limit 2) X");
     expectedRecordCount = 2;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     // source is PARQUET
     actualRecordCount = testSql("select NID from ( select n_nationkey as nid from cp.`tpch/nation.parquet`) where NID = 3");
     expectedRecordCount = 1;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     actualRecordCount = testSql("select x.N_nationkey from ( select n_nationkey from cp.`tpch/nation.parquet`) X where N_NATIONKEY = 3");
     expectedRecordCount = 1;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
       // source is CSV
@@ -505,7 +505,7 @@ public class TestExampleQueries extends BaseTestQuery{
     String query = String.format("select rid, x.name from (select columns[0] as RID, columns[1] as NAME from dfs_test.`%s`) X where X.rid = 2", root);
     actualRecordCount = testSql(query);
     expectedRecordCount = 1;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
   }

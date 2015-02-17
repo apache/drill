@@ -15,29 +15,34 @@
 # limitations under the License.
 
 data: {
-    vv: tdd(../data/ValueVectorTypes.tdd),
-    compare: tdd(../data/CompareTypes.tdd),
-    cast: tdd(../data/Casts.tdd),
-    MathFunctionTypes: tdd(../data/MathFunctionTypes.tdd),
-    mathFunc:tdd(../data/MathFunc.tdd),
-    aggrtypes1: tdd(../data/AggrTypes1.tdd),
-    decimalaggrtypes1: tdd(../data/DecimalAggrTypes1.tdd),
-    decimalaggrtypes2: tdd(../data/DecimalAggrTypes2.tdd),
-    aggrtypes2: tdd(../data/AggrTypes2.tdd),
-    aggrtypes3: tdd(../data/AggrTypes3.tdd),
-    covarTypes: tdd(../data/CovarTypes.tdd),
-    corrTypes: tdd(../data/CorrelationTypes.tdd),
-    logicalTypes: tdd(../data/AggrBitwiseLogicalTypes.tdd),
-    date: tdd(../data/DateTypes.tdd),
-    extract: tdd(../data/ExtractTypes.tdd),
-    parser: tdd(../data/Parser.tdd),
-    decimal: tdd(../data/DecimalTypes.tdd),
-    dateIntervalFunc: tdd(../data/DateIntervalFunc.tdd),
-    intervalNumericTypes: tdd(../data/IntervalNumericTypes.tdd),
-    extract: tdd(../data/ExtractTypes.tdd),
-    sumzero: tdd(../data/SumZero.tdd),
-    numericTypes: tdd(../data/NumericTypes.tdd),
-    casthigh: tdd(../data/CastHigh.tdd)
+    vv:                       tdd(../data/ValueVectorTypes.tdd),
+
+    # Most types for comparison functions (for templates/ComparisonFunctions.java).
+    comparisonTypesMain:      tdd(../data/ComparisonTypesMain.tdd),
+
+    # Decimal types for comparison function (for
+    # templates/DecimalFunctions/ComparisonFunctions.java).
+    comparisonTypesDecimal:   tdd(../data/ComparisonTypesDecimal.tdd),
+
+    cast:                     tdd(../data/Casts.tdd),
+    MathFunctionTypes:        tdd(../data/MathFunctionTypes.tdd),
+    mathFunc:                 tdd(../data/MathFunc.tdd),
+    aggrtypes1:               tdd(../data/AggrTypes1.tdd),
+    decimalaggrtypes1:        tdd(../data/DecimalAggrTypes1.tdd),
+    decimalaggrtypes2:        tdd(../data/DecimalAggrTypes2.tdd),
+    aggrtypes2:               tdd(../data/AggrTypes2.tdd),
+    aggrtypes3:               tdd(../data/AggrTypes3.tdd),
+    covarTypes:               tdd(../data/CovarTypes.tdd),
+    corrTypes:                tdd(../data/CorrelationTypes.tdd),
+    logicalTypes:             tdd(../data/AggrBitwiseLogicalTypes.tdd),
+    extract:                  tdd(../data/ExtractTypes.tdd),
+    parser:                   tdd(../data/Parser.tdd),
+    dateIntervalFunc:         tdd(../data/DateIntervalFunc.tdd),
+    intervalNumericTypes:     tdd(../data/IntervalNumericTypes.tdd),
+    extract:                  tdd(../data/ExtractTypes.tdd),
+    sumzero:                  tdd(../data/SumZero.tdd),
+    numericTypes:             tdd(../data/NumericTypes.tdd),
+    casthigh:                 tdd(../data/CastHigh.tdd)
 }
 freemarkerLinks: {
     includes: includes/

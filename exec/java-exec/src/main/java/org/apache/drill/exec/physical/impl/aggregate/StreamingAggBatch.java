@@ -248,7 +248,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       cg.setMappingSet(IS_SAME_I2);
       HoldingContainer second = cg.addExpr(expr, false);
 
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(first, second, context.getFunctionRegistry());
+      LogicalExpression fh =
+          FunctionGenerationHelper
+          .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
       HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
@@ -269,7 +271,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       cg.setMappingSet(ISA_B2);
       HoldingContainer second = cg.addExpr(expr, false);
 
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(first, second, context.getFunctionRegistry());
+      LogicalExpression fh =
+          FunctionGenerationHelper
+          .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
       HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }

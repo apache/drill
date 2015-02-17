@@ -15,36 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.expression;
+package org.apache.drill.jdbc;
 
-public class ExpressionPosition {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionPosition.class);
+import net.hydromatic.avatica.AvaticaConnection;
+import net.hydromatic.avatica.AvaticaDatabaseMetaData;
 
-  public static final ExpressionPosition UNKNOWN = new ExpressionPosition("--UNKNOWN EXPRESSION--", -1);
+public class DrillDatabaseMetaData extends AvaticaDatabaseMetaData {
 
-  private final String expression;
-  private final int charIndex;
+  protected DrillDatabaseMetaData( AvaticaConnection connection ) {
+    super( connection );
+  }
 
-  public ExpressionPosition(String expression, int charIndex) {
-    super();
-    this.expression = expression;
-    this.charIndex = charIndex;
+
+  // For omitted NULLS FIRST/NULLS HIGH, Drill sort NULL sorts as highest value:
+
+  @Override
+  public boolean nullsAreSortedHigh() {
+    return true;
   }
 
   @Override
-  public String toString() {
-    return super.toString()
-           + "[charIndex = " + charIndex + ", expression = " + expression + "]";
+  public boolean nullsAreSortedLow() {
+    return false;
   }
 
-  public String getExpression() {
-    return expression;
+  @Override
+  public boolean nullsAreSortedAtStart() {
+    return false;
   }
 
-  public int getCharIndex() {
-    return charIndex;
+  @Override
+  public boolean nullsAreSortedAtEnd() {
+    return false;
   }
-
 
 
 }

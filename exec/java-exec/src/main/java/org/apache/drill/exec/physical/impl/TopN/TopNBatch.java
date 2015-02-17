@@ -61,6 +61,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.eigenbase.rel.RelFieldCollation.Direction;
+import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
@@ -324,7 +325,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       g.setMappingSet(mainMapping);
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
+      LogicalExpression fh =
+        FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
+                                                       context.getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 

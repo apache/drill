@@ -65,6 +65,7 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.eigenbase.rel.RelFieldCollation.Direction;
+import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterators;
@@ -565,7 +566,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       g.setMappingSet(mainMapping);
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
+      LogicalExpression fh =
+          FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
+                                                         context.getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
@@ -612,7 +615,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       g.setMappingSet(MAIN_MAPPING);
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
+      LogicalExpression fh =
+          FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
+                                                         context.getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 

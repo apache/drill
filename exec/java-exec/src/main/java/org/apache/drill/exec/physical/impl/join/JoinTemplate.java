@@ -155,7 +155,9 @@ public abstract class JoinTemplate implements JoinWorker {
           }
           status.advanceRight();
 
-        } while ((!status.isLeftRepeating() || status.isRightPositionInCurrentBatch()) && status.isRightPositionAllowed() && doCompare(status.getLeftPosition(), status.getRightPosition()) == 0);
+        } while ((!status.isLeftRepeating() || status.isRightPositionInCurrentBatch())
+                 && status.isRightPositionAllowed()
+                 && doCompare(status.getLeftPosition(), status.getRightPosition()) == 0);
 
         if (status.getRightPosition() > initialRightPosition &&
             (status.isLeftRepeating() || ! status.isNextLeftPositionInCurrentBatch())) {
@@ -204,8 +206,8 @@ public abstract class JoinTemplate implements JoinWorker {
   /**
    * Copy the data to the new record batch (if it fits).
    *
-   * @param leftIndex  position of batch (lower 16 bits) and record (upper 16 bits) in left SV4
-   * @param outIndex position of the output record batch
+   * @param  leftIndex   position of batch (lower 16 bits) and record (upper 16 bits) in left SV4
+   * @param  outIndex  position of the output record batch
    * @return Whether or not the data was copied.
    */
   public abstract void doCopyLeft(@Named("leftIndex") int leftIndex, @Named("outIndex") int outIndex);
@@ -228,8 +230,8 @@ public abstract class JoinTemplate implements JoinWorker {
 
   /**
    * Compare the current left key to the next left key, if it's within the batch.
-   * @return  0 if both keys are equal
-   *          1 if the keys are not equal
+   * @return  0 if both keys are equal,
+   *          1 if the keys are not equal, and
    *         -1 if there are no more keys in this batch
    */
   protected abstract int doCompareNextLeftKey(@Named("leftIndex") int leftIndex);

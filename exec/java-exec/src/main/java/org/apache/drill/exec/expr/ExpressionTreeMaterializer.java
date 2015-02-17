@@ -203,7 +203,7 @@ public class ExpressionTreeMaterializer {
       List<LogicalExpression> args = Lists.newArrayList();
       for (int i = 0; i < call.args.size(); ++i) {
         LogicalExpression newExpr = call.args.get(i).accept(this, registry);
-        assert newExpr != null : String.format("Materialization of %s return a null expression.", call.args.get(i));
+        assert newExpr != null : String.format("Materialization of %s returned a null expression.", call.args.get(i));
         args.add(newExpr);
       }
 

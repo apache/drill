@@ -29,28 +29,58 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
+import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
 public class FunctionGenerationHelper {
-  public static final String COMPARE_TO = "compare_to";
+  public static final String COMPARE_TO_NULLS_HIGH = "compare_to_nulls_high";
+  public static final String COMPARE_TO_NULLS_LOW = "compare_to_nulls_low";
 
   /**
-   * Given materialized arguments find the "compare_to" FunctionHolderExpression
-   * @param left
-   * @param right
-   * @param registry
-   * @return FunctionHolderExpression containing the function implementation
+   * Finds ordering comparator ("compare_to...") FunctionHolderExpression with
+   * a specified ordering for NULL (and considering NULLS <i>equal</i>).
+   * @param  null_high  whether NULL should compare as the lowest value (if
+   *                    {@code false}) or the highest value (if {@code true})
+   * @param  left  ...
+   * @param  right  ...
+   * @param  registry  ...
+   * @return
+   *     FunctionHolderExpression containing the found function implementation
    */
-  public static FunctionHolderExpression getComparator(HoldingContainer left,
-    HoldingContainer right,
-    FunctionImplementationRegistry registry) {
-    if (! isComparableType(left.getMajorType()) || ! isComparableType(right.getMajorType()) ){
-      throw new UnsupportedOperationException(formatCanNotCompareMsg(left.getMajorType(), right.getMajorType()));
-    }
+  public static FunctionHolderExpression getOrderingComparator(
+      boolean null_high,
+      HoldingContainer left,
+      HoldingContainer right,
+      FunctionImplementationRegistry registry) {
+    final String comparator_name =
+        null_high ? COMPARE_TO_NULLS_HIGH : COMPARE_TO_NULLS_LOW;
 
-    return getFunctionExpression(COMPARE_TO, Types.required(MinorType.INT), registry, left, right);
+    if (   ! isComparableType(left.getMajorType() )
+        || ! isComparableType(right.getMajorType() ) ) {
+      throw new UnsupportedOperationException(
+          formatCanNotCompareMsg(left.getMajorType(), right.getMajorType()));
+    }
+    return getFunctionExpression(comparator_name, Types.required(MinorType.INT),
+                                 registry, left, right);
   }
 
-  public static FunctionHolderExpression getFunctionExpression(String name, MajorType returnType, FunctionImplementationRegistry registry, HoldingContainer... args) {
+  /**
+   * Finds ordering comparator ("compare_to...") FunctionHolderExpression with
+   * a "NULL high" ordering (and considering NULLS <i>equal</i>).
+   * @param  left  ...
+   * @param  right  ...
+   * @param  registry  ...
+   * @return FunctionHolderExpression containing the function implementation
+   * @see #getComparator
+   */
+  public static FunctionHolderExpression getOrderingComparatorNullsHigh(
+      HoldingContainer left,
+      HoldingContainer right,
+      FunctionImplementationRegistry registry) {
+    return getOrderingComparator(true, left, right, registry);
+  }
+
+  public static FunctionHolderExpression getFunctionExpression(
+      String name, MajorType returnType, FunctionImplementationRegistry registry, HoldingContainer... args) {
     List<MajorType> argTypes = new ArrayList<MajorType>(args.length);
     List<LogicalExpression> argExpressions = new ArrayList<LogicalExpression>(args.length);
     for(HoldingContainer c : args) {
@@ -69,10 +99,10 @@ public class FunctionGenerationHelper {
     sb.append("( ");
     for(int i =0; i < args.length; i++) {
       MajorType mt = args[i].getMajorType();
-      appendType(mt, sb);
       if (i != 0) {
         sb.append(", ");
       }
+      appendType(mt, sb);
     }
     sb.append(" ) returns ");
     appendType(returnType, sb);

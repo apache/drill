@@ -27,9 +27,17 @@ import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
+/**
+ * Function templates for Bit/BOOLEAN functions other than comparison
+ * functions.  (Bit/BOOLEAN comparison functions are generated in
+ * ComparisonFunctions.java template.)
+ *
+ */
 public class BitFunctions {
 
-  @FunctionTemplate(names = {"booleanOr", "or", "||"}, scope = FunctionScope.SC_BOOLEAN_OPERATOR, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"booleanOr", "or", "||"},
+                    scope = FunctionScope.SC_BOOLEAN_OPERATOR,
+                    nulls = NullHandling.NULL_IF_NULL)
   public static class BitOr implements DrillSimpleFunc {
 
     @Param BitHolder left;
@@ -43,7 +51,9 @@ public class BitFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"booleanAnd", "and", "&&"}, scope = FunctionScope.SC_BOOLEAN_OPERATOR, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"booleanAnd", "and", "&&"},
+                    scope = FunctionScope.SC_BOOLEAN_OPERATOR,
+                    nulls = NullHandling.NULL_IF_NULL)
   public static class BitAnd implements DrillSimpleFunc {
 
     @Param BitHolder left;
@@ -58,7 +68,9 @@ public class BitFunctions {
   }
 
 
-  @FunctionTemplate(names = {"xor", "^"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"xor", "^"},
+                    scope = FunctionScope.SIMPLE,
+                    nulls = NullHandling.NULL_IF_NULL)
   public static class IntXor implements DrillSimpleFunc {
 
     @Param IntHolder left;
@@ -72,32 +84,4 @@ public class BitFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"equal","==","="}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class EqualsBitBit implements DrillSimpleFunc {
-
-    @Param BitHolder left;
-    @Param BitHolder right;
-    @Output BitHolder out;
-
-    public void setup(RecordBatch b) {}
-
-    public void eval() {
-      out.value = left.value == right.value ? 1 : 0;
-
-    }
-  }
-
-  @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class CompareBitBit implements DrillSimpleFunc {
-
-    @Param BitHolder left;
-    @Param BitHolder right;
-    @Output IntHolder out;
-
-    public void setup(RecordBatch b) {}
-
-    public void eval() {
-      out.value = left.value < right.value ? -1 : ((left.value == right.value)? 0 : 1);
-    }
-  }
 }

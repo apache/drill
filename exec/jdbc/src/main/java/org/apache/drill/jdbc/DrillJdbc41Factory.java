@@ -57,16 +57,20 @@ public class DrillJdbc41Factory extends DrillFactory {
     return new DrillJdbc41Connection((Driver) driver, factory, url, info);
   }
 
+  @Override
   public DrillJdbc41DatabaseMetaData newDatabaseMetaData(AvaticaConnection connection) {
     return new DrillJdbc41DatabaseMetaData((DrillConnectionImpl) connection);
   }
 
+
+  @Override
   public DrillJdbc41Statement newStatement(AvaticaConnection connection, int resultSetType, int resultSetConcurrency,
       int resultSetHoldability) {
     return new DrillJdbc41Statement((DrillConnectionImpl) connection, resultSetType, resultSetConcurrency,
         resultSetHoldability);
   }
 
+  @Override
   public AvaticaPreparedStatement newPreparedStatement(AvaticaConnection connection,
       AvaticaPrepareResult prepareResult, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
       throws SQLException {
@@ -74,11 +78,13 @@ public class DrillJdbc41Factory extends DrillFactory {
         resultSetType, resultSetConcurrency, resultSetHoldability);
   }
 
+  @Override
   public DrillResultSet newResultSet(AvaticaStatement statement, AvaticaPrepareResult prepareResult, TimeZone timeZone) {
     final ResultSetMetaData metaData = newResultSetMetaData(statement, prepareResult.getColumnList());
     return new DrillResultSet(statement, (DrillPrepareResult) prepareResult, metaData, timeZone);
   }
 
+  @Override
   public ResultSetMetaData newResultSetMetaData(AvaticaStatement statement, List<ColumnMetaData> columnMetaDataList) {
     return new AvaticaResultSetMetaData(statement, null, columnMetaDataList);
   }
@@ -176,7 +182,7 @@ public class DrillJdbc41Factory extends DrillFactory {
     }
   }
 
-  private static class DrillJdbc41DatabaseMetaData extends AvaticaDatabaseMetaData {
+  private static class DrillJdbc41DatabaseMetaData extends DrillDatabaseMetaData {
     DrillJdbc41DatabaseMetaData(DrillConnectionImpl connection) {
       super(connection);
     }

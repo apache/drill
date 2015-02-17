@@ -27,7 +27,7 @@ public class TestHiveProjectPushDown extends HiveTestBase {
     testPhysicalPlan(query, expectedColNamesInPlan);
 
     int actualRecordCount = testSql(query);
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 

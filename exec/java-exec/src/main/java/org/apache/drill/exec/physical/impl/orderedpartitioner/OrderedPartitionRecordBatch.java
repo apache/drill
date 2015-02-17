@@ -70,6 +70,7 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.eigenbase.rel.RelFieldCollation.Direction;
+import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -574,7 +575,10 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
           new ValueVectorReadExpression(new TypedFieldId(expr.getMajorType(), count++)), false);
       cg.setMappingSet(mainMapping);
 
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
+      // next we wrap the two comparison sides and add the expression block for the comparison.
+      LogicalExpression fh =
+          FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
+                                                         context.getFunctionRegistry());
       ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
       JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 

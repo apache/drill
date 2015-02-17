@@ -65,7 +65,7 @@ public class QueryResultHandler {
     if (l == null) {
       BufferingListener bl = new BufferingListener();
       l = resultsListener.putIfAbsent(result.getQueryId(), bl);
-      // if we had a succesful insert, use that reference.  Otherwise, just throw away the new bufering listener.
+      // if we had a successful insert, use that reference.  Otherwise, just throw away the new bufering listener.
       if (l == null) {
         l = bl;
       }

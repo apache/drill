@@ -43,6 +43,7 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.eigenbase.rel.RelFieldCollation.Direction;
+import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
@@ -180,7 +181,9 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       g.setMappingSet(mainMapping);
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
+      LogicalExpression fh =
+        FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
+                                                       context.getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 

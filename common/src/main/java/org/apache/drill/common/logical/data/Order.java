@@ -20,6 +20,7 @@ package org.apache.drill.common.logical.data;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
@@ -65,27 +66,96 @@ public class Order extends SingleInputOperator {
     }
 
 
-    public static class Ordering {
+  /**
+   * Representation of a SQL &lt;sort specification>.
+   */
+  public static class Ordering {
 
-    private final RelFieldCollation.Direction direction;
     private final LogicalExpression expr;
-    private final RelFieldCollation.NullDirection nulls;
+    /** Net &lt;ordering specification>. */
+    private final Direction direction;
+    /** Net &lt;null ordering> */
+    private final NullDirection nullOrdering;
 
+    /**
+     * Constructs a sort specification.
+     * @param  expr  ...
+     * @param  strOrderingSpec  the &lt;ordering specification> as string;
+     *             allowed values: {@code "ASC"}, {@code "DESC"}, {@code null};
+     *             null specifies default &lt;ordering specification>
+     *                   ({@code "ASC"} / {@link Direction#ASCENDING})
+     * @param  strNullOrdering   the &lt;null ordering> as string;
+     *             allowed values: {@code "FIRST"}, {@code "LAST"},
+     *             {@code "UNSPECIFIED"}, {@code null};
+     *             null specifies default &lt;null ordering>
+     *             (omitted / {@link NullDirection#UNSPECIFIED}, interpreted later)
+     */
     @JsonCreator
-    public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("nullDirection") String nullCollation) {
+    public Ordering( @JsonProperty("expr") LogicalExpression expr,
+                     @JsonProperty("order") String strOrderingSpec,
+                     @JsonProperty("nullDirection") String strNullOrdering ) {
       this.expr = expr;
-      this.nulls = NullDirection.LAST.name().equalsIgnoreCase(nullCollation) ? NullDirection.LAST :  NullDirection.FIRST; // default first
-      this.direction = Order.getDirectionFromString(strOrder);
+      this.direction = getOrderingSpecFromString( strOrderingSpec );
+      this.nullOrdering = getNullOrderingFromString( strNullOrdering );
     }
 
-    public Ordering(Direction direction, LogicalExpression e, NullDirection nullCollation) {
+    public Ordering(Direction direction, LogicalExpression e, NullDirection nullOrdering) {
       this.expr = e;
-      this.nulls = nullCollation;
       this.direction = direction;
+      this.nullOrdering = nullOrdering;
     }
 
     public Ordering(Direction direction, LogicalExpression e) {
       this(direction, e, NullDirection.FIRST);
+    }
+
+    private static Direction getOrderingSpecFromString( String strDirection ) {
+      final Direction direction;
+      if ( null == strDirection
+          || Direction.ASCENDING.shortString.equals( strDirection ) ) {
+        direction = Direction.ASCENDING;
+      }
+      else if ( Direction.DESCENDING.shortString.equals( strDirection ) ) {
+        direction = Direction.DESCENDING;
+      }
+      else {
+        throw new DrillRuntimeException(
+            "Unknown <ordering specification> string (not \"ASC\", \"DESC\", "
+            + "or null): \"" + strDirection + "\"" );
+      }
+      return direction;
+    }
+
+    private static NullDirection getNullOrderingFromString( String strNullOrdering ) {
+      final RelFieldCollation.NullDirection nullOrdering;
+      if ( null == strNullOrdering ) {
+        nullOrdering = NullDirection.UNSPECIFIED;
+      }
+      else {
+        try {
+          nullOrdering = NullDirection.valueOf( strNullOrdering );
+        }
+        catch ( IllegalArgumentException e ) {
+          throw new DrillRuntimeException(
+              "Internal error:  Unknown <null ordering> string (not "
+              + "\"" + NullDirection.FIRST.name() + "\", "
+              + "\"" + NullDirection.LAST.name() + "\", or "
+              + "\"" + NullDirection.UNSPECIFIED.name() + "\" or null): "
+              + "\"" + strNullOrdering + "\"" );
+        }
+      }
+      return nullOrdering;
+   }
+
+    @Override
+    public String toString() {
+      return
+          super.toString()
+          + "[ "
+          + " expr = " + expr
+          + ", direction = " + direction
+          + ", nullOrdering = " + nullOrdering
+          + "] ";
     }
 
     @JsonIgnore
@@ -98,18 +168,59 @@ public class Order extends SingleInputOperator {
     }
 
     public String getOrder() {
-
-      switch(direction){
-      case DESCENDING: return "DESC";
-      default: return "ASC";
+      switch (direction) {
+      case ASCENDING:
+        return Direction.ASCENDING.shortString;
+      case DESCENDING:
+        return Direction.DESCENDING.shortString;
+      default:
+        throw new DrillRuntimeException(
+            "Unexpected " + Direction.class.getName() + " value other than "
+            + Direction.ASCENDING + " or " + Direction.DESCENDING + ": "
+            + direction );
       }
     }
 
     public NullDirection getNullDirection() {
-      return nulls;
+      return nullOrdering;
     }
 
+    /**
+     * Reports whether NULL sorts high or low in this ordering.
+     *
+     * @return
+     * {@code true}  if NULL sorts higher than any other value;
+     * {@code false} if NULL sorts lower  than any other value
+     */
+    public boolean nullsSortHigh() {
+      final boolean nullsHigh;
 
+      switch (nullOrdering) {
+
+      case UNSPECIFIED:
+        // Default:  NULL sorts high: like NULLS LAST if ASC, FIRST if DESC.
+        nullsHigh = true;
+        break;
+
+      case FIRST:
+        // FIRST: NULL sorts low with ASC, high with DESC.
+        nullsHigh = Direction.DESCENDING == getDirection();
+        break;
+
+      case LAST:
+        // LAST: NULL sorts high with ASC, low with DESC.
+        nullsHigh = Direction.ASCENDING == getDirection();
+        break;
+
+      default:
+        throw new DrillRuntimeException(
+            "Unexpected " + NullDirection.class.getName() + " value other than "
+            + NullDirection.FIRST + ", " + NullDirection.LAST + " or " + NullDirection.UNSPECIFIED + ": "
+            + nullOrdering );
+      }
+
+      return nullsHigh;
+    }
 
   }
 
@@ -137,13 +248,5 @@ public class Order extends SingleInputOperator {
     }
 
 
-  }
-
-  public static Direction getDirectionFromString(String direction){
-    return "DESC".equalsIgnoreCase(direction) ? Direction.DESCENDING : Direction.ASCENDING;
-  }
-
-  public static String getStringFromDirection(Direction direction){
-    return direction == Direction.DESCENDING ? "DESC" : "ASC";
   }
 }

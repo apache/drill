@@ -47,12 +47,12 @@ public class TestAggNullable extends BaseTestQuery{
 
     enableAggr(true, false);
     actualRecordCount = testSql(query1);
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     expectedRecordCount = 4;
     actualRecordCount = testSql(query2);
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
@@ -68,12 +68,12 @@ public class TestAggNullable extends BaseTestQuery{
 
     enableAggr(false, true);
     actualRecordCount = testSql(query1);
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     expectedRecordCount = 4;
     actualRecordCount = testSql(query2);
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 

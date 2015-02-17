@@ -115,7 +115,7 @@ public class ProjectPrule extends Prule {
 
     for ( RelFieldCollation field : src.getFieldCollations()) {
       if (inToOut.containsKey(field.getFieldIndex())) {
-        newFields.add(new RelFieldCollation(inToOut.get(field.getFieldIndex()), field.getDirection()));
+        newFields.add(new RelFieldCollation(inToOut.get(field.getFieldIndex()), field.getDirection(), field.nullDirection));
       }
     }
 

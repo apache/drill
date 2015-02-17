@@ -250,8 +250,10 @@ public class ChainedHashTable {
         jc._then()._return(JExpr.FALSE);
       }
 
-      // next we wrap the two comparison sides and add the expression block for the comparison.
-      LogicalExpression f = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
+      final LogicalExpression f =
+          FunctionGenerationHelper
+          .getOrderingComparatorNullsHigh(left, right, context.getFunctionRegistry());
+
       HoldingContainer out = cg.addExpr(f, false);
 
       // check if two values are not equal (comparator result != 0)

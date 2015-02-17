@@ -184,6 +184,7 @@
             <exclude>**/*.iml</exclude>
             <exclude>**/*.tdd</exclude>
             <exclude>**/*.project</exclude>
+            <exclude>**/TAGS</exclude>
             <exclude>**/*.checkstyle</exclude>
             <exclude>**/.classpath</exclude>
             <exclude>**/.settings/**</exclude>

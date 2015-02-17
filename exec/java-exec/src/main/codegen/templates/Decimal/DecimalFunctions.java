@@ -20,211 +20,75 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <@pp.dropOutputFile />
 
-<#macro compareBlock holderType left right absCompare output>
+<#-- TODO:  Refactor comparison code from here into ComparisonFunctions (to
+     eliminate duplicate template code and so that ComparisonFunctions actually
+     as all comparison functions. -->
 
-        outside:{
+<#macro compareNullsSubblock leftType rightType output breakTarget nullCompare nullComparesHigh>
+  <#if nullCompare>
+    <#if nullComparesHigh>
+      <#assign leftNullResult = 1> <#-- if only L is null and nulls are high, then "L > R" (1) -->
+      <#assign rightNullResult = -1>
+    <#else>
+      <#assign leftNullResult = -1> <#-- if only L is null and nulls are low, then "L < R" (-1) -->
+      <#assign rightNullResult = 1>
+    </#if>
+
+    <#if leftType?starts_with("Nullable")>
+      <#if rightType?starts_with("Nullable")>
+        <#-- Both are nullable. -->
+        if ( left.isSet == 0 ) {
+          if ( right.isSet == 0 ) {
+            <#-- Both are null--result is "L = R". -->
+            ${output} = 0;
+            break ${breakTarget};
+          } else {
+            <#-- Only left is null--result is "L < R" or "L > R" per null ordering. -->
+            ${output} = ${leftNullResult};
+            break ${breakTarget};
+          }
+        } else if ( right.isSet == 0 ) {
+          <#-- Only right is null--result is "L > R" or "L < R" per null ordering. -->
+          ${output} = ${rightNullResult};
+          break ${breakTarget};
+        }
+      <#else>
+        <#-- Left is nullable but right is not. -->
+        if ( left.isSet == 0 ) {
+          <#-- Only left is null--result is "L < R" or "L > R" per null ordering. -->
+          ${output} = ${leftNullResult};
+          break ${breakTarget};
+        }
+      </#if>
+    <#elseif rightType?starts_with("Nullable")>
+      <#-- Left is not nullable but right is. -->
+      if ( right.isSet == 0 ) {
+        <#-- Only right is null--result is "L > R" or "L < R" per null ordering. -->
+        ${output} = ${rightNullResult};
+        break ${breakTarget};
+      }
+    </#if>
+  </#if>
+
+</#macro>
+
+
+<#macro compareBlock leftType rightType absCompare output nullCompare nullComparesHigh>
+         outside:
+          {
+            <@compareNullsSubblock leftType=leftType rightType=rightType output=output breakTarget="outside" nullCompare=nullCompare nullComparesHigh=nullComparesHigh />
+
             ${output} = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(left.buffer, left.start, left.getSign(left.start, left.buffer),
                             left.scale, left.precision, right.buffer,
                             right.start, right.getSign(right.start, right.buffer), right.precision,
                             right.scale, left.WIDTH, left.nDecimalDigits, ${absCompare});
 
-    }
+          } // outside
 </#macro>
 
-<#macro subtractBlock holderType in1 in2 result>
-
-            int resultScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(result.scale);
-            int resultIndex = result.nDecimalDigits- 1;
-
-            int leftScaleRoundedUp  = org.apache.drill.exec.util.DecimalUtility.roundUp(${in1}.scale);
-            int leftIntRoundedUp    = org.apache.drill.exec.util.DecimalUtility.roundUp(${in1}.precision - ${in1}.scale);
-            int rightScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(${in2}.scale);
-
-            int leftIndex  = ${in1}.nDecimalDigits - 1;
-            int rightIndex = ${in2}.nDecimalDigits - 1;
-
-            /* If the left scale is bigger, simply copy over the digits into result */
-            while (leftScaleRoundedUp > rightScaleRoundedUp) {
-                result.setInteger(resultIndex, ${in1}.getInteger(leftIndex, ${in1}.start, ${in1}.buffer), result.start, result.buffer);
-                leftIndex--;
-                resultIndex--;
-                leftScaleRoundedUp--;
-            }
-
-            /* If the right scale is bigger, subtract with zero at each array location */
-            int carry = 0;
-            while(rightScaleRoundedUp > leftScaleRoundedUp) {
-
-                int difference = 0 - ${in2}.getInteger(rightIndex, ${in2}.start, ${in2}.buffer) - carry;
-                rightIndex--;
-
-                if (difference < 0) {
-                    carry = 1;
-                    result.setInteger(resultIndex, (difference + org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), result.start, result.buffer);
-                } else {
-                    result.setInteger(resultIndex, difference, result.start, result.buffer);
-                    carry = 0;
-                }
-                resultIndex--;
-                rightScaleRoundedUp--;
-
-            }
-
-            /* Now both the scales are equal perform subtraction use one of the scales
-             * for terminal condition in the while loop
-             */
-            while (leftScaleRoundedUp > 0) {
-
-                int difference = ${in1}.getInteger(leftIndex, ${in1}.start, ${in1}.buffer) - ${in2}.getInteger(rightIndex, ${in2}.start, ${in2}.buffer) - carry;
-                leftIndex--;
-                rightIndex--;
-
-                if (difference < 0) {
-                    carry = 1;
-                    result.setInteger(resultIndex, (difference + org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), result.start, result.buffer);
-                } else {
-                    result.setInteger(resultIndex, difference, result.start, result.buffer);
-                    carry = 0;
-                }
-                resultIndex--;
-                leftScaleRoundedUp--;
-            }
-
-            /* Since we are gurranteed to have the left input >= right input, iterate
-             * over the remaining left input's integers
-             */
-            while(leftIntRoundedUp > 0) {
-
-                int difference = ${in1}.getInteger(leftIndex, ${in1}.start, ${in1}.buffer);
-                leftIndex--;
-
-                if (rightIndex >= 0) {
-                    difference -= ${in2}.getInteger(rightIndex, ${in2}.start, ${in2}.buffer);
-                    rightIndex--;
-                }
-
-                difference -= carry;
-
-                if (difference < 0) {
-                    carry = 1;
-                    result.setInteger(resultIndex, (difference + org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), result.start, result.buffer);
-                } else {
-                    carry = 0;
-                    result.setInteger(resultIndex, difference, result.start, result.buffer);
-                }
-                resultIndex--;
-                leftIntRoundedUp--;
-            }
-
-</#macro>
-
-<#macro addBlock holderType in1 in2 result>
-
-        int resultScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(result.scale);
-
-        int leftScaleRoundedUp  = org.apache.drill.exec.util.DecimalUtility.roundUp(${in1}.scale);
-        int rightScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(${in2}.scale);
-
-        /* starting index for each decimal */
-        int leftIndex  = ${in1}.nDecimalDigits - 1;
-        int rightIndex = ${in2}.nDecimalDigits - 1;
-        int resultIndex = result.nDecimalDigits - 1;
-
-        /* If one of the scale is larger then simply copy it over
-         * to the result digits
-         */
-        while (leftScaleRoundedUp > rightScaleRoundedUp) {
-
-            result.setInteger(resultIndex, ${in1}.getInteger(leftIndex, ${in1}.start, ${in1}.buffer), result.start, result.buffer);
-            leftIndex--;
-            resultIndex--;
-            leftScaleRoundedUp--;
-            resultScaleRoundedUp--;
-        }
-
-        while (rightScaleRoundedUp > leftScaleRoundedUp) {
-            result.setInteger((resultIndex), ${in2}.getInteger(rightIndex, ${in2}.start, ${in2}.buffer), result.start, result.buffer);
-            rightIndex--;
-            resultIndex--;
-            rightScaleRoundedUp--;
-            resultScaleRoundedUp--;
-        }
-
-        int sum = 0;
-
-        /* now the two scales are at the same level, we can add them */
-        while (resultScaleRoundedUp > 0) {
-
-            sum += ${in1}.getInteger(leftIndex, ${in1}.start, ${in1}.buffer) + ${in2}.getInteger(rightIndex, ${in2}.start, ${in2}.buffer);
-            leftIndex--;
-            rightIndex--;
-
-            if (sum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
-                result.setInteger(resultIndex, (sum - org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), result.start, result.buffer);
-                sum = 1;
-            } else {
-                result.setInteger(resultIndex, sum, result.start, result.buffer);
-                sum = 0;
-            }
-            resultIndex--;
-            resultScaleRoundedUp--;
-        }
-
-        /* add the integer part */
-        while (leftIndex >= 0 && rightIndex >= 0) {
-
-            sum += ${in1}.getInteger(leftIndex, ${in1}.start, ${in1}.buffer) + ${in2}.getInteger(rightIndex, ${in2}.start, ${in2}.buffer);
-            leftIndex--;
-            rightIndex--;
-
-            if (sum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
-                result.setInteger(resultIndex, (sum - org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), result.start, result.buffer);
-                sum = 1;
-            } else {
-                result.setInteger(resultIndex, sum, result.start, result.buffer);
-                sum = 0;
-            }
-            resultIndex--;
-        }
-
-        while (resultIndex >= 0 && leftIndex >= 0) {
-            sum += ${in1}.getInteger(leftIndex, ${in1}.start, ${in1}.buffer);
-            leftIndex--;
-
-            if (sum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
-                result.setInteger(resultIndex, (sum - org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), result.start, result.buffer);
-                sum = 1;
-            } else {
-                result.setInteger(resultIndex, sum, result.start, result.buffer);
-                sum = 0;
-            }
-        }
-
-        while (resultIndex >= 0 && rightIndex >= 0) {
-            sum += ${in2}.getInteger(rightIndex, ${in2}.start, ${in2}.buffer);
-            rightIndex--;
-
-            if (sum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
-                result.setInteger(resultIndex, (sum - org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), result.start, result.buffer);
-                sum = 1;
-            } else {
-                result.setInteger(resultIndex, sum, result.start, result.buffer);
-                sum = 0;
-            }
-        }
-
-        /* store the last carry */
-        if (sum > 0)
-        result.setInteger(resultIndex, sum, result.start, result.buffer);
-
-</#macro>
-
-
-<#macro adjustScale holderType javaType left right>
+<#macro adjustScale javaType leftType rightType>
 
             // Adjust the scale of the two inputs to be the same
-
-            int adjustment = 0;
 
             if (left.scale < right.scale) {
                 left.value = (${javaType}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(left.value, (int) (right.scale - left.scale)));
@@ -235,9 +99,11 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             }
 </#macro>
 
-<#list decimal.decimalTypes as type>
+<#-- For each DECIMAL... type (in DecimalTypes.tdd) ... -->
+<#list comparisonTypesDecimal.decimalTypes as type>
 
 <#if type.name.endsWith("Sparse")>
+
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/${type.name}Functions.java" />
 
 <#include "/@includes/license.ftl" />
@@ -252,6 +118,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -295,7 +162,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal rightInput = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
             java.math.BigDecimal addResult = leftInput.subtract(rightInput);
 
-            // set the scale
+            // Set the scale
             addResult.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
             org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(addResult, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
@@ -333,7 +200,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal rightInput = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
             java.math.BigDecimal addResult = leftInput.add(rightInput);
 
-            // set the scale
+            // Set the scale
             addResult.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
             org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(addResult, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
@@ -387,7 +254,7 @@ public class ${type.name}Functions {
 
             int leftIntegerSize = leftStopIndex - leftIndex;
 
-            /* Remove the leaing zeroes from the integer part of the input */
+            /* Remove the leading zeroes from the integer part of the input */
             int rightIndex = 0;
             int rightStopIndex = right.nDecimalDigits - org.apache.drill.exec.util.DecimalUtility.roundUp(right.scale);
 
@@ -429,7 +296,7 @@ public class ${type.name}Functions {
 
                     currentIndex--;
                 }
-                /* propogate the carry */
+                /* Propagate the carry */
                 if (carry > 0)
                     tempResult[currentIndex] += carry;
 
@@ -442,17 +309,17 @@ public class ${type.name}Functions {
             resultScaleSize = org.apache.drill.exec.util.DecimalUtility.roundUp(result.scale);
 
             if (result.scale < (left.scale + right.scale)) {
-              /* The scale of the output data type is lesser than the scale
+              /* The scale of the output data type is less than the scale
                * we obtained as a result of multiplication, we need to round
                * a chunk of the fractional part
                */
               int lastScaleIndex = currentIndex + resultIntegerSize + resultScaleSize - 1;
 
-              // compute the power of 10 necessary to find if we need to round up
+              // Compute the power of 10 necessary to find if we need to round up
               int roundFactor = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(
                                         org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - ((result.scale + 1) % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS)));
 
-              // index of rounding digit
+              // Index of rounding digit
               int roundIndex = currentIndex + resultIntegerSize + org.apache.drill.exec.util.DecimalUtility.roundUp(result.scale + 1) - 1;
 
               // Check the first chopped digit to see if we need to round up
@@ -471,7 +338,7 @@ public class ${type.name}Functions {
                 carry *= scaleFactor;
               }
 
-              // propogate the carry
+              // Propagate the carry
               while (carry > 0 && lastScaleIndex >= 0) {
                 int tempSum = tempResult[lastScaleIndex] + carry;
                 if (tempSum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
@@ -484,7 +351,7 @@ public class ${type.name}Functions {
                 lastScaleIndex--;
               }
 
-              // check if carry has increased integer digit
+              // Check if carry has increased integer digit
               if ((lastScaleIndex + 1) < currentIndex) {
                 resultIntegerSize++;
                 currentIndex = lastScaleIndex + 1;
@@ -599,7 +466,7 @@ public class ${type.name}Functions {
           out.buffer = in.buffer;
           out.start = in.start;
 
-          // set the output buffer with the positive sign
+          // Set the output buffer with the positive sign
           out.buffer.setInt(out.start, (out.buffer.getInt(out.start) & 0x7fffffff));
         }
     }
@@ -691,7 +558,7 @@ public class ${type.name}Functions {
               }
             }
           }
-          // set the sign
+          // Set the sign
           out.setSign(sign, out.start, out.buffer);
         }
     }
@@ -756,7 +623,7 @@ public class ${type.name}Functions {
               }
             }
           }
-          // set the sign
+          // Set the sign
           out.setSign(sign, out.start, out.buffer);
         }
     }
@@ -790,8 +657,8 @@ public class ${type.name}Functions {
           while (destIndex >= 0) {
             out.setInteger(destIndex--, 0, out.start, out.buffer);
           }
-            // set the sign
-            out.setSign(sign, out.start, out.buffer);
+          // Set the sign
+          out.setSign(sign, out.start, out.buffer);
         }
     }
 
@@ -867,8 +734,8 @@ public class ${type.name}Functions {
               }
             }
           }
-            // set the sign
-            result.setSign(sign, result.start, result.buffer);
+          // Set the sign
+          result.setSign(sign, result.start, result.buffer);
         }
     }
 
@@ -929,8 +796,8 @@ public class ${type.name}Functions {
               }
             }
           }
-            // set the sign
-            out.setSign(sign, out.start, out.buffer);
+          // Set the sign
+          out.setSign(sign, out.start, out.buffer);
         }
     }
 
@@ -952,26 +819,62 @@ public class ${type.name}Functions {
           boolean sign = left.getSign(left.start, left.buffer);
 
           org.apache.drill.exec.util.DecimalUtility.roundDecimal(result.buffer, result.start, result.nDecimalDigits, result.scale, left.scale);
-          // set the sign
+          // Set the sign
           result.setSign(sign, result.start, result.buffer);
         }
     }
 
-    @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
-    public static class ${type.name}CompareTo implements DrillSimpleFunc {
+ <#-- Handle 2 x 2 combinations of nullable and non-nullable arguments. -->
+ <#list ["Nullable${type.name}", "${type.name}"] as leftType >
+ <#list ["Nullable${type.name}", "${type.name}"] as rightType >
 
-        @Param ${type.name}Holder left;
-        @Param ${type.name}Holder right;
-        @Output IntHolder out;
-        public void setup(RecordBatch incoming) {}
+  <#-- Comparison function for sorting and grouping relational operators
+       (not for comparison expression operators (=, <, etc.)). -->
+  @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_HIGH,
+                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                    nulls = NullHandling.INTERNAL)
+  public static class GCompare${leftType}Vs${rightType}NullHigh implements DrillSimpleFunc {
 
-        public void eval() {
-             <@compareBlock holderType=type.name left="left" right="right" absCompare="false" output="out.value"/>
-        }
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {}
+
+    public void eval() {
+      <@compareBlock leftType=leftType rightType=rightType absCompare="false" output="out.value" nullCompare=true nullComparesHigh=true />
     }
+  }
 
 
-    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+
+  <#-- Comparison function for sorting and grouping relational operators
+        (not for comparison expression operators (=, <, etc.)). -->
+  @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_LOW,
+                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                    nulls = NullHandling.INTERNAL)
+  public static class GCompare${leftType}Vs${rightType}NullLow implements DrillSimpleFunc {
+
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {}
+
+    public void eval() {
+      <@compareBlock leftType=leftType rightType=rightType absCompare="false" output="out.value" nullCompare=true nullComparesHigh=false />
+    }
+  }
+
+ </#list>
+ </#list>
+
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "less than",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -981,12 +884,19 @@ public class ${type.name}Functions {
 
         public void eval() {
             int cmp;
-            <@compareBlock holderType=type.name left="left" right="right" absCompare="false" output="cmp"/>
+            <@compareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
             out.value = cmp == -1 ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+
+    // TODO:  RESOLVE:  Here there are spaces in function template names, but
+    // elsewhere there are underlines.  Are things being looked up correctly?
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "less than or equal to",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -996,12 +906,17 @@ public class ${type.name}Functions {
 
         public void eval() {
             int cmp;
-            <@compareBlock holderType=type.name left="left" right="right" absCompare="false" output="cmp"/>
+            <@compareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
             out.value = cmp < 1 ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "greater than",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1011,12 +926,17 @@ public class ${type.name}Functions {
 
         public void eval() {
             int cmp;
-            <@compareBlock holderType=type.name left="left" right="right" absCompare="false" output="cmp"/>
+            <@compareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
             out.value = cmp == 1 ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "greater than or equal to",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1026,12 +946,17 @@ public class ${type.name}Functions {
 
         public void eval() {
             int cmp;
-            <@compareBlock holderType=type.name left="left" right="right" absCompare="false" output="cmp"/>
+            <@compareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
             out.value = cmp > -1 ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "Equal", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "Equal",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}Equal implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1041,12 +966,17 @@ public class ${type.name}Functions {
 
         public void eval() {
             int cmp;
-            <@compareBlock holderType=type.name left="left" right="right" absCompare="false" output="cmp"/>
+            <@compareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
             out.value = cmp == 0 ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "not equal",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}NotEqual implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1056,13 +986,14 @@ public class ${type.name}Functions {
 
         public void eval() {
             int cmp;
-            <@compareBlock holderType=type.name left="left" right="right" absCompare="false" output="cmp"/>
+            <@compareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
             out.value = cmp != 0 ? 1 : 0;
         }
     }
 }
 
 <#elseif type.name.endsWith("Dense")>
+
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/${type.name}Functions.java" />
 
 <#include "/@includes/license.ftl" />
@@ -1076,6 +1007,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -1087,20 +1019,65 @@ import java.nio.ByteBuffer;
 public class ${type.name}Functions {
 
 
-    @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
-    public static class ${type.name}CompareTo implements DrillSimpleFunc {
+ <#-- Handle 2 x 2 combinations of nullable and non-nullable arguments. -->
+ <#list ["Nullable${type.name}", "${type.name}"] as leftType >
+ <#list ["Nullable${type.name}", "${type.name}"] as rightType >
 
-        @Param ${type.name}Holder left;
-        @Param ${type.name}Holder right;
-        @Output IntHolder out;
-        public void setup(RecordBatch incoming) {}
+  <#-- Comparison function for sorting and grouping relational operators
+       (not for comparison expression operators (=, <, etc.)). -->
+  @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_HIGH,
+                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                    nulls = NullHandling.INTERNAL)
+  public static class GCompare${leftType}Vs${rightType}NullHigh implements DrillSimpleFunc {
 
-        public void eval() {
-            out.value = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(left.start, left.buffer), right.buffer, right.start, right.getSign(right.start, right.buffer), left.WIDTH);
-        }
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {}
+
+    public void eval() {
+     outside:
+      {
+        <@compareNullsSubblock leftType=leftType rightType=rightType output="out.value" breakTarget="outside" nullCompare=true nullComparesHigh=true />
+
+        out.value = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(left.start, left.buffer), right.buffer, right.start, right.getSign(right.start, right.buffer), left.WIDTH);
+      } // outside
     }
+  }
 
-    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+  <#-- Comparison function for sorting and grouping relational operators
+       (not for comparison expression operators (=, <, etc.)). -->
+  @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_LOW,
+                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                    nulls = NullHandling.INTERNAL)
+  public static class GCompare${leftType}Vs${rightType}NullLow implements DrillSimpleFunc {
+
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {}
+
+    public void eval() {
+     outside:
+      {
+        <@compareNullsSubblock leftType=leftType rightType=rightType output="out.value" breakTarget="outside" nullCompare=true nullComparesHigh=false />
+
+        out.value = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(left.start, left.buffer), right.buffer, right.start, right.getSign(right.start, right.buffer), left.WIDTH);
+      } // outside
+    }
+  }
+
+ </#list>
+ </#list>
+
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "less than",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1114,7 +1091,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "less than or equal to",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1128,7 +1109,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "greater than",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1142,7 +1127,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "greater than or equal to",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1156,7 +1145,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "Equal", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "Equal",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}Equal implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1171,7 +1164,11 @@ public class ${type.name}Functions {
     }
 
 
-    @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "not equal",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}NotEqual implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1186,6 +1183,7 @@ public class ${type.name}Functions {
         }
     }
 }
+
 <#elseif type.name.endsWith("Decimal9") || type.name.endsWith("Decimal18")>
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/${type.name}Functions.java" />
@@ -1202,6 +1200,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -1233,7 +1232,7 @@ public class ${type.name}Functions {
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
+            <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
 
             result.value = left.value + right.value;
             result.precision = outputPrecision;
@@ -1261,7 +1260,7 @@ public class ${type.name}Functions {
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
+            <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
 
             result.value = left.value - right.value;
             result.precision = outputPrecision;
@@ -1511,7 +1510,9 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "round", scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "round",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}RoundScaleFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1562,21 +1563,65 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
-    public static class ${type.name}CompareTo implements DrillSimpleFunc {
+ <#-- Handle 2 x 2 combinations of nullable and non-nullable arguments. -->
+ <#list ["Nullable${type.name}", "${type.name}"] as leftType >
+ <#list ["Nullable${type.name}", "${type.name}"] as rightType >
 
-        @Param ${type.name}Holder left;
-        @Param ${type.name}Holder right;
-        @Output IntHolder out;
-        public void setup(RecordBatch incoming) {}
+  <#-- Comparison function for sorting and grouping relational operators
+       (not for comparison expression operators (=, <, etc.)). -->
+  @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_HIGH,
+                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                    nulls = NullHandling.INTERNAL)
+  public static class GCompare${leftType}Vs${rightType}NullHigh implements DrillSimpleFunc {
 
-        public void eval() {
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
-            out.value = (left.value < right.value) ? -1 : (left.value > right.value) ? 1 : 0;
-        }
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {}
+
+    public void eval() {
+     outside:
+      {
+        <@compareNullsSubblock leftType=leftType rightType=rightType output="out.value" breakTarget="outside" nullCompare=true nullComparesHigh=true />
+
+        <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
+        out.value = (left.value < right.value) ? -1 : (left.value > right.value) ? 1 : 0;
+      } // outside
     }
+  }
 
-    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+  <#-- Comparison function for sorting and grouping relational operators
+       (not for comparison expression operators (=, <, etc.)). -->
+  @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_LOW,
+                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                    nulls = NullHandling.INTERNAL)
+  public static class GCompare${leftType}Vs${rightType}NullLow implements DrillSimpleFunc {
+
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {}
+
+    public void eval() {
+     outside:
+      {
+        <@compareNullsSubblock leftType=leftType rightType=rightType output="out.value" breakTarget="outside" nullCompare=true nullComparesHigh=false />
+        <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
+        out.value = (left.value < right.value) ? -1 : (left.value > right.value) ? 1 : 0;
+      } // outside
+    }
+  }
+
+ </#list>
+ </#list>
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "less than",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1585,13 +1630,16 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
+            <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
             out.value = (left.value < right.value) ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+          not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "less than or equal to",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1600,13 +1648,16 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
+            <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
             out.value = (left.value <= right.value) ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+          not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "greater than",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1615,13 +1666,16 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
+            <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
             out.value = (left.value > right.value) ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+          not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "greater than or equal to",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1630,13 +1684,16 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
+            <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
             out.value = (left.value >= right.value) ? 1 : 0;
         }
     }
 
-    @FunctionTemplate(name = "Equal", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+          not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "Equal",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}Equal implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1645,14 +1702,17 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
+            <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
             out.value = (left.value == right.value) ? 1 : 0;
         }
     }
 
 
-    @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+          not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "not equal",
+                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
+                      nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}NotEqual implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1661,13 +1721,12 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-
-            int cmp;
-            <@adjustScale holderType=type.name javaType=type.storage left="left" right="right"/>
+            <@adjustScale javaType=type.storage leftType="leftType" rightType="rightType"/>
             out.value = (left.value != right.value) ? 1 : 0;
         }
     }
 }
 
 </#if>
+
 </#list>

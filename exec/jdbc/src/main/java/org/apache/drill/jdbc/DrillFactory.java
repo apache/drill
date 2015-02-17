@@ -38,14 +38,17 @@ public abstract class DrillFactory implements AvaticaFactory {
     this.minor = minor;
   }
 
+  @Override
   public int getJdbcMajorVersion() {
     return major;
   }
 
+  @Override
   public int getJdbcMinorVersion() {
     return minor;
   }
 
+  @Override
   public final AvaticaConnection newConnection(UnregisteredDriver driver, AvaticaFactory factory, String url,
       Properties info)  throws SQLException{
     return newDrillConnection((Driver) driver, (DrillFactory) factory, url, info);

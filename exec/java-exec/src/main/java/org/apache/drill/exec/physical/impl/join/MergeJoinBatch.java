@@ -313,12 +313,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
       // check value equality
 
-      LogicalExpression gh = FunctionGenerationHelper.getComparator(compareThisLeftExprHolder,
-        compareNextLeftExprHolder,
-        context.getFunctionRegistry());
+      LogicalExpression gh =
+          FunctionGenerationHelper.getOrderingComparatorNullsHigh(compareThisLeftExprHolder,
+                                                                  compareNextLeftExprHolder,
+                                                                  context.getFunctionRegistry());
       HoldingContainer out = cg.addExpr(gh, false);
 
-      //If not 0, it means not equal. We return this out value.
+      // If not 0, it means not equal. We return this out value.
       JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
       jc._then()._return(out.getValue());
     }
@@ -523,12 +524,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
         ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(materializedRightExpr, false);
 
-        LogicalExpression fh = FunctionGenerationHelper.getComparator(compareLeftExprHolder,
-          compareRightExprHolder,
-          context.getFunctionRegistry());
+        LogicalExpression fh =
+            FunctionGenerationHelper.getOrderingComparatorNullsHigh(compareLeftExprHolder,
+                                                                    compareRightExprHolder,
+                                                                    context.getFunctionRegistry());
         HoldingContainer out = cg.addExpr(fh, false);
 
-        // If not 0, it means not equal. We return this out value.
+        // If not 0, it means not equal.
         // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.
         if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()
             && ! areNullsEqual) {

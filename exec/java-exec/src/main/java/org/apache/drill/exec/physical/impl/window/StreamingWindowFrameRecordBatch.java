@@ -185,7 +185,9 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
       cg.setMappingSet(ISA_B2);
       ClassGenerator.HoldingContainer second = cg.addExpr(expr, false);
 
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(first, second, context.getFunctionRegistry());
+      LogicalExpression fh =
+          FunctionGenerationHelper
+          .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
       ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
@@ -205,7 +207,9 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
       cg.setMappingSet(IS_SAME_I2);
       ClassGenerator.HoldingContainer second = cg.addExpr(expr, false);
 
-      LogicalExpression fh = FunctionGenerationHelper.getComparator(first, second, context.getFunctionRegistry());
+      LogicalExpression fh =
+          FunctionGenerationHelper
+          .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
       ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }

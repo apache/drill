@@ -24,6 +24,8 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
+// TODO:  Doc.:  What's an MSorter?  A sorter for merge join?  something else?
+// (What's the "M" part?  Actually, rename interface to clearer.
 public interface MSorter {
   public void setup(FragmentContext context, BufferAllocator allocator, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException;
   public void sort(VectorContainer container);

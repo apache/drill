@@ -53,6 +53,7 @@ public class PrintingResultsListener implements UserResultsListener {
   @Override
   public void submissionFailed(RpcException ex) {
     exception = ex;
+    System.out.println("Exception (no rows returned): " + ex );
     latch.countDown();
   }
 
@@ -87,7 +88,7 @@ public class PrintingResultsListener implements UserResultsListener {
     if (isLastChunk) {
       allocator.close();
       latch.countDown();
-      System.out.println("Total rows returned : " + count.get());
+      System.out.println("Total rows returned: " + count.get());
     }
 
   }

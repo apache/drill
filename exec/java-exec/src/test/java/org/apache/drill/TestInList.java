@@ -33,7 +33,7 @@ public class TestInList extends BaseTestQuery{
         ")");
 
     int expectedRecordCount = 59;
-    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 

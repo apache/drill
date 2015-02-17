@@ -160,6 +160,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
             in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
             throw new org.apache.drill.common.exceptions.DrillRuntimeException("Precision is insufficient for the provided input: " + new String(buf, com.google.common.base.Charsets.UTF_8) + " Precision: " + out.precision +
                                                                                " Total Digits: " + (out.scale + (integerEndIndex - integerStartIndex)));
+            // TODO:  Use JDK's java.nio.charset.StandardCharsets.UTF_8.
         }
 
         // Check if we need to round up
@@ -302,7 +303,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
         int radix = 10;
         boolean leadingDigitFound = false;
         boolean round = false;
-    
+
         /* This is the first pass, we get the number of integer digits and based on the provided scale
          * we compute which index into the ByteBuf we start storing the integer part of the Decimal
          */
@@ -343,6 +344,9 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
             }
         }
 
+        <#-- TODO:  Pull out much of this code into something parallel to
+             ByteFunctionHelpers but for DECIMAL type implementations. -->
+
         /* Based on the number of integer digits computed and the scale throw an
          * exception if the provided precision is not sufficient to store the value
          */
@@ -350,6 +354,13 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
             byte[] buf = new byte[in.end - in.start];
             in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
             throw new org.apache.drill.common.exceptions.DrillRuntimeException("Precision is insufficient for the provided input: " + new String(buf, com.google.common.base.Charsets.UTF_8) + " Precision: " + out.precision + " Total Digits: " + (out.scale + integerDigits));
+            <#-- TODO:  Revisit message.  (Message would be clearer and shorter
+                 as something like "Precision of X digits is insufficient for
+                 the provided input of "XXXXX.XXXXX" (X total digits)."  (An
+                 occurrence of "Precision is insufficient for the provided input:
+                 123456789.987654321 Precision: 5 Total Digits: 9" seemed to
+                 mean that 5 post-decimal digits and 9 total digits were allowed.)
+                 -->
         }
 
 
@@ -444,7 +455,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
 
             int carry = 0;
             do {
-                // propogate the carry
+                // propagate the carry
                 int tempValue = out.getInteger(decimalBufferIndex, out.start, out.buffer) + carry;
                 if (tempValue >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
                     carry = tempValue / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;

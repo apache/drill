@@ -4,6 +4,7 @@
 .checkstyle
 .settings/
 .idea/
+TAGS
 *.log
 *.lck
 *.iml

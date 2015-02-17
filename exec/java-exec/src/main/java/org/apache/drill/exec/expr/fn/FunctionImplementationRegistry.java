@@ -99,11 +99,15 @@ public class FunctionImplementationRegistry {
     return functionResolver.getBestMatch(drillFuncRegistry.getMethods(functionReplacement(functionCall)), functionCall);
   }
 
-  // Check if this Function Replacement is Needed; if yes, return a new name. otherwise, return the original name
+  // Check if this Function Replacement is needed; if yes, return a new name. otherwise, return the original name
   private String functionReplacement(FunctionCall functionCall) {
     String funcName = functionCall.getName();
-    if(optionManager != null && optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC).bool_val && CastFunctions.isReplacementNeeded(functionCall.args.get(0).getMajorType().getMinorType(), funcName)) {
-      org.apache.drill.common.types.TypeProtos.DataMode dataMode = functionCall.args.get(0).getMajorType().getMode();
+    if (optionManager != null
+        && optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC).bool_val
+        && CastFunctions.isReplacementNeeded(functionCall.args.get(0).getMajorType().getMinorType(),
+                                             funcName)) {
+      org.apache.drill.common.types.TypeProtos.DataMode dataMode =
+          functionCall.args.get(0).getMajorType().getMode();
       funcName = CastFunctions.getReplacingCastFunction(funcName, dataMode);
     }
 

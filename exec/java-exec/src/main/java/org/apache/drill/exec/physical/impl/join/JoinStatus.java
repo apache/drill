@@ -72,6 +72,29 @@ public final class JoinStatus {
     this.joinType = output.getJoinType();
   }
 
+  @Override
+  public String toString() {
+    return
+        super.toString()
+        + "["
+        + "leftPosition = " + leftPosition
+        + ", rightPosition = " + rightPosition
+        + ", svRightPosition = " + svRightPosition
+        + ", outputPosition = " + outputPosition
+        + ", lastLeft = " + lastLeft
+        + ", lastRight = " + lastRight
+        + ", rightSourceMode = " + rightSourceMode
+        + ", sv4 = " + sv4
+        + ", joinType = " + joinType
+        + ", ok = " + ok
+        + ", initialSet = " + initialSet
+        + ", leftRepeating = " + leftRepeating
+        + ", left = " + left
+        + ", right = " + right
+        + ", outputBatch = " + outputBatch
+        + "]";
+  }
+
   private final IterOutcome nextLeft() {
     return outputBatch.next(LEFT_INPUT, left);
   }

@@ -28,15 +28,27 @@ import java.lang.annotation.Target;
 public @interface FunctionTemplate {
 
   /**
-   * Use this annotation if there is only one name for function
-   * Note: If you use this annotation don't use {@link #names()}
+   * Name of function (when only one.)
+   * Use this annotation element if there is only one name for the function.
+   * Note: If you use this annotation don't use {@link #names()}.
+   * <p>
+   *   TODO:  Refer to wherever list of possible or at least known names is,
+   *   to resolve the current issue of spaces vs. underlines in names (e.g., we
+   *   have both "less_than" and "less than".
+   * </p>
    * @return
    */
   String name() default "";
 
   /**
-   * Use this annotation if there are multiple names for function
-   * Note: If you use this annotation don't use {@link #name()}
+   * Names of function (when multiple).
+   * Use this annotation element if there are multiple names for the function.
+   * Note: If you use this annotation don't use {@link #name()}.
+   * <p>
+   *   TODO:  Refer to wherever list of possible or at least known names is,
+   *   to resolve the current issue of spaces vs. underlines in names (e.g., we
+   *   have both "less_than" and "less than".
+   * </p>
    * @return
    */
   String[] names() default {};
@@ -49,10 +61,21 @@ public @interface FunctionTemplate {
   FunctionCostCategory costCategory() default FunctionCostCategory.SIMPLE;
 
   public static enum NullHandling {
-    INTERNAL, NULL_IF_NULL;
+    /**
+     * Method handles nulls.
+     */
+    INTERNAL,
+
+    /**
+     * Null output if any null input:
+     * Indicates that a method's associated logical operation returns NULL if
+     * either input is NULL, and therefore that the method must not be called
+     * with null inputs.  (The calling framework must handle NULLs.)
+     */
+    NULL_IF_NULL;
   }
 
-  public static enum FunctionScope{
+  public static enum FunctionScope {
     SIMPLE,
     POINT_AGGREGATE,
     DECIMAL_AGGREGATE,

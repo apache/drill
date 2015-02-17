@@ -27,9 +27,13 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 public class CastFunctions {
 
   private static Map<MinorType, String> TYPE2FUNC = new HashMap<>();
-  private static Set<String> CAST_FUNC_REPLACEMENT_NEEDED = new HashSet<>();  // The cast fucntions which are needed to be replaced (if "drill.exec.functions.cast_empty_string_to_null"" is set as true)
-  private static Map<String, String> CAST_FUNC_REPLACEMENT_FROM_NONNULLABLE = new HashMap<>(); // Map from the replaced functions to the new ones (for non-nullable varchar)
-  private static Map<String, String> CAST_FUNC_REPLACEMENT_FROM_NULLABLE = new HashMap<>();    // Map from the replaced functions to the new ones (for nullable varchar)
+  /** The cast functions that need to be replaced (if
+   * "drill.exec.functions.cast_empty_string_to_null" is set to true). */
+  private static Set<String> CAST_FUNC_REPLACEMENT_NEEDED = new HashSet<>();
+  /** Map from the replaced functions to the new ones (for non-nullable VARCHAR). */
+  private static Map<String, String> CAST_FUNC_REPLACEMENT_FROM_NONNULLABLE = new HashMap<>();
+  /** Map from the replaced functions to the new ones (for nullable VARCHAR). */
+  private static Map<String, String> CAST_FUNC_REPLACEMENT_FROM_NULLABLE = new HashMap<>();
 
   static {
     TYPE2FUNC.put(MinorType.BIGINT, "castBIGINT");
