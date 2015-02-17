@@ -128,4 +128,33 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineValues("VIETNAM21", 1L)
         .build().run();
   }
+
+  @Test //DRILL-2242
+  public void testDRILLNestedGBWithSubsetKeys() throws Exception {
+    String sql = " select count(*) as cnt from (select l_partkey from\n" +
+        "   (select l_partkey, l_suppkey from cp.`tpch/lineitem.parquet`\n" +
+        "      group by l_partkey, l_suppkey) \n" +
+        "   group by l_partkey )";
+
+    test("alter session set `planner.slice_target` = 1; alter session set `planner.enable_multiphase_agg` = false ;");
+
+    testBuilder()
+        .ordered()
+        .sqlQuery(sql)
+        .baselineColumns("cnt")
+        .baselineValues(2000L)
+        .build().run();
+
+    test("alter session set `planner.slice_target` = 1; alter session set `planner.enable_multiphase_agg` = true ;");
+
+    testBuilder()
+        .ordered()
+        .sqlQuery(sql)
+        .baselineColumns("cnt")
+        .baselineValues(2000L)
+        .build().run();
+
+    test("alter session set `planner.slice_target` = 100000");
+  }
+
 }

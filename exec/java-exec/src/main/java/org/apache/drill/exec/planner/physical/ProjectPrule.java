@@ -97,7 +97,9 @@ public class ProjectPrule extends Prule {
       }
     }
 
-    if (newFields.isEmpty()) {
+    // After the projection, if the new distribution fields is empty, or new distribution fields is a subset of
+    // original distribution field, we should replace with either SINGLETON or RANDOM_DISTRIBUTED.
+    if (newFields.isEmpty() || newFields.size() < srcDist.getFields().size()) {
       if (srcDist.getType() != DistributionType.SINGLETON) {
         return DrillDistributionTrait.RANDOM_DISTRIBUTED;
       } else {
