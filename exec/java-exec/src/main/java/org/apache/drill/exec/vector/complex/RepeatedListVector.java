@@ -388,7 +388,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     Preconditions.checkArgument(name == null);
 
     if(vector == null){
-      final MaterializedField child =  MaterializedField.create(SchemaPath.getSimplePath("").getUnindexedArrayChild(), type);
+      final MaterializedField child =  MaterializedField.create(getField().getPath().getUnindexedArrayChild(), type);
       vector = TypeHelper.getNewVector(child, allocator, callBack);
       setVector(vector);
       if (callBack != null) {

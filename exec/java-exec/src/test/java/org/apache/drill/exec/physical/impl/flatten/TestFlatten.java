@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.flatten;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -201,5 +202,43 @@ public class TestFlatten extends BaseTestQuery {
   public void testDrill_1770() throws Exception {
     test("select flatten(sub.fk.`value`) from (select flatten(kvgen(map)) fk from cp.`/store/json/nested_repeated_map.json`) sub");
   }
+
+
+  @Test //DRILL-2254
+  public void testSingleFlattenFromNestedRepeatedList() throws Exception {
+    final String query = "select t.uid, flatten(t.odd) odd from cp.`project/complex/a.json` t";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .jsonBaselineFile("flatten/drill-2254-result-single.json")
+        .build()
+        .run();
+  }
+
+  @Test //DRILL-2254 supplementary
+  public void testMultiFlattenFromNestedRepeatedList() throws Exception {
+    final String query = "select t.uid, flatten(flatten(t.odd)) odd from cp.`project/complex/a.json` t";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .jsonBaselineFile("flatten/drill-2254-result-multi.json")
+        .build()
+        .run();
+  }
+
+  @Test //DRILL-2254 supplementary
+  public void testSingleMultiFlattenFromNestedRepeatedList() throws Exception {
+    final String query = "select t.uid, flatten(t.odd) once, flatten(flatten(t.odd)) twice from cp.`project/complex/a.json` t";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .jsonBaselineFile("flatten/drill-2254-result-mix.json")
+        .build()
+        .run();
+  }
+
 
 }
