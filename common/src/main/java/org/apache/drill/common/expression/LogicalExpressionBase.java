@@ -57,12 +57,18 @@ public abstract class LogicalExpressionBase implements LogicalExpression {
 
   @JsonIgnore
   public int getSelfCost() {
-    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName()));
+    return 0;
   }
 
   @JsonIgnore
-  public int getCumulativeCost() {
-    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName()));
+  public int getCumulativeCost()  {
+    int cost = this.getSelfCost();
+
+    for (LogicalExpression e : this) {
+      cost += e.getCumulativeCost();
+    }
+
+    return cost;
   }
 
 }

@@ -120,14 +120,9 @@ public class IfExpression extends LogicalExpressionBase {
   }
 
   @Override
-  public int getSelfCost() {
-    return 0;  // TODO
-  }
-
-  @Override
   public int getCumulativeCost() {
     // return the average cost of operands for a boolean "and" | "or"
-    int cost = 0;
+    int cost = this.getSelfCost();
 
     int i = 0;
     for (LogicalExpression e : this) {

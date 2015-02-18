@@ -25,6 +25,7 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 
 public class HiveFuncHolderExpr extends FunctionHolderExpression implements Iterable<LogicalExpression>{
@@ -70,6 +71,11 @@ public class HiveFuncHolderExpr extends FunctionHolderExpression implements Iter
   @Override
   public HiveFuncHolderExpr copy(List<LogicalExpression> args) {
     return new HiveFuncHolderExpr(this.nameUsed, this.holder, args, this.getPosition());
+  }
+
+  @Override
+  public int getSelfCost() {
+    return FunctionTemplate.FunctionCostCategory.getDefault().getValue();
   }
 
 }
