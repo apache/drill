@@ -145,12 +145,10 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         first = false;
         return outcome;
       case UPDATE_AGGREGATOR:
-        first = false;
-        aggregator = null;
-        if (!createAggregator()) {
-          return IterOutcome.STOP;
-      }
-      continue;
+        context.fail(new SchemaChangeException("Streaming aggregate does not support schema changes"));
+        cleanup();
+        killIncoming(false);
+        return IterOutcome.STOP;
       default:
         throw new IllegalStateException(String.format("Unknown state %s.", out));
       }

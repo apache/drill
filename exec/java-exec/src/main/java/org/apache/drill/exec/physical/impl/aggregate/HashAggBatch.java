@@ -134,11 +134,10 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         IterOutcome outcome = aggregator.getOutcome();
         return aggregator.getOutcome();
       case UPDATE_AGGREGATOR:
-        aggregator = null;
-        if (!createAggregator()) {
-          return IterOutcome.STOP;
-        }
-        continue;
+        context.fail(new SchemaChangeException("Hash aggregate does not support schema changes"));
+        cleanup();
+        killIncoming(false);
+        return IterOutcome.STOP;
       default:
         throw new IllegalStateException(String.format("Unknown state %s.", out));
       }
