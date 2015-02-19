@@ -326,26 +326,27 @@ public class SimpleRepeatedFunctions {
     @Param RepeatedVarCharHolder listToSearch;
     @Param VarCharHolder targetValue;
     @Workspace VarCharHolder currVal;
+    @Workspace java.util.regex.Matcher matcher;
 
     @Output BitHolder out;
 
     public void setup() {
       currVal = new VarCharHolder();
+      matcher = java.util.regex.Pattern.compile(
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(targetValue.start,  targetValue.end,  targetValue.buffer)).matcher("");
     }
 
     public void eval() {
       for (int i = listToSearch.start; i < listToSearch.end; i++) {
         out.value = 0;
         listToSearch.vector.getAccessor().get(i, currVal);
-        if (org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(
-            currVal.buffer, currVal.start, currVal.end, targetValue.buffer, targetValue.start, targetValue.end) == 0 ) {
-          out.value = 1;
-          break;
-        }
-      }
+        String in = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(currVal.start, currVal.end, currVal.buffer);
+        matcher.reset(in);
+          if(matcher.find()) {
+             out.value = 1;
+             break;
+          }
+       }
     }
-
   }
-
-
 }
