@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
@@ -412,7 +413,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
         MajorType inputType = field.getType();
         MajorType outputType;
-        if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED) {
+        // If left join, then the output type must be nullable. However, map types are
+        // not nullable so we must exclude them from the check below (see DRILL-2197).
+        if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED
+            && inputType.getMinorType() != TypeProtos.MinorType.MAP) {
           outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
         } else {
           outputType = inputType;
