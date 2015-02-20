@@ -103,6 +103,42 @@ public class PlanTestBase extends BaseTestQuery {
     }
   }
 
+  /**
+   * Runs an explain plan query and check for expected substring patterns (in optiq
+   * text format), also ensure excluded patterns are not found. Either list can
+   * be empty or null to skip that part of the check.
+   *
+   * This is different from testPlanMatchingPatterns in that this one use substring contains,
+   * in stead of regex pattern matching. This one is useful when the pattern contains
+   * many regex reserved chars, and you do not want to put the escape char.
+   *
+   * See the convenience methods for passing a single string in either the
+   * excluded list, included list or both.
+   *
+   * @param query - an explain query, this method does not add it for you
+   * @param expectedPatterns - list of patterns that should appear in the plan
+   * @param excludedPatterns - list of patterns that should not appear in the plan
+   * @throws Exception - if an inclusion or exclusion check fails, or the
+   *                     planning process throws an exception
+   */
+  public void testPlanSubstrPatterns(String query, String[] expectedPatterns, String[] excludedPatterns) throws Exception {
+    String plan = getPlanInString("EXPLAIN PLAN for " + normalizeQuery(query), OPTIQ_FORMAT);
+
+    // Check and make sure all expected patterns are in the plan
+    if (expectedPatterns != null) {
+      for (String s : expectedPatterns) {
+        assert plan.contains(s) : EXPECTED_NOT_FOUND + s;
+      }
+    }
+
+    // Check and make sure all excluded patterns are not in the plan
+    if (excludedPatterns != null) {
+      for (String s : excludedPatterns) {
+        assert ! plan.contains(s) : UNEXPECTED_FOUND + s;
+      }
+    }
+  }
+
   public void testPlanOneExpectedPatternOneExcluded(String query, String expectedPattern, String excludedPattern) throws Exception {
     testPlanMatchingPatterns(query, new String[]{expectedPattern}, new String[]{excludedPattern});
   }

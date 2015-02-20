@@ -33,12 +33,16 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+
+import java.util.List;
 
 /**
  * Base class for logical and physical Filters implemented in Drill
  */
 public abstract class DrillFilterRelBase extends FilterRelBase implements DrillRelNode {
-  int numConjuncts = 0;
+  private final int numConjuncts;
+  private final List<RexNode> conjunctions;
 
   protected DrillFilterRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
     super(cluster, traits, child, condition);
@@ -46,8 +50,10 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
 
     // save the number of conjuncts that make up the filter condition such
     // that repeated calls to the costing function can use the saved copy
-    numConjuncts = RelOptUtil.conjunctions(condition).size();
+    conjunctions = RelOptUtil.conjunctions(condition);
+    numConjuncts = conjunctions.size();
     assert numConjuncts >= 1;
+
   }
 
   @Override
@@ -57,7 +63,7 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
     }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
-    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numConjuncts * inputRows;
+    double cpuCost = estimateCpuCost();
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, cpuCost, 0, 0);
   }
@@ -65,4 +71,22 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
   protected LogicalExpression getFilterExpression(DrillParseContext context){
     return DrillOptiq.toDrill(context, getChild(), getCondition());
   }
+
+  /* Given the condition (C1 and C2 and C3 and ... C_n), here is how to estimate cpu cost of FILTER :
+  *  Let's say child's rowcount is n. We assume short circuit evaluation will be applied to the boolean expression evaluation.
+  *  #_of_comparison = n + n * Selectivity(C1) + n * Selectivity(C1 and C2) + ... + n * Selecitivity(C1 and C2 ... and C_n)
+  *  cpu_cost = #_of_comparison * DrillCostBase_COMPARE_CPU_COST;
+  */
+  private double estimateCpuCost() {
+    RelNode child = this.getChild();
+    double compNum = RelMetadataQuery.getRowCount(child);
+
+    for (int i = 0; i< numConjuncts; i++) {
+      RexNode conjFilter = RexUtil.composeConjunction(this.getCluster().getRexBuilder(), conjunctions.subList(0, i + 1), false);
+      compNum += FilterRelBase.estimateFilteredRows(child, conjFilter);
+    }
+
+    return compNum * DrillCostBase.COMPARE_CPU_COST;
+  }
+
 }
