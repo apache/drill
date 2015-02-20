@@ -91,7 +91,7 @@ public class StringFunctions{
     }
   }
 
-  @FunctionTemplate(names = {"similar", "similar to"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"similar", "similar_to"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Similar implements DrillSimpleFunc{
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
@@ -110,7 +110,7 @@ public class StringFunctions{
     }
   }
 
-  @FunctionTemplate(names = {"similar", "similar to"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"similar", "similar_to"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class SimilarWithEscape implements DrillSimpleFunc{
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;

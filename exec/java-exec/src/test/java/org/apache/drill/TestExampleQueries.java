@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -616,6 +618,24 @@ public class TestExampleQueries extends BaseTestQuery{
         .jsonBaselineFile("project/complex/drill-2163-result.json")
         .build()
         .run();
+  }
+
+  @Test
+  public void testSimilar() throws Exception {
+    String query = "select n_nationkey " +
+        "from cp.`tpch/nation.parquet` " +
+        "where n_name similar to 'CHINA' " +
+        "order by n_regionkey";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1")
+        .baselineColumns("n_nationkey")
+        .baselineValues(18)
+        .go();
+
+    test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
   }
 
 }
