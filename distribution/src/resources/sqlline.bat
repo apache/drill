@@ -121,6 +121,7 @@ rem ----
 if "test%HADOOP_HOME%" == "test" (
   echo HADOOP_HOME not detected...
   set USE_HADOOP_CP=0
+  set HADOOP_HOME=%DRILL_HOME%\winutils
 ) else (
   echo Calculating HADOOP_CLASSPATH ...
   for %%i in (%HADOOP_HOME%\lib\*.jar) do (

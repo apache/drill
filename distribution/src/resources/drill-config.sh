@@ -178,9 +178,13 @@ if $is_cygwin; then
   DRILL_CONF_DIR=`cygpath -w "$DRILL_CONF_DIR"`
   DRILL_LOG_DIR=`cygpath -w "$DRILL_LOG_DIR"`
   CP=`cygpath -w -p "$CP"`
+  if [ -z "$HADOOP_HOME" ]; then
+    HADOOP_HOME=${DRILL_HOME}/winutils
+  fi
 fi
 
 # Variables exported form this script
+export HADOOP_HOME
 export is_cygwin
 export DRILL_HOME
 export DRILL_CONF_DIR

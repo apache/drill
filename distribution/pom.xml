@@ -192,6 +192,12 @@
         </property>
       </activation>
       <dependencies>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-winutils</artifactId>
+          <version>2.4.1</version>
+          <type>zip</type>
+        </dependency>
       </dependencies>
       <build>
       </build>
@@ -212,7 +218,12 @@
           <groupId>com.mapr.fs</groupId>
           <artifactId>mapr-hbase</artifactId>
         </dependency>
-
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-winutils</artifactId>
+          <version>2.4.1-mapr-1408</version>
+          <type>zip</type>
+        </dependency>
       </dependencies>
       <build>
       </build>
