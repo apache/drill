@@ -57,9 +57,14 @@ public abstract class InfoSchemaTable implements InfoSchemaConstants{
 
   static public RelDataType getRelDataType(RelDataTypeFactory typeFactory, MajorType type) {
     switch (type.getMinorType()) {
-    case INT: return typeFactory.createSqlType(SqlTypeName.INTEGER);
-    case VARCHAR: return typeFactory.createSqlType(SqlTypeName.VARCHAR);
-    default: throw new UnsupportedOperationException("Only INT and VARCHAR types are supported in INFORMATION_SCHEMA");
+    case INT:
+      return typeFactory.createSqlType(SqlTypeName.INTEGER);
+    case VARCHAR:
+      // Note:  Remember to not default to "VARCHAR(1)":
+      return typeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.MAX_VALUE);
+    default:
+      throw new UnsupportedOperationException(
+          "Only INT and VARCHAR types are supported in INFORMATION_SCHEMA");
     }
   }
 
