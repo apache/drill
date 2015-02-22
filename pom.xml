@@ -525,6 +525,7 @@
 
     <!-- Test Dependencies -->
     <dependency>
+      <!-- JMockit needs to be on class path before JUnit. -->
       <groupId>com.googlecode.jmockit</groupId>
       <artifactId>jmockit</artifactId>
       <version>1.3</version>
@@ -535,6 +536,13 @@
       <artifactId>junit</artifactId>
       <version>${dep.junit.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <!-- Mockito needs to be on the class path after JUnit (or Hamcrest) as 
+           long as Mockito _contains_ older Hamcrest classes.  See DRILL-2130. --> 
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>1.9.5</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
