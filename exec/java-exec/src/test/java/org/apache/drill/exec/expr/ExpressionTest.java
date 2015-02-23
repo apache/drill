@@ -40,6 +40,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -71,7 +73,7 @@ public class ExpressionTest extends ExecTest {
         batch.getValueAccessorById(IntVector.class, tfid.getFieldIds());
         result = wrapper;
         wrapper.getValueVector();
-        result = new IntVector(null, null);
+        result = new IntVector(null, new TopLevelAllocator(0));
       }
 
     };

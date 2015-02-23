@@ -38,6 +38,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 public final class BitVector extends BaseDataValueVector implements FixedWidthVector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitVector.class);
 
+  private final FieldReader reader = new BitReaderImpl(BitVector.this);
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
 
@@ -46,6 +47,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   public BitVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
+  }
+
+  @Override
+  public FieldReader getReader() {
+    return reader;
   }
 
   @Override
@@ -278,6 +284,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       return Long.bitCount(b &  (1L << bitIndex));
     }
 
+    @Override
     public boolean isNull(int index) {
       return false;
     }
@@ -299,11 +306,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     public final void get(int index, NullableBitHolder holder) {
       holder.isSet = 1;
       holder.value = get(index);
-    }
-
-    @Override
-    public FieldReader getReader() {
-      return new BitReaderImpl(BitVector.this);
     }
   }
 

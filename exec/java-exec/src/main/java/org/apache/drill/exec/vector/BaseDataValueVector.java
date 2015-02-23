@@ -54,12 +54,10 @@ public abstract class BaseDataValueVector extends BaseValueVector{
     }
   }
 
-  @Override
   public void setCurrentValueCount(int count) {
     currentValueCount = count;
   }
 
-  @Override
   public int getCurrentValueCount() {
     return currentValueCount;
   }
@@ -93,7 +91,6 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   @Override
   public abstract SerializedField getMetadata();
 
-  @Override
   public DrillBuf getData() {
     return data;
   }

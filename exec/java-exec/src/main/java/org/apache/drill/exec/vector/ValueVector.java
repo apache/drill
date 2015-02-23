@@ -29,24 +29,32 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 /**
- * ValueVectorTypes defines a set of template-generated classes which implement type-specific value vectors. The
- * template approach was chosen due to the lack of multiple inheritence. It is also important that all related logic be
- * as efficient as possible.
+ * An abstraction that is used to store a sequence of values in an individual column.
+ *
+ * A {@link ValueVector value vector} stores underlying data in-memory in a columnar fashion that is compact and
+ * efficient. The column whose data is stored, is referred by {@link #getField()}.
+ *
+ * A vector when instantiated, relies on a {@link org.apache.drill.exec.record.DeadBuf dead buffer}. It is important
+ * that vector is allocated before attempting to read or write.
+ *
+ * @param <V>  actual value vector type
+ * @param <A>  accessor type that supports reading from this vector
+ * @param <M>  mutator type that supports writing to this vector
  */
-public interface ValueVector extends Closeable, Iterable<ValueVector> {
-
+public interface ValueVector<V extends ValueVector, A extends ValueVector.Accessor, M extends ValueVector.Mutator>
+    extends Closeable, Iterable<ValueVector<V, A, M>> {
 
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
    * @throws OutOfMemoryRuntimeException Thrown if no memory can be allocated.
    */
-  public void allocateNew() throws OutOfMemoryRuntimeException;
+  void allocateNew() throws OutOfMemoryRuntimeException;
 
   /**
    * Allocates new buffers. ValueVector implements logic to determine how much to allocate.
    * @return Returns true if allocation was succesful.
    */
-  public boolean allocateNewSafe();
+  boolean allocateNewSafe();
 
   /**
    * Set the initial record capacity
@@ -54,51 +62,69 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
   public void setInitialCapacity(int numRecords);
 
-  public int getBufferSize();
+  /**
+   * Returns the maximum number of values that can be stored in this vector instance.
+   */
+  int getValueCapacity();
 
   /**
    * Alternative to clear(). Allows use as closeable in try-with-resources.
    */
-  public void close();
+  void close();
 
   /**
    * Release the underlying DrillBuf and reset the ValueVector to empty.
    */
-  public void clear();
+  void clear();
 
   /**
    * Get information about how this field is materialized.
-   *
-   * @return
    */
-  public MaterializedField getField();
+  MaterializedField getField();
 
   /**
-   * Get a transfer pair to allow transferring this vectors data between this vector and a destination vector of the
-   * same type. Will also generate a second instance of this vector class that is connected through the TransferPair.
-   *
-   * @return
+   * Returns a {@link org.apache.drill.exec.record.TransferPair transfer pair}, creating a new target vector of
+   * the same type.
    */
-  public TransferPair getTransferPair();
+  TransferPair getTransferPair();
 
-  public TransferPair makeTransferPair(ValueVector to);
-
-  public TransferPair getTransferPair(FieldReference ref);
+  TransferPair getTransferPair(FieldReference ref);
 
   /**
-   * Given the current buffer allocation, return the maximum number of values that this buffer can contain.
-   *
-   * @return Maximum values buffer can contain. In the case of a Repeated field, this is the number of atoms, not
-   *         repeated groups.
+   * Returns a new {@link org.apache.drill.exec.record.TransferPair transfer pair} that is used to transfer underlying
+   * buffers into the target vector.
    */
-  public int getValueCapacity();
+  TransferPair makeTransferPair(V target);
 
   /**
-   * Get Accessor to read value vector data.
-   *
-   * @return
+   * Returns an {@link org.apache.drill.exec.vector.ValueVector.Accessor accessor} that is used to read from this vector
+   * instance.
    */
-  public abstract Accessor getAccessor();
+  A getAccessor();
+
+  /**
+   * Returns an {@link org.apache.drill.exec.vector.ValueVector.Mutator mutator} that is used to write to this vector
+   * instance.
+   */
+  M getMutator();
+
+  /**
+   * Returns a {@link org.apache.drill.exec.vector.complex.reader.FieldReader field reader} that supports reading values
+   * from this vector.
+   */
+  FieldReader getReader();
+
+  /**
+   * Get the metadata for this field. Used in serialization
+   *
+   * @return FieldMetadata for this field.
+   */
+  SerializedField getMetadata();
+
+  /**
+   * Returns the number of bytes that is used by this vector instance.
+   */
+  int getBufferSize();
 
   /**
    * Return the underlying buffers associated with this vector. Note that this doesn't impact the reference counts for
@@ -108,9 +134,9 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    * @param clear
    *          Whether to clear vector
    *
-   * @return The underlying ByteBuf.
+   * @return The underlying {@link io.netty.buffer.DrillBuf buffers} that is used by this vector instance.
    */
-  public abstract DrillBuf[] getBuffers(boolean clear);
+  DrillBuf[] getBuffers(boolean clear);
 
   /**
    * Load the data provided in the buffer. Typically used when deserializing from the wire.
@@ -120,58 +146,54 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    * @param buffer
    *          The buffer that contains the ValueVector.
    */
-  public void load(SerializedField metadata, DrillBuf buffer);
+  void load(SerializedField metadata, DrillBuf buffer);
 
   /**
-   * Get the metadata for this field. Used in serialization
+   * An abstraction that is used to read from this vector instance.
    *
-   * @return FieldMetadata for this field.
+   * @param <BT>  boxed value type that is stored in this vector.
    */
-  public SerializedField getMetadata();
-
-  /**
-   * Get a Mutator to update this vectors data.
-   *
-   * @return
-   */
-  public abstract Mutator getMutator();
-
-  public interface Accessor {
-
-    // /**
-    // * Get the number of records allocated for this value vector.
-    // * @return number of allocated records
-    // */
-    // public int getRecordCount();
-
+  interface Accessor<BT> {
     /**
      * Get the Java Object representation of the element at the specified position. Useful for testing.
      *
      * @param index
      *          Index of the value to get
      */
-    public abstract Object getObject(int index);
+    BT getObject(int index);
 
-    public int getValueCount();
+    /**
+     * Returns the number of values that is stored in this vector.
+     */
+    int getValueCount();
 
-    public boolean isNull(int index);
-
-    public void reset();
-
-    public FieldReader getReader();
+    /**
+     * Returns true if the value at the given index is null, false otherwise.
+     */
+    boolean isNull(int index);
   }
 
-  public interface Mutator {
+  /**
+   * An abstractiong that is used to write into this vector instance.
+   */
+  interface Mutator {
     /**
-     * Set the top number values (optional/required) or number of value groupings (repeated) in this vector.
+     * Sets the number of values that is stored in this vector to the given value count.
      *
-     * @param valueCount
+     * @param valueCount  value count to set.
      */
-    public void setValueCount(int valueCount);
+    void setValueCount(int valueCount);
 
-    public void reset();
+    /**
+     * Resets the mutator to pristine state.
+     */
+    void reset();
 
-    public void generateTestData(int values);
+    /**
+     * @deprecated  this has nothing to do with value vector abstraction and should be removed.
+     */
+    @Deprecated
+    void generateTestData(int values);
   }
 
 }

@@ -64,7 +64,7 @@ public class RecordValueAccessor {
 
   public void getFieldById(int fieldId, ComplexHolder holder) {
     holder.isSet = vectors[fieldId].getAccessor().isNull(currentIndex) ? 1 : 0;
-    holder.reader = (vectors[fieldId]).getAccessor().getReader();
+    holder.reader = (vectors[fieldId]).getReader();
     holder.reader.setPosition(currentIndex);
   }
 

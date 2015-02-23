@@ -121,7 +121,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   @Override
   public FieldReader reader() {
     if (reader == null) {
-      reader = container.getChild(name).getAccessor().getReader();
+      reader = container.getChild(name).getReader();
       if (currentOffset == NO_VALUES) {
         reader = NullReader.INSTANCE;
       } else {

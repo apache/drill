@@ -64,7 +64,7 @@ public class SingleListReaderImpl extends AbstractFieldReader{
   @Override
   public FieldReader reader() {
     if (reader == null) {
-      reader = container.getChild(name).getAccessor().getReader();
+      reader = container.getChild(name).getReader();
       setPosition(idx());
     }
     return reader;

@@ -340,7 +340,7 @@ public class DrillParquetReader extends AbstractRecordReader {
   private int getPercentFilled() {
     int filled = 0;
     for (ValueVector v : primitiveVectors) {
-      filled = Math.max(filled, ((BaseValueVector) v).getCurrentValueCount() * 100 / v.getValueCapacity());
+      filled = Math.max(filled, v.getAccessor().getValueCount() * 100 / v.getValueCapacity());
       if (v instanceof VariableWidthVector) {
         filled = Math.max(filled, ((VariableWidthVector) v).getCurrentSizeInBytes() * 100 / ((VariableWidthVector) v).getByteCapacity());
       }

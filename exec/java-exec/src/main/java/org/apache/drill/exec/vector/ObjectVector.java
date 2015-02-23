@@ -51,6 +51,11 @@ public class ObjectVector extends BaseValueVector{
     maxCount += allocationSize;
   }
 
+  @Override
+  public FieldReader getReader() {
+    throw new UnsupportedOperationException("ObjectVector does not support this");
+  }
+
   public final class Mutator implements ValueVector.Mutator {
 
     public void set(int index, Object obj) {
@@ -138,20 +143,6 @@ public class ObjectVector extends BaseValueVector{
   }
 
   @Override
-  public int getCurrentValueCount() {
-    return 0;
-  }
-
-  @Override
-  public void setCurrentValueCount(int count) {
-  }
-
-  @Override
-  public DrillBuf getData() {
-    throw new UnsupportedOperationException("ObjectVector does not support this");
-  }
-
-  @Override
   public TransferPair getTransferPair() {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
@@ -215,16 +206,6 @@ public class ObjectVector extends BaseValueVector{
     @Override
     public int getValueCount() {
       return count;
-    }
-
-    @Override
-    public boolean isNull(int index) {
-      return false;
-    }
-
-    @Override
-    public FieldReader getReader() {
-      throw new UnsupportedOperationException("ObjectVector does not support this");
     }
 
     public Object get(int index) {

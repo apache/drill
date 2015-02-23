@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import java.lang.Override;
+
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
@@ -55,6 +57,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   private static final int MIN_BYTE_COUNT = 4096;
   
   private final UInt${type.width}Vector offsetVector;
+  private final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
+
   private final Accessor accessor;
   private final Mutator mutator;
   
@@ -70,6 +74,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     this.oAccessor = offsetVector.getAccessor();
     this.accessor = new Accessor();
     this.mutator = new Mutator();
+  }
+
+  @Override
+  public FieldReader getReader(){
+    return reader;
   }
 
   public int getBufferSize(){
@@ -316,12 +325,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   public final class Accessor extends BaseValueVector.BaseAccessor implements VariableWidthAccessor {
-    final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
     final UInt${type.width}Vector.Accessor oAccessor = offsetVector.getAccessor();
-    public FieldReader getReader(){
-      return reader;
-    }
-    
+
     public long getStartEnd(int index){
       return oAccessor.getTwoAsLong(index);
     }

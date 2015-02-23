@@ -82,6 +82,11 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
+  public RepeatedListReaderImpl getReader() {
+    return reader;
+  }
+
+  @Override
   public int size() {
     return vector != null ? 1 : 0;
   }
@@ -217,7 +222,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
       if (offset >= h.end) {
         holder.reader = NullReader.INSTANCE;
       } else {
-        FieldReader r = vector.getAccessor().getReader();
+        FieldReader r = vector.getReader();
         r.setPosition(offset);
         holder.reader = r;
       }
@@ -226,15 +231,6 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     @Override
     public boolean isNull(int index) {
       return false;
-    }
-
-    @Override
-    public void reset() {
-    }
-
-    @Override
-    public FieldReader getReader() {
-      return reader;
     }
 
     @Override
@@ -416,9 +412,8 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   @Override
   public void allocateNew(int parentValueCount, int childValueCount) {
     clear();
-    offsets.allocateNew(parentValueCount+1);
+    offsets.allocateNew(parentValueCount + 1);
     mutator.reset();
-    accessor.reset();
   }
 
   @Override

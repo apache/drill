@@ -360,7 +360,7 @@ public class EvaluationVisitor {
 
       } else {
         JExpression vector = e.isSuperReader() ? vv1.component(componentVariable) : vv1;
-        JExpression expr = vector.invoke("getAccessor").invoke("getReader");
+        JExpression expr = vector.invoke("getReader");
         PathSegment seg = e.getReadPath();
 
         JVar isNull = null;

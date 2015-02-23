@@ -248,7 +248,7 @@ public class TestRepeated {
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     JsonWriter jsonWriter = new JsonWriter(stream, true);
-    FieldReader reader = v.getChild("col", MapVector.class).getAccessor().getReader();
+    FieldReader reader = v.getChild("col", MapVector.class).getReader();
     reader.setPosition(0);
     jsonWriter.write(reader);
     reader.setPosition(1);

@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.vector.complex;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -94,7 +97,7 @@ public abstract class AbstractContainerVector implements ValueVector {
    */
  @Override
   public void close() {
-    for (ValueVector vector:this) {
+    for (ValueVector vector:(Iterable<ValueVector>)this) {
       vector.close();
     }
   }

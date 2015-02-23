@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -180,7 +181,7 @@ public abstract class ColumnReader<V extends ValueVector> {
     readLengthInBits = 0;
     recordsReadInThisIteration = 0;
     bytesReadInCurrentPass = 0;
-    vectorData = ((BaseValueVector) valueVec).getData();
+    vectorData = ((BaseDataValueVector) valueVec).getData();
   }
 
   public int capacity() {

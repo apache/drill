@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
 import org.apache.drill.exec.vector.ValueVector;
@@ -35,7 +36,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
   int rightBitShift;
   // used when copying less than a byte worth of data at a time, to indicate the number of used bits in the current byte
   int bitsUsed;
-  BaseValueVector castedBaseVector;
+  BaseDataValueVector castedBaseVector;
   NullableVectorDefinitionSetter castedVectorMutator;
   long definitionLevelsRead;
   long totalDefinitionLevelsRead;
@@ -43,7 +44,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
   NullableColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-    castedBaseVector = (BaseValueVector) v;
+    castedBaseVector = (BaseDataValueVector) v;
     castedVectorMutator = (NullableVectorDefinitionSetter) v.getMutator();
     totalDefinitionLevelsRead = 0;
   }
@@ -114,7 +115,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         }
         valuesReadInCurrentPass += nullsFound;
 
-        int writerIndex = ((BaseValueVector) valueVec).getData().writerIndex();
+        int writerIndex = ((BaseDataValueVector) valueVec).getData().writerIndex();
         if ( dataTypeLengthInBits > 8  || (dataTypeLengthInBits < 8 && totalValuesRead + runLength % 8 == 0)){
           castedBaseVector.getData().setIndex(0, writerIndex + (int) Math.ceil( nullsFound * dataTypeLengthInBits / 8.0));
         }

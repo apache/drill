@@ -73,9 +73,14 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
 
   public void setInitialCapacity(int numRecords) {
     offsets.setInitialCapacity(numRecords + 1);
-    for(ValueVector v : this) {
+    for(ValueVector v : (ValueVector<?,?,?>)this) {
       v.setInitialCapacity(numRecords * DEFAULT_REPEAT_PER_RECORD);
     }
+  }
+
+  @Override
+  public RepeatedMapReaderImpl getReader() {
+    return reader;
   }
 
   @Override
@@ -87,7 +92,6 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
       AllocationHelper.allocatePrecomputedChildCount(v, groupCount, 50, valueCount);
     }
     mutator.reset();
-    accessor.reset();
   }
 
   public void reAlloc() {
@@ -111,7 +115,7 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
       return 0;
     }
     long buffer = offsets.getBufferSize();
-    for (ValueVector v : this) {
+    for (ValueVector v : (Iterable<ValueVector>)this) {
       buffer += v.getBufferSize();
     }
     return (int) buffer;
@@ -503,15 +507,6 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
     @Override
     public boolean isNull(int index) {
       return false;
-    }
-
-    @Override
-    public void reset() {
-    }
-
-    @Override
-    public FieldReader getReader() {
-      return reader;
     }
 
     @Override

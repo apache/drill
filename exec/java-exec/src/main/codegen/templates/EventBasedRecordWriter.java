@@ -73,7 +73,7 @@ public class EventBasedRecordWriter {
     try {
       int fieldId = 0;
       for (VectorWrapper w : batch) {
-        FieldReader reader = w.getValueVector().getAccessor().getReader();
+        FieldReader reader = w.getValueVector().getReader();
         FieldConverter converter = getConverter(recordWriter, fieldId++, w.getField().getLastName(), reader);
         fieldConverters.add(converter);
       }

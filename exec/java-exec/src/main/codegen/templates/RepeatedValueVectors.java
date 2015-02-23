@@ -48,12 +48,14 @@ package org.apache.drill.exec.vector;
  */
 
 public final class Repeated${minor.class}Vector extends BaseValueVector implements Repeated<#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Repeated${minor.class}Vector.class);
 
   private int parentValueCount;
   private int childValueCount;
 
   private final UInt4Vector offsets;   // offsets to start of each record
   private final ${minor.class}Vector values;
+  private final FieldReader reader = new Repeated${minor.class}ReaderImpl(Repeated${minor.class}Vector.this);
   private final Mutator mutator = new Mutator();
   private final Accessor accessor = new Accessor();
   
@@ -63,6 +65,11 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     this.offsets = new UInt4Vector(null, allocator);
     MaterializedField mf = MaterializedField.create(field.getPath(), Types.required(field.getType().getMinorType()));
     this.values = new ${minor.class}Vector(mf, allocator);
+  }
+
+  @Override
+  public FieldReader getReader(){
+    return reader;
   }
 
   public int getValueCapacity(){
@@ -305,13 +312,7 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
   // in the future, the interface shold be declared in the respective value vector superclasses for fixed and variable
   // and we should refer to each in the generation template
   public final class Accessor implements RepeatedFixedWidthVector.RepeatedAccessor{
-    
-    final FieldReader reader = new Repeated${minor.class}ReaderImpl(Repeated${minor.class}Vector.this);
-    
-    public FieldReader getReader(){
-      return reader;
-    }
-    
+
     /**
      * Get the elements at the given index.
      */
@@ -517,19 +518,19 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
       offsets.getMutator().setValueCount(groupCount == 0 ? 0 : groupCount+1);
       values.getMutator().setValueCount(childValueCount);
     }
-    
+
     public void generateTestData(final int valCount){
       int[] sizes = {1,2,0,6};
       int size = 0;
       int runningOffset = 0;
       for(int i =1; i < valCount+1; i++, size++){
         runningOffset += sizes[size % sizes.length];
-        offsets.getMutator().set(i, runningOffset);  
+        offsets.getMutator().set(i, runningOffset);
       }
       values.getMutator().generateTestData(valCount*9);
       setValueCount(size);
     }
-    
+
     public void reset(){
       
     }

@@ -17,27 +17,26 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.DrillBuf;
-
 import java.util.Iterator;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 
-import com.google.common.collect.Iterators;
-
-public abstract class BaseValueVector implements ValueVector{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseValueVector.class);
+public abstract class BaseValueVector<V extends BaseValueVector<V, A, M>, A extends BaseValueVector.BaseAccessor,
+    M extends BaseValueVector.BaseMutator> implements ValueVector<V, A, M> {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseValueVector.class);
 
   protected final BufferAllocator allocator;
   protected final MaterializedField field;
   public static final int INITIAL_VALUE_ALLOCATION = 4096;
 
-  BaseValueVector(MaterializedField field, BufferAllocator allocator) {
-    this.allocator = allocator;
+  protected BaseValueVector(MaterializedField field, BufferAllocator allocator) {
     this.field = field;
+    this.allocator = Preconditions.checkNotNull(allocator, "allocator cannot be null");
   }
 
   @Override
@@ -54,26 +53,27 @@ public abstract class BaseValueVector implements ValueVector{
     return getField().clone(ref);
   }
 
-  protected SerializedField.Builder getMetadataBuilder(){
+  protected SerializedField.Builder getMetadataBuilder() {
     return getField().getAsBuilder();
   }
 
-  public abstract int getCurrentValueCount();
-  public abstract void setCurrentValueCount(int count);
+  public abstract static class BaseAccessor implements ValueVector.Accessor {
+    protected BaseAccessor() { }
 
-  abstract public DrillBuf getData();
-
-  abstract static class BaseAccessor implements ValueVector.Accessor{
-    public abstract int getValueCount();
-    public void reset(){}
+    @Override
+    public boolean isNull(int index) {
+      return false;
+    }
   }
 
-  abstract class BaseMutator implements Mutator{
-    public void reset(){}
+  public abstract static class BaseMutator implements ValueVector.Mutator {
+    protected BaseMutator() { }
+
+    public void reset() { }
   }
 
   @Override
-  public Iterator<ValueVector> iterator() {
+  public Iterator<ValueVector<V,A,M>> iterator() {
     return Iterators.emptyIterator();
   }
 
