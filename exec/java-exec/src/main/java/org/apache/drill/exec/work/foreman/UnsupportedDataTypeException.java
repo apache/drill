@@ -23,4 +23,8 @@ public class UnsupportedDataTypeException extends SqlUnsupportedException {
   public UnsupportedDataTypeException(String drillJiraNumber, String message) {
     super(drillJiraNumber, message);
   }
+
+  public UnsupportedDataTypeException(String errorMessage) {
+    super(errorMessage);
+  }
 }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -35,6 +36,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
@@ -61,7 +63,9 @@ import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
+import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.relopt.hep.HepPlanner;
@@ -103,7 +107,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   protected void log(String name, Prel node) {
-    String plan = PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES);;
+    String plan = PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES);
     if(textPlan != null){
       textPlan.value = plan;
     }
@@ -186,13 +190,23 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return rel;
   }
 
-  protected DrillRel convertToDrel(RelNode relNode) throws RelConversionException {
-    RelNode convertedRelNode = planner.transform(DrillSqlWorker.LOGICAL_RULES,
-        relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
-    if (convertedRelNode instanceof DrillStoreRel) {
-      throw new UnsupportedOperationException();
-    } else {
-      return new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode);
+  protected DrillRel convertToDrel(RelNode relNode) throws RelConversionException, SqlUnsupportedException {
+    try {
+      RelNode convertedRelNode = planner.transform(DrillSqlWorker.LOGICAL_RULES,
+          relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
+      if (convertedRelNode instanceof DrillStoreRel) {
+        throw new UnsupportedOperationException();
+      } else {
+        return new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode);
+      }
+    } catch (RelOptPlanner.CannotPlanException ex) {
+      logger.error(ex.getMessage());
+
+      if(JoinUtils.checkCartesianJoin(relNode, new ArrayList<Integer>(), new ArrayList<Integer>())) {
+        throw new UnsupportedRelOperatorException("This query cannot be planned possibly due to either a cartesian join or an inequality join");
+      } else {
+        throw ex;
+      }
     }
   }
 

@@ -17,10 +17,12 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import org.eigenbase.sql.SqlOperator;
-
 public class UnsupportedFunctionException extends SqlUnsupportedException {
   public UnsupportedFunctionException(String drillJiraNumber, String message) {
     super(drillJiraNumber, message);
+  }
+
+  public UnsupportedFunctionException(String errorMessage) {
+    super(errorMessage);
   }
 }

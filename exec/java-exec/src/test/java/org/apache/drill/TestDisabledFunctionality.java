@@ -191,4 +191,101 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       throw ex;
     }
   }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // DRILL-2068
+  public void testImplicitCartesianJoin() throws Exception {
+    try {
+      test("select a.*, b.user_port " +
+          "from cp.`employee.json` a, sys.drillbits b;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2068, DRILL-1325
+  public void testNonEqualJoin() throws Exception {
+    try {
+      test("select a.*, b.user_port " +
+          "from cp.`employee.json` a, sys.drillbits b " +
+          "where a.position_id <> b.user_port;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2068, DRILL-1325
+  public void testMultipleJoinsWithOneNonEqualJoin() throws Exception {
+    try {
+      test("select a.last_name, b.n_name, c.r_name " +
+          "from cp.`employee.json` a, cp.`tpch/nation.parquet` b, cp.`tpch/region.parquet` c " +
+          "where a.position_id > b.n_nationKey and b.n_nationKey = c.r_regionkey;");
+      } catch(Exception ex) {
+        SqlUnsupportedException.errorMessageToException(ex.getMessage());
+        throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // see  DRILL-2068, DRILL-1325
+  public void testLeftOuterJoin() throws Exception {
+    try {
+      test("select a.lastname, b.n_name " +
+          "from cp.`employee.json` a LEFT JOIN cp.`tpch/nation.parquet` b " +
+          "ON a.position_id > b.n_nationKey;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2068, DRILL-1325
+  public void testInnerJoin() throws Exception {
+    try {
+      test("select a.lastname, b.n_name " +
+          "from cp.`employee.json` a INNER JOIN cp.`tpch/nation.parquet` b " +
+          "ON a.position_id > b.n_nationKey;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedFunctionException.class) // see DRILL-1325, DRILL-2155, see DRILL-1937
+  public void testMultipleUnsupportedOperatorations() throws Exception {
+    try {
+      test("select a.lastname, b.n_name " +
+          "from cp.`employee.json` a, cp.`tpch/nation.parquet` b " +
+          "where b.n_nationkey = " +
+          "(select r_regionkey from cp.`tpch/region.parquet` " +
+          "where r_regionkey = 1)");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1325,
+  public void testSubqueryWithoutCorrelatedJoinCondition() throws Exception {
+    try {
+      test("select a.lastname " +
+          "from cp.`employee.json` a " +
+          "where exists (select n_name from cp.`tpch/nation.parquet` b) AND a.position_id = 10");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2068, DRILL-1325
+  public void testExplainPlanForCartesianJoin() throws Exception {
+    try {
+      test("explain plan for (select a.lastname, b.n_name " +
+          "from cp.`employee.json` a INNER JOIN cp.`tpch/nation.parquet` b " +
+          "ON a.position_id > b.n_nationKey);");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
 }

@@ -43,6 +43,10 @@ public abstract class SqlUnsupportedException extends ForemanSetupException {
         "See Apache Drill JIRA: DRILL-" + jiraNumber);
   }
 
+  public SqlUnsupportedException(String errorMessage) {
+    super(errorMessage);
+  }
+
   public static void errorMessageToException(String errorMessage) throws SqlUnsupportedException {
     UnsupportedOperatorCollector collector = new UnsupportedOperatorCollector();
     for(ExceptionType ex : ExceptionType.values()) {

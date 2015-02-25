@@ -21,4 +21,8 @@ public class UnsupportedRelOperatorException extends SqlUnsupportedException {
   public UnsupportedRelOperatorException(String drillJiraNumber, String message) {
     super(drillJiraNumber, message);
   }
+
+  public UnsupportedRelOperatorException(String errorMessage) {
+    super(errorMessage);
+  }
 }
