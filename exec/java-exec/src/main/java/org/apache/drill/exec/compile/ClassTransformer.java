@@ -26,36 +26,72 @@ import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.codehaus.commons.compiler.CompileException;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class ClassTransformer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassTransformer.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassTransformer.class);
 
   private final ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
+  private final OptionManager optionManager;
 
-  public ClassTransformer() {
+  public final static String SCALAR_REPLACEMENT_OPTION =
+      "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement";
+  public final static EnumeratedStringValidator SCALAR_REPLACEMENT_VALIDATOR = new EnumeratedStringValidator(
+      SCALAR_REPLACEMENT_OPTION, "try", "off", "try", "on");
+
+  @VisibleForTesting // although we need it even if it weren't used in testing
+  public enum ScalarReplacementOption {
+    OFF, // scalar replacement will not ever be used
+    TRY, // scalar replacement will be attempted, and if there is an error, we fall back to not using it
+    ON; // scalar replacement will always be used, and any errors cause user visible errors
+
+    /**
+     * Convert a string to an enum value.
+     *
+     * @param s the string
+     * @return an enum value
+     * @throws IllegalArgumentException if the string doesn't match any of the enum values
+     */
+    public static ScalarReplacementOption fromString(final String s) {
+      switch(s) {
+      case "off":
+        return OFF;
+      case "try":
+        return TRY;
+      case "on":
+        return ON;
+      }
+
+      throw new IllegalArgumentException("Invalid ScalarReplacementOption \"" + s + "\"");
+    }
   }
 
-  public static class ClassSet{
+  public ClassTransformer(final OptionManager optionManager) {
+    this.optionManager = optionManager;
+  }
+
+  public static class ClassSet {
     public final ClassSet parent;
     public final ClassNames precompiled;
     public final ClassNames generated;
 
     public ClassSet(ClassSet parent, String precompiled, String generated) {
-      super();
+      Preconditions.checkArgument(!generated.startsWith(precompiled),
+          String.format("The new name of a class cannot start with the old name of a class, otherwise class renaming will cause problems. Precompiled class name %s. Generated class name %s",
+              precompiled, generated));
       this.parent = parent;
-
       this.precompiled = new ClassNames(precompiled);
       this.generated = new ClassNames(generated);
-      Preconditions.checkArgument(!generated.startsWith(precompiled),
-          String.format("The new name of a class cannot start with the old name of a class, otherwise class renaming will cause problems.  Precompiled class name %s.  Generated class name %s", precompiled, generated));
     }
 
     public ClassSet getChild(String precompiled, String generated) {
@@ -111,11 +147,9 @@ public class ClassTransformer {
       }
       return true;
     }
-
   }
 
   public static class ClassNames {
-
     public final String dot;
     public final String slash;
     public final String clazz;
@@ -173,21 +207,18 @@ public class ClassTransformer {
     }
   }
 
-  private static ClassNode getClassNodeFromByteCode(byte[] bytes) {
-    ClassReader iReader = new ClassReader(bytes);
-    ClassNode impl = new ClassNode();
-    iReader.accept(impl, ClassReader.EXPAND_FRAMES);
-    return impl;
-  }
-
-  public Class<?> getImplementationClass( //
-      QueryClassLoader classLoader, //
-      TemplateClassDefinition<?> templateDefinition, //
-      String entireClass, //
-      String materializedClassName) throws ClassTransformationException {
+  public Class<?> getImplementationClass(
+      final QueryClassLoader classLoader,
+      final TemplateClassDefinition<?> templateDefinition,
+      final String entireClass,
+      final String materializedClassName) throws ClassTransformationException {
+    // unfortunately, this hasn't been set up at construction time, so we have to do it here
+    final OptionValue optionValue = optionManager.getOption(SCALAR_REPLACEMENT_OPTION);
+    final ScalarReplacementOption scalarReplacementOption =
+        ScalarReplacementOption.fromString((String) optionValue.getValue()); // TODO(DRILL-2474)
 
     try {
-      long t1 = System.nanoTime();
+      final long t1 = System.nanoTime();
       final ClassSet set = new ClassSet(null, templateDefinition.getTemplateClassName(), materializedClassName);
       final byte[][] implementationClasses = classLoader.getClassByteCode(set.generated, entireClass);
 
@@ -195,12 +226,15 @@ public class ClassTransformer {
       Map<String, ClassNode> classesToMerge = Maps.newHashMap();
       for (byte[] clazz : implementationClasses) {
         totalBytecodeSize += clazz.length;
-        ClassNode node = getClassNodeFromByteCode(clazz);
+        final ClassNode node = AsmUtil.classFromBytes(clazz);
+        if (!AsmUtil.isClassOk(logger, node, "implementationClasses")) {
+          throw new IllegalStateException("Problem found with implementationClasses");
+        }
         classesToMerge.put(node.name, node);
       }
 
-      LinkedList<ClassSet> names = Lists.newLinkedList();
-      Set<ClassSet> namesCompleted = Sets.newHashSet();
+      final LinkedList<ClassSet> names = Lists.newLinkedList();
+      final Set<ClassSet> namesCompleted = Sets.newHashSet();
       names.add(set);
 
       while ( !names.isEmpty() ) {
@@ -210,9 +244,43 @@ public class ClassTransformer {
         }
         final ClassNames nextPrecompiled = nextSet.precompiled;
         final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
-        ClassNames nextGenerated = nextSet.generated;
-        ClassNode generatedNode = classesToMerge.get(nextGenerated.slash);
-        MergedClassResult result = MergeAdapter.getMergedClass(nextSet, precompiledBytes, generatedNode);
+        final ClassNames nextGenerated = nextSet.generated;
+        final ClassNode generatedNode = classesToMerge.get(nextGenerated.slash);
+
+        /**
+         * TODO
+         * We're having a problem with some cases of scalar replacement, but we want to get
+         * the code in so it doesn't rot anymore.
+         *
+         *  Here, we use the specified replacement option. The loop will allow us to retry if
+         *  we're using TRY.
+         */
+        MergedClassResult result = null;
+        boolean scalarReplace = scalarReplacementOption != ScalarReplacementOption.OFF;
+        while(true) {
+          try {
+            result = MergeAdapter.getMergedClass(nextSet, precompiledBytes, generatedNode, scalarReplace);
+            break;
+          } catch(RuntimeException e) {
+            // if we had a problem without using scalar replacement, then rethrow
+            if (!scalarReplace) {
+              throw e;
+            }
+
+            // if we did try to use scalar replacement, decide if we need to retry or not
+            if (scalarReplacementOption == ScalarReplacementOption.ON) {
+              // option is forced on, so this is a hard error
+              throw e;
+            }
+
+            /*
+             * We tried to use scalar replacement, with the option to fall back to not using it.
+             * Log this failure before trying again without scalar replacement.
+             */
+            logger.info("scalar replacement failure (retrying)\n", e);
+            scalarReplace = false;
+          }
+        }
 
         for (String s : result.innerClasses) {
           s = s.replace(FileUtils.separatorChar, '.');

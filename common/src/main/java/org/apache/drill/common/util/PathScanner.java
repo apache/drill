@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.CommonConstants;
 import org.reflections.Reflections;
@@ -37,6 +38,7 @@ import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 
 public class PathScanner {
@@ -73,20 +75,27 @@ public class PathScanner {
 
   public static <T> Class<?>[] scanForImplementationsArr(Class<T> baseClass, final List<String> scanPackages) {
     Collection<Class<? extends T>> imps = scanForImplementations(baseClass, scanPackages);
-    return imps.toArray(new Class<?>[imps.size()]);
+    Class<?>[] arr = imps.toArray(new Class<?>[imps.size()]);
+    return arr;
   }
 
   public static <T> Set<Class<? extends T>> scanForImplementations(Class<T> baseClass, final List<String> scanPackages) {
-    synchronized(SYNC) {
-      Set<Class<? extends T>> classes = getReflections().getSubTypesOf(baseClass);
-      for (Iterator<Class<? extends T>> i = classes.iterator(); i.hasNext();) {
-        Class<? extends T> c = i.next();
-        assert baseClass.isAssignableFrom(c);
-        if (Modifier.isAbstract(c.getModifiers())) {
-          i.remove();
+    Stopwatch w = new Stopwatch().start();
+    try {
+      synchronized(SYNC) {
+
+        Set<Class<? extends T>> classes = getReflections().getSubTypesOf(baseClass);
+        for (Iterator<Class<? extends T>> i = classes.iterator(); i.hasNext();) {
+          Class<? extends T> c = i.next();
+          assert baseClass.isAssignableFrom(c);
+          if (Modifier.isAbstract(c.getModifiers())) {
+            i.remove();
+          }
         }
+        return classes;
       }
-      return classes;
+    } finally{
+      logger.debug("Classpath scanning took {}ms", w.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 

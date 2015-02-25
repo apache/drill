@@ -58,7 +58,7 @@ public final class DrillConfig extends NestedConfig{
   @VisibleForTesting
   public DrillConfig(Config config, boolean enableServer) {
     super(config);
-
+    logger.debug("Setting up config object.");
     mapper = new ObjectMapper();
 
     if (enableServer) {
@@ -80,7 +80,7 @@ public final class DrillConfig extends NestedConfig{
 
     RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
     this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());
-
+    logger.debug("Config object initialized.");
   };
 
   public List<String> getStartupArguments() {

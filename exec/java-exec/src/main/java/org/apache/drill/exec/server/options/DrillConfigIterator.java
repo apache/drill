@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 import com.typesafe.config.ConfigValue;
@@ -52,27 +51,34 @@ public class DrillConfigIterator implements Iterable<OptionValue> {
 
     @Override
     public OptionValue next() {
-      Entry<String, ConfigValue> e = entries.next();
-      OptionValue v = new OptionValue();
-      v.name = e.getKey();
-      ConfigValue cv = e.getValue();
-      v.type = OptionType.BOOT;
-      switch(cv.valueType()){
+      final Entry<String, ConfigValue> e = entries.next();
+      final ConfigValue cv = e.getValue();
+      final String name = e.getKey();
+      OptionValue optionValue = null;
+      switch(cv.valueType()) {
       case BOOLEAN:
-        v.kind = Kind.BOOLEAN;
-        v.bool_val = (Boolean) cv.unwrapped();
+        optionValue = OptionValue.createBoolean(OptionType.BOOT, name, (Boolean) cv.unwrapped());
         break;
+
       case LIST:
       case OBJECT:
       case STRING:
-        v.string_val = cv.render();
+        optionValue = OptionValue.createString(OptionType.BOOT, name, cv.render());
         break;
+
       case NUMBER:
-        v.kind = Kind.LONG;
-        v.num_val = ((Number)cv.unwrapped()).longValue();
+        optionValue = OptionValue.createLong(OptionType.BOOT, name, ((Number) cv.unwrapped()).longValue());
         break;
+
+      case NULL:
+        throw new IllegalStateException("Config value \"" + name + "\" has NULL type");
+/* TODO(cwestin)
+        optionValue = OptionValue.createOption(kind, OptionType.BOOT, name, "");
+        break;
+*/
       }
-      return v;
+
+      return optionValue;
     }
 
     @Override

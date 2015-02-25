@@ -17,50 +17,73 @@
  */
 package org.apache.drill.exec.compile.bytecode;
 
+import java.util.LinkedList;
 
-import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.compile.CheckMethodVisitorFsm;
+import org.apache.drill.exec.compile.CompilationConfig;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.Frame;
 
 public class ScalarReplacementNode extends MethodNode {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScalarReplacementNode.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScalarReplacementNode.class);
+  private final boolean verifyBytecode;
 
+  private final String className;
+  private final String[] exceptionsArr;
+  private final MethodVisitor inner;
 
-  String[] exceptionsArr;
-  MethodVisitor inner;
-
-  public ScalarReplacementNode(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor inner) {
-    super(access, name, desc, signature, exceptions);
+  public ScalarReplacementNode(final String className, final int access, final String name,
+      final String desc, final String signature, final String[] exceptions, final MethodVisitor inner,
+      final boolean verifyBytecode) {
+    super(CompilationConfig.ASM_API_VERSION, access, name, desc, signature, exceptions);
+    this.className = className;
     this.exceptionsArr = exceptions;
     this.inner = inner;
+    this.verifyBytecode = verifyBytecode;
   }
-
 
   @Override
   public void visitEnd() {
+    /*
+     * Note this is a MethodNode, not a MethodVisitor. As a result, calls to the various visitX()
+     * methods will be building up a method. Then, once we analyze it, we use accept() to visit that
+     * method and transform it with the InstructionModifier at the bottom.
+     */
     super.visitEnd();
 
-    Analyzer<BasicValue> a = new Analyzer<>(new ReplacingInterpreter());
+    final LinkedList<ReplacingBasicValue> valueList = new LinkedList<>();
+    final MethodAnalyzer<BasicValue> analyzer =
+        new MethodAnalyzer<BasicValue>(new ReplacingInterpreter(className, valueList));
     Frame<BasicValue>[] frames;
     try {
-      frames = a.analyze("Object", this);
+      frames = analyzer.analyze(className, this);
     } catch (AnalyzerException e) {
       throw new IllegalStateException(e);
     }
+
+    if (logger.isDebugEnabled()) {
+      final StringBuilder sb = new StringBuilder();
+      sb.append("ReplacingBasicValues for " + className + "\n");
+      for(ReplacingBasicValue value : valueList) {
+        value.dump(sb, 2);
+        sb.append('\n');
+      }
+      logger.debug(sb.toString());
+    }
+
+    // wrap the instruction handler so that we can do additional things
     TrackingInstructionList list = new TrackingInstructionList(frames, this.instructions);
     this.instructions = list;
-    InstructionModifier holderV = new InstructionModifier(this.access, this.name, this.desc, this.signature, this.exceptionsArr, list, inner);
+
+    MethodVisitor methodVisitor = inner;
+    if (verifyBytecode) {
+      methodVisitor = new CheckMethodVisitorFsm(CompilationConfig.ASM_API_VERSION, methodVisitor);
+    }
+    InstructionModifier holderV = new InstructionModifier(this.access, this.name, this.desc,
+        this.signature, this.exceptionsArr, list, methodVisitor);
     accept(holderV);
-  }
-
-
-  IntHolder local;
-  public void x(){
-    IntHolder h = new IntHolder();
-    local = h;
   }
 }

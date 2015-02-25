@@ -100,6 +100,8 @@ public interface ExecConstants {
   public static String PARQUET_NEW_RECORD_READER = "store.parquet.use_new_reader";
   public static OptionValidator PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR = new BooleanValidator(PARQUET_NEW_RECORD_READER, false);
 
+  public static OptionValidator COMPILE_SCALAR_REPLACEMENT = new BooleanValidator("exec.compile.scalar_replacement", false);
+
   public static String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static OptionValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE, false);
 

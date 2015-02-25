@@ -27,18 +27,19 @@ public class DrillInitMethodVisitor extends MethodVisitor {
   final String className;
 
   public DrillInitMethodVisitor(String className, MethodVisitor mv){
-    super(Opcodes.ASM4, mv);
+    super(CompilationConfig.ASM_API_VERSION, mv);
     this.className = className;
   }
 
   @Override
   public void visitInsn(int opcode) {
-    if(opcode == Opcodes.RETURN){
-      super.visitVarInsn(Opcodes.ALOAD, 0); // load this.
-      super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className, SignatureHolder.DRILL_INIT_METHOD, "()V"); // execute drill init.
+    if(opcode == Opcodes.RETURN) {
+      // Load this.
+      super.visitVarInsn(Opcodes.ALOAD, 0);
+
+      // Execute drill init.
+      super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className, SignatureHolder.DRILL_INIT_METHOD, "()V", false);
     }
     super.visitInsn(opcode);
   }
-
-
 }

@@ -18,21 +18,18 @@
 package org.apache.drill.exec.server.options;
 
 import java.util.Iterator;
-import java.util.Map;
 
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
-public abstract class FallbackOptionManager implements OptionManager{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
+public abstract class FallbackOptionManager implements OptionManager {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
 
-  protected OptionManager fallback;
+  protected final OptionManager fallback;
 
   public FallbackOptionManager(OptionManager fallback) {
-    super();
     this.fallback = fallback;
   }
 
@@ -43,7 +40,7 @@ public abstract class FallbackOptionManager implements OptionManager{
 
   @Override
   public OptionValue getOption(String name) {
-    OptionValue opt = getLocalOption(name);
+    final OptionValue opt = getLocalOption(name);
     if(opt == null && fallback != null){
       return fallback.getOption(name);
     }else{
@@ -62,9 +59,8 @@ public abstract class FallbackOptionManager implements OptionManager{
   }
 
   @Override
-  public void setOption(String name, SqlLiteral literal, OptionType type) {
-    OptionValue val = getAdmin().validate(name, literal);
-    val.type = type;
+  public void setOption(String name, SqlLiteral literal, OptionType optionType) {
+    final OptionValue val = getAdmin().validate(name, literal, optionType);
     setValidatedOption(val);
   }
 
@@ -89,11 +85,10 @@ public abstract class FallbackOptionManager implements OptionManager{
 
   @Override
   public OptionList getOptionList() {
-    OptionList list = new OptionList();
+    final OptionList list = new OptionList();
     for (OptionValue o : optionIterable()) {
       list.add(o);
     }
     return list;
   }
-
 }

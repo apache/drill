@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.base.Preconditions;
 
 @JsonInclude(Include.NON_NULL)
-public class OptionValue{
+public class OptionValue {
 
   public static enum OptionType {
     BOOT, SYSTEM, SESSION, QUERY
@@ -41,6 +41,15 @@ public class OptionValue{
   public Boolean bool_val;
   public Double float_val;
 
+  /**
+   * Constructor.
+   *
+   * <p>Unfortunately, we have to have this variant, and are unable to make the members final,
+   * in order to support JSON deserialization into this structure.
+   */
+  public OptionValue() {
+  }
+
   public static OptionValue createLong(OptionType type, String name, long val) {
     return new OptionValue(Kind.LONG, type, name, val, null, null, null);
   }
@@ -57,8 +66,6 @@ public class OptionValue{
     return new OptionValue(Kind.DOUBLE, type, name, null, null, null, val);
   }
 
-  public OptionValue() {}
-
   public static OptionValue createOption(Kind kind, OptionType type, String name, String val) {
     switch (kind) {
       case BOOLEAN:
@@ -73,18 +80,17 @@ public class OptionValue{
     return null;
   }
 
-
-  private OptionValue(Kind kind, OptionType type, String name, Long num_val, String string_val, Boolean bool_val, Double float_val) {
-    super();
+  private OptionValue(Kind kind, OptionType type, String name,
+      Long num_val, String string_val, Boolean bool_val, Double float_val) {
     Preconditions.checkArgument(num_val != null || string_val != null || bool_val != null || float_val != null);
-    this.name = name;
     this.kind = kind;
-    this.float_val = float_val;
     this.type = type;
+    this.name = name;
+
+    this.float_val = float_val;
     this.num_val = num_val;
     this.string_val = string_val;
     this.bool_val = bool_val;
-    this.type = type;
   }
 
   @JsonIgnore
@@ -176,5 +182,4 @@ public class OptionValue{
   public String toString() {
     return "OptionValue [type=" + type + ", name=" + name + ", value=" + getValue() + "]";
   }
-
 }

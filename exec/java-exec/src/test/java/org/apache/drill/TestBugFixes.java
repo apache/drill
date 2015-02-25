@@ -22,6 +22,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestBugFixes extends BaseTestQuery {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
 
   @Test
   public void leak1() throws Exception {

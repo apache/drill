@@ -20,50 +20,39 @@ package org.apache.drill.exec.compile.bytecode;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.Frame;
 
 public class TrackingInstructionList extends InsnList {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TrackingInstructionList.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TrackingInstructionList.class);
 
-  Frame<?> currentFrame;
-  Frame<?> nextFrame;
-  Frame<?>[] frames;
-  InsnList inner;
-  int index = 0;
+  Frame<BasicValue> currentFrame;
+  Frame<BasicValue> nextFrame;
+  AbstractInsnNode currentInsn;
+  private int index = 0;
+  private final Frame<BasicValue>[] frames;
+  private final InsnList inner;
 
-
-
-  public TrackingInstructionList(Frame<?>[] frames, InsnList inner) {
-    super();
-
+  public TrackingInstructionList(final Frame<BasicValue>[] frames, final InsnList inner) {
     this.frames = frames;
     this.inner = inner;
   }
 
-  public InsnList getInner(){
-    return inner;
-  }
-
   @Override
-  public void accept(MethodVisitor mv) {
-    AbstractInsnNode insn = inner.getFirst();
-    while (insn != null) {
+  public void accept(final MethodVisitor mv) {
+    currentInsn = inner.getFirst();
+    while (currentInsn != null) {
         currentFrame = frames[index];
-        nextFrame = index +1 < frames.length ? frames[index+1] : null;
-        insn.accept(mv);
+        nextFrame = index + 1 < frames.length ? frames[index + 1] : null;
+        currentInsn.accept(mv);
 
-        insn = insn.getNext();
+        currentInsn = currentInsn.getNext();
         index++;
     }
   }
-
 
   @Override
   public int size() {
     return inner.size();
   }
-
-
-
-
 }

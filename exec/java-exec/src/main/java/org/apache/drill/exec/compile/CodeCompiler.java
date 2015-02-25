@@ -28,63 +28,74 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 public class CodeCompiler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeCompiler.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeCompiler.class);
 
   private final ClassTransformer transformer;
-  private final LoadingCache<CodeGenerator<?>, GeneratedClassEntry>  cache;
+  private final LoadingCache<CodeGenerator<?>, GeneratedClassEntry> cache;
   private final DrillConfig config;
-  private final OptionManager systemOptionManager;
+  private final OptionManager optionManager;
 
-  public CodeCompiler(DrillConfig config, OptionManager systemOptionManager){
-    this.transformer = new ClassTransformer();
-    int cacheMaxSize = config.getInt(ExecConstants.MAX_LOADING_CACHE_SIZE_CONFIG);
-    this.cache = CacheBuilder //
-        .newBuilder() //
-        .maximumSize(cacheMaxSize) //
+  public CodeCompiler(final DrillConfig config, final OptionManager optionManager) {
+    transformer = new ClassTransformer(optionManager);
+    final int cacheMaxSize = config.getInt(ExecConstants.MAX_LOADING_CACHE_SIZE_CONFIG);
+    cache = CacheBuilder.newBuilder()
+        .maximumSize(cacheMaxSize)
         .build(new Loader());
-    this.systemOptionManager = systemOptionManager;
+    this.optionManager = optionManager;
     this.config = config;
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T getImplementationClass(CodeGenerator<?> cg) throws ClassTransformationException, IOException {
+  public <T> T getImplementationClass(final CodeGenerator<?> cg) throws ClassTransformationException, IOException {
     cg.generate();
     try {
-      GeneratedClassEntry ce = cache.get(cg);
+      final GeneratedClassEntry ce = cache.get(cg);
       return (T) ce.clazz.newInstance();
     } catch (ExecutionException | InstantiationException | IllegalAccessException e) {
       throw new ClassTransformationException(e);
     }
   }
 
-  private class Loader extends CacheLoader<CodeGenerator<?>, GeneratedClassEntry>{
+  private class Loader extends CacheLoader<CodeGenerator<?>, GeneratedClassEntry> {
     @Override
-    public GeneratedClassEntry load(CodeGenerator<?> cg) throws Exception {
-      QueryClassLoader loader = new QueryClassLoader(config, systemOptionManager);
-      Class<?> c = transformer.getImplementationClass(loader, cg.getDefinition(), cg.getGeneratedCode(), cg.getMaterializedClassName());
-      return new GeneratedClassEntry(loader, c);
+    public GeneratedClassEntry load(final CodeGenerator<?> cg) throws Exception {
+      final QueryClassLoader loader = new QueryClassLoader(config, optionManager);
+      final Class<?> c = transformer.getImplementationClass(loader, cg.getDefinition(),
+          cg.getGeneratedCode(), cg.getMaterializedClassName());
+      return new GeneratedClassEntry(c);
     }
   }
 
   private class GeneratedClassEntry {
-
-    private final QueryClassLoader classLoader;
     private final Class<?> clazz;
 
-    public GeneratedClassEntry(QueryClassLoader classLoader, Class<?> c) {
-      super();
-      this.classLoader = classLoader;
-      this.clazz = c;
+    public GeneratedClassEntry(final Class<?> clazz) {
+      this.clazz = clazz;
     }
-
   }
 
   public static CodeCompiler getTestCompiler(DrillConfig c) throws IOException{
     return new CodeCompiler(c, new SystemOptionManager(c, new LocalPStoreProvider(c)).init());
+  }
+
+  /**
+   * Flush the compiled classes from the cache.
+   *
+   * <p>The cache has DrillbitContext lifetime, so the only way items go out of it
+   * now is by being aged out because of the maximum cache size.
+   *
+   * <p>The intent of flushCache() is to make it possible to flush the cache for
+   * testing purposes, although this could be used by users in case issues arise. If
+   * that happens, remove the visible for testing annotation.
+   */
+  @VisibleForTesting
+  public void flushCache() {
+    cache.invalidateAll();
   }
 }

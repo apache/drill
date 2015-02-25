@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.server.options;
 
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 
-public interface OptionManager extends Iterable<OptionValue>{
+public interface OptionManager extends Iterable<OptionValue> {
   public OptionValue getOption(String name);
   public void setOption(OptionValue value) throws SetOptionException;
   public void setOption(String name, SqlLiteral literal, OptionValue.OptionType type) throws SetOptionException;
@@ -27,11 +28,9 @@ public interface OptionManager extends Iterable<OptionValue>{
   public OptionManager getSystemManager();
   public OptionList getOptionList();
 
-  public interface OptionAdmin{
+  public interface OptionAdmin {
     public void registerOptionType(OptionValidator validator);
     public void validate(OptionValue v) throws SetOptionException;
-    public OptionValue validate(String name, SqlLiteral value) throws SetOptionException;
+    public OptionValue validate(String name, SqlLiteral value, OptionType optionType) throws SetOptionException;
   }
-
-
 }

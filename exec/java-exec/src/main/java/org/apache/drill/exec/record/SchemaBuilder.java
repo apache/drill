@@ -81,7 +81,7 @@ public class SchemaBuilder {
 //                .format(
 //                    "You attempted to add a field for Id An attempt was made to add a duplicate fieldId to the schema.  The offending fieldId was %d",
 //                    fieldId));
-//      f.checkMaterialization(expectedFields.lget());
+//      f.checkMaterialization(expectedFields.lget()); // TODO: lget is not safe if expectedFields is shared
 //    }
 //    fields.put(f.getFieldId(), f);
 //  }

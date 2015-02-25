@@ -20,10 +20,10 @@ package org.apache.drill;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestTpchDistributed extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchDistributed.class);
+public class TestTpchDistributed extends BaseTestQuery {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchDistributed.class);
 
-  private void testDistributed(String fileName) throws Exception{
+  private static void testDistributed(String fileName) throws Exception {
     String query = getFile(fileName);
     test("alter session set `planner.slice_target` = 10; " + query);
   }

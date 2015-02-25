@@ -24,13 +24,12 @@ import com.google.common.base.Preconditions;
 public class GeneratorMapping {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GeneratorMapping.class);
 
-  private String setup;
-  private String eval;
-  private String reset;
-  private String cleanup;
+  private final String setup;
+  private final String eval;
+  private final String reset;
+  private final String cleanup;
 
-
-  public GeneratorMapping(String setup, String eval, String reset, String cleanup) {
+  public GeneratorMapping(final String setup, final String eval, final String reset, final String cleanup) {
     super();
     this.setup = setup;
     this.eval = eval;
@@ -38,7 +37,7 @@ public class GeneratorMapping {
     this.cleanup = cleanup;
   }
 
-  public GeneratorMapping(GeneratorMapping gm) {
+  public GeneratorMapping(final GeneratorMapping gm) {
     super();
     this.setup = gm.setup;
     this.eval = gm.eval;
@@ -46,20 +45,22 @@ public class GeneratorMapping {
     this.cleanup = gm.cleanup;
   }
 
-  public static GeneratorMapping GM(String setup, String eval){
+  public static GeneratorMapping GM(final String setup, final String eval) {
     return create(setup, eval, null, null);
   }
 
-  public static GeneratorMapping GM(String setup, String eval, String reset, String cleanup){
+  public static GeneratorMapping GM(
+      final String setup, final String eval, final String reset, final String cleanup) {
     return create(setup, eval, reset, cleanup);
   }
 
-  public static GeneratorMapping create(String setup, String eval, String reset, String cleanup){
+  public static GeneratorMapping create(
+      final String setup, final String eval, final String reset, final String cleanup) {
     return new GeneratorMapping(setup, eval, reset, cleanup);
   }
 
-  public String getMethodName(BlockType type){
-    switch(type){
+  public String getMethodName(final BlockType type) {
+    switch(type) {
     case CLEANUP:
       Preconditions.checkNotNull(cleanup, "The current mapping does not have a cleanup method defined.");
       return cleanup;
@@ -76,6 +77,4 @@ public class GeneratorMapping {
       throw new IllegalStateException();
     }
   }
-
-
 }

@@ -17,8 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.server.options;
 
-
 import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
 
 /**
@@ -27,12 +27,11 @@ import org.eigenbase.sql.SqlLiteral;
  * @param <E>
  */
 public abstract class OptionValidator {
-
   // Stored here as well as in the option static class to allow insertion of option optionName into
   // the error messages produced by the validator
-  private String optionName;
+  private final String optionName;
 
-  public OptionValidator(String optionName){
+  public OptionValidator(String optionName) {
     this.optionName = optionName;
   }
 
@@ -48,16 +47,15 @@ public abstract class OptionValidator {
    *            while allowing some flexibility for users
    * @throws ExpressionParsingException - message to describe error with value, including range or list of expected values
    */
-  public abstract OptionValue validate(SqlLiteral value) throws ExpressionParsingException;
+  public abstract OptionValue validate(SqlLiteral value, OptionType optionType) throws ExpressionParsingException;
 
   public String getOptionName() {
     return optionName;
   }
 
-  public String getDefaultString(){
+  public String getDefaultString() {
     return null;
   }
-
 
   public abstract OptionValue getDefault();
 

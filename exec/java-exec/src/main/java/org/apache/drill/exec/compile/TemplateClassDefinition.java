@@ -65,12 +65,4 @@ public class TemplateClassDefinition<T>{
   public String toString() {
     return "TemplateClassDefinition [template=" + template + ", signature=" + signature + "]";
   }
-
-  @Override
-  public boolean equals(Object obj) {
-    return super.equals(obj);
-  }
-
-
-
 }

@@ -41,7 +41,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
 
 public class DrillbitContext {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
 
   private final BootStrapContext context;
 
@@ -154,7 +154,4 @@ public class DrillbitContext {
   public CodeCompiler getCompiler() {
     return compiler;
   }
-
-
-
 }

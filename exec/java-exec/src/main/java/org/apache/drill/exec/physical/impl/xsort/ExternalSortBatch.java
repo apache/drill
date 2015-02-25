@@ -73,7 +73,7 @@ import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
 public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
 
   private static final long MAX_SORT_BYTES = 1L * 1024 * 1024 * 1024;
   private static final GeneratorMapping COPIER_MAPPING = new GeneratorMapping("doSetup", "doCopy", null, null);

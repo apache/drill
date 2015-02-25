@@ -26,6 +26,9 @@ import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.rest.DrillRestServer;
 import org.apache.drill.exec.service.ServiceEngine;
 import org.apache.drill.exec.store.sys.CachingStoreProvider;
@@ -50,7 +53,7 @@ import com.google.common.io.Closeables;
  * Starts, tracks and stops all the required services for a Drillbit daemon to work.
  */
 public class Drillbit implements Closeable{
-  static final org.slf4j.Logger logger;
+  private static final org.slf4j.Logger logger;
   static {
     logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
     Environment.logEnv("Drillbit environment:.", logger);
@@ -76,6 +79,77 @@ public class Drillbit implements Closeable{
       throw new DrillbitStartupException("Failure during initial startup of Drillbit.", e);
     }
     return bit;
+  }
+
+  private final static String SYSTEM_OPTIONS_NAME = "org.apache.drill.exec.server.Drillbit.system_options";
+
+  private static void throwInvalidSystemOption(final String systemProp, final String errorMessage) {
+    throw new IllegalStateException("Property \"" + SYSTEM_OPTIONS_NAME + "\" part \"" + systemProp
+        + "\" " + errorMessage + ".");
+  }
+
+  private static String stripQuotes(final String s, final String systemProp) {
+    if (s.isEmpty()) {
+      return s;
+    }
+
+    final char cFirst = s.charAt(0);
+    final char cLast = s.charAt(s.length() - 1);
+    if ((cFirst == '"') || (cFirst == '\'')) {
+      if (cLast != cFirst) {
+        throwInvalidSystemOption(systemProp, "quoted value does not have closing quote");
+      }
+
+      return s.substring(1, s.length() - 2); // strip the quotes
+    }
+
+    if ((cLast == '"') || (cLast == '\'')) {
+        throwInvalidSystemOption(systemProp, "value has unbalanced closing quote");
+    }
+
+    // return as-is
+    return s;
+  }
+
+  private void javaPropertiesToSystemOptions() {
+    // get the system options property
+    final String allSystemProps = System.getProperty(SYSTEM_OPTIONS_NAME);
+    if ((allSystemProps == null) || allSystemProps.isEmpty()) {
+      return;
+    }
+
+    final OptionManager optionManager = getContext().getOptionManager();
+
+    // parse out the properties, validate, and then set them
+    final String systemProps[] = allSystemProps.split(",");
+    for(String systemProp : systemProps) {
+      final String keyValue[] = systemProp.split("=");
+      if (keyValue.length != 2) {
+        throwInvalidSystemOption(systemProp, "does not contain a key=value assignment");
+      }
+
+      final String optionName = keyValue[0].trim();
+      if (optionName.isEmpty()) {
+        throwInvalidSystemOption(systemProp, "does not contain a key before the assignment");
+      }
+
+      final String optionString = stripQuotes(keyValue[1].trim(), systemProp);
+      if (optionString.isEmpty()) {
+        throwInvalidSystemOption(systemProp, "does not contain a value after the assignment");
+      }
+
+      final OptionValue defaultValue = optionManager.getOption(optionName);
+      if (defaultValue == null) {
+        throwInvalidSystemOption(systemProp, "does not specify a valid option name");
+      }
+      if (defaultValue.type != OptionType.SYSTEM) {
+        throwInvalidSystemOption(systemProp, "does not specify a SYSTEM option ");
+      }
+
+      final OptionValue optionValue = OptionValue.createOption(
+          defaultValue.kind, OptionType.SYSTEM, optionName, optionString);
+      optionManager.setOption(optionValue);
+    }
   }
 
   public static void main(String[] cli) throws DrillbitStartupException {
@@ -154,6 +228,7 @@ public class Drillbit implements Closeable{
     manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider);
     manager.getContext().getStorage().init();
     manager.getContext().getOptionManager().init();
+    javaPropertiesToSystemOptions();
     handle = coord.register(md);
     startJetty();
   }

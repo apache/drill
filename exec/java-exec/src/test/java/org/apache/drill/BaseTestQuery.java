@@ -51,7 +51,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -60,7 +59,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class BaseTestQuery extends ExecTest{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
   /**
    * Number of Drillbits in test cluster. Default is 1.

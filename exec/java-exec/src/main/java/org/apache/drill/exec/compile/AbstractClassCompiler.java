@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.compile;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.drill.common.util.DrillStringUtils;
@@ -35,6 +37,18 @@ public abstract class AbstractClassCompiler {
       throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
     if (getLogger().isDebugEnabled()) {
       getLogger().debug("Compiling (source size={}):\n{}", DrillStringUtils.readable(sourceCode.length()), prefixLineNumbers(sourceCode));
+
+/* uncomment this to get a dump of the generated source in /tmp
+      // This can be used to write out the generated operator classes for debugging purposes
+      // TODO: should these be put into a directory named with the query id and/or fragment id
+      final int lastSlash = className.slash.lastIndexOf('/');
+      final File dir = new File("/tmp", className.slash.substring(0, lastSlash));
+      dir.mkdirs();
+      final File file = new File(dir, className.slash.substring(lastSlash + 1) + ".java");
+      final FileWriter writer = new FileWriter(file);
+      writer.write(sourceCode);
+      writer.close();
+*/
     }
     return getByteCode(className, sourceCode);
   }

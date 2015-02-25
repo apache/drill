@@ -17,9 +17,13 @@
  */
 package org.apache.drill.exec.compile.bytecode;
 
+import java.util.List;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.BasicInterpreter;
@@ -29,47 +33,136 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class ReplacingInterpreter extends BasicInterpreter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReplacingInterpreter.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReplacingInterpreter.class);
 
+  private final String className; // fully qualified internal class name
   private int index = 0;
+  private final List<ReplacingBasicValue> valueList;
 
-  @Override
-  public BasicValue newValue(Type t) {
-    if(t != null){
-      ValueHolderIden iden = HOLDERS.get(t.getDescriptor());
-      if(iden != null){
-        ReplacingBasicValue v = new ReplacingBasicValue(t, iden, index++);
-        v.markFunctionReturn();
-        return v;
-      }
-    }
-    return super.newValue(t);
-
+  public ReplacingInterpreter(final String className, final List<ReplacingBasicValue> valueList) {
+    this.className = className;
+    this.valueList = valueList;
   }
 
   @Override
-  public BasicValue newOperation(AbstractInsnNode insn) throws AnalyzerException {
-    if(insn.getOpcode() == Opcodes.NEW){
-      TypeInsnNode t = (TypeInsnNode) insn;
-      ValueHolderIden iden = HOLDERS.get(t.desc);
+  public BasicValue newValue(final Type t) {
+    if (t != null) {
+      final ValueHolderIden iden = HOLDERS.get(t.getDescriptor());
+      if (iden != null) {
+        final ReplacingBasicValue v = ReplacingBasicValue.create(t, iden, index++, valueList);
+        v.markFunctionReturn();
+        return v;
+      }
 
-      if(iden != null){
-        return new ReplacingBasicValue(Type.getObjectType(t.desc), iden, index++);
+      // We need to track use of the "this" objectref
+      if ((t.getSort() == Type.OBJECT) && className.equals(t.getInternalName())) {
+        final ReplacingBasicValue rbValue = ReplacingBasicValue.create(t, null, 0, valueList);
+        rbValue.setThis();
+        return rbValue;
+      }
+    }
+
+    return super.newValue(t);
+  }
+
+  @Override
+  public BasicValue newOperation(final AbstractInsnNode insn) throws AnalyzerException {
+    if (insn.getOpcode() == Opcodes.NEW) {
+      final TypeInsnNode t = (TypeInsnNode) insn;
+
+      // if this is for a holder class, we'll replace it
+      final ValueHolderIden iden = HOLDERS.get(t.desc);
+      if (iden != null) {
+        return ReplacingBasicValue.create(Type.getObjectType(t.desc), iden, index++, valueList);
       }
     }
 
     return super.newOperation(insn);
   }
 
+  @Override
+  public BasicValue unaryOperation(final AbstractInsnNode insn, final BasicValue value)
+      throws AnalyzerException {
+    /*
+     * We're looking for the assignment of an operator member variable that's a holder to a local
+     * objectref. If we spot that, we can't replace the local objectref (at least not
+     * until we do the work to replace member variable holders).
+     *
+     * Note that a GETFIELD does not call newValue(), as would happen for a local variable, so we're
+     * emulating that here.
+     */
+    if ((insn.getOpcode() == Opcodes.GETFIELD) && (value instanceof ReplacingBasicValue)) {
+      final ReplacingBasicValue possibleThis = (ReplacingBasicValue) value;
+      if (possibleThis.isThis()) {
+        final FieldInsnNode fieldInsn = (FieldInsnNode) insn;
+        if (HOLDERS.get(fieldInsn.desc) != null) {
+          final BasicValue fetchedField = super.unaryOperation(insn, value);
+          final ReplacingBasicValue replacingValue =
+              ReplacingBasicValue.create(fetchedField.getType(), null, -1, valueList);
+          replacingValue.setAssignedToMember();
+          return replacingValue;
+        }
+      }
+    }
+
+    return super.unaryOperation(insn,  value);
+  }
+
+  @Override
+  public BasicValue binaryOperation(final AbstractInsnNode insn,
+      final BasicValue value1, final BasicValue value2) throws AnalyzerException {
+    /*
+     * We're looking for the assignment of a local holder objectref to a member variable.
+     * If we spot that, then the local holder can't be replaced, since we don't (yet)
+     * have the mechanics to replace the member variable with the holder's members or
+     * to assign all of them when this happens.
+     */
+    if (insn.getOpcode() == Opcodes.PUTFIELD) {
+      if (value2.isReference() && (value1 instanceof ReplacingBasicValue)) {
+        final ReplacingBasicValue possibleThis = (ReplacingBasicValue) value1;
+        if (possibleThis.isThis() && (value2 instanceof ReplacingBasicValue)) {
+          // if this is a reference for a holder class, we can't replace it
+          if (HOLDERS.get(value2.getType().getDescriptor()) != null) {
+            final ReplacingBasicValue localRef = (ReplacingBasicValue) value2;
+            localRef.setAssignedToMember();
+          }
+        }
+      }
+    }
+
+    return super.binaryOperation(insn, value1, value2);
+  }
+
+  @Override
+  public BasicValue naryOperation(final AbstractInsnNode insn,
+      final List<? extends BasicValue> values) throws AnalyzerException {
+    if (insn instanceof MethodInsnNode) {
+      boolean skipOne = insn.getOpcode() != Opcodes.INVOKESTATIC;
+
+      // Note if the argument is a holder, and is used as a function argument
+      for(BasicValue value : values) {
+        // if non-static method, skip over the receiver
+        if (skipOne) {
+          skipOne = false;
+          continue;
+        }
+
+        if (value instanceof ReplacingBasicValue) {
+          final ReplacingBasicValue argument = (ReplacingBasicValue) value;
+          argument.setFunctionArgument();
+        }
+      }
+    }
+
+    return super.naryOperation(insn,  values);
+  }
+
   private static String desc(Class<?> c) {
-    Type t = Type.getType(c);
+    final Type t = Type.getType(c);
     return t.getDescriptor();
   }
 
-
-
   static {
-
     ImmutableMap.Builder<String, ValueHolderIden> builder = ImmutableMap.builder();
     ImmutableSet.Builder<String> setB = ImmutableSet.builder();
     for (Class<?> c : ScalarReplacementTypes.CLASSES) {
@@ -86,6 +179,4 @@ public class ReplacingInterpreter extends BasicInterpreter {
 
   private final static ImmutableMap<String, ValueHolderIden> HOLDERS;
   public final static ImmutableSet<String> HOLDER_DESCRIPTORS;
-
-
 }

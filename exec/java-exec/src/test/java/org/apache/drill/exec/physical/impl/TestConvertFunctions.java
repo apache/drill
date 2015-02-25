@@ -30,24 +30,32 @@ import java.util.List;
 import mockit.Injectable;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.compile.ClassTransformer;
+import org.apache.drill.exec.compile.ClassTransformer.ScalarReplacementOption;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.util.ByteBufUtil.HadoopWritables;
 import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class TestConvertFunctions extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestConvertFunctions.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestConvertFunctions.class);
 
   private static final String CONVERSION_TEST_LOGICAL_PLAN = "functions/conv/conversionTestWithLogicalPlan.json";
   private static final String CONVERSION_TEST_PHYSICAL_PLAN = "functions/conv/conversionTestWithPhysicalPlan.json";
@@ -318,13 +326,15 @@ public class TestConvertFunctions extends BaseTestQuery {
     verifyPhysicalPlan("convert_to('apache_drill', 'UTF8')", new byte[] {'a', 'p', 'a', 'c', 'h', 'e', '_', 'd', 'r', 'i', 'l', 'l'});
   }
 
+  @Ignore // TODO(DRILL-2326) remove this when we get rid of the scalar replacement option test cases below
   @Test
   public void testBigIntVarCharReturnTripConvertLogical() throws Exception {
-    String logicalPlan = Resources.toString(Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), Charsets.UTF_8);
-    List<QueryResultBatch> results =  testLogicalWithResults(logicalPlan);
+    final String logicalPlan = Resources.toString(
+        Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), Charsets.UTF_8);
+    final List<QueryResultBatch> results =  testLogicalWithResults(logicalPlan);
     int count = 0;
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for (QueryResultBatch result : results){
+    final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for (QueryResultBatch result : results) {
       count += result.getHeader().getRowCount();
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() > 0) {
@@ -334,6 +344,97 @@ public class TestConvertFunctions extends BaseTestQuery {
       result.release();
     }
     assertTrue(count == 10);
+  }
+
+  /**
+   * Set up the options to test the scalar replacement retry option (see
+   * ClassTransformer.java). Scalar replacement rewrites bytecode to replace
+   * value holders (essentially boxed values) with their member variables as
+   * locals. There is still one pattern that doesn't work, and occasionally new
+   * ones are introduced. This can be used in tests that exercise failing patterns.
+   *
+   * <p>This also flushes the compiled code cache.
+   *
+   * <p>TODO this should get moved to QueryTestUtil once DRILL-2245 has been merged
+   *
+   * @param drillbit the drillbit
+   * @param srOption the scalar replacement option value to use
+   * @return the original scalar replacement option setting (so it can be restored)
+   */
+  private static OptionValue setupScalarReplacementOption(
+      final Drillbit drillbit, final ScalarReplacementOption srOption) {
+    // set the system option
+    final DrillbitContext drillbitContext = drillbit.getContext();
+    final OptionManager optionManager = drillbitContext.getOptionManager();
+    final OptionValue originalOptionValue = optionManager.getOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION);
+    final OptionValue newOptionValue = OptionValue.createString(OptionType.SYSTEM,
+        ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase());
+    optionManager.setOption(newOptionValue);
+
+    // flush the code cache
+    drillbitContext.getCompiler().flushCache();
+
+    return originalOptionValue;
+  }
+
+  /**
+   * Restore the original scalar replacement option returned from
+   * setupScalarReplacementOption().
+   *
+   * <p>This also flushes the compiled code cache.
+   *
+   * <p>TODO this should get moved to QueryTestUtil once DRILL-2245 has been merged
+   *
+   * @param drillbit the drillbit
+   * @param srOption the scalar replacement option value to use
+   */
+  private static void restoreScalarReplacementOption(final Drillbit drillbit, final OptionValue srOption) {
+    final DrillbitContext drillbitContext = drillbit.getContext();
+    final OptionManager optionManager = drillbitContext.getOptionManager();
+    optionManager.setOption(srOption);
+
+    // flush the code cache
+    drillbitContext.getCompiler().flushCache();
+  }
+
+  @Test // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
+  public void testBigIntVarCharReturnTripConvertLogical_ScalarReplaceTRY() throws Exception {
+    final OptionValue srOption = setupScalarReplacementOption(bits[0], ScalarReplacementOption.TRY);
+    try {
+      // this should work fine
+      testBigIntVarCharReturnTripConvertLogical();
+    } finally {
+      // restore the system option
+      restoreScalarReplacementOption(bits[0], srOption);
+    }
+  }
+
+  @Test // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
+  public void testBigIntVarCharReturnTripConvertLogical_ScalarReplaceON() throws Exception {
+    final OptionValue srOption = setupScalarReplacementOption(bits[0], ScalarReplacementOption.ON);
+    boolean caughtException = false;
+    try {
+      // this will fail (with a JUnit assertion) until we fix the SR bug
+      testBigIntVarCharReturnTripConvertLogical();
+    } catch(RpcException e) {
+      caughtException = true;
+    } finally {
+      restoreScalarReplacementOption(bits[0], srOption);
+    }
+
+    assertTrue(caughtException);
+  }
+
+  @Test // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
+  public void testBigIntVarCharReturnTripConvertLogical_ScalarReplaceOFF() throws Exception {
+    final OptionValue srOption = setupScalarReplacementOption(bits[0], ScalarReplacementOption.OFF);
+    try {
+      // this should work fine
+      testBigIntVarCharReturnTripConvertLogical();
+    } finally {
+      // restore the system option
+      restoreScalarReplacementOption(bits[0], srOption);
+    }
   }
 
   @Test

@@ -20,44 +20,65 @@ package org.apache.drill.exec.compile.bytecode;
 import java.io.PrintWriter;
 
 import org.apache.commons.io.output.StringBuilderWriter;
+import org.apache.drill.exec.compile.CheckMethodVisitorFsm;
+import org.apache.drill.exec.compile.CompilationConfig;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.Textifier;
 import org.objectweb.asm.util.TraceMethodVisitor;
 
 public class ValueHolderReplacementVisitor extends ClassVisitor {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderReplacementVisitor.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderReplacementVisitor.class);
+  private final boolean verifyBytecode;
+  private String className; // fully qualified internal class name
 
-  public ValueHolderReplacementVisitor(ClassVisitor cw) {
-    super(Opcodes.ASM4, cw);
+  public ValueHolderReplacementVisitor(ClassVisitor cw, boolean verifyBytecode) {
+    super(CompilationConfig.ASM_API_VERSION, cw);
+    this.verifyBytecode = verifyBytecode;
   }
 
+  @Override
+  public void visit(final int version, final int access, final String name, final String signature,
+      final String superName, final String[] interfaces) {
+    // capture the name of the class for later analysis
+    className = name;
 
+    super.visit(version, access, name, signature, superName, interfaces);
+  }
 
   @Override
   public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
     MethodVisitor innerVisitor = super.visitMethod(access, name, desc, signature, exceptions);
 //     innerVisitor = new Debugger(access, name, desc, signature, exceptions, innerVisitor);
-    return new ScalarReplacementNode(access, name, desc, signature, exceptions, innerVisitor);
+    if (verifyBytecode) {
+      innerVisitor = new CheckMethodVisitorFsm(api, innerVisitor);
+    }
+
+    /*
+     * Before using the ScalarReplacementNode to rewrite method code, use the
+     * AloadPopRemover to eliminate unnecessary ALOAD-POP pairs; see the
+     * AloadPopRemover javadoc for a detailed explanation.
+     */
+    return new AloadPopRemover(api,
+        new ScalarReplacementNode(
+            className, access, name, desc, signature, exceptions, innerVisitor, verifyBytecode));
   }
 
   private static class Debugger extends MethodNode {
-
     MethodVisitor inner;
 
     public Debugger(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor inner) {
       super(access, name, desc, signature, exceptions);
       this.inner = inner;
-
     }
 
     @Override
     public void visitEnd() {
-      try{
+      try {
         accept(inner);
-      }catch(Exception e){
+        super.visitEnd();
+      } catch(Exception e){
         Textifier t = new Textifier();
         accept(new TraceMethodVisitor(t));
         StringBuilderWriter sw = new StringBuilderWriter();
@@ -68,8 +89,6 @@ public class ValueHolderReplacementVisitor extends ClassVisitor {
         logger.error(String.format("Failure while rendering method %s, %s, %s.  ByteCode:\n %s", name, desc, signature, bytecode), e);
         throw new RuntimeException(String.format("Failure while rendering method %s, %s, %s.  ByteCode:\n %s", name, desc, signature, bytecode), e);
       }
-
     }
-
   }
 }

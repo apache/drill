@@ -59,5 +59,4 @@ public class JaninoClassCompiler extends AbstractClassCompiler {
 
   @Override
   protected org.slf4j.Logger getLogger() { return logger; }
-
 }

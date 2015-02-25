@@ -82,7 +82,7 @@ public class QueryClassLoader extends URLClassLoader {
 
   public void injectByteCode(String className, byte[] classBytes) throws IOException {
     if (customClasses.containsKey(className)) {
-      throw new IOException(String.format("The class defined {} has already been loaded.", className));
+      throw new IOException(String.format("The class defined %s has already been loaded.", className));
     }
     customClasses.put(className, classBytes);
   }

@@ -87,6 +87,10 @@ public class DrillFunctionRegistry {
     }
   }
 
+  public int size(){
+    return methods.size();
+  }
+
   /** Returns functions with given name. Function name is case insensitive. */
   public List<DrillFuncHolder> getMethods(String name) {
     return this.methods.get(name.toLowerCase());

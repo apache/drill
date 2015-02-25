@@ -104,7 +104,7 @@ public class TestClassTransformation extends BaseTestQuery {
   private void compilationInnerClass(QueryClassLoader loader) throws Exception{
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
 
-    ClassTransformer ct = new ClassTransformer();
+    ClassTransformer ct = new ClassTransformer(sessionOptions);
     Class<? extends ExampleInner> c = (Class<? extends ExampleInner>) ct.getImplementationClass(loader, cg.getDefinition(), cg.generateAndGet(), cg.getMaterializedClassName());
     ExampleInner t = (ExampleInner) c.newInstance();
     t.doOutside();
