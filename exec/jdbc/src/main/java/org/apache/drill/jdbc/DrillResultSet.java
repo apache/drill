@@ -76,6 +76,20 @@ public class DrillResultSet extends AvaticaResultSet {
     listener.close();
   }
 
+  @Override
+  public boolean next() throws SQLException {
+    // Next may be called after close has been called (for example after a user cancel) which in turn
+    // sets the cursor to null. So we must check before we call next.
+    // TODO: handle next() after close is called in the Avatica code.
+    if(super.cursor!=null){
+      return super.next();
+    }else{
+      return false;
+    }
+
+  }
+
+
   @Override protected DrillResultSet execute() throws SQLException{
     // Call driver's callback. It is permitted to throw a RuntimeException.
     DrillConnectionImpl connection = (DrillConnectionImpl) statement.getConnection();
@@ -200,6 +214,9 @@ public class DrillResultSet extends AvaticaResultSet {
           qrb.getData().release();
         }
       }
+      // close may be called before the first result is received and the main thread is blocked waiting
+      // for the result. In that case we want to unblock the main thread.
+      latch.countDown();
       completed = true;
     }
 
