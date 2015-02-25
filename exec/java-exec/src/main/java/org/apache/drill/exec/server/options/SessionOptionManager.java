@@ -19,8 +19,8 @@ package org.apache.drill.exec.server.options;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SessionOptionManager extends InMemoryOptionManager{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
+public class SessionOptionManager extends InMemoryOptionManager {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
 
   public SessionOptionManager(OptionManager systemOptions) {
     super(systemOptions, new ConcurrentHashMap<String, OptionValue>());
@@ -30,5 +30,4 @@ public class SessionOptionManager extends InMemoryOptionManager{
   boolean supportsOption(OptionValue value) {
     return value.type == OptionValue.OptionType.SESSION;
   }
-
 }

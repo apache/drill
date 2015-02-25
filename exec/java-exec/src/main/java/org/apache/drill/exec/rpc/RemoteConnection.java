@@ -54,6 +54,7 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
       return true;
     }catch(InterruptedException e){
       listener.failed(new RpcException(e));
+      // TODO InterruptedException
       return false;
     }
   }
@@ -109,6 +110,7 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
       channel.close().get();
     } catch (InterruptedException | ExecutionException e) {
       logger.warn("Caught exception while closing channel.", e);
+      // TODO InterruptedException
     }
   }
 

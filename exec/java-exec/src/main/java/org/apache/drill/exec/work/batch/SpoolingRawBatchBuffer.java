@@ -162,6 +162,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
         return batch;
       } catch (InterruptedException e) {
         return null;
+        // TODO InterruptedException
       }
     }
     if (w == null) {

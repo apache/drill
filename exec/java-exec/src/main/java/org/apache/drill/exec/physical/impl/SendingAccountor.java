@@ -46,6 +46,7 @@ public class SendingAccountor {
       batchesSent.set(0);
     } catch (InterruptedException e) {
       logger.warn("Failure while waiting for send complete.", e);
+      // TODO InterruptedException
     }
   }
 }

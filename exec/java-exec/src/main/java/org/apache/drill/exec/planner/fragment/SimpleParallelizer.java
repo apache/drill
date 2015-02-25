@@ -33,7 +33,6 @@ import com.google.common.collect.Ordering;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -145,7 +144,7 @@ public class SimpleParallelizer {
    * @param planningSet
    * @return Returns a list of leaf fragments in fragment dependency graph.
    */
-  private Set<Wrapper> constructFragmentDependencyGraph(PlanningSet planningSet) {
+  private static Set<Wrapper> constructFragmentDependencyGraph(PlanningSet planningSet) {
 
     // Set up dependency of fragments based on the affinity of exchange that separates the fragments.
     for(Wrapper currentFragmentWrapper : planningSet) {

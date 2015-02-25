@@ -31,24 +31,21 @@ import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlSetOption;
 
-public class SetOptionHandler extends AbstractSqlHandler{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
+public class SetOptionHandler extends AbstractSqlHandler {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
 
-  QueryContext context;
-
+  private final QueryContext context;
 
   public SetOptionHandler(QueryContext context) {
-    super();
     this.context = context;
   }
 
-
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
-    SqlSetOption option = unwrap(sqlNode, SqlSetOption.class);
-    String scope = option.getScope();
-    String name = option.getName();
-    SqlNode value = option.getValue();
+    final SqlSetOption option = unwrap(sqlNode, SqlSetOption.class);
+    final String scope = option.getScope();
+    final String name = option.getName();
+    final SqlNode value = option.getValue();
     OptionValue.OptionType type;
     if (value instanceof SqlLiteral) {
       switch (scope.toLowerCase()) {
@@ -70,9 +67,5 @@ public class SetOptionHandler extends AbstractSqlHandler{
     }
 
     return DirectPlan.createDirectPlan(context, true, String.format("%s updated.", name));
-
   }
-
-
-
 }

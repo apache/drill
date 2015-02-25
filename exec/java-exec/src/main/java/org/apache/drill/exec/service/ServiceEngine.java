@@ -57,7 +57,7 @@ public class ServiceEngine implements Closeable{
     this.allowPortHunting = allowPortHunting;
   }
 
-  public DrillbitEndpoint start() throws DrillbitStartupException, InterruptedException, UnknownHostException{
+  public DrillbitEndpoint start() throws DrillbitStartupException, UnknownHostException{
     int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT), allowPortHunting);
     String address = useIP ?  InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
     DrillbitEndpoint partialEndpoint = DrillbitEndpoint.newBuilder()

@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 /**
@@ -26,8 +24,6 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
  * output nodes and storage nodes.  They are there driving force behind the completion of a query.
  */
 public interface RootExec {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootExec.class);
-
   /**
    * Do the next batch of work.
    * @return Whether or not additional batches of work are necessary.  False means that this fragment is done.
@@ -44,5 +40,4 @@ public interface RootExec {
    * @param handle
    */
   public void receivingFragmentFinished(FragmentHandle handle);
-
 }

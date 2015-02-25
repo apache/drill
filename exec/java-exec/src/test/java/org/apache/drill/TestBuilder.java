@@ -27,7 +27,6 @@ import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 
@@ -36,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 
@@ -124,7 +122,7 @@ public class TestBuilder {
   }
 
   public TestBuilder sqlQuery(String query) {
-    this.query = BaseTestQuery.normalizeQuery(query);
+    this.query = QueryTestUtil.normalizeQuery(query);
     this.queryType = UserBitShared.QueryType.SQL;
     return this;
   }

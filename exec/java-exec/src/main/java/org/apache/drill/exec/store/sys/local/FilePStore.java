@@ -56,13 +56,13 @@ public class FilePStore<V> implements PStore<V> {
     this.fs = fs;
 
     try {
-      mk(basePath);
+      mkdirs(basePath);
     } catch (IOException e) {
       throw new RuntimeException("Failure setting pstore configuration path.");
     }
   }
 
-  private void mk(Path path) throws IOException{
+  private void mkdirs(Path path) throws IOException{
     fs.mkdirs(path);
   }
 
@@ -112,20 +112,20 @@ public class FilePStore<V> implements PStore<V> {
     }
   }
 
-  private Path p(String name) throws IOException {
+  private Path makePath(String name) {
     Preconditions.checkArgument(
         !name.contains("/") &&
         !name.contains(":") &&
         !name.contains(".."));
 
-    Path f = new Path(basePath, name + DRILL_SYS_FILE_SUFFIX);
+    final Path path = new Path(basePath, name + DRILL_SYS_FILE_SUFFIX);
     // do this to check file name.
-    return f;
+    return path;
   }
 
   public V get(String key) {
     try{
-      Path path = p(key);
+      Path path = makePath(key);
       if(!fs.exists(path)){
         return null;
       }
@@ -133,15 +133,16 @@ public class FilePStore<V> implements PStore<V> {
       throw new RuntimeException(e);
     }
 
-    try (InputStream is = fs.open(p(key))) {
+    final Path path = makePath(key);
+    try (InputStream is = fs.open(path)) {
       return config.getSerializer().deserialize(IOUtils.toByteArray(is));
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Unable to deserialize \"" + path + "\"", e);
     }
   }
 
   public void put(String key, V value) {
-    try (OutputStream os = fs.create(p(key))) {
+    try (OutputStream os = fs.create(makePath(key))) {
       IOUtils.write(config.getSerializer().serialize(value), os);
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -151,7 +152,7 @@ public class FilePStore<V> implements PStore<V> {
   @Override
   public boolean putIfAbsent(String key, V value) {
     try {
-      Path p = p(key);
+      Path p = makePath(key);
       if (fs.exists(p)) {
         return false;
       } else {
@@ -165,7 +166,7 @@ public class FilePStore<V> implements PStore<V> {
 
   public void delete(String key) {
     try {
-      fs.delete(p(key), false);
+      fs.delete(makePath(key), false);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

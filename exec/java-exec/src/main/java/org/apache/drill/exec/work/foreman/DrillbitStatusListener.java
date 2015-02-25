@@ -26,7 +26,7 @@ import java.util.Set;
  * Interface to define the listener to take actions when the set of active drillbits is changed.
  */
 public interface DrillbitStatusListener {
-
+  // TODO this doesn't belong here
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitStatusListener.class);
 
   /**

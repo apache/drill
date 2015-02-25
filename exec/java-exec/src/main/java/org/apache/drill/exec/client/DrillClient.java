@@ -98,7 +98,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator) {
     this.ownsZkConnection = coordinator == null;
     this.ownsAllocator = allocator == null;
-    this.allocator = allocator == null ? new TopLevelAllocator(config) : allocator;
+    this.allocator = ownsAllocator ? new TopLevelAllocator(config) : allocator;
     this.config = config;
     this.clusterCoordinator = coordinator;
     this.reconnectTimes = config.getInt(ExecConstants.BIT_RETRY_TIMES);
@@ -131,7 +131,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   /**
    * Connects the client to a Drillbit server
    *
-   * @throws IOException
+   * @throws RpcException
    */
   public void connect() throws RpcException {
     connect(null, new Properties());
@@ -176,7 +176,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     connected = true;
   }
 
-  protected EventLoopGroup createEventLoop(int size, String prefix) {
+  protected static EventLoopGroup createEventLoop(int size, String prefix) {
     return TransportCheck.createEventLoopGroup(size, prefix);
   }
 
@@ -204,12 +204,8 @@ public class DrillClient implements Closeable, ConnectionThrottle{
 
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
     FutureHandler f = new FutureHandler();
-    try {
-      client.connect(f, endpoint, props, getUserCredentials());
-      f.checkedGet();
-    } catch (InterruptedException e) {
-      throw new RpcException(e);
-    }
+    client.connect(f, endpoint, props, getUserCredentials());
+    f.checkedGet();
   }
 
   public BufferAllocator getAllocator() {
@@ -219,6 +215,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   /**
    * Closes this client's connection to the server
    */
+  @Override
   public void close() {
     if (this.client != null) {
       this.client.close();
@@ -286,15 +283,13 @@ public class DrillClient implements Closeable, ConnectionThrottle{
    * Submits a Logical plan for direct execution (bypasses parsing)
    *
    * @param plan the plan to execute
-   * @return a handle for the query result
-   * @throws RpcException
    */
   public void runQuery(QueryType type, String plan, UserResultsListener resultsListener) {
     client.submitQuery(resultsListener, newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build());
   }
 
   private class ListHoldingResultsListener implements UserResultsListener {
-    private Vector<QueryResultBatch> results = new Vector<QueryResultBatch>();
+    private Vector<QueryResultBatch> results = new Vector<>();
     private SettableFuture<List<QueryResultBatch>> future = SettableFuture.create();
     private UserProtos.RunQuery query ;
 

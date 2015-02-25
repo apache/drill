@@ -21,7 +21,6 @@ import static com.google.common.base.Throwables.propagate;
 
 import java.util.List;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.Drillbit;
 import org.slf4j.Logger;
@@ -33,8 +32,7 @@ import com.google.common.collect.ImmutableList;
  * Starts one or more Drillbits, an embedded ZooKeeper cluster and provides a configured client for testing.
  */
 public class DrillSystemTestBase extends TestWithZookeeper {
-
-  static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
+  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSystemTestBase.class);
 
   private List<Drillbit> servers;
 
@@ -62,9 +60,7 @@ public class DrillSystemTestBase extends TestWithZookeeper {
     }
   }
 
-
   public Drillbit getABit(){
     return this.servers.iterator().next();
   }
-
 }

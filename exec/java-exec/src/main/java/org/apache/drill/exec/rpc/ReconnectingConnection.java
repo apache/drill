@@ -114,6 +114,7 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
         }
       } catch (InterruptedException e) {
         cmd.connectionFailed(FailureType.CONNECTION, e);
+        // TODO InterruptedException
       } catch (ExecutionException e) {
         throw new IllegalStateException();
       }

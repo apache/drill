@@ -30,7 +30,6 @@ import java.io.Closeable;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.work.ErrorHelper;

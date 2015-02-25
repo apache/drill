@@ -17,65 +17,27 @@
  */
 package org.apache.drill.exec;
 
-import static com.google.common.base.Throwables.propagate;
-
-import java.io.File;
-import java.io.IOException;
-
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.util.MiniZooKeeperCluster;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 public class TestWithZookeeper extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestWithZookeeper.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestWithZookeeper.class);
 
-  private static File testDir = new File("target/test-data");
-  private static DrillConfig config;
-  private static String zkUrl;
-  private static MiniZooKeeperCluster zkCluster;
+  private static ZookeeperHelper zkHelper;
 
   @BeforeClass
   public static void setUp() throws Exception {
-    config = DrillConfig.create();
-    zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
-    setupTestDir();
-    startZookeeper(1);
+    zkHelper = new ZookeeperHelper();
+    zkHelper.startZookeeper(1);
   }
 
   @AfterClass
   public static void tearDown() throws Exception {
-    stopZookeeper();
+    zkHelper.stopZookeeper();
   }
 
-  private static void setupTestDir() {
-    if (!testDir.exists()) {
-      testDir.mkdirs();
-    }
+  public static DrillConfig getConfig() {
+    return zkHelper.getConfig();
   }
-
-  private static void startZookeeper(int numServers) {
-    try {
-      zkCluster = new MiniZooKeeperCluster();
-      zkCluster.setDefaultClientPort(Integer.parseInt(zkUrl.split(":")[1]));
-      zkCluster.startup(testDir, numServers);
-    } catch (IOException e) {
-      propagate(e);
-    } catch (InterruptedException e) {
-      propagate(e);
-    }
-  }
-
-  private static void stopZookeeper() {
-    try {
-      zkCluster.shutdown();
-    } catch (IOException e) {
-      propagate(e);
-    }
-  }
-
-  public static DrillConfig getConfig(){
-    return config;
-  }
-
 }

@@ -202,4 +202,8 @@ public interface ExecConstants {
 
   public static final String ENABLE_WINDOW_FUNCTIONS = "window.enable";
   public static final OptionValidator ENABLE_WINDOW_FUNCTIONS_VALIDATOR = new BooleanValidator(ENABLE_WINDOW_FUNCTIONS, false);
+
+  public static final String DRILLBIT_EXCEPTION_INJECTIONS = "drill.exec.testing.exception-injections";
+  public static final OptionValidator DRILLBIT_EXCEPTION_INJECTIONS_VALIDATOR =
+      new StringValidator(DRILLBIT_EXCEPTION_INJECTIONS, "");
 }

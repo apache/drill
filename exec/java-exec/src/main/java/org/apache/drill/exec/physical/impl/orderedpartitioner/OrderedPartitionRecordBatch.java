@@ -307,6 +307,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       logger.error("Failure while building final partition table.", ex);
       context.fail(ex);
       return false;
+      // TODO InterruptedException
     }
     return true;
   }

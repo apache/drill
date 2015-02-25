@@ -46,7 +46,7 @@ public class ControllerImpl implements Controller {
   }
 
   @Override
-  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws InterruptedException, DrillbitStartupException {
+  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException {
     server = new ControlServer(handler, context, connectionRegistry);
     int port = context.getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
     port = server.bind(port, allowPortHunting);

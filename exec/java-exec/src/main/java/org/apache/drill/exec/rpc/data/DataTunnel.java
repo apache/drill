@@ -50,6 +50,7 @@ public class DataTunnel {
       manager.runCommand(b);
     }catch(InterruptedException e){
       outcomeListener.failed(new RpcException("Interrupted while trying to get sending semaphore.", e));
+      // TODO InterruptedException
     }
   }
 
@@ -60,6 +61,7 @@ public class DataTunnel {
       manager.runCommand(b);
     }catch(InterruptedException e){
       b.connectionFailed(FailureType.CONNECTION, new RpcException("Interrupted while trying to get sending semaphore.", e));
+      // TODO InterruptedException
     }
     return b.getFuture();
   }

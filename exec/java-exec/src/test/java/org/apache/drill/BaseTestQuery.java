@@ -23,18 +23,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter;
-import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -58,7 +53,7 @@ import org.junit.runner.Description;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class BaseTestQuery extends ExecTest{
+public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
   /**
@@ -129,7 +124,7 @@ public class BaseTestQuery extends ExecTest{
   }
 
   @BeforeClass
-  public static void openClient() throws Exception{
+  public static void openClient() throws Exception {
     config = DrillConfig.create(TEST_CONFIGURATIONS);
     allocator = new TopLevelAllocator(config);
     if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
@@ -139,20 +134,15 @@ public class BaseTestQuery extends ExecTest{
     }
 
     bits = new Drillbit[drillbitCount];
-    for(int i=0; i<drillbitCount; i++) {
+    for(int i = 0; i < drillbitCount; i++) {
       bits[i] = new Drillbit(config, serviceSet);
       bits[i].run();
     }
 
-    client = new DrillClient(config, serviceSet.getCoordinator());
-    client.connect();
-    List<QueryResultBatch> results = client.runQuery(QueryType.SQL, String.format("alter session set `%s` = 2", ExecConstants.MAX_WIDTH_PER_NODE_KEY));
-    for (QueryResultBatch b : results) {
-      b.release();
-    }
+    client = QueryTestUtil.createClient(config,  serviceSet, 2);
   }
 
-  protected BufferAllocator getAllocator() {
+  protected static BufferAllocator getAllocator() {
     return allocator;
   }
 
@@ -205,27 +195,23 @@ public class BaseTestQuery extends ExecTest{
   }
 
   public static List<QueryResultBatch>  testRunAndReturn(QueryType type, String query) throws Exception{
-    query = normalizeQuery(query);
+    query = QueryTestUtil.normalizeQuery(query);
     return client.runQuery(type, query);
   }
 
-  public static int testRunAndPrint(QueryType type, String query) throws Exception{
-    query = normalizeQuery(query);
-    PrintingResultsListener resultListener = new PrintingResultsListener(client.getConfig(), Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH);
-    client.runQuery(type, query, resultListener);
-    return resultListener.await();
+  public static int testRunAndPrint(final QueryType type, final String query) throws Exception {
+    return QueryTestUtil.testRunAndPrint(client, type, query);
   }
 
   protected static void testWithListener(QueryType type, String query, UserResultsListener resultListener) {
-    query = normalizeQuery(query);
-    client.runQuery(type, query, resultListener);
+    QueryTestUtil.testWithListener(client, type, query, resultListener);
   }
 
-  protected void testNoResult(String query, Object... args) throws Exception {
+  protected static void testNoResult(String query, Object... args) throws Exception {
     testNoResult(1, query, args);
   }
 
-  protected void testNoResult(int interation, String query, Object... args) throws Exception {
+  protected static void testNoResult(int interation, String query, Object... args) throws Exception {
     query = String.format(query, args);
     logger.debug("Running query:\n--------------\n"+query);
     for (int i = 0; i < interation; i++) {
@@ -237,27 +223,11 @@ public class BaseTestQuery extends ExecTest{
   }
 
   public static void test(String query, Object... args) throws Exception {
-    test(String.format(query, args));
+    QueryTestUtil.test(client, String.format(query, args));
   }
 
-  public static void test(String query) throws Exception{
-    query = normalizeQuery(query);
-    String[] queries = query.split(";");
-    for (String q : queries) {
-      if (q.trim().isEmpty()) {
-        continue;
-      }
-      testRunAndPrint(QueryType.SQL, q);
-    }
-  }
-
-  public static String normalizeQuery(String query) {
-    if (query.contains("${WORKING_PATH}")) {
-      return query.replaceAll(Pattern.quote("${WORKING_PATH}"), Matcher.quoteReplacement(TestTools.getWorkingPath()));
-    } else if (query.contains("[WORKING_PATH]")) {
-      return query.replaceAll(Pattern.quote("[WORKING_PATH]"), Matcher.quoteReplacement(TestTools.getWorkingPath()));
-    }
-    return query;
+  public static void test(final String query) throws Exception {
+    QueryTestUtil.test(client, query);
   }
 
   protected static int testLogical(String query) throws Exception{
@@ -272,19 +242,19 @@ public class BaseTestQuery extends ExecTest{
     return testRunAndPrint(QueryType.SQL, query);
   }
 
-  protected void testPhysicalFromFile(String file) throws Exception{
+  protected static void testPhysicalFromFile(String file) throws Exception{
     testPhysical(getFile(file));
   }
 
-  protected List<QueryResultBatch> testPhysicalFromFileWithResults(String file) throws Exception {
+  protected static List<QueryResultBatch> testPhysicalFromFileWithResults(String file) throws Exception {
     return testRunAndReturn(QueryType.PHYSICAL, getFile(file));
   }
 
-  protected void testLogicalFromFile(String file) throws Exception{
+  protected static void testLogicalFromFile(String file) throws Exception{
     testLogical(getFile(file));
   }
 
-  protected void testSqlFromFile(String file) throws Exception{
+  protected static void testSqlFromFile(String file) throws Exception{
     test(getFile(file));
   }
 
@@ -358,7 +328,8 @@ public class BaseTestQuery extends ExecTest{
     return rowCount;
   }
 
-  protected String getResultString(List<QueryResultBatch> results, String delimiter) throws SchemaChangeException {
+  protected static String getResultString(List<QueryResultBatch> results, String delimiter)
+      throws SchemaChangeException {
     StringBuilder formattedResults = new StringBuilder();
     boolean includeHeader = true;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());

@@ -20,7 +20,5 @@ package org.apache.drill.exec.work.foreman;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 
 public interface FragmentStatusListener {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStatusListener.class);
-
   public void statusUpdate(FragmentStatus status);
 }

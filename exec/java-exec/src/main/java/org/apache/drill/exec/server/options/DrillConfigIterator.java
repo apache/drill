@@ -72,10 +72,6 @@ public class DrillConfigIterator implements Iterable<OptionValue> {
 
       case NULL:
         throw new IllegalStateException("Config value \"" + name + "\" has NULL type");
-/* TODO(cwestin)
-        optionValue = OptionValue.createOption(kind, OptionType.BOOT, name, "");
-        break;
-*/
       }
 
       return optionValue;

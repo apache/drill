@@ -22,18 +22,14 @@ import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.exec.physical.PhysicalPlan;
 
 public class IdentityOptimizer extends Optimizer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IdentityOptimizer.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IdentityOptimizer.class);
 
   @Override
-  public void init(DrillConfig config) {
+  public void init(final DrillConfig config) {
   }
 
   @Override
-  public PhysicalPlan optimize(OptimizationContext context, LogicalPlan plan) {
+  public PhysicalPlan optimize(final OptimizationContext context, final LogicalPlan plan) {
     return null;
-  }
-
-  @Override
-  public void close() {
   }
 }

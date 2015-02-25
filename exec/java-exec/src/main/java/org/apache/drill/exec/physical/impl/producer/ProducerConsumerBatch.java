@@ -73,6 +73,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
         context.fail(e);
       }
       return IterOutcome.STOP;
+      // TODO InterruptedException
     } finally {
       stats.stopWait();
     }
@@ -147,6 +148,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
         }
       } catch (InterruptedException e) {
         logger.warn("Producer thread is interrupted.", e);
+        // TODO InterruptedException
       } finally {
         if (stop) {
           try {
@@ -154,6 +156,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
             queue.put(new RecordBatchDataWrapper(null, true, false));
           } catch (InterruptedException e) {
             logger.error("Unable to enqueue the last batch indicator. Something is broken.", e);
+            // TODO InterruptedException
           }
         }
         if (wrapper!=null) {
@@ -181,6 +184,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
       producer.join();
     } catch (InterruptedException e) {
       logger.warn("Interrupted while waiting for producer thread");
+      // TODO InterruptedException
     }
   }
 
@@ -191,6 +195,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
       cleanUpLatch.await();
     } catch (InterruptedException e) {
       logger.warn("Interrupted while waiting for producer to clean up first. I will try to clean up now...", e);
+      // TODO InterruptedException
     } finally {
       super.cleanup();
       clearQueue();

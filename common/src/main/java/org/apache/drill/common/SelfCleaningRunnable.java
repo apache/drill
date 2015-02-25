@@ -15,8 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.work;
+package org.apache.drill.common;
 
-public interface CancelableQuery {
-  public void cancel();
+/**
+ * A wrapper for Runnables that provides a hook to do cleanup.
+ */
+public abstract class SelfCleaningRunnable implements Runnable {
+  private final Runnable runnable;
+
+  /**
+   * Constructor.
+   *
+   * @param runnable the Runnable to wrap
+   */
+  public SelfCleaningRunnable(final Runnable runnable) {
+    this.runnable = runnable;
+  }
+
+  @Override
+  public void run() {
+    try {
+      runnable.run();
+    } finally {
+      cleanup();
+    }
+  }
+
+  /**
+   * Cleanup.
+   *
+   * <p>Derived classes should put any necessary cleanup in here. This
+   * is guaranteed to be called, even if the wrapped Runnable throws an
+   * exception.
+   */
+  protected abstract void cleanup();
 }

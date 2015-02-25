@@ -30,13 +30,13 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.exec.work.foreman.ForemanException;
 
 /**
  * This managers determines when to run a non-root fragment node.
  */
+// TODO a lot of this is the same as RootFragmentManager
 public class NonRootFragmentManager implements FragmentManager {
   private final PlanFragment fragment;
   private FragmentRoot root;
@@ -44,15 +44,13 @@ public class NonRootFragmentManager implements FragmentManager {
   private final StatusReporter runnerListener;
   private volatile FragmentExecutor runner;
   private volatile boolean cancel = false;
-  private final WorkerBee bee;
   private final FragmentContext context;
   private List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
 
-  public NonRootFragmentManager(PlanFragment fragment, WorkerBee bee) throws ExecutionSetupException {
+  public NonRootFragmentManager(final PlanFragment fragment, final DrillbitContext context)
+      throws ExecutionSetupException {
     try {
       this.fragment = fragment;
-      DrillbitContext context = bee.getContext();
-      this.bee = bee;
       this.root = context.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
       this.context = new FragmentContext(context, fragment, null, context.getFunctionImplementationRegistry());
       this.buffers = new IncomingBuffers(root, this.context);
@@ -84,8 +82,8 @@ public class NonRootFragmentManager implements FragmentManager {
       if (cancel) {
         return null;
       }
-      runner = new FragmentExecutor(context, bee, root, runnerListener);
-      return this.runner;
+      runner = new FragmentExecutor(context, root, runnerListener);
+      return runner;
     }
 
   }

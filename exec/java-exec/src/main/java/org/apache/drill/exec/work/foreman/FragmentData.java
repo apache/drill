@@ -29,19 +29,21 @@ public class FragmentData {
   private volatile long lastStatusUpdate = 0;
   private final DrillbitEndpoint endpoint;
 
-  public FragmentData(FragmentHandle handle, DrillbitEndpoint endpoint, boolean isLocal) {
-    super();
-    MinorFragmentProfile f = MinorFragmentProfile.newBuilder() //
-        .setState(FragmentState.SENDING) //
-        .setMinorFragmentId(handle.getMinorFragmentId()) //
-        .setEndpoint(endpoint) //
-        .build();
-    this.status = FragmentStatus.newBuilder().setHandle(handle).setProfile(f).build();
+  public FragmentData(final FragmentHandle handle, final DrillbitEndpoint endpoint, final boolean isLocal) {
     this.endpoint = endpoint;
     this.isLocal = isLocal;
+    final MinorFragmentProfile f = MinorFragmentProfile.newBuilder()
+        .setState(FragmentState.SENDING)
+        .setMinorFragmentId(handle.getMinorFragmentId())
+        .setEndpoint(endpoint)
+        .build();
+    status = FragmentStatus.newBuilder()
+        .setHandle(handle)
+        .setProfile(f)
+        .build();
   }
 
-  public void setStatus(FragmentStatus status){
+  public void setStatus(final FragmentStatus status) {
     this.status = status;
     lastStatusUpdate = System.currentTimeMillis();
   }
@@ -54,15 +56,11 @@ public class FragmentData {
     return isLocal;
   }
 
-  public long getLastStatusUpdate() {
-    return lastStatusUpdate;
-  }
-
   public DrillbitEndpoint getEndpoint() {
     return endpoint;
   }
 
-  public FragmentHandle getHandle(){
+  public FragmentHandle getHandle() {
     return status.getHandle();
   }
 
@@ -71,7 +69,4 @@ public class FragmentData {
     return "FragmentData [isLocal=" + isLocal + ", status=" + status + ", lastStatusUpdate=" + lastStatusUpdate
         + ", endpoint=" + endpoint + "]";
   }
-
-
-
 }

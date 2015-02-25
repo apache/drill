@@ -39,7 +39,7 @@ public interface Controller extends Closeable {
    */
   public ControlTunnel getTunnel(DrillbitEndpoint node) ;
 
-  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws InterruptedException, DrillbitStartupException;
+  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException;
 
 
 }

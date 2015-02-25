@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -58,7 +57,7 @@ public class ScreenCreator implements RootCreator<Screen>{
 
 
   static class ScreenRoot extends BaseRootExec {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
+//    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     volatile boolean ok = true;
 
     private final SendingAccountor sendCount = new SendingAccountor();
@@ -67,7 +66,6 @@ public class ScreenCreator implements RootCreator<Screen>{
     final FragmentContext context;
     final UserClientConnection connection;
     private RecordMaterializer materializer;
-    private boolean first = true;
 
     public enum Metric implements MetricDef {
       BYTES_SENT;
@@ -146,7 +144,7 @@ public class ScreenCreator implements RootCreator<Screen>{
       }
       case OK_NEW_SCHEMA:
         materializer = new VectorRecordMaterializer(context, incoming);
-        // fall through.
+        //$FALL-THROUGH$
       case OK:
 //        context.getStats().batchesCompleted.inc(1);
 //        context.getStats().recordsCompleted.inc(incoming.getRecordCount());
@@ -160,7 +158,6 @@ public class ScreenCreator implements RootCreator<Screen>{
         }
         sendCount.increment();
 
-        first = false;
         return true;
       default:
         throw new UnsupportedOperationException();

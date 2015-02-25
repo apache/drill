@@ -15,15 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.work;
+package org.apache.drill.common;
 
-import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.slf4j.Logger;
 
-public interface StatusProvider {
-
+/**
+ * Utilities for AutoCloseable classes.
+ */
+public class AutoCloseables {
   /**
-   * Provides the current status of the FragmentExecutor's work.
-   * @return Status if currently.  Null if in another state.
+   * Close an {@link AutoCloseable}, catching and logging any exceptions at
+   * INFO level.
+   *
+   * <p>This can be dangerous if there is any possibility of recovery. See
+   * the <a href="https://code.google.com/p/guava-libraries/issues/detail?id=1118">
+   * notes regarding the deprecation of Guava's
+   * {@link com.google.common.io.Closeables#closeQuietly}</a>.
+   *
+   * @param ac the AutoCloseable to close
+   * @param logger the logger to use to record the exception if there was one
    */
-  public FragmentStatus getStatus();
+  public static void close(final AutoCloseable ac, final Logger logger) {
+    try {
+      ac.close();
+    } catch(Exception e) {
+      logger.info("Failure on close(): " + e);
+    }
+  }
 }

@@ -42,13 +42,12 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class TestComparisonFunctions extends ExecTest {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComparisonFunctions.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComparisonFunctions.class);
 
-  DrillConfig c = DrillConfig.create();
-    String COMPARISON_TEST_PHYSICAL_PLAN = "functions/comparisonTest.json";
-  PhysicalPlanReader reader;
-  FunctionImplementationRegistry registry;
-  FragmentContext context;
+  private final DrillConfig c = DrillConfig.create();
+  private final String COMPARISON_TEST_PHYSICAL_PLAN = "functions/comparisonTest.json";
+  private PhysicalPlanReader reader;
+  private FunctionImplementationRegistry registry;
 
   public void runTest(@Injectable final DrillbitContext bitContext,
                       @Injectable UserServer.UserClientConnection connection, String expression, int expectedResults) throws Throwable {
@@ -68,21 +67,20 @@ public class TestComparisonFunctions extends ExecTest {
     if (registry == null) {
       registry = new FunctionImplementationRegistry(c);
     }
-    if(context == null) {
-      context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    }
+    final FragmentContext context =
+        new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     PhysicalPlan plan = reader.readPhysicalPlan(planString);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     while(exec.next()) {
-      assertEquals(String.format("Expression: %s;", expression), expectedResults, exec.getSelectionVector2().getCount());
+      assertEquals(String.format("Expression: %s;", expression), expectedResults,
+          exec.getSelectionVector2().getCount());
 //      for (ValueVector vv: exec) {
 //        vv.close();
 //      }
     }
 
     exec.stop();
-
     context.close();
 
     if (context.getFailureCause() != null) {

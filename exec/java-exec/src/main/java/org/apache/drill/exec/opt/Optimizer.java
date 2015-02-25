@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.opt;
 
-import java.io.Closeable;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -26,22 +24,19 @@ import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.server.options.OptionManager;
 
-public abstract class Optimizer implements Closeable{
-
+public abstract class Optimizer {
   public static String OPTIMIZER_IMPL_KEY = "drill.exec.optimizer.implementation";
 
   public abstract void init(DrillConfig config);
-
   public abstract PhysicalPlan optimize(OptimizationContext context, LogicalPlan plan) throws OptimizerException;
-  public abstract void close();
 
-  public static Optimizer getOptimizer(DrillConfig config) throws DrillConfigurationException{
-    Optimizer o = config.getInstanceOf(OPTIMIZER_IMPL_KEY, Optimizer.class);
-    o.init(config);
-    return o;
+  public static Optimizer getOptimizer(final DrillConfig config) throws DrillConfigurationException {
+    final Optimizer optimizer = config.getInstanceOf(OPTIMIZER_IMPL_KEY, Optimizer.class);
+    optimizer.init(config);
+    return optimizer;
   }
 
-  public interface OptimizationContext{
+  public interface OptimizationContext {
     public int getPriority();
     public OptionManager getOptions();
   }

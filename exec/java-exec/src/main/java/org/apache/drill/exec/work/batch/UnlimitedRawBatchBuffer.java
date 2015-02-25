@@ -162,6 +162,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
         b = buffer.take();
       } catch (InterruptedException e) {
         return null;
+        // TODO InterruptedException
       }
     }
 

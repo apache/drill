@@ -19,6 +19,7 @@ package org.apache.drill.jdbc.test;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -85,15 +86,14 @@ public class JdbcAssert {
   }
 
   static String toString(ResultSet resultSet, int expectedRecordCount) throws SQLException {
-    StringBuilder buf = new StringBuilder();
-    int total = 0, n;
+    final StringBuilder buf = new StringBuilder();
     while (resultSet.next()) {
-      n = resultSet.getMetaData().getColumnCount();
-      total++;
+      final ResultSetMetaData metaData = resultSet.getMetaData();
+      final int n = metaData.getColumnCount();
       String sep = "";
       for (int i = 1; i <= n; i++) {
         buf.append(sep)
-            .append(resultSet.getMetaData().getColumnLabel(i))
+            .append(metaData.getColumnLabel(i))
             .append("=")
             .append(resultSet.getObject(i));
         sep = "; ";

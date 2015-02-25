@@ -95,6 +95,7 @@ public class SystemOptionManager implements OptionManager {
       QueryClassLoader.JAVA_COMPILER_DEBUG,
       ExecConstants.ENABLE_VERBOSE_ERRORS,
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
+      ExecConstants.DRILLBIT_EXCEPTION_INJECTIONS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
   };
 

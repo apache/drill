@@ -19,7 +19,6 @@ package org.apache.drill.exec.ops;
 
 import io.netty.buffer.DrillBuf;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +26,9 @@ import java.util.Map;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
+import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -39,7 +38,6 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
@@ -49,53 +47,52 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
-import com.carrotsearch.hppc.LongObjectOpenHashMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
  * Contextual objects required for execution of a particular fragment.
  */
 public class FragmentContext implements AutoCloseable, UdfUtilities {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContext.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContext.class);
 
-
-  private Map<DrillbitEndpoint, DataTunnel> tunnels = Maps.newHashMap();
-
+  private final Map<DrillbitEndpoint, DataTunnel> tunnels = Maps.newHashMap();
   private final DrillbitContext context;
   private final UserClientConnection connection;
   private final FragmentStats stats;
   private final FunctionImplementationRegistry funcRegistry;
-  private final QueryClassLoader loader;
   private final BufferAllocator allocator;
   private final PlanFragment fragment;
-  private List<Thread> daemonThreads = Lists.newLinkedList();
-  private QueryDateTimeInfo queryDateTimeInfo;
+  private final QueryDateTimeInfo queryDateTimeInfo;
   private IncomingBuffers buffers;
   private final OptionManager fragmentOptions;
-  private final UserCredentials credentials;
   private final BufferManager bufferManager;
 
-  private volatile Throwable failureCause;
+  private final DeferredException deferredException = new DeferredException();
   private volatile FragmentContextState state = FragmentContextState.OK;
 
+  /*
+   * TODO we need a state that indicates that cancellation has been requested and
+   * is in progress. Early termination (such as from limit queries) could also use
+   * this, as the cleanup steps should be exactly the same.
+   */
   private static enum FragmentContextState {
     OK,
     FAILED,
     CANCELED
   }
 
-  public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
-      FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
-
+  public FragmentContext(final DrillbitContext dbContext, final PlanFragment fragment,
+      final UserClientConnection connection, final FunctionImplementationRegistry funcRegistry)
+    throws ExecutionSetupException {
     this.context = dbContext;
     this.connection = connection;
     this.fragment = fragment;
     this.funcRegistry = funcRegistry;
-    this.credentials = fragment.getCredentials();
-    this.queryDateTimeInfo = new QueryDateTimeInfo(fragment.getQueryStartTime(), fragment.getTimeZone());
+    queryDateTimeInfo = new QueryDateTimeInfo(fragment.getQueryStartTime(), fragment.getTimeZone());
+
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
     logger.debug("Fragment max allocation: {}", fragment.getMemMax());
+
     try {
       OptionList list;
       if (!fragment.hasOptionsJson() || fragment.getOptionsJson().isEmpty()) {
@@ -103,7 +100,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
       } else {
         list = dbContext.getConfig().getMapper().readValue(fragment.getOptionsJson(), OptionList.class);
       }
-      this.fragmentOptions = new FragmentOptionManager(context.getOptionManager(), list);
+      fragmentOptions = new FragmentOptionManager(context.getOptionManager(), list);
     } catch (Exception e) {
       throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
@@ -111,15 +108,15 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     // Add the fragment context to the root allocator.
     // The QueryManager will call the root allocator to recalculate all the memory limits for all the fragments
     try {
-      this.allocator = dbContext.getAllocator().getChildAllocator(this, fragment.getMemInitial(), fragment.getMemMax(), true);
+      allocator = context.getAllocator().getChildAllocator(
+          this, fragment.getMemInitial(), fragment.getMemMax(), true);
       assert (allocator != null);
-    }catch(Throwable e){
+    } catch(Throwable e) {
       throw new ExecutionSetupException("Failure while getting memory allocator for fragment.", e);
     }
-    this.stats = new FragmentStats(allocator, dbContext.getMetrics(), fragment.getAssignment());
-    this.bufferManager = new BufferManager(this.allocator, this);
 
-    this.loader = new QueryClassLoader(dbContext.getConfig(), fragmentOptions);
+    stats = new FragmentStats(allocator, dbContext.getMetrics(), fragment.getAssignment());
+    bufferManager = new BufferManager(this.allocator, this);
   }
 
   public OptionManager getOptions() {
@@ -133,7 +130,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   public void fail(Throwable cause) {
     logger.error("Fragment Context received failure.", cause);
     setState(FragmentContextState.FAILED);
-    failureCause = cause;
+    deferredException.addThrowable(cause);
   }
 
   public void cancel() {
@@ -161,11 +158,11 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
       fail(new UnsupportedOperationException("Schema tree can only be created in root fragment. " +
           "This is a non-root fragment."));
       return null;
-    } else {
-      SchemaPlus root = SimpleOptiqSchema.createRootSchema(false);
-      context.getStorage().getSchemaFactory().registerSchemas(connection.getSession(), root);
-      return root;
     }
+
+    final SchemaPlus root = SimpleOptiqSchema.createRootSchema(false);
+    context.getStorage().getSchemaFactory().registerSchemas(connection.getSession(), root);
+    return root;
   }
 
   /**
@@ -177,14 +174,17 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   }
 
   public FragmentStats getStats() {
-    return this.stats;
+    return stats;
   }
 
+  @Override
   public QueryDateTimeInfo getQueryDateTimeInfo(){
     return this.queryDateTimeInfo;
   }
 
-  public DrillbitEndpoint getForemanEndpoint() {return fragment.getForeman();}
+  public DrillbitEndpoint getForemanEndpoint() {
+    return fragment.getForeman();
+  }
 
   /**
    * The FragmentHandle for this Fragment
@@ -194,31 +194,37 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return fragment.getHandle();
   }
 
+  private String getFragIdString() {
+    final FragmentHandle handle = getHandle();
+    final String frag = handle != null ? handle.getMajorFragmentId() + ":" + handle.getMinorFragmentId() : "0:0";
+    return frag;
+  }
+
   /**
    * Get this fragment's allocator.
-   * @return
+   * @return the allocator
    */
   @Deprecated
   public BufferAllocator getAllocator() {
-    if(allocator == null){
-      FragmentHandle handle=getHandle();
-      String frag=handle!=null?handle.getMajorFragmentId()+":"+handle.getMinorFragmentId():"0:0";
-      logger.debug("Fragment:"+frag+" Allocator is NULL");
+    if (allocator == null) {
+      logger.debug("Fragment: " + getFragIdString() + " Allocator is NULL");
     }
     return allocator;
   }
 
-  public BufferAllocator getNewChildAllocator(long initialReservation,
-                                              long maximumReservation,
-                                              boolean applyFragmentLimit) throws OutOfMemoryException {
+  public BufferAllocator getNewChildAllocator(final long initialReservation,
+                                              final long maximumReservation,
+                                              final boolean applyFragmentLimit) throws OutOfMemoryException {
     return allocator.getChildAllocator(this, initialReservation, maximumReservation, applyFragmentLimit);
   }
 
-  public <T> T getImplementationClass(ClassGenerator<T> cg) throws ClassTransformationException, IOException {
+  public <T> T getImplementationClass(final ClassGenerator<T> cg)
+      throws ClassTransformationException, IOException {
     return getImplementationClass(cg.getCodeGenerator());
   }
 
-  public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException {
+  public <T> T getImplementationClass(final CodeGenerator<T> cg)
+      throws ClassTransformationException, IOException {
     return context.getCompiler().getImplementationClass(cg);
   }
 
@@ -238,7 +244,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return connection;
   }
 
-  public ControlTunnel getControlTunnel(DrillbitEndpoint endpoint) {
+  public ControlTunnel getControlTunnel(final DrillbitEndpoint endpoint) {
     return context.getController().getTunnel(endpoint);
   }
 
@@ -251,24 +257,12 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return tunnel;
   }
 
-  /**
-   * Add a new thread to this fragment's context. This thread will likely run for the life of the fragment but should be
-   * terminated when the fragment completes. When the fragment completes, the threads will be interrupted.
-   *
-   * @param thread
-   */
-  public void addDaemonThread(Thread thread) {
-    daemonThreads.add(thread);
-    thread.start();
-
-  }
-
   public IncomingBuffers getBuffers() {
     return buffers;
   }
 
   public Throwable getFailureCause() {
-    return failureCause;
+    return deferredException.getException();
   }
 
   public boolean isFailed() {
@@ -283,43 +277,36 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return funcRegistry;
   }
 
-  public UserCredentials getCredentials() {
-    return credentials;
-  }
-
-  public QueryClassLoader getClassLoader() {
-    return loader;
-  }
-
   public DrillConfig getConfig() {
     return context.getConfig();
   }
 
-  public void setFragmentLimit(long limit) {
-    this.allocator.setFragmentLimit(limit);
+  public void setFragmentLimit(final long limit) {
+    allocator.setFragmentLimit(limit);
+  }
+
+  public DeferredException getDeferredException() {
+    return deferredException;
   }
 
   @Override
   public void close() throws Exception {
-    for (Thread thread: daemonThreads) {
-      thread.interrupt();
-    }
-    bufferManager.close();
+    /*
+     * TODO wait for threads working on this Fragment to terminate (or at least stop working
+     * on this Fragment's query)
+     */
+    deferredException.suppressingClose(bufferManager);
+    deferredException.suppressingClose(buffers);
+    deferredException.suppressingClose(allocator);
 
-    if (buffers != null) {
-      buffers.close();
-    }
-
-    FragmentHandle handle=getHandle();
-    String frag=handle!=null?handle.getMajorFragmentId()+":"+handle.getMinorFragmentId():"0:0";
-    allocator.close();
-    logger.debug("Fragment:"+frag+" After close allocator is: "+allocator!=null?"OK":"NULL");
+    deferredException.close(); // must be last, as this may throw
   }
 
   public DrillBuf replace(DrillBuf old, int newSize) {
     return bufferManager.replace(old, newSize);
   }
 
+  @Override
   public DrillBuf getManagedBuffer() {
     return bufferManager.getManagedBuffer();
   }
@@ -327,5 +314,4 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   public DrillBuf getManagedBuffer(int size) {
     return bufferManager.getManagedBuffer(size);
   }
-
 }

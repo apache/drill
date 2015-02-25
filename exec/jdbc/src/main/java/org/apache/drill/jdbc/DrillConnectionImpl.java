@@ -115,6 +115,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
     return allocator;
   }
 
+  @Override
   public DrillClient getClient() {
     return client;
   }

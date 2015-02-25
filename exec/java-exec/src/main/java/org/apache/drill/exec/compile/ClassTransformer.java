@@ -294,14 +294,11 @@ public class ClassTransformer {
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
         logger.debug("Done compiling (bytecode size={}, time:{} millis).", DrillStringUtils.readable(totalBytecodeSize), (System.nanoTime() - t1) / 1000000);
         return c;
-      } else {
-        throw new ClassTransformationException("The requested class did not implement the expected interface.");
       }
+
+      throw new ClassTransformationException("The requested class did not implement the expected interface.");
     } catch (CompileException | IOException | ClassNotFoundException e) {
       throw new ClassTransformationException(String.format("Failure generating transformation classes for value: \n %s", entireClass), e);
     }
-
   }
-
 }
-

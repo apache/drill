@@ -25,10 +25,10 @@ public final class CoordinationProtos {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface DrillbitEndpointOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface DrillbitEndpointOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:exec.DrillbitEndpoint)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string address = 1;
     /**
      * <code>optional string address = 1;</code>
      */
@@ -43,7 +43,6 @@ public final class CoordinationProtos {
     com.google.protobuf.ByteString
         getAddressBytes();
 
-    // optional int32 user_port = 2;
     /**
      * <code>optional int32 user_port = 2;</code>
      */
@@ -53,7 +52,6 @@ public final class CoordinationProtos {
      */
     int getUserPort();
 
-    // optional int32 control_port = 3;
     /**
      * <code>optional int32 control_port = 3;</code>
      */
@@ -63,7 +61,6 @@ public final class CoordinationProtos {
      */
     int getControlPort();
 
-    // optional int32 data_port = 4;
     /**
      * <code>optional int32 data_port = 4;</code>
      */
@@ -73,7 +70,6 @@ public final class CoordinationProtos {
      */
     int getDataPort();
 
-    // optional .exec.Roles roles = 5;
     /**
      * <code>optional .exec.Roles roles = 5;</code>
      */
@@ -91,8 +87,9 @@ public final class CoordinationProtos {
    * Protobuf type {@code exec.DrillbitEndpoint}
    */
   public static final class DrillbitEndpoint extends
-      com.google.protobuf.GeneratedMessage
-      implements DrillbitEndpointOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:exec.DrillbitEndpoint)
+      DrillbitEndpointOrBuilder {
     // Use DrillbitEndpoint.newBuilder() to construct.
     private DrillbitEndpoint(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -139,8 +136,9 @@ public final class CoordinationProtos {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              address_ = input.readBytes();
+              address_ = bs;
               break;
             }
             case 16: {
@@ -211,7 +209,6 @@ public final class CoordinationProtos {
     }
 
     private int bitField0_;
-    // optional string address = 1;
     public static final int ADDRESS_FIELD_NUMBER = 1;
     private java.lang.Object address_;
     /**
@@ -254,7 +251,6 @@ public final class CoordinationProtos {
       }
     }
 
-    // optional int32 user_port = 2;
     public static final int USER_PORT_FIELD_NUMBER = 2;
     private int userPort_;
     /**
@@ -270,7 +266,6 @@ public final class CoordinationProtos {
       return userPort_;
     }
 
-    // optional int32 control_port = 3;
     public static final int CONTROL_PORT_FIELD_NUMBER = 3;
     private int controlPort_;
     /**
@@ -286,7 +281,6 @@ public final class CoordinationProtos {
       return controlPort_;
     }
 
-    // optional int32 data_port = 4;
     public static final int DATA_PORT_FIELD_NUMBER = 4;
     private int dataPort_;
     /**
@@ -302,7 +296,6 @@ public final class CoordinationProtos {
       return dataPort_;
     }
 
-    // optional .exec.Roles roles = 5;
     public static final int ROLES_FIELD_NUMBER = 5;
     private org.apache.drill.exec.proto.CoordinationProtos.Roles roles_;
     /**
@@ -334,7 +327,8 @@ public final class CoordinationProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -469,8 +463,9 @@ public final class CoordinationProtos {
      * Protobuf type {@code exec.DrillbitEndpoint}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:exec.DrillbitEndpoint)
+        org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.CoordinationProtos.internal_static_exec_DrillbitEndpoint_descriptor;
@@ -630,7 +625,6 @@ public final class CoordinationProtos {
       }
       private int bitField0_;
 
-      // optional string address = 1;
       private java.lang.Object address_ = "";
       /**
        * <code>optional string address = 1;</code>
@@ -644,9 +638,12 @@ public final class CoordinationProtos {
       public java.lang.String getAddress() {
         java.lang.Object ref = address_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          address_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            address_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -704,7 +701,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional int32 user_port = 2;
       private int userPort_ ;
       /**
        * <code>optional int32 user_port = 2;</code>
@@ -737,7 +733,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional int32 control_port = 3;
       private int controlPort_ ;
       /**
        * <code>optional int32 control_port = 3;</code>
@@ -770,7 +765,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional int32 data_port = 4;
       private int dataPort_ ;
       /**
        * <code>optional int32 data_port = 4;</code>
@@ -803,7 +797,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional .exec.Roles roles = 5;
       private org.apache.drill.exec.proto.CoordinationProtos.Roles roles_ = org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.CoordinationProtos.Roles, org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder, org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder> rolesBuilder_;
@@ -912,7 +905,7 @@ public final class CoordinationProtos {
         if (rolesBuilder_ == null) {
           rolesBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.CoordinationProtos.Roles, org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder, org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder>(
-                  roles_,
+                  getRoles(),
                   getParentForChildren(),
                   isClean());
           roles_ = null;
@@ -931,10 +924,10 @@ public final class CoordinationProtos {
     // @@protoc_insertion_point(class_scope:exec.DrillbitEndpoint)
   }
 
-  public interface DrillServiceInstanceOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface DrillServiceInstanceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:exec.DrillServiceInstance)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string id = 1;
     /**
      * <code>optional string id = 1;</code>
      */
@@ -949,7 +942,6 @@ public final class CoordinationProtos {
     com.google.protobuf.ByteString
         getIdBytes();
 
-    // optional int64 registrationTimeUTC = 2;
     /**
      * <code>optional int64 registrationTimeUTC = 2;</code>
      */
@@ -959,7 +951,6 @@ public final class CoordinationProtos {
      */
     long getRegistrationTimeUTC();
 
-    // optional .exec.DrillbitEndpoint endpoint = 3;
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      */
@@ -977,8 +968,9 @@ public final class CoordinationProtos {
    * Protobuf type {@code exec.DrillServiceInstance}
    */
   public static final class DrillServiceInstance extends
-      com.google.protobuf.GeneratedMessage
-      implements DrillServiceInstanceOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:exec.DrillServiceInstance)
+      DrillServiceInstanceOrBuilder {
     // Use DrillServiceInstance.newBuilder() to construct.
     private DrillServiceInstance(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1025,8 +1017,9 @@ public final class CoordinationProtos {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              id_ = input.readBytes();
+              id_ = bs;
               break;
             }
             case 16: {
@@ -1087,7 +1080,6 @@ public final class CoordinationProtos {
     }
 
     private int bitField0_;
-    // optional string id = 1;
     public static final int ID_FIELD_NUMBER = 1;
     private java.lang.Object id_;
     /**
@@ -1130,7 +1122,6 @@ public final class CoordinationProtos {
       }
     }
 
-    // optional int64 registrationTimeUTC = 2;
     public static final int REGISTRATIONTIMEUTC_FIELD_NUMBER = 2;
     private long registrationTimeUTC_;
     /**
@@ -1146,7 +1137,6 @@ public final class CoordinationProtos {
       return registrationTimeUTC_;
     }
 
-    // optional .exec.DrillbitEndpoint endpoint = 3;
     public static final int ENDPOINT_FIELD_NUMBER = 3;
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_;
     /**
@@ -1176,7 +1166,8 @@ public final class CoordinationProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -1297,8 +1288,9 @@ public final class CoordinationProtos {
      * Protobuf type {@code exec.DrillServiceInstance}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstanceOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:exec.DrillServiceInstance)
+        org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstanceOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.CoordinationProtos.internal_static_exec_DrillServiceInstance_descriptor;
@@ -1440,7 +1432,6 @@ public final class CoordinationProtos {
       }
       private int bitField0_;
 
-      // optional string id = 1;
       private java.lang.Object id_ = "";
       /**
        * <code>optional string id = 1;</code>
@@ -1454,9 +1445,12 @@ public final class CoordinationProtos {
       public java.lang.String getId() {
         java.lang.Object ref = id_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          id_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            id_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1514,7 +1508,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional int64 registrationTimeUTC = 2;
       private long registrationTimeUTC_ ;
       /**
        * <code>optional int64 registrationTimeUTC = 2;</code>
@@ -1547,7 +1540,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional .exec.DrillbitEndpoint endpoint = 3;
       private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> endpointBuilder_;
@@ -1656,7 +1648,7 @@ public final class CoordinationProtos {
         if (endpointBuilder_ == null) {
           endpointBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>(
-                  endpoint_,
+                  getEndpoint(),
                   getParentForChildren(),
                   isClean());
           endpoint_ = null;
@@ -1675,10 +1667,10 @@ public final class CoordinationProtos {
     // @@protoc_insertion_point(class_scope:exec.DrillServiceInstance)
   }
 
-  public interface RolesOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface RolesOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:exec.Roles)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional bool sql_query = 1 [default = true];
     /**
      * <code>optional bool sql_query = 1 [default = true];</code>
      */
@@ -1688,7 +1680,6 @@ public final class CoordinationProtos {
      */
     boolean getSqlQuery();
 
-    // optional bool logical_plan = 2 [default = true];
     /**
      * <code>optional bool logical_plan = 2 [default = true];</code>
      */
@@ -1698,7 +1689,6 @@ public final class CoordinationProtos {
      */
     boolean getLogicalPlan();
 
-    // optional bool physical_plan = 3 [default = true];
     /**
      * <code>optional bool physical_plan = 3 [default = true];</code>
      */
@@ -1708,7 +1698,6 @@ public final class CoordinationProtos {
      */
     boolean getPhysicalPlan();
 
-    // optional bool java_executor = 4 [default = true];
     /**
      * <code>optional bool java_executor = 4 [default = true];</code>
      */
@@ -1718,7 +1707,6 @@ public final class CoordinationProtos {
      */
     boolean getJavaExecutor();
 
-    // optional bool distributed_cache = 5 [default = true];
     /**
      * <code>optional bool distributed_cache = 5 [default = true];</code>
      */
@@ -1732,8 +1720,9 @@ public final class CoordinationProtos {
    * Protobuf type {@code exec.Roles}
    */
   public static final class Roles extends
-      com.google.protobuf.GeneratedMessage
-      implements RolesOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:exec.Roles)
+      RolesOrBuilder {
     // Use Roles.newBuilder() to construct.
     private Roles(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1844,7 +1833,6 @@ public final class CoordinationProtos {
     }
 
     private int bitField0_;
-    // optional bool sql_query = 1 [default = true];
     public static final int SQL_QUERY_FIELD_NUMBER = 1;
     private boolean sqlQuery_;
     /**
@@ -1860,7 +1848,6 @@ public final class CoordinationProtos {
       return sqlQuery_;
     }
 
-    // optional bool logical_plan = 2 [default = true];
     public static final int LOGICAL_PLAN_FIELD_NUMBER = 2;
     private boolean logicalPlan_;
     /**
@@ -1876,7 +1863,6 @@ public final class CoordinationProtos {
       return logicalPlan_;
     }
 
-    // optional bool physical_plan = 3 [default = true];
     public static final int PHYSICAL_PLAN_FIELD_NUMBER = 3;
     private boolean physicalPlan_;
     /**
@@ -1892,7 +1878,6 @@ public final class CoordinationProtos {
       return physicalPlan_;
     }
 
-    // optional bool java_executor = 4 [default = true];
     public static final int JAVA_EXECUTOR_FIELD_NUMBER = 4;
     private boolean javaExecutor_;
     /**
@@ -1908,7 +1893,6 @@ public final class CoordinationProtos {
       return javaExecutor_;
     }
 
-    // optional bool distributed_cache = 5 [default = true];
     public static final int DISTRIBUTED_CACHE_FIELD_NUMBER = 5;
     private boolean distributedCache_;
     /**
@@ -1934,7 +1918,8 @@ public final class CoordinationProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -2069,8 +2054,9 @@ public final class CoordinationProtos {
      * Protobuf type {@code exec.Roles}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:exec.Roles)
+        org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.CoordinationProtos.internal_static_exec_Roles_descriptor;
@@ -2219,7 +2205,6 @@ public final class CoordinationProtos {
       }
       private int bitField0_;
 
-      // optional bool sql_query = 1 [default = true];
       private boolean sqlQuery_ = true;
       /**
        * <code>optional bool sql_query = 1 [default = true];</code>
@@ -2252,7 +2237,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional bool logical_plan = 2 [default = true];
       private boolean logicalPlan_ = true;
       /**
        * <code>optional bool logical_plan = 2 [default = true];</code>
@@ -2285,7 +2269,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional bool physical_plan = 3 [default = true];
       private boolean physicalPlan_ = true;
       /**
        * <code>optional bool physical_plan = 3 [default = true];</code>
@@ -2318,7 +2301,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional bool java_executor = 4 [default = true];
       private boolean javaExecutor_ = true;
       /**
        * <code>optional bool java_executor = 4 [default = true];</code>
@@ -2351,7 +2333,6 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional bool distributed_cache = 5 [default = true];
       private boolean distributedCache_ = true;
       /**
        * <code>optional bool distributed_cache = 5 [default = true];</code>
@@ -2395,17 +2376,17 @@ public final class CoordinationProtos {
     // @@protoc_insertion_point(class_scope:exec.Roles)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_DrillbitEndpoint_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_DrillbitEndpoint_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_DrillServiceInstance_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_DrillServiceInstance_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_Roles_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -2433,35 +2414,35 @@ public final class CoordinationProtos {
       "otoB\022CoordinationProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_exec_DrillbitEndpoint_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_exec_DrillbitEndpoint_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_exec_DrillbitEndpoint_descriptor,
-              new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", });
-          internal_static_exec_DrillServiceInstance_descriptor =
-            getDescriptor().getMessageTypes().get(1);
-          internal_static_exec_DrillServiceInstance_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_exec_DrillServiceInstance_descriptor,
-              new java.lang.String[] { "Id", "RegistrationTimeUTC", "Endpoint", });
-          internal_static_exec_Roles_descriptor =
-            getDescriptor().getMessageTypes().get(2);
-          internal_static_exec_Roles_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_exec_Roles_descriptor,
-              new java.lang.String[] { "SqlQuery", "LogicalPlan", "PhysicalPlan", "JavaExecutor", "DistributedCache", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_exec_DrillbitEndpoint_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_exec_DrillbitEndpoint_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_exec_DrillbitEndpoint_descriptor,
+        new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", });
+    internal_static_exec_DrillServiceInstance_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_exec_DrillServiceInstance_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_exec_DrillServiceInstance_descriptor,
+        new java.lang.String[] { "Id", "RegistrationTimeUTC", "Endpoint", });
+    internal_static_exec_Roles_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_exec_Roles_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_exec_Roles_descriptor,
+        new java.lang.String[] { "SqlQuery", "LogicalPlan", "PhysicalPlan", "JavaExecutor", "DistributedCache", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

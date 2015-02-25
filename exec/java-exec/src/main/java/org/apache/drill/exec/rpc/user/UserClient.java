@@ -57,7 +57,7 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   }
 
   public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint, UserProperties props, UserBitShared.UserCredentials credentials)
-      throws RpcException, InterruptedException {
+      throws RpcException {
     UserToBitHandshake.Builder hsBuilder = UserToBitHandshake.newBuilder()
         .setRpcVersion(UserRpcConfig.RPC_VERSION)
         .setSupportListening(true)

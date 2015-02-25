@@ -46,8 +46,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 public final class DrillConfig extends NestedConfig{
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
   private final ObjectMapper mapper;
   private final ImmutableList<String> startupArguments;
   @SuppressWarnings("restriction")  private static final long MAX_DIRECT_MEMORY = sun.misc.VM.maxDirectMemory();
@@ -219,14 +218,12 @@ public final class DrillConfig extends NestedConfig{
     return this.root().render();
   }
 
-  public static void main(String[] args)  throws Exception{
+  public static void main(String[] args)  throws Exception {
     //"-XX:MaxDirectMemorySize"
     DrillConfig config = DrillConfig.create();
-
   }
 
   public static long getMaxDirectMemory() {
     return MAX_DIRECT_MEMORY;
   }
-
 }

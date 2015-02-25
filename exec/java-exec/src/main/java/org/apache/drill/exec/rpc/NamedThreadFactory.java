@@ -20,29 +20,61 @@ package org.apache.drill.exec.rpc;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * {@link ThreadFactory} for {@link ExecutorServices} that names threads sequentially.
+ * Creates Threads named with the prefix specified at construction time. Created threads
+ * have the daemon bit set and priority Thread.MAX_PRIORITY.
+ *
+ * <p>An instance creates names with an instance-specific prefix suffixed with sequential
+ * integers.</p>
+ *
+ * <p>Concurrency: See {@link newThread}.</p>
+ */
 public class NamedThreadFactory implements ThreadFactory {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NamedThreadFactory.class);
-  private final AtomicInteger nextId = new AtomicInteger();
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NamedThreadFactory.class);
+  private final AtomicInteger nextId = new AtomicInteger(); // used to generate unique ids
   private final String prefix;
 
-  public NamedThreadFactory(String prefix) {
+  /**
+   * Constructor.
+   *
+   * @param prefix the string prefix that will be used to name threads created by this factory
+   */
+  public NamedThreadFactory(final String prefix) {
     this.prefix = prefix;
   }
 
+ /**
+  * Creates a sequentially named thread running a given Runnable.
+  * <p>
+  *   The thread's name will be this instance's prefix concatenated with
+  *   this instance's next<sup><a href="#fn-1">*</a></sup> sequential integer.
+  * </p>
+  * <p>
+  *  Concurrency:  Thread-safe.
+  * </p>
+  * <p>
+  * (Concurrent calls get different numbers.
+  *  Calls started after other calls complete get later/higher numbers than
+  *  those other calls.
+  * </p>
+  * <p>
+  *  <a name="fn-1" />*However, for concurrent calls, the order of numbers
+  *  is not defined.)
+  */
   @Override
-  public Thread newThread(Runnable r) {
-    Thread t = new Thread(r, prefix + nextId.incrementAndGet());
+  public Thread newThread(final Runnable runnable) {
+    final Thread thread = new Thread(runnable, prefix + nextId.incrementAndGet());
+    thread.setDaemon(true);
+
     try {
-      if (t.isDaemon()) {
-        t.setDaemon(true);
-      }
-      if (t.getPriority() != Thread.MAX_PRIORITY) {
-        t.setPriority(Thread.MAX_PRIORITY);
+      if (thread.getPriority() != Thread.MAX_PRIORITY) {
+        thread.setPriority(Thread.MAX_PRIORITY);
       }
     } catch (Exception ignored) {
       // Doesn't matter even if failed to set.
+      logger.info("ignored exception " + ignored);
     }
-    return t;
+    return thread;
   }
-
 }

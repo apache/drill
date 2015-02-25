@@ -99,10 +99,10 @@ message QueryResult {
 	enum QueryState {
 	  PENDING = 0;
 	  RUNNING = 1;
-	  COMPLETED = 2;
-	  CANCELED = 3;
+	  COMPLETED = 2; // query has completed successfully
+	  CANCELED = 3; // query has been cancelled, and all cleanup is complete
 	  FAILED = 4;
-	  UNKNOWN_QUERY = 5;
+	  CANCELLATION_REQUESTED = 5; // cancellation has been requested, and is being processed
 	}
 
 	optional QueryState query_state = 1;

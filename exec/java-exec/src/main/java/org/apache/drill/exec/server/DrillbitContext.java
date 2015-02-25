@@ -37,6 +37,7 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
 import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.testing.SimulatedExceptions;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
@@ -45,8 +46,7 @@ public class DrillbitContext {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
 
   private final BootStrapContext context;
-
-  private PhysicalPlanReader reader;
+  private final PhysicalPlanReader reader;
   private final ClusterCoordinator coord;
   private final DataConnectionCreator connectionsPool;
   private final DrillbitEndpoint endpoint;
@@ -59,10 +59,11 @@ public class DrillbitContext {
   private final PStoreProvider provider;
   private final CodeCompiler compiler;
   private final ExecutorService executor;
+  private final SimulatedExceptions simulatedExceptions = new SimulatedExceptions();
 
-  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, WorkEventBus workBus, PStoreProvider provider,
+  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord,
+      Controller controller, DataConnectionCreator connectionsPool, WorkEventBus workBus, PStoreProvider provider,
       ExecutorService executor) {
-    super();
     Preconditions.checkNotNull(endpoint);
     Preconditions.checkNotNull(context);
     Preconditions.checkNotNull(controller);
@@ -87,7 +88,7 @@ public class DrillbitContext {
     return functionRegistry;
   }
 
-  public WorkEventBus getWorkBus(){
+  public WorkEventBus getWorkBus() {
     return workBus;
   }
 
@@ -99,7 +100,7 @@ public class DrillbitContext {
     return systemOptions;
   }
 
-  public DrillbitEndpoint getEndpoint(){
+  public DrillbitEndpoint getEndpoint() {
     return endpoint;
   }
 
@@ -107,11 +108,11 @@ public class DrillbitContext {
     return context.getConfig();
   }
 
-  public Collection<DrillbitEndpoint> getBits(){
+  public Collection<DrillbitEndpoint> getBits() {
     return coord.getAvailableEndpoints();
   }
 
-  public BufferAllocator getAllocator(){
+  public BufferAllocator getAllocator() {
     return context.getAllocator();
   }
 
@@ -119,35 +120,35 @@ public class DrillbitContext {
     return operatorCreatorRegistry;
   }
 
-  public StoragePluginRegistry getStorage(){
+  public StoragePluginRegistry getStorage() {
     return this.storagePlugins;
   }
 
-  public EventLoopGroup getBitLoopGroup(){
+  public EventLoopGroup getBitLoopGroup() {
     return context.getBitLoopGroup();
   }
 
-  public DataConnectionCreator getDataConnectionsPool(){
+  public DataConnectionCreator getDataConnectionsPool() {
     return connectionsPool;
   }
 
-  public Controller getController(){
+  public Controller getController() {
     return controller;
   }
 
-  public MetricRegistry getMetrics(){
+  public MetricRegistry getMetrics() {
     return context.getMetrics();
   }
 
-  public PhysicalPlanReader getPlanReader(){
+  public PhysicalPlanReader getPlanReader() {
     return reader;
   }
 
-  public PStoreProvider getPersistentStoreProvider(){
+  public PStoreProvider getPersistentStoreProvider() {
     return provider;
   }
 
-  public DrillSchemaFactory getSchemaFactory(){
+  public DrillSchemaFactory getSchemaFactory() {
     return storagePlugins.getSchemaFactory();
   }
 
@@ -161,5 +162,9 @@ public class DrillbitContext {
 
   public ExecutorService getExecutor() {
     return executor;
+  }
+
+  public SimulatedExceptions getSimulatedExceptions() {
+    return simulatedExceptions;
   }
 }

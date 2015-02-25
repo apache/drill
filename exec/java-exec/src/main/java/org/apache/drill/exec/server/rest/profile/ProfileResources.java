@@ -38,14 +38,12 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
-import org.apache.drill.exec.work.foreman.QueryStatus;
+import org.apache.drill.exec.work.foreman.QueryManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.google.common.collect.Lists;
@@ -137,8 +135,8 @@ public class ProfileResources {
     PStore<QueryProfile> completed = null;
     PStore<QueryInfo> running = null;
     try {
-      completed = provider().getStore(QueryStatus.QUERY_PROFILE);
-      running = provider().getStore(QueryStatus.RUNNING_QUERY_INFO);
+      completed = provider().getStore(QueryManager.QUERY_PROFILE);
+      running = provider().getStore(QueryManager.RUNNING_QUERY_INFO);
     } catch (IOException e) {
       logger.debug("Failed to get profiles from persistent or ephemeral store.");
       return new QProfiles(new ArrayList<ProfileInfo>(), new ArrayList<ProfileInfo>());
@@ -177,12 +175,12 @@ public class ProfileResources {
     // first check local running
     Foreman f = work.getBee().getForemanForQueryId(id);
     if(f != null){
-      return f.getQueryStatus().getAsProfile();
+      return f.getQueryManager().getQueryProfile();
     }
 
     // then check remote running
     try{
-      PStore<QueryInfo> runningQueries = provider().getStore(QueryStatus.RUNNING_QUERY_INFO);
+      PStore<QueryInfo> runningQueries = provider().getStore(QueryManager.RUNNING_QUERY_INFO);
       QueryInfo info = runningQueries.get(queryId);
       return work.getContext().getController().getTunnel(info.getForeman()).requestQueryProfile(id).checkedGet(2, TimeUnit.SECONDS);
     }catch(Exception e){
@@ -191,7 +189,7 @@ public class ProfileResources {
 
     // then check blob store
     try{
-      PStore<QueryProfile> profiles = provider().getStore(QueryStatus.QUERY_PROFILE);
+      PStore<QueryProfile> profiles = provider().getStore(QueryManager.QUERY_PROFILE);
       return profiles.get(queryId);
     }catch(Exception e){
       logger.warn("Failure to load query profile for query {}", queryId, e);
@@ -208,7 +206,7 @@ public class ProfileResources {
   @Produces(MediaType.APPLICATION_JSON)
   public String getProfileJSON(@PathParam("queryid") String queryId) {
     try {
-      return new String(QueryStatus.QUERY_PROFILE.getSerializer().serialize(getQueryProfile(queryId)));
+      return new String(QueryManager.QUERY_PROFILE.getSerializer().serialize(getQueryProfile(queryId)));
     } catch (IOException e) {
       logger.debug("Failed to serialize profile for: " + queryId);
       return ("{ 'message' : 'error (unable to serialize profile)' }");
@@ -242,7 +240,7 @@ public class ProfileResources {
 
     // then check remote running
     try{
-      PStore<QueryInfo> runningQueries = provider().getStore(QueryStatus.RUNNING_QUERY_INFO);
+      PStore<QueryInfo> runningQueries = provider().getStore(QueryManager.RUNNING_QUERY_INFO);
       QueryInfo info = runningQueries.get(queryId);
       Ack a = work.getContext().getController().getTunnel(info.getForeman()).requestCancelQuery(id).checkedGet(2, TimeUnit.SECONDS);
       if(a.getOk()){

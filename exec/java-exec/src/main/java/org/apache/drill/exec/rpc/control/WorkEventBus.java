@@ -26,8 +26,6 @@ import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.FragmentStatusListener;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.fragment.FragmentManager;
@@ -37,60 +35,53 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 
 public class WorkEventBus {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkEventBus.class);
-
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkEventBus.class);
   private final ConcurrentMap<FragmentHandle, FragmentManager> managers = Maps.newConcurrentMap();
-  private final ConcurrentMap<QueryId, FragmentStatusListener> listeners = new ConcurrentHashMap<QueryId, FragmentStatusListener>(
-      16, 0.75f, 16);
-  private final WorkerBee bee;
-  private final Cache<FragmentHandle,Integer> recentlyFinishedFragments = CacheBuilder.newBuilder()
+  private final ConcurrentMap<QueryId, FragmentStatusListener> listeners =
+      new ConcurrentHashMap<>(16, 0.75f, 16);
+  private final Cache<FragmentHandle, Integer> recentlyFinishedFragments = CacheBuilder.newBuilder()
           .maximumSize(10000)
-
           .expireAfterWrite(10, TimeUnit.MINUTES)
           .build();
 
-  public WorkEventBus(WorkerBee bee) {
-    this.bee = bee;
-  }
-
-  public void removeFragmentStatusListener(QueryId queryId) {
+  public void removeFragmentStatusListener(final QueryId queryId) {
     logger.debug("Removing fragment status listener for queryId {}.", queryId);
     listeners.remove(queryId);
   }
 
-  public void setFragmentStatusListener(QueryId queryId, FragmentStatusListener listener) throws ForemanSetupException {
+  public void addFragmentStatusListener(final QueryId queryId, final FragmentStatusListener listener)
+      throws ForemanSetupException {
     logger.debug("Adding fragment status listener for queryId {}.", queryId);
-    FragmentStatusListener old = listeners.putIfAbsent(queryId, listener);
+    final FragmentStatusListener old = listeners.putIfAbsent(queryId, listener);
     if (old != null) {
       throw new ForemanSetupException (
           "Failure.  The provided handle already exists in the listener pool.  You need to remove one listener before adding another.");
     }
   }
 
-  public void status(FragmentStatus status) {
-    FragmentStatusListener l = listeners.get(status.getHandle().getQueryId());
-    if (l == null) {
+  public void statusUpdate(final FragmentStatus status) {
+    final FragmentStatusListener listener = listeners.get(status.getHandle().getQueryId());
+    if (listener == null) {
       logger.warn("A fragment message arrived but there was no registered listener for that message: {}.", status);
     } else {
-      l.statusUpdate(status);
+      listener.statusUpdate(status);
     }
   }
 
-  public void setFragmentManager(FragmentManager fragmentManager) {
+  public void addFragmentManager(final FragmentManager fragmentManager) {
     logger.debug("Manager created: {}", QueryIdHelper.getQueryIdentifier(fragmentManager.getHandle()));
-    FragmentManager old = managers.putIfAbsent(fragmentManager.getHandle(), fragmentManager);
+    final FragmentManager old = managers.putIfAbsent(fragmentManager.getHandle(), fragmentManager);
       if (old != null) {
         throw new IllegalStateException(
             "Tried to set fragment manager when has already been set for the provided fragment handle.");
     }
   }
 
-  public FragmentManager getFragmentManagerIfExists(FragmentHandle handle){
+  public FragmentManager getFragmentManagerIfExists(final FragmentHandle handle) {
     return managers.get(handle);
-
   }
 
-  public FragmentManager getFragmentManager(FragmentHandle handle) throws FragmentSetupException {
+  public FragmentManager getFragmentManager(final FragmentHandle handle) throws FragmentSetupException {
     // check if this was a recently canceled fragment.  If so, throw away message.
     if (recentlyFinishedFragments.asMap().containsKey(handle)) {
       logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
@@ -98,17 +89,17 @@ public class WorkEventBus {
     }
 
     // since non-leaf fragments are sent first, it is an error condition if the manager is unavailable.
-    FragmentManager m = managers.get(handle);
+    final FragmentManager m = managers.get(handle);
     if(m != null) {
       return m;
     }
-    throw new FragmentSetupException("Failed to receive plan fragment that was required for id: " + QueryIdHelper.getQueryIdentifier(handle));
+    throw new FragmentSetupException("Failed to receive plan fragment that was required for id: "
+        + QueryIdHelper.getQueryIdentifier(handle));
   }
 
-  public void removeFragmentManager(FragmentHandle handle) {
+  public void removeFragmentManager(final FragmentHandle handle) {
     logger.debug("Removing fragment manager: {}", QueryIdHelper.getQueryIdentifier(handle));
     recentlyFinishedFragments.put(handle,  1);
     managers.remove(handle);
   }
-
 }

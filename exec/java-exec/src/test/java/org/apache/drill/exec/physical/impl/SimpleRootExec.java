@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -35,11 +34,12 @@ import org.apache.drill.exec.vector.ValueVector;
 import com.google.common.collect.Lists;
 
 @Deprecated
-public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRootExec.class);
+public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRootExec.class);
 
-  private RecordBatch incoming;
-  private ScreenRoot screenRoot;
+  private final RecordBatch incoming;
+  private final ScreenRoot screenRoot;
+
   public SimpleRootExec(RootExec e) {
     if (e instanceof ScreenRoot) {
       incoming = ((ScreenRoot)e).getIncoming();

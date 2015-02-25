@@ -18,70 +18,65 @@
 package org.apache.drill.exec.work.fragment;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.common.DeferredException;
+import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.FragmentStats;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
-import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
-import org.apache.drill.exec.work.CancelableQuery;
-import org.apache.drill.exec.work.StatusProvider;
-import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 
 /**
- * Responsible for running a single fragment on a single Drillbit. Listens/responds to status request and cancellation
- * messages.
+ * Responsible for running a single fragment on a single Drillbit. Listens/responds to status request
+ * and cancellation messages.
  */
-public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvider, Comparable<Object>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentExecutor.class);
+public class FragmentExecutor implements Runnable {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentExecutor.class);
 
   private final AtomicInteger state = new AtomicInteger(FragmentState.AWAITING_ALLOCATION_VALUE);
   private final FragmentRoot rootOperator;
-  private final FragmentContext context;
-  private final WorkerBee bee;
+  private final FragmentContext fragmentContext;
   private final StatusReporter listener;
-  private final DrillbitStatusListener drillbitStatusListener = new FragmentDrillbitStatusListener();
-
+  private volatile boolean closed;
   private RootExec root;
-  private boolean closed;
 
-  public FragmentExecutor(FragmentContext context, WorkerBee bee, FragmentRoot rootOperator, StatusReporter listener) {
-    this.context = context;
-    this.bee = bee;
+  public FragmentExecutor(final FragmentContext context, final FragmentRoot rootOperator,
+      final StatusReporter listener) {
+    this.fragmentContext = context;
     this.rootOperator = rootOperator;
     this.listener = listener;
   }
 
-  @Override
   public FragmentStatus getStatus() {
-    // If the query is not in a running state, the operator tree is still being constructed and
-    // there is no reason to poll for intermediate results.
-
-    // Previously the call to get the operator stats with the AbstractStatusReporter was happening
-    // before this check. This caused a concurrent modification exception as the list of operator
-    // stats is iterated over while collecting info, and added to while building the operator tree.
-    if(state.get() != FragmentState.RUNNING_VALUE){
+    /*
+     * If the query is not in a running state, the operator tree is still being constructed and
+     * there is no reason to poll for intermediate results.
+     *
+     * Previously the call to get the operator stats with the AbstractStatusReporter was happening
+     * before this check. This caused a concurrent modification exception as the list of operator
+     * stats is iterated over while collecting info, and added to while building the operator tree.
+     */
+    if(state.get() != FragmentState.RUNNING_VALUE) {
       return null;
     }
-    FragmentStatus status = AbstractStatusReporter.getBuilder(context, FragmentState.RUNNING, null, null).build();
+    final FragmentStatus status =
+        AbstractStatusReporter.getBuilder(fragmentContext, FragmentState.RUNNING, null, null).build();
     return status;
   }
 
-  @Override
   public void cancel() {
+    // Note this will be called outside of run(), from another thread
     updateState(FragmentState.CANCELLED);
-    logger.debug("Cancelled Fragment {}", context.getHandle());
-    context.cancel();
+    logger.debug("Cancelled Fragment {}", fragmentContext.getHandle());
+    fragmentContext.cancel();
   }
 
   public void receivingFragmentFinished(FragmentHandle handle) {
@@ -91,98 +86,116 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     }
   }
 
-  public UserClientConnection getClient() {
-    return context.getConnection();
-  }
-
   @Override
   public void run() {
-    final String originalThread = Thread.currentThread().getName();
+    final Thread myThread = Thread.currentThread();
+    final String originalThreadName = myThread.getName();
+    final FragmentHandle fragmentHandle = fragmentContext.getHandle();
+    final ClusterCoordinator clusterCoordinator = fragmentContext.getDrillbitContext().getClusterCoordinator();
+    final DrillbitStatusListener drillbitStatusListener = new FragmentDrillbitStatusListener();
+
     try {
-      String newThreadName = String.format("%s:frag:%s:%s", //
-          QueryIdHelper.getQueryId(context.getHandle().getQueryId()), //
-          context.getHandle().getMajorFragmentId(),
-          context.getHandle().getMinorFragmentId()
-          );
-      Thread.currentThread().setName(newThreadName);
+      final String newThreadName = String.format("%s:frag:%s:%s",
+          QueryIdHelper.getQueryId(fragmentHandle.getQueryId()),
+          fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId());
+      myThread.setName(newThreadName);
 
-      root = ImplCreator.getExec(context, rootOperator);
+      root = ImplCreator.getExec(fragmentContext, rootOperator);
+      clusterCoordinator.addDrillbitStatusListener(drillbitStatusListener);
 
-      context.getDrillbitContext().getClusterCoordinator().addDrillbitStatusListener(drillbitStatusListener);
-
-      logger.debug("Starting fragment runner. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
+      logger.debug("Starting fragment runner. {}:{}",
+          fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId());
       if (!updateStateOrFail(FragmentState.AWAITING_ALLOCATION, FragmentState.RUNNING)) {
         logger.warn("Unable to set fragment state to RUNNING. Cancelled or failed?");
         return;
       }
 
-      // run the query until root.next returns false.
+      /*
+       * Run the query until root.next returns false.
+       * Note that we closeOutResources() here if we're done. That's because this can also throw
+       * exceptions that we want to treat as failures of the request, even if the request did fine
+       * up until this point. Any failures there will be caught in the catch clause below, which
+       * will be reported to the user. If they were to come from the finally clause, the uncaught
+       * exception there will simply terminate this thread without alerting the user -- the
+       * behavior then is to hang.
+       */
       while (state.get() == FragmentState.RUNNING_VALUE) {
         if (!root.next()) {
-          if (context.isFailed()) {
-            internalFail(context.getFailureCause());
-            closeOutResources(false);
+          if (fragmentContext.isFailed()) {
+            internalFail(fragmentContext.getFailureCause());
+            closeOutResources();
           } else {
-            closeOutResources(true); // make sure to close out resources before we report success.
+            /*
+             * Close out resources before we report success. We do this so that we'll get an
+             * error if there's a problem cleaning up, even though the query execution portion
+             * succeeded.
+             */
+            closeOutResources();
             updateStateOrFail(FragmentState.RUNNING, FragmentState.FINISHED);
           }
-
           break;
         }
       }
     } catch (AssertionError | Exception e) {
       logger.warn("Error while initializing or executing fragment", e);
-      context.fail(e);
+      fragmentContext.fail(e);
       internalFail(e);
     } finally {
-      bee.removeFragment(context.getHandle());
-      context.getDrillbitContext().getClusterCoordinator().removeDrillbitStatusListener(drillbitStatusListener);
+      clusterCoordinator.removeDrillbitStatusListener(drillbitStatusListener);
 
       // Final check to make sure RecordBatches are cleaned up.
-      closeOutResources(false);
+      closeOutResources();
 
-      Thread.currentThread().setName(originalThread);
+      myThread.setName(originalThreadName);
     }
   }
 
-  private void closeOutResources(boolean throwFailure) {
+  private static final String CLOSE_FAILURE = "Failure while closing out resources";
+
+  private void closeOutResources() {
+    /*
+     * Because of the way this method can be called, it needs to be idempotent; it must
+     * be safe to call it more than once. We use this flag to bypass the body if it has
+     * been called before.
+     */
     if (closed) {
       return;
     }
 
+    final DeferredException deferredException = fragmentContext.getDeferredException();
     try {
-      root.stop();
+      root.stop(); // TODO make this an AutoCloseable so we can detect lack of closure
     } catch (RuntimeException e) {
-      if (throwFailure) {
-        throw e;
-      }
-      logger.warn("Failure while closing out resources.", e);
-    }
-
-    try {
-      context.close();
-    } catch (Exception e) {
-      if (throwFailure) {
-        throw new RuntimeException("Error closing fragment context.", e);
-      }
-      logger.warn("Failure while closing out resources.", e);
+      logger.warn(CLOSE_FAILURE, e);
+      deferredException.addException(e);
     }
 
     closed = true;
+
+    /*
+     * This must be last, because this may throw deferred exceptions.
+     * We are forced to wrap the checked exception (if any) so that it will be unchecked.
+     */
+    try {
+      fragmentContext.close();
+    } catch(Exception e) {
+      throw new RuntimeException("Error closing fragment context.", e);
+    }
   }
 
-  private void internalFail(Throwable excep) {
+  private void internalFail(final Throwable excep) {
     state.set(FragmentState.FAILED_VALUE);
-    listener.fail(context.getHandle(), "Failure while running fragment.", excep);
+    listener.fail(fragmentContext.getHandle(), "Failure while running fragment.", excep);
   }
 
   /**
    * Updates the fragment state with the given state
+   *
    * @param to target state
    */
-  protected void updateState(FragmentState to) {;
+  private void updateState(final FragmentState to) {
     state.set(to.getNumber());
-    listener.stateChanged(context.getHandle(), to);
+    listener.stateChanged(fragmentContext.getHandle(), to);
   }
 
   /**
@@ -192,10 +205,10 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
    * @param to target state
    * @return true only if update succeeds
    */
-  protected boolean checkAndUpdateState(FragmentState expected, FragmentState to) {
-    boolean success = state.compareAndSet(expected.getNumber(), to.getNumber());
+  private boolean checkAndUpdateState(final FragmentState expected, final FragmentState to) {
+    final boolean success = state.compareAndSet(expected.getNumber(), to.getNumber());
     if (success) {
-      listener.stateChanged(context.getHandle(), to);
+      listener.stateChanged(fragmentContext.getHandle(), to);
     } else {
       logger.debug("State change failed. Expected state: {} -- target state: {} -- current state: {}.",
           expected.name(), to.name(), FragmentState.valueOf(state.get()));
@@ -206,7 +219,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   /**
    * Returns true if the fragment is in a terminal state
    */
-  protected boolean isCompleted() {
+  private boolean isCompleted() {
     return state.get() == FragmentState.CANCELLED_VALUE
         || state.get() == FragmentState.FAILED_VALUE
         || state.get() == FragmentState.FINISHED_VALUE;
@@ -220,38 +233,32 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
    * @param to target state
    * @return true only if update succeeds
    */
-  protected boolean updateStateOrFail(FragmentState expected, FragmentState to) {
+  private boolean updateStateOrFail(final FragmentState expected, final FragmentState to) {
     final boolean updated = checkAndUpdateState(expected, to);
     if (!updated && !isCompleted()) {
       final String msg = "State was different than expected while attempting to update state from %s to %s however current state was %s.";
-      internalFail(new StateTransitionException(String.format(msg, expected.name(), to.name(), FragmentState.valueOf(state.get()))));
+      internalFail(new StateTransitionException(
+          String.format(msg, expected.name(), to.name(), FragmentState.valueOf(state.get()))));
     }
     return updated;
   }
 
-
-  @Override
-  public int compareTo(Object o) {
-    return o.hashCode() - this.hashCode();
-  }
-
   public FragmentContext getContext() {
-    return context;
+    return fragmentContext;
   }
 
   private class FragmentDrillbitStatusListener implements DrillbitStatusListener {
-
     @Override
-    public void drillbitRegistered(Set<CoordinationProtos.DrillbitEndpoint> registeredDrillbits) {
-      // Do nothing.
+    public void drillbitRegistered(final Set<CoordinationProtos.DrillbitEndpoint> registeredDrillbits) {
     }
 
     @Override
-    public void drillbitUnregistered(Set<CoordinationProtos.DrillbitEndpoint> unregisteredDrillbits) {
-      if (unregisteredDrillbits.contains(FragmentExecutor.this.context.getForemanEndpoint())) {
-        logger.warn("Forman : {} no longer active. Cancelling fragment {}.",
-            FragmentExecutor.this.context.getForemanEndpoint().getAddress(),
-            QueryIdHelper.getQueryIdentifier(context.getHandle()));
+    public void drillbitUnregistered(final Set<CoordinationProtos.DrillbitEndpoint> unregisteredDrillbits) {
+      // if the defunct Drillbit was running our Foreman, then cancel the query
+      final DrillbitEndpoint foremanEndpoint = FragmentExecutor.this.fragmentContext.getForemanEndpoint();
+      if (unregisteredDrillbits.contains(foremanEndpoint)) {
+        logger.warn("Foreman : {} no longer active. Cancelling fragment {}.",
+            foremanEndpoint.getAddress(), QueryIdHelper.getQueryIdentifier(fragmentContext.getHandle()));
         FragmentExecutor.this.cancel();
       }
     }

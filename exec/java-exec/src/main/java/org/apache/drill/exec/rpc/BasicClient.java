@@ -43,7 +43,6 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicClient.class);
 
   private final Bootstrap b;
-  private volatile boolean connect = false;
   protected R connection;
   private final T handshakeType;
   private final Class<HANDSHAKE_RESPONSE> responseClass;
@@ -81,7 +80,6 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
                 new InboundHandler(connection), //
                 new RpcExceptionHandler() //
                 );
-            connect = true;
           }
         }); //
 
@@ -180,7 +178,6 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
         try {
           BasicClient.this.validateHandshake(value);
           BasicClient.this.finalizeConnection(value, connection);
-          BasicClient.this.connect = true;
           l.connectionSucceeded(connection);
 //          logger.debug("Handshake completed succesfully.");
         } catch (RpcException ex) {
@@ -218,6 +215,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
       connection.getChannel().close().get();
     } catch (InterruptedException | ExecutionException e) {
       logger.warn("Failure whiel shutting {}", this.getClass().getName(), e);
+      // TODO InterruptedException
     }
   }
 
