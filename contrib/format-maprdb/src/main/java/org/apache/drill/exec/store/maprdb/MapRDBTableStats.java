@@ -26,12 +26,18 @@ import com.mapr.fs.hbase.HBaseAdminImpl;
 public class MapRDBTableStats {
 
   private long numRows;
+  private volatile HBaseAdminImpl admin = null;
 
   public MapRDBTableStats(HTable table) throws Exception {
-    Configuration config = table.getConfiguration();
-    HBaseAdminImpl admin = new HBaseAdminImpl(config, TableMappingRulesFactory.create(config));
+    if (admin == null) {
+      synchronized (MapRDBTableStats.class) {
+        if (admin == null) {
+          Configuration config = table.getConfiguration();
+          admin = new HBaseAdminImpl(config, TableMappingRulesFactory.create(config));
+        }
+      }
+    }
     numRows = admin.getNumRows(new String(table.getTableName()));
-    admin.close();
   }
 
   public long getNumRows() {
