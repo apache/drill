@@ -72,6 +72,8 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   private Configuration hbaseConf;
   private OperatorContext operatorContext;
 
+  private boolean rowKeyOnly;
+
   public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) throws OutOfMemoryException {
     hbaseConf = conf;
@@ -87,8 +89,8 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    rowKeyOnly = true;
     if (!isStarQuery()) {
-      boolean rowKeyOnly = true;
       for (SchemaPath column : columns) {
         if (column.getRootSegment().getPath().equalsIgnoreCase(ROW_KEY)) {
           transformed.add(ROW_KEY_PATH);
@@ -116,6 +118,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
             HBaseUtils.andFilterAtIndex(hbaseScan.getFilter(), HBaseUtils.LAST_FILTER, new FirstKeyOnlyFilter()));
       }
     } else {
+      rowKeyOnly = false;
       transformed.add(ROW_KEY_PATH);
     }
 
@@ -130,7 +133,6 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   public void setOperatorContext(OperatorContext operatorContext) {
     this.operatorContext = operatorContext;
   }
-
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
@@ -197,22 +199,23 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
       if (rowKeyVector != null) {
         rowKeyVector.getMutator().setSafe(rowCount, cells[0].getRowArray(), cells[0].getRowOffset(), cells[0].getRowLength());
       }
+      if (!rowKeyOnly) {
+        for (Cell cell : cells) {
+          int familyOffset = cell.getFamilyOffset();
+          int familyLength = cell.getFamilyLength();
+          byte[] familyArray = cell.getFamilyArray();
+          MapVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength), true);
 
-      for (Cell cell : cells) {
-        int familyOffset = cell.getFamilyOffset();
-        int familyLength = cell.getFamilyLength();
-        byte[] familyArray = cell.getFamilyArray();
-        MapVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength), true);
+          int qualifierOffset = cell.getQualifierOffset();
+          int qualifierLength = cell.getQualifierLength();
+          byte[] qualifierArray = cell.getQualifierArray();
+          NullableVarBinaryVector v = getOrCreateColumnVector(mv, new String(qualifierArray, qualifierOffset, qualifierLength));
 
-        int qualifierOffset = cell.getQualifierOffset();
-        int qualifierLength = cell.getQualifierLength();
-        byte[] qualifierArray = cell.getQualifierArray();
-        NullableVarBinaryVector v = getOrCreateColumnVector(mv, new String(qualifierArray, qualifierOffset, qualifierLength));
-
-        int valueOffset = cell.getValueOffset();
-        int valueLength = cell.getValueLength();
-        byte[] valueArray = cell.getValueArray();
-        v.getMutator().setSafe(rowCount, valueArray, valueOffset, valueLength);
+          int valueOffset = cell.getValueOffset();
+          int valueLength = cell.getValueLength();
+          byte[] valueArray = cell.getValueArray();
+          v.getMutator().setSafe(rowCount, valueArray, valueOffset, valueLength);
+        }
       }
     }
 
