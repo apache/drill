@@ -141,6 +141,10 @@ connectionStatus_t DrillClientImpl::connect(const char* host, const char* port){
         }
 
     }catch(std::exception e){
+        // Handle case when the hostname cannot be resolved. "resolve" is hard-coded in boost asio resolver.resolve
+        if (!strcmp(e.what(), "resolve")) {
+            return handleConnError(CONN_HOSTNAME_RESOLUTION_ERROR, getMessage(ERR_CONN_EXCEPT, e.what()));
+        }
         return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_EXCEPT, e.what()));
     }
 
