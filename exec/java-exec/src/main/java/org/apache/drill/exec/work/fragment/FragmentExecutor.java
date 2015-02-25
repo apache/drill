@@ -64,10 +64,16 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
 
   @Override
   public FragmentStatus getStatus() {
-    FragmentStatus status = AbstractStatusReporter.getBuilder(context, FragmentState.RUNNING, null, null).build();
+    // If the query is not in a running state, the operator tree is still being constructed and
+    // there is no reason to poll for intermediate results.
+
+    // Previously the call to get the operator stats with the AbstractStatusReporter was happening
+    // before this check. This caused a concurrent modification exception as the list of operator
+    // stats is iterated over while collecting info, and added to while building the operator tree.
     if(state.get() != FragmentState.RUNNING_VALUE){
       return null;
     }
+    FragmentStatus status = AbstractStatusReporter.getBuilder(context, FragmentState.RUNNING, null, null).build();
     return status;
   }
 
