@@ -4,15 +4,16 @@ parent: "SQL Reference"
 ---
 You can use the following types of functions in your Drill queries:
 
-  * Scalar Functions
+  * Math Functions
+  * String Functions
+  * Date/Time Functions
+  * Data Type Formatting Functions
   * Aggregate Functions
   * Aggregate Statistics Functions
-  * Convert Functions
+  * Convert and Cast Functions
   * Nested Data Functions
 
-## Scalar Functions
-
-### Math
+## Math
 
 You can use the following scalar math functions in your Drill queries:
 
@@ -29,7 +30,7 @@ You can use the following scalar math functions in your Drill queries:
   * SQRT
   * TRUNC
 
-### String Functions
+## String Functions
 
 The following table provides the string functions that you can use in your
 Drill queries:
@@ -60,7 +61,7 @@ trim([leading | trailing | both] [characters] from string)| text
 upper(string)| text
   
   
-### Date/Time Functions
+## Date/Time Functions
 
 The following table provides the date/time functions that you can use in your
 Drill queries:
@@ -81,7 +82,7 @@ localtimestamp| timestamp
 now()| timestamp with time zone  
 timeofday()| text  
   
-### Data Type Formatting Functions
+## Data Type Formatting Functions
 
 The following table provides the data type formatting functions that you can
 use in your Drill queries:
@@ -126,7 +127,7 @@ var_pop(expression)| smallint, int, bigint, real, double precision, or numeric| 
 var_samp(expression)| smallint, int, bigint, real, double precision, or numeric| double precision for floating-point arguments, otherwise numeric
   
   
-## Convert Functions
+## Convert and Cast Functions
 
 You can use the CONVERT_TO and CONVERT_FROM functions to encode and decode
 data when you query your data sources with Drill. For example, HBase stores

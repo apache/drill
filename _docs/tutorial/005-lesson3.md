@@ -279,7 +279,7 @@ ordered list of products purchased rather than a random list).
     | 17192 | 2014-04-22 | 2501 | AOS4.2 | 26 | true |
     ...
 
-This query uses an SQL extension, the repeated_count function, to get an
+This query uses a Drill extension of SQL, the repeated_count function, to get an
 aggregated count of the array values. The query returns the number of products
 searched for each session that converted into a purchase and ranks the counts
 in descending order. Only clicks that have resulted in a purchase are counted.

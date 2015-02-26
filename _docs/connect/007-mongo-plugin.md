@@ -15,7 +15,7 @@ on the data using ANSI SQL.
 
 This tutorial assumes that you have Drill installed locally (embedded mode),
 as well as MongoDB. Examples in this tutorial use zip code aggregation data
-provided by MongoDB. Before You Begin provides links to download tools and data
+provided by MongDB. Before You Begin provides links to download tools and data
 used throughout the tutorial.
 
 **Note:** A local instance of Drill is used in this tutorial for simplicity. You can also run Drill and MongoDB together in distributed mode.
@@ -86,8 +86,8 @@ the `USE` command to change schema.
 ### Example Queries
 
 The following example queries are included for reference. However, you can use
-the SQL power of Apache Drill directly on MongoDB. For more information about,
-refer to the [SQL
+the SQL power of Apache Drill directly on MongoDB. For more information,
+refer to the [Apache Drill SQL
 Reference](/drill/docs/sql-reference).
 
 **Example 1: View mongo.zipdb Dataset**

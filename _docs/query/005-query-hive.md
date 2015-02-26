@@ -19,7 +19,7 @@ To create a Hive table and query it with Drill, complete the following steps:
 
         hive> load data local inpath '/<directory path>/customers.csv' overwrite into table customers;`
   4. Issue `quit` or `exit` to leave the Hive shell.
-  5. Start Drill. Refer to [Starting/Stopping Drill](/drill/docs/starting-stopping-drill) for instructions.
+  5. Start Drill. Refer to [/drill/docs/starting-stopping-drill) for instructions.
   6. Issue the following query to Drill to get the first and last names of the first ten customers in the Hive table:  
 
         0: jdbc:drill:schema=hiveremote> SELECT firstname,lastname FROM hiveremote.`customers` limit 10;`
