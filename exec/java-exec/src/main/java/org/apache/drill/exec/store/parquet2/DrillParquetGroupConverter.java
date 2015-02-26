@@ -340,7 +340,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
     }
 
     @Override
-    public void addInt(int value) {
+    public void addLong(long value) {
       holder.value = value;
       writer.write(holder);
     }
