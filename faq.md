@@ -98,7 +98,7 @@ The best way to get started is to just try it out. It just takes a few minutes e
 
 ## How can I ask questions and provide feedback?
 
-Please post your questions and feedback on <drill-user@incubator.apache.org>. We are happy to have you try out Drill and help with any questions!
+Please post your questions and feedback on <user@drill.apache.org>. We are happy to have you try out Drill and help with any questions!
 
 ## How can I contribute to Drill?
 
