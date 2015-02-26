@@ -262,23 +262,19 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
    * the end of one of the other vectors while we are copying the data of the other vectors alongside each new flattened
    * value coming out of the repeated field.)
    */
-  private TransferPair getFlattenFieldTransferPair() {
-    ValueVector flattenField = incoming.getValueAccessorById(
-        incoming.getSchema().getColumn(
-            incoming.getValueVectorId(
-                popConfig.getColumn()).getFieldIds()[0]).getValueClass(),
-        incoming.getValueVectorId(popConfig.getColumn()).getFieldIds()).getValueVector();
+  private TransferPair getFlattenFieldTransferPair(FieldReference reference) {
+    final TypedFieldId fieldId = incoming.getValueVectorId(popConfig.getColumn());
+    final Class vectorClass = incoming.getSchema().getColumn(fieldId.getFieldIds()[0]).getValueClass();
+    final ValueVector flattenField = incoming.getValueAccessorById(vectorClass, fieldId.getFieldIds()).getValueVector();
 
     TransferPair tp = null;
-    if (flattenField instanceof MapVector) {
-      return null;
-    } else if (flattenField instanceof RepeatedMapVector) {
-      tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap();
+    if (flattenField instanceof RepeatedMapVector) {
+      tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap(reference);
     } else {
       ValueVector vvIn = ((RepeatedVector)flattenField).getAccessor().getAllChildValues();
       // vvIn may be null because of fast schema return for repeated list vectors
       if (vvIn != null) {
-        tp = vvIn.getTransferPair();
+        tp = vvIn.getTransferPair(reference);
       }
     }
     return tp;
@@ -293,15 +289,11 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     final List<TransferPair> transfers = Lists.newArrayList();
 
     final ClassGenerator<Flattener> cg = CodeGenerator.getRoot(Flattener.TEMPLATE_DEFINITION, context.getFunctionRegistry());
-    IntOpenHashSet transferFieldIds = new IntOpenHashSet();
+    final IntOpenHashSet transferFieldIds = new IntOpenHashSet();
 
-    NamedExpression namedExpression = new NamedExpression(popConfig.getColumn(), new FieldReference(popConfig.getColumn()));
-    LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
-    ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
-    TypedFieldId id = vectorRead.getFieldId();
-    Preconditions.checkNotNull(incoming);
-
-    TransferPair tp = getFlattenFieldTransferPair();
+    final NamedExpression flattenExpr = new NamedExpression(popConfig.getColumn(), new FieldReference(popConfig.getColumn()));
+    final ValueVectorReadExpression vectorRead = (ValueVectorReadExpression)ExpressionTreeMaterializer.materialize(flattenExpr.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
+    final TransferPair tp = getFlattenFieldTransferPair(flattenExpr.getRef());
 
     if (tp != null) {
       transfers.add(tp);
@@ -314,7 +306,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     ClassifierResult result = new ClassifierResult();
 
     for (int i = 0; i < exprs.size(); i++) {
-      namedExpression = exprs.get(i);
+      final NamedExpression namedExpression = exprs.get(i);
       result.clear();
 
       String outputName = getRef(namedExpression).getRootSegment().getPath();
@@ -327,7 +319,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         }
       }
 
-      expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
       final MaterializedField outputField = MaterializedField.create(outputName, expr.getMajorType());
       if (collector.hasErrors()) {
         throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));

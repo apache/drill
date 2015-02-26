@@ -159,8 +159,8 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
     }
   }
 
-  public TransferPair getTransferPairToSingleMap() {
-    return new SingleMapTransferPair(this, getField());
+  public TransferPair getTransferPairToSingleMap(FieldReference reference) {
+    return new SingleMapTransferPair(this, reference);
   }
 
   @Override
@@ -183,8 +183,8 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
     private final MapVector to;
     private static final MajorType MAP_TYPE = Types.required(MinorType.MAP);
 
-    public SingleMapTransferPair(RepeatedMapVector from, MaterializedField field) {
-      this(from, new MapVector(MaterializedField.create(field.getPath(), MAP_TYPE), from.allocator, from.callBack), false);
+    public SingleMapTransferPair(RepeatedMapVector from, SchemaPath path) {
+      this(from, new MapVector(MaterializedField.create(path, MAP_TYPE), from.allocator, from.callBack), false);
     }
 
     public SingleMapTransferPair(RepeatedMapVector from, MapVector to) {
