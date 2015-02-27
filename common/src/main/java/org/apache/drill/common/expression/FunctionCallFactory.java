@@ -39,7 +39,7 @@ public class FunctionCallFactory {
     opToFuncTable.put("*", "multiply");
     opToFuncTable.put("%", "modulo");
     opToFuncTable.put("^", "xor");
-    opToFuncTable.put("||", "concat");
+    opToFuncTable.put("||", "concatOperator");
     opToFuncTable.put("or", "booleanOr");
     opToFuncTable.put("and", "booleanAnd");
     opToFuncTable.put(">", "greater_than");

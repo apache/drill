@@ -30,6 +30,60 @@ import org.junit.Test;
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
+  @Test // see DRILL-2328
+  public void testConcatOnNull() throws Exception {
+    try {
+      test("use dfs.tmp");
+      test("create view concatNull as (select * from cp.`customer.json` where customer_id < 5);");
+
+      // Test Left Null
+      testBuilder()
+          .sqlQuery("select (mi || lname) as CONCATOperator, mi, lname, concat(mi, lname) as CONCAT from concatNull")
+          .ordered()
+          .baselineColumns("CONCATOperator", "mi", "lname","CONCAT")
+          .baselineValues("A.Nowmer", "A.", "Nowmer", "A.Nowmer")
+          .baselineValues("I.Whelply", "I.", "Whelply", "I.Whelply")
+          .baselineValues(null, null, "Derry", "Derry")
+          .baselineValues("J.Spence", "J.", "Spence", "J.Spence")
+          .build().run();
+
+      // Test Right Null
+      testBuilder()
+          .sqlQuery("select (lname || mi) as CONCATOperator, lname, mi, concat(lname, mi) as CONCAT from concatNull")
+          .ordered()
+          .baselineColumns("CONCATOperator", "lname", "mi", "CONCAT")
+          .baselineValues("NowmerA.", "Nowmer", "A.", "NowmerA.")
+          .baselineValues("WhelplyI.", "Whelply", "I.", "WhelplyI.")
+          .baselineValues(null, "Derry", null, "Derry")
+          .baselineValues("SpenceJ.", "Spence", "J.", "SpenceJ.")
+          .build().run();
+
+      // Test Two Sides
+      testBuilder()
+          .sqlQuery("select (mi || mi) as CONCATOperator, mi, mi, concat(mi, mi) as CONCAT from concatNull")
+          .ordered()
+          .baselineColumns("CONCATOperator", "mi", "mi0", "CONCAT")
+          .baselineValues("A.A.", "A.", "A.", "A.A.")
+          .baselineValues("I.I.", "I.", "I.", "I.I.")
+          .baselineValues(null, null, null, "")
+          .baselineValues("J.J.", "J.", "J.", "J.J.")
+          .build().run();
+
+      testBuilder()
+          .sqlQuery("select (cast(null as varchar(10)) || lname) as CONCATOperator, " +
+              "cast(null as varchar(10)) as NullColumn, lname, concat(cast(null as varchar(10)), lname) as CONCAT from concatNull")
+          .ordered()
+          .baselineColumns("CONCATOperator", "NullColumn", "lname", "CONCAT")
+          .baselineValues(null, null, "Nowmer", "Nowmer")
+          .baselineValues(null, null, "Whelply", "Whelply")
+          .baselineValues(null, null, "Derry", "Derry")
+          .baselineValues(null, null, "Spence", "Spence")
+          .build().run();
+    } finally {
+      test("drop view concatNull;");
+    }
+  }
+
   @Test // see DRILL-2054
   public void testConcatOperator() throws Exception {
     testBuilder()

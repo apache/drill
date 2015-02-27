@@ -837,6 +837,31 @@ public class StringFunctions{
     } // end of eval
   }
 
+  @FunctionTemplate(name = "concatOperator", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ConcatOperator implements DrillSimpleFunc{
+    @Param  VarCharHolder left;
+    @Param  VarCharHolder right;
+    @Output VarCharHolder out;
+    @Inject DrillBuf buffer;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.buffer = buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
+      out.start = out.end = 0;
+
+      int id = 0;
+      for (id = left.start; id < left.end; id++) {
+        out.buffer.setByte(out.end++, left.buffer.getByte(id));
+      }
+
+      for (id = right.start; id < right.end; id++) {
+        out.buffer.setByte(out.end++, right.buffer.getByte(id));
+      }
+    }
+  }
+
   //Concatenate the text representations of the arguments. NULL arguments are ignored.
   //TODO: NullHanding.INTERNAL for DrillSimpleFunc requires change in code generation.
   @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
@@ -864,7 +889,6 @@ public class StringFunctions{
         out.buffer.setByte(out.end++, right.buffer.getByte(id));
       }
     }
-
   }
 
   @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
