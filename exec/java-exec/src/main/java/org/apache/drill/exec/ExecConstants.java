@@ -91,7 +91,7 @@ public interface ExecConstants {
       PARQUET_WRITER_COMPRESSION_TYPE, "snappy", "snappy", "gzip", "none");
   public static final String PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING = "store.parquet.enable_dictionary_encoding";
   public static final OptionValidator PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING_VALIDATOR = new BooleanValidator(
-      PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, true);
+      PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, false);
 
   public static final String PARQUET_VECTOR_FILL_THRESHOLD = "store.parquet.vector_fill_threshold";
   public static final OptionValidator PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_THRESHOLD, 99l, 85l);
