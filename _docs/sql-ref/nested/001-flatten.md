@@ -85,5 +85,5 @@ the categories array, then run a COUNT function on the flattened result:
     +---------------|------------+
 
 A common use case for FLATTEN is its use in conjunction with the
-[KVGEN](/drill/docs/flatten-function) function.
+[KVGEN](/docs/flatten-function) function.
 

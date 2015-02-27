@@ -18,7 +18,7 @@ You can use the following SQL data types in your Drill queries:
   * TIME
   * TIMESTAMP
 
-Refer to [Supported Date/Time Data Type formats](/drill/docs/supported-date-time-data-type-formats/).
+Refer to [Supported Date/Time Data Type formats](/docs/supported-date-time-data-type-formats/).
 
 #### Integer
 

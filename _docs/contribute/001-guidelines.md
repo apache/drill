@@ -167,7 +167,7 @@ functions which need to be implemented can be found
 [here](https://docs.google.com/spreadsheet/ccc?key=0AgAGbQ6asvQ-
 dDRrUUxVSVlMVXRtanRoWk9JcHgteUE&usp=sharing#gid=0) (WIP).
 
-More contribution ideas are located on the [Contribution Ideas](/drill/docs/apache-drill-contribution-ideas) page.
+More contribution ideas are located on the [Contribution Ideas](/docs/apache-drill-contribution-ideas) page.
 
 ### Contributing your work
 

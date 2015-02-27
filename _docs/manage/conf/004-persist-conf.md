@@ -67,7 +67,7 @@ override.conf.`
 ## MapR-DB for Persistent Configuration Storage
 
 The MapR-DB plugin will be released soon. You can [compile Drill from
-source](/drill/docs/compiling-drill-from-source) to try out this
+source](/docs/compiling-drill-from-source) to try out this
 new feature.
 
 If you have MapR-DB in your cluster, you can use MapR-DB for persistent

@@ -30,4 +30,4 @@ the count to be grouped by other columns in the select list (such as `name` in
 this example).
 
 For another example of this function, see the following lesson in the Apache
-Drill Tutorial for Hadoop: [Lesson 3: Run Queries on Complex Data Types](/drill/docs/lession-3-run-queries-on-complex-data-types/).
+Drill Tutorial for Hadoop: [Lesson 3: Run Queries on Complex Data Types](/docs/lession-3-run-queries-on-complex-data-types/).

@@ -60,7 +60,7 @@ You can use the following subquery operators in your Drill queries:
   * EXISTS
   * IN
 
-See [SELECT Statements](/drill/docs/select-statements).
+See [SELECT Statements](/docs/select-statements).
 
 ## String Operators
 

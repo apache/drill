@@ -19,7 +19,7 @@ Take a look at the pre-configured storage plugins by opening the Drill Web UI.
 
 Feel free to skip this section and jump directly to the queries: [Lesson 1:
 Learn About the Data
-Set](/drill/docs/lession-1-learn-about-the-data-set)
+Set](/docs/lession-1-learn-about-the-data-set)
 
   * Launch a web browser and go to: `http://<IP address of the sandbox>:8047`
   * Go to the Storage tab
@@ -30,7 +30,7 @@ Set](/drill/docs/lession-1-learn-about-the-data-set)
 
 A storage plugin configuration for MapR-DB in the sandbox. Drill uses a single
 storage plugin for connecting to HBase as well as MapR-DB, which is an
-enterprise grade in-Hadoop NoSQL database. In addition to the following brief example, see the [Registering HBase](/drill/docs/registering-hbase) for more
+enterprise grade in-Hadoop NoSQL database. In addition to the following brief example, see the [Registering HBase](/docs/registering-hbase) for more
 information on how to configure Drill to query HBase.
 
     {
@@ -150,7 +150,7 @@ connect and access from Drill. The interfaces include the following.
 
 Drill provides ODBC/JDBC drivers to connect from BI tools such as Tableau,
 MicroStrategy, SQUirrel, and Jaspersoft; refer to [Using ODBC to Access Apache
-Drill from BI Tools](/drill/docs/odbc-jdbc-interfaces/using-odbc-to- access-apache-drill-from-bi-tools) and [Using JDBC to Access Apache Drill](/drill/docs/odbc-jdbc-interfaces#using-jdbc-to-access-apache-drill-from-squirrel) to learn
+Drill from BI Tools](/docs/odbc-jdbc-interfaces/using-odbc-to- access-apache-drill-from-bi-tools) and [Using JDBC to Access Apache Drill](/docs/odbc-jdbc-interfaces#using-jdbc-to-access-apache-drill-from-squirrel) to learn
 more.
 
 ### SQLLine
@@ -228,5 +228,5 @@ Apache Drill as you work through the tutorial.
 # What's Next
 
 Start running queries by going to [Lesson 1: Learn About the Data
-Set](/drill/docs/lession-1-learn-about-the-data-set).
+Set](/docs/lession-1-learn-about-the-data-set).
 

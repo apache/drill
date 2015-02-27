@@ -10,7 +10,7 @@ a map with a wide set of columns into an array of key-value pairs.
 
 In turn, you can write analytic queries that return a subset of the generated
 keys or constrain the keys in some way. For example, you can use the
-[FLATTEN](/drill/docs/flatten-function) function to break the
+[FLATTEN](/docs/flatten-function) function to break the
 array down into multiple distinct rows and further query those rows.
 
   
@@ -26,7 +26,7 @@ KVGEN would operate on this data to generate:
     [{"key": "a", "value": "valA"}, {"key": "b", "value": "valB"}]
     [{"key": "c", "value": "valC"}, {"key": "d", "value": "valD"}]
 
-Applying the [FLATTEN](/drill/docs/flatten-function) function to
+Applying the [FLATTEN](/docs/flatten-function) function to
 this data would return:
 
     {"key": "a", "value": "valA"}
@@ -146,5 +146,5 @@ distinct rows:
 	+------------+
 	9 rows selected (0.151 seconds)
 
-See the description of [FLATTEN](/drill/docs/flatten-function)
+See the description of [FLATTEN](/docs/flatten-function)
 for an example of a query against the flattened data.

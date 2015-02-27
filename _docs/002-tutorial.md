@@ -7,12 +7,12 @@ configured with Apache Drill.
 To complete the tutorial on the MapR Sandbox with Apache Drill, work through
 the following pages in order:
 
-  * [Installing the Apache Drill Sandbox](/drill/docs/installing-the-apache-drill-sandbox)
-  * [Getting to Know the Drill Setup](/drill/docs/getting-to-know-the-drill-sandbox)
-  * [Lesson 1: Learn About the Data Set](/drill/docs/lession-1-learn-about-the-data-set)
-  * [Lesson 2: Run Queries with ANSI SQL](/drill/docs/lession-2-run-queries-with-ansi-sql)
-  * [Lesson 3: Run Queries on Complex Data Types](/drill/docs/lession-3-run-queries-on-complex-data-types)
-  * [Summary](/drill/docs/summary)
+  * [Installing the Apache Drill Sandbox](/docs/installing-the-apache-drill-sandbox)
+  * [Getting to Know the Drill Setup](/docs/getting-to-know-the-drill-sandbox)
+  * [Lesson 1: Learn About the Data Set](/docs/lession-1-learn-about-the-data-set)
+  * [Lesson 2: Run Queries with ANSI SQL](/docs/lession-2-run-queries-with-ansi-sql)
+  * [Lesson 3: Run Queries on Complex Data Types](/docs/lession-3-run-queries-on-complex-data-types)
+  * [Summary](/docs/summary)
 
 ## About Apache Drill
 
@@ -41,11 +41,11 @@ environment to get a feel for the power and capabilities of Apache Drill by
 performing various types of queries. Once you get a flavor for the technology,
 refer to the [Apache Drill web site](http://incubator.apache.org/drill/) and
 [Apache Drill documentation
-](/drill/docs)for more
+](/docs)for more
 details.
 
 Note that Hadoop is not a prerequisite for Drill and users can start ramping
 up with Drill by running SQL queries directly on the local file system. Refer
-to [Apache Drill in 10 minutes](/drill/docs/apache-drill-in-10-minutes) for an introduction to using Drill in local
+to [Apache Drill in 10 minutes](/docs/apache-drill-in-10-minutes) for an introduction to using Drill in local
 (embedded) mode.
 

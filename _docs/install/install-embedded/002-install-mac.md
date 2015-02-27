@@ -23,7 +23,7 @@ OS X:
   
         cd /Users/max/drill/apache-drill-<version>
 
-At this point, you can [invoke SQLLine](/drill/docs/starting-stopping-drill) to
+At this point, you can [invoke SQLLine](/docs/starting-stopping-drill) to
 run Drill.
 
 <!--The title is too complicated for me to figure out how to create a link to it.-->

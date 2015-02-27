@@ -30,8 +30,8 @@ Maven and JDK installed:
 Now that you have Drill installed, you can connect to Drill and query sample
 data or you can connect Drill to your data sources.
 
-  * To connect Drill to your data sources, refer to [Connect to Data Sources](/drill/docs/connect-to-data-sources) for instructions.
+  * To connect Drill to your data sources, refer to [Connect to Data Sources](/docs/connect-to-data-sources) for instructions.
   * To connect to Drill and query sample data, refer to the following topics:
-    * [Start Drill ](/drill/docs/starting-stopping-drill)(For Drill installed in embedded mode)
-    * [Query Data ](/drill/docs/query-data)
+    * [Start Drill ](/docs/starting-stopping-drill)(For Drill installed in embedded mode)
+    * [Query Data ](/docs/query-data)
 

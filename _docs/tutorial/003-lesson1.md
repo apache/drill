@@ -390,7 +390,7 @@ subdirectories to return the total number of rows in those files.
 # What's Next
 
 Go to [Lesson 2: Run Queries with ANSI
-SQL](/drill/docs/lession-2-run-queries-with-ansi-sql).
+SQL](/docs/lession-2-run-queries-with-ansi-sql).
 
 
 

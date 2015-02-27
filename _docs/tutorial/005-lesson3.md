@@ -373,7 +373,7 @@ with a subdirectory that has the same name as the table you created.
 
 ## What's Next
 
-Complete the tutorial with the [Summary](/drill/docs/summary).
+Complete the tutorial with the [Summary](/docs/summary).
 
 
 

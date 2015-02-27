@@ -43,7 +43,7 @@ The flow of a Drill query typically involves the following steps:
 
 You can access Drill through the following interfaces:
 
-  * [Drill shell (SQLLine)](/drill/docs/starting-stopping-drill)
-  * [Drill Web UI](/drill/docs/monitoring-and-canceling-queries-in-the-drill-web-ui)
-  * [ODBC/JDBC](/drill/docs/odbc-jdbc-interfaces/#using-odbc-to-access-apache-drill-from-bi-tools) 
+  * [Drill shell (SQLLine)](/docs/starting-stopping-drill)
+  * [Drill Web UI](/docs/monitoring-and-canceling-queries-in-the-drill-web-ui)
+  * [ODBC/JDBC](/docs/odbc-jdbc-interfaces/#using-odbc-to-access-apache-drill-from-bi-tools) 
   * C++ API

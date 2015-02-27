@@ -16,7 +16,7 @@ distributed file system:
 The default `dfs` storage plugin instance registered with Drill has a
 `default` workspace. If you query data in the `default` workspace, you do not
 need to include the workspace in the query. Refer to
-[Workspaces](/drill/docs/workspaces) for
+[Workspaces](/docs/workspaces) for
 more information.
 
 Drill supports the following file types:
