@@ -20,17 +20,29 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import org.apache.drill.BaseTestQuery;
 import org.junit.Test;
 
-public class TestNullableFixedAlignedReaders extends BaseTestQuery {
+public class TestDateReader extends BaseTestQuery {
 
   /**
-   * check if NullableDateReader works well with dictionary encoding.
+   * check if DateReader works well with dictionary encoding.
    */
   @Test
-  public void testNullableDateReaderWithDictionary() throws Exception {
-    // the file 'date_dictionary.parquet' contains one single DATE column with 600 rows and 290 distinct date values
-    // and uses the PLAIN_DICTIONARY encoder
+  public void testDictionary() throws Exception {
+    // the file 'date_dictionary.parquet' contains two DATE columns, one optional and one required
+    // and uses the PLAIN_DICTIONARY encoding
 
     // query parquet file. We shouldn't get any exception
     testNoResult("SELECT * FROM cp.`parquet/date_dictionary.parquet`");
+  }
+
+  /**
+   * check if DateReader works well with plain encoding.
+   */
+  @Test
+  public void testNoDictionary() throws Exception {
+    // the file 'date_dictionary.parquet' contains two DATE columns, one optional and one required
+    // and uses the PLAIN encoding
+
+    // query parquet file. We shouldn't get any exception
+    testNoResult("SELECT * FROM cp.`parquet/date_nodictionary.parquet`");
   }
 }

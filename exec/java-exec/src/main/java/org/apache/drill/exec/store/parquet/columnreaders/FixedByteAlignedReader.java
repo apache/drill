@@ -130,10 +130,14 @@ class FixedByteAlignedReader extends ColumnReader {
 
     @Override
     void addNext(int start, int index) {
-//      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(
-//          NullableFixedByteAlignedReaders.NullableDateReader.readIntLittleEndian(bytebuf, start)
-      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(readIntLittleEndian(bytebuf, start)
-              - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+      int intValue;
+      if (usingDictionary) {
+        intValue =  pageReader.dictionaryValueReader.readInteger();
+      } else {
+        intValue = readIntLittleEndian(bytebuf, start);
+      }
+
+      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
     }
 
     // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
