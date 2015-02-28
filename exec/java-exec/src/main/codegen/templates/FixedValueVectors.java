@@ -394,17 +394,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     <#elseif (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
 
     public void get(int index, ${minor.class}Holder holder) {
-
         holder.start = index * ${type.width};
-
         holder.buffer = data;
-
-        /* The buffer within the value vector is little endian.
-         * For the dense representation though, we use big endian
-         * byte ordering (internally). This is because we shift bits to the right and
-         * big endian ordering makes sense for this purpose.  So we have to deal with
-         * the sign bit for the two representation in a slightly different fashion
-         */
         holder.scale = getField().getScale();
         holder.precision = getField().getPrecision();
     }
@@ -412,8 +403,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public void get(int index, Nullable${minor.class}Holder holder) {
         holder.isSet = 1;
         holder.start = index * ${type.width};
-
         holder.buffer = data;
+        holder.scale = getField().getScale();
+        holder.precision = getField().getPrecision();
     }
 
       @Override
