@@ -35,8 +35,9 @@ import org.apache.hadoop.fs.Path;
 
 import parquet.bytes.BytesInput;
 import parquet.column.ColumnDescriptor;
+import parquet.column.page.DataPage;
+import parquet.column.page.DataPageV1;
 import parquet.column.page.DictionaryPage;
-import parquet.column.page.Page;
 import parquet.column.page.PageReadStore;
 import parquet.column.page.PageReader;
 import parquet.format.PageHeader;
@@ -129,7 +130,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
     }
 
     @Override
-    public Page readPage() {
+    public DataPage readPage() {
       PageHeader pageHeader = new PageHeader();
       try {
         if (lastPage != null) {
@@ -159,7 +160,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               while (buffer.remaining() > 0) {
                 CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
               }
-              return new Page(
+              return new DataPageV1(
                       decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
                       pageHeader.data_page_header.num_values,
                       pageHeader.uncompressed_page_size,

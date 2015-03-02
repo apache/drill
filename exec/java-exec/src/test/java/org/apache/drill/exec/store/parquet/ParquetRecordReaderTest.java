@@ -67,7 +67,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import parquet.bytes.BytesInput;
-import parquet.column.page.Page;
+import parquet.column.page.DataPageV1;
 import parquet.column.page.PageReadStore;
 import parquet.column.page.PageReader;
 import parquet.hadoop.CodecFactoryExposer;
@@ -370,7 +370,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   private void validateContains(MessageType schema, PageReadStore pages, String[] path, int values, BytesInput bytes)
       throws IOException {
     PageReader pageReader = pages.getPageReader(schema.getColumnDescription(path));
-    Page page = pageReader.readPage();
+    DataPageV1 page = (DataPageV1) pageReader.readPage();
     assertEquals(values, page.getValueCount());
     assertArrayEquals(bytes.toByteArray(), page.getBytes().toByteArray());
   }

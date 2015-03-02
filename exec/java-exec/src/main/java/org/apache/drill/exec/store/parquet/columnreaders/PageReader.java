@@ -35,8 +35,8 @@ import org.apache.hadoop.fs.Path;
 import parquet.bytes.BytesInput;
 import parquet.column.Dictionary;
 import parquet.column.ValuesType;
+import parquet.column.page.DataPageV1;
 import parquet.column.page.DictionaryPage;
-import parquet.column.page.Page;
 import parquet.column.values.ValuesReader;
 import parquet.column.values.dictionary.DictionaryValuesReader;
 import parquet.format.PageHeader;
@@ -46,6 +46,8 @@ import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.CompressionCodecName;
 import parquet.schema.PrimitiveType;
 
+import static parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
+
 // class to keep track of the read position of variable length columns
 final class PageReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageReader.class);
@@ -53,7 +55,7 @@ final class PageReader {
   private final ColumnReader parentColumnReader;
   private final ColumnDataReader dataReader;
   // store references to the pages that have been uncompressed, but not copied to ValueVectors yet
-  Page currentPage;
+  DataPageV1 currentPage;
   // buffer to store bytes of current page
   DrillBuf pageDataByteArray;
 
@@ -217,10 +219,11 @@ final class PageReader {
           pageHeader.getUncompressed_page_size());
       compressedData.release();
     }
-    currentPage = new Page(
+    currentPage = new DataPageV1(
         bytesIn,
         pageHeader.data_page_header.num_values,
         pageHeader.uncompressed_page_size,
+        fromParquetStatistics(pageHeader.data_page_header.getStatistics(), parentColumnReader.getColumnDescriptor().getType()), // ?
         ParquetFormatPlugin.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.repetition_level_encoding),
         ParquetFormatPlugin.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.definition_level_encoding),
         ParquetFormatPlugin.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.encoding)
