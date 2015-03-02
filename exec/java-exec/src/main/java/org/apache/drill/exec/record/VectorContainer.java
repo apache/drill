@@ -23,7 +23,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -116,16 +118,16 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   }
 
   public static VectorContainer getTransferClone(VectorAccessible incoming, VectorWrapper[] ignoreWrappers) {
-    VectorContainer vc = new VectorContainer();
-    for (VectorWrapper<?> w : incoming) {
-      if(ignoreWrappers != null) {
-        for(VectorWrapper wrapper : ignoreWrappers) {
-          if (w == wrapper) {
-            continue;
-          }
-        }
-      }
+    Iterable<VectorWrapper<?>> wrappers = incoming;
+    if (ignoreWrappers != null) {
+      final List<VectorWrapper> ignored = Lists.newArrayList(ignoreWrappers);
+      final Set<VectorWrapper<?>> resultant = Sets.newLinkedHashSet(incoming);
+      resultant.removeAll(ignored);
+      wrappers = resultant;
+    }
 
+    final VectorContainer vc = new VectorContainer();
+    for (VectorWrapper<?> w : wrappers) {
       vc.cloneAndTransfer(w);
     }
 
