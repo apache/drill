@@ -128,7 +128,9 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   }
 
   public void fail(Throwable cause) {
-    logger.error("Fragment Context received failure.", cause);
+    final FragmentHandle fragmentHandle = fragment.getHandle();
+    logger.error("Fragment Context received failure -- Fragment: {}:{}",
+      fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId(), cause);
     setState(FragmentContextState.FAILED);
     deferredException.addThrowable(cause);
   }
