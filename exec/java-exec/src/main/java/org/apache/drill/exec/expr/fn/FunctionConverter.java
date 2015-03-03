@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import com.google.common.base.Joiner;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +33,6 @@ import javax.inject.Inject;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -42,6 +43,8 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterGenerator;
 import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.ops.QueryDateTimeInfo;
+import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.codehaus.commons.compiler.CompileException;
@@ -189,8 +192,9 @@ public class FunctionConverter {
       } else {
         // workspace work.
         boolean isInject = inject != null;
-        if (isInject && !field.getType().equals(DrillBuf.class)) {
-          return failure(String.format("Only DrillBuf is allowed to be injected.  You attempted to inject %s.", field.getType()), clazz, field);
+        if (isInject && UdfUtilities.INJECTABLE_GETTER_METHODS.get(field.getType()) == null) {
+          return failure(String.format("A %s cannot be injected into a %s, available injectable classes are: %s.",
+              field.getType(), DrillFunc.class.getSimpleName(), Joiner.on(",").join(UdfUtilities.INJECTABLE_GETTER_METHODS.keySet())), clazz, field);
         }
         WorkspaceReference wsReference = new WorkspaceReference(field.getType(), field.getName(), isInject);
 

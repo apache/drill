@@ -32,7 +32,9 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
+import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.record.MaterializedField;
@@ -43,8 +45,10 @@ import org.apache.drill.exec.store.mock.MockGroupScanPOP;
 import org.apache.drill.exec.store.mock.MockScanBatchCreator;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.apache.drill.exec.vector.ValueVector;
+import org.joda.time.DateTime;
 import org.junit.Test;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -94,8 +98,42 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
   }
 
+  @Test
+  public void interpreterDateTest() throws Exception {
+    String[] colNames = {"col1"};
+    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.INT)};
+    String expressionStr = "now()";
+    BitControl.PlanFragment planFragment = BitControl.PlanFragment.getDefaultInstance();
+    QueryDateTimeInfo dateTime = new QueryDateTimeInfo(planFragment.getQueryStartTime(), planFragment.getTimeZone());
+    int                        timeZoneIndex = dateTime.getRootFragmentTimeZone();
+    org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+    org.joda.time.DateTime     now = new org.joda.time.DateTime(dateTime.getQueryStartTime(), timeZone);
+
+    long queryStartDate = now.getMillis();
+    int timezoneIndex = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(now.getZone().toString());
+
+    TimeStampTZHolder out = new TimeStampTZHolder();
+
+    out.value = queryStartDate;
+    out.index = timezoneIndex;
+
+    ByteBuffer buffer = ByteBuffer.allocate(12);
+    buffer.putLong(out.value);
+    buffer.putInt(out.index);
+    long l = buffer.getLong(0);
+    DateTime t = new DateTime(l);
+
+    String[] expectedFirstTwoValues = {t.toString(), t.toString()};
+
+    doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues, planFragment);
+  }
+
 
   protected void doTest(String expressionStr, String[] colNames, TypeProtos.MajorType[] colTypes, String[] expectFirstTwoValues) throws Exception {
+    doTest(expressionStr, colNames, colTypes, expectFirstTwoValues, BitControl.PlanFragment.getDefaultInstance());
+  }
+
+  protected void doTest(String expressionStr, String[] colNames, TypeProtos.MajorType[] colTypes, String[] expectFirstTwoValues, BitControl.PlanFragment planFragment) throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
@@ -114,7 +152,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     MockGroupScanPOP.MockScanEntry entry = new MockGroupScanPOP.MockScanEntry(10, columns);
     MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", java.util.Collections.singletonList(entry));
 
-    RecordBatch batch = createMockScanBatch(bit1, scanPOP);
+    RecordBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
 
     batch.next();
 
@@ -134,12 +172,12 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   }
 
 
-  private RecordBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP) {
+  private RecordBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP, BitControl.PlanFragment planFragment) {
     List<RecordBatch> children = Lists.newArrayList();
     MockScanBatchCreator creator = new MockScanBatchCreator();
 
     try {
-      FragmentContext context = new FragmentContext(bit.getContext(), BitControl.PlanFragment.getDefaultInstance(), null, bit.getContext().getFunctionImplementationRegistry());
+      FragmentContext context = new FragmentContext(bit.getContext(), planFragment, null, bit.getContext().getFunctionImplementationRegistry());
       return creator.getBatch(context,scanPOP, children);
     } catch (Exception ex) {
       throw new DrillRuntimeException("Error when setup fragment context" + ex);

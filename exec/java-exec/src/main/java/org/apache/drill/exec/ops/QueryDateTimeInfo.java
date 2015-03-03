@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,18 +14,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package org.apache.drill.exec.expr.holders;
+ ******************************************************************************/
+package org.apache.drill.exec.ops;
 
-/**
- * Wrapper object for an individual value in Drill.
- *
- * ValueHolders are designed to be mutable wrapper objects for defining clean
- * APIs that access data in Drill. For performance, object creation is avoided
- * at all costs throughout execution. For this reason, ValueHolders are
- * disallowed from implementing any methods, this allows for them to be
- * replaced by their java primitive inner members during optimization of
- * run-time generated code.
- */
-public interface ValueHolder {
+public class QueryDateTimeInfo {
+  private final long queryStartTime;
+  private final int rootFragmentTimeZone;
+
+  public QueryDateTimeInfo(long queryStartTime, int rootFragmentTimeZone) {
+    this.queryStartTime = queryStartTime;
+    this.rootFragmentTimeZone = rootFragmentTimeZone;
+  }
+
+  public long getQueryStartTime() {
+    return this.queryStartTime;
+  }
+
+  public int getRootFragmentTimeZone() {
+    return this.rootFragmentTimeZone;
+  }
 }

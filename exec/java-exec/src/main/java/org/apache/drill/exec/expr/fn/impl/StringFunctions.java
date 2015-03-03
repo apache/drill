@@ -843,7 +843,7 @@ public class StringFunctions{
     @Output VarCharHolder out;
     @Inject DrillBuf buffer;
 
-    public void setup(RecordBatch incoming) {
+    public void setup() {
     }
 
     public void eval() {

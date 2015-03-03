@@ -23,7 +23,7 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public interface DrillSimpleFuncInterpreter extends DrillFuncInterpreter {
 
-  public void doSetup(ValueHolder[] args, RecordBatch incoming);
+  public void doSetup(ValueHolder[] args);
 
   public ValueHolder doEval(ValueHolder [] args) ;
 

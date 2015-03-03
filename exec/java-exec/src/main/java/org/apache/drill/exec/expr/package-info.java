@@ -15,17 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr.holders;
-
 /**
- * Wrapper object for an individual value in Drill.
+ * Drill expression materialization and evaluation facilities.
  *
- * ValueHolders are designed to be mutable wrapper objects for defining clean
- * APIs that access data in Drill. For performance, object creation is avoided
- * at all costs throughout execution. For this reason, ValueHolders are
- * disallowed from implementing any methods, this allows for them to be
- * replaced by their java primitive inner members during optimization of
- * run-time generated code.
+ * Drill exposes an interface for defining custom scalar and aggregate functions.
+ * These functions are found by scanning the classpath at runtime and allow users
+ * to add their own functions without rebuilding Drill or changing cluster
+ * configuration.
+ *
+ * The classes that define these functions are actually decomposed at the source
+ * level, copied into generated code blocks to evaluate an entire expression
+ * tree. This generated source is built at run-time as schema is discovered.
+ *
+ * This package contains the {@link DrillSimpleFunc} and {@link DrillAggFunc}
+ * interfaces that can be implemented by users to define their own aggregate
+ * and scalar functions.
  */
-public interface ValueHolder {
-}
+package org.apache.drill.exec.expr;

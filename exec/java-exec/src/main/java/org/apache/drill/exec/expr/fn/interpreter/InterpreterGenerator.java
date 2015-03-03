@@ -95,16 +95,9 @@ public class InterpreterGenerator {
 
     JMethod doSetupMethod = clazz.method(JMod.PUBLIC, Void.TYPE, SETUP_METHOD);
     doSetupMethod.param(valueholderClass.array(), ARG_NAME);
-    JVar incomingJVar = doSetupMethod.param(model.ref(RecordBatch.class), "incoming");
 
     if (holder.getSetupBody()!=null && ! holder.getSetupBody().trim().equals("{}")) {
       declareAssignParm(model, doSetupMethod.body(), holder, ARG_NAME, true);
-    }
-
-    for (DrillFuncHolder.WorkspaceReference ws : holder.getWorkspaceVars()) {
-      if (ws.isInject()) {
-        doSetupMethod.body().assign(wsFieldVars.get(ws), incomingJVar.invoke("getContext").invoke("getManagedBuffer"));
-      }
     }
 
     doSetupMethod.body().directStatement(holder.getSetupBody());
