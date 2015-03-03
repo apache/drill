@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
@@ -31,7 +32,10 @@ import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.IntervalDayHolder;
+import org.apache.drill.exec.expr.holders.IntervalYearHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
+import org.apache.drill.exec.expr.holders.TimeHolder;
+import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.util.DecimalUtility;
@@ -70,6 +74,23 @@ public class ValueHolderHelper {
     return holder;
   }
 
+  public static DateHolder getDateHolder(long value) {
+    DateHolder holder = new DateHolder();
+    holder.value = value;
+    return holder;
+  }
+
+  public static TimeHolder getTimeHolder(int value) {
+    TimeHolder holder = new TimeHolder();
+    holder.value = value;
+    return holder;
+  }
+
+  public static TimeStampHolder getTimeStampHolder(long value) {
+    TimeStampHolder holder = new TimeStampHolder();
+    holder.value = value;
+    return holder;
+  }
 
   public static BitHolder getBitHolder(int value) {
     BitHolder holder = new BitHolder();
@@ -108,6 +129,14 @@ public class ValueHolderHelper {
     vch.buffer = a.buffer(b.length); //
     vch.buffer.setBytes(0, b);
     return vch;
+  }
+
+
+  public static IntervalYearHolder getIntervalYearHolder(int intervalYear) {
+    IntervalYearHolder holder = new IntervalYearHolder();
+
+    holder.value = intervalYear;
+    return holder;
   }
 
   public static IntervalDayHolder getIntervalDayHolder(int days, int millis) {

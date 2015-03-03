@@ -27,12 +27,11 @@ import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
-import org.apache.drill.exec.expr.fn.interpreter.DrillSimpleFuncInterpreter;
 
 public class DrillFuncHolderExpr extends FunctionHolderExpression implements Iterable<LogicalExpression>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFuncHolderExpr.class);
   private DrillFuncHolder holder;
-  private DrillSimpleFuncInterpreter interpreter;
+  private DrillSimpleFunc interpreter;
 
   public DrillFuncHolderExpr(String nameUsed, DrillFuncHolder holder, List<LogicalExpression> args, ExpressionPosition pos) {
     super(nameUsed, pos, args);
@@ -94,11 +93,11 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
     return new DrillFuncHolderExpr(this.nameUsed, this.holder, args, this.getPosition());
   }
 
-  public void setInterpreter(DrillSimpleFuncInterpreter interpreter) {
+  public void setInterpreter(DrillSimpleFunc interpreter) {
     this.interpreter = interpreter;
   }
 
-  public DrillSimpleFuncInterpreter getInterpreter() {
+  public DrillSimpleFunc getInterpreter() {
     return this.interpreter;
   }
 

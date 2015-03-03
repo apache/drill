@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,9 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package org.apache.drill.exec.expr;
-
+ ******************************************************************************/
+package org.apache.drill.exec.fn.interp;
 
 import com.google.common.collect.Lists;
 import org.antlr.runtime.ANTLRStringStream;
@@ -31,6 +30,8 @@ import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
 import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -84,6 +85,26 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.INT)};
     String expressionStr = "col1 + 100 - 1 * 2 + 2";
     String[] expectedFirstTwoValues = {"-2147483548", "null"};
+
+    doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
+  }
+
+  @Test
+  public void interpreterLikeExpr() throws Exception {
+    String[] colNames = {"col1"};
+    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
+    String expressionStr =  "like(col1, 'aaa%')";
+    String[] expectedFirstTwoValues = {"true", "null"};
+
+    doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
+  }
+
+  @Test
+  public void interpreterCastExpr() throws Exception {
+    String[] colNames = {"col1"};
+    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
+    String expressionStr =  "cast(3+4 as float8)";
+    String[] expectedFirstTwoValues = {"7.0", "7.0"};
 
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
   }

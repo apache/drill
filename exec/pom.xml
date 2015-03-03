@@ -41,17 +41,6 @@
         <module>jdbc-all</module>
       </modules>
     </profile>
-    <profile>
-      <id>build-interpreter</id>
-      <activation>
-        <property>
-          <name>!skipInterpreter</name>
-        </property>
-      </activation>
-      <modules>
-        <module>interpreter</module>
-      </modules>
-    </profile>
   </profiles>
 
 
