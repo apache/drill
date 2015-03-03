@@ -1,12 +1,12 @@
 ---
-title: "Registering a File System"
-parent: "Storage Plugin Registration"
+title: "File System Storage Plugin"
+parent: "Storage Plugin Configuration"
 ---
 You can register a storage plugin instance that connects Drill to a local file
 system or a distributed file system registered in `core-site.xml`, such as S3
 or HDFS. When you register a storage plugin instance for a file system,
 provide a unique name for the instance, and identify the type as “`file`”. By
-default, Drill includes an instance named `dfs `that points to the local file
+default, Drill includes an instance named `dfs` that points to the local file
 system on your machine. You can update this configuration to point to a
 distributed file system or you can create a new instance to point to a
 distributed file system.
@@ -27,7 +27,7 @@ the following steps:
                 "root": {
                   "location": "/user/max/donuts",
                   "writable": false,
-                  "storageformat": null
+                  "defaultinputformat": null
                  }
               },
                  "formats" : {
@@ -46,7 +46,7 @@ the following steps:
                 "root : {
                   "location" : "/user/root/drill",
                   "writable" : true,
-                  "storageformat" : "null"
+                  "defaultinputformat" : "null"
                 }
               },
               "formats" : {

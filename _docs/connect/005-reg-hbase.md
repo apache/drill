@@ -1,13 +1,13 @@
 ---
-title: "Registering HBase"
-parent: "Storage Plugin Registration"
+title: "HBase Storage Plugin"
+parent: "Storage Plugin Configuration"
 ---
 Register a storage plugin instance and specify a zookeeper quorum to connect
 Drill to an HBase data source. When you register a storage plugin instance for
 an HBase data source, provide a unique name for the instance, and identify the
 type as “hbase” in the Drill Web UI.
 
-Currently, Drill only works with HBase version 0.94.
+Drill supports HBase version 0.98.
 
 To register HBase with Drill, complete the following steps:
 
@@ -28,5 +28,7 @@ To register HBase with Drill, complete the following steps:
 
   4. Click **Enable**.
 
-Once you have configured a storage plugin instance for the HBase, you can
+After you configure a storage plugin instance for the HBase, you can
 issue Drill queries against it.
+
+In the Drill sandbox, use the `dfs` storage plugin and the [MapR-DB format](/docs/mapr-db-format/) to query HBase files because the sandbox does not include HBase services.

@@ -1,35 +1,24 @@
 ---
 title: "Storage Plugin Registration"
-parent: "Connect to Data Sources"
+parent: "Connect to a Data Source"
 ---
-You can connect Drill to a file system, Hive, or HBase data source. To connect
-Drill to a data source, you must register the data source as a storage plugin
-instance in the Drill Web UI. You register an instance of a data source as a
-`file`, `hive`, or `hbase` storage plugin type. You can register multiple
-storage plugin instances for each storage plugin type.
+You connect Drill to a file system, Hive, HBase, or other data source using storage plugins. Drill includes a number storage plugins in the installation. On the Storage tab of the Web UI, you can view, create, reconfigure, and register a storage plugin. To open the Storage tab, go to `http://<IP address>:8047/storage`:
 
-Each node with a Drillbit installed has a running browser that provides access
-to the Drill Web UI at `http://localhost:8047/`. The Drill Web UI includes
-`cp`, `dfs`, `hive`, and `hbase` storage plugin instances by default, though
-the `hive` and `hbase` instances are disabled. You can update the `hive` and
-`hbase` instances with configuration details and then enable them.
+![drill-installed plugins]({{ site.baseurl }}/docs/img/plugin-default.png)
 
-The `cp` instance points to a JAR file in Drill’s classpath that contains
-sample data that you can query. By default, the `dfs` instance points to the
-local file system on your machine, but you can configure this instance to
-point to any distributed file system, such as a Hadoop or S3 file system.
+The Drill installation registers the `cp`, `dfs`, `hbase`, `hive`, and `mongo` storage plugins instances by default.
 
-When you add or update storage plugin instances on one Drill node in a Drill
-cluster, Drill broadcasts the information to all of the other Drill nodes so
-they all have identical storage plugin configurations. You do not need to
-restart any of the Drillbits when you add or update a storage plugin instance.
+* `cp`
+  Points to a JAR file in the Drill classpath that contains sample data that you can query. 
+* `dfs`
+  Points to the local file system on your machine, but you can configure this instance to
+point to any distributed file system, such as a Hadoop or S3 file system. 
+* `hbase`
+   Provides a connection to HBase/M7.
+* `hive`
+   Integrates Drill with the Hive metadata abstraction of files, HBase/M7, and libraries to read data and operate on SerDes and UDFs.
+* `mongo`
+   Provides a connection to MongoDB data.
 
-Each storage plugin instance that you register with Drill must have a distinct
-name. For example, if you register two storage plugin instances for a Hadoop
-file system, you might name one storage plugin instance `hdfstest` and the
-other instance `hdfsproduction`.
+In the Drill sandbox,  the `dfs` storage plugin connects you to the MapR File System (MFS). Using an installation of Drill instead of the sandbox, `dfs` connects you to the root of your file system.
 
-The following example shows an HDFS data source registered in the Drill Web UI
-as a storage plugin instance of plugin type "`file"`:
-
-![drill query flow]({{ site.baseurl }}/docs/img/StoragePluginConfig.png)

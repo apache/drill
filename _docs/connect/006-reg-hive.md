@@ -1,6 +1,6 @@
 ---
-title: "Registering Hive"
-parent: "Storage Plugin Registration"
+title: "Hive Storage Plugin"
+parent: "Storage Plugin Configuration"
 ---
 You can register a storage plugin instance that connects Drill to a Hive data
 source that has a remote or embedded metastore service. When you register a
@@ -8,9 +8,9 @@ storage plugin instance for a Hive data source, provide a unique name for the
 instance, and identify the type as “`hive`”. You must also provide the
 metastore connection information.
 
-Currently, Drill supports Hive version 0.13. To access Hive tables
+Drill supports Hive 0.13. To access Hive tables
 using custom SerDes or InputFormat/OutputFormat, all nodes running Drillbits
-must have the SerDes or InputFormat/OutputFormat `JAR` files in the
+must have the SerDes or InputFormat/OutputFormat `JAR` files in the 
 `<drill_installation_directory>/jars/3rdparty` folder.
 
 ## Hive Remote Metastore
@@ -44,8 +44,6 @@ To register a remote Hive metastore with Drill, complete the following steps:
         }       
   5. Click **Enable**.
   6. Verify that `HADOOP_CLASSPATH` is set in `drill-env.sh`. If you need to set the classpath, add the following line to `drill-env.sh`.
-  
-        export HADOOP_CLASSPATH=/<directory path>/hadoop/hadoop-0.20.2
 
 Once you have configured a storage plugin instance for a Hive data source, you
 can [query Hive tables](/drill/docs/querying-hive/).
@@ -82,5 +80,4 @@ steps:
   4. Click** Enable.**
   5. Verify that `HADOOP_CLASSPATH` is set in `drill-env.sh`. If you need to set the classpath, add the following line to `drill-env.sh`.
   
-        export HADOOP_CLASSPATH=/<directory path>/hadoop/hadoop-0.20.2
- 
+        export HADOOP_CLASSPATH=/<directory path>/hadoop/hadoop-<version-number>

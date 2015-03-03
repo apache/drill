@@ -1,0 +1,123 @@
+---
+title: "Storage Plugin Configuration"
+parent: "Connect to a Data Source"
+---
+When you add or update storage plugin instances on one Drill node in a Drill
+cluster, Drill broadcasts the information to all of the other Drill nodes so
+they all have identical storage plugin configurations. You do not need to
+restart any of the Drillbits when you add or update a storage plugin instance.
+
+Use the Drill Web UI to update or add a new storage plugin. Launch a web browser, go to: `http://<IP address of the sandbox>:8047`, and then go to the Storage tab. 
+
+To create and configure a new storage plugin:
+
+1. Enter a storage name in New Storage Plugin.
+   Each storage plugin registered with Drill must have a distinct
+name. Names are case-sensitive.
+2. Click Create.  
+3. In Configuration, configure attributes of the storage plugin, if applicable, using JSON formatting. The Storage Plugin Attributes table in the next section describes attributes typically reconfigured by users. 
+4. Click Create.
+
+Click Update to reconfigure an existing, enabled storage plugin.
+
+## Storage Plugin Attributes
+
+<table>
+  <tr>
+    <th>Attribute</th>
+    <th>Example Values</th>
+    <th>Required</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>"type"</td>
+    <td>"file"<br>"hbase"<br>"hive"<br>"mongo"</td>
+    <td>yes</td>
+    <td>The storage plugin type name supported by Drill</td>
+  </tr>
+  <tr>
+    <td>"enabled"</td>
+    <td>true<br>false</td>
+    <td>yes</td>
+    <td>The state of the storage plugin</td>
+  </tr>
+  <tr>
+    <td>"connection"</td>
+    <td>"classpath:///"<br>"file:///"<br>"mongodb://localhost:27017/"<br>"maprfs:///"</td>
+    <td>implementation-dependent</td>
+    <td>The type of distributed filesystem. Drill can work with any distributed system, such as HDFS and S3, or JSON or CSV file in your file system.</td>
+  </tr>
+  <tr>
+    <td>"workspaces"</td>
+    <td>null<br>"logs"</td>
+    <td>no</td>
+    <td>One or more arbitrary workspace names, enclosed in double quotation marks. Workspace names are case sensitive.</td>
+  </tr>
+  <tr>
+    <td>"workspaces". . . "location"</td>
+    <td>"location": "/"<br>"location": "/tmp"</td>
+    <td>no</td>
+    <td>An alias for a path to a directory, used to shorten references to files in the a query. </td>
+  </tr>
+  <tr>
+    <td>"workspaces". . . "writable"</td>
+    <td>true<br>false</td>
+    <td>yes</td>
+    <td>Indicates whether or not users can write data to this location</td>
+  </tr>
+  <tr>
+    <td>"workspaces". . . "defaultInputFormat"</td>
+    <td>null<br>"parquet"<br>"csv"<br>"json"</td>
+    <td>yes</td>
+    <td>The format of data written by executing CREATE TABLE AS and CREATE VIEW commands</td>
+  </tr>
+  <tr>
+    <td>"formats"</td>
+    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"maprdb"</td>
+    <td>yes</td>
+    <td>One or more file formats of data read by Drill. Drill can detect some file formats based on the file extension or the first few bits of data within the file, but needs format information for others. </td>
+  </tr>
+  <tr>
+    <td>"formats" . . . "type"</td>
+    <td>"text"<br>"parquet"<br>"json"<br>"maprdb"</td>
+    <td>no</td>
+    <td>The type of data in the file. Although Drill can work with different file types in the same directory, restricting a Drill workspace to one file type prevents confusion. </td>
+  </tr>
+  <tr>
+    <td>formats . . . "extensions"</td>
+    <td>["csv"]</td>
+    <td>format-dependent</td>
+    <td>The extension of the file.</td>
+  </tr>
+  <tr>
+    <td>"formats" . . . "delimiter"</td>
+    <td>"\t"<br>","</td>
+    <td>format-dependent</td>
+    <td>The delimiter used to separate columns in text files such as CSV.</td>
+  </tr>
+</table>
+
+The configuration of other attributes, such as `size.calculator.enabled` in the hbase plugin and `configProps` in the hive plugin, are implementation-dependent and beyond the scope of this document.
+
+## Case-sensitive Names
+As previously mentioned, workspace and storage plugin names are case-sensitive. For example, the following query uses a storage plugin name `dfs` and a workspace name `clicks`. When you refer to `dfs.clicks` in an SQL statement, use the defined case:
+
+    0: jdbc:drill:> USE dfs.clicks;
+
+For example, using uppercase letters in the query after defining the storage plugin and workspace names using lowercase letters does not work. 
+
+## REST API
+
+Drill provides a REST API that you can use to create a storage plugin. Use an HTTP POST and pass two properties:
+
+* name
+  The plugin name. 
+
+* config
+  The storage plugin definition as you would enter it in the Web UI.
+
+For example, this command creates a plugin named myplugin for reading files of an unknown type located on the root of the file system:
+
+    curl -X POST -/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' http://localhost:8047/storage/myplugin.json
+
+

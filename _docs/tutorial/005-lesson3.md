@@ -45,19 +45,19 @@ exist. Here is a visual example of how this works:
 ### Query logs data for a specific year:
 
     0: jdbc:drill:> select * from logs where dir0='2013' limit 10;
-    +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+-----------+------------+
-    | dir0 | dir1 | trans_id | date | time | cust_id | device | state | camp_id | keywords | prod_id | purch_flag |
-    +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+-----------+------------+
-    | 2013 | 11 | 12119 | 11/09/2013 | 02:24:51 | 262 | IOS5 | ny | 0 | chamber | 198 | false |
-    | 2013 | 11 | 12120 | 11/19/2013 | 09:37:43 | 0 | AOS4.4 | il | 2 | outside | 511 | false |
-    | 2013 | 11 | 12134 | 11/10/2013 | 23:42:47 | 60343 | IOS5 | ma | 4 | and | 421 | false |
-    | 2013 | 11 | 12135 | 11/16/2013 | 01:42:13 | 46762 | AOS4.3 | ca | 4 | here's | 349 | false |
-    | 2013 | 11 | 12165 | 11/26/2013 | 21:58:09 | 41987 | AOS4.2 | mn | 4 | he | 271 | false |
-    | 2013 | 11 | 12168 | 11/09/2013 | 23:41:48 | 8600 | IOS5 | in | 6 | i | 459 | false |
-    | 2013 | 11 | 12196 | 11/20/2013 | 02:23:06 | 15603 | IOS5 | tn | 1 | like | 324 | false |
-    | 2013 | 11 | 12203 | 11/25/2013 | 23:50:29 | 221 | IOS6 | tx | 10 | if | 323 | false |
-    | 2013 | 11 | 12206 | 11/09/2013 | 23:53:01 | 2488 | AOS4.2 | tx | 14 | unlike | 296 | false |
-    | 2013 | 11 | 12217 | 11/06/2013 | 23:51:56 | 0 | AOS4.2 | tx | 9 | can't | 54 | false |
+    +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
+    |    dir0    |    dir1    |  trans_id  |    date    |    time    |  cust_id   |   device   |   state    |  camp_id   |  keywords  |  prod_id   | purch_flag |
+    +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
+    | 2013       | 2          | 12115      | 02/23/2013 | 19:48:24   | 3          | IOS5       | az         | 5          | who's      | 6          | false      |
+    | 2013       | 2          | 12127      | 02/26/2013 | 19:42:03   | 11459      | IOS5       | wa         | 10         | for        | 331        | false      |
+    | 2013       | 2          | 12138      | 02/09/2013 | 05:49:01   | 1          | IOS6       | ca         | 7          | minutes    | 500        | false      |
+    | 2013       | 2          | 12139      | 02/23/2013 | 06:58:20   | 1          | AOS4.4     | ms         | 7          | i          | 20         | false      |
+    | 2013       | 2          | 12145      | 02/10/2013 | 10:14:56   | 10         | IOS5       | mi         | 6          | wrong      | 42         | false      |
+    | 2013       | 2          | 12157      | 02/15/2013 | 02:49:22   | 102        | IOS5       | ny         | 5          | want       | 95         | false      |
+    | 2013       | 2          | 12176      | 02/19/2013 | 08:39:02   | 28         | IOS5       | or         | 0          | and        | 351        | false      |
+    | 2013       | 2          | 12194      | 02/24/2013 | 08:26:17   | 125445     | IOS5       | ar         | 0          | say        | 500        | true       |
+    | 2013       | 2          | 12236      | 02/05/2013 | 01:40:05   | 10         | IOS5       | nj         | 2          | sir        | 393        | false      |
+    | 2013       | 2          | 12249      | 02/03/2013 | 04:45:47   | 21725      | IOS5       | nj         | 5          | no         | 414        | false      |
     +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
 
 
@@ -74,16 +74,13 @@ an IOS5 device in August 2013.
     where dir0='2013' and dir1='8' and device='IOS5' and purch_flag='true'
     order by `date`;
     +------------+------------+------------+
-    | yr | mth | cust_id |
+    |     yr     |    mth     |  cust_id   |
     +------------+------------+------------+
-    | 2013 | 8 | 4 |
-    | 2013 | 8 | 521 |
-    | 2013 | 8 | 1 |
-    | 2013 | 8 | 2 |
-    | 2013 | 8 | 4 |
-    | 2013 | 8 | 549 |
-    | 2013 | 8 | 72827 |
-    | 2013 | 8 | 38127 |
+    | 2013       | 8          | 4          |
+    | 2013       | 8          | 521        |
+    | 2013       | 8          | 1          |
+    | 2013       | 8          | 2          |
+
     ...
 
 ### Return monthly counts per customer for a given year:
@@ -148,13 +145,13 @@ data.
     t.user_info.state as state
     from `clicks/clicks.json` t limit 5;
     +------------+------------+------------+
-    | custid | device | state |
+    |   custid   |   device   |   state    |
     +------------+------------+------------+
-    | 22526 | IOS5 | il |
-    | 16368 | AOS4.2 | nc |
-    | 21449 | IOS6 | oh |
-    | 20323 | IOS5 | oh |
-    | 15360 | IOS5 | ca |
+    | 22526      | IOS5       | il         |
+    | 16368      | AOS4.2     | nc         |
+    | 21449      | IOS6       | oh         |
+    | 20323      | IOS5       | oh         |
+    | 15360      | IOS5       | ca         |
     +------------+------------+------------+
 
 This query uses a simple table.column.column notation to extract nested column
@@ -174,15 +171,14 @@ parsed as table names by the SQL parser.
     purchased
     from `clicks/clicks.json` t limit 5;
     +------------+------------+
-    | prodid | purchased |
+    |   prodid   | purchased  |
     +------------+------------+
-    | [174,2] | false |
-    | [] | false |
-    | [582] | false |
-    | [710,47] | false |
-    | [0,8,170,173,1,124,46,764,30,711,0,3,25] | true |
-    +------------+------------+
-    5 rows selected
+    | [174,2]    | false      |
+    | []         | false      |
+    | [582]      | false      |
+    | [710,47]   | false      |
+    | [0,8,170,173,1,124,46,764,30,711,0,3,25] | true       |
+        5 rows selected
 
 Note that this result reveals that the prod_id column contains an array of IDs
 (one or more product ID values per row, separated by commas). The next step
@@ -246,15 +242,15 @@ non-null product ID at the 21st position in the array.
     where sq.prodid between 700 and 750 and sq.purchased='true'
     order by sq.prodid;
     +------------+------------+------------+
-    | trans_id | prodid | purchased |
+    |  trans_id  |   prodid   | purchased  |
     +------------+------------+------------+
-    | 21886 | 704 | true |
-    | 20674 | 708 | true |
-    | 22158 | 709 | true |
-    | 34089 | 714 | true |
-    | 22545 | 714 | true |
-    | 37500 | 717 | true |
-    | 36595 | 718 | true |
+    | 21886      | 704        | true       |
+    | 20674      | 708        | true       |
+    | 22158      | 709        | true       |
+    | 34089      | 714        | true       |
+    | 22545      | 714        | true       |
+    | 37500      | 717        | true       |
+    | 36595      | 718        | true       |
     ...
 
 This query assumes that there is some meaning to the array (that it is an
@@ -270,16 +266,16 @@ ordered list of products purchased rather than a random list).
     from `clicks/clicks.json` t
     where t.trans_info.purch_flag = 'true' order by prod_count desc;
     +------------+--------------+------------+------------+------------+------------+
-    | trans_id | session_date | cust_id | device | prod_count | purch_flag |
+    |  trans_id  | session_date |  cust_id   |   device   | prod_count | purch_flag |
     +------------+--------------+------------+------------+------------+------------+
-    | 37426 | 2014-04-06 | 18709 | IOS5 | 34 | true |
-    | 31589 | 2014-04-16 | 18576 | IOS6 | 31 | true |
-    | 11600 | 2014-04-07 | 4260 | AOS4.2 | 28 | true |
-    | 35074 | 2014-04-03 | 16697 | AOS4.3 | 27 | true |
-    | 17192 | 2014-04-22 | 2501 | AOS4.2 | 26 | true |
+    | 37426      | 2014-04-06   | 18709      | IOS5       | 34         | true       |
+    | 31589      | 2014-04-16   | 18576      | IOS6       | 31         | true       |
+    | 11600      | 2014-04-07   | 4260       | AOS4.2     | 28         | true       |
+    | 35074      | 2014-04-03   | 16697      | AOS4.3     | 27         | true       |
+    | 17192      | 2014-04-22   | 2501       | AOS4.2     | 26         | true       |
     ...
 
-This query uses a Drill extension of SQL, the repeated_count function, to get an
+This query uses an SQL extension, the repeated_count function, to get an
 aggregated count of the array values. The query returns the number of products
 searched for each session that converted into a purchase and ranks the counts
 in descending order. Only clicks that have resulted in a purchase are counted.
@@ -307,7 +303,7 @@ quickly create a Drill table from the results of the query.
     and o.order_total > (select avg(inord.order_total) 
     from hive.orders inord where inord.state = o.state);
     +------------+-------------+------------+
-    |  cust_id   | order_total |   prod_id   |
+    |  cust_id   | order_total |   prod_id  |
     +------------+-------------+------------+
     ...
     | 9650       | 69          | 16         |

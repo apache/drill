@@ -1,6 +1,6 @@
 ---
 title: "Workspaces"
-parent: "Storage Plugin Registration"
+parent: "Storage Plugin Configuration"
 ---
 When you register an instance of a file system data source, you can configure
 one or more workspaces for the instance. A workspace is a directory within the
@@ -25,7 +25,7 @@ workspace named `json` configured to point Drill to the
         "json" : {
           "location" : "/users/max/drill/json/",
           "writable" : false,
-          "storageformat" : json
+          "defaultinputformat" : json
        } 
     },
 
@@ -40,7 +40,7 @@ instance for each query that you issue:
     USE dfs.json;
     SELECT * FROM dfs.json.`donuts.json` WHERE type='frosted'
 
-If the `json `workspace did not exist, the query would have to include the
+If the `json` workspace did not exist, the query would have to include the
 full path to the `donuts.json` file:
 
     SELECT * FROM dfs.`/users/max/drill/json/donuts.json` WHERE type='frosted';
@@ -52,7 +52,7 @@ in subsequent queries on the directory.
 
 Each `file` and `hive` instance includes a `default` workspace. The `default`
 workspace points to the file system or to the Hive metastore. When you query
-files and tables in the` file` or `hive default` workspaces, you can omit the
+files and tables in the `file` or `hive default` workspaces, you can omit the
 workspace name from the query.
 
 For example, you can issue a query on a Hive table in the `default workspace`

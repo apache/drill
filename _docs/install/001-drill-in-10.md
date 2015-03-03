@@ -89,7 +89,7 @@ commands. SQLLine is used as the shell for Drill. Drill follows the ANSI SQL:
 
 You must have the following software installed on your machine to run Drill:
 
-<table ><tbody><tr><td ><strong>Software</strong></td><td ><strong>Description</strong></td></tr><tr><td ><a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html" class="external-link" rel="nofollow">Oracle JDK version 7</a></td><td >A set of programming tools for developing Java applications.</td></tr></tbody></table></div>
+<table ><tbody><tr><td ><strong>Software</strong></td><td ><strong>Description</strong></td></tr><tr><td ><a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html" class="external-link" rel="nofollow">Oracle JDK version 7</a></td><td >A set of programming tools for developing Java applications.</td></tr></tbody></table>
 
   
 ### Prerequisite Validation
@@ -355,7 +355,7 @@ Now that you have an idea about what Drill can do, you might want to:
 
   * [Deploy Drill in a clustered environment.](/drill/docs/deploying-apache-drill-in-a-clustered-environment)
   * [Configure storage plugins to connect Drill to your data sources](/drill/docs/connect-to-data-sources).
-  * Query [Hive](/drill/docs/querying-hive) and [HBase](/drill/docs/registering-hbase) data.
+  * Query [Hive](/drill/docs/querying-hive) and [HBase](/docs/hbase-storage-plugin) data.
   * [Query Complex Data](/drill/docs/querying-complex-data)
   * [Query Plain Text Files](/drill/docs/querying-plain-text-files)
 
