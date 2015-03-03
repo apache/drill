@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -75,7 +76,7 @@ import parquet.schema.Types;
 
 public class DrillParquetReader extends AbstractRecordReader {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
 
   // same as the DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH in ParquetRecordReader
 
@@ -270,8 +271,14 @@ public class DrillParquetReader extends AbstractRecordReader {
         recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
       }
     } catch (Exception e) {
-      throw new ExecutionSetupException(e);
+      handleAndRaise("Failure in setting up reader", e);
     }
+  }
+
+  protected void handleAndRaise(String s, Exception e) {
+    String message = "Error in drill parquet reader (complex).\nMessage: " + s +
+      "\nParquet Metadata: " + footer;
+    throw new DrillRuntimeException(message, e);
   }
 
   private static Type getType(String[] pathSegments, int depth, MessageType schema) {
@@ -312,7 +319,8 @@ public class DrillParquetReader extends AbstractRecordReader {
       if (count % fillLevelCheckFrequency == 0) {
         if (getPercentFilled() > fillLevelCheckThreshold) {
           if(!recordMaterializer.ok()){
-            throw new RuntimeException(String.format("The setting for `%s` is too high for your Parquet records. Please set a lower check threshold and retry your query. ", ExecConstants.PARQUET_VECTOR_FILL_CHECK_THRESHOLD));
+            String message = String.format("The setting for `%s` is too high for your Parquet records. Please set a lower check threshold and retry your query. ", ExecConstants.PARQUET_VECTOR_FILL_CHECK_THRESHOLD);
+            handleAndRaise(message, new RuntimeException(message));
           }
           break;
         }

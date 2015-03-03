@@ -54,7 +54,7 @@ import com.google.common.collect.Lists;
 
 
 public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetScanBatchCreator.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetScanBatchCreator.class);
 
   private static final String ENABLE_BYTES_READ_COUNTER = "parquet.benchmark.bytes.read";
   private static final String ENABLE_BYTES_TOTAL_COUNTER = "parquet.benchmark.bytes.total";

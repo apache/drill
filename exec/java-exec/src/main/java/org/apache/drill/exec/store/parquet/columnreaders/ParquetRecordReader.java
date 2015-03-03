@@ -60,7 +60,7 @@ import parquet.schema.PrimitiveType;
 import com.google.common.collect.Lists;
 
 public class ParquetRecordReader extends AbstractRecordReader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
 
   // this value has been inflated to read in multiple value vectors at once, and then break them up into smaller vectors
   private static final int NUMBER_OF_VECTORS = 1;
@@ -319,11 +319,15 @@ public class ParquetRecordReader extends AbstractRecordReader {
           }
         }
       }
-    } catch (SchemaChangeException e) {
-      throw new ExecutionSetupException(e);
     } catch (Exception e) {
-      throw new ExecutionSetupException(e);
+      handleAndRaise("Failure in setting up reader", e);
     }
+  }
+
+  protected void handleAndRaise(String s, Exception e) {
+    String message = "Error in parquet record reader.\nMessage: " + s +
+      "\nParquet Metadata: " + footer;
+    throw new DrillRuntimeException(message, e);
   }
 
   @Override
@@ -424,9 +428,17 @@ public class ParquetRecordReader extends AbstractRecordReader {
 //      logger.debug("So far read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex, hadoopPath.toUri().getPath());
       totalRecordsRead += firstColumnStatus.getRecordsReadInCurrentPass();
       return firstColumnStatus.getRecordsReadInCurrentPass();
-    } catch (IOException e) {
-      throw new DrillRuntimeException(e);
+    } catch (Exception e) {
+      handleAndRaise("\nHadoop path: " + hadoopPath.toUri().getPath() +
+        "\nTotal records read: " + totalRecordsRead +
+        "\nMock records read: " + mockRecordsRead +
+        "\nRecords to read: " + recordsToRead +
+        "\nRow group index: " + rowGroupIndex +
+        "\nRecords in row group: " + footer.getBlocks().get(rowGroupIndex).getRowCount(), e);
     }
+
+    // this is never reached
+    return 0;
   }
 
   @Override

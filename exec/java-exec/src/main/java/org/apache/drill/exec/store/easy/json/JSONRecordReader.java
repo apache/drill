@@ -45,7 +45,7 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 public class JSONRecordReader extends AbstractRecordReader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
 
   private OutputMutator mutator;
   private VectorContainerWriter writer;
@@ -92,7 +92,7 @@ public class JSONRecordReader extends AbstractRecordReader {
 
   protected void handleAndRaise(String msg, Exception e) {
     StringBuilder sb = new StringBuilder();
-    sb.append(msg).append(" - Parser was at record: ").append(recordCount+1);
+    sb.append(msg).append(" - In ").append(hadoopPath.toUri().getPath()).append(" parser was at record: ").append(recordCount+1);
     if (e instanceof JsonParseException) {
       JsonParseException ex = JsonParseException.class.cast(e);
       sb.append(" column: ").append(ex.getLocation().getColumnNr());
