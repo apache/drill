@@ -88,7 +88,7 @@ steps:
     
          cat testdata.txt | hbase shell
   5. Issue `exit` to leave the `hbase shell`.
-  6. Start Drill. Refer to [Starting/Stopping Drill](/drill/docs/starting-stopping-drill) for instructions.
+  6. Start Drill. Refer to [Starting/Stopping Drill](/docs/starting-stopping-drill) for instructions.
   7. Use Drill to issue the following SQL queries on the “students” and “clicks” tables:  
   
      1. Issue the following query to see the data in the “students” table:  

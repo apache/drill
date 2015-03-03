@@ -5,7 +5,7 @@ parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
 You can use a connection string to connect to your data source. For a list of
 all the properties that you can use in connection strings, see [Driver
 Configuration
-Options](/drill/docs/driver-configuration-options).
+Options](/docs/driver-configuration-options).
 
 The following example shows a connection string for connecting directly to a
 Drillbit:

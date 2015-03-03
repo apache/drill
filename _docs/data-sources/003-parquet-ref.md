@@ -20,7 +20,7 @@ Apache Drill includes the following support for Parquet:
 
 ### Reading and Writing Parquet Files
 When a read of Parquet data occurs, Drill loads only the necessary columns of data, which reduces I/O. Reading only a small piece of the Parquet data from a data file or table, Drill can examine and analyze all values for a column across multiple files.
-Parquet is the default storage format for a [Create Table As Select (CTAS)](/drill/docs/create-table-as-ctas-command) command. You can create a Drill table from one format and store the data in another format, including Parquet.
+Parquet is the default storage format for a [Create Table As Select (CTAS)](/docs/create-table-as-ctas-command) command. You can create a Drill table from one format and store the data in another format, including Parquet.
 
 CTAS can use any data source provided by the storage plugin. 
 
@@ -53,7 +53,7 @@ To maximize performance, set the target size of a Parquet row group to the numbe
 The default block size is 536870912 bytes.
 
 ### Type Mapping
-The high correlation between Parquet and SQL data types makes reading Parquet files effortless in Drill. Writing to Parquet files takes more work than reading. Because SQL does not support all Parquet data types, to prevent Drill from inferring a type other than one you want, use the [cast function] (/drill/docs/sql-functions) Drill offers more liberal casting capabilities than SQL for Parquet conversions if the Parquet data is of a logical type. 
+The high correlation between Parquet and SQL data types makes reading Parquet files effortless in Drill. Writing to Parquet files takes more work than reading. Because SQL does not support all Parquet data types, to prevent Drill from inferring a type other than one you want, use the [cast function] (/docs/sql-functions) Drill offers more liberal casting capabilities than SQL for Parquet conversions if the Parquet data is of a logical type. 
 
 The following general process converts a file from JSON to Parquet:
 

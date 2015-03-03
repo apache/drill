@@ -12,7 +12,7 @@ This section includes the following examples:
   * Using custom SQL to connect to data in a Parquet file
 The steps and results of these examples assume pre-configured schemas and
 source data. You configure schemas as storage plugin instances on the Storage
-tab of the [Drill Web UI](/drill/docs/getting-to-know-the-drill-sandbox#storage-plugins-overview).
+tab of the [Drill Web UI](/docs/getting-to-know-the-drill-sandbox#storage-plugins-overview).
 
 ## Example: Connect to a Hive Table in Tableau
 
@@ -125,7 +125,7 @@ HBase table.
 
      HBase does not contain type information, so you need to cast the data in Drill
 Explorer. For information about SQL query support, see the SQL
-Reference in the [Apache Drill Wiki documentation](/drill/docs/sql-reference).
+Reference in the [Apache Drill Wiki documentation](/docs/sql-reference).
   9. To save the view, click **Create As**.
   10. Specify the schema where you want to save the view, enter a name for the view, and click **Save**.  
 

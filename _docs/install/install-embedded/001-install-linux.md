@@ -19,4 +19,4 @@ Linux:
 
         cd /opt/drill/apache-drill-<version>
 At this point, you can [invoke
-SQLLine](/drill/docs/starting-stopping-drill) to run Drill.
+SQLLine](/docs/starting-stopping-drill) to run Drill.

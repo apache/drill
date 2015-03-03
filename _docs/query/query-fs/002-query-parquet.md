@@ -6,7 +6,7 @@ Your Drill installation includes a `sample-data` directory with Parquet files
 that you can query. Use SQL syntax to query the `region.parquet` and
 `nation.parquet` files in the `sample-data` directory.
 
-**Note:** Your Drill installation location may differ from the examples used here. The examples assume that Drill was installed in embedded mode on your machine following the [Apache Drill in 10 Minutes ](/drill/docs/apache-drill-in-10-minutes/)tutorial. If you installed Drill in distributed mode, or your `sample-data` directory differs from the location used in the examples, make sure to change the `sample-data` directory to the correct location before you run the queries.
+**Note:** Your Drill installation location may differ from the examples used here. The examples assume that Drill was installed in embedded mode on your machine following the [Apache Drill in 10 Minutes ](/docs/apache-drill-in-10-minutes/)tutorial. If you installed Drill in distributed mode, or your `sample-data` directory differs from the location used in the examples, make sure to change the `sample-data` directory to the correct location before you run the queries.
 
 ## Region File
 

@@ -46,4 +46,4 @@ Drill.
 
 After downloading and installing the sandbox, continue with the tutorial by
 [Getting to Know the Drill
-Setup](/drill/docs/getting-to-know-the-drill-sandbox).
+Setup](/docs/getting-to-know-the-drill-sandbox).

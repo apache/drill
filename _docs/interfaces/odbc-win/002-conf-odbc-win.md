@@ -8,7 +8,7 @@ sources:
   * Create a Data Source Name
   * Create an ODBC Connection String
 
-**Prerequisite:** An Apache Drill installation must be available that is configured to access the data sources that you want to connect to.  For information about how to install Apache Drill, see [Install Drill](/drill/docs/install-drill). For information about configuring data sources, see the [Apache Drill documentation](/drill/docs).
+**Prerequisite:** An Apache Drill installation must be available that is configured to access the data sources that you want to connect to.  For information about how to install Apache Drill, see [Install Drill](/docs/install-drill). For information about configuring data sources, see the [Apache Drill documentation](/docs).
 
 ## Create a Data Source Name (DSN)
 
@@ -31,12 +31,12 @@ The ODBC Data Source Administrator window appears.
 
      <table style='table-layout:fixed;width:100%'><tbody><tr><th>Connection Type</th><th >Properties</th><th >Descriptions</th></tr><tr><td rowspan="2" valign="top" width="10%">Zookeeper Quorum</td><td valign="top" style='width: 100px;'>Quorum</td><td valign="top" style='width: 400px;'>A comma-separated list of servers in a Zookeeper cluster.For example, &lt;ip_zookeepernode1&gt;:5181,&lt;ip_zookeepernode21&gt;:5181,…</td></tr><tr><td valign="top">ClusterID</td><td valign="top">Name of the drillbit cluster. The default is drillbits1. You may need to specify a different value if the cluster ID was changed in the drill-override.conf file.</td></tr><tr><td colspan="1" valign="top">Direct to Drillbit</td><td colspan="1" valign="top"> </td><td colspan="1" valign="top">Provide the IP address or host name of the Drill server and the port number that that the Drill server is listening on.  The port number defaults to 31010. You may need to specify a different value if the port number was changed in the drill-override.conf file.</td></tr></tbody></table>
      For information on selecting the appropriate connection type, see [Connection
-Types](/drill/docs/step-2-configure-odbc-connections-to-drill-data-sources#connection-type).
+Types](/docs/step-2-configure-odbc-connections-to-drill-data-sources#connection-type).
   8. In the **Default Schema** field, select the default schema that you want to connect to.
      For more information about the schemas that appear in this list, see Schemas.
   9. Optionally, perform one of the following operations:
 
-     <table ><tbody><tr><th >Option</th><th >Action</th></tr><tr><td valign="top">Update the configuration of the advanced properties.</td><td valign="top">Edit the default values in the <strong>Advanced Properties</strong> section. <br />For more information, see <a href="/drill/docs/advanced-properties/">Advanced Properties</a>.</td></tr><tr><td valign="top">Configure the types of events that you want the driver to log.</td><td valign="top">Click <strong>Logging Options</strong>. <br />For more information, see <a href="/drill/docs/step-2-configure-odbc-connections-to-drill-data-sources#logging-options">Logging Options</a>.</td></tr><tr><td valign="top">Create views or explore Drill sources.</td><td valign="top">Click <strong>Drill Explorer</strong>. <br />For more information, see <a href="/drill/docs/using-drill-explorer-to-browse-data-and-create-views">Using Drill Explorer to Browse Data and Create Views</a>.</td></tr></tbody></table>
+     <table ><tbody><tr><th >Option</th><th >Action</th></tr><tr><td valign="top">Update the configuration of the advanced properties.</td><td valign="top">Edit the default values in the <strong>Advanced Properties</strong> section. <br />For more information, see <a href="/docs/advanced-properties/">Advanced Properties</a>.</td></tr><tr><td valign="top">Configure the types of events that you want the driver to log.</td><td valign="top">Click <strong>Logging Options</strong>. <br />For more information, see <a href="/docs/step-2-configure-odbc-connections-to-drill-data-sources#logging-options">Logging Options</a>.</td></tr><tr><td valign="top">Create views or explore Drill sources.</td><td valign="top">Click <strong>Drill Explorer</strong>. <br />For more information, see <a href="/docs/using-drill-explorer-to-browse-data-and-create-views">Using Drill Explorer to Browse Data and Create Views</a>.</td></tr></tbody></table>
   10. Click **OK** to save the DSN.
 
 ## Configuration Options
@@ -139,5 +139,5 @@ type:
 
         DRIVER=MapR Drill ODBC Driver;AdvancedProperties={HandshakeTimeout=0;QueryTimeout=0;TimestampTZDisplayTimezone=utc;ExcludedSchemas=sys, INFORMATION_SCHEMA;};Catalog=DRILL;Schema=;ConnectionType=ZooKeeper;ZKQuorum=192.168.39.43:5181;ZKClusterID=drillbits1
 
-#### What's Next? Go to [Step 3. Connect to Drill Data Sources from a BI Tool](/drill/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool).
+#### What's Next? Go to [Step 3. Connect to Drill Data Sources from a BI Tool](/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool).
 

@@ -69,12 +69,12 @@ Use all text mode to prevent the schema change error described in the previous s
 
 When you set this option, Drill reads all data from the JSON files as VARCHAR. After reading the data, use a SELECT statement in Drill to cast data as follows:
 
-* Cast [JSON numeric values](/drill/docs/lession-2-run-queries-with-ansi-sql#return-customer-data-with-appropriate-data-types) to SQL types, such as BIGINT, DECIMAL, FLOAT, INTEGER, and SMALLINT.
-* Cast JSON strings to [Drill Date/Time Data Type Formats](/drill/docs/supported-date-time-data-type-formats).
+* Cast [JSON numeric values](/docs/lession-2-run-queries-with-ansi-sql#return-customer-data-with-appropriate-data-types) to SQL types, such as BIGINT, DECIMAL, FLOAT, INTEGER, and SMALLINT.
+* Cast JSON strings to [Drill Date/Time Data Type Formats](/docs/supported-date-time-data-type-formats).
 
 For example, apply a [Drill view] (link to view reference) to the data. 
 
-Drill uses [map and array data types](/drill/docs/data-types) internally for reading and writing complex and nested data structures from JSON. <<true?>>
+Drill uses [map and array data types](/docs/data-types) internally for reading and writing complex and nested data structures from JSON. <<true?>>
 
 ## Reading JSON
 To read JSON data using Drill, use a [file system storage plugin](link to plugin section) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 
@@ -118,7 +118,7 @@ You can write data from Drill to a JSON file. The following setup is required:
         CREATE TABLE my_json AS
         SELECT my column from dfs.`<path_file_name>`;
 
-Drill performs the following actions, as shown in the complete [CTAS command example](/drill/docs/create-table-as-ctas-command):
+Drill performs the following actions, as shown in the complete [CTAS command example](/docs/create-table-as-ctas-command):
    
 * Creates a directory using table name.
 * Writes the JSON data to the directory in the workspace location.
@@ -283,7 +283,7 @@ To access the second geometry coordinate of the first city lot in the San Franci
 		+------------+
 		1 row selected (0.19 seconds)
 
-More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"](/drill/docs/query-3-selecting-nested-data-for-a-column). 
+More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"](/docs/query-3-selecting-nested-data-for-a-column). 
 
 ### Example: Analyze Map Fields in a Map
 This example uses a WHERE clause to drill down to a third level of the following JSON hierarchy to get the Id and weight of the person whose max_hdl exceeds 160, use dot notation as shown in the query that follows:

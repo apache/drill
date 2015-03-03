@@ -8,7 +8,7 @@ parent: "Query Data"
 This tutorial covers how to query a file and a directory on your local file
 system. Files and directories are like standard SQL tables to Drill. If you
 install Drill in [embedded
-mode](/drill/docs/installing-drill-in-embedded-mode), the
+mode](/docs/installing-drill-in-embedded-mode), the
 installer registers and configures your file system as the `dfs` instance.
 You can query these types of files using the default `dfs` storage plugin:
 
@@ -22,7 +22,7 @@ plugin to simplify querying plain text files.
 ## Prerequisites
 
 This tutorial assumes that you installed Drill in [embedded
-mode](/drill/docs/installing-drill-in-embedded-mode). The first few lessons of the tutorial
+mode](/docs/installing-drill-in-embedded-mode). The first few lessons of the tutorial
 use a Google file of Ngram data that you download from the internet. The
 compressed Google Ngram files are 8 and 58MB. To expand the compressed files,
 you need an additional 448MB of free disk space for this exercise.
@@ -32,7 +32,7 @@ interface (CLI) on Linux, Mac OS X, or Windows.
 
 ### Start Drill (Linux or Mac OS X)
 
-To [start Drill](/drill/docs/starting-stopping-drill) on Linux
+To [start Drill](/docs/starting-stopping-drill) on Linux
 or Mac OS X, use the SQLLine command.
 
   1. Open a terminal.
@@ -46,7 +46,7 @@ or Mac OS X, use the SQLLine command.
 
 ### Start Drill (Windows)
 
-To [start Drill](/drill/docs/starting-stopping-drill) on
+To [start Drill](/docs/starting-stopping-drill) on
 Windows, use the SQLLine command.
 
   1. Open the `apache-drill-<version>` folder.
