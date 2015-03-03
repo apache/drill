@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -72,18 +73,15 @@ public class ClassPathFileSystem extends FileSystem{
   @Override
   public FileStatus getFileStatus(Path arg0) throws IOException {
     String file = getFileName(arg0);
+    URL url;
 
     try{
-    URL url = Resources.getResource(file);
-    if(url == null){
-      throw new IOException(String.format("Unable to find path %s.", arg0.toString()));
+      url = Resources.getResource(file);
+    }catch(IllegalArgumentException e){
+      throw new FileNotFoundException(String.format("Unable to find path %s.", arg0.toString()));
     }
-
 
     return new FileStatus(Resources.asByteSource(url).size(), false, 1, 8096, System.currentTimeMillis(), arg0);
-    }catch(RuntimeException e){
-      throw new IOException(String.format("Failure trying to load file %s", arg0), e);
-    }
   }
 
   @Override
