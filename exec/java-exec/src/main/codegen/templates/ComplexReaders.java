@@ -56,9 +56,13 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
     super();
     this.vector = vector;
   }
-  
+
   public MajorType getType(){
     return vector.getField().getType();
+  }
+
+  public MaterializedField getField(){
+    return vector.getField();
   }
   
   public boolean isSet(){

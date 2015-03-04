@@ -20,6 +20,8 @@ package org.apache.drill.exec.vector.complex.impl;
 import java.util.Iterator;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 
@@ -48,6 +50,11 @@ abstract class AbstractBaseReader implements FieldReader{
 
   public MajorType getType(){
     throw new IllegalStateException("The current reader doesn't support getting type information.");
+  }
+
+  @Override
+  public MaterializedField getField() {
+    return MaterializedField.create("unknown", Types.LATE_BIND_TYPE);
   }
 
   @Override

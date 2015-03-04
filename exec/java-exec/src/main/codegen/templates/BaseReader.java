@@ -30,8 +30,9 @@ package org.apache.drill.exec.vector.complex.reader;
 
 @SuppressWarnings("unused")
 public interface BaseReader extends Positionable{
-  public MajorType getType();
-  
+  MajorType getType();
+  MaterializedField getField();
+
   public interface MapReader extends BaseReader, Iterable<String>{
     FieldReader reader(String name);
   }
