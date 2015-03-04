@@ -220,7 +220,8 @@ public class DateTypeFunctions {
             int timeZoneIndex = incoming.getContext().getRootFragmentTimeZone();
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
             org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime(), timeZone);
-            queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
+            queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).
+                withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
         }
 
         public void eval() {

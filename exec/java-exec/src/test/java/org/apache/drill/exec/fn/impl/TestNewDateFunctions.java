@@ -83,4 +83,14 @@ public class TestNewDateFunctions extends BaseTestQuery {
         .baselineValues(unixTimeStamp)
         .build().run();
   }
+
+  @Test
+  public void testCurrentDate() throws Exception {
+    testBuilder()
+        .sqlQuery("select (extract(hour from current_date) = 0) as col from cp.`employee.json` limit 1")
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(true)
+        .go();
+  }
 }
