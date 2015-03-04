@@ -8,8 +8,6 @@ Included in the data sources that  Drill supports are these key data sources:
 * MapR-DB
 * File system
 
-. . .
-
 Drill supports the following input formats for data:
 
 * CSV (Comma-Separated-Values)

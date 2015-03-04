@@ -58,3 +58,12 @@ steps:
             "writable" : true,
             "defaultInputFormat" : "json"
         }
+
+## Querying Compressed JSON
+
+You can use Drill 0.8 and later to query compressed JSON in .gz files as well as uncompressed files having the .json extension. First, add the gz extension to a storage plugin, and then use that plugin to query the compressed file.
+
+      "extensions": [
+        "json",
+        "gz"
+      ]
