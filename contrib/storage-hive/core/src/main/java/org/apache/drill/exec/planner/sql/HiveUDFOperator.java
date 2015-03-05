@@ -18,7 +18,9 @@
 
 package org.apache.drill.exec.planner.sql;
 
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlCallBinding;
 import org.eigenbase.sql.SqlFunction;
@@ -26,6 +28,7 @@ import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlOperandCountRange;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlOperatorBinding;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlOperandCountRanges;
 import org.eigenbase.sql.type.SqlOperandTypeChecker;
@@ -42,10 +45,17 @@ public class HiveUDFOperator extends SqlFunction {
 
   @Override
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
-    return validator.getTypeFactory().createSqlType(SqlTypeName.ANY);
+    RelDataTypeFactory factory = validator.getTypeFactory();
+    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
   }
 
-  /** Argument Checker for variable number of arguments */
+  @Override
+  public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+    RelDataTypeFactory factory = opBinding.getTypeFactory();
+    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
+  }
+
+    /** Argument Checker for variable number of arguments */
   public static class ArgChecker implements SqlOperandTypeChecker {
 
     public static ArgChecker INSTANCE = new ArgChecker();

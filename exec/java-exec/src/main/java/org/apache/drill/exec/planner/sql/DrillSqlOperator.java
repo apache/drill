@@ -55,12 +55,22 @@ public class DrillSqlOperator extends SqlFunction {
     return factory.createSqlType(SqlTypeName.ANY);
   }
 
+  private RelDataType getNullableReturnDataType(final RelDataTypeFactory factory) {
+    return factory.createTypeWithNullability(getReturnDataType(factory), true);
+  }
+
   @Override
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
     if (NONE.equals(returnType)) {
       return validator.getTypeFactory().createSqlType(SqlTypeName.ANY);
     }
-    return getReturnDataType(validator.getTypeFactory());
+    /*
+     * We return a nullable output type both in validation phase and in
+     * Sql to Rel phase. We don't know the type of the output until runtime
+     * hence have to choose the least restrictive type to avoid any wrong
+     * results.
+     */
+    return getNullableReturnDataType(validator.getTypeFactory());
   }
 
   @Override
@@ -68,6 +78,7 @@ public class DrillSqlOperator extends SqlFunction {
     if (NONE.equals(returnType)) {
       return super.inferReturnType(opBinding);
     }
-    return getReturnDataType(opBinding.getTypeFactory());
+
+    return getNullableReturnDataType(opBinding.getTypeFactory());
   }
 }
