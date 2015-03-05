@@ -42,6 +42,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, RuntimeException> {
+  private static final DrillSqlOperator SQL_OP_HASH64_WITH_NO_SEED = new DrillSqlOperator("hash64", 1, MajorType.getDefaultInstance(), true);
+  private static final DrillSqlOperator SQL_OP_HASH64_WITH_SEED = new DrillSqlOperator("hash64", 2, MajorType.getDefaultInstance(), true);
+  private static final DrillSqlOperator SQL_OP_CAST_INT = new DrillSqlOperator("castINT", 1, MajorType.getDefaultInstance(), true);
 
   private final boolean isMuxEnabled;
   private final boolean isDeMuxEnabled;
@@ -81,21 +84,23 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
     if ( isMuxEnabled ) {
       // Insert Project Operator with new column that will be a hash for HashToRandomExchange fields
       List<DistributionField> fields = hashPrel.getFields();
-      final DrillSqlOperator sqlOpH = new DrillSqlOperator("hash", 1, MajorType.getDefaultInstance(), true);
-      final DrillSqlOperator sqlOpX = new DrillSqlOperator("xor", 2, MajorType.getDefaultInstance(), true);
-      RexNode prevRex = null;
       List<String> outputFieldNames = Lists.newArrayList(childFields);
       final RexBuilder rexBuilder = prel.getCluster().getRexBuilder();
       final List<RelDataTypeField> childRowTypeFields = child.getRowType().getFieldList();
-      for ( DistributionField field : fields) {
-        final int tmpField = field.getFieldId();
-        RexNode rex = rexBuilder.makeInputRef(childRowTypeFields.get(tmpField).getType(), tmpField);
-        RexNode rexFunc = rexBuilder.makeCall(sqlOpH, rex);
-        if ( prevRex != null ) {
-          rexFunc = rexBuilder.makeCall(sqlOpX, prevRex, rexFunc);
-        }
-        prevRex = rexFunc;
+
+      // First field has no seed argument for hash64 function.
+      final int firstFieldId = fields.get(0).getFieldId();
+      RexNode firstFieldInputRef = rexBuilder.makeInputRef(childRowTypeFields.get(firstFieldId).getType(), firstFieldId);
+      RexNode hashExpr = rexBuilder.makeCall(SQL_OP_HASH64_WITH_NO_SEED, firstFieldInputRef);
+
+      for (int i=1; i<fields.size(); i++) {
+        final int fieldId = fields.get(i).getFieldId();
+        RexNode inputRef = rexBuilder.makeInputRef(childRowTypeFields.get(fieldId).getType(), fieldId);
+        hashExpr = rexBuilder.makeCall(SQL_OP_HASH64_WITH_SEED, inputRef, hashExpr);
       }
+
+      hashExpr = rexBuilder.makeCall(SQL_OP_CAST_INT, hashExpr);
+
       List <RexNode> updatedExpr = Lists.newArrayList();
       for ( RelDataTypeField field : childRowTypeFields) {
         RexNode rex = rexBuilder.makeInputRef(field.getType(), field.getIndex());
@@ -104,7 +109,7 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
       }
       outputFieldNames.add(PrelUtil.HASH_EXPR_NAME);
 
-      updatedExpr.add(prevRex);
+      updatedExpr.add(hashExpr);
       RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), updatedExpr, outputFieldNames);
 
       ProjectPrel addColumnprojectPrel = new ProjectPrel(child.getCluster(), child.getTraitSet(), child, updatedExpr, rowType);
