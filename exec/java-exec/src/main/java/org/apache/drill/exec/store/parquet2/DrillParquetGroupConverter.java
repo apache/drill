@@ -69,6 +69,7 @@ import parquet.io.api.PrimitiveConverter;
 import parquet.schema.DecimalMetadata;
 import parquet.schema.GroupType;
 import parquet.schema.MessageType;
+import parquet.schema.OriginalType;
 import parquet.schema.PrimitiveType;
 import parquet.schema.Type;
 import parquet.schema.Type.Repetition;
@@ -216,13 +217,14 @@ public class DrillParquetGroupConverter extends GroupConverter {
             VarCharWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varChar() : mapWriter.varChar(name);
             return new DrillVarCharConverter(writer, mutator.getManagedBuffer());
           }
+          //TODO not sure if BINARY/DECIMAL is actually supported
           case DECIMAL: {
             DecimalMetadata metadata = type.getDecimalMetadata();
             if (metadata.getPrecision() <= 28) {
-              Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal28Sparse() : mapWriter.decimal28Sparse(name);
+              Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal28Sparse() : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
               return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
             } else {
-              Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal38Sparse() : mapWriter.decimal38Sparse(name);
+              Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal38Sparse() : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
               return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
             }
           }
@@ -231,6 +233,19 @@ public class DrillParquetGroupConverter extends GroupConverter {
           }
         }
       }
+      case FIXED_LEN_BYTE_ARRAY:
+        if (type.getOriginalType() == OriginalType.DECIMAL) {
+          DecimalMetadata metadata = type.getDecimalMetadata();
+          if (metadata.getPrecision() <= 28) {
+            Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal28Sparse() : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
+            return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
+          } else {
+            Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal38Sparse() : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
+            return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
+          }
+        } else {
+          throw new UnsupportedOperationException("Unsupported type " + type.getOriginalType());
+        }
       default:
         throw new UnsupportedOperationException("Unsupported type: " + type.getPrimitiveTypeName());
     }

@@ -26,6 +26,7 @@ package org.apache.drill.exec.vector.complex.writer;
 
 <#include "/@includes/vv_imports.ftl" />
 
+/* This class is generated using freemarker and the BaseWriter.java template */
 @SuppressWarnings("unused")
 public interface BaseWriter extends Positionable{
   FieldWriter getParent();
@@ -44,6 +45,9 @@ public interface BaseWriter extends Positionable{
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
     <#assign upperName = minor.class?upper_case />
     <#assign capName = minor.class?cap_first />
+    <#if minor.class?starts_with("Decimal") >
+    ${capName}Writer ${lowerName}(String name, int scale, int precision);
+    </#if>
     ${capName}Writer ${lowerName}(String name);
     </#list></#list>
     

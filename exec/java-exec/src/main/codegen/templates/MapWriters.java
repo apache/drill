@@ -34,6 +34,7 @@ package org.apache.drill.exec.vector.complex.impl;
 <#include "/@includes/vv_imports.ftl" />
 import java.util.Map;
 
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -164,9 +165,21 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
   <#assign capName = minor.class?cap_first />
   <#assign vectName = capName />
   <#assign vectName = "Nullable${capName}" />
-  
+
+  <#if minor.class?starts_with("Decimal") >
+  public ${minor.class}Writer ${lowerName}(String name){
+    // returns existing writer
+    FieldWriter writer = fields.get(name);
+    assert writer != null;
+    return writer;
+  }
+
+  public ${minor.class}Writer ${lowerName}(String name, int scale, int precision){
+    final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, DataMode.OPTIONAL, scale, precision);
+  <#else>
   private static final MajorType ${upperName}_TYPE = Types.optional(MinorType.${upperName});
   public ${minor.class}Writer ${lowerName}(String name){
+  </#if>
     FieldWriter writer = fields.get(name);
     if(writer == null){
       ${vectName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);

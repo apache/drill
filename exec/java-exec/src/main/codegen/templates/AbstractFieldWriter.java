@@ -26,6 +26,7 @@ package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
 
+/* This class is generated using freemarker and the AbstractFieldWriter.java template */
 @SuppressWarnings("unused")
 abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWriter{
   
@@ -82,7 +83,13 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
   <#assign upperName = minor.class?upper_case />
   <#assign capName = minor.class?cap_first />
-  public ${capName}Writer ${lowerName}(String name){
+  <#if minor.class?starts_with("Decimal") >
+  public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
+    fail("${capName}");
+    return null;
+  }
+  </#if>
+  public ${capName}Writer ${lowerName}(String name) {
     fail("${capName}");
     return null;
   }
