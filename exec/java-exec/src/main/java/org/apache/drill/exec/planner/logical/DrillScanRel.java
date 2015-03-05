@@ -25,7 +25,6 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
@@ -59,7 +58,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
       RelOptTable table) {
     // By default, scan does not support project pushdown.
     // Decision whether push projects into scan will be made solely in DrillPushProjIntoScanRule.
-    this(cluster, traits, table, table.getRowType(), AbstractGroupScan.ALL_COLUMNS);
+    this(cluster, traits, table, table.getRowType(), GroupScan.ALL_COLUMNS);
   }
 
   /** Creates a DrillScan. */
@@ -67,7 +66,13 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
       RelOptTable table, RelDataType rowType, List<SchemaPath> columns) {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.rowType = rowType;
-    this.columns = columns == null || columns.size() == 0 ? GroupScan.ALL_COLUMNS : columns;
+    if (columns == null) { // planner asks to scan all of the columns
+      this.columns =  ColumnList.all();
+    } else if (columns.size() == 0) { // planner asks to skip all of the columns
+      this.columns = ColumnList.none();
+    } else { // planner asks to scan some columns
+      this.columns  = ColumnList.some(columns);
+    }
     try {
       this.groupScan = drillTable.getGroupScan().clone(this.columns);
     } catch (IOException e) {

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.planner.logical.ColumnList;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -36,9 +37,14 @@ public abstract class AbstractRecordReader implements RecordReader {
 
   private Collection<SchemaPath> columns = null;
   private boolean isStarQuery = false;
+  private boolean isSkipQuery = false;
 
   protected final void setColumns(Collection<SchemaPath> projected) {
     assert Preconditions.checkNotNull(projected, COL_NULL_ERROR).size() > 0 : COL_EMPTY_ERROR;
+    if (projected instanceof ColumnList) {
+      final ColumnList columns = ColumnList.class.cast(projected);
+      isSkipQuery = columns.getMode() == ColumnList.Mode.SKIP_ALL;
+    }
     isStarQuery = isStarQuery(projected);
     columns = transformColumns(projected);
   }
@@ -53,6 +59,14 @@ public abstract class AbstractRecordReader implements RecordReader {
 
   protected boolean isStarQuery() {
     return isStarQuery;
+  }
+
+  /**
+   * Returns true if reader should skip all of the columns, reporting number of records only. Handling of a skip query
+   * is storage plugin-specific.
+   */
+  protected boolean isSkipQuery() {
+    return isSkipQuery;
   }
 
   public static boolean isStarQuery(Collection<SchemaPath> projected) {
