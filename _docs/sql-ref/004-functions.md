@@ -39,8 +39,8 @@ Function| Return Type
 --------|---  
 char_length(string) or character_length(string)| int  
 concat(str "any" [, str "any" [, ...] ])| text
-convert_from(string bytea, src_encoding name)| text 
-convert_to(string text, dest_encoding name)| bytea
+convert_from(string text, src_encoding name)| text 
+convert_to(string text, dest_encoding name)| 
 initcap(string)| text
 left(str text, n int)| text
 length(string)| int

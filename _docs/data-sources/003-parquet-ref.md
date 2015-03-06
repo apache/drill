@@ -18,30 +18,26 @@ Apache Drill includes the following support for Parquet:
 * Generating Parquet files that have evolving or changing schemas and querying the data on the fly
 * Handling Parquet scalar and complex data types, such as maps and arrays
 
-### Reading and Writing Parquet Files
-When a read of Parquet data occurs, Drill loads only the necessary columns of data, which reduces I/O. Reading only a small piece of the Parquet data from a data file or table, Drill can examine and analyze all values for a column across multiple files.
-Parquet is the default storage format for a [Create Table As Select (CTAS)](/docs/create-table-as-ctas-command) command. You can create a Drill table from one format and store the data in another format, including Parquet.
+### Reading Parquet Files
+When a read of Parquet data occurs, Drill loads only the necessary columns of data, which reduces I/O. Reading only a small piece of the Parquet data from a data file or table, Drill can examine and analyze all values for a column across multiple files. You can create a Drill table from one format and store the data in another format, including Parquet.
 
-CTAS can use any data source provided by the storage plugin. 
+### Writing Parquet Files
+CTAS can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
 
-Parquet data generally resides in multiple files that resemble MapReduce output having numbered file names,  such as 0_0_0.parquet in a directory.
-
-To read Parquet data, point Drill to a single file or directory. Drill merges all files in a directory, including subdirectories, to create a single table.
-
-To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
+Although the data resides in a single table, Parquet output generally consists of multiple files that resemble MapReduce output having numbered file names,  such as 0_0_0.parquet in a directory.
 
 ### Configuring the Parquet Storage Format
-The default file type for writing data to a workspace is Parquet. You can change the default by setting a different format in the storage plugin definition. Use the store.format option to set the CTAS output format of a Parquet row group at the session or system level.
+To read or write Parquet data, you need to include the Parquet format in the storage plugin format definitions. The `dfs` plugin definition includes the Parquet format. 
+
+Use the `store.format` option to set the CTAS output format of a Parquet row group at the session or system level.
 
 Use the ALTER command to set the `store.format` option.
          
         ALTER SESSION SET `store.format` = 'parquet';
         ALTER SYSTEM SET `store.format` = 'parquet';
         
-Parquet is also the default Drill format for reading. For example, if you query a JSON file, Drill attempts to read the file in Parquet format first.
-
 ### Configuring the Size of Parquet Files
-Configuring the size of Parquet files by setting the store.parquet.block-size can improve write performance. The block size is the size of MFS, HDFS, or the file system. 
+Configuring the size of Parquet files by setting the `store.parquet.block-size` can improve write performance. The block size is the size of MFS, HDFS, or the file system. 
 
 The larger the block size, the more memory Drill needs for buffering data. Parquet files that contain a single block maximize the amount of data Drill stores contiguously on disk. Given a single row group per file, Drill stores the entire Parquet file onto the block, avoiding network I/O.
 
@@ -66,45 +62,15 @@ The following general process converts a file from JSON to Parquet:
 This example demonstrates a storage plugin definition, a sample row of data from a JSON file, and a Drill query that writes the JSON input to Parquet output. 
 
 #### Storage Plugin Definition
-The following example storage plugin defines these options
-
-* A connection to the home directory of the file system "file:///" instead of another location, such as the mapr-fs. 
-* A workspace named "home" that represents a location in the file system connection.
-* The path to home: "/home/mapr" 
-* The writable option set to true, so Drill can write the Parquet output.
-* A default input format of null. An error occurs if you read a file having an ambiguous extension. 
-* The storage formats in which Drill writes the data. 
-
-        {
-	      "type": "file",
-	      "enabled": true,
-	      "connection": "file:///",
-		  "workspaces": {
-		    "home": {
-		      "location": "/home/mapr",
-		      "writable": true,
-		      "defaultInputFormat": null
-		    }
-		  },
-		  "formats": {
-		    "parquet": {
-		      "type": "parquet"
-		    },
-		    "json": {
-		      "type": "json"
-		    }
-		  }
-		}
-
-First, the example storage plugin definition allows Drill to write data to Parquet or JSON. Next, the CTAS query gets the JSON file from and writes the Parquet directory of files to the home directory.
+You can use the default dfs storage plugin installed with Drill for reading and writing Parquet files. The storage plugin needs to configure the writable option of the workspace to true, so Drill can write the Parquet output. The dfs storage plugin defines the tmp writable workspace, which you can use in the CTAS command to create a Parquet table.
 
 #### Sample Row of JSON Data
 A JSON file contains data consisting of strings, typical of JSON data. The following example shows one row of the JSON file:
 
         {"trans_id":0,"date":"2013-07-26","time":"04:56:59","amount":80.5,"user_info":
-          {"cust_id":28,"device":"IOS5","state":"mt"
+          {"cust_id":28,"device":"WEARABLE2","state":"mt"
           },"marketing_info":
-            {"camp_id":4,"keywords":            ["go","to","thing","watch","made","laughing","might","pay","in","your","hold"]
+            {"camp_id":4,"keywords": ["go","to","thing","watch","made","laughing","might","pay","in","your","hold"]
             },
             "trans_info":
               {"prod_id":[16],
@@ -116,22 +82,38 @@ A JSON file contains data consisting of strings, typical of JSON data. The follo
 #### CTAS Query      
 The following example shows a CTAS query that creates a table from JSON data. The command casts the date, time, and amount strings to SQL types DATE, TIME, and DOUBLE. String-to-VARCHAR casting of the other strings occurs automatically.
 
-    CREATE TABLE home.sampleparquet AS 
-      (SELECT trans_id, 
-        cast(`date` AS date) transdate, 
-        cast(`time` AS time) transtime, 
-        cast(amount AS double) amount,`
-        user_info`,`marketing_info`, `trans_info` 
-        FROM home.`sample.json`);
+    CREATE TABLE dfs.tmp.sampleparquet AS 
+    (SELECT trans_id, 
+    cast(`date` AS date) transdate, 
+    cast(`time` AS time) transtime, 
+    cast(amount AS double) amountm,
+    user_info, marketing_info, trans_info 
+    FROM dfs.`/Users/drilluser/sample.json`);
         
-The output is a Parquet file:
+The CTAS query did not specify a file name extension, so Drill used the default parquet file name extension. The output is a Parquet file:
 
     +------------+---------------------------+
-	|  Fragment  | Number of records written |
-	+------------+---------------------------+
-	| 0_0        | 5                         |
-	+------------+---------------------------+
-	1 row selected (1.369 seconds)
+    |  Fragment  | Number of records written |
+    +------------+---------------------------+
+    | 0_0        | 5                         |
+    +------------+---------------------------+
+    1 row selected (1.369 seconds)
+
+You can query the Parquet file to verify that Drill now interprets the converted string as a date.
+
+    SELECT extract(year from transdate) AS `Year`, t.user_info.cust_id AS Customer 
+    FROM dfs.tmp.`sampleparquet` t;
+
+    +------------+------------+
+    |    Year    |  Customer  |
+    +------------+------------+
+    | 2013       | 28         |
+    | 2013       | 86623      |
+    | 2013       | 11         |
+    | 2013       | 666        |
+    | 2013       | 999        |
+    +------------+------------+
+    5 rows selected (0.039 seconds)
 
 For more examples of and information about using Parquet data, see ["Evolving Parquet as self-describing data format – New paradigms for consumerization of Hadoop data"](https://www.mapr.com/blog/evolving-parquet-self-describing-data-format-new-paradigms-consumerization-hadoop-data#.VNeqQbDF_8f).
 
