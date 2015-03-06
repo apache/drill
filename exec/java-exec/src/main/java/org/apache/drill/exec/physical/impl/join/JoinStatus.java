@@ -60,6 +60,10 @@ public final class JoinStatus {
   public MergeJoinBatch outputBatch;
   public SelectionVector4 sv4;
 
+  private boolean hasIntermediateData;
+  private int initialRightPosition = -1;
+  private boolean crossedBatchBoundaries;
+
   private final JoinRelType joinType;
 
   public boolean ok = true;
@@ -95,6 +99,28 @@ public final class JoinStatus {
         + ", right = " + right
         + ", outputBatch = " + outputBatch
         + "]";
+  }
+
+  public boolean hasIntermediateData() {
+    return hasIntermediateData;
+  }
+
+  public void resetIntermediateData() {
+    hasIntermediateData = false;
+  }
+
+  public void setIntermediateData(int initialRightPosition, boolean crossedBatchBoundaries) {
+    this.initialRightPosition = initialRightPosition;
+    this.crossedBatchBoundaries = crossedBatchBoundaries;
+    this.hasIntermediateData = true;
+  }
+
+  public int getInitialRightPosition() {
+    return initialRightPosition;
+  }
+
+  public boolean getCrossedBatchBoundaries() {
+    return crossedBatchBoundaries;
   }
 
   private final IterOutcome nextLeft() {

@@ -95,7 +95,7 @@ public abstract class JoinTemplate implements JoinWorker {
           // we've hit the end of the right record batch; copy any remaining values from the left batch
           while (status.isLeftPositionAllowed()) {
             if (status.isOutgoingBatchFull()) {
-              return false;
+              return true;
             }
             doCopyLeft(status.getLeftPosition(), status.getOutPosition());
 
@@ -137,11 +137,21 @@ public abstract class JoinTemplate implements JoinWorker {
           status.notifyLeftStoppedRepeating();
         }
 
-        boolean crossedBatchBoundaries = false;
-        int initialRightPosition = status.getRightPosition();
+        boolean crossedBatchBoundaries;
+        int initialRightPosition;
+        if (status.hasIntermediateData()) {
+          crossedBatchBoundaries = status.getCrossedBatchBoundaries();
+          initialRightPosition = status.getInitialRightPosition();
+          status.resetIntermediateData();
+        } else {
+          crossedBatchBoundaries = false;
+          initialRightPosition = status.getRightPosition();
+        }
+
         do {
           if (status.isOutgoingBatchFull()) {
-            return false;
+            status.setIntermediateData(initialRightPosition, crossedBatchBoundaries);
+            return true;
           }
           // copy all equal right keys to the output record batch
           doCopyLeft(status.getLeftPosition(), status.getOutPosition());
@@ -170,7 +180,8 @@ public abstract class JoinTemplate implements JoinWorker {
         }
         status.advanceLeft();
 
-        if (status.isLeftRepeating() && doCompareNextLeftKey(status.getLeftPosition()) != 0) {
+        if (status.isLeftRepeating() && status.isNextLeftPositionInCurrentBatch() &&
+          doCompareNextLeftKey(status.getLeftPosition()) != 0) {
           // left no longer has duplicates.  switch back to incoming batch mode
           status.setDefaultAdvanceMode();
           status.notifyLeftStoppedRepeating();
@@ -197,7 +208,8 @@ public abstract class JoinTemplate implements JoinWorker {
         throw new IllegalStateException();
       }
     }
-    return false;
+
+    return true;
   }
 
   // Generated Methods
