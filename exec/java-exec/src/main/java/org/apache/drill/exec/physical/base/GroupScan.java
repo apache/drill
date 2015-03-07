@@ -45,6 +45,22 @@ public interface GroupScan extends Scan, HasAffinity{
   public int getMaxParallelizationWidth();
 
   /**
+   * At minimum, the GroupScan requires these many fragments to run.
+   * Currently, this is used in {@link org.apache.drill.exec.planner.fragment.SimpleParallelizer}
+   * @return the minimum number of fragments that should run
+   */
+  @JsonIgnore
+  public int getMinParallelizationWidth();
+
+  /**
+   * Check if GroupScan enforces width to be maximum parallelization width.
+   * Currently, this is used in {@link org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier}
+   * @return if maximum width should be enforced
+   */
+  @JsonIgnore
+  public boolean enforceWidth();
+
+  /**
    * Returns a signature of the {@link GroupScan} which should usually be composed of
    * all its attributes which could describe it uniquely.
    */

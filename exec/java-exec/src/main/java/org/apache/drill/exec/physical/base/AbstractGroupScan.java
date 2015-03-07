@@ -28,7 +28,7 @@ import com.google.common.collect.Iterators;
 import org.apache.drill.exec.physical.EndpointAffinity;
 
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractGroupScan.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractGroupScan.class);
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
@@ -53,6 +53,18 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     throw new UnsupportedOperationException(String.format("%s does not implement clone(columns) method!", this.getClass().getCanonicalName()));
+  }
+
+  @Override
+  @JsonIgnore
+  public int getMinParallelizationWidth() {
+    return 1;
+  }
+
+  @Override
+  @JsonIgnore
+  public boolean enforceWidth() {
+    return false;
   }
 
   @Override

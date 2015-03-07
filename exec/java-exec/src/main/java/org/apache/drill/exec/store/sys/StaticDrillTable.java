@@ -18,24 +18,27 @@
 package org.apache.drill.exec.store.sys;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.store.RecordDataType;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.drill.exec.store.pojo.PojoDataType;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 
-public class StaticDrillTable extends DrillTable{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StaticDrillTable.class);
+/**
+ * A {@link org.apache.drill.exec.planner.logical.DrillTable} with a defined schema
+ * Currently, this is a wrapper class for {@link org.apache.drill.exec.store.sys.SystemTable}.
+ */
+public class StaticDrillTable extends DrillTable {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StaticDrillTable.class);
 
-  private final PojoDataType type;
+  private final RecordDataType dataType;
 
-  public StaticDrillTable(PojoDataType type, String storageEngineName, StoragePlugin plugin, Object selection) {
+  public StaticDrillTable(String storageEngineName, StoragePlugin plugin, Object selection, RecordDataType dataType) {
     super(storageEngineName, plugin, selection);
-    this.type = type;
+    this.dataType = dataType;
   }
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    return type.getRowType(typeFactory);
+    return dataType.getRowType(typeFactory);
   }
-
 }

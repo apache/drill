@@ -34,7 +34,7 @@ public class DrillbitIterator implements Iterator<Object> {
   }
 
   public static class DrillbitInstance {
-    public String host;
+    public String hostname;
     public int user_port;
     public int control_port;
     public int data_port;
@@ -51,7 +51,7 @@ public class DrillbitIterator implements Iterator<Object> {
     DrillbitEndpoint ep = endpoints.next();
     DrillbitInstance i = new DrillbitInstance();
     i.current = ep.equals(current);
-    i.host = ep.getAddress();
+    i.hostname = ep.getAddress();
     i.user_port = ep.getUserPort();
     i.control_port = ep.getControlPort();
     i.data_port = ep.getDataPort();

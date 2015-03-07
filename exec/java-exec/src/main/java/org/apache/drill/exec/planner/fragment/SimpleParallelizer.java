@@ -264,8 +264,8 @@ public class SimpleParallelizer {
       }
 
       if (width < numRequiredNodes) {
-        throw new PhysicalOperatorSetupException("Can not parallelize the fragment as the parallelization width is " +
-            "less than the number of mandatory nodes (nodes with +INFINITE affinity).");
+        throw new PhysicalOperatorSetupException("Can not parallelize the fragment as the parallelization width (" + width + ") is " +
+            "less than the number of mandatory nodes (" + numRequiredNodes + " nodes with +INFINITE affinity).");
       }
 
       // Find the maximum number of slots which should go to endpoints with affinity (See DRILL-825 for details)

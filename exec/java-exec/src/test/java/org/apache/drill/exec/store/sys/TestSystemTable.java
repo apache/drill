@@ -44,4 +44,16 @@ public class TestSystemTable extends BaseTestQuery {
       .baselineValues(true)
       .go();
   }
+
+  // need to enhance this
+  @Test
+  public void testThreadsTable() throws Exception {
+    test("select * from sys.threads");
+  }
+
+  // need to enhance this
+  @Test
+  public void testMemoryTable() throws Exception {
+    test("select * from sys.memory");
+  }
 }

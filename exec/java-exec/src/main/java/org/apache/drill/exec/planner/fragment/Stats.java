@@ -39,6 +39,10 @@ public class Stats {
     collector.addMaxWidth(maxWidth);
   }
 
+  public void addMinWidth(int minWidth) {
+    collector.addMinWidth(minWidth);
+  }
+
   public void addEndpointAffinities(List<EndpointAffinity> endpointAffinityList) {
     collector.addEndpointAffinities(endpointAffinityList);
   }

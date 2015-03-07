@@ -22,24 +22,24 @@ import java.lang.reflect.Modifier;
 import java.sql.Timestamp;
 import java.util.List;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.apache.drill.exec.store.RecordDataType;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import com.google.common.collect.Lists;
 
-public class PojoDataType {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoDataType.class);
+/**
+ * This class uses reflection of a Java class to construct a {@link org.apache.drill.exec.store.RecordDataType}.
+ */
+public class PojoDataType extends RecordDataType {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoDataType.class);
 
-  public List<SqlTypeName> types = Lists.newArrayList();
-  public List<String> names = Lists.newArrayList();
+  private final List<SqlTypeName> types = Lists.newArrayList();
+  private final List<String> names = Lists.newArrayList();
+  private final Class<?> pojoClass;
 
   public PojoDataType(Class<?> pojoClass) {
-    logger.debug(pojoClass.getName());
-    Field[] fields = pojoClass.getDeclaredFields();
-    for (int i = 0; i < fields.length; i++) {
-      Field f = fields[i];
-
+    this.pojoClass = pojoClass;
+    for (Field f : pojoClass.getDeclaredFields()) {
       if (Modifier.isStatic(f.getModifiers())) {
         continue;
       }
@@ -62,17 +62,23 @@ public class PojoDataType {
       } else if (type == Timestamp.class) {
         types.add(SqlTypeName.TIMESTAMP);
       } else {
-        throw new RuntimeException(String.format("PojoRecord reader doesn't yet support conversions from type [%s].", type));
+        throw new RuntimeException(String.format("PojoDataType doesn't yet support conversions from type [%s].", type));
       }
     }
   }
 
-  public RelDataType getRowType(RelDataTypeFactory f) {
-    List<RelDataType> fields = Lists.newArrayList();
-    for (SqlTypeName n : types) {
-      fields.add(f.createSqlType(n));
-    }
-    return f.createStructType(fields, names);
+  public Class<?> getPojoClass() {
+    return pojoClass;
+  }
+
+  @Override
+  public List<SqlTypeName> getFieldSqlTypeNames() {
+    return types;
+  }
+
+  @Override
+  public List<String> getFieldNames() {
+    return names;
   }
 
 }

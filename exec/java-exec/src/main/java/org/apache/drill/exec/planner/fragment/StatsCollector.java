@@ -85,7 +85,9 @@ public class StatsCollector extends AbstractOpWrapperVisitor<Void, RuntimeExcept
 
   @Override
   public Void visitGroupScan(GroupScan groupScan, Wrapper wrapper) {
-    wrapper.getStats().addMaxWidth(groupScan.getMaxParallelizationWidth());
+    final Stats stats = wrapper.getStats();
+    stats.addMaxWidth(groupScan.getMaxParallelizationWidth());
+    stats.addMinWidth(groupScan.getMinParallelizationWidth());
     return super.visitGroupScan(groupScan, wrapper);
   }
 

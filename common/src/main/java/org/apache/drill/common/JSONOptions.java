@@ -48,7 +48,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 @JsonDeserialize(using = De.class)
 public class JSONOptions {
 
-  final static Logger logger = LoggerFactory.getLogger(JSONOptions.class);
+  private final static Logger logger = LoggerFactory.getLogger(JSONOptions.class);
 
   private JsonNode root;
   private JsonLocation location;
@@ -67,17 +67,30 @@ public class JSONOptions {
   public <T> T getWith(DrillConfig config, Class<T> c) {
     try {
       if (opaque != null) {
-        if (opaque.getClass().equals(c)) {
+        final Class<?> opaqueClass = opaque.getClass();
+        if (opaqueClass.equals(c)) {
           return (T) opaque;
         } else {
-          throw new IllegalArgumentException(String.format("Attmpted to retrieve a option with type of %s.  However, the JSON options carried an opaque value of type %s.", c.getName(), opaque.getClass().getName()));
+          // Enum values that override methods are given $1, $2 ... extensions. Ignore the extension.
+          // e.g. SystemTable$1 for SystemTable.OPTION
+          if (c.isEnum()) {
+            final String opaqueName = opaqueClass.getName().replaceAll("\\$\\d+$", "");
+            final String cName = c.getName();
+            if(opaqueName.equals(cName)) {
+              return (T) opaque;
+            }
+          }
+          throw new IllegalArgumentException(String.format("Attempted to retrieve a option with type of %s.  " +
+            "However, the JSON options carried an opaque value of type %s.", c.getName(), opaqueClass.getName()));
         }
       }
 
       //logger.debug("Read tree {}", root);
       return config.getMapper().treeToValue(root, c);
     } catch (JsonProcessingException e) {
-      throw new LogicalPlanParsingException(String.format("Failure while trying to convert late bound json options to type of %s. Reference was originally located at line %d, column %d.", c.getCanonicalName(), location.getLineNr(), location.getColumnNr()), e);
+      throw new LogicalPlanParsingException(String.format("Failure while trying to convert late bound " +
+        "json options to type of %s. Reference was originally located at line %d, column %d.",
+        c.getCanonicalName(), location.getLineNr(), location.getColumnNr()), e);
     }
   }
 
@@ -95,7 +108,8 @@ public class JSONOptions {
       if ( c.equals(opaque.getClass())) {
         return (T) opaque;
       } else {
-        throw new IOException(String.format("Attmpted to retrieve a list with type of %s.  However, the JSON options carried an opaque value of type %s.", t.getType(), opaque.getClass().getName()));
+        throw new IOException(String.format("Attempted to retrieve a list with type of %s.  However, the JSON " +
+          "options carried an opaque value of type %s.", t.getType(), opaque.getClass().getName()));
       }
     }
     if (root == null) {

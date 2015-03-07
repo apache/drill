@@ -27,18 +27,33 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.pojo.PojoDataType;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
-public class SystemTableBatchCreator implements BatchCreator<SystemTableScan>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTableBatchCreator.class);
+/**
+ * This class creates batches based on the the type of {@link org.apache.drill.exec.store.sys.SystemTable}.
+ * The distributed tables and the local tables use different record readers.
+ * Local system tables do not require a full-fledged query because these records are present on every Drillbit.
+ */
+public class SystemTableBatchCreator implements BatchCreator<SystemTableScan> {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTableBatchCreator.class);
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public RecordBatch getBatch(FragmentContext context, SystemTableScan scan, List<RecordBatch> children)
-      throws ExecutionSetupException {
-    Iterator<Object> iter = scan.getPlugin().getRecordIterator(context, scan.getTable());
-    PojoRecordReader reader = new PojoRecordReader(scan.getTable().getPojoClass(), iter);
+  public RecordBatch getBatch(final FragmentContext context, final SystemTableScan scan,
+                              final List<RecordBatch> children)
+    throws ExecutionSetupException {
+    final SystemTable table = scan.getTable();
+    final RecordReader reader;
+    if (table.isDistributed()) {
+      final SystemRecord record = table.getSystemRecord();
+      reader = new SystemRecordReader(context, record);
+    } else {
+      final Iterator<Object> iter = table.getLocalIterator(context);
+      final PojoDataType type = (PojoDataType) table.getDataType();
+      reader = new PojoRecordReader(type.getPojoClass(), iter);
+    }
 
-    return new ScanBatch(scan, context, Collections.singleton( (RecordReader) reader).iterator());
+    return new ScanBatch(scan, context, Collections.singleton(reader).iterator());
   }
 }

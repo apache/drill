@@ -19,15 +19,17 @@ package org.apache.drill.exec.store.sys;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
 
+/**
+ * A namesake plugin configuration for system tables.
+ */
 public class SystemTablePluginConfig extends StoragePluginConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTablePluginConfig.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTablePluginConfig.class);
 
-  public static String NAME = "system-tables";
+  public static final String NAME = "system-tables";
 
-  public static SystemTablePluginConfig INSTANCE = new SystemTablePluginConfig();
+  public static final SystemTablePluginConfig INSTANCE = new SystemTablePluginConfig();
 
-  private SystemTablePluginConfig(){
-
+  private SystemTablePluginConfig() {
   }
 
   @Override

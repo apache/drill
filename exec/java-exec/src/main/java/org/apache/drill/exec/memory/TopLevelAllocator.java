@@ -37,6 +37,8 @@ import org.apache.drill.exec.util.Pointer;
 public class TopLevelAllocator implements BufferAllocator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopLevelAllocator.class);
 
+  public static long MAXIMUM_DIRECT_MEMORY;
+
   private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
   private final Map<ChildAllocator, StackTraceElement[]> childrenMap;
   private final PooledByteBufAllocatorL innerAllocator = PooledByteBufAllocatorL.DEFAULT;
@@ -56,6 +58,7 @@ public class TopLevelAllocator implements BufferAllocator {
   }
 
   private TopLevelAllocator(DrillConfig config, long maximumAllocation, boolean errorOnLeak){
+    MAXIMUM_DIRECT_MEMORY = maximumAllocation;
     this.config=(config!=null) ? config : DrillConfig.create();
     this.errorOnLeak = errorOnLeak;
     this.acct = new Accountor(config, errorOnLeak, null, null, maximumAllocation, 0, true);

@@ -17,40 +17,93 @@
  */
 package org.apache.drill.exec.store.sys;
 
+import com.google.common.collect.Iterators;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.server.options.DrillConfigIterator;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.store.RecordDataType;
 import org.apache.drill.exec.store.pojo.PojoDataType;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 
+import java.util.Iterator;
+
+/**
+ * An enumeration of all system tables that Drill supports.
+ * <p/>
+ * OPTION, DRILLBITS and VERSION are local tables available on every Drillbit.
+ * MEMORY and THREADS are distributed tables with one record on every Drillbit.
+ */
 public enum SystemTable {
-  OPTION("options", OptionValue.class),
-  DRILLBITS("drillbits", DrillbitIterator.DrillbitInstance.class),
-  VERSION("version", VersionIterator.VersionInfo.class)
-  ;
 
-  private final PojoDataType type;
+  OPTION("options", false, new PojoDataType(OptionValue.class)) {
+    @Override
+    public Iterator<Object> getLocalIterator(final FragmentContext context) {
+      final DrillConfigIterator configOptions = new DrillConfigIterator(context.getConfig());
+      final OptionManager fragmentOptions = context.getOptions();
+      return (Iterator<Object>) (Object) Iterators.concat(configOptions.iterator(), fragmentOptions.iterator());
+    }
+  },
+
+  DRILLBITS("drillbits", false, new PojoDataType(DrillbitIterator.DrillbitInstance.class)) {
+    @Override
+    public Iterator<Object> getLocalIterator(final FragmentContext context) {
+      return new DrillbitIterator(context);
+    }
+  },
+
+  VERSION("version", false, new PojoDataType(VersionIterator.VersionInfo.class)) {
+    @Override
+    public Iterator<Object> getLocalIterator(final FragmentContext context) {
+      return new VersionIterator();
+    }
+  },
+
+  MEMORY("memory", true, MemoryRecord.getInstance()) {
+    @Override
+    public SystemRecord getSystemRecord() {
+      return MemoryRecord.getInstance();
+    }
+  },
+
+  THREADS("threads", true, ThreadsRecord.getInstance()) {
+    @Override
+    public SystemRecord getSystemRecord() {
+      return ThreadsRecord.getInstance();
+    }
+  };
+
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTable.class);
+
   private final String tableName;
-  private final Class<?> pojoClass;
+  private final boolean distributed;
+  private final RecordDataType dataType;
 
-  SystemTable(String tableName, Class<?> clazz){
-    this.type = new PojoDataType(clazz);
+  SystemTable(String tableName, boolean distributed, RecordDataType dataType) {
     this.tableName = tableName;
-    this.pojoClass = clazz;
+    this.distributed = distributed;
+    this.dataType = dataType;
   }
 
-  public String getTableName(){
+  // Distributed tables must override this method
+  public SystemRecord getSystemRecord() {
+    throw new UnsupportedOperationException("Local table does not support this function.");
+  }
+
+  // Local tables must override this method
+  public Iterator<Object> getLocalIterator(FragmentContext context) {
+    throw new UnsupportedOperationException("Distributed table does not support this function.");
+  }
+
+  public String getTableName() {
     return tableName;
   }
 
-  public RelDataType getRowType(RelDataTypeFactory f){
-    return type.getRowType(f);
+  public boolean isDistributed() {
+    return distributed;
   }
 
-  public PojoDataType getType(){
-    return type;
+  public RecordDataType getDataType() {
+    return dataType;
   }
 
-  public Class<?> getPojoClass(){
-    return pojoClass;
-  }
 }
