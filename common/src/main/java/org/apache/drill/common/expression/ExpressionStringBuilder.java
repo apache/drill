@@ -79,7 +79,17 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitFunctionHolderExpression(FunctionHolderExpression holder, StringBuilder sb) throws RuntimeException {
-    throw new UnsupportedOperationException();
+    ImmutableList<LogicalExpression> args = holder.args;
+    sb.append(holder.getName());
+    sb.append("(");
+    for (int i = 0; i < args.size(); i++) {
+      if (i != 0) {
+        sb.append(", ");
+      }
+      args.get(i).accept(this, sb);
+    }
+    sb.append(") ");
+    return null;
   }
 
   @Override

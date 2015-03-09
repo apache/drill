@@ -38,6 +38,11 @@ public class TypeHelper {
 
   private static final int WIDTH_ESTIMATE = 50;
 
+  // Default length when casting to varchar : 65536 = 2^16
+  // This only defines an absolute maximum for values, setting
+  // a high value like this will not inflate the size for small values
+  public static final int VARCHAR_DEFAULT_CAST_LEN = 65536;
+
   public static int getSize(MajorType major) {
     switch (major.getMinorType()) {
 <#list vv.types as type>

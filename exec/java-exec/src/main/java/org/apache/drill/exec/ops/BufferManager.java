@@ -76,6 +76,7 @@ public class BufferManager implements AutoCloseable {
     DrillBuf newBuf = allocator.buffer(size);
     managedBuffers.put(newBuf.memoryAddress(), newBuf);
     newBuf.setFragmentContext(fragmentContext);
+    newBuf.setBufferManager(this);
     return newBuf;
   }
 

@@ -36,6 +36,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.QueryOptionManager;
@@ -57,9 +58,11 @@ public class PlanningBase extends ExecTest{
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(10000);
 
   @Mocked DrillbitContext dbContext;
-  @Mocked QueryContext context;
   private final DrillConfig config = DrillConfig.create();
 
+  @Mocked QueryContext context;
+
+  TopLevelAllocator allocator = new TopLevelAllocator();
 
   protected void testSqlPlanFromFile(String file) throws Exception {
     testSqlPlan(getFile(file));
@@ -82,7 +85,7 @@ public class PlanningBase extends ExecTest{
         dbContext.getMetrics();
         result = new MetricRegistry();
         dbContext.getAllocator();
-        result = new TopLevelAllocator();
+        result = allocator;
         dbContext.getConfig();
         result = config;
         dbContext.getOptionManager();
@@ -98,7 +101,6 @@ public class PlanningBase extends ExecTest{
     final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);
     final SchemaPlus root = SimpleOptiqSchema.createRootSchema(false);
     registry.getSchemaFactory().registerSchemas(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(), root);
-
 
     new NonStrictExpectations() {
       {
@@ -122,6 +124,8 @@ public class PlanningBase extends ExecTest{
         result = config;
         context.getDrillOperatorTable();
         result = table;
+        context.getAllocator();
+        result = allocator;
       }
     };
 

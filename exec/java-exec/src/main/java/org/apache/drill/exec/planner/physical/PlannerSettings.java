@@ -37,6 +37,7 @@ public class PlannerSettings implements Context{
   public static final int MAX_BROADCAST_THRESHOLD = Integer.MAX_VALUE;
   public static final int DEFAULT_IDENTIFIER_MAX_LENGTH = 1024;
 
+  public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding", true);
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
   public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg", true);
   public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg", true);
@@ -104,6 +105,10 @@ public class PlannerSettings implements Context{
 
   public boolean isHashAggEnabled() {
     return options.getOption(HASHAGG.getOptionName()).bool_val;
+  }
+
+  public boolean isConstantFoldingEnabled() {
+    return options.getOption(CONSTANT_FOLDING.getOptionName()).bool_val;
   }
 
   public boolean isStreamAggEnabled() {

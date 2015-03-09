@@ -28,6 +28,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
@@ -70,6 +71,8 @@ public class DrillFunctionRegistry {
           if ((existingImplementation = functionSignatureMap.get(functionSignature)) != null) {
             throw new AssertionError(String.format("Conflicting functions with similar signature found. Func Name: %s, Class name: %s " +
                 " Class name: %s", functionName, clazz.getName(), existingImplementation));
+          } else if (holder.isAggregating() && holder.isRandom() ) {
+            logger.warn("Aggregate functions cannot be random, did not register function {}", clazz.getName());
           } else {
             functionSignatureMap.put(functionSignature, clazz.getName());
           }
@@ -106,7 +109,15 @@ public class DrillFunctionRegistry {
           if (func.isAggregating()) {
             op = new DrillSqlAggOperator(name, func.getParamCount());
           } else {
-            op = new DrillSqlOperator(name, func.getParamCount(), func.getReturnType(), func.isDeterministic());
+            boolean isDeterministic;
+            // prevent Drill from folding constant functions with types that cannot be materialized
+            // into literals
+            if (DrillConstExecutor.NON_REDUCIBLE_TYPES.contains(func.getReturnType().getMinorType())) {
+              isDeterministic = false;
+            } else {
+              isDeterministic = func.isDeterministic();
+            }
+            op = new DrillSqlOperator(name, func.getParamCount(), func.getReturnType(), isDeterministic);
           }
           operatorTable.add(function.getKey(), op);
         }

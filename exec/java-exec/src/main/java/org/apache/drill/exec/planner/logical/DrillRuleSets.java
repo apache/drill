@@ -47,6 +47,7 @@ import org.eigenbase.rel.rules.MergeFilterRule;
 import org.eigenbase.rel.rules.MergeProjectRule;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
+import org.eigenbase.rel.rules.ReduceExpressionsRule;
 import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.RemoveDistinctRule;
 import org.eigenbase.rel.rules.RemoveSortRule;
@@ -62,9 +63,60 @@ public class DrillRuleSets {
 
   public static RuleSet DRILL_BASIC_RULES = null;
 
+  /**
+   * Get a list of logical rules that can be turned on or off by session/system options.
+   *
+   * If a rule is intended to always be included with the logical set, it should be added
+   * to the immutable list created in the getDrillBasicRules() method below.
+   *
+   * @param queryContext - used to get the list of planner settings, other rules may
+   *                     also in the future need to get other query state from this,
+   *                     such as the available list of UDFs (as is used by the
+   *                     DrillMergeProjectRule created in getDrillBasicRules())
+   * @return - a list of rules that have been filtered to leave out
+   *         rules that have been turned off by system or session settings
+   */
+  public static RuleSet getDrillUserConfigurableLogicalRules(QueryContext queryContext) {
+    PlannerSettings ps = queryContext.getPlannerSettings();
+
+    // This list is used to store rules that can be turned on an off
+    // by user facing planning options
+    Builder userConfigurableRules = ImmutableSet.<RelOptRule>builder();
+
+    if (ps.isConstantFoldingEnabled()) {
+      // TODO - DRILL-2218
+      userConfigurableRules.add(ReduceExpressionsRule.PROJECT_INSTANCE);
+
+      userConfigurableRules.add(DrillReduceExpressionsRule.FILTER_INSTANCE_DRILL);
+      userConfigurableRules.add(DrillReduceExpressionsRule.CALC_INSTANCE_DRILL);
+    }
+
+    return new DrillRuleSet(userConfigurableRules.build());
+  }
+
+  /**
+   * Get an immutable list of rules that will always be used when running
+   * logical planning.
+   *
+   * This would be a static member, rather than a method, but some of
+   * the rules need a reference to state that isn't available at class
+   * load time. The current example is the DrillMergeProjectRule which
+   * needs access to the registry of Drill UDFs, which is populated by
+   * scanning the class path a Drillbit startup.
+   *
+   * If a logical rule needs to be user configurable, such as turning
+   * it on and off with a system/session option, add it in the
+   * getDrillUserConfigurableLogicalRules() method instead of here.
+   *
+   * @param context - shared state used during planning, currently used here
+   *                to gain access to the fucntion registry described above.
+   * @return - a RuleSet containing the logical rules that will always
+   *           be used.
+   */
   public static RuleSet getDrillBasicRules(QueryContext context) {
     if (DRILL_BASIC_RULES == null) {
-    DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.of( //
+
+      DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
         // Add support for WHERE style joins.
 //      PushFilterPastProjectRule.INSTANCE, // Replaced by DrillPushFilterPastProjectRule
       DrillPushFilterPastProjectRule.INSTANCE,
@@ -121,9 +173,12 @@ public class DrillRuleSets {
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
       DrillUnionRule.INSTANCE,
+
       DrillReduceAggregatesRule.INSTANCE
-      ));
+      )
+      .build());
     }
+
     return DRILL_BASIC_RULES;
   }
 
@@ -135,6 +190,7 @@ public class DrillRuleSets {
   public static final RuleSet getPhysicalRules(QueryContext qcontext) {
     List<RelOptRule> ruleList = new ArrayList<RelOptRule>();
 
+    PlannerSettings ps = qcontext.getPlannerSettings();
 
     ruleList.add(ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN);
     ruleList.add(ConvertCountToDirectScan.AGG_ON_SCAN);
@@ -151,11 +207,7 @@ public class DrillRuleSets {
     ruleList.add(PushLimitToTopN.INSTANCE);
     ruleList.add(UnionAllPrule.INSTANCE);
 
-
-
     // ruleList.add(UnionDistinctPrule.INSTANCE);
-
-    PlannerSettings ps = qcontext.getPlannerSettings();
 
     if (ps.isHashAggEnabled()) {
       ruleList.add(HashAggPrule.INSTANCE);

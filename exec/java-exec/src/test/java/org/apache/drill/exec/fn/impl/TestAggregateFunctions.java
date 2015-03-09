@@ -19,6 +19,7 @@ package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.types.TypeProtos;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestAggregateFunctions extends BaseTestQuery {
@@ -58,6 +59,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .go();
   }
 
+  @Ignore
   @Test // DRILL-2092: count distinct, non distinct aggregate with group-by
   public void testDrill2092() throws Exception {
     String query = "select a1, b1, count(distinct c1) as dist1, \n"

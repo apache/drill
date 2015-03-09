@@ -21,6 +21,7 @@ package org.apache.drill.exec.expr.fn.impl;
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.joda.time.chrono.ISOChronology;
 
@@ -179,6 +180,20 @@ public class StringFunctionHelpers {
 
       outBuf.setByte(out, currentByte);
     } // end of for_loop
+  }
+
+  /**
+   * Convert a VarCharHolder to a String.
+   *
+   * VarCharHolders are designed specifically for object reuse and mutability, only use
+   * this method when absolutely necessary for interacting with interfaces that must take
+   * a String.
+   *
+   * @param varCharHolder a mutable wrapper object that stores a variable length char array, always in UTF-8
+   * @return              String of the bytes interpreted as UTF-8
+   */
+  public static String getStringFromVarCharHolder(VarCharHolder varCharHolder) {
+    return toStringFromUTF8(varCharHolder.start, varCharHolder.end, varCharHolder.buffer);
   }
 
   public static String toStringFromUTF8(int start, int end, DrillBuf buffer) {

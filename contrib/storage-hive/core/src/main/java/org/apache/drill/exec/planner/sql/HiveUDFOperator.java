@@ -43,6 +43,14 @@ public class HiveUDFOperator extends SqlFunction {
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 
+  // Consider Hive functions to be non-deterministic so they are not folded at
+  // planning time. The expression interpreter used to evaluate constant expressions
+  // currently does not support anything but simple DrillFuncs.
+  @Override
+  public boolean isDeterministic() {
+    return false;
+  }
+
   @Override
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
     RelDataTypeFactory factory = validator.getTypeFactory();

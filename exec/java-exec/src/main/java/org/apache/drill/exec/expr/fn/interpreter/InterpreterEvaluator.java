@@ -195,7 +195,7 @@ public class InterpreterEvaluator {
 
     @Override
     public ValueHolder visitDecimal38Constant(ValueExpressions.Decimal38Expression decExpr,Integer value) throws RuntimeException {
-      return ValueHolderHelper.getDecimal28Holder(getManagedBufferIfAvailable(), decExpr.getBigDecimal().toString());
+      return ValueHolderHelper.getDecimal38Holder(getManagedBufferIfAvailable(), decExpr.getBigDecimal().toString());
     }
 
     @Override

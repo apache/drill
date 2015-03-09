@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.exec.memory.Accountor;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.BufferManager;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.util.AssertionUtil;
@@ -49,9 +50,15 @@ public final class DrillBuf extends AbstractByteBuf {
   private volatile Accountor acct;
   private volatile int length;
 
+  // TODO - cleanup
+  // The code is partly shared and partly copy-pasted between
+  // these three types. They should be unified under one interface
+  // to share code and to remove the hacky code here to use only
+  // one of these types at a time and use null checks to find out
+  // which.
   private OperatorContext context;
   private FragmentContext fContext;
-
+  private BufferManager bufManager;
 
   public DrillBuf(BufferAllocator allocator, Accountor a, UnsafeDirectLittleEndian b) {
     super(b.maxCapacity());
@@ -138,6 +145,10 @@ public final class DrillBuf extends AbstractByteBuf {
     this.fContext = c;
   }
 
+  public void setBufferManager(BufferManager bufManager) {
+    this.bufManager = bufManager;
+  }
+
   public BufferAllocator getAllocator() {
     return allocator;
   }
@@ -150,6 +161,8 @@ public final class DrillBuf extends AbstractByteBuf {
       return context.replace(this, size);
     } else if(fContext != null) {
       return fContext.replace(this, size);
+    } else if (bufManager != null) {
+      return bufManager.replace(this, size);
     } else {
       throw new UnsupportedOperationException("Realloc is only available in the context of an operator's UDFs");
     }

@@ -41,6 +41,7 @@ public class SystemOptionManager implements OptionManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
   private static final OptionValidator[] VALIDATORS = {
+      PlannerSettings.CONSTANT_FOLDING,
       PlannerSettings.EXCHANGE,
       PlannerSettings.HASHAGG,
       PlannerSettings.STREAMAGG,
