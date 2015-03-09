@@ -140,8 +140,8 @@
           <groupId>org.apache.drill.contrib.storage-hive</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>mondrian-data-foodmart-json</artifactId>
-          <groupId>pentaho</groupId>
+          <artifactId>foodmart-data-json</artifactId>
+          <groupId>net.hydromatic</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -299,15 +299,15 @@
       <activation><activeByDefault>false</activeByDefault></activation>
       <dependencies>
         <dependency>
-          <groupId>pentaho</groupId>
-          <artifactId>mondrian-data-foodmart-queries</artifactId>
-          <version>0.3</version>
+          <groupId>net.hydromatic</groupId>
+          <artifactId>foodmart-queries</artifactId>
+          <version>0.4.1</version>
           <scope>test</scope>
         </dependency>
         <dependency>
-          <groupId>pentaho</groupId>
-          <artifactId>mondrian-data-foodmart-json</artifactId>
-          <version>0.3.2</version>
+          <groupId>net.hydromatic</groupId>
+          <artifactId>foodmart-data-json</artifactId>
+          <version>0.4</version>
         </dependency>
       </dependencies>
     </profile>

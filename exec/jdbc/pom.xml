@@ -60,15 +60,15 @@
       <version>2.4.3</version>
     </dependency>    
     <dependency>
-      <groupId>pentaho</groupId>
-      <artifactId>mondrian-data-foodmart-queries</artifactId>
-      <version>0.3</version>
+      <groupId>net.hydromatic</groupId>
+      <artifactId>foodmart-queries</artifactId>
+      <version>0.4.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>pentaho</groupId>
-      <artifactId>mondrian-data-foodmart-json</artifactId>
-      <version>0.3.2</version>
+      <groupId>net.hydromatic</groupId>
+      <artifactId>foodmart-data-json</artifactId>
+      <version>0.4</version>
     </dependency>
 
     <dependency>

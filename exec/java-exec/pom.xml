@@ -142,9 +142,9 @@
       <version>2.3.19</version>
     </dependency>
     <dependency>
-      <groupId>pentaho</groupId>
-      <artifactId>mondrian-data-foodmart-json</artifactId>
-      <version>0.3.2</version>
+      <groupId>net.hydromatic</groupId>
+      <artifactId>foodmart-data-json</artifactId>
+      <version>0.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
