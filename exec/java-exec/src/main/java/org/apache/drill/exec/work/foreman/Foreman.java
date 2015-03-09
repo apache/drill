@@ -39,6 +39,7 @@ import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.opt.BasicOptimizer;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -159,10 +160,21 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
     bee.retireForeman(this);
     context.getWorkBus().removeFragmentStatusListener(queryId);
     context.getClusterCoordinator().removeDrillbitStatusListener(queryManager);
-    if(result != null){
-      initiatingClient.sendResult(responseListener, new QueryWritableBatch(result), true);
+
+    try {
+      try {
+        context.close();
+      } catch (Exception e) {
+        moveToState(QueryState.FAILED, e);
+        return;
+      }
+
+      if (result != null) {
+        initiatingClient.sendResult(responseListener, new QueryWritableBatch(result), true);
+      }
+    } finally {
+      releaseLease();
     }
-    releaseLease();
   }
 
   /**
@@ -372,7 +384,8 @@ public class Foreman implements Runnable, Closeable, Comparable<Object> {
 
     SimpleParallelizer parallelizer = new SimpleParallelizer(context);
     return parallelizer.getFragments(context.getOptions().getOptionList(), context.getCurrentEndpoint(),
-        queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, initiatingClient.getSession());
+        queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, initiatingClient.getSession(),
+        context.getQueryDateTimeInfo());
   }
 
   /**

@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
@@ -41,7 +40,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
@@ -54,6 +52,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
+
 public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
@@ -62,7 +61,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   protected final FunctionTemplate.NullHandling nullHandling;
   protected final FunctionTemplate.FunctionCostCategory costCategory;
   protected final boolean isBinaryCommutative;
-  protected final boolean isRandom;
+  protected final boolean isDeterministic;
   protected final String[] registeredNames;
   protected final ImmutableList<String> imports;
   protected final WorkspaceReference[] workspaceVars;
@@ -78,7 +77,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     this.nullHandling = nullHandling;
     this.workspaceVars = workspaceVars;
     this.isBinaryCommutative = isBinaryCommutative;
-    this.isRandom = isRandom;
+    this.isDeterministic = ! isRandom;
     this.registeredNames = registeredNames;
     this.methodMap = ImmutableMap.copyOf(methods);
     this.parameters = parameters;
@@ -116,10 +115,17 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return false;
   }
 
+  /**
+   * @deprecated - use isDeterministic method instead
+   */
+  @Deprecated
   public boolean isRandom() {
-    return isRandom;
+    return ! isDeterministic;
   }
 
+  public boolean isDeterministic() {
+    return isDeterministic;
+  }
 
   protected JVar[] declareWorkspaceVariables(ClassGenerator<?> g) {
     JVar[] workspaceJVars = new JVar[workspaceVars.length];

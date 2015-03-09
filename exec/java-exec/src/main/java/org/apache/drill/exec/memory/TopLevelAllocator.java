@@ -191,9 +191,10 @@ public class TopLevelAllocator implements BufferAllocator {
                           boolean applyFragmentLimit) throws OutOfMemoryException{
       assert max >= pre;
       this.applyFragmentLimit=applyFragmentLimit;
-      childAcct = new Accountor(context.getConfig(), errorOnLeak, context, parentAccountor, max, pre, applyFragmentLimit);
+      DrillConfig drillConf = context != null ? context.getConfig() : null;
+      childAcct = new Accountor(drillConf, errorOnLeak, context, parentAccountor, max, pre, applyFragmentLimit);
       this.fragmentContext=context;
-      this.handle = context.getHandle();
+      this.handle = context != null ? context.getHandle() : null;
       thisMap = map;
       this.empty = DrillBuf.getEmpty(this, childAcct);
     }

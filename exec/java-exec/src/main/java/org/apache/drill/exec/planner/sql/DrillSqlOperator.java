@@ -38,14 +38,20 @@ public class DrillSqlOperator extends SqlFunction {
 
   private static final MajorType NONE = MajorType.getDefaultInstance();
   private final MajorType returnType;
+  private final boolean isDeterministic;
 
-  public DrillSqlOperator(String name, int argCount) {
-    this(name, argCount, MajorType.getDefaultInstance());
+  public DrillSqlOperator(String name, int argCount, boolean isDeterministic) {
+    this(name, argCount, MajorType.getDefaultInstance(), isDeterministic);
   }
 
-  public DrillSqlOperator(String name, int argCount, MajorType returnType) {
+  public DrillSqlOperator(String name, int argCount, MajorType returnType, boolean isDeterminisitic) {
     super(new SqlIdentifier(name, SqlParserPos.ZERO), DynamicReturnType.INSTANCE, null, new Checker(argCount), null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
     this.returnType = Preconditions.checkNotNull(returnType);
+    this.isDeterministic = isDeterminisitic;
+  }
+
+  public boolean isDeterministic() {
+    return isDeterministic;
   }
 
   protected RelDataType getReturnDataType(final RelDataTypeFactory factory) {

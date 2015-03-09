@@ -54,6 +54,16 @@ public interface BufferAllocator extends Closeable {
 
   public abstract ByteBufAllocator getUnderlyingAllocator();
 
+  /**
+   * Create a child allocator nested below this one.
+   *
+   * @param context - owning fragment for this allocator
+   * @param initialReservation - specified in bytes
+   * @param maximumReservation - specified in bytes
+   * @param applyFragmentLimit - flag to conditionally enable fragment memory limits
+   * @return - a new buffer allocator owned by the parent it was spawned from
+   * @throws OutOfMemoryException - when off-heap memory has been exhausted
+   */
   public abstract BufferAllocator getChildAllocator(FragmentContext context, long initialReservation,
       long maximumReservation, boolean applyFragmentLimit) throws OutOfMemoryException;
 

@@ -66,7 +66,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
   public static final DrillReduceAggregatesRule INSTANCE =
       new DrillReduceAggregatesRule(operand(AggregateRel.class, any()));
 
-  private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1);
+  private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1, false);
 
   //~ Constructors -----------------------------------------------------------
 

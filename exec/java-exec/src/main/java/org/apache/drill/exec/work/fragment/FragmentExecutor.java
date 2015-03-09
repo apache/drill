@@ -161,9 +161,9 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
 
     try {
       context.close();
-    } catch (RuntimeException e) {
+    } catch (Exception e) {
       if (throwFailure) {
-        throw e;
+        throw new RuntimeException("Error closing fragment context.", e);
       }
       logger.warn("Failure while closing out resources.", e);
     }

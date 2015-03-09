@@ -24,6 +24,8 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.config.UnorderedDeMuxExchange;
 import org.apache.drill.exec.physical.config.HashToRandomExchange;
@@ -405,9 +407,13 @@ public class TestLocalExchange extends PlanTestBase {
 
     findFragmentsWithPartitionSender(rootFragment, planningSet, deMuxFragments, htrFragments);
 
+    long queryStartTime = System.currentTimeMillis();
+    int timeZone = DateUtility.getIndex(System.getProperty("user.timezone"));
+    QueryDateTimeInfo queryDateTimeInfo = new QueryDateTimeInfo(queryStartTime, timeZone);
+
     QueryWorkUnit qwu = PARALLELIZER.getFragments(new OptionList(), drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
-        drillbitContext.getBits(), planReader, rootFragment, USER_SESSION);
+        drillbitContext.getBits(), planReader, rootFragment, USER_SESSION, queryDateTimeInfo);
 
     // Make sure the number of minor fragments with HashPartitioner within a major fragment is not more than the
     // number of Drillbits in cluster

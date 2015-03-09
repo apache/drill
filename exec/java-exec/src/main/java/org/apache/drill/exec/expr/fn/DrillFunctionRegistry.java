@@ -106,7 +106,7 @@ public class DrillFunctionRegistry {
           if (func.isAggregating()) {
             op = new DrillSqlAggOperator(name, func.getParamCount());
           } else {
-            op = new DrillSqlOperator(name, func.getParamCount(), func.getReturnType());
+            op = new DrillSqlOperator(name, func.getParamCount(), func.getReturnType(), func.isDeterministic());
           }
           operatorTable.add(function.getKey(), op);
         }

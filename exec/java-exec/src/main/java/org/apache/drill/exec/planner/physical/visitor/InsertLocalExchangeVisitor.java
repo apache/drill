@@ -81,8 +81,8 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
     if ( isMuxEnabled ) {
       // Insert Project Operator with new column that will be a hash for HashToRandomExchange fields
       List<DistributionField> fields = hashPrel.getFields();
-      final DrillSqlOperator sqlOpH = new DrillSqlOperator("hash", 1, MajorType.getDefaultInstance());
-      final DrillSqlOperator sqlOpX = new DrillSqlOperator("xor", 2, MajorType.getDefaultInstance());
+      final DrillSqlOperator sqlOpH = new DrillSqlOperator("hash", 1, MajorType.getDefaultInstance(), true);
+      final DrillSqlOperator sqlOpX = new DrillSqlOperator("xor", 2, MajorType.getDefaultInstance(), true);
       RexNode prevRex = null;
       List<String> outputFieldNames = Lists.newArrayList(childFields);
       final RexBuilder rexBuilder = prel.getCluster().getRexBuilder();
