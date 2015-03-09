@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -43,9 +42,6 @@ import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,12 +61,10 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   private final String storageEngineName;
   private final String schemaName;
   private final FileSystemPlugin plugin;
-
-  private final PStore<String> knownViews;
   private final ObjectMapper mapper;
 
-  public WorkspaceSchemaFactory(DrillConfig drillConfig, PStoreProvider provider, FileSystemPlugin plugin, String schemaName, String storageEngineName,
-      DrillFileSystem fileSystem, WorkspaceConfig config,
+  public WorkspaceSchemaFactory(DrillConfig drillConfig, FileSystemPlugin plugin, String schemaName,
+      String storageEngineName, DrillFileSystem fileSystem, WorkspaceConfig config,
       List<FormatMatcher> formatMatchers) throws ExecutionSetupException, IOException {
     this.fs = fileSystem;
     this.plugin = plugin;
@@ -81,18 +75,6 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     this.dirMatchers = Lists.newArrayList();
     this.storageEngineName = storageEngineName;
     this.schemaName = schemaName;
-
-    // setup cache
-    if (storageEngineName == null) {
-      this.knownViews = null;
-    } else {
-      this.knownViews = provider.getStore(PStoreConfig //
-          .newJacksonBuilder(drillConfig.getMapper(), String.class) //
-          .persist() //
-          .name(Joiner.on('.').join("storage.views", storageEngineName, schemaName)) //
-          .build());
-    }
-
 
     for (FormatMatcher m : formatMatchers) {
       if (m.supportDirectoryReads()) {
@@ -117,7 +99,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   }
 
   private Path getViewPath(String name) {
-    return new Path(config.getLocation() + '/' + name + ".view.drill");
+    return DotDrillType.VIEW.getPath(config.getLocation(), name);
   }
 
   public WorkspaceSchema createSchema(List<String> parentSchemaPath, UserSession session) {
@@ -174,9 +156,6 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       try (OutputStream stream = fs.create(viewPath)) {
         mapper.writeValue(stream, view);
       }
-      if (knownViews != null) {
-        knownViews.put(view.getName(), viewPath.toString());
-      }
       return replaced;
     }
 
@@ -187,12 +166,9 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
     public void dropView(String viewName) throws IOException {
       fs.delete(getViewPath(viewName), false);
-      if (knownViews != null) {
-        knownViews.delete(viewName);
-      }
     }
 
-    private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<String, DrillTable>(WorkspaceSchemaFactory.this);
+    private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<>(WorkspaceSchemaFactory.this);
 
     private UserSession session;
 
@@ -203,33 +179,20 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
     private Set<String> getViews() {
       Set<String> viewSet = Sets.newHashSet();
-      if(knownViews != null) {
-        String viewName;
-        for(Map.Entry<String, String> e : knownViews) {
-          viewName = e.getKey();
-          if (hasView(viewName)) {
-            viewSet.add(viewName);
-          } else if (knownViews != null) {
-            knownViews.delete(viewName);
-          }
-        }
-      }
-      return viewSet;
-    }
-
-    /**
-     * Checks whether underlying filesystem has the view.
-     * @param viewName view name
-     * @return true if storage has the view, false otherwise.
-     */
-    public boolean hasView(String viewName) {
-      List<DotDrillFile> files = null;
+      // Look for files with ".view.drill" extension.
+      List<DotDrillFile> files;
       try {
-        files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), viewName, DotDrillType.VIEW);
+        files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), DotDrillType.VIEW);
+        for(DotDrillFile f : files) {
+          viewSet.add(f.getBaseName());
+        }
+      } catch (UnsupportedOperationException e) {
+        logger.debug("The filesystem for this workspace does not support this operation.", e);
       } catch (Exception e) {
-        logger.warn("Failure while trying to check view[{}].", viewName,  e);
+        logger.warn("Failure while trying to list .view.drill files in workspace [{}]", getFullSchemaName(), e);
       }
-      return files!=null && files.size()>0;
+
+      return viewSet;
     }
 
     @Override
@@ -249,9 +212,6 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
         return tables.get(name);
       }
 
-      // then check known views.
-//      String path = knownViews.get(name);
-
       // then look for files that start with this name and end in .drill.
       List<DotDrillFile> files;
       try {
@@ -265,11 +225,10 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       } catch (UnsupportedOperationException e) {
         logger.debug("The filesystem for this workspace does not support this operation.", e);
       } catch (Exception e) {
-        logger.warn("Failure while trying to load .drill file.", e);
+        logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", name, getFullSchemaName(), e);
       }
 
       return tables.get(name);
-
     }
 
     @Override
@@ -284,7 +243,6 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     public String getDefaultLocation() {
       return config.getLocation();
     }
-
 
     @Override
     public CreateTableEntry createNewTable(String tableName) {
@@ -306,7 +264,5 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     public String getTypeName() {
       return FileSystemConfig.NAME;
     }
-
   }
-
 }

@@ -50,6 +50,15 @@ public class DotDrillFile {
     return type;
   }
 
+  /**
+   * Return base file name without the parent directory and extensions.
+   * @return Base file name.
+   */
+  public String getBaseName() {
+    final String fileName = status.getPath().getName();
+    return fileName.substring(0, fileName.lastIndexOf(type.getEnding()));
+  }
+
   public View getView(DrillConfig config) throws Exception{
     Preconditions.checkArgument(type == DotDrillType.VIEW);
     try(InputStream is = fs.open(status.getPath())){

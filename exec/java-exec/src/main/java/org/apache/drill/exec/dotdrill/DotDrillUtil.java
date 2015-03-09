@@ -53,11 +53,11 @@ public class DotDrillUtil {
     return getDrillFiles(fs, fs.globStatus(new Path(root, "*.drill")), types);
   }
 
-    public static List<DotDrillFile> getDotDrills(DrillFileSystem fs, Path root, String name, DotDrillType... types) throws IOException{
-      if(!name.endsWith(".drill")) {
-        name = name + DotDrillType.DOT_DRILL_GLOB;
-      }
-
-      return getDrillFiles(fs, fs.globStatus(new Path(root, name)), types);
+  public static List<DotDrillFile> getDotDrills(DrillFileSystem fs, Path root, String name, DotDrillType... types) throws IOException{
+    if(!name.endsWith(".drill")) {
+      name = name + DotDrillType.DOT_DRILL_GLOB;
     }
+
+    return getDrillFiles(fs, fs.globStatus(new Path(root, name)), types);
+  }
 }

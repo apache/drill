@@ -18,6 +18,7 @@
 package org.apache.drill.exec.dotdrill;
 
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
 
 public enum DotDrillType {
   VIEW
@@ -33,6 +34,26 @@ public enum DotDrillType {
 
   public boolean matches(FileStatus status){
     return status.getPath().getName().endsWith(ending);
+  }
+
+  /**
+   * For a given parent directory and base file name return complete path including file type specific extensions.
+   *
+   * @param parentDir Directory where the DotDrillFile is stored.
+   * @param name Base file name of the DotDrillFile.
+   * @return Path including the extensions that can be used to read/write in filesystem.
+   */
+  public Path getPath(String parentDir, String name) {
+    return new Path(parentDir, name + ending);
+  }
+
+  /**
+   * Return extension string of file type represented by this object.
+   *
+   * @return File extension.
+   */
+  public String getEnding() {
+    return ending;
   }
 
   public static final String DOT_DRILL_GLOB;

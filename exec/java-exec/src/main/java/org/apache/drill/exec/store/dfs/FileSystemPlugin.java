@@ -82,13 +82,13 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       List<WorkspaceSchemaFactory> factories = Lists.newArrayList();
       if (!noWorkspace) {
         for (Map.Entry<String, WorkspaceConfig> space : config.workspaces.entrySet()) {
-          factories.add(new WorkspaceSchemaFactory(context.getConfig(), context.getPersistentStoreProvider(), this, space.getKey(), name, fs, space.getValue(), matchers));
+          factories.add(new WorkspaceSchemaFactory(context.getConfig(), this, space.getKey(), name, fs, space.getValue(), matchers));
         }
       }
 
       // if the "default" workspace is not given add one.
       if (noWorkspace || !config.workspaces.containsKey("default")) {
-        factories.add(new WorkspaceSchemaFactory(context.getConfig(), context.getPersistentStoreProvider(), this, "default", name, fs, WorkspaceConfig.DEFAULT, matchers));
+        factories.add(new WorkspaceSchemaFactory(context.getConfig(), this, "default", name, fs, WorkspaceConfig.DEFAULT, matchers));
       }
 
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
