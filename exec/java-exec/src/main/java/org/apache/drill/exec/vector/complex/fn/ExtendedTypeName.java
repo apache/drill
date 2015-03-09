@@ -15,26 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.easy.json;
+package org.apache.drill.exec.vector.complex.fn;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
-public interface JsonProcessor {
-
-  public static enum ReadState {
-    END_OF_STREAM,
-    WRITE_SUCCEED
-  }
-
-  ReadState write(BaseWriter.ComplexWriter writer) throws IOException;
-
-  void setSource(InputStream is) throws IOException;
-  void setSource(JsonNode node);
-
-  void ensureAtLeastOneField(BaseWriter.ComplexWriter writer);
+public interface ExtendedTypeName {
+  public static final String BINARY = "$binary";      // base64 encoded binary (ZHJpbGw=)  [from Mongo]
+  public static final String DATE = "$dateDay";       // ISO date with no time. such as (12-24-27)
+  public static final String TIME = "$time";          // ISO time with no timezone (19:20:30.45Z)
+  public static final String TIMESTAMP = "$date";     // ISO standard time (2009-02-23T00:00:00.000-08:00) [from Mongo]
+  public static final String INTERVAL = "$interval";  // ISO standard duration (PT26.4S)
+  public static final String INTEGER = "$numberLong"; // 8 byte signed integer (123) [from Mongo]
+  public static final String DECIMAL = "$decimal";    // exact numeric value (123.123)
 }
+

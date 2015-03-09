@@ -17,29 +17,22 @@
  */
 package org.apache.drill.exec.vector.complex.impl;
 
-import org.apache.drill.exec.vector.complex.WriteState;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 
 abstract class AbstractBaseWriter implements FieldWriter{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBaseWriter.class);
 
-  final WriteState state;
   final FieldWriter parent;
   private int index;
 
   public AbstractBaseWriter(FieldWriter parent) {
     super();
-    this.state = parent == null ? new WriteState() : parent.getState();
     this.parent = parent;
   }
 
   public FieldWriter getParent() {
     return parent;
-  }
-
-  public boolean ok(){
-    return state.isOk();
   }
 
   public boolean isRoot(){
@@ -50,22 +43,8 @@ abstract class AbstractBaseWriter implements FieldWriter{
     return index;
   }
 
-  public void resetState(){
-    state.reset();
-  }
-
   public void setPosition(int index){
     this.index = index;
-  }
-
-  void inform(boolean outcome){
-    if(!outcome){
-      state.fail(this);
-    }
-  }
-
-  public WriteState getState(){
-    return state;
   }
 
   public void end(){

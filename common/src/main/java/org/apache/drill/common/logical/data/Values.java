@@ -23,15 +23,17 @@ import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 
-@JsonTypeName("constant")
-public class Constant extends SourceOperator {
+@JsonTypeName("values")
+public class Values extends SourceOperator {
 
     private final JSONOptions content;
 
     @JsonCreator
-    public Constant(@JsonProperty("content") JSONOptions content){
+    public Values(@JsonProperty("content") JSONOptions content){
         super();
         this.content = content;
         Preconditions.checkNotNull(content, "content attribute is required for source operator 'constant'.");
@@ -43,8 +45,25 @@ public class Constant extends SourceOperator {
 
     @Override
     public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-      return logicalVisitor.visitConstant(this, value);
+      return logicalVisitor.visitValues(this, value);
     }
 
+    public static Builder builder(){
+      return new Builder();
+    }
+
+    public static class Builder extends AbstractBuilder<Values>{
+      private JSONOptions content;
+
+      public Builder content(JsonNode n){
+        content = new JSONOptions(n, JsonLocation.NA);
+        return this;
+      }
+
+      @Override
+      public Values build() {
+        return new Values(content);
+      }
+    }
 
 }

@@ -17,42 +17,40 @@
  */
 package org.apache.drill.exec.store.easy.json.reader;
 
+import io.netty.buffer.DrillBuf;
+
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.io.IOContext;
-import com.fasterxml.jackson.core.sym.BytesToNameCanonicalizer;
-import com.fasterxml.jackson.core.util.BufferRecycler;
-import com.google.common.base.Preconditions;
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.store.easy.json.JsonProcessor;
-import org.apache.drill.exec.store.easy.json.RewindableUtf8Reader;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.TreeTraversingParser;
+import com.google.common.base.Preconditions;
 
 public abstract class BaseJsonProcessor implements JsonProcessor {
 
-  protected final RewindableUtf8Reader parser;
+  private static final ObjectMapper MAPPER = new ObjectMapper() //
+    .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
+    .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+
+  protected JsonParser parser;
   protected DrillBuf workBuf;
 
   public BaseJsonProcessor(DrillBuf workBuf) {
     this.workBuf = Preconditions.checkNotNull(workBuf);
-    this.parser = Preconditions.checkNotNull(createParser());
-  }
-
-  protected RewindableUtf8Reader createParser() {
-    final BufferRecycler recycler = new BufferRecycler();
-    final IOContext context = new IOContext(recycler, this, false);
-    final int features = JsonParser.Feature.collectDefaults() //
-        | JsonParser.Feature.ALLOW_COMMENTS.getMask() //
-        | JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES.getMask();
-
-    final BytesToNameCanonicalizer can = BytesToNameCanonicalizer.createRoot();
-    return new RewindableUtf8Reader<>(context, features, can.makeChild(JsonFactory.Feature.collectDefaults()), context.allocReadIOBuffer());
   }
 
   @Override
   public void setSource(InputStream is) throws IOException {
-    parser.setInputStream(is);
+    this.parser = MAPPER.getFactory().createParser(is);
   }
+
+  @Override
+  public void setSource(JsonNode node) {
+    this.parser = new TreeTraversingParser(node);
+  }
+
 }

@@ -24,7 +24,7 @@ import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.store.easy.json.JsonProcessor;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
-public class CountingJsonReader extends BaseJsonProcessor implements JsonProcessor {
+public class CountingJsonReader extends BaseJsonProcessor {
 
   public CountingJsonReader(DrillBuf workBuf) {
     super(workBuf);
@@ -40,7 +40,7 @@ public class CountingJsonReader extends BaseJsonProcessor implements JsonProcess
     }
     writer.rootAsMap().bit("count").writeBit(1);
     parser.skipChildren();
-    return writer.ok() ? ReadState.WRITE_SUCCEED : ReadState.WRITE_FAILURE;
+    return ReadState.WRITE_SUCCEED;
   }
 
   @Override

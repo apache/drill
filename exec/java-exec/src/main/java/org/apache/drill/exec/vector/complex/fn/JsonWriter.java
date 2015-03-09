@@ -32,11 +32,19 @@ public class JsonWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonWriter.class);
 
   private final JsonFactory factory = new JsonFactory();
-  private final JsonGenerator gen;
+  private final JsonOutput gen;
 
-  public JsonWriter(OutputStream out, boolean pretty) throws IOException{
+  public JsonWriter(OutputStream out, boolean pretty, boolean useExtendedOutput) throws IOException{
     JsonGenerator writer = factory.createJsonGenerator(out);
-    gen = pretty ? writer.useDefaultPrettyPrinter() : writer;
+    if(pretty){
+      writer = writer.useDefaultPrettyPrinter();
+    }
+    if(useExtendedOutput){
+      gen = new ExtendedJsonOutput(writer);
+    }else{
+      gen = new BasicJsonOutput(writer);
+    }
+
   }
 
   public void write(FieldReader reader) throws JsonGenerationException, IOException{
@@ -50,58 +58,45 @@ public class JsonWriter {
 
     switch(m){
     case OPTIONAL:
-      if(!reader.isSet()){
-        gen.writeNull();
-        break;
-      }
-
     case REQUIRED:
 
 
       switch (mt) {
       case FLOAT4:
-        gen.writeNumber(reader.readFloat());
+        gen.writeFloat(reader);
         break;
       case FLOAT8:
-        gen.writeNumber(reader.readDouble());
+        gen.writeDouble(reader);
         break;
       case INT:
-        Integer i = reader.readInteger();
-        if(i == null){
-          gen.writeNull();
-        }else{
-          gen.writeNumber(reader.readInteger());
-        }
+        gen.writeInt(reader);
         break;
       case SMALLINT:
-        gen.writeNumber(reader.readShort());
+        gen.writeSmallInt(reader);
         break;
       case TINYINT:
-        gen.writeNumber(reader.readByte());
+        gen.writeTinyInt(reader);
         break;
       case BIGINT:
-        Long l = reader.readLong();
-        if(l == null){
-          gen.writeNull();
-        }else{
-          gen.writeNumber(reader.readLong());
-        }
-
+        gen.writeBigInt(reader);
         break;
       case BIT:
-        gen.writeBoolean(reader.readBoolean());
+        gen.writeBoolean(reader);
         break;
 
       case DATE:
+        gen.writeDate(reader);
+        break;
       case TIME:
+        gen.writeTime(reader);
+        break;
       case TIMESTAMP:
-      case TIMESTAMPTZ:
-        gen.writeString(reader.readDateTime().toString());
-
+        gen.writeTimestamp(reader);
+        break;
       case INTERVALYEAR:
       case INTERVALDAY:
       case INTERVAL:
-        gen.writeString(reader.readPeriod().toString());
+        gen.writeInterval(reader);
         break;
       case DECIMAL28DENSE:
       case DECIMAL28SPARSE:
@@ -109,7 +104,7 @@ public class JsonWriter {
       case DECIMAL38SPARSE:
       case DECIMAL9:
       case DECIMAL18:
-        gen.writeNumber(reader.readBigDecimal());
+        gen.writeDecimal(reader);
         break;
 
       case LIST:
@@ -130,17 +125,17 @@ public class JsonWriter {
         gen.writeEndObject();
         break;
       case NULL:
-        gen.writeNull();
+        gen.writeUntypedNull();
         break;
 
       case VAR16CHAR:
-        gen.writeString(reader.readString());
+        gen.writeVar16Char(reader);
         break;
       case VARBINARY:
-        gen.writeBinary(reader.readByteArray());
+        gen.writeBinary(reader);
         break;
       case VARCHAR:
-        gen.writeString(reader.readText().toString());
+        gen.writeVarChar(reader);
         break;
 
       }
@@ -151,54 +146,61 @@ public class JsonWriter {
       switch (mt) {
       case FLOAT4:
         for(int i = 0; i < reader.size(); i++){
-          gen.writeNumber(reader.readFloat(i));
+          gen.writeFloat(i, reader);
         }
 
         break;
       case FLOAT8:
         for(int i = 0; i < reader.size(); i++){
-          gen.writeNumber(reader.readDouble(i));
+          gen.writeDouble(i, reader);
         }
         break;
       case INT:
         for(int i = 0; i < reader.size(); i++){
-          gen.writeNumber(reader.readInteger(i));
+          gen.writeInt(i, reader);
         }
         break;
       case SMALLINT:
         for(int i = 0; i < reader.size(); i++){
-          gen.writeNumber(reader.readShort(i));
+          gen.writeSmallInt(i, reader);
         }
         break;
       case TINYINT:
         for(int i = 0; i < reader.size(); i++){
-          gen.writeNumber(reader.readByte(i));
+          gen.writeTinyInt(i, reader);
         }
         break;
       case BIGINT:
         for(int i = 0; i < reader.size(); i++){
-          gen.writeNumber(reader.readLong(i));
+          gen.writeBigInt(i, reader);
         }
         break;
       case BIT:
         for(int i = 0; i < reader.size(); i++){
-        gen.writeBoolean(reader.readBoolean(i));
+          gen.writeBoolean(i, reader);
         }
         break;
 
       case DATE:
-      case TIME:
-      case TIMESTAMP:
-      case TIMESTAMPTZ:
         for(int i = 0; i < reader.size(); i++){
-        gen.writeString(reader.readDateTime(i).toString());
+          gen.writeDate(i, reader);
         }
-
+        break;
+      case TIME:
+        for(int i = 0; i < reader.size(); i++){
+          gen.writeTime(i, reader);
+        }
+        break;
+      case TIMESTAMP:
+        for(int i = 0; i < reader.size(); i++){
+          gen.writeTimestamp(i, reader);
+        }
+        break;
       case INTERVALYEAR:
       case INTERVALDAY:
       case INTERVAL:
         for(int i = 0; i < reader.size(); i++){
-        gen.writeString(reader.readPeriod(i).toString());
+          gen.writeInterval(i, reader);
         }
         break;
       case DECIMAL28DENSE:
@@ -208,7 +210,7 @@ public class JsonWriter {
       case DECIMAL9:
       case DECIMAL18:
         for(int i = 0; i < reader.size(); i++){
-        gen.writeNumber(reader.readBigDecimal(i));
+          gen.writeDecimal(i, reader);
         }
         break;
 
@@ -237,20 +239,22 @@ public class JsonWriter {
 
       case VAR16CHAR:
         for(int i = 0; i < reader.size(); i++){
-          gen.writeString(reader.readString(i));
+          gen.writeVar16Char(i, reader);
         }
         break;
       case VARBINARY:
         for(int i = 0; i < reader.size(); i++){
-        gen.writeBinary(reader.readByteArray(i));
+          gen.writeBinary(i, reader);
         }
         break;
       case VARCHAR:
         for(int i = 0; i < reader.size(); i++){
-        gen.writeString(reader.readText(i).toString());
+          gen.writeVarChar(i, reader);
         }
         break;
 
+      default:
+        throw new IllegalStateException(String.format("Unable to handle type %s.", mt));
       }
       gen.writeEndArray();
       break;

@@ -146,7 +146,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     this.writer = new VectorContainerWriter(output);
-    this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()), enableAllTextMode);
+    this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()), enableAllTextMode, false);
     logger.info("Filters Applied : " + filters);
     logger.info("Fields Selected :" + fields);
     cursor = collection.find(filters, fields);

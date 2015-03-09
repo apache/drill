@@ -46,7 +46,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   protected final ${containerClass} container;
   private Mode mode = Mode.INIT;
   private FieldWriter writer;
-  protected ValueVector innerVector;
+  protected RepeatedVector innerVector;
   
   <#if mode == "Repeated">private int currentChildIndex = 0;</#if>
   public ${mode}ListWriter(String name, ${containerClass} container, FieldWriter parent){
@@ -62,9 +62,12 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   }
 
   public void allocate(){
-    if(writer != null) writer.allocate();
+    if(writer != null){
+      writer.allocate();
+    }
+    
     <#if mode == "Repeated">
-    inform(container.allocateNewSafe());
+    container.allocateNew();
     </#if>
   }
   
@@ -149,27 +152,27 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     return container.getField();
   }
 
-  public void checkValueCapacity() {
-    inform(container.getValueCapacity() > idx());
-  }
-
   <#if mode == "Repeated">
+  
   public void start(){
-    if(ok()){
-      checkValueCapacity();
-      if (!ok()) return;
-      // update the repeated vector to state that there is current+1 objects.
-      RepeatedListHolder h = new RepeatedListHolder();
-      container.getAccessor().get(idx(), h);
-      if(h.start >= h.end){
-        container.getMutator().startNewGroup(idx());  
-      }
-      currentChildIndex = container.getMutator().add(idx());
-      if(currentChildIndex == -1){
-        inform(false);
-      }else{
-        if(writer != null) writer.setPosition(currentChildIndex);  
-      }
+    
+    final RepeatedListVector list = (RepeatedListVector) container;
+    final RepeatedListVector.Mutator mutator = list.getMutator();
+    
+    // make sure that the current vector can support the end position of this list.
+    if(container.getValueCapacity() <= idx()){
+      mutator.setValueCount(idx()+1);
+    }
+    
+    // update the repeated vector to state that there is current+1 objects.
+    RepeatedListHolder h = new RepeatedListHolder();
+    list.getAccessor().get(idx(), h);
+    if(h.start >= h.end){
+      mutator.startNewGroup(idx());  
+    }
+    currentChildIndex = container.getMutator().add(idx());
+    if(writer != null){
+      writer.setPosition(currentChildIndex);  
     }
   }
   
@@ -179,6 +182,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     // noop, we initialize state at start rather than end.
   }
   <#else>
+  
   
   public void setPosition(int index){
     super.setPosition(index);

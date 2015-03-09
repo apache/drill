@@ -15,32 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex;
+package org.apache.drill.exec.vector.complex.fn;
 
-import org.apache.drill.exec.vector.complex.writer.FieldWriter;
+import com.fasterxml.jackson.core.io.SerializedString;
 
+public enum ExtendedType {
 
-public class WriteState {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WriteState.class);
+  BINARY(ExtendedTypeName.BINARY),
+  DATE(ExtendedTypeName.DATE),
+  TIME(ExtendedTypeName.TIME),
+  TIMESTAMP(ExtendedTypeName.TIMESTAMP),
+  INTERVAL(ExtendedTypeName.INTERVAL),
+  INTEGER(ExtendedTypeName.INTEGER),
+  DECIMAL(ExtendedTypeName.DECIMAL);
 
-  private FieldWriter failPoint;
+  public final SerializedString serialized;
 
-  public boolean isFailed(){
-    return failPoint != null;
+  ExtendedType(String name) {
+    this.serialized = new SerializedString(name);
   }
 
-  public boolean isOk(){
-    return failPoint == null;
-  }
 
-  public void fail(FieldWriter w){
-    assert failPoint == null;
-    failPoint = w;
 
-//    System.out.println("Fail Point " + failPoint);
-  }
-
-  public void reset(){
-    failPoint = null;
-  }
 }

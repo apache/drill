@@ -61,7 +61,7 @@ import com.google.common.collect.Lists;
  * Utilities for Drill's planner.
  */
 public class DrillOptiq {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOptiq.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOptiq.class);
 
   /**
    * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax.
@@ -499,7 +499,7 @@ public class DrillOptiq {
     return new TypedNullConstant(Types.optional(type));
   }
 
-  private static boolean isLiteralNull(RexLiteral literal) {
+  public static boolean isLiteralNull(RexLiteral literal) {
     return literal.getTypeName().getName().equals("NULL");
   }
 }

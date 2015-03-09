@@ -310,15 +310,12 @@ public class EvaluationVisitor {
             TypeHelper.getWriterInterface(inputContainer.getMinorType(), inputContainer.getMajorType().getMode()));
         JVar writer = generator.declareClassField("writer", writerIFace);
         generator.getSetupBlock().assign(writer, JExpr._new(writerImpl).arg(vv).arg(JExpr._null()));
-        generator.getEvalBlock().add(writer.invoke("resetState"));
         generator.getEvalBlock().add(writer.invoke("setPosition").arg(outIndex));
         String copyMethod = inputContainer.isSingularRepeated() ? "copyAsValueSingle" : "copyAsValue";
         generator.getEvalBlock().add(inputContainer.getHolder().invoke(copyMethod).arg(writer));
         if (e.isSafe()) {
           HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
-          JConditional ifOut = generator.getEvalBlock()._if(writer.invoke("ok"));
-          ifOut._then().assign(outputContainer.getValue(), JExpr.lit(1));
-          ifOut._else().assign(outputContainer.getValue(), JExpr.lit(0));
+          generator.getEvalBlock().assign(outputContainer.getValue(), JExpr.lit(1));
           return outputContainer;
         }
       } else {

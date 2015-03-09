@@ -15,26 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.easy.json;
+package org.apache.drill.exec.vector.complex.fn;
 
-import java.io.IOException;
-import java.io.InputStream;
+/**
+ * Describes the default date output format to use for JSON. Drill's default behavior for text output formats is to use
+ * a string which can be implicitly casted back to its original type (so the same format as the SQL literal format where
+ * applicable). However, in JSON, we also can use extended types to specifically identify the data type of the output.
+ * In this case, Drill outputs ISO standard formats rather than SQL formats to ensure comaptibility with other systems
+ * (namely MongoDB).
+ */
+public enum DateOutputFormat {
+  /**
+   * The SQL literal format for dates.  This means no timezone in times and a space in between the date and time for timestamp.
+   */
+  SQL,
 
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
-public interface JsonProcessor {
-
-  public static enum ReadState {
-    END_OF_STREAM,
-    WRITE_SUCCEED
-  }
-
-  ReadState write(BaseWriter.ComplexWriter writer) throws IOException;
-
-  void setSource(InputStream is) throws IOException;
-  void setSource(JsonNode node);
-
-  void ensureAtLeastOneField(BaseWriter.ComplexWriter writer);
+  /**
+   * The ISO standard format for dates/times.
+   */
+  ISO
 }

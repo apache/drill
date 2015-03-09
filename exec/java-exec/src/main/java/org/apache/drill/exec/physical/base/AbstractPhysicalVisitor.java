@@ -41,6 +41,7 @@ import org.apache.drill.exec.physical.config.Trace;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.physical.config.UnionExchange;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
+import org.apache.drill.exec.physical.config.Values;
 import org.apache.drill.exec.physical.config.WindowPOP;
 
 public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> implements PhysicalVisitor<T, X, E> {
@@ -211,6 +212,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
 
   @Override
   public T visitIteratorValidator(IteratorValidator op, X value) throws E {
+    return visitOp(op, value);
+  }
+
+  @Override
+  public T visitValues(Values op, X value) throws E {
     return visitOp(op, value);
   }
 

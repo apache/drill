@@ -79,17 +79,13 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   <#if mode == "Repeated">
 
   public void copyAsValue(${minor.class?cap_first}Writer writer){
-    if (writer.ok()) {
-      Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer;
-      impl.vector.copyFromSafe(idx(), impl.idx(), vector);
-    }
+    Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer;
+    impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
   
   public void copyAsField(String name, MapWriter writer){
-    if (writer.ok()) {
-      Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl)  writer.list(name).${lowerName}();
-      impl.vector.copyFromSafe(idx(), impl.idx(), vector);
-    }
+    Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl)  writer.list(name).${lowerName}();
+    impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
   
   public int size(){
@@ -115,17 +111,13 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   <#else>
   
   public void copyAsValue(${minor.class?cap_first}Writer writer){
-    if (writer.ok()) {
-      ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer;
-      impl.vector.copyFromSafe(idx(), impl.idx(), vector);
-    }
+    ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer;
+    impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
   
   public void copyAsField(String name, MapWriter writer){
-    if (writer.ok()) {
-      ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name);
-      impl.vector.copyFromSafe(idx(), impl.idx(), vector);
-    }
+    ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name);
+    impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
   
   public void read(Nullable${minor.class?cap_first}Holder h){

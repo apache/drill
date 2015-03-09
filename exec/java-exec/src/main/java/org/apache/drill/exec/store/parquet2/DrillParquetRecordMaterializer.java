@@ -42,10 +42,6 @@ public class DrillParquetRecordMaterializer extends RecordMaterializer<Void> {
     complexWriter.setPosition(position);
   }
 
-  public boolean ok() {
-    return complexWriter.ok();
-  }
-
   @Override
   public Void getCurrentRecord() {
     return null;

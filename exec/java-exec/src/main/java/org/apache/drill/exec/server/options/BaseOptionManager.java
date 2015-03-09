@@ -17,29 +17,40 @@
  */
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
-import org.eigenbase.sql.SqlLiteral;
 
-public interface OptionManager extends Iterable<OptionValue> {
-  public OptionValue getOption(String name);
-  public void setOption(OptionValue value) throws SetOptionException;
-  public void setOption(String name, SqlLiteral literal, OptionValue.OptionType type) throws SetOptionException;
-  public OptionAdmin getAdmin();
-  public OptionManager getSystemManager();
-  public OptionList getOptionList();
+abstract class BaseOptionManager implements OptionManager {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseOptionManager.class);
 
-  public boolean getOption(BooleanValidator validator);
-  public double getOption(DoubleValidator validator);
-  public long getOption(LongValidator validator);
-  public String getOption(StringValidator validator);
 
-  public interface OptionAdmin {
-    public void registerOptionType(OptionValidator validator);
-    public void validate(OptionValue v) throws SetOptionException;
-    public OptionValue validate(String name, SqlLiteral value, OptionType optionType) throws SetOptionException;
+  private OptionValue getOptionSafe(OptionValidator validator){
+    OptionValue value = getOption(validator.getOptionName());
+    if(value == null){
+      throw new IllegalArgumentException(String.format("Unknown value for boolean option `%s`.", validator.getOptionName()));
+    }
+    return value;
+  }
+
+  @Override
+  public boolean getOption(BooleanValidator validator) {
+    return getOptionSafe(validator).bool_val;
+  }
+
+  @Override
+  public double getOption(DoubleValidator validator) {
+    return getOptionSafe(validator).float_val;
+  }
+
+  @Override
+  public long getOption(LongValidator validator) {
+    return getOptionSafe(validator).num_val;
+  }
+
+  @Override
+  public String getOption(StringValidator validator) {
+    return getOptionSafe(validator).string_val;
   }
 }

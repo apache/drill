@@ -42,7 +42,9 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.google.common.base.Preconditions;
 
 @JsonSerialize(using = Se.class)
 @JsonDeserialize(using = De.class)
@@ -96,6 +98,16 @@ public class JSONOptions {
 
   public <T> T getListWith(DrillConfig config, TypeReference<T> t) throws IOException {
     return getListWith(config.getMapper(), t);
+  }
+
+  public JsonNode asNode(){
+    Preconditions.checkArgument(this.root != null, "Attempted to grab JSONOptions as JsonNode when no root node was stored.  You can only convert non-opaque JSONOptions values to JsonNodes.");
+    return root;
+  }
+
+  public JsonParser asParser(){
+    Preconditions.checkArgument(this.root != null, "Attempted to grab JSONOptions as Parser when no root node was stored.  You can only convert non-opaque JSONOptions values to parsers.");
+    return new TreeTraversingParser(root);
   }
 
   @SuppressWarnings("unchecked")

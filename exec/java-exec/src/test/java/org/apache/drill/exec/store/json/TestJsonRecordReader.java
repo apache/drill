@@ -34,6 +34,11 @@ public class TestJsonRecordReader extends BaseTestQuery{
   }
 
   @Test
+  public void testContainingArray() throws Exception {
+    test("select * from dfs.`${WORKING_PATH}/src/test/resources/store/json/listdoc.json`");
+  }
+
+  @Test
   public void testComplexMultipleTimes() throws Exception{
     for(int i =0 ; i < 5; i++){
     test("select * from cp.`join/merge_join.json`");

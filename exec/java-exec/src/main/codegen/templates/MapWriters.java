@@ -63,14 +63,6 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
       return container.getField();
   }
 
-  public void checkValueCapacity(){
-    <#if mode == "Repeated">
-    if (container.getValueCapacity() <= idx()) {
-      container.reAlloc();
-    }
-    </#if>
-  }
-
   public MapWriter map(String name){
     FieldWriter writer = fields.get(name);
     if(writer == null){
@@ -85,7 +77,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
   }
   
   public void allocate(){
-    inform(container.allocateNewSafe());
+    container.allocateNew();
     for(FieldWriter w : fields.values()){
       w.allocate();
     }
@@ -96,9 +88,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
     for(FieldWriter w : fields.values()){
       w.clear();
     }
-    
   }
-  
   
   public ListWriter list(String name){
     FieldWriter writer = fields.get(name);
@@ -113,24 +103,24 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
 
   <#if mode == "Repeated">
   public void start(){
-    if(ok()){
-      checkValueCapacity();
-      if (!ok()) return;
       // update the repeated vector to state that there is current+1 objects.
       
-      RepeatedMapHolder h = new RepeatedMapHolder();
-      container.getAccessor().get(idx(), h);
-      if(h.start >= h.end){
-        container.getMutator().startNewGroup(idx());  
-      }
-      currentChildIndex = container.getMutator().add(idx());
-      if(currentChildIndex == -1){
-        inform(false);
-      }else{
-        for(FieldWriter w: fields.values()){
-          w.setPosition(currentChildIndex);  
-        }
-      }
+    final RepeatedMapHolder h = new RepeatedMapHolder();
+    final RepeatedMapVector map = (RepeatedMapVector) container;
+    final RepeatedMapVector.Mutator mutator = map.getMutator();
+    
+    // make sure that the current vector can support the end position of this list.
+    if(container.getValueCapacity() <= idx()){
+      mutator.setValueCount(idx()+1);
+    }
+
+    map.getAccessor().get(idx(), h);
+    if(h.start >= h.end){
+      container.getMutator().startNewGroup(idx());  
+    }
+    currentChildIndex = container.getMutator().add(idx());
+    for(FieldWriter w: fields.values()){
+      w.setPosition(currentChildIndex);  
     }
   }
   

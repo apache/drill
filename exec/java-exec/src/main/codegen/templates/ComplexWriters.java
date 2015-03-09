@@ -61,12 +61,8 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     return vector.getValueCapacity();
   }
 
-  public void checkValueCapacity() {
-    inform(vector.getValueCapacity() > idx());
-  }
-
   public void allocate(){
-    inform(vector.allocateNewSafe());
+    vector.allocateNew();
   }
   
   public void clear(){
@@ -77,76 +73,53 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     return super.idx();
   }
   
-  protected void inform(boolean ok){
-    super.inform(ok);
-  }
-  
   <#if mode == "Repeated">
 
   public void write(${minor.class?cap_first}Holder h){
-    if(ok()){
-      // update to inform(addSafe) once available for all repeated vector types for holders.
-      mutator.addSafe(idx(), h);
-      vector.setCurrentValueCount(idx());
-    }
+    mutator.addSafe(idx(), h);
+    vector.setCurrentValueCount(idx());
   }
   
   public void write(Nullable${minor.class?cap_first}Holder h){
-    if(ok()){
-      // update to inform(addSafe) once available for all repeated vector types for holders.
-      mutator.addSafe(idx(), h);
-      vector.setCurrentValueCount(idx());
-    }
+    mutator.addSafe(idx(), h);
+    vector.setCurrentValueCount(idx());
   }
 
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
-    if(ok()){
-      // update to inform(setSafe) once available for all vector types for holders.
-      mutator.addSafe(idx(), <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-      vector.setCurrentValueCount(idx());
-    }
+    mutator.addSafe(idx(), <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
+    vector.setCurrentValueCount(idx());
   }
   </#if>
   
   public void setPosition(int idx){
-    if (ok()){
-      super.setPosition(idx);
-      mutator.startNewGroup(idx);
-    }
+    super.setPosition(idx);
+    mutator.startNewGroup(idx);
   }
   
   
   <#else>
   
   public void write(${minor.class}Holder h){
-    if(ok()){
-      mutator.setSafe(idx(), h);
-      vector.setCurrentValueCount(idx());
-    }
+    mutator.setSafe(idx(), h);
+    vector.setCurrentValueCount(idx());
   }
   
   public void write(Nullable${minor.class}Holder h){
-    if(ok()){
-      mutator.setSafe(idx(), h);
-      vector.setCurrentValueCount(idx());
-    }
+    mutator.setSafe(idx(), h);
+    vector.setCurrentValueCount(idx());
   }
   
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
-    if(ok()){
-      mutator.setSafe(idx(), <#if mode == "Nullable">1, </#if><#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-      vector.setCurrentValueCount(idx());
-    }
+    mutator.setSafe(idx(), <#if mode == "Nullable">1, </#if><#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
+    vector.setCurrentValueCount(idx());
   }
 
   <#if mode == "Nullable">
   public void writeNull(){
-    if(ok()){
-      mutator.setNull(idx());
-      vector.setCurrentValueCount(idx());
-    }
+    mutator.setNull(idx());
+    vector.setCurrentValueCount(idx());
   }
   </#if>
   </#if>

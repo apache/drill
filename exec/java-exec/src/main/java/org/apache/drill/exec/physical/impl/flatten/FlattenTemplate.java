@@ -37,6 +37,8 @@ import org.apache.drill.exec.vector.RepeatedVector;
 public abstract class FlattenTemplate implements Flattener {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenTemplate.class);
 
+  private static final int OUTPUT_BATCH_SIZE = 4*1024;
+
   private ImmutableList<TransferPair> transfers;
   private SelectionVector2 vector2;
   private SelectionVector4 vector4;
@@ -86,9 +88,10 @@ public abstract class FlattenTemplate implements Flattener {
           for ( ; groupIndex < groupCount; groupIndex++) {
             currGroupSize = accessor.getGroupSizeAtIndex(groupIndex);
             for ( ; childIndexWithinCurrGroup < currGroupSize; childIndexWithinCurrGroup++) {
-              if (!doEval(groupIndex, firstOutputIndex)) {
+              if (firstOutputIndex == OUTPUT_BATCH_SIZE) {
                 break outer;
               }
+              doEval(groupIndex, firstOutputIndex);
               firstOutputIndex++;
               childIndex++;
             }

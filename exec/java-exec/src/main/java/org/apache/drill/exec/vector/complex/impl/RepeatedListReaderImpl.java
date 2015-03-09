@@ -48,7 +48,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
 
   @Override
   public void copyAsValue(ListWriter writer) {
-    if (currentOffset == NO_VALUES || writer.ok() == false) {
+    if (currentOffset == NO_VALUES) {
       return;
     }
     RepeatedListWriter impl = (RepeatedListWriter) writer;
@@ -57,7 +57,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
 
   @Override
   public void copyAsField(String name, MapWriter writer) {
-    if (currentOffset == NO_VALUES || writer.ok() == false) {
+    if (currentOffset == NO_VALUES) {
       return;
     }
     RepeatedListWriter impl = (RepeatedListWriter) writer.list(name);

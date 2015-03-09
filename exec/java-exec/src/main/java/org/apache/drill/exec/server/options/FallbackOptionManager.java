@@ -24,7 +24,7 @@ import org.eigenbase.sql.SqlLiteral;
 
 import com.google.common.collect.Iterables;
 
-public abstract class FallbackOptionManager implements OptionManager {
+public abstract class FallbackOptionManager extends BaseOptionManager {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
 
   protected final OptionManager fallback;

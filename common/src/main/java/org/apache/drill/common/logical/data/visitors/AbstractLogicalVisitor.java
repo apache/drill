@@ -17,7 +17,7 @@
  */
 package org.apache.drill.common.logical.data.visitors;
 
-import org.apache.drill.common.logical.data.Constant;
+import org.apache.drill.common.logical.data.Values;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Flatten;
 import org.apache.drill.common.logical.data.GroupingAggregate;
@@ -115,7 +115,7 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     }
 
     @Override
-    public T visitConstant(Constant constant, X value) throws E {
+    public T visitValues(Values constant, X value) throws E {
        return visitOp(constant, value);
     }
 

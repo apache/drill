@@ -16,12 +16,6 @@
  * limitations under the License.
  */
 
-import org.joda.time.DateTimeUtils;
-import parquet.io.api.Binary;
-
-import java.lang.Override;
-import java.lang.RuntimeException;
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/JSONOutputRecordWriter.java" />
 <#include "/@includes/license.ftl" />
@@ -46,6 +40,8 @@ import io.netty.buffer.ByteBuf;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.complex.fn.JsonOutput;
+
 
 
 import org.apache.drill.common.types.TypeProtos;
@@ -68,7 +64,7 @@ import java.util.Map;
  */
 public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implements RecordWriter {
 
-  protected JsonGenerator gen;
+  protected JsonOutput gen;
 
 <#list vv.types as type>
   <#list type.minor as minor>
@@ -92,12 +88,7 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
 
     @Override
     public void writeField() throws IOException {
-  <#if mode.prefix == "Nullable" >
-    if (!reader.isSet()) {
-      gen.writeNull();
-      return;
-    }
-  <#elseif mode.prefix == "Repeated" >
+  <#if mode.prefix == "Repeated" >
     // empty lists are represented by simply not starting a field, rather than starting one and putting in 0 elements
     if (reader.size() == 0) {
       return;
@@ -106,57 +97,59 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
     for (int i = 0; i < reader.size(); i++) {
   <#else>
   </#if>
+  
+  <#assign typeName = minor.class >
+  
+  <#switch minor.class>
+  <#case "UInt1">
+  <#case "UInt2">
+  <#case "UInt4">
+  <#case "UInt8">
+    <#assign typeName = "unsupported">
+    <#break>
+    
+  <#case "Decimal9">
+  <#case "Decimal18">
+  <#case "Decimal28Sparse">
+  <#case "Decimal28Dense">
+  <#case "Decimal38Dense">
+  <#case "Decimal38Sparse">
+    <#assign typeName = "Decimal">
+    <#break>
+  <#case "Float4">
+    <#assign typeName = "Float">
+    <#break>
+  <#case "Float8">
+    <#assign typeName = "Double">
+    <#break>
+    
+  <#case "IntervalDay">
+  <#case "IntervalYear">
+    <#assign typeName = "Interval">
+    <#break>
+    
+  <#case "Bit">
+    <#assign typeName = "Boolean">
+    <#break>  
 
-  <#if  minor.class == "TinyInt" ||
-        minor.class == "UInt1" ||
-        minor.class == "UInt2" ||
-        minor.class == "SmallInt" ||
-        minor.class == "Int" ||
-        minor.class == "Decimal9" ||
-        minor.class == "Float4" ||
-        minor.class == "BigInt" ||
-        minor.class == "Decimal18" ||
-        minor.class == "UInt8" ||
-        minor.class == "UInt4" ||
-        minor.class == "Float8" ||
-        minor.class == "Decimal28Sparse" ||
-        minor.class == "Decimal28Dense" ||
-        minor.class == "Decimal38Dense" ||
-        minor.class == "Decimal38Sparse">
-    <#if mode.prefix == "Repeated" >
-      gen.writeNumber(reader.read${friendlyType}(i));
-    <#else>
-      gen.writeNumber(reader.read${friendlyType}());
-    </#if>
-  <#elseif minor.class == "Date" ||
-              minor.class == "Time" ||
-              minor.class == "TimeStamp" ||
-              minor.class == "TimeTZ" ||
-              minor.class == "IntervalDay" ||
-              minor.class == "Interval" ||
-              minor.class == "VarChar" ||
-              minor.class == "Var16Char" ||
-              minor.class == "IntervalYear">
-    <#if mode.prefix == "Repeated" >
-              gen.writeString(reader.read${friendlyType}(i).toString());
-    <#else>
-      gen.writeString(reader.read${friendlyType}().toString());
-    </#if>
-  <#elseif
-        minor.class == "Bit">
-      <#if mode.prefix == "Repeated" >
-              gen.writeBoolean(reader.read${friendlyType}(i));
-      <#else>
-      gen.writeBoolean(reader.read${friendlyType}());
-      </#if>
-  <#elseif
-            minor.class == "VarBinary">
-      <#if mode.prefix == "Repeated" >
-              gen.writeBinary(reader.readByteArray(i));
-      <#else>
-      gen.writeBinary(reader.readByteArray());
-      </#if>
+  <#case "TimeStamp">
+    <#assign typeName = "Timestamp">
+    <#break>  
+    
+  <#case "VarBinary">
+    <#assign typeName = "Binary">
+    <#break>  
+    
+  </#switch>
+  
+  <#if typeName == "unsupported">
+    throw new UnsupportedOperationException("Unable to currently write ${minor.class} type to JSON.");
+  <#elseif mode.prefix == "Repeated" >
+    gen.write${typeName}(i, reader);
+  <#else>
+    gen.write${typeName}(reader);
   </#if>
+
   <#if mode.prefix == "Repeated">
     }
       gen.writeEndArray();

@@ -25,7 +25,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.logical.LogicalPlan;
-import org.apache.drill.common.logical.data.Constant;
+import org.apache.drill.common.logical.data.Values;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.GroupingAggregate;
 import org.apache.drill.common.logical.data.Join;
@@ -146,7 +146,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
   }
 
   @Override
-  public Void visitConstant(Constant constant, FieldList value) {
+  public Void visitValues(Values constant, FieldList value) {
     return null;
   }
 

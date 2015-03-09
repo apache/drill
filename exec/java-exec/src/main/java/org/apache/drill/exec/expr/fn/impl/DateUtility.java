@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
@@ -666,4 +667,16 @@ public class DateUtility {
         }
         return timeFormat;
     }
+
+    public static int monthsFromPeriod(Period period){
+      return (period.getYears() * yearsToMonths) + period.getMonths();
+    }
+
+    public static int millisFromPeriod(final Period period){
+      return (period.getHours() * hoursToMillis) +
+      (period.getMinutes() * minutesToMillis) +
+      (period.getSeconds() * secondsToMillis) +
+      (period.getMillis());
+    }
+
 }

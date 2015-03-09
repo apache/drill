@@ -18,7 +18,6 @@
 package org.apache.drill.common.types;
 
 import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
-import static org.apache.drill.common.types.TypeProtos.MinorType.*;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -39,7 +38,7 @@ public class Types {
     UNKNOWN, NONE, EQUAL, ORDERED;
   }
 
-  public static boolean isComplex(MajorType type) {
+  public static boolean isComplex(final MajorType type) {
     switch(type.getMinorType()) {
     case LIST:
     case MAP:
@@ -49,11 +48,11 @@ public class Types {
     return false;
   }
 
-  public static boolean isRepeated(MajorType type) {
+  public static boolean isRepeated(final MajorType type) {
     return type.getMode() == REPEATED ;
   }
 
-  public static boolean isNumericType(MajorType type) {
+  public static boolean isNumericType(final MajorType type) {
     if (type.getMode() == REPEATED) {
       return false;
     }
@@ -85,7 +84,7 @@ public class Types {
   /***
    * Gets JDBC type code for given Drill RPC-/protobuf-level type.
    */
-  public static int getJdbcType(MajorType type) {
+  public static int getJdbcType(final MajorType type) {
     if (type.getMode() == DataMode.REPEATED) {
       return java.sql.Types.ARRAY;
     }
@@ -159,7 +158,7 @@ public class Types {
     }
   }
 
-  public static boolean isUnSigned(MajorType type) {
+  public static boolean isUnSigned(final MajorType type) {
     switch(type.getMinorType()) {
     case UINT1:
     case UINT2:
@@ -171,7 +170,7 @@ public class Types {
     }
 
   }
-  public static boolean usesHolderForGet(MajorType type) {
+  public static boolean usesHolderForGet(final MajorType type) {
     if (type.getMode() == REPEATED) {
       return true;
     }
@@ -199,7 +198,7 @@ public class Types {
 
   }
 
-  public static boolean isFixedWidthType(MajorType type) {
+  public static boolean isFixedWidthType(final MajorType type) {
     switch(type.getMinorType()) {
     case VARBINARY:
     case VAR16CHAR:
@@ -211,7 +210,7 @@ public class Types {
   }
 
 
-  public static boolean isStringScalarType(MajorType type) {
+  public static boolean isStringScalarType(final MajorType type) {
     if (type.getMode() == REPEATED) {
       return false;
     }
@@ -226,7 +225,7 @@ public class Types {
     }
   }
 
-  public static boolean isBytesScalarType(MajorType type) {
+  public static boolean isBytesScalarType(final MajorType type) {
     if (type.getMode() == REPEATED) {
       return false;
     }
@@ -239,7 +238,7 @@ public class Types {
     }
   }
 
-  public static Comparability getComparability(MajorType type) {
+  public static Comparability getComparability(final MajorType type) {
     if (type.getMode() == REPEATED) {
       return Comparability.NONE;
     }
@@ -261,7 +260,7 @@ public class Types {
   }
 
 
-  public static boolean softEquals(MajorType a, MajorType b, boolean allowNullSwap) {
+  public static boolean softEquals(final MajorType a, final MajorType b, final boolean allowNullSwap) {
     if (a.getMinorType() != b.getMinorType()) {
         return false;
     }
@@ -279,31 +278,31 @@ public class Types {
     return a.getMode() == b.getMode();
   }
 
-  public static boolean isLateBind(MajorType type) {
+  public static boolean isLateBind(final MajorType type) {
     return type.getMinorType() == MinorType.LATE;
   }
 
-  public static MajorType withMode(MinorType type, DataMode mode) {
+  public static MajorType withMode(final MinorType type, final DataMode mode) {
     return MajorType.newBuilder().setMode(mode).setMinorType(type).build();
   }
 
-  public static MajorType withScaleAndPrecision(MinorType type, DataMode mode, int scale, int precision) {
+  public static MajorType withScaleAndPrecision(final MinorType type, final DataMode mode, final int scale, final int precision) {
     return MajorType.newBuilder().setMinorType(type).setMode(mode).setScale(scale).setPrecision(precision).build();
   }
 
-  public static MajorType required(MinorType type) {
+  public static MajorType required(final MinorType type) {
     return MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(type).build();
   }
 
-  public static MajorType repeated(MinorType type) {
+  public static MajorType repeated(final MinorType type) {
     return MajorType.newBuilder().setMode(REPEATED).setMinorType(type).build();
   }
 
-  public static MajorType optional(MinorType type) {
+  public static MajorType optional(final MinorType type) {
     return MajorType.newBuilder().setMode(DataMode.OPTIONAL).setMinorType(type).build();
   }
 
-  public static MajorType overrideMinorType(MajorType originalMajorType, MinorType overrideMinorType) {
+  public static MajorType overrideMinorType(final MajorType originalMajorType, final MinorType overrideMinorType) {
     switch (originalMajorType.getMode()) {
       case REPEATED:
         return repeated(overrideMinorType);
@@ -316,11 +315,11 @@ public class Types {
     }
   }
 
-  public static MajorType overrideMode(MajorType originalMajorType, DataMode overrideMode) {
+  public static MajorType overrideMode(final MajorType originalMajorType, final DataMode overrideMode) {
     return withScaleAndPrecision(originalMajorType.getMinorType(), overrideMode, originalMajorType.getScale(), originalMajorType.getPrecision());
   }
 
-  public static MajorType getMajorTypeFromName(String typeName) {
+  public static MajorType getMajorTypeFromName(final String typeName) {
     return getMajorTypeFromName(typeName, DataMode.REQUIRED);
   }
 
@@ -376,6 +375,7 @@ public class Types {
     case "binary":
       return MinorType.VARBINARY;
     case "json":
+    case "simplejson":
       return MinorType.LATE;
     case "null":
     case "any":
@@ -385,11 +385,11 @@ public class Types {
     }
   }
 
-  public static MajorType getMajorTypeFromName(String typeName, DataMode mode) {
+  public static MajorType getMajorTypeFromName(final String typeName, final DataMode mode) {
     return withMode(getMinorTypeFromName(typeName), mode);
   }
 
-  public static String getNameOfMinorType(MinorType type) {
+  public static String getNameOfMinorType(final MinorType type) {
     switch (type) {
       case BIT:
         return "bool";
@@ -440,7 +440,7 @@ public class Types {
     }
   }
 
-  public static String toString(MajorType type) {
+  public static String toString(final MajorType type) {
     return type != null ? "MajorType[" + TextFormat.shortDebugString(type) + "]" : "null";
   }
 

@@ -56,17 +56,12 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
     return container.getValueCapacity();
   }
 
-  public void checkValueCapacity(){
-    inform(container.getValueCapacity() > idx());
-  }
-
   private void check(Mode... modes){
     StateTool.check(mode, modes);
   }
 
   public void reset(){
     setPosition(0);
-    resetState();
   }
 
   public void clear(){

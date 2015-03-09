@@ -18,7 +18,7 @@
 package org.apache.drill.common.logical.data.visitors;
 
 
-import org.apache.drill.common.logical.data.Constant;
+import org.apache.drill.common.logical.data.Values;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Flatten;
 import org.apache.drill.common.logical.data.GroupingAggregate;
@@ -53,7 +53,7 @@ public interface LogicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
     public RETURN visitFlatten(Flatten flatten, EXTRA value) throws EXCEP;
 
     public RETURN visitProject(Project project, EXTRA value) throws EXCEP;
-    public RETURN visitConstant(Constant constant, EXTRA value) throws EXCEP;
+    public RETURN visitValues(Values constant, EXTRA value) throws EXCEP;
     public RETURN visitOrder(Order order, EXTRA value) throws EXCEP;
     public RETURN visitJoin(Join join, EXTRA value) throws EXCEP;
     public RETURN visitLimit(Limit limit, EXTRA value) throws EXCEP;

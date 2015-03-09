@@ -26,6 +26,8 @@ import org.apache.drill.exec.store.EventBasedRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.JSONOutputRecordWriter;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.vector.complex.fn.BasicJsonOutput;
+import org.apache.drill.exec.vector.complex.fn.ExtendedJsonOutput;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -33,17 +35,19 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.collect.Lists;
 
 public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWriter {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonRecordWriter.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonRecordWriter.class);
 
   private String location;
   private String prefix;
 
   private String fieldDelimiter;
   private String extension;
+  private boolean useExtendedOutput;
 
   private int index;
   private FileSystem fs = null;
@@ -63,6 +67,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
     this.prefix = writerOptions.get("prefix");
     this.fieldDelimiter = writerOptions.get("separator");
     this.extension = writerOptions.get("extension");
+    this.useExtendedOutput = Boolean.parseBoolean(writerOptions.get("extended"));
 
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
@@ -71,7 +76,12 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
     Path fileName = new Path(location, prefix + "_" + index + "." + extension);
     try {
       stream = fs.create(fileName);
-      gen = factory.createGenerator(stream).useDefaultPrettyPrinter();
+      JsonGenerator generator = factory.createGenerator(stream).useDefaultPrettyPrinter();
+      if(useExtendedOutput){
+        gen = new ExtendedJsonOutput(generator);
+      }else{
+        gen = new BasicJsonOutput(generator);
+      }
       logger.debug("Created file: {}", fileName);
     } catch (IOException ex) {
       logger.error("Unable to create file: " + fileName, ex);

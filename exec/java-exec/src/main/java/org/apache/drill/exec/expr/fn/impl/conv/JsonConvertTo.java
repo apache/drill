@@ -52,7 +52,37 @@ public class JsonConvertTo {
 
       java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonWriter jsonWriter = new org.apache.drill.exec.vector.complex.fn.JsonWriter(stream, true);
+        org.apache.drill.exec.vector.complex.fn.JsonWriter jsonWriter = new org.apache.drill.exec.vector.complex.fn.JsonWriter(stream, true, true);
+
+        jsonWriter.write(input);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+
+      byte [] bytea = stream.toByteArray();
+
+      out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
+      out.buffer.setBytes(0, bytea);
+      out.end = bytea.length;
+    }
+  }
+
+  @FunctionTemplate(name = "convert_toSIMPLEJSON", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ConvertToSimpleJson implements DrillSimpleFunc{
+
+    @Param FieldReader input;
+    @Output VarBinaryHolder out;
+    @Inject DrillBuf buffer;
+
+    public void setup(){
+    }
+
+    public void eval(){
+      out.start = 0;
+
+      java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
+      try {
+        org.apache.drill.exec.vector.complex.fn.JsonWriter jsonWriter = new org.apache.drill.exec.vector.complex.fn.JsonWriter(stream, true, false);
 
         jsonWriter.write(input);
       } catch (Exception e) {

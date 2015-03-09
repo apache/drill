@@ -30,15 +30,11 @@ package org.apache.drill.exec.vector.complex.writer;
 @SuppressWarnings("unused")
 public interface BaseWriter extends Positionable{
   FieldWriter getParent();
-  boolean ok();
-  WriteState getState();
   int getValueCapacity();
-  void resetState();
 
   public interface MapWriter extends BaseWriter{
 
     MaterializedField getField();
-    void checkValueCapacity();
 
     <#list vv.types as type><#list type.minor as minor>
     <#assign lowerName = minor.class?uncap_first />
@@ -83,7 +79,6 @@ public interface BaseWriter extends Positionable{
     void copyReader(FieldReader reader);
     MapWriter rootAsMap();
     ListWriter rootAsList();
-    boolean ok();
     
     public void setPosition(int index);
     public void setValueCount(int count);
