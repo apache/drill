@@ -62,37 +62,44 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class ParquetFormatPlugin implements FormatPlugin{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
+
+  public static final ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
+
+  private static final String DEFAULT_NAME = "parquet";
+
+  private static final List<Pattern> PATTERNS = Lists.newArrayList(
+      Pattern.compile(".*\\.parquet$"),
+      Pattern.compile(".*/" + ParquetFileWriter.PARQUET_METADATA_FILE));
+  private static final List<MagicString> MAGIC_STRINGS = Lists.newArrayList(new MagicString(0, ParquetFileWriter.MAGIC));
 
   private final DrillbitContext context;
-  public static final ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
-  private CodecFactoryExposer codecFactoryExposer;
-  private final DrillFileSystem fs;
+  private final CodecFactoryExposer codecFactoryExposer;
+  private final Configuration fsConf;
   private final ParquetFormatMatcher formatMatcher;
   private final ParquetFormatConfig config;
   private final StoragePluginConfig storageConfig;
   private final String name;
 
-  public ParquetFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig){
-    this(name, context, fs, storageConfig, new ParquetFormatConfig());
+  public ParquetFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
+      StoragePluginConfig storageConfig){
+    this(name, context, fsConf, storageConfig, new ParquetFormatConfig());
   }
 
-  public ParquetFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig, ParquetFormatConfig formatConfig){
+  public ParquetFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
+      StoragePluginConfig storageConfig, ParquetFormatConfig formatConfig){
     this.context = context;
-    this.codecFactoryExposer = new CodecFactoryExposer(fs.getConf());
+    this.codecFactoryExposer = new CodecFactoryExposer(fsConf);
     this.config = formatConfig;
-    this.formatMatcher = new ParquetFormatMatcher(this, fs);
+    this.formatMatcher = new ParquetFormatMatcher(this);
     this.storageConfig = storageConfig;
-    this.fs = fs;
-    this.name = name == null ? "parquet" : name;
+    this.fsConf = fsConf;
+    this.name = name == null ? DEFAULT_NAME : name;
   }
 
-  Configuration getHadoopConfig() {
-    return fs.getConf();
-  }
-
-  public DrillFileSystem getFileSystem() {
-    return fs;
+  @Override
+  public Configuration getFsConf() {
+    return fsConf;
   }
 
   @Override
@@ -155,12 +162,13 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   @Override
   public ParquetGroupScan getGroupScan(FileSelection selection) throws IOException {
-    return new ParquetGroupScan(selection.getFileStatusList(fs), this, selection.selectionRoot, null);
+    return getGroupScan(selection, null);
   }
 
   @Override
   public ParquetGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException {
-    return new ParquetGroupScan(selection.getFileStatusList(fs), this, selection.selectionRoot, columns);
+    final DrillFileSystem dfs = new DrillFileSystem(fsConf);
+    return new ParquetGroupScan(selection.getFileStatusList(dfs), this, selection.selectionRoot, columns);
   }
 
   @Override
@@ -190,20 +198,8 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   private static class ParquetFormatMatcher extends BasicFormatMatcher{
 
-    private final DrillFileSystem fs;
-
-    public ParquetFormatMatcher(ParquetFormatPlugin plugin, DrillFileSystem fs) {
-      super(plugin, fs, //
-          Lists.newArrayList( //
-              Pattern.compile(".*\\.parquet$"), //
-              Pattern.compile(".*/" + ParquetFileWriter.PARQUET_METADATA_FILE) //
-              //
-              ),
-          Lists.newArrayList(new MagicString(0, ParquetFileWriter.MAGIC))
-
-          );
-      this.fs = fs;
-
+    public ParquetFormatMatcher(ParquetFormatPlugin plugin) {
+      super(plugin, PATTERNS, MAGIC_STRINGS);
     }
 
     @Override
@@ -212,17 +208,17 @@ public class ParquetFormatPlugin implements FormatPlugin{
     }
 
     @Override
-    public FormatSelection isReadable(FileSelection selection) throws IOException {
+    public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
       // TODO: we only check the first file for directory reading.  This is because
       if(selection.containsDirectories(fs)){
-        if(isDirReadable(selection.getFirstPath(fs))){
+        if(isDirReadable(fs, selection.getFirstPath(fs))){
           return new FormatSelection(plugin.getConfig(), selection);
         }
       }
-      return super.isReadable(selection);
+      return super.isReadable(fs, selection);
     }
 
-    boolean isDirReadable(FileStatus dir) {
+    boolean isDirReadable(DrillFileSystem fs, FileStatus dir) {
       Path p = new Path(dir.getPath(), ParquetFileWriter.PARQUET_METADATA_FILE);
       try {
         if (fs.exists(p)) {
@@ -235,16 +231,12 @@ public class ParquetFormatPlugin implements FormatPlugin{
           if (files.length == 0) {
             return false;
           }
-          return super.isReadable(files[0]);
+          return super.isReadable(fs, files[0]);
         }
       } catch (IOException e) {
         logger.info("Failure while attempting to check for Parquet metadata file.", e);
         return false;
       }
     }
-
-
-
   }
-
 }

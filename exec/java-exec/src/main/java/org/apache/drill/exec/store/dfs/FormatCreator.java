@@ -31,19 +31,22 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.DrillbitContext;
 
 import com.google.common.collect.Maps;
+import org.apache.hadoop.conf.Configuration;
 
 public class FormatCreator {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatCreator.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatCreator.class);
 
-  static final ConstructorChecker FORMAT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class, FormatPluginConfig.class);
-  static final ConstructorChecker DEFAULT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class);
+  private static final ConstructorChecker FORMAT_BASED = new ConstructorChecker(String.class, DrillbitContext.class,
+      Configuration.class, StoragePluginConfig.class, FormatPluginConfig.class);
+  private static final ConstructorChecker DEFAULT_BASED = new ConstructorChecker(String.class, DrillbitContext.class,
+      Configuration.class, StoragePluginConfig.class);
 
-  static Map<String, FormatPlugin> getFormatPlugins(DrillbitContext context, DrillFileSystem fileSystem, FileSystemConfig storageConfig) {
+  static Map<String, FormatPlugin> getFormatPlugins(DrillbitContext context, Configuration fsConf,
+      FileSystemConfig storageConfig) {
     final DrillConfig config = context.getConfig();
     Map<String, FormatPlugin> plugins = Maps.newHashMap();
 
     Collection<Class<? extends FormatPlugin>> pluginClasses = PathScanner.scanForImplementations(FormatPlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
-
 
     if (storageConfig.formats == null || storageConfig.formats.isEmpty()) {
 
@@ -53,7 +56,7 @@ public class FormatCreator {
             if (!DEFAULT_BASED.check(c)) {
               continue;
             }
-            FormatPlugin plugin = (FormatPlugin) c.newInstance(null, context, fileSystem, storageConfig);
+            FormatPlugin plugin = (FormatPlugin) c.newInstance(null, context, fsConf, storageConfig);
             plugins.put(plugin.getName(), plugin);
           } catch (Exception e) {
             logger.warn(String.format("Failure while trying instantiate FormatPlugin %s.", pluginClass.getName()), e);
@@ -84,7 +87,7 @@ public class FormatCreator {
           continue;
         }
         try {
-          plugins.put(e.getKey(), (FormatPlugin) c.newInstance(e.getKey(), context, fileSystem, storageConfig, e.getValue()));
+          plugins.put(e.getKey(), (FormatPlugin) c.newInstance(e.getKey(), context, fsConf, storageConfig, e.getValue()));
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
           logger.warn("Failure initializing storage config named '{}' of type '{}'.", e.getKey(), e.getValue().getClass().getName(), e1);
         }

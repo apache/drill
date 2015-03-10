@@ -54,38 +54,39 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyFormatPlugin.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyFormatPlugin.class);
 
   private final BasicFormatMatcher matcher;
   private final DrillbitContext context;
   private final boolean readable;
   private final boolean writable;
   private final boolean blockSplittable;
-  private final DrillFileSystem fs;
+  private final Configuration fsConf;
   private final StoragePluginConfig storageConfig;
   protected final FormatPluginConfig formatConfig;
   private final String name;
   protected final CompressionCodecFactory codecFactory;
   private final boolean compressible;
 
-  protected EasyFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig,
-                             T formatConfig, boolean readable, boolean writable, boolean blockSplittable, boolean compressible, List<String> extensions, String defaultName){
-    this.matcher = new BasicFormatMatcher(this, fs, extensions, compressible);
+  protected EasyFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
+      StoragePluginConfig storageConfig, T formatConfig, boolean readable, boolean writable, boolean blockSplittable,
+      boolean compressible, List<String> extensions, String defaultName){
+    this.matcher = new BasicFormatMatcher(this, fsConf, extensions, compressible);
     this.readable = readable;
     this.writable = writable;
     this.context = context;
     this.blockSplittable = blockSplittable;
     this.compressible = compressible;
-    this.fs = fs;
+    this.fsConf = fsConf;
     this.storageConfig = storageConfig;
     this.formatConfig = formatConfig;
     this.name = name == null ? defaultName : name;
-    this.codecFactory = new CompressionCodecFactory(new Configuration(fs.getConf()));
+    this.codecFactory = new CompressionCodecFactory(new Configuration(fsConf));
   }
 
   @Override
-  public DrillFileSystem getFileSystem() {
-    return fs;
+  public Configuration getFsConf() {
+    return fsConf;
   }
 
   @Override
@@ -152,7 +153,13 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     int numParts = 0;
     OperatorContext oContext = new OperatorContext(scan, context,
         false /* ScanBatch is not subject to fragment memory limit */);
-    DrillFileSystem dfs = new DrillFileSystem(fs, oContext.getStats());
+    DrillFileSystem dfs;
+    try {
+      dfs = new DrillFileSystem(fsConf, oContext.getStats());
+    } catch (IOException e) {
+      throw new ExecutionSetupException(String.format("Failed to create FileSystem: %s", e.getMessage()), e);
+    }
+
     for(FileWork work : scan.getWorkUnits()){
       readers.add(getRecordReader(context, dfs, work, scan.getColumns()));
       if (scan.getSelectionRoot() != null) {

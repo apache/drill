@@ -74,7 +74,7 @@ public class TestDrillFileSystem {
     stats.startProcessing();
 
     try {
-      dfs = new DrillFileSystem(FileSystem.get(conf), stats);
+      dfs = new DrillFileSystem(conf, stats);
       is = dfs.open(new Path(tempFilePath));
 
       byte[] buf = new byte[8000];

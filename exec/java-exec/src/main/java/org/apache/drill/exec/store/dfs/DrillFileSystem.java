@@ -96,11 +96,11 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   private final OperatorStats operatorStats;
 
   public DrillFileSystem(Configuration fsConf) throws IOException {
-    this(FileSystem.get(fsConf), null);
+    this(fsConf, null);
   }
 
-  public DrillFileSystem(FileSystem fs, OperatorStats operatorStats) {
-    this.underlyingFs = fs;
+  public DrillFileSystem(Configuration fsConf, OperatorStats operatorStats) throws IOException {
+    this.underlyingFs = FileSystem.get(fsConf);
     this.operatorStats = operatorStats;
   }
 

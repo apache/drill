@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -36,34 +37,32 @@ import com.google.common.collect.Range;
 public class BasicFormatMatcher extends FormatMatcher{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicFormatMatcher.class);
 
-  private final List<Pattern> patterns;
-  private final MagicStringMatcher matcher;
-  protected final DrillFileSystem fs;
   protected final FormatPlugin plugin;
   protected final boolean compressible;
   protected final CompressionCodecFactory codecFactory;
 
-  public BasicFormatMatcher(FormatPlugin plugin, DrillFileSystem fs, List<Pattern> patterns, List<MagicString> magicStrings) {
+  private final List<Pattern> patterns;
+  private final MagicStringMatcher matcher;
+
+  public BasicFormatMatcher(FormatPlugin plugin, List<Pattern> patterns, List<MagicString> magicStrings) {
     super();
     this.patterns = ImmutableList.copyOf(patterns);
     this.matcher = new MagicStringMatcher(magicStrings);
-    this.fs = fs;
     this.plugin = plugin;
     this.compressible = false;
     this.codecFactory = null;
   }
 
-  public BasicFormatMatcher(FormatPlugin plugin, DrillFileSystem fs, List<String> extensions, boolean compressible) {
+  public BasicFormatMatcher(FormatPlugin plugin, Configuration fsConf, List<String> extensions, boolean compressible) {
     List<Pattern> patterns = Lists.newArrayList();
     for (String extension : extensions) {
       patterns.add(Pattern.compile(".*\\." + extension));
     }
     this.patterns = patterns;
     this.matcher = new MagicStringMatcher(new ArrayList<MagicString>());
-    this.fs = fs;
     this.plugin = plugin;
     this.compressible = compressible;
-    this.codecFactory = new CompressionCodecFactory(fs.getConf());
+    this.codecFactory = new CompressionCodecFactory(fsConf);
   }
 
   @Override
@@ -72,8 +71,8 @@ public class BasicFormatMatcher extends FormatMatcher{
   }
 
   @Override
-  public FormatSelection isReadable(FileSelection selection) throws IOException {
-    if (isReadable(selection.getFirstPath(fs))) {
+  public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
+    if (isReadable(fs, selection.getFirstPath(fs))) {
       if (plugin.getName() != null) {
         NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
         namedConfig.name = plugin.getName();
@@ -85,7 +84,7 @@ public class BasicFormatMatcher extends FormatMatcher{
     return null;
   }
 
-  protected final boolean isReadable(FileStatus status) throws IOException {
+  protected final boolean isReadable(DrillFileSystem fs, FileStatus status) throws IOException {
     CompressionCodec codec = null;
     if (compressible) {
       codec = codecFactory.getCodec(status.getPath());
@@ -103,7 +102,7 @@ public class BasicFormatMatcher extends FormatMatcher{
       }
     }
 
-    if (matcher.matches(status)) {
+    if (matcher.matches(fs, status)) {
       return true;
     }
     return false;
@@ -128,7 +127,7 @@ public class BasicFormatMatcher extends FormatMatcher{
       }
     }
 
-    public boolean matches(FileStatus status) throws IOException{
+    public boolean matches(DrillFileSystem fs, FileStatus status) throws IOException{
       if (ranges.isEmpty()) {
         return false;
       }

@@ -124,7 +124,7 @@ public class ControlHandlerImpl implements ControlMessageHandler {
     try {
       // we either need to start the fragment if it is a leaf fragment, or set up a fragment manager if it is non leaf.
       if (fragment.getLeafFragment()) {
-        final FragmentContext context = new FragmentContext(drillbitContext, fragment, null,
+        final FragmentContext context = new FragmentContext(drillbitContext, fragment,
             drillbitContext.getFunctionImplementationRegistry());
         final ControlTunnel tunnel = drillbitContext.getController().getTunnel(fragment.getForeman());
         final NonRootStatusReporter listener = new NonRootStatusReporter(context, tunnel);

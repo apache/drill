@@ -44,6 +44,7 @@ import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
@@ -52,14 +53,14 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFactory<String, DrillTable> {
+public class WorkspaceSchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private final List<FormatMatcher> fileMatchers;
   private final List<FormatMatcher> dirMatchers;
 
   private final WorkspaceConfig config;
-  private final DrillFileSystem fs;
+  private final Configuration fsConf;
   private final DrillConfig drillConfig;
   private final String storageEngineName;
   private final String schemaName;
@@ -67,9 +68,9 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   private final ObjectMapper mapper;
 
   public WorkspaceSchemaFactory(DrillConfig drillConfig, FileSystemPlugin plugin, String schemaName,
-      String storageEngineName, DrillFileSystem fileSystem, WorkspaceConfig config,
-      List<FormatMatcher> formatMatchers) throws ExecutionSetupException, IOException {
-    this.fs = fileSystem;
+      String storageEngineName, WorkspaceConfig config, List<FormatMatcher> formatMatchers)
+    throws ExecutionSetupException, IOException {
+    this.fsConf = plugin.getFsConf();
     this.plugin = plugin;
     this.drillConfig = drillConfig;
     this.config = config;
@@ -95,7 +96,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
             defaultInputFormat, storageEngineName, schemaName);
         throw new ExecutionSetupException(message);
       }
-      final FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin, fs,
+      final FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin,
           ImmutableList.of(Pattern.compile(".*")), ImmutableList.<MagicString>of());
       fileMatchers.add(fallbackMatcher);
     }
@@ -105,53 +106,20 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     return DotDrillType.VIEW.getPath(config.getLocation(), name);
   }
 
-  public WorkspaceSchema createSchema(List<String> parentSchemaPath, UserSession session) {
+  public WorkspaceSchema createSchema(List<String> parentSchemaPath, UserSession session) throws IOException {
     return new WorkspaceSchema(parentSchemaPath, schemaName, session);
   }
 
-  @Override
-  public DrillTable create(String key) {
-    try {
+  public class WorkspaceSchema extends AbstractSchema implements ExpandingConcurrentMap.MapValueFactory<String, DrillTable> {
+    private final ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<>(this);
+    private final UserSession session;
+    private final DrillFileSystem fs;
 
-      FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key);
-      if (fileSelection == null) {
-        return null;
-      }
-
-      if (fileSelection.containsDirectories(fs)) {
-        for (FormatMatcher m : dirMatchers) {
-          try {
-            Object selection = m.isReadable(fileSelection);
-            if (selection != null) {
-              return new DynamicDrillTable(plugin, storageEngineName, selection);
-            }
-          } catch (IOException e) {
-            logger.debug("File read failed.", e);
-          }
-        }
-        fileSelection = fileSelection.minusDirectories(fs);
-      }
-
-      for (FormatMatcher m : fileMatchers) {
-        Object selection = m.isReadable(fileSelection);
-        if (selection != null) {
-          return new DynamicDrillTable(plugin, storageEngineName, selection);
-        }
-      }
-      return null;
-
-    } catch (IOException e) {
-      logger.debug("Failed to create DrillTable with root {} and name {}", config.getLocation(), key, e);
+    public WorkspaceSchema(List<String> parentSchemaPath, String wsName, UserSession session) throws IOException {
+      super(parentSchemaPath, wsName);
+      this.session = session;
+      this.fs = new DrillFileSystem(fsConf);
     }
-
-    return null;
-  }
-
-  @Override
-  public void destroy(DrillTable value) {
-  }
-
-  public class WorkspaceSchema extends AbstractSchema {
 
     public boolean createView(View view) throws Exception {
       Path viewPath = getViewPath(view.getName());
@@ -184,15 +152,6 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
     public void dropView(String viewName) throws IOException {
       fs.delete(getViewPath(viewName), false);
-    }
-
-    private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<>(WorkspaceSchemaFactory.this);
-
-    private UserSession session;
-
-    public WorkspaceSchema(List<String> parentSchemaPath, String name, UserSession session) {
-      super(parentSchemaPath, name);
-      this.session = session;
     }
 
     private Set<String> getViews() {
@@ -281,6 +240,48 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     @Override
     public String getTypeName() {
       return FileSystemConfig.NAME;
+    }
+
+    @Override
+    public DrillTable create(String key) {
+      try {
+
+        FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key);
+        if (fileSelection == null) {
+          return null;
+        }
+
+        if (fileSelection.containsDirectories(fs)) {
+          for (FormatMatcher m : dirMatchers) {
+            try {
+              Object selection = m.isReadable(fs, fileSelection);
+              if (selection != null) {
+                return new DynamicDrillTable(plugin, storageEngineName, selection);
+              }
+            } catch (IOException e) {
+              logger.debug("File read failed.", e);
+            }
+          }
+          fileSelection = fileSelection.minusDirectories(fs);
+        }
+
+        for (FormatMatcher m : fileMatchers) {
+          Object selection = m.isReadable(fs, fileSelection);
+          if (selection != null) {
+            return new DynamicDrillTable(plugin, storageEngineName, selection);
+          }
+        }
+        return null;
+
+      } catch (IOException e) {
+        logger.debug("Failed to create DrillTable with root {} and name {}", config.getLocation(), key, e);
+      }
+
+      return null;
+    }
+
+    @Override
+    public void destroy(DrillTable value) {
     }
   }
 }

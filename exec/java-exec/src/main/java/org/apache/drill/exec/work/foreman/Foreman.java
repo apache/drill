@@ -348,7 +348,7 @@ public class Foreman implements Runnable {
     injector.injectPause(queryContext.getExecutionControls(), "pause-run-plan", logger);
 
     // set up the root fragment first so we'll have incoming buffers available.
-    setupRootFragment(rootPlanFragment, initiatingClient, work.getRootOperator());
+    setupRootFragment(rootPlanFragment, work.getRootOperator());
 
     setupNonRootFragments(planFragments);
     drillbitContext.getAllocator().resetFragmentLimits(); // TODO a global effect for this query?!?
@@ -791,15 +791,14 @@ public class Foreman implements Runnable {
    * Set up the root fragment (which will run locally), and submit it for execution.
    *
    * @param rootFragment
-   * @param rootClient
    * @param rootOperator
    * @throws ExecutionSetupException
    */
-  private void setupRootFragment(final PlanFragment rootFragment, final UserClientConnection rootClient,
-      final FragmentRoot rootOperator) throws ExecutionSetupException {
+  private void setupRootFragment(final PlanFragment rootFragment, final FragmentRoot rootOperator)
+      throws ExecutionSetupException {
     @SuppressWarnings("resource")
-    final FragmentContext rootContext = new FragmentContext(drillbitContext, rootFragment, rootClient,
-        drillbitContext.getFunctionImplementationRegistry());
+    final FragmentContext rootContext = new FragmentContext(drillbitContext, rootFragment, queryContext,
+        initiatingClient, drillbitContext.getFunctionImplementationRegistry());
     @SuppressWarnings("resource")
     final IncomingBuffers buffers = new IncomingBuffers(rootOperator, rootContext);
     rootContext.setBuffers(buffers);

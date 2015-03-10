@@ -56,7 +56,7 @@ public class NonRootFragmentManager implements FragmentManager {
     try {
       this.fragment = fragment;
       this.root = context.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
-      this.context = new FragmentContext(context, fragment, null, context.getFunctionImplementationRegistry());
+      this.context = new FragmentContext(context, fragment, context.getFunctionImplementationRegistry());
       this.buffers = new IncomingBuffers(root, this.context);
       final StatusReporter reporter = new NonRootStatusReporter(this.context, context.getController().getTunnel(
           fragment.getForeman()));

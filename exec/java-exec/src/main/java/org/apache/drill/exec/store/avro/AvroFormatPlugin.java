@@ -31,6 +31,7 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,13 +41,13 @@ import java.util.List;
  */
 public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
 
-  public AvroFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs,
+  public AvroFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
                           StoragePluginConfig storagePluginConfig) {
-    this(name, context, fs, storagePluginConfig, new AvroFormatConfig());
+    this(name, context, fsConf, storagePluginConfig, new AvroFormatConfig());
   }
 
-  public AvroFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig config, AvroFormatConfig formatPluginConfig) {
-    super(name, context, fs, config, formatPluginConfig, true, false, false, false, Lists.newArrayList("avro"), "avro");
+  public AvroFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, AvroFormatConfig formatPluginConfig) {
+    super(name, context, fsConf, config, formatPluginConfig, true, false, false, false, Lists.newArrayList("avro"), "avro");
   }
 
   @Override

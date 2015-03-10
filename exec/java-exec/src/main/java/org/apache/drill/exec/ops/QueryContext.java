@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.ops;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import io.netty.buffer.DrillBuf;
@@ -46,7 +47,7 @@ import org.apache.drill.exec.testing.ExecutionControls;
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
 public class QueryContext implements AutoCloseable, UdfUtilities {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
 
   private final DrillbitContext drillbitContext;
   private final UserSession session;
@@ -113,9 +114,15 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
   }
 
   public SchemaPlus getRootSchema() {
-    final SchemaPlus rootSchema = SimpleOptiqSchema.createRootSchema(false);
-    drillbitContext.getSchemaFactory().registerSchemas(session, rootSchema);
-    return rootSchema;
+    try {
+      final SchemaPlus rootSchema = SimpleOptiqSchema.createRootSchema(false);
+      drillbitContext.getSchemaFactory().registerSchemas(session, rootSchema);
+      return rootSchema;
+    } catch(IOException e) {
+      final String errMsg = String.format("Failed to create schema tree: %s", e.getMessage());
+      logger.error(errMsg, e);
+      throw new DrillRuntimeException(errMsg, e);
+    }
   }
 
   public OptionManager getOptions() {

@@ -82,7 +82,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void registerSchemas(UserSession session, SchemaPlus parent) {
+  public void registerSchemas(UserSession session, SchemaPlus parent) throws IOException {
     schemaFactory.registerSchemas(session, parent);
   }
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {

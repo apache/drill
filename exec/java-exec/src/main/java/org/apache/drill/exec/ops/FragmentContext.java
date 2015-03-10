@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
@@ -64,7 +63,8 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   private final Map<DrillbitEndpoint, AccountingDataTunnel> tunnels = Maps.newHashMap();
   private final DrillbitContext context;
-  private final UserClientConnection connection; // is null if attached to non-root fragment
+  private final UserClientConnection connection; // is null if this context is for non-root fragment
+  private final QueryContext queryContext; // is null if this context is for non-root fragment
   private final FragmentStats stats;
   private final FunctionImplementationRegistry funcRegistry;
   private final BufferAllocator allocator;
@@ -87,10 +87,34 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   private final RpcOutcomeListener<Ack> statusHandler = new StatusHandler(exceptionConsumer, sendingAccountor);
   private final AccountingUserConnection accountingUserConnection;
 
+  /**
+   * Create a FragmentContext instance for non-root fragment.
+   *
+   * @param dbContext DrillbitContext.
+   * @param fragment Fragment implementation.
+   * @param funcRegistry FunctionImplementationRegistry.
+   * @throws ExecutionSetupException
+   */
   public FragmentContext(final DrillbitContext dbContext, final PlanFragment fragment,
+      final FunctionImplementationRegistry funcRegistry) throws ExecutionSetupException {
+    this(dbContext, fragment, null, null, funcRegistry);
+  }
+
+  /**
+   * Create a FragmentContext instance for root fragment.
+   *
+   * @param dbContext DrillbitContext.
+   * @param fragment Fragment implementation.
+   * @param queryContext QueryContext.
+   * @param connection UserClientConnection.
+   * @param funcRegistry FunctionImplementationRegistry.
+   * @throws ExecutionSetupException
+   */
+  public FragmentContext(final DrillbitContext dbContext, final PlanFragment fragment, final QueryContext queryContext,
       final UserClientConnection connection, final FunctionImplementationRegistry funcRegistry)
     throws ExecutionSetupException {
     this.context = dbContext;
+    this.queryContext = queryContext;
     this.connection = connection;
     this.accountingUserConnection = new AccountingUserConnection(connection, sendingAccountor, statusHandler);
     this.fragment = fragment;
@@ -128,6 +152,15 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     bufferManager = new BufferManager(this.allocator, this);
   }
 
+  /**
+   * TODO: Remove this constructor when removing the SimpleRootExec (DRILL-2097). This is kept only to avoid modifying
+   * the long list of test files.
+   */
+  public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
+      FunctionImplementationRegistry funcRegistry) throws ExecutionSetupException {
+    this(dbContext, fragment, null, connection, funcRegistry);
+  }
+
   public OptionManager getOptions() {
     return fragmentOptions;
   }
@@ -162,15 +195,13 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   }
 
   public SchemaPlus getRootSchema() {
-    if (connection == null) {
+    if (queryContext == null) {
       fail(new UnsupportedOperationException("Schema tree can only be created in root fragment. " +
           "This is a non-root fragment."));
       return null;
     }
 
-    final SchemaPlus root = SimpleOptiqSchema.createRootSchema(false);
-    context.getStorage().getSchemaFactory().registerSchemas(connection.getSession(), root);
-    return root;
+    return queryContext.getRootSchema();
   }
 
   /**

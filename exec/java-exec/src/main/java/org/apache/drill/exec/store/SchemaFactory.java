@@ -21,8 +21,10 @@ import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.exec.rpc.user.UserSession;
 
+import java.io.IOException;
+
 public interface SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaFactory.class);
 
-  public void registerSchemas(UserSession session, SchemaPlus parent);
+  public void registerSchemas(UserSession session, SchemaPlus parent) throws IOException;
 }
