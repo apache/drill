@@ -82,7 +82,8 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
     for(AggregateCall aggregateCall : aggregate.getAggCallList()) {
       if(aggregateCall.getAggregation() instanceof SqlSingleValueAggFunction) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-            "1937", "Non-scalar sub-query used in an expression");
+            "Non-scalar sub-query used in an expression\n" +
+            "See Apache Drill JIRA: DRILL-1937");
         throw new UnsupportedOperationException();
       }
     }
@@ -147,7 +148,8 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
       for(RelDataTypeField dataField : child.getRowType().getFieldList()) {
         if(dataField.getName().contains(StarColumnHelper.STAR_COLUMN)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
-            "2414", "Union-all over schema-less tables must specify the columns explicitly");
+              "Union-All over schema-less tables must specify the columns explicitly\n" +
+              "See Apache Drill JIRA: DRILL-2414");
           throw new UnsupportedOperationException();
         }
       }

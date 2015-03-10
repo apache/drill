@@ -24,7 +24,6 @@ import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 
 public class UnsupportedOperatorCollector {
   private SqlUnsupportedException.ExceptionType exceptionType;
-  private String jiraNumber;
   private String message;
 
   public UnsupportedOperatorCollector() {
@@ -35,13 +34,13 @@ public class UnsupportedOperatorCollector {
     switch (exceptionType) {
       case RELATIONAL:
         clean();
-        throw new UnsupportedRelOperatorException(jiraNumber, message);
+        throw new UnsupportedRelOperatorException(message);
       case DATA_TYPE:
         clean();
-        throw new UnsupportedDataTypeException(jiraNumber, message);
+        throw new UnsupportedDataTypeException(message);
       case FUNCTION:
         clean();
-        throw new UnsupportedFunctionException(jiraNumber, message);
+        throw new UnsupportedFunctionException(message);
       default:
         break;
     }
@@ -49,21 +48,20 @@ public class UnsupportedOperatorCollector {
     return false;
   }
 
-  public void setException(SqlUnsupportedException.ExceptionType exceptionType, String jiraNumber, String message) {
+  public void setException(SqlUnsupportedException.ExceptionType exceptionType, String message) {
     if(this.exceptionType != SqlUnsupportedException.ExceptionType.NONE) {
       throw new IllegalStateException("Exception was set already");
     }
 
     this.exceptionType = exceptionType;
-    this.jiraNumber = jiraNumber;
     this.message = message;
   }
 
   public void setException(SqlUnsupportedException.ExceptionType exceptionType) {
-    setException(exceptionType, "", "");
+    setException(exceptionType, "");
   }
 
-   public void clean() {
+  public void clean() {
       exceptionType = SqlUnsupportedException.ExceptionType.NONE;
     }
 }
