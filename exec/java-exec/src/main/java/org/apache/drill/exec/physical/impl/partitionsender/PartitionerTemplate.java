@@ -39,7 +39,6 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.FragmentWritableBatch;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -94,9 +93,6 @@ public abstract class PartitionerTemplate implements Partitioner {
     }
 
     for (MinorFragmentEndpoint destination : popConfig.getDestinations()) {
-      FragmentHandle opposite = context.getHandle().toBuilder()
-          .setMajorFragmentId(popConfig.getOppositeMajorFragmentId())
-          .setMinorFragmentId(destination.getId()).build();
       outgoingBatches.add(new OutgoingRecordBatch(stats, sendingAccountor, popConfig,
           context.getDataTunnel(destination.getEndpoint()), context, oContext.getAllocator(), destination.getId(), statusHandler));
     }
@@ -185,16 +181,6 @@ public abstract class PartitionerTemplate implements Partitioner {
     for (OutgoingRecordBatch outgoingRecordBatch : outgoingBatches) {
       outgoingRecordBatch.clear();
     }
-  }
-
-  private String composeTooBigMsg(int recordId, RecordBatch incoming) {
-    String msg = String.format("Record " + recordId + " is too big to fit into the allocated memory of ValueVector.");
-    msg += " Schema: ";
-    for (int i = 0; i < incoming.getSchema().getFieldCount(); i++) {
-      MaterializedField f = incoming.getSchema().getColumn(i);
-      msg += f.getPath().getRootSegment().getPath() + " ";
-    }
-    return msg;
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") OutgoingRecordBatch[] outgoing) throws SchemaChangeException;

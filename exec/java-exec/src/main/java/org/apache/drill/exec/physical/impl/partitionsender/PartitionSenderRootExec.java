@@ -98,6 +98,8 @@ public class PartitionSenderRootExec extends BaseRootExec {
     this.statusHandler = new StatusHandler(sendCount, context);
     this.remainingReceivers = new AtomicIntegerArray(outGoingBatchCount);
     this.remaingReceiverCount = new AtomicInteger(outGoingBatchCount);
+
+    stats.setLongStat(Metric.N_RECEIVERS, outGoingBatchCount);
   }
 
   @Override
@@ -223,19 +225,18 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
   }
 
-  public void updateStats(List<? extends PartitionOutgoingBatch> outgoing) {
-    long records = 0;
+  /**
+   * Find min and max record count seen across the outgoing batches and put them in stats.
+   * @param outgoing
+   */
+  private void updateAggregateStats(List<? extends PartitionOutgoingBatch> outgoing) {
     for (PartitionOutgoingBatch o : outgoing) {
       long totalRecords = o.getTotalRecords();
       minReceiverRecordCount = Math.min(minReceiverRecordCount, totalRecords);
       maxReceiverRecordCount = Math.max(maxReceiverRecordCount, totalRecords);
-      records += totalRecords;
     }
-    stats.addLongStat(Metric.BATCHES_SENT, 1);
-    stats.addLongStat(Metric.RECORDS_SENT, records);
     stats.setLongStat(Metric.MIN_RECORDS, minReceiverRecordCount);
     stats.setLongStat(Metric.MAX_RECORDS, maxReceiverRecordCount);
-    stats.setLongStat(Metric.N_RECEIVERS, outgoing.size());
   }
 
   @Override
@@ -254,6 +255,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
     logger.debug("Partition sender stopping.");
     ok = false;
     if (partitioner != null) {
+      updateAggregateStats(partitioner.getOutgoingBatches());
       partitioner.clear();
     }
     sendCount.waitForSendComplete();
@@ -287,6 +289,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
       }
       sendCount.increment();
     }
+    stats.addLongStat(Metric.BATCHES_SENT, 1);
   }
-
 }
