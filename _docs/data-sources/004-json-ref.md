@@ -70,7 +70,7 @@ When you set this option, Drill reads all data from the JSON files as VARCHAR. A
 * Cast JSON numeric values to [SQL types](/docs/data-types), such as BIGINT, DECIMAL, FLOAT, INTEGER, and SMALLINT.
 * Cast JSON strings to [Drill Date/Time Data Type Formats](/docs/supported-date-time-data-type-formats).
 
-Drill uses [map and array data types](/docs/data-types) internally for reading and writing complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] (/docs/lession-2-run-queries-with-ansi-sql). “Query Complex Data” shows how to access nested arrays, for example.
+Drill uses [map and array data types](/docs/data-types) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] (/docs/lession-2-run-queries-with-ansi-sql). “Query Complex Data” shows how to access nested arrays.
 
 ## Reading JSON
 To read JSON data using Drill, use a [file system storage plugin](/docs/connect-to-a-data-source) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 
@@ -496,6 +496,7 @@ Workaround: Set the `store.json.all_text_mode` property, described earlier, to t
 Drill currently returns only fields common to all the files in a [directory query](/docs/lesson-3-create-a-storage-plugin#query-multiple-files-in-a-directory) that selects all (SELECT *) JSON files.
 
 Workaround: Query each file individually.
+
 
 
 

@@ -24,7 +24,7 @@ In this tutorial you query a number of data sets, including Hive and HBase, and 
 
 ## Storage Plugin Overview
 This section describes storage plugins included in the sandbox. For general information about Drill storage plugins, see ["Connect to a Data Source"](/docs/connect-to-data-sources).
-Take a look at the pre-configured storage plugins for the sandbox by opening the Storage tab in the Drill Web UI. Launch a web browser and go to: `http://<IP address of the sandbox>:8047/storage`. For example:
+Take a look at the pre-configured storage plugins for the sandbox by opening the Storage tab in the Drill Web UI. Launch a web browser and go to: `http://<IP address>:8047/storage`. For example:
 
     http://localhost:8046/storage
 

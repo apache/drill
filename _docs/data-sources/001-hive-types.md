@@ -5,7 +5,7 @@ parent: "Data Sources and File Formats"
 Using Drill you can read tables created in Hive that use data types compatible with Drill. Drill currently does not support writing Hive tables. The following table shows Drill support for Hive primitive types:
 <table>
   <tr>
-    <th>SQL Type</th>
+    <th>Supported SQL Type</th>
     <th>Hive Type</th>
     <th>Drill Description</th>
   </tr>
@@ -80,25 +80,16 @@ Using Drill you can read tables created in Hive that use data types compatible w
     <td>Conventional UNIX Epoch timestamp.</td>
   </tr>
   <tr>
-    <td>N/A</td>
+    <td>None</td>
     <td>TIMESTAMP</td>
     <td>JDBC timestamp in yyyy-mm-dd hh:mm:ss format</td>
   </tr>
   <tr>
-    <td>TIMESTAMPTZ</td>
-    <td>N/A</td>
-    <td>Hours ahead of or behind Coordinated Universal Time (UTC) or regional hours and minutes</td>
-  </tr>
-  <tr>
-    <td>N/A</td>
+    <td>None</td>
     <td>STRING</td>
     <td>Binary string (16)</td>
   </tr>
-  <tr>
-    <td>BINARY</td>
-    <td>BINARY</td>
-    <td>Binary string</td>
-  </tr>
+  
   <tr>
     <td>VARCHAR</td>
     <td>VARCHAR</td>
@@ -120,7 +111,7 @@ The Hive version used in MapR supports the Hive timestamp in Unix Epoch format. 
 ## Type Mapping Example
 This example demonstrates the mapping of Hive data types to Drill data types. Using a CSV that has the following contents, you create a Hive table having values of different supported types:
 
-     100005,true,3.5,-1231.4,3.14,42,"SomeText",2015-03-25,2015-03-25 01:23:15 
+     8223372036854775807,true,3.5,-1231.4,3.14,42,"SomeText",2015-03-25,2015-03-25 01:23:15 
 
 The example assumes that the CSV resides on the MapR file system (MapRFS) in the Drill sandbox: `/mapr/demo.mapr.com/data/`
  
@@ -144,7 +135,7 @@ You check that Hive mapped the data from the CSV to the typed values as as expec
 
     hive> SELECT * FROM types_demo;
     OK
-    100005	true	3.5	-1231.4	3.14	42	"SomeText"	2015-03-25   2015-03-25 01:23:15
+    8223372036854775807	true	3.5	-1231.4	3.14	42	"SomeText"	2015-03-25   2015-03-25 01:23:15
     Time taken: 0.524 seconds, Fetched: 1 row(s)
 
 In Drill, you use the Hive storage plugin that has the following definition.
@@ -171,11 +162,11 @@ Using the Hive storage plugin connects Drill to the Hive metastore containing th
 The data in the Hive table shows the expected values.
 	
 	0: jdbc:drill:> SELECT * FROM hive.`types_demo`;
-	+--------+------+------+---------+------+----+------------+------------+-----------+
-	|   a    |   b  |  c   |     d   |  e   | f  |     g      |     h      |     i     |
-	+------------+---------+---------+------+----+------------+------------+-----------+
-	| 100005 | true | 3.50 | -1231.4 | 3.14 | 42 | "SomeText" | 2015-03-25 | 2015-03-25 01:23:15.0 |
-	+--------+------+------+---------+------+----+------------+------------+-----------+
+	+---------------------+------+------+---------+------+----+------------+------------+-----------+
+	|   a                 |   b  |  c   |     d   |  e   | f  |     g      |     h      |     i     |
+	+---------------------+---------+---------+------+----+------------+------------+-----------+
+	| 8223372036854775807 | true | 3.50 | -1231.4 | 3.14 | 42 | "SomeText" | 2015-03-25 | 2015-03-25 01:23:15.0 |
+	+---------------------+------+------+---------+------+----+------------+------------+-----------+
 	1 row selected (1.262 seconds)
 	
 To validate that Drill interprets the timestamp in column i correctly, use the extract function to extract part of the date:

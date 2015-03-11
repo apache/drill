@@ -1,7 +1,8 @@
 ---
 title: "Connect to a Data Source"
 ---
-A storage plugin is an interface for connecting to a data source to read and write data. Apache Drill connects to a data source, such as a file on the file system or a Hive metastore, through a storage plugin. When you execute a query, Drill gets the plugin name you provide in FROM clause of your query. 
+A storage plugin is an interface for connecting to a data source to read and write data. Apache Drill connects to a data source, such as a file on the file system or a Hive metastore, through a storage plugin. When you execute a query, Drill gets the plugin name you provide in FROM clause of your query or from the default you specify in the USE.<plugin name> command that precedes the query.
+. 
 
 In addition to the connection string, the storage plugin configures the workspace and file formats for reading and writing data, as described in subsequent sections. 
 
@@ -18,8 +19,7 @@ A storage plugin provides the following information to Drill:
   * Interfaces that Drill can use to read from and write to data sources
   * A set of storage plugin optimization rules that assist with efficient and faster execution of Drill queries, such as pushdowns, statistics, and partition awareness
 
-A storage plugin performs scanner and writer functions, and informs the metadata
-repository of any known metadata, such as:
+A storage plugin performs scanner and writer functions, and informs the metadata repository of any known metadata. The metadata repository is a database created to store metadata. The metadata is information about the structures that contain the actual data, such as:
 
   * Schema
   * File size

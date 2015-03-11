@@ -3,10 +3,13 @@ title: "Lexical Structure"
 parent: "SQL Reference"
 ---
 
-A SQL statement used in Drill can include the following parts:
+A SQL statement used in Drill can include one or more of the following parts:
 
-* [Storage plugin and workspace references](/docs/lexical-structure#storage-plugin-and-workspace-references)
-* Literal values
+* Clause, such as FROM
+* Command, such as SELECT 
+* Expression, a combination of one or more values, operators, and SQL functions that evaluates to a value. For example, users.firstname is a period expression
+* Function, scalar and aggregate, such as sum
+* Literal value
 
   * [Boolean](/docs/lexical-structure#boolean)
   * [Identifier](/docs/lexical-structure#identifier)
@@ -14,11 +17,12 @@ A SQL statement used in Drill can include the following parts:
   * [Numeric constant](/docs/lexical-structure#numeric-constant)
   * [String](/docs/lexical-structure#string)
 
-* Expressions, such as t.metric * 3.1415927
-* Functions, such as count(*)
-* Names of commands and clauses, such as `SELECT * FROM myfile WHERE a > b`.
+* Operator, such as [NOT] IN, LIKE, and AND
+* Predicate, such as a > b in `SELECT * FROM myfile WHERE a > b`.
+* [Storage plugin and workspace reference](/docs/lexical-structure#storage-plugin-and-workspace-references)
+* Whitespace
 
-The upper/lowercase sensitivity of the parts differ.
+The upper/lowercase sensitivity of the parts differs.
 
 ## Case-sensitivity
 
@@ -30,7 +34,7 @@ The sys.options table name and values are case-sensitive. The following query wo
 
     SELECT * FROM sys.options where NAME like '%parquet%';
 
-When using the ALTER command, specify the name lower case. For example:
+When using the ALTER command, specify the name in lower case. For example:
 
     ALTER SESSION  set `store.parquet.compression`='snappy';
 
@@ -40,7 +44,7 @@ Storage plugin and workspace names are case-sensitive. The case of the name used
 
     SELECT * FROM dfs.`/Users/drilluser/ticket_sales.json`;
 
-## Literal values
+## Literal Values
 
 This section describes how to construct literals.
 
@@ -53,7 +57,7 @@ An identifier is a letter followed by any sequence of letters, digits, or the un
 * Keywords
 * Identifiers that SQL cannot parse. 
 
-For example, you enclose the SQL keywords date and time in back ticks in the example in section, ["Example: Read JSON, Write Parquet"](/docs/parquet-format#example-read-json-write-parquet):
+For example, enclose the SQL keywords date and time in back ticks when referring to column names, but not when referring to data types:
 
     CREATE TABLE dfs.tmp.sampleparquet AS 
     (SELECT trans_id, 
@@ -65,7 +69,7 @@ For example, you enclose the SQL keywords date and time in back ticks in the exa
 
 Table and column names are case-insensitive. Use back ticks to enclose names that contain special characters. Special characters are those other than the 52 Latin alphabet characters. For example, space and @ are special characters. 
 
-The following example shows the keyword Year and the column alias "Customer Number" enclosed in back ticks. The column alias contains the special space character.
+The following example shows the keyword Year enclosed in back ticks. Because the column alias contains the special space character, also enclose the alias in back ticks, as shown in the following example:
 
     SELECT extract(year from transdate) AS `Year`, t.user_info.cust_id AS `Customer Number` FROM dfs.tmp.`sampleparquet` t;
 
@@ -130,7 +134,7 @@ Strings are characters enclosed in single quotation marks. To use a single quota
     +------------+
     2 rows selected (0.053 seconds)
 
-To refer to the string Martha's Vineyard in a query, use single quotation marks to enclose the string. and escape the apostophe using a single quotation mark:
+To refer to the string Martha's Vineyard in a query, use single quotation marks to enclose the string and escape the apostophe using a single quotation mark:
 
     SELECT * FROM dfs.`/Users/drilluser/vitalstat.json` t 
     WHERE t.source = 'Martha''s Vineyard';

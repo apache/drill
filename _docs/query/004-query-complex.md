@@ -43,7 +43,7 @@ The examples in this section operate on JSON data files. In order to write
 your own queries, you need to be aware of the basic data types in these files:
 
   * string (all data inside double quotes), such as `"0001"` or `"Cake"`
-  * numeric types: integers, decimals, and floats, such as `0.55` or `10`
+  * number: integers, decimals, and floats, such as `0.55` or `10`
   * null values
   * boolean values: true, false
 

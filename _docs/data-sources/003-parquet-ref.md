@@ -16,13 +16,13 @@ Apache Drill includes the following support for Parquet:
 * Querying self-describing data in files or NoSQL databases without having to define and manage schema overlay definitions in centralized metastores
 * Creating Parquet files from other file formats, such as JSON, without any set up
 * Generating Parquet files that have evolving or changing schemas and querying the data on the fly
-* Handling Parquet scalar and complex data types, such as maps and arrays
+* Handling Parquet data types
 
 ### Reading Parquet Files
 When a read of Parquet data occurs, Drill loads only the necessary columns of data, which reduces I/O. Reading only a small piece of the Parquet data from a data file or table, Drill can examine and analyze all values for a column across multiple files. You can create a Drill table from one format and store the data in another format, including Parquet.
 
 ### Writing Parquet Files
-CTAS can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
+CREATE TABLE AS SELECT (CTAS) can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
 
 Although the data resides in a single table, Parquet output generally consists of multiple files that resemble MapReduce output having numbered file names,  such as 0_0_0.parquet in a directory.
 
@@ -56,7 +56,7 @@ The following general process converts a file from JSON to Parquet:
 * Create or use an existing storage plugin that specifies the storage location of the Parquet file, mutability of the data, and supported file formats.
 * Take a look at the JSON data. 
 * Create a table that selects the JSON file.
-* In the CTAS command, cast JSON string data to corresponding SQL types.
+* In the CTAS command, cast JSON string data to corresponding [SQL types](/docs/json-data-model/data-type-mapping).
 
 ### Example: Read JSON, Write Parquet
 This example demonstrates a storage plugin definition, a sample row of data from a JSON file, and a Drill query that writes the JSON input to Parquet output. 
@@ -65,7 +65,7 @@ This example demonstrates a storage plugin definition, a sample row of data from
 You can use the default dfs storage plugin installed with Drill for reading and writing Parquet files. The storage plugin needs to configure the writable option of the workspace to true, so Drill can write the Parquet output. The dfs storage plugin defines the tmp writable workspace, which you can use in the CTAS command to create a Parquet table.
 
 #### Sample Row of JSON Data
-A JSON file contains data consisting of strings, typical of JSON data. The following example shows one row of the JSON file:
+A JSON file called sample.json contains data consisting of strings, typical of JSON data. The following example shows one row of the JSON file:
 
         {"trans_id":0,"date":"2013-07-26","time":"04:56:59","amount":80.5,"user_info":
           {"cust_id":28,"device":"WEARABLE2","state":"mt"
@@ -80,7 +80,7 @@ A JSON file contains data consisting of strings, typical of JSON data. The follo
               
 
 #### CTAS Query      
-The following example shows a CTAS query that creates a table from JSON data. The command casts the date, time, and amount strings to SQL types DATE, TIME, and DOUBLE. String-to-VARCHAR casting of the other strings occurs automatically.
+The following example shows a CTAS query that creates a table from JSON data shown in the last example. The command casts the date, time, and amount strings to SQL types DATE, TIME, and DOUBLE. String-to-VARCHAR casting of the other strings occurs automatically.
 
     CREATE TABLE dfs.tmp.sampleparquet AS 
     (SELECT trans_id, 
@@ -90,7 +90,7 @@ The following example shows a CTAS query that creates a table from JSON data. Th
     user_info, marketing_info, trans_info 
     FROM dfs.`/Users/drilluser/sample.json`);
         
-The CTAS query did not specify a file name extension, so Drill used the default parquet file name extension. The output is a Parquet file:
+The CTAS query does not specify a file name extension for the output. Drill creates a parquet file by default, as indicated by the file name in the output:
 
     +------------+---------------------------+
     |  Fragment  | Number of records written |

@@ -2,76 +2,119 @@
 title: "Data Types"
 parent: "SQL Reference"
 ---
-You can use the following SQL data types in your Drill queries:
+You can use the following SQL data types in Drill queries:
 
-
-#### Character
-
-  * VARCHAR/CHAR 
-
-#### Date/Time
-
-  * DATE
-  * INTERVAL
-    * Interval Year (stores year and month)
-    * Interval Day (stores day, hour, minute, seconds, and milliseconds)
-  * TIME
-  * TIMESTAMP
-
-Refer to [Supported Date/Time Data Type formats](/docs/supported-date-time-data-type-formats/).
-
-#### Integer
-
-  * BIGINT
-  * INT
-  * SMALLINT
-
-#### Numeric
-
-  * DECIMAL
-  * FLOAT 
-  * DOUBLE PRECISION (FLOAT 8)
-  * REAL (FLOAT 4) 
-
-#### Boolean
-
-Values are FALSE or TRUE.
+<table>
+  <tr>
+    <th>SQL Type</th>
+    <th>Drill Description</th>
+  </tr>
+  <tr>
+    <td>BIGINT</td>
+    <td>8-byte signed integer</td>
+  </tr>
+  <tr>
+    <td>BOOLEAN</td>
+    <td>TRUE (1) or FALSE (0)</td>
+  </tr>
+  <tr>
+    <td>DATE</td>
+    <td>Years months and days in the form in the form YYYY-­MM-­DD</td>
+  </tr>
+  <tr>
+    <td>DECIMAL</td>
+    <td>38-digit precision</td>
+  </tr>
+  <tr>
+    <td>FLOAT</td>
+    <td>4-byte single precision floating point number</td>
+  </tr>
+  <tr>
+    <td>DOUBLE</td>
+    <td>8-byte double precision floating point number</td>
+  </tr>
+  <tr>
+    <td>INTEGER</td>
+    <td>4-byte signed integer</td>
+  </tr>
+  <tr>
+    <td>INTERVAL</td>
+    <td>Integer fields representing a period of time depending on the type of interval</td>
+  </tr>
+  <tr>
+    <td>INTERVALDAY</td>
+    <td>Integer fields representing a day</td>
+  </tr>
+  <tr>
+    <td>INTERVALYEAR</td>
+    <td>Integer fields representing a year</td>
+  </tr>
+  <tr>
+    <td>SMALLINT</td>
+    <td>2-byte signed integer. Supported in Drill 0.9 and later.</td>
+  </tr>
+  <tr>
+    <td>TIME</td>
+    <td>Hours minutes seconds 24-hour basis</td>
+  </tr>
+  <tr>
+    <td>TIMESTAMP</td>
+    <td>Conventional UNIX Epoch timestamp.</td>
+  </tr>
+  <tr>
+    <td>VARCHAR</td>
+    <td>Character string variable length</td>
+  </tr>
+</table>
 
 ## Complex Data Types
 
-Drill provides map and array data types to work with complex and nested data
-structures. For analysis of complex data, a more modern JSON-style approach to
-writing queries is more effective than using standard SQL functions.
+Complex and nested data structures in JSON and Parquet files are of map and array types. 
 
-The following table provides descriptions and examples of the complex data
-types:
+* A map is a set of name/value pairs. 
+  A value in a map can be a scalar type, such as string or int, or a complex type, such as an array or another map. 
+* An array is a repeated list of values.
+  A value in an array can be a scalar type, such as string or int, or an array can be a complex type, such as a map or another array.
 
-<table><tbody>
-  <tr><th>Data Type</th>
-  <th>Description</th>
-  <th>Example</th></tr>
-    <tr>
-      <td valign="top">Map</td>
-      <td valign="top">A map is a set of name/value pairs. </br>
-      A value in an map can be a scalar type, </br>
-      such as string or int, or a map can be a </br>
-      complex type, such as an array or another map.</td>
-      <td valign="top">Map with scalar type values:</br><code>&nbsp;&nbsp;&quot;phoneNumber&quot;: { &quot;areaCode&quot;: &quot;622&quot;, &quot;number&quot;: &quot;1567845&quot;}</code></br>Map with complex type value:<code></br>&nbsp;&nbsp;{ &quot;citiesLived&quot; : [ { &quot;place&quot; : &quot;Los Angeles&quot;,</br>        
-      &nbsp;&nbsp;&nbsp;&nbsp;&quot;yearsLived&quot; : [ &quot;1989&quot;,</br>
-      &nbsp;&nbsp;&nbsp;&nbsp;            &quot;1993&quot;,</br>            
-      &nbsp;&nbsp;&nbsp;&nbsp;&quot;1998&quot;,</br>            
-      &nbsp;&nbsp;&nbsp;&nbsp;&quot;2002&quot;</br>
-      &nbsp;&nbsp;&nbsp;&nbsp;          ]</br>      
-      &nbsp;&nbsp;
-      &nbsp;} ] }</code></td>
-    </tr>
-    <tr>
-      <td valign="top">Array</td>
-      <td valign="top">An array is a repeated list of values. </br>
-      A value in an array can be a scalar type, </br>
-      such as string or int, or an array can be a</br> 
-      complex type, such as a map or another array.</td>
-      <td valign="top">Array with scalar values:</br><code>&nbsp;&nbsp;&quot;yearsLived&quot;: [&quot;1990&quot;, &quot;1993&quot;, &quot;1998&quot;, &quot;2008&quot;]</code></br>Array with complex type values:</br><code>&nbsp;&nbsp;&quot;children&quot;:</br>&nbsp;&nbsp;[ { &quot;age&quot; : &quot;10&quot;, </br>   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;gender&quot; : &quot;Male&quot;,</br>    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;name&quot; : &quot;Earl&quot;</br> &nbsp;&nbsp;&nbsp;&nbsp; }, </br> &nbsp;&nbsp;&nbsp;&nbsp;{ &quot;age&quot; : &quot;6&quot;,</br>    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;gender&quot; : &quot;Male&quot;,</br>    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;name&quot; : &quot;Sam&quot;</br>  &nbsp;&nbsp;&nbsp;&nbsp;},</br>  &nbsp;&nbsp;&nbsp;&nbsp;{ &quot;age&quot; : &quot;8&quot;,</br>    &nbsp;&nbsp;&nbsp;&nbsp;&quot;gender&quot; : &quot;Male&quot;,  </br>  &nbsp;&nbsp;&nbsp;&nbsp;&quot;name&quot; : &quot;Kit&quot; </br> &nbsp;&nbsp;&nbsp;&nbsp;}</br>&nbsp;&nbsp;]</code></td>
-    </tr>
-  </tbody></table>
+Drill reads/writes maps and arrays from/to JSON and Parquet files. In Drill, you do not cast a map or array to another type. 
 
+
+The following example shows a JSON map having scalar values:
+
+    phoneNumber: 
+    { 
+      areaCode: 622, 
+      number: 1567845
+    }
+
+The following example shows a JSON map having an array as a value:
+
+    { citiesLived : 
+      [ 
+        { place : Los Angeles,       
+          yearsLived : [ 1989, 1993, 1998, 2002]     
+        } 
+      ] 
+    }
+
+The following example shows a JSON array having scalar values:
+
+    yearsLived: [1990, 1993, 1998, 2008]
+
+The following example shows a JSON array having complex type values:
+
+    children: 
+      [ 
+        { age : 10,
+          gender : Male,
+          name : Earl
+        },
+        { age : 6,
+          gender : Male,
+          name : Sam,
+        { age : 8,
+          gender : Male,
+          name : Kit
+        }
+      ]
+  
