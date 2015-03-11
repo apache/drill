@@ -125,48 +125,54 @@ public class MetaImpl implements Meta {
   }
 
   public ResultSet getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
-
     StringBuilder sb = new StringBuilder();
-    sb.append("select "
-        + "TABLE_CATALOG as TABLE_CAT, "
-        + "TABLE_SCHEMA as TABLE_SCHEM, "
-        + "TABLE_NAME, "
-        + "COLUMN_NAME, "
-        + "DATA_TYPE, "
-        + "CHARACTER_MAXIMUM_LENGTH as BUFFER_LENGTH, "
-        + "NUMERIC_PRECISION as DECIMAL_PRECISION, "
-        + "NUMERIC_PRECISION_RADIX as NUM_PREC_RADIX, "
-        + DatabaseMetaData.columnNullableUnknown
-        + " as NULLABLE, "
-        + "'' as REMARKS, "
-        + "'' as COLUMN_DEF, "
-        + "0 as SQL_DATA_TYPE, "
-        + "0 as SQL_DATETIME_SUB, "
-        + "4 as CHAR_OCTET_LENGTH, "
-        + "1 as ORDINAL_POSITION, "
-        + "'YES' as IS_NULLABLE, "
-        + "'' as SCOPE_CATALOG,"
-        + "'' as SCOPE_SCHEMA, "
-        + "'' as SCOPE_TABLE, "
-        + "'' as SOURCE_DATA_TYPE, "
-        + "'' as IS_AUTOINCREMENT, "
-        + "'' as IS_GENERATEDCOLUMN "
-        + "FROM INFORMATION_SCHEMA.COLUMNS "
+    sb.append(
+        "SELECT \n"
+        // getColumns INFORMATION_SCHEMA.COLUMNS   getColumns()
+        // column     source column or             column name
+        // number     expression
+        // -------    ------------------------     -------------
+        + /*  1 */ "  TABLE_CATALOG            as  TABLE_CAT, \n"
+        + /*  2 */ "  TABLE_SCHEMA             as  TABLE_SCHEM, \n"
+        + /*  3 */ "  TABLE_NAME               as  TABLE_NAME, \n"
+        + /*  4 */ "  COLUMN_NAME              as  COLUMN_NAME, \n"
+        + /*  5 */ "  DATA_TYPE                as  DATA_TYPE, \n"
+        ///*  6 */                             #6: TYPE_NAME
+        ///*  7 */                             #7: COLUMN_SIZE
+        + /*  8 */ "  CHARACTER_MAXIMUM_LENGTH as  BUFFER_LENGTH, \n"
+        + /*  9 */ "  NUMERIC_PRECISION        as  DECIMAL_PRECISION, \n" // #9: DECIMAL_DIGITS
+        + /* 10 */ "  NUMERIC_PRECISION_RADIX  as  NUM_PREC_RADIX, \n"
+        + /* 11 */ "  " + DatabaseMetaData.columnNullableUnknown
+        +             "                        as  NULLABLE, \n"
+        + /* 12 */ "  ''                       as  REMARKS, \n"
+        + /* 13 */ "  ''                       as  COLUMN_DEF, \n"
+        + /* 14 */ "  0                        as  SQL_DATA_TYPE, \n"
+        + /* 15 */ "  0                        as  SQL_DATETIME_SUB, \n"
+        + /* 16 */ "  4                        as  CHAR_OCTET_LENGTH, \n"
+        + /* 17 */ "  1                        as  ORDINAL_POSITION, \n"
+        + /* 18 */ "  'YES'                    as  IS_NULLABLE, \n"
+        + /* 19 */ "  ''                       as  SCOPE_CATALOG,"
+        + /* 20 */ "  ''                       as  SCOPE_SCHEMA, \n"
+        + /* 21 */ "  ''                       as  SCOPE_TABLE, \n"
+        + /* 22 */ "  ''                       as  SOURCE_DATA_TYPE, \n"
+        + /* 23 */ "  ''                       as  IS_AUTOINCREMENT, \n"
+        + /* 24 */ "  ''                       as  IS_GENERATEDCOLUMN \n"
+        + "FROM INFORMATION_SCHEMA.COLUMNS \n"
         + "WHERE 1=1 ");
 
     if (catalog != null) {
-      sb.append(" AND TABLE_CATALOG = '" + DrillStringUtils.escapeSql(catalog) + "' ");
+      sb.append("\n  AND TABLE_CATALOG = '" + DrillStringUtils.escapeSql(catalog) + "'");
     }
     if (schemaPattern.s != null) {
-      sb.append(" AND TABLE_SCHEMA like '" + DrillStringUtils.escapeSql(schemaPattern.s) + "'");
+      sb.append("\n  AND TABLE_SCHEMA like '" + DrillStringUtils.escapeSql(schemaPattern.s) + "'");
     }
 
     if (tableNamePattern.s != null) {
-      sb.append(" AND TABLE_NAME like '" + DrillStringUtils.escapeSql(tableNamePattern.s) + "'");
+      sb.append("\n  AND TABLE_NAME like '" + DrillStringUtils.escapeSql(tableNamePattern.s) + "'");
     }
 
     if (columnNamePattern.s != null) {
-      sb.append(" AND COLUMN_NAME like '" + DrillStringUtils.escapeSql(columnNamePattern.s) + "'");
+      sb.append("\n  AND COLUMN_NAME like '" + DrillStringUtils.escapeSql(columnNamePattern.s) + "'");
     }
 
     sb.append(" ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME");
