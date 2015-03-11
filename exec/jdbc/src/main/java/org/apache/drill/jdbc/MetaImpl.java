@@ -19,6 +19,8 @@ package org.apache.drill.jdbc;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.Types;
+
 import java.util.List;
 
 import net.hydromatic.avatica.AvaticaPrepareResult;
@@ -126,6 +128,8 @@ public class MetaImpl implements Meta {
 
   public ResultSet getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
     StringBuilder sb = new StringBuilder();
+    // TODO:  Fix the various remaining bugs and resolve the various questions
+    // noted below.
     sb.append(
         "SELECT \n"
         // getColumns INFORMATION_SCHEMA.COLUMNS   getColumns()
@@ -136,11 +140,113 @@ public class MetaImpl implements Meta {
         + /*  2 */ "  TABLE_SCHEMA             as  TABLE_SCHEM, \n"
         + /*  3 */ "  TABLE_NAME               as  TABLE_NAME, \n"
         + /*  4 */ "  COLUMN_NAME              as  COLUMN_NAME, \n"
-        + /*  5 */ "  DATA_TYPE                as  DATA_TYPE, \n"
-        ///*  6 */                             #6: TYPE_NAME
-        ///*  7 */                             #7: COLUMN_SIZE
+
+        // TODO:  Resolve the various questions noted below for DATA_TYPE.
+        /*    5  (DATA_TYPE) */
+        + "  CASE \n"
+        // (All values in JDBC 4.0/Java 7 java.sql.Types except for types.NULL:)
+
+        // TODO:  RESOLVE:  How does ARRAY appear in COLUMNS.DATA_TYPE?
+        // - Only at end (with no maximum size, as "VARCHAR(65535) ARRAY")?
+        // - Possibly with maximum size (as "... ARRAY[10]")?
+        // (SQL source syntax:
+        //   <array type> ::=
+        //     <data type> ARRAY
+        //       [ <left bracket or trigraph> <maximum cardinality> <right bracket or trigraph> ]
+        + "    WHEN DATA_TYPE LIKE '% ARRAY'    THEN " + Types.ARRAY
+
+        + "    WHEN DATA_TYPE = 'BIGINT'        THEN " + Types.BIGINT
+        + "    WHEN DATA_TYPE = 'BINARY'        THEN " + Types.BINARY
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'BIT'           THEN " + Types.BIT
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'BLOB'          THEN " + Types.BLOB
+        + "    WHEN DATA_TYPE = 'BOOLEAN'       THEN " + Types.BOOLEAN
+
+        + "    WHEN DATA_TYPE = 'CHAR'          THEN " + Types.CHAR
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'CLOB'          THEN " + Types.CLOB
+
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'DATALINK'      THEN " + Types.DATALINK
+        + "    WHEN DATA_TYPE = 'DATE'          THEN " + Types.DATE
+        + "    WHEN DATA_TYPE = 'DECIMAL'       THEN " + Types.DECIMAL
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'DISTINCT'      THEN " + Types.DISTINCT
+        + "    WHEN DATA_TYPE = 'DOUBLE'        THEN " + Types.DOUBLE
+
+        + "    WHEN DATA_TYPE = 'FLOAT'         THEN " + Types.FLOAT
+
+        + "    WHEN DATA_TYPE = 'INTEGER'       THEN " + Types.INTEGER
+
+        // Resolve:  Not seen in Drill yet.  Can it ever appear?:
+        + "    WHEN DATA_TYPE = 'JAVA_OBJECT'   THEN " + Types.JAVA_OBJECT
+
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'LONGNVARCHAR'  THEN " + Types.LONGNVARCHAR
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'LONGVARBINARY' THEN " + Types.LONGVARBINARY
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'LONGVARCHAR'   THEN " + Types.LONGVARCHAR
+
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'NCHAR'         THEN " + Types.NCHAR
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'NCLOB'         THEN " + Types.NCLOB
+        // TODO:  Resolve following about NULL (and then update comment and code):
+        // It is not clear whether Types.NULL can represent a type (perhaps the
+        // type of the literal NULL when no further type information is known?) or
+        // whether 'NULL' can appear in INFORMATION_SCHEMA.COLUMNS.DATA_TYPE.
+        // For now, since it shouldn't hurt, include 'NULL'/Types.NULL in mapping.
+        + "    WHEN DATA_TYPE = 'NULL'          THEN " + Types.NULL
+        // (No NUMERIC--Drill seems to map any to DECIMAL currently.)
+        + "    WHEN DATA_TYPE = 'NUMERIC'       THEN " + Types.NUMERIC
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'NVARCHAR'      THEN " + Types.NVARCHAR
+
+        // Resolve:  Unexpectedly, has appeared in Drill.  Should it?
+        + "    WHEN DATA_TYPE = 'OTHER'         THEN " + Types.OTHER
+
+        + "    WHEN DATA_TYPE = 'REAL'          THEN " + Types.REAL
+        // SQL source syntax:
+        //   <reference type> ::=
+        //     REF <left paren> <referenced type> <right paren> [ <scope clause> ]
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'REF'           THEN " + Types.REF
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'ROWID'         THEN " + Types.ROWID
+
+        + "    WHEN DATA_TYPE = 'SMALLINT'      THEN " + Types.SMALLINT
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "    WHEN DATA_TYPE = 'SQLXML'        THEN " + Types.SQLXML
+
+        // TODO:  RESOLVE:  How does "STRUCT" appear?
+        // - Only at beginning (as "STRUCT(INTEGER sint, BOOLEAN sboolean")?
+        // - Otherwise too?
+        + "    WHEN DATA_TYPE LIKE 'STRUCT(%'   THEN " + Types.STRUCT
+
+        + "    WHEN DATA_TYPE = 'TIME'          THEN " + Types.TIME
+        + "    WHEN DATA_TYPE = 'TIMESTAMP'     THEN " + Types.TIMESTAMP
+        + "    WHEN DATA_TYPE = 'TINYINT'       THEN " + Types.TINYINT
+
+        + "    WHEN DATA_TYPE = 'VARBINARY'     THEN " + Types.VARBINARY
+        + "    WHEN DATA_TYPE = 'VARCHAR'       THEN " + Types.VARCHAR
+
+        // TODO:  RESOLVE:  How does MAP appear in COLUMNS.DATA_TYPE?
+        // - Only at end?
+        // - Otherwise?
+        // TODO:  RESOLVE:  Should it map to Types.OTHER or something else?
+        // Has appeared in Drill.  Should it?
+        + "    WHEN DATA_TYPE LIKE '% MAP'      THEN " + Types.OTHER
+
+        + "    ELSE                                  " + Types.OTHER
+        + "  END                               as  DATA_TYPE, \n"
+
+        + /*  6 */ "  DATA_TYPE                as  TYPE_NAME, \n"
+        ///*  7 */  FIXME:  BUG:  There should be: COLUMN_SIZE
         + /*  8 */ "  CHARACTER_MAXIMUM_LENGTH as  BUFFER_LENGTH, \n"
-        + /*  9 */ "  NUMERIC_PRECISION        as  DECIMAL_PRECISION, \n" // #9: DECIMAL_DIGITS
+        //  FIXME:  BUG:  Many of the following are wrong.
+        + /*  9 */ "  NUMERIC_PRECISION        as  DECIMAL_PRECISION, \n" // FIXME:  BUG:  Should be "DECIMAL_DIGITS"
         + /* 10 */ "  NUMERIC_PRECISION_RADIX  as  NUM_PREC_RADIX, \n"
         + /* 11 */ "  " + DatabaseMetaData.columnNullableUnknown
         +             "                        as  NULLABLE, \n"
