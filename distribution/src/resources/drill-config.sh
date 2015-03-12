@@ -78,20 +78,21 @@ fi
 . "${DRILL_CONF_DIR}/drill-env.sh"
 
 # get log directory
-if [ "$DRILL_LOG_DIR" = "" ]; then
-  DRILL_LOG_DIR=/var/log/drill
-  touch $DRILL_LOG_DIR/sqlline.log
-  TOUCH_EXIT_CODE=$?
-  if [ $TOUCH_EXIT_CODE = 0 ]; then
-    echo "Default Drill log directory: $DRILL_LOG_DIR"
-    DRILL_LOG_DIR_FALLBACK=0
-  else
-    #Force DRILL_LOG_DIR to fall back
-    DRILL_LOG_DIR_FALLBACK=1
-  fi
+if [ "x${DRILL_LOG_DIR}" = "x" ]; then
+  export DRILL_LOG_DIR=/var/log/drill
 fi
 
-if [ ! -d $DRILL_LOG_DIR ] || [ $DRILL_LOG_DIR_FALLBACK = 1 ]; then
+touch "$DRILL_LOG_DIR/sqlline.log" &> /dev/null
+TOUCH_EXIT_CODE=$?
+if [ "$TOUCH_EXIT_CODE" = "0" ]; then
+  echo "Drill log directory: $DRILL_LOG_DIR"
+  DRILL_LOG_DIR_FALLBACK=0
+else
+  #Force DRILL_LOG_DIR to fall back
+  DRILL_LOG_DIR_FALLBACK=1
+fi
+
+if [ ! -d "$DRILL_LOG_DIR" ] || [ "$DRILL_LOG_DIR_FALLBACK" = "1" ]; then
   echo "Drill log directory $DRILL_LOG_DIR does not exist or is not writable, defaulting to $DRILL_HOME/log"
   DRILL_LOG_DIR=$DRILL_HOME/log
   mkdir -p $DRILL_LOG_DIR
