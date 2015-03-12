@@ -288,4 +288,28 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       throw ex;
     }
   }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2441
+  public void testExplainPlanOuterJoinWithInequality() throws Exception {
+    try {
+      test("explain plan for (select a.lastname, b.n_name " +
+          "from cp.`employee.json` a LEFT OUTER JOIN cp.`tpch/nation.parquet` b " +
+          "ON (a.position_id > b.n_nationKey AND a.employee_id = b.n_regionkey));");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2441
+  public void testOuterJoinWithInequality() throws Exception {
+    try {
+      test("select a.lastname, b.n_name " +
+          "from cp.`employee.json` a RIGHT OUTER JOIN cp.`tpch/nation.parquet` b " +
+          "ON (a.position_id > b.n_nationKey AND a.employee_id = b.n_regionkey);");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
 }

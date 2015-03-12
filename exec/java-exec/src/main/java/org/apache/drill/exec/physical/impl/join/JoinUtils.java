@@ -20,8 +20,11 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.eigenbase.rel.JoinRelBase;
+import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.rex.RexNode;
 
 import java.util.List;
 
@@ -79,9 +82,15 @@ public class JoinUtils {
       RelNode left = joinRel.getLeft();
       RelNode right = joinRel.getRight();
 
-      RelOptUtil.splitJoinCondition(left, right, joinRel.getCondition(), leftKeys, rightKeys);
-      if(leftKeys.isEmpty() || rightKeys.isEmpty()) {
-        return true;
+      RexNode remaining = RelOptUtil.splitJoinCondition(left, right, joinRel.getCondition(), leftKeys, rightKeys);
+      if(joinRel.getJoinType() == JoinRelType.INNER) {
+        if(leftKeys.isEmpty() || rightKeys.isEmpty()) {
+          return true;
+        }
+      } else {
+        if(!remaining.isAlwaysTrue() || leftKeys.isEmpty() || rightKeys.isEmpty()) {
+          return true;
+        }
       }
     }
 
