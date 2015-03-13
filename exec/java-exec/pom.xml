@@ -38,12 +38,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.drill.contrib.data</groupId>
-      <artifactId>window-test-data</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
     <!-- <dependency> -->
     <!-- <groupId>org.ow2.asm</groupId> -->
     <!-- <artifactId>asm-commons</artifactId> -->

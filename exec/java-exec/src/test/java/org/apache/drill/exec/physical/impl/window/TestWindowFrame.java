@@ -18,19 +18,60 @@
 package org.apache.drill.exec.physical.impl.window;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillTestWrapper;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Properties;
 
 public class TestWindowFrame extends BaseTestQuery {
 
-  private void runTest(String data, String results, String window) throws Exception {
-    testNoResult("alter session set `%s`= true", ExecConstants.ENABLE_WINDOW_FUNCTIONS);
-    testBuilder()
-      .sqlQuery("select count(*) over pos_win `count`, sum(salary) over pos_win `sum` from cp.`window/%s.json` window pos_win as (%s)", data, window)
+  private static final String TEST_RES_PATH = TestTools.getWorkingPath() + "/src/test/resources";
+  private static final String QUERY_NO_ORDERBY =
+    "select count(*) over pos_win `count`, sum(salary) over pos_win `sum` from dfs_test.`%s/window/%s` window pos_win as (partition by position_id)";
+  private static final String QUERY_ORDERBY =
+    "select count(*) over pos_win `count`, sum(salary) over pos_win `sum`, row_number() over pos_win `row_number`, rank() over pos_win `rank`, dense_rank() over pos_win `dense_rank`, cume_dist() over pos_win `cume_dist`, percent_rank() over pos_win `percent_rank`  from dfs_test.`%s/window/%s` window pos_win as (partition by position_id order by sub)";
+
+  @BeforeClass
+  public static void setupMSortBatchSize() {
+    // make sure memory sorter outputs 20 rows per batch
+    final Properties props = cloneDefaultTestConfigProperties();
+    props.put(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE, Integer.toString(20));
+
+    updateTestCluster(1, DrillConfig.create(props));
+  }
+
+  private DrillTestWrapper buildWindowQuery(final String tableName) throws Exception {
+    return testBuilder()
+      .sqlQuery(String.format(QUERY_NO_ORDERBY, TEST_RES_PATH, tableName))
       .ordered()
-      .csvBaselineFile("window/" + results + ".tsv")
+      .csvBaselineFile("window/" + tableName + ".tsv")
       .baselineColumns("count", "sum")
-      .build().run();
+      .build();
+  }
+
+  private DrillTestWrapper buildWindowWithOrderByQuery(final String tableName) throws Exception {
+    return testBuilder()
+      .sqlQuery(String.format(QUERY_ORDERBY, TEST_RES_PATH, tableName))
+      .ordered()
+      .csvBaselineFile("window/" + tableName + ".subs.tsv")
+      .baselineColumns("count", "sum", "row_number", "rank", "dense_rank", "cume_dist", "percent_rank")
+      .build();
+  }
+
+  private void runTest(final String tableName, final boolean withOrderBy) throws Exception {
+    runSQL(String.format("alter session set `%s`= true", ExecConstants.ENABLE_WINDOW_FUNCTIONS));
+
+    try {
+      DrillTestWrapper testWrapper = withOrderBy ?
+        buildWindowWithOrderByQuery(tableName) : buildWindowQuery(tableName);
+      testWrapper.run();
+    } finally {
+      runSQL(String.format("alter session set `%s`= false", ExecConstants.ENABLE_WINDOW_FUNCTIONS));
+    }
   }
 
   /**
@@ -38,7 +79,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB1P1() throws Exception {
-    runTest("b1.p1.data", "b1.p1", "partition by position_id order by position_id");
+    runTest("b1.p1", false);
   }
 
   /**
@@ -46,7 +87,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB1P1OrderBy() throws Exception {
-    runTest("b1.p1.data", "b1.p1.subs", "partition by position_id order by sub");
+    runTest("b1.p1", true);
   }
 
   /**
@@ -54,7 +95,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB1P2() throws Exception {
-    runTest("b1.p2.data", "b1.p2", "partition by position_id order by position_id");
+    runTest("b1.p2", false);
   }
 
   /**
@@ -63,7 +104,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB1P2OrderBy() throws Exception {
-    runTest("b1.p2.data", "b1.p2.subs", "partition by position_id order by sub");
+    runTest("b1.p2", true);
   }
 
   /**
@@ -71,12 +112,12 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB2P2() throws Exception {
-    runTest("b2.p2.data", "b2.p2", "partition by position_id order by position_id");
+    runTest("b2.p2", false);
   }
 
   @Test
   public void testB2P2OrderBy() throws Exception {
-    runTest("b2.p2.data", "b2.p2.subs", "partition by position_id order by sub");
+    runTest("b2.p2", true);
   }
 
   /**
@@ -84,7 +125,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB2P4() throws Exception {
-    runTest("b2.p4.data", "b2.p4", "partition by position_id order by position_id");
+    runTest("b2.p4", false);
   }
 
   /**
@@ -93,7 +134,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB2P4OrderBy() throws Exception {
-    runTest("b2.p4.data", "b2.p4.subs", "partition by position_id order by sub");
+    runTest("b2.p4", true);
   }
 
   /**
@@ -101,7 +142,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB3P2() throws Exception {
-    runTest("b3.p2.data", "b3.p2", "partition by position_id order by position_id");
+    runTest("b3.p2", false);
   }
 
   /**
@@ -110,7 +151,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB3P2OrderBy() throws Exception {
-    runTest("b3.p2.data", "b3.p2.subs", "partition by position_id order by sub");
+    runTest("b3.p2", true);
   }
 
   /**
@@ -119,7 +160,23 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testb4P4() throws Exception {
-    runTest("b4.p4.data", "b4.p4", "partition by position_id order by position_id");
+    runTest("b4.p4", false);
   }
 
+  @Test
+  public void testb4P4OrderBy() throws Exception {
+    runTest("b4.p4", true);
+  }
+
+  @Test // DRILL-3218
+  public void testMaxVarChar() throws Exception {
+    runSQL(String.format("alter session set `%s`= true", ExecConstants.ENABLE_WINDOW_FUNCTIONS));
+
+    try {
+      test("select max(cast(columns[2] as char(2))) over(partition by cast(columns[2] as char(2)) order by cast(columns[0] as int)) from dfs_test.`%s/window/allData.csv`", TEST_RES_PATH);
+    } finally {
+      runSQL(String.format("alter session set `%s`= false", ExecConstants.ENABLE_WINDOW_FUNCTIONS));
+    }
+
+  }
 }

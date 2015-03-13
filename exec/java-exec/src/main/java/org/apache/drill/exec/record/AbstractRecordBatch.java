@@ -34,7 +34,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements CloseableRecordBatch {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
-  protected final VectorContainer container; //= new VectorContainer();
+  protected final VectorContainer container;
   protected final T popConfig;
   protected final FragmentContext context;
   protected final OperatorContext oContext;
@@ -56,8 +56,8 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.context = context;
     this.popConfig = popConfig;
     this.oContext = oContext;
-    this.stats = oContext.getStats();
-    this.container = new VectorContainer(this.oContext);
+    stats = oContext.getStats();
+    container = new VectorContainer(this.oContext);
     if (buildSchema) {
       state = BatchState.BUILD_SCHEMA;
     } else {

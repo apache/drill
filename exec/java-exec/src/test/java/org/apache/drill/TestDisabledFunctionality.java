@@ -23,7 +23,6 @@ import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestDisabledFunctionality extends BaseTestQuery{
@@ -281,18 +280,6 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("select a.lastname, b.n_name " +
           "from cp.`employee.json` a RIGHT OUTER JOIN cp.`tpch/nation.parquet` b " +
           "ON (a.position_id > b.n_nationKey AND a.employee_id = b.n_regionkey);");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // see DRILL-2441
-  public void testDisabledWindowFunctions() throws Exception {
-    try {
-      test("SELECT employee_id,position_id, salary, avg(salary) " +
-          "OVER (PARTITION BY position_id order by position_id) " +
-          "FROM cp.`employee.json` " +
-          "order by employee_id;");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }

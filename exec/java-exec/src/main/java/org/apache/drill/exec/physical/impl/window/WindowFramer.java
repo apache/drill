@@ -20,21 +20,20 @@ package org.apache.drill.exec.physical.impl.window;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
-import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorContainer;
 
 import java.util.List;
 
 public interface WindowFramer {
-  public static TemplateClassDefinition<WindowFramer> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, WindowFrameTemplate.class);
+  TemplateClassDefinition<WindowFramer> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, DefaultFrameTemplate.class);
 
-  public abstract void setup(List<RecordBatchData> batches, VectorAccessible container) throws SchemaChangeException;
+  void setup(List<WindowDataBatch> batches, final VectorContainer container) throws SchemaChangeException;
 
   /**
    * process the inner batch and write the aggregated values in the container
    * @throws DrillException
    */
-  public abstract void doWork() throws DrillException;
+  void doWork() throws DrillException;
 
   /**
    * check if current batch can be processed:
@@ -44,16 +43,12 @@ public interface WindowFramer {
    * </ol>
    * @return true if current batch can be processed, false otherwise
    */
-  public abstract boolean canDoWork();
+  boolean canDoWork();
+
   /**
    * @return number rows processed in last batch
    */
-  public abstract int getOutputCount();
+  int getOutputCount();
 
-  public abstract void cleanup();
-
-  /**
-   * @return saved batch that will be processed in doWork()
-   */
-  public abstract VectorAccessible getCurrent();
+  void cleanup();
 }

@@ -1,0 +1,93 @@
+/*******************************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+package org.apache.drill.exec.physical.impl.window;
+
+import com.google.common.collect.Lists;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.ValueVector;
+
+import java.util.Iterator;
+import java.util.List;
+
+public class WindowDataBatch implements VectorAccessible {
+
+  private final FragmentContext context;
+  private final VectorContainer container;
+  private final int recordCount;
+
+  public WindowDataBatch(final VectorAccessible batch, final FragmentContext context) {
+    this.context = context;
+    recordCount = batch.getRecordCount();
+
+    List<ValueVector> vectors = Lists.newArrayList();
+
+    for (VectorWrapper<?> v : batch) {
+      if (v.isHyper()) {
+        throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
+      }
+      TransferPair tp = v.getValueVector().getTransferPair();
+      tp.transfer();
+      vectors.add(tp.getTo());
+    }
+
+    container = new VectorContainer();
+    container.addCollection(vectors);
+    container.setRecordCount(recordCount);
+    container.buildSchema(batch.getSchema().getSelectionVectorMode());
+  }
+
+  public FragmentContext getContext() {
+    return context;
+  }
+
+  @Override
+  public int getRecordCount() {
+    return recordCount;
+  }
+
+  @Override
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds) {
+    return container.getValueAccessorById(clazz, fieldIds);
+  }
+
+  @Override
+  public TypedFieldId getValueVectorId(SchemaPath path) {
+    return container.getValueVectorId(path);
+  }
+
+  @Override
+  public BatchSchema getSchema() {
+    return container.getSchema();
+  }
+
+  @Override
+  public Iterator<VectorWrapper<?>> iterator() {
+    return container.iterator();
+  }
+
+  public void clear() {
+    container.clear();
+  }
+}

@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import com.typesafe.config.ConfigException;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Queue;
 
 import javax.inject.Named;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -36,7 +38,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Queues;
 
 public abstract class MSortTemplate implements MSorter, IndexedSortable{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MSortTemplate.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MSortTemplate.class);
 
   private SelectionVector4 vector4;
   private SelectionVector4 aux;
@@ -68,7 +70,16 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
       }
     }
     final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
-    aux = new SelectionVector4(drillBuf, totalCount, Character.MAX_VALUE);
+
+    // This is only useful for debugging: change the maximum size of batches exposed to downstream
+    // when we don't spill to disk
+    int MSORT_BATCH_MAXSIZE;
+    try {
+      MSORT_BATCH_MAXSIZE = context.getConfig().getInt(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE);
+    } catch(ConfigException.Missing e) {
+      MSORT_BATCH_MAXSIZE = Character.MAX_VALUE;
+    }
+    aux = new SelectionVector4(drillBuf, totalCount, MSORT_BATCH_MAXSIZE);
   }
 
   /**
