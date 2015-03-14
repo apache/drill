@@ -97,7 +97,7 @@ public class DrillJoinRule extends RelOptRule {
         newJoinCondition = RexUtil.composeConjunction(builder, equijoinList, false);
       } else {
 //        tracer.warning("Non-equijoins are only supported in the presence of an equijoin.");
-        return;
+//        return;
       }
     }
     //else {
@@ -108,11 +108,11 @@ public class DrillJoinRule extends RelOptRule {
     try {
       if (!addFilter) {
        RelNode joinRel = new DrillJoinRel(join.getCluster(), traits, convertedLeft, convertedRight, origJoinCondition,
-                                         join.getJoinType(), leftKeys, rightKeys, false);
+                                         join.getJoinType(), leftKeys, rightKeys);
        call.transformTo(joinRel);
       } else {
         RelNode joinRel = new DrillJoinRel(join.getCluster(), traits, convertedLeft, convertedRight, newJoinCondition,
-                                           join.getJoinType(), leftKeys, rightKeys, false);
+                                           join.getJoinType(), leftKeys, rightKeys);
         call.transformTo(new DrillFilterRel(join.getCluster(), traits, joinRel, remaining));
       }
     } catch (InvalidRelException e) {

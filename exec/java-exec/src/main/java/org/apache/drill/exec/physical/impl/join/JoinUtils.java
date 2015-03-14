@@ -24,6 +24,9 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.volcano.RelSubset;
+import org.apache.drill.exec.planner.logical.DrillAggregateRel;
+import org.apache.drill.exec.planner.logical.DrillFilterRel;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -38,12 +41,19 @@ import org.apache.drill.exec.resolver.TypeCastRules;
 
 import java.util.LinkedList;
 import java.util.List;
+import com.google.common.collect.Lists;
 
 public class JoinUtils {
   public static enum JoinComparator {
     NONE, // No comparator
     EQUALS, // Equality comparator
     IS_NOT_DISTINCT_FROM // 'IS NOT DISTINCT FROM' comparator
+  }
+
+  public static enum JoinCategory {
+    EQUALITY,  // equality join
+    INEQUALITY,  // inequality join: <>, <, >
+    CARTESIAN   // no join condition
   }
 
   // Check the comparator for the join condition. Note that a similar check is also
@@ -194,4 +204,44 @@ public class JoinUtils {
       }
     }
   }
+
+  public static boolean isScalarSubquery(RelNode childrel) {
+    DrillAggregateRel agg = null;
+    RelNode currentrel = childrel;
+    while (agg == null && currentrel != null) {
+      if (currentrel instanceof DrillAggregateRel) {
+        agg = (DrillAggregateRel)currentrel;
+      } else if (currentrel instanceof DrillFilterRel) {
+        currentrel = currentrel.getInput(0);
+      } else if (currentrel instanceof RelSubset) {
+        currentrel = ((RelSubset)currentrel).getBest() ;
+      } else {
+        break;
+      }
+    }
+
+    if (agg != null) {
+      if (agg.getGroupSet().isEmpty()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static JoinCategory getJoinCategory(RelNode left, RelNode right, RexNode condition,
+      List<Integer> leftKeys, List<Integer> rightKeys) {
+    if (condition.isAlwaysTrue()) {
+      return JoinCategory.CARTESIAN;
+    }
+    leftKeys.clear();
+    rightKeys.clear();
+    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
+
+    if (!remaining.isAlwaysTrue() || (leftKeys.size() == 0 || rightKeys.size() == 0) ) {
+      // for practical purposes these cases could be treated as inequality
+      return JoinCategory.INEQUALITY;
+    }
+    return JoinCategory.EQUALITY;
+  }
+
 }

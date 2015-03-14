@@ -20,48 +20,46 @@ package org.apache.drill.exec.planner.physical;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.calcite.rel.core.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.HashJoinPOP;
-import org.apache.drill.exec.physical.impl.join.JoinUtils;
-import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
+import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.Lists;
 
-public class HashJoinPrel  extends JoinPrel {
+public class NestedLoopJoinPrel  extends JoinPrel {
 
-  private boolean swapped = false;
-
-  public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+  public NestedLoopJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
                       JoinRelType joinType) throws InvalidRelException {
-    this(cluster, traits, left, right, condition, joinType, false);
-  }
-
-  public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType, boolean swapped) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
-    this.swapped = swapped;
-    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys);
+    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
   }
 
   @Override
   public Join copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
     try {
-      return new HashJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType, this.swapped);
+      return new NestedLoopJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
+  }
+
+  @Override
+  public double getRows() {
+    return this.getLeft().getRows() * this.getRight().getRows();
   }
 
   @Override
@@ -69,35 +67,21 @@ public class HashJoinPrel  extends JoinPrel {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
-    if (joincategory == JoinCategory.CARTESIAN || joincategory == JoinCategory.INEQUALITY) {
-      return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
-    }
-    return computeHashJoinCost(planner);
+    double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
+    double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
+    double nljFactor = PrelUtil.getSettings(getCluster()).getNestedLoopJoinFactor();
+
+    // cpu cost of evaluating each leftkey=rightkey join condition
+    double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
+
+    double cpuCost = joinConditionCost * (leftRowCount * rightRowCount) * nljFactor;
+
+    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
+    return costFactory.makeCost(leftRowCount * rightRowCount, cpuCost, 0, 0, 0);
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    // Depending on whether the left/right is swapped for hash inner join, pass in different
-    // combinations of parameters.
-    if (! swapped) {
-      return getHashJoinPop(creator, left, right, leftKeys, rightKeys);
-    } else {
-      return getHashJoinPop(creator, right, left, rightKeys, leftKeys);
-    }
-  }
-
-  @Override
-  public SelectionVectorMode[] getSupportedEncodings() {
-    return SelectionVectorMode.DEFAULT;
-  }
-
-  @Override
-  public SelectionVectorMode getEncoding() {
-    return SelectionVectorMode.NONE;
-  }
-
-  private PhysicalOperator getHashJoinPop(PhysicalPlanCreator creator, RelNode left, RelNode right,
-                                          List<Integer> leftKeys, List<Integer> rightKeys) throws IOException{
     final List<String> fields = getRowType().getFieldNames();
     assert isUnique(fields);
 
@@ -113,16 +97,18 @@ public class HashJoinPrel  extends JoinPrel {
 
     buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
 
-    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype);
-    return creator.addMetadata(this, hjoin);
+    NestedLoopJoinPOP nljoin = new NestedLoopJoinPOP(leftPop, rightPop, conditions, jtype);
+    return creator.addMetadata(this, nljoin);
   }
 
-  public void setSwapped(boolean swapped) {
-    this.swapped = swapped;
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.DEFAULT;
   }
 
-  public boolean isSwapped() {
-    return this.swapped;
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
   }
 
 }

@@ -51,26 +51,14 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
 
-    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
-    if (!remaining.isAlwaysTrue() && (leftKeys.size() == 0 || rightKeys.size() == 0)) {
-      // throw new InvalidRelException("DrillJoinRel only supports equi-join");
-    }
+    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
   }
 
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType, List<Integer> leftKeys, List<Integer> rightKeys, boolean checkCartesian) throws InvalidRelException {
+      JoinRelType joinType, List<Integer> leftKeys, List<Integer> rightKeys) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
 
     assert (leftKeys != null && rightKeys != null);
-
-    if (checkCartesian)  {
-      List<Integer> tmpLeftKeys = Lists.newArrayList();
-      List<Integer> tmpRightKeys = Lists.newArrayList();
-      RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, tmpLeftKeys, tmpRightKeys);
-      if (!remaining.isAlwaysTrue() && (tmpLeftKeys.size() == 0 || tmpRightKeys.size() == 0)) {
-        // throw new InvalidRelException("DrillJoinRel only supports equi-join");
-      }
-    }
     this.leftKeys = leftKeys;
     this.rightKeys = rightKeys;
   }

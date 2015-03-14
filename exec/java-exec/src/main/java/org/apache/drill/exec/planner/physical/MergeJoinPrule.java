@@ -53,11 +53,12 @@ public class MergeJoinPrule extends JoinPruleBase {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
+    PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
 
-    if (!checkPreconditions(join, left, right)) {
+    if (!checkPreconditions(join, left, right, settings)) {
       return;
     }
 
@@ -71,7 +72,8 @@ public class MergeJoinPrule extends JoinPruleBase {
         createDistBothPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight, hashSingleKey);
       }else{
         if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
-          createBroadcastPlan(call, join, PhysicalJoinType.MERGE_JOIN, left, right, collationLeft, collationRight);
+          createBroadcastPlan(call, join, join.getCondition(), PhysicalJoinType.MERGE_JOIN,
+              left, right, collationLeft, collationRight);
         }
       }
 

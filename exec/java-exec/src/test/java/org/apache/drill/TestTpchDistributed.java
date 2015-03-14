@@ -80,9 +80,14 @@ public class TestTpchDistributed extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // cartesion problem
+  @Ignore // depends on fix for Calcite-695 or an implementation of SqlSingleValueAggFunction in Drill
   public void tpch11() throws Exception{
     testDistributed("queries/tpch/11.sql");
+  }
+
+  @Test // slight variant of tpch-11 that does not require SqlSingleValueAggFunction
+  public void tpch11_1() throws Exception{
+    testDistributed("queries/tpch/11_1.sql");
   }
 
   @Test
@@ -101,13 +106,11 @@ public class TestTpchDistributed extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // non-equality join
   public void tpch15() throws Exception{
     testDistributed("queries/tpch/15.sql");
   }
 
   @Test
-  @Ignore // invalid plan, due to Nulls value NOT IN sub-q
   public void tpch16() throws Exception{
     testDistributed("queries/tpch/16.sql");
   }

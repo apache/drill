@@ -21,11 +21,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.physical.impl.join.JoinUtils;
+import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.calcite.rel.InvalidRelException;
@@ -57,22 +58,32 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    List<Integer> tmpLeftKeys = Lists.newArrayList();
-    List<Integer> tmpRightKeys = Lists.newArrayList();
-    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, tmpLeftKeys, tmpRightKeys);
-    if (!remaining.isAlwaysTrue() || (tmpLeftKeys.size() == 0 || tmpRightKeys.size() == 0)) {
+    JoinCategory category = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys);
+    if (category == JoinCategory.CARTESIAN || category == JoinCategory.INEQUALITY) {
+      if (PrelUtil.getPlannerSettings(planner).isNestedLoopJoinEnabled()) {
+        if (PrelUtil.getPlannerSettings(planner).isNlJoinForScalarOnly()) {
+          if (hasScalarSubqueryInput()) {
+            return computeLogicalJoinCost(planner);
+          } else {
+            return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+          }
+        } else {
+          return computeLogicalJoinCost(planner);
+        }
+      }
       return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
     }
 
-    // We do not know which join method, i.e HASH-join or MergeJoin, will be used in Logical Planning.
-    // Here, we assume to use Hash-join, since this is a more commonly-used Join method in Drill.
-    return computeHashJoinCost(planner);
-    // return super.computeSelfCost(planner);
+    return computeLogicalJoinCost(planner);
   }
 
   @Override
   public double getRows() {
-    return joinRowFactor * Math.max(this.getLeft().getRows(), this.getRight().getRows());
+    if (this.condition.isAlwaysTrue()) {
+      return joinRowFactor * this.getLeft().getRows() * this.getRight().getRows();
+    } else {
+      return joinRowFactor * Math.max(this.getLeft().getRows(), this.getRight().getRows());
+    }
   }
 
   /**
@@ -96,6 +107,17 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
 
   public List<Integer> getRightKeys() {
     return this.rightKeys;
+  }
+
+  protected RelOptCost computeLogicalJoinCost(RelOptPlanner planner) {
+    // During Logical Planning, although we don't care much about the actual physical join that will
+    // be chosen, we do care about which table - bigger or smaller - is chosen as the right input
+    // of the join since that is important at least for hash join and we don't currently have
+    // hybrid-hash-join that can swap the inputs dynamically.  The Calcite planner's default cost of a join
+    // is the same whether the bigger table is used as left input or right. In order to overcome that,
+    // we will use the Hash Join cost as the logical cost such that cardinality of left and right inputs
+    // is considered appropriately.
+    return computeHashJoinCost(planner);
   }
 
   protected RelOptCost computeHashJoinCost(RelOptPlanner planner) {
@@ -131,4 +153,13 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
     return costFactory.makeCost(buildRowCount + probeRowCount, cpuCost, 0, 0, memCost);
 
   }
+  private boolean hasScalarSubqueryInput() {
+    if (JoinUtils.isScalarSubquery(this.getLeft())
+        || JoinUtils.isScalarSubquery(this.getRight())) {
+      return true;
+    }
+
+    return false;
+  }
+
 }

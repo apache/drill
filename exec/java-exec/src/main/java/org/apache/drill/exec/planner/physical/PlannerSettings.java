@@ -43,10 +43,13 @@ public class PlannerSettings implements Context{
   public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg", true);
   public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);
   public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);
+  public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin", true);
   public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", true);
   public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", true);
   public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD, 10000000);
   public static final OptionValidator BROADCAST_FACTOR = new RangeDoubleValidator("planner.broadcast_factor", 0, Double.MAX_VALUE, 1.0d);
+  public static final OptionValidator NESTEDLOOPJOIN_FACTOR = new RangeDoubleValidator("planner.nestedloopjoin_factor", 0, Double.MAX_VALUE, 100.0d);
+  public static final OptionValidator NLJOIN_FOR_SCALAR = new BooleanValidator("planner.enable_nljoin_for_scalar_only", true);
   public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, Double.MAX_VALUE, 1.0d);
   public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange", true);
   public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange", false);
@@ -91,6 +94,14 @@ public class PlannerSettings implements Context{
     return options.getOption(BROADCAST_FACTOR.getOptionName()).float_val;
   }
 
+  public double getNestedLoopJoinFactor(){
+    return options.getOption(NESTEDLOOPJOIN_FACTOR.getOptionName()).float_val;
+  }
+
+  public boolean isNlJoinForScalarOnly() {
+    return options.getOption(NLJOIN_FOR_SCALAR.getOptionName()).bool_val;
+  }
+
   public boolean useDefaultCosting() {
     return useDefaultCosting;
   }
@@ -121,6 +132,10 @@ public class PlannerSettings implements Context{
 
   public boolean isMergeJoinEnabled() {
     return options.getOption(MERGEJOIN.getOptionName()).bool_val;
+  }
+
+  public boolean isNestedLoopJoinEnabled() {
+    return options.getOption(NESTEDLOOPJOIN.getOptionName()).bool_val;
   }
 
   public boolean isMultiPhaseAggEnabled() {

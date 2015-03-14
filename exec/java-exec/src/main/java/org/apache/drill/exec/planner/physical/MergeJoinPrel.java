@@ -24,6 +24,8 @@ import org.apache.calcite.rel.core.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
+import org.apache.drill.exec.physical.impl.join.JoinUtils;
+import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -46,15 +48,7 @@ public class MergeJoinPrel  extends JoinPrel {
   public MergeJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
-
-    if (condition.isAlwaysTrue()) {
-      throw new InvalidRelException("MergeJoinPrel does not support cartesian product join");
-    }
-
-    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
-    if (!remaining.isAlwaysTrue() && (leftKeys.size() == 0 || rightKeys.size() == 0)) {
-      throw new InvalidRelException("MergeJoinPrel only supports equi-join");
-    }
+    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys);
   }
 
 
@@ -71,6 +65,9 @@ public class MergeJoinPrel  extends JoinPrel {
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
+    }
+    if (joincategory == JoinCategory.CARTESIAN || joincategory == JoinCategory.INEQUALITY) {
+      return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
     }
     double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
     double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
