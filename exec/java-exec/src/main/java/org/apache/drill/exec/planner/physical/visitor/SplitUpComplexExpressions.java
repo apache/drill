@@ -82,18 +82,22 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
   @Override
   public Prel visitProject(ProjectPrel project, Object unused) throws RelConversionException {
 
+    // Apply the rule to the child
+    RelNode originalInput = ((Prel)project.getInput(0)).accept(this, null);
+    project = (ProjectPrel) project.copy(project.getTraitSet(), Lists.newArrayList(originalInput));
+
     List<RexNode> exprList = new ArrayList<>();
 
     List<RelDataTypeField> relDataTypes = new ArrayList();
     List<RelDataTypeField> origRelDataTypes = new ArrayList();
     int i = 0;
+    final int lastColumnReferenced = PrelUtil.getLastUsedColumnReference(project.getProjects());
 
-    ProjectPushInfo columnInfo = PrelUtil.getColumns(project.getInput(0).getRowType(), project.getProjects());
-
-    if (columnInfo == null ) {
+    if (lastColumnReferenced == -1) {
       return project;
     }
-    int lastRexInput = columnInfo.desiredFields.size();
+
+    final int lastRexInput = lastColumnReferenced + 1;
     RexVisitorComplexExprSplitter exprSplitter = new RexVisitorComplexExprSplitter(factory, funcReg, lastRexInput);
 
     for (RexNode rex : project.getChildExps()) {
@@ -103,7 +107,6 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
     }
     List<RexNode> complexExprs = exprSplitter.getComplexExprs();
 
-    RelNode originalInput = ((Prel)project.getInput(0)).accept(this, null);
     ProjectPrel childProject;
 
     List<RexNode> allExprs = new ArrayList();

@@ -125,6 +125,14 @@ public class PrelUtil {
     return new SelectionVectorRemoverPrel(prel);
   }
 
+  public static int getLastUsedColumnReference(List<RexNode> projects) {
+    LastUsedRefVisitor lastUsed = new LastUsedRefVisitor();
+    for (RexNode rex : projects) {
+      rex.accept(lastUsed);
+    }
+    return lastUsed.getLastUsedReference();
+  }
+
   public static ProjectPushInfo getColumns(RelDataType rowType, List<RexNode> projects) {
     final List<String> fieldNames = rowType.getFieldNames();
     if (fieldNames.isEmpty()) {
@@ -238,6 +246,34 @@ public class PrelUtil {
 
     public RelDataType createNewRowType(RelDataTypeFactory factory) {
       return factory.createStructType(types, fieldNames);
+    }
+  }
+
+  // Simple visitor class to determine the last used reference in the expression
+  private static class LastUsedRefVisitor extends RexVisitorImpl {
+
+    int lastUsedRef = -1;
+
+    protected LastUsedRefVisitor() {
+      super(true);
+    }
+
+    @Override
+    public Void visitInputRef(RexInputRef inputRef) {
+      lastUsedRef = Math.max(lastUsedRef, inputRef.getIndex());
+      return null;
+    }
+
+    @Override
+    public Void visitCall(RexCall call) {
+      for (RexNode operand : call.operands) {
+        operand.accept(this);
+      }
+      return null;
+    }
+
+    public int getLastUsedReference() {
+      return lastUsedRef;
     }
   }
 

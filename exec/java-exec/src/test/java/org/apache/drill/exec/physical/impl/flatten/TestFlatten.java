@@ -249,4 +249,19 @@ public class TestFlatten extends BaseTestQuery {
             .build().run();
   }
 
+  @Test
+  public void testDRILL_2106() throws Exception {
+    testBuilder()
+        .sqlQuery("select rl, flatten(rl) frl from (select `integer`, flatten(rl) as rl from cp.`jsoninput/input2.json`)")
+        .unOrdered()
+        .jsonBaselineFile("flatten/drill-2106-result.json")
+        .go();
+
+    testBuilder()
+        .sqlQuery("select rl, flatten(rl) frl from (select flatten(rl) as rl, `integer` from cp.`jsoninput/input2.json`)")
+        .unOrdered()
+        .jsonBaselineFile("flatten/drill-2106-result.json")
+        .go();
+
+  }
 }
