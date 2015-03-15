@@ -60,4 +60,34 @@ public class TestHBaseQueries extends BaseHBaseTest {
     }
 
   }
+
+
+  @Test
+  public void testWithEmptyTable() throws Exception {
+    HBaseAdmin admin = HBaseTestsSuite.getAdmin();
+    String tableName = "drill_ut_empty_table";
+    HTable table = null;
+
+    try {
+      HTableDescriptor desc = new HTableDescriptor(tableName);
+      desc.addFamily(new HColumnDescriptor("f"));
+      admin.createTable(desc, Arrays.copyOfRange(TestTableGenerator.SPLIT_KEYS, 0, 2));
+
+      table = new HTable(admin.getConfiguration(), tableName);
+
+      setColumnWidths(new int[] {8, 15});
+      runHBaseSQLVerifyCount("SELECT row_key, count(*)\n"
+          + "FROM\n"
+          + "  hbase.`" + tableName + "` tableName GROUP BY row_key\n"
+          , 0);
+    } finally {
+      try {
+        if (table != null) {
+          table.close();
+        }
+        admin.disableTable(tableName);
+        admin.deleteTable(tableName);
+      } catch (Exception e) { } // ignore
+    }
+  }
 }
