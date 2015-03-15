@@ -248,7 +248,7 @@ public class HiveTestDataGenerator {
         "bigintType BIGINT, " +
         "floatType FLOAT, " +
         "doubleType DOUBLE, " +
-        "dataType DATE, " +
+        "dateType DATE, " +
         "timestampType TIMESTAMP, " +
         "binaryType BINARY, " +
         "decimalType DECIMAL(38, 2), " +
