@@ -27,6 +27,8 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.math.BigDecimal;
+
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
@@ -690,5 +692,48 @@ public class TestExampleQueries extends BaseTestQuery{
         .go();
 
     test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+  }
+
+  @Test // DRILL-2311
+  public void testCreateTableSameColumnNames() throws Exception {
+    String creatTable = "CREATE TABLE CaseInsensitiveColumnNames as " +
+        "select cast(r_regionkey as BIGINT) BIGINT_col, cast(r_regionkey as DECIMAL) bigint_col \n" +
+        "FROM cp.`tpch/region.parquet`;\n";
+
+    test("USE dfs.tmp");
+    test(creatTable);
+
+    testBuilder()
+        .sqlQuery("select * from `CaseInsensitiveColumnNames`")
+        .unOrdered()
+        .baselineColumns("BIGINT_col", "bigint_col0\n")
+        .baselineValues((long) 0, new BigDecimal(0))
+        .baselineValues((long) 1, new BigDecimal(1))
+        .baselineValues((long) 2, new BigDecimal(2))
+        .baselineValues((long) 3, new BigDecimal(3))
+        .baselineValues((long) 4, new BigDecimal(4))
+        .build().run();
+  }
+
+  @Test // DRILL-1943, DRILL-1911
+  public void testColumnNamesDifferInCaseOnly() throws Exception {
+    testBuilder()
+        .sqlQuery("select r_regionkey a, r_regionkey A FROM cp.`tpch/region.parquet`")
+        .unOrdered()
+        .baselineColumns("a", "A0")
+        .baselineValues(0, 0)
+        .baselineValues(1, 1)
+        .baselineValues(2, 2)
+        .baselineValues(3, 3)
+        .baselineValues(4, 4)
+        .build().run();
+
+    testBuilder()
+        .sqlQuery("select employee_id, Employee_id from cp.`employee.json` limit 2")
+        .unOrdered()
+        .baselineColumns("employee_id", "Employee_id0")
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 2, (long) 2)
+        .build().run();
   }
 }

@@ -319,7 +319,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         classifyExpr(namedExpression, incoming, result);
 
         if (result.isStar) {
-          // The parameter value indicates which wildcard we are processing now
+          // The value indicates which wildcard we are processing now
           Integer value = result.prefixMap.get(result.prefix);
           if (value != null && value.intValue() == 1) {
             int k = 0;
@@ -366,6 +366,12 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
           }
           continue;
         }
+      } else {
+        // For the columns which do not needed to be classified,
+        // it is still necessary to ensure the output column name is unique
+        result.outputNames = Lists.newArrayList();
+        String outputName = getRef(namedExpression).getRootSegment().getPath();
+        addToResultMaps(outputName, result, true);
       }
 
       String outputName = getRef(namedExpression).getRootSegment().getPath();
@@ -510,6 +516,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     return newName;
   }
 
+  /**
+  * Helper method to ensure unique output column names. If allowDupsWithRename is set to true, the original name
+  * will be appended with a suffix number to ensure uniqueness. Otherwise, the original column would not be renamed even
+  * even if it has been used
+  *
+  * @param origName            the original input name of the column
+  * @param result              the data structure to keep track of the used names and decide what output name should be
+  *                            to ensure uniqueness
+  * @Param allowDupsWithRename if the original name has been used, is renaming allowed to ensure output name unique
+  */
   private void addToResultMaps(String origName, ClassifierResult result, boolean allowDupsWithRename) {
     String name = origName;
     if (allowDupsWithRename) {
