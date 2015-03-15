@@ -82,12 +82,15 @@ public class Types {
     }
   }
 
-  public static int getSqlType(MajorType type) {
+  /***
+   * Gets JDBC type code for given Drill RPC-/protobuf-level type.
+   */
+  public static int getJdbcType(MajorType type) {
     if (type.getMode() == DataMode.REPEATED) {
       return java.sql.Types.ARRAY;
     }
 
-    switch(type.getMinorType()) {
+    switch (type.getMinorType()) {
     case BIGINT:
       return java.sql.Types.BIGINT;
     case BIT:
@@ -146,9 +149,13 @@ public class Types {
     case VARBINARY:
       return java.sql.Types.VARBINARY;
     case VARCHAR:
-      return java.sql.Types.NVARCHAR;
+      return java.sql.Types.VARCHAR;
     default:
-      throw new UnsupportedOperationException();
+      // TODO:  This isn't really an unsupported-operation/-type case; this
+      //   is an unexpected, code-out-of-sync-with-itself case, so use an
+      //   exception intended for that.
+      throw new UnsupportedOperationException(
+          "Unexpected/unhandled " + type.getMinorType() + " value " + type.getMinorType() );
     }
   }
 

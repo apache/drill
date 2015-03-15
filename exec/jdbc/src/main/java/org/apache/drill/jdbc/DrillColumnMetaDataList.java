@@ -82,11 +82,11 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
   }
 
   private static AvaticaType getAvaticaType(MajorType t){
-    int sqlTypeId = Types.getSqlType(t);
-    return ColumnMetaData.scalar(sqlTypeId, getSqlTypeName(sqlTypeId), Rep.BOOLEAN /* dummy value, unused */);
+    final int jdbcTypeId = Types.getJdbcType(t);
+    return ColumnMetaData.scalar(jdbcTypeId, getJdbcTypeName(jdbcTypeId), Rep.BOOLEAN /* dummy value, unused */);
   }
 
-  private static String getSqlTypeName(int type) {
+  private static String getJdbcTypeName(int type) {
     switch (type) {
     case java.sql.Types.BIT:
         return "BIT";
