@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import net.hydromatic.optiq.tools.RelConversionException;
 
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -110,10 +111,18 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
     ProjectPrel childProject;
 
     List<RexNode> allExprs = new ArrayList();
+    int exprIndex = 0;
+    List<String> fieldNames = originalInput.getRowType().getFieldNames();
     for (int index = 0; index < lastRexInput; index++) {
       RexBuilder builder = new RexBuilder(factory);
       allExprs.add(builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
-      relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + index, allExprs.size(), factory.createSqlType(SqlTypeName.ANY) ));
+
+      if(fieldNames.get(index).contains(StarColumnHelper.STAR_COLUMN)) {
+        relDataTypes.add(new RelDataTypeFieldImpl(fieldNames.get(index), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
+      } else {
+        relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + exprIndex, allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
+        exprIndex++;
+      }
     }
     RexNode currRexNode;
     int index = lastRexInput - 1;
@@ -127,9 +136,11 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
           allExprs.add(builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
         }
         index++;
+        exprIndex++;
+
         currRexNode = complexExprs.remove(0);
         allExprs.add(currRexNode);
-        relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + index, allExprs.size(), factory.createSqlType(SqlTypeName.ANY) ));
+        relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + exprIndex, allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
         childProject = new ProjectPrel(project.getCluster(), project.getTraitSet(), originalInput, ImmutableList.copyOf(allExprs), new RelRecordType(relDataTypes));
         originalInput = childProject;
       }
