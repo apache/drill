@@ -17,6 +17,7 @@
  */
 
 
+#include <boost/assign.hpp>
 #include "drill/common.hpp"
 #include "drill/drillClient.hpp"
 #include "drill/recordBatch.hpp"
@@ -117,6 +118,22 @@ int32_t DrillClientConfig::getQueryTimeout(){
 logLevel_t DrillClientConfig::getLogLevel(){
     boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     return s_logLevel;
+}
+
+//Using boost assign to initialize maps. 
+const std::map<std::string, uint32_t>  DrillUserProperties::USER_PROPERTIES=boost::assign::map_list_of
+    ( USERPROP_USERNAME,    USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_STRING )
+    ( USERPROP_PASSWORD,    USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_PASSWORD)
+    ( USERPROP_SCHEMA,      USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_STRING)
+    ( USERPROP_USESSL,      USERPROP_FLAGS_BOOLEAN|USERPROP_FLAGS_SSLPROP)
+    ( USERPROP_FILEPATH,    USERPROP_FLAGS_STRING|USERPROP_FLAGS_SSLPROP|USERPROP_FLAGS_FILEPATH)
+    ( USERPROP_FILENAME,    USERPROP_FLAGS_STRING|USERPROP_FLAGS_SSLPROP|USERPROP_FLAGS_FILENAME)
+;
+
+bool DrillUserProperties::validate(std::string& err){
+    bool ret=true;
+    //We can add additional validation for any params here
+    return ret;
 }
 
 RecordIterator::~RecordIterator(){
@@ -288,11 +305,30 @@ DrillClient::~DrillClient(){
 connectionStatus_t DrillClient::connect(const char* connectStr, const char* defaultSchema){
     connectionStatus_t ret=CONN_SUCCESS;
     ret=this->m_pImpl->connect(connectStr);
-
-    if(ret==CONN_SUCCESS)
-        ret=this->m_pImpl->validateHandShake(defaultSchema);
+    DrillUserProperties props;
+    std::string schema(defaultSchema);
+    props.setProperty(USERPROP_SCHEMA,  schema);
+    if(ret==CONN_SUCCESS){
+        if(defaultSchema!=NULL){
+            ret=this->m_pImpl->validateHandshake(&props);
+        }else{
+            ret=this->m_pImpl->validateHandshake(NULL);
+        }
+    }
     return ret;
+}
 
+connectionStatus_t DrillClient::connect(const char* connectStr, DrillUserProperties* properties){
+    connectionStatus_t ret=CONN_SUCCESS;
+    ret=this->m_pImpl->connect(connectStr);
+    if(ret==CONN_SUCCESS){
+        if(properties!=NULL){
+            ret=this->m_pImpl->validateHandshake(properties);
+        }else{
+            ret=this->m_pImpl->validateHandshake(NULL);
+        }
+    }
+    return ret;
 }
 
 bool DrillClient::isActive(){

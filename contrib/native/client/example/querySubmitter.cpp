@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include "drill/drillc.hpp"
 
-int nOptions=11;
+int nOptions=13;
 
 struct Option{
     char name[32];
@@ -39,7 +39,9 @@ struct Option{
     {"testCancel", "Cancel the query afterthe first record batch.", false},
     {"syncSend", "Send query only after previous result is received", false},
     {"hshakeTimeout", "Handshake timeout (second).", false},
-    {"queryTimeout", "Query timeout (second).", false}
+    {"queryTimeout", "Query timeout (second).", false},
+    {"user", "Username", false},
+    {"password", "Password", false}
 };
 
 std::map<std::string, std::string> qsOptionValues;
@@ -273,6 +275,8 @@ int main(int argc, char* argv[]) {
         std::string syncSend=qsOptionValues["syncSend"];
         std::string hshakeTimeout=qsOptionValues["hshakeTimeout"];
         std::string queryTimeout=qsOptionValues["queryTimeout"];
+        std::string user=qsOptionValues["user"];
+        std::string password=qsOptionValues["password"];
 
         Drill::QueryType type;
 
@@ -324,7 +328,21 @@ int main(int argc, char* argv[]) {
         if (!queryTimeout.empty()){
             Drill::DrillClientConfig::setQueryTimeout(atoi(queryTimeout.c_str()));
         }
-        if(client.connect(connectStr.c_str(), schema.c_str())!=Drill::CONN_SUCCESS){
+
+        Drill::DrillUserProperties props;
+        if(schema.length()>0){
+            props.setProperty(USERPROP_SCHEMA, schema);
+        }
+        if(user.length()>0){
+            props.setProperty(USERPROP_USERNAME, user);
+        }
+        if(password.length()>0){
+            props.setProperty(USERPROP_PASSWORD, password);
+        }
+
+        props.setProperty("someRandomProperty", "someRandomValue");
+
+        if(client.connect(connectStr.c_str(), &props)!=Drill::CONN_SUCCESS){
             std::cerr<< "Failed to connect with error: "<< client.getError() << " (Using:"<<connectStr<<")"<<std::endl;
             return -1;
         }

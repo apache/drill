@@ -270,7 +270,7 @@ void DrillClientImpl::handleHShakeReadTimeout(const boost::system::error_code & 
     return;
 }
 
-connectionStatus_t DrillClientImpl::validateHandShake(const char* defaultSchema){
+connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* properties){
 
     DRILL_LOG(LOG_TRACE) << "validateHandShake\n";
 
@@ -279,13 +279,34 @@ connectionStatus_t DrillClientImpl::validateHandShake(const char* defaultSchema)
     u2b.set_rpc_version(DRILL_RPC_VERSION);
     u2b.set_support_listening(true);
 
-    if ( defaultSchema != NULL ){
-        DRILL_LOG(LOG_TRACE) << "defaultSchema = " << defaultSchema << "\n";
+    if(properties != NULL && properties->size()>0){
+        std::string err;
+        if(!properties->validate(err)){
+            DRILL_LOG(LOG_INFO) << "Invalid user input:" << err << std::endl;
+        }
         exec::user::UserProperties* userProperties = u2b.mutable_properties();
-        exec::user::Property* connSchema = userProperties->add_properties();
-        connSchema->set_key("schema");
-        connSchema->set_value(defaultSchema);
+          
+        std::map<char,int>::iterator it;
+        for(size_t i=0; i<properties->size(); i++){
+            std::map<std::string,uint32_t>::const_iterator it=DrillUserProperties::USER_PROPERTIES.find(properties->keyAt(i));
+            if(it==DrillUserProperties::USER_PROPERTIES.end()){
+                DRILL_LOG(LOG_WARNING) << "Connection property ("<< properties->keyAt(i) 
+                    << ") is unknown and is being skipped" << std::endl;
+                continue;
+            }
+            if(IS_BITSET((*it).second,USERPROP_FLAGS_SERVERPROP)){
+                exec::user::Property* connProp = userProperties->add_properties();
+                connProp->set_key(properties->keyAt(i));
+                connProp->set_value(properties->valueAt(i));
+                if(IS_BITSET((*it).second,USERPROP_FLAGS_PASSWORD)){
+                    DRILL_LOG(LOG_INFO) <<  properties->keyAt(i) << ": ********** " << std::endl;
+                }else{
+                    DRILL_LOG(LOG_INFO) << properties->keyAt(i) << ":" << properties->valueAt(i) << std::endl;
+                }
+            }// Server properties
+        }
     }
+
     {
         boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
         uint64_t coordId = this->getNextCoordinationId();

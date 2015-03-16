@@ -241,7 +241,7 @@ class DrillClientImpl{
         DrillClientError* getError(){ return m_pError;}
         DrillClientQueryResult* SubmitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx);
         void waitForResults();
-        connectionStatus_t validateHandShake(const char* defaultSchema);
+        connectionStatus_t validateHandshake(DrillUserProperties* props);
 
     private:
         friend class DrillClientQueryResult;
