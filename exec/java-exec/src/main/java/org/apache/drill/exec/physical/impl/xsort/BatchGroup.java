@@ -143,6 +143,7 @@ public class BatchGroup implements VectorAccessible {
   }
 
   public void cleanup() throws IOException {
+    currentContainer.zeroVectors();
     if (sv2 != null) {
       sv2.clear();
     }
