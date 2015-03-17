@@ -351,21 +351,21 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
 
     public void setSafe(int index, int value) {
-      if(index >= getValueCapacity()) {
+      while(index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, value);
     }
 
     public void setSafe(int index, BitHolder holder) {
-      if(index >= getValueCapacity()) {
+      while(index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, holder.value);
     }
 
     public void setSafe(int index, NullableBitHolder holder) {
-      if(index >= getValueCapacity()) {
+      while(index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, holder.value);

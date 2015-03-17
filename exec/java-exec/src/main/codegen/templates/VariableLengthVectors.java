@@ -210,7 +210,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     
     int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
     
-    if(data.capacity() < outputStart + len) {
+    while(data.capacity() < outputStart + len) {
         reAlloc();
     }
 
@@ -423,7 +423,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       assert index >= 0;
 
       int currentOffset = offsetVector.getAccessor().get(index);
-      if (data.capacity() < currentOffset + bytes.length) {
+      while (data.capacity() < currentOffset + bytes.length) {
         reAlloc();
       }
       offsetVector.getMutator().setSafe(index + 1, currentOffset + bytes.length);
@@ -451,7 +451,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
       int currentOffset = offsetVector.getAccessor().get(index);
 
-      if (data.capacity() < currentOffset + length) {
+      while (data.capacity() < currentOffset + length) {
         reAlloc();
       }
       offsetVector.getMutator().setSafe(index + 1, currentOffset + length);
@@ -460,7 +460,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     public void setValueLengthSafe(int index, int length) {
       int offset = offsetVector.getAccessor().get(index);
-      if(data.capacity() < offset + length ) {
+      while(data.capacity() < offset + length ) {
         reAlloc();
       }
       offsetVector.getMutator().setSafe(index + 1, offsetVector.getAccessor().get(index) + length);
@@ -472,7 +472,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       
       int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
       
-      if(data.capacity() < outputStart + len) {
+      while(data.capacity() < outputStart + len) {
         reAlloc();
       }
       
@@ -490,7 +490,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       
       int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
       
-      if(data.capacity() < outputStart + len) {
+      while(data.capacity() < outputStart + len) {
         reAlloc();
       }
       
@@ -506,7 +506,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       
       int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
       
-      if(data.capacity() < outputStart + len) {
+      while(data.capacity() < outputStart + len) {
         reAlloc();
       }
       
