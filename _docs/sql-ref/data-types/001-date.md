@@ -1,148 +1,128 @@
 ---
-title: "Supported Date/Time Data Type Formats"
-parent: "Data Types"
+title: "Date/Time Formats"
+parent: "Data Type Casting"
 ---
-You must use supported `date` and `time` formats when you `SELECT` date and
-time literals or when you `CAST()` from `VARCHAR `to `date` and `time` data
-types. Apache Drill currently supports specific formats for the following
-`date` and `time` data types:
+Using familiar date and time formats, listed in the [SQL data types table](/docs/data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. 
 
-  * Date
-  * Timestamp
-  * Time
-  * Interval
-    * Interval Year
-    * Interval Day
-  * Literal
+## Date, Time, and Timestamp
 
-The following query provides an example of how to `SELECT` a few of the
-supported date and time formats as literals:
+Before running a query, you can check the formatting of your dates and times. First, create a dummy JSON file to use in the FROM clause for testing queries as shown in the following examples. 
+    {"dummy" : "data"}. 
 
-    select date '2008-2-23', timestamp '2008-1-23 14:24:23', time '10:20:30' from dfs.`/tmp/input.json`;
+Next, use the following literals in a SELECT statement. 
 
-The following query provides an example where `VARCHAR` data in a file is
-`CAST()` to supported `date` and `time` formats:
+* `date`
+* `time`
+* `timestamp`
 
-    select cast(col_A as date), cast(col_B as timestamp), cast(col_C as time) from dfs.`/tmp/dates.json`;
+You can also use `interval` as a literal in a SELECT statement. This usage is covered later.
 
-`Date`, `timestamp`, and `time` data types store values in `UTC`. Currently,
-Apache Drill does not support `timestamp` with time zone.
+    SELECT date '2010-2-15' FROM dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2010-02-15 |
+    +------------+
+    1 row selected (0.083 seconds)
 
-## Date
+    SELECT time '15:20:30' from dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 15:20:30   |
+    +------------+
+    1 row selected (0.067 seconds)
 
-Drill supports the `date` data type in the following format:
+    SELECT timestamp '2015-03-11 6:50:08' FROM dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2015-03-11 06:50:08.0 |
+    +------------+
+    1 row selected (0.071 seconds)
 
-    YYYY-MM-DD (year-month-date)
+## INTERVAL Type
 
-The following table provides some examples for the `date` data type:
+The INTERVAL type represents a period of time. Use ISO 8601 syntax to format a value of this type:
 
-  | Use | Example |
-  | --- | ------- |
-  |Literal| `select date ‘2008-2-23’ from dfs.`/tmp/input.json`;`|
-  |`JSON` input | `{"date_col" : "2008-2-23"} 
-  | `CAST` from `VARCHAR`| `` select CAST(date_col as date) as CAST_DATE from dfs.`/tmp/input.json`; ``|
-
-## Timestamp
-
-Drill supports the `timestamp` data type in the following format:
-
-    yyyy-MM-dd HH:mm:ss.SSS (year-month-date hour:minute:sec.milliseconds)
-
-The following table provides some examples for the `timestamp` data type:
-
-<table>
- <tbody>
-  <tr>
-   <th>Use</th>
-   <th>CAST Example</th>
-  </tr>
-  <tr>
-   <td valign="top">Literal</td>
-   <td valign="top"><code><span style="color: rgb(0,0,0);">select timestamp ‘2008-2-23 10:20:30.345’, timestamp ‘2008-2-23 10:20:30’ from dfs.`/tmp/input.json`;</span></code>
-   </td></tr>
-  <tr>
-   <td colspan="1" valign="top"><code>JSON</code> Input</td>
-   <td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">{“timestamp_col”: “2008-2-23 15:20:30.345”}<br /></span><span style="color: rgb(0,0,0);">{“timestamp_col”: “2008-2-23 10:20:30”}</span></code><span style="color: rgb(0,0,0);">The fractional millisecond component is optional.</span></td>
-   </tr>
-   <tr>
-    <td colspan="1" valign="top"><code>CAST</code> from <code>VARCHAR</code></td>
-    <td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select cast(timestamp_col as timestamp) from dfs.`/tmp/input.json`; </span></code></td>
-   </tr>
-  </tbody>
- </table>
-
-## Time
-
-Drill supports the `time` data type in the following format:
-
-    HH:mm:ss.SSS (hour:minute:sec.milliseconds)
-
-The following table provides some examples for the `time` data type:
-
-<table><tbody><tr>
-  <th>Use</th>
-  <th>Example</th>
-  </tr>
-  <tr>
-   <td valign="top">Literal</td>
-   <td valign="top"><code><span style="color: rgb(0,0,0);">select time ‘15:20:30’, time ‘10:20:30.123’ from dfs.`/tmp/input.json`;</span></code></td>
-  </tr>
-  <tr>
-  <td colspan="1" valign="top"><code>JSON</code> Input</td>
-  <td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">{“time_col” : “10:20:30.999”}<br /></span><span style="color: rgb(0,0,0);">{“time_col”: “10:20:30”}</span></code></td>
- </tr>
- <tr>
-  <td colspan="1" valign="top"><code>CAST</code> from <code>VARCHAR</code></td>
-  <td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select cast(time_col as time) from dfs.`/tmp/input.json`;</span></code></td>
-</tr></tbody>
-</table>
-
-## Interval
-
-Drill supports the `interval year` and `interval day` data types.
-
-### Interval Year
-
-The `interval year` data type stores time duration in years and months. Drill
-supports the `interval` data type in the following format:
-
-    P [qty] Y [qty] M
-
-The following table provides examples for `interval year` data type:
-
-<table ><tbody><tr>
-<th>Use</th>
-<th>Example</th></tr>
-  <tr>
-    <td valign="top">Literals</td>
-    <td valign="top"><code><span style="color: rgb(0,0,0);">select interval ‘1-2’ year to month from dfs.`/tmp/input.json`;<br /></span><span style="color: rgb(0,0,0);">select interval ‘1’ year from dfs.`/tmp/input.json`;<br /></span><span style="color: rgb(0,0,0);">select interval '13’ month from dfs.`/tmp/input.json`;</span></code></td></tr><tr>
-    <td colspan="1" valign="top"><code>JSON</code> Input</td>
-    <td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">{“col” : “P1Y2M”}<br /></span><span style="color: rgb(0,0,0);">{“col” : “P-1Y2M”}<br /></span><span style="color: rgb(0,0,0);">{“col” : “P-1Y-2M”}<br /></span><span style="color: rgb(0,0,0);">{“col”: “P10M”}<br /></span><span style="color: rgb(0,0,0);">{“col”: “P5Y”}</span></code></td>
-  </tr>
-  <tr>
-    <td colspan="1" valign="top"><code>CAST</code> from <code>VARCHAR</code></td>
-    <td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select cast(col as interval year) from dfs.`/tmp/input.json`;</span></code></td>
-  </tr>
-  </tbody></table> 
-
-### Interval Day
-
-The `interval day` data type stores time duration in days, hours, minutes, and
-seconds. You do not need to specify all fields in a given interval. Drill
-supports the `interval day` data type in the following format:
+    P [qty] Y [qty] M [qty] D T [qty] H [qty] M [qty] S
 
     P [qty] D T [qty] H [qty] M [qty] S
 
-The following table provides examples for `interval day` data type:
+    P [qty] Y [qty] M
 
-<table ><tbody><tr><th >Use</th><th >Example</th></tr><tr><td valign="top">Literal</td><td valign="top"><code><span style="color: rgb(0,0,0);">select interval '1 10:20:30.123' day to second from dfs.`/tmp/input.json`;<br /></span><span style="color: rgb(0,0,0);">select interval '1 10' day to hour from dfs.`/tmp/input.json`;<br /></span><span style="color: rgb(0,0,0);">select interval '10' day  from dfs.`/tmp/input.json`;<br /></span><span style="color: rgb(0,0,0);">select interval '10' hour  from dfs.`/tmp/input.json`;</span></code><code><span style="color: rgb(0,0,0);">select interval '10.999' second  from dfs.`/tmp/input.json`;</span></code></td></tr><tr><td colspan="1" valign="top"><code>JSON</code> Input</td><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">{&quot;col&quot; : &quot;P1DT10H20M30S&quot;}<br /></span><span style="color: rgb(0,0,0);">{&quot;col&quot; : &quot;P1DT10H20M30.123S&quot;}<br /></span><span style="color: rgb(0,0,0);">{&quot;col&quot; : &quot;P1D&quot;}<br /></span><span style="color: rgb(0,0,0);">{&quot;col&quot; : &quot;PT10H&quot;}<br /></span><span style="color: rgb(0,0,0);">{&quot;col&quot; : &quot;PT10.10S&quot;}<br /></span><span style="color: rgb(0,0,0);">{&quot;col&quot; : &quot;PT20S&quot;}<br /></span><span style="color: rgb(0,0,0);">{&quot;col&quot; : &quot;PT10H10S&quot;}</span></code></td></tr><tr><td colspan="1" valign="top"><code>CAST</code> from <code>VARCHAR</code></td><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select cast(col as interval day) from dfs.`/tmp/input.json`;</span></code></td></tr></tbody></table> 
+where:
 
-## Literal
+* P (Period) marks the beginning of a period of time.
+* Y follows a number of years.
+* M follows a number of months.
+* D follows a number of days.
+* H follows a number of hours 0-24.
+* M follows a number of minutes.
+* S follows a number of seconds and optional milliseconds to the right of a decimal point
 
-The following table provides a list of `date/time` literals that Drill
-supports with examples of each:
 
-<table ><tbody><tr><th >Format</th><th colspan="1" >Interpretation</th><th >Example</th></tr><tr><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">interval '1 10:20:30.123' day to second</span></code></td><td colspan="1" valign="top"><code>1 day, 10 hours, 20 minutes, 30 seconds, and 123 thousandths of a second</code></td><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select interval '1 10:20:30.123' day to second from dfs.`/tmp/input.json`;</span></code></td></tr><tr><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">interval '1 10' day to hour</span></code></td><td colspan="1" valign="top"><code>1 day 10 hours</code></td><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select interval '1 10' day to hour from dfs.`/tmp/input.json`;</span></code></td></tr><tr><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">interval '10' day</span></code></td><td colspan="1" valign="top"><code>10 days</code></td><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select interval '10' day from dfs.`/tmp/input.json`;</span></code></td></tr><tr><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">interval '10' hour</span></code></td><td colspan="1" valign="top"><code>10 hours</code></td><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select interval '10' hour from dfs.`/tmp/input.json`;</span></code></td></tr><tr><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">interval '10.999' second</span></code></td><td colspan="1" valign="top"><code>10.999 seconds</code></td><td colspan="1" valign="top"><code><span style="color: rgb(0,0,0);">select interval '10.999' second from dfs.`/tmp/input.json`; </span></code></td></tr></tbody></table>
+INTERVALYEAR (Year, Month) and INTERVALDAY (Day, Hours, Minutes, Seconds, Milliseconds) are a simpler version of INTERVAL with a subset of the fields.  You do not need to specify all fields.
 
+The format of INTERVAL data in the data source differs from the query format. 
+
+You can run the dummy query described earlier to check the formatting of the fields. The input to the following SELECT statements show how to format INTERVAL data in the query. The output shows how to format the data in the data source.
+
+    SELECT INTERVAL '1 10:20:30.123' day to second FROM dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | P1DT37230.123S |
+    +------------+
+    1 row selected (0.054 seconds)
+
+    SELECT INTERVAL '1-2' year to month FROM dfs.`/Users/khahn/drill/apache-drill-0.8.0-SNAPSHOT/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | P1Y2M      |
+    +------------+
+    1 row selected (0.927 seconds)
+
+    SELECT INTERVAL '1' year FROM dfs.`/Users/khahn/drill/apache-drill-0.8.0-SNAPSHOT/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | P1Y        |
+    +------------+
+    1 row selected (0.088 seconds)
+
+    SELECT INTERVAL '13' month FROM dfs.`/Users/khahn/drill/apache-drill-0.8.0-SNAPSHOT/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | P1Y1M      |
+    +------------+
+    1 row selected (0.076 seconds)
+
+To cast INTERVAL data use the following syntax:
+
+    CAST (column_name AS INTERVAL)
+    CAST (column_name AS INTERVAL DAY)
+    CAST (column_name AS INTERVAL YEAR)
+
+## Interval Example
+A JSON file contains the following objects:
+
+    { "INTERVALYEAR_col":"P1Y", "INTERVALDAY_col":"P1D", "INTERVAL_col":"P1Y1M1DT1H1M" }
+    { "INTERVALYEAR_col":"P2Y", "INTERVALDAY_col":"P2D", "INTERVAL_col":"P2Y2M2DT2H2M" }
+    { "INTERVALYEAR_col":"P3Y", "INTERVALDAY_col":"P3D", "INTERVAL_col":"P3Y3M3DT3H3M" }
+
+The following CTAS statement shows how to cast text from a JSON file to INTERVAL data types in a Parquet table:
+
+    CREATE TABLE dfs.tmp.parquet_intervals AS 
+    (SELECT cast (INTERVAL_col as interval),
+           cast( INTERVALYEAR_col as interval year) INTERVALYEAR_col, 
+           cast( INTERVALDAY_col as interval day) INTERVALDAY_col 
+    FROM `/user/root/intervals.json`);
+
+Output is: 
+
+TBD need to test in a future build.
 
 

@@ -7,15 +7,15 @@ Using Drill you can read tables created in Hive that use data types compatible w
   <tr>
     <th>Supported SQL Type</th>
     <th>Hive Type</th>
-    <th>Drill Description</th>
+    <th>Description</th>
   </tr>
   <tr>
-    <td>BIGINT</td>
+    <td>bigint</td>
     <td>BIGINT</td>
     <td>8-byte signed integer</td>
   </tr>
   <tr>
-    <td>BOOLEAN</td>
+    <td>boolean</td>
     <td>BOOLEAN</td>
     <td>TRUE (1) or FALSE (0)</td>
   </tr>
@@ -25,62 +25,62 @@ Using Drill you can read tables created in Hive that use data types compatible w
     <td>Same as Varchar but having a fixed-length max 255</td>
   </tr>
   <tr>
-    <td>DATE</td>
+    <td>date</td>
     <td>DATE</td>
     <td>Years months and days in the form in the form YYYY-­MM-­DD</td>
   </tr>
   <tr>
-    <td>DECIMAL</td>
+    <td>decimal</td>
     <td>DECIMAL</td>
     <td>38-digit precision</td>
   </tr>
   <tr>
-    <td>FLOAT</td>
+    <td>float</td>
     <td>FLOAT</td>
     <td>4-byte single precision floating point number</td>
   </tr>
   <tr>
-    <td>DOUBLE</td>
+    <td>double</td>
     <td>DOUBLE</td>
     <td>8-byte double precision floating point number</td>
   </tr>
   <tr>
-    <td>INTEGER</td>
+    <td>integer</td>
     <td>INT</td>
     <td>4-byte signed integer</td>
   </tr>
   <tr>
-    <td>INTERVAL</td>
+    <td>interval</td>
     <td>N/A</td>
     <td>Integer fields representing a period of time depending on the type of interval</td>
   </tr>
   <tr>
-    <td>INTERVALDAY</td>
+    <td>intervalday</td>
     <td>N/A</td>
     <td>Integer fields representing a day</td>
   </tr>
   <tr>
-    <td>INTERVALYEAR</td>
+    <td>intervalyear</td>
     <td>N/A</td>
     <td>Integer fields representing a year</td>
   </tr>
   <tr>
-    <td>SMALLINT</td>
+    <td>smallint</td>
     <td>SMALLINT</td>
     <td>2-byte signed integer</td>
   </tr>
   <tr>
-    <td>TIME</td>
+    <td>time</td>
     <td>N/A</td>
     <td>Hours minutes seconds 24-hour basis</td>
   </tr>
   <tr>
-    <td>TIMESTAMP</td>
     <td>N/A</td>
+    <td>TIMESTAMP</td>
     <td>Conventional UNIX Epoch timestamp.</td>
   </tr>
   <tr>
-    <td>None</td>
+    <td>timestamp</td>
     <td>TIMESTAMP</td>
     <td>JDBC timestamp in yyyy-mm-dd hh:mm:ss format</td>
   </tr>
@@ -91,14 +91,14 @@ Using Drill you can read tables created in Hive that use data types compatible w
   </tr>
   
   <tr>
-    <td>VARCHAR</td>
+    <td>varchar</td>
     <td>VARCHAR</td>
     <td>Character string variable length</td>
   </tr>
 </table>
 
 ## Unsupported Types
-The following Hive types are not supported:
+Drill does not support the following Hive types:
 
 * LIST
 * MAP

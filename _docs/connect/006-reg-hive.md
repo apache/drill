@@ -8,7 +8,7 @@ storage plugin instance for a Hive data source, provide a unique name for the
 instance, and identify the type as “`hive`”. You must also provide the
 metastore connection information.
 
-Drill supports Hive 0.13. To access Hive tables
+Drill supports Hive 1.0. To access Hive tables
 using custom SerDes or InputFormat/OutputFormat, all nodes running Drillbits
 must have the SerDes or InputFormat/OutputFormat `JAR` files in the 
 `<drill_installation_directory>/jars/3rdparty` folder.
