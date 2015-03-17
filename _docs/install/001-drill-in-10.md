@@ -355,7 +355,7 @@ Now that you have an idea about what Drill can do, you might want to:
 
   * [Deploy Drill in a clustered environment.](/docs/deploying-apache-drill-in-a-clustered-environment)
   * [Configure storage plugins to connect Drill to your data sources](/docs/connect-to-data-sources).
-  * Query [Hive](/docs/querying-hive) and [HBase](/docs/registering-hbase) data.
+  * Query [Hive](/docs/querying-hive) and [HBase](/docs/hbase-storage-plugin) data.
   * [Query Complex Data](/docs/querying-complex-data)
   * [Query Plain Text Files](/docs/querying-plain-text-files)
 

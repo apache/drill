@@ -30,7 +30,7 @@ In this step, we will create a DSN that accesses a Hive table.
   3. Select **MapR Drill ODBC Driver** and click **Finish**.  
      The _MapR Drill ODBC Driver DSN Setup_ window appears.
   4. Enter a name for the data source.
-  5. Specify the connection type based on your requirements. The connection type provides the DSN access to Drill Data Sources. .  
+  5. Specify the connection type based on your requirements. The connection type provides the DSN access to Drill Data Sources.  
 In this example, we are connecting to a Zookeeper Quorum.
   6. In the **Schema** field, select the Hive schema.
      In this example, the Hive schema is named hive.default.
@@ -124,8 +124,8 @@ HBase table.
         hbase.voter
 
      HBase does not contain type information, so you need to cast the data in Drill
-Explorer. For information about SQL query support, see the [SQL
-Reference] (/docs/sql-reference).
+Explorer. For information about SQL query support, see the SQL
+Reference in the [Apache Drill Wiki documentation](/docs/sql-reference).
   9. To save the view, click **Create As**.
   10. Specify the schema where you want to save the view, enter a name for the view, and click **Save**.  
 

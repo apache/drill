@@ -22,26 +22,17 @@ This lesson consists of select * queries on each data source.
 
 ## Before You Begin
 
-### Start sqlline
+### Start SQLLine
 
-If sqlline is not already started, use a Terminal or Command window to log
-into the demo VM as root, then enter `sqlline`:
+If SQLLine is not already started, use a Terminal or Command window to log
+into the demo VM as root, then enter `sqlline`, as described in ["Getting to Know the Sandbox"](/docs/getting-to-know-the-drill-sandbox):
 
-    $ ssh root@10.250.0.6
-    Password:
-    Last login: Mon Sep 15 13:46:08 2014 from 10.250.0.28
-    Welcome to your Mapr Demo virtual machine.
-    [root@maprdemo ~]# sqlline
-    sqlline version 1.1.6
-    0: jdbc:drill:>
-
-You can run queries from this prompt to complete the tutorial. To exit from
-`sqlline`, type:
+You can run queries from the `sqlline` prompt to complete the tutorial. To exit from
+SQLLine, type:
 
     0: jdbc:drill:> !quit
 
-Note that though this tutorial demonstrates the queries using SQLLine, you can
-also execute queries using the Drill Web UI.
+Examples in this tutorial use SQLLine. You can also execute queries using the Drill Web UI.
 
 ### List the available workspaces and databases:
 
@@ -55,7 +46,6 @@ also execute queries using the Drill Web UI.
     | dfs.root    |
     | dfs.views   |
     | dfs.clicks  |
-    | dfs.data    |
     | dfs.tmp     |
     | sys         |
     | maprdb      |
@@ -64,9 +54,9 @@ also execute queries using the Drill Web UI.
     +-------------+
     12 rows selected
 
-Note that this command exposes all the metadata available from the storage
-plugins configured with Drill as a set of schemas. This includes the Hive and
-MapR-DB databases as well as the workspaces configured in the file system. As
+This command exposes all the metadata available from the storage
+plugins configured with Drill as a set of schemas. The Hive and
+MapR-DB databases, file system, and other data are configured in the file system. As
 you run queries in the tutorial, you will switch among these schemas by
 submitting the USE command. This behavior resembles the ability to use
 different database schemas (namespaces) in a relational database system.
@@ -113,13 +103,13 @@ on the metadata available in the Hive metastore.
 
     0: jdbc:drill:> select * from orders limit 5;
     +------------+------------+------------+------------+------------+-------------+
-    | order_id | month | cust_id | state | prod_id | order_total |
+    |  order_id  |   month    |  cust_id   |   state    |  prod_id   | order_total |
     +------------+------------+------------+------------+------------+-------------+
-    | 67212 | June | 10001 | ca | 909 | 13 |
-    | 70302 | June | 10004 | ga | 420 | 11 |
-    | 69090 | June | 10011 | fl | 44 | 76 |
-    | 68834 | June | 10012 | ar | 0 | 81 |
-    | 71220 | June | 10018 | az | 411 | 24 |
+    | 67212      | June       | 10001      | ca         | 909        | 13          |
+    | 70302      | June       | 10004      | ga         | 420        | 11          |
+    | 69090      | June       | 10011      | fl         | 44         | 76          |
+    | 68834      | June       | 10012      | ar         | 0          | 81          |
+    | 71220      | June       | 10018      | az         | 411        | 24          |
     +------------+------------+------------+------------+------------+-------------+
 
 Because orders is a Hive table, you can query the data in the same way that
@@ -256,7 +246,7 @@ a relational database “table.” Therefore, you can perform SQL operations
 directly on files and directories without the need for up-front schema
 definitions or schema management for any model changes. The schema is
 discovered on the fly based on the query. Drill supports queries on a variety
-of file formats including text, CSV, Parquet, and JSON in the 0.5 release.
+of file formats including text, CSV, Parquet, and JSON.
 
 In this example, the clickstream data coming from the mobile/web applications
 is in JSON format. The JSON files have the following structure:
@@ -285,7 +275,7 @@ setup beyond the definition of a workspace.
 
 In this case, setting the workspace is a mechanism for making queries easier
 to write. When you specify a file system workspace, you can shorten references
-to files in the FROM clause of your queries. Instead of having to provide the
+to files in your queries. Instead of having to provide the
 complete path to a file, you can provide the path relative to a directory
 location specified in the workspace. For example:
 

@@ -1,9 +1,8 @@
 ---
-title: "MapR-DB Plugin for Apache Drill"
-parent: "Connect to Data Sources"
+title: "MapR-DB Format"
+parent: "Connect to a Data Source"
 ---
-Drill includes a `maprdb` format plugin for MapR-DB that is defined within the
-default `dfs` storage plugin instance when you install Drill from the `mapr-drill` package on a MapR node. The `maprdb` format plugin improves the
+Drill includes a `maprdb` format for reading MapR-DB data. The `dfs` storage plugin defines the format when you install Drill from the `mapr-drill` package on a MapR node. The `maprdb` format plugin improves the
 estimated number of rows that Drill uses to plan a query. It also enables you
 to query tables like you would query files in a file system because MapR-DB
 and MapR-FS share the same namespace.

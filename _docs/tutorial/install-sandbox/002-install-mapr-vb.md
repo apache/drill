@@ -55,7 +55,7 @@ VirtualBox adapter.
 13. You can navigate to the URL provided or to [localhost:8047](http://localhost:8047) to experience the Drill Web UI, or you can log into the sandbox through the command line.  
 
     a. To navigate to the MapR Sandbox with Apache Drill, enter the provided URL in your browser's address bar.  
-    b. To log into the virtual machine and access the command line, enter Alt+F2 on Windows or Option+F5 on Mac. When prompted, enter `mapr` as the login and password.
+    b. To log into the virtual machine and access the command line, enter Alt+F2 on Windows or Option+F5 on Mac. When prompted, enter `mapr` as the login name and password.
 
 # What's Next
 

@@ -67,8 +67,7 @@ Setting up IDE formatters is recommended and can be done by importing the
 following settings into your browser:
 
 IntelliJ IDEA formatter: [settings
-jar](/confluence/download/attachments/30757399/idea-
-settings.jar?version=1&modificationDate=1363022308000&api=v2)
+jar](https://cwiki.apache.org/confluence/download/attachments/30757399/idea-settings.jar?version=1&modificationDate=1363022308000&api=v2)
 
 Eclipse: [formatter xml from HBase](https://issues.apache.org/jira/secure/atta
 chment/12474245/eclipse_formatter_apache.xml)

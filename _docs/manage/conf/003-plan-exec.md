@@ -28,8 +28,7 @@ at the system or session level:
 <script type="syntaxhighlighter" class="theme: Default; brush: java; gutter: false"><![CDATA[number of active drillbits (typically one per node) 
 * number of cores per node
 * 0.7]]></script>
-<p>For example, on a single-node test system with 2 cores and hyper-threading enabled:</p>
-<script type="syntaxhighlighter" class="theme: Default; brush: java; gutter: false"><![CDATA[1 * 4 * 0.7 = 3]]></script>
+<p>For example, on a single-node test system with 2 cores and hyper-threading enabled:</p><script type="syntaxhighlighter" class="theme: Default; brush: java; gutter: false"><![CDATA[1 * 4 * 0.7 = 3]]></script>
 <p>When you modify the default setting, you can supply any meaningful number. The system does not automatically scale down your setting.</p></td></tr><tr><td valign="top" colspan="1" >planner.width.max_per_query</td><td valign="top" colspan="1" >1000</td><td valign="top" colspan="1" ><p>The max_per_query value also sets the maximum degree of parallelism for any given stage of a query, but the setting applies to the query as executed by the whole cluster (multiple nodes). In effect, the actual maximum width per query is the <em>minimum of two values</em>:</p>
 <script type="syntaxhighlighter" class="theme: Default; brush: java; gutter: false"><![CDATA[min((number of nodes * width.max_per_node), width.max_per_query)]]></script>
 <p>For example, on a 4-node cluster where <span><code>width.max_per_node</code> is set to 6 and </span><span><code>width.max_per_query</code> is set to 30:</span></p>
