@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -182,18 +183,19 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     container.clear();
 
-    int numGroupByExprs = (popConfig.getGroupByExprs() != null) ? popConfig.getGroupByExprs().length : 0;
-    int numAggrExprs = (popConfig.getAggrExprs() != null) ? popConfig.getAggrExprs().length : 0;
+    List<NamedExpression> groupedCols = AggregateUtils.expandGroupByColumns(popConfig.getGroupByExprs(), incoming.getSchema());
+    final int numAggrExprs = (popConfig.getAggrExprs() != null) ? popConfig.getAggrExprs().length : 0;
     aggrExprs = new LogicalExpression[numAggrExprs];
-    groupByOutFieldIds = new TypedFieldId[numGroupByExprs];
+    groupByOutFieldIds = new TypedFieldId[groupedCols.size()];
     aggrOutFieldIds = new TypedFieldId[numAggrExprs];
 
     ErrorCollector collector = new ErrorCollectorImpl();
 
-    int i;
+    NamedExpression[] namedExpressions = new NamedExpression[groupedCols.size()];
+    for (int i = 0; i < groupedCols.size(); i++) {
+      NamedExpression ne = groupedCols.get(i);
 
-    for (i = 0; i < numGroupByExprs; i++) {
-      NamedExpression ne = popConfig.getGroupByExprs()[i];
+      namedExpressions[i] = ne;
       final LogicalExpression expr =
           ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
       if (expr == null) {
@@ -207,7 +209,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       groupByOutFieldIds[i] = container.add(vv);
     }
 
-    for (i = 0; i < numAggrExprs; i++) {
+    for (int i = 0; i < numAggrExprs; i++) {
       NamedExpression ne = popConfig.getAggrExprs()[i];
       final LogicalExpression expr =
           ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
@@ -240,8 +242,9 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     HashTableConfig htConfig =
         new HashTableConfig(context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE_KEY).num_val.intValue(),
-            HashTable.DEFAULT_LOAD_FACTOR, popConfig.getGroupByExprs(), null /* no probe exprs */);
-
+            HashTable.DEFAULT_LOAD_FACTOR,
+                namedExpressions,
+                    null /* no probe exprs */);
     agg.setup(popConfig, htConfig, context, this.stats,
         oContext.getAllocator(), incoming, this,
         aggrExprs,
@@ -295,5 +298,4 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
   }
-
 }

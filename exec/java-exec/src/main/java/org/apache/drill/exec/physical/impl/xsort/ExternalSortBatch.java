@@ -27,11 +27,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
@@ -53,6 +56,7 @@ import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -663,7 +667,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   private MSorter createNewMSorter() throws ClassTransformationException, IOException, SchemaChangeException {
-    return createNewMSorter(this.context, this.popConfig.getOrderings(), this, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+    List<Ordering> orderings = columnExpansion();
+    return createNewMSorter(this.context, orderings, this, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
   }
 
   private MSorter createNewMSorter(FragmentContext context, List<Ordering> orderings, VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
@@ -721,7 +726,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private void generateComparisons(ClassGenerator<?> g, VectorAccessible batch) throws SchemaChangeException {
     g.setMappingSet(MAIN_MAPPING);
 
-    for (Ordering od : popConfig.getOrderings()) {
+    List<Ordering> orderings = columnExpansion();
+    for (Ordering od : orderings) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector,context.getFunctionRegistry());
@@ -791,4 +797,47 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     incoming.kill(sendUpstream);
   }
 
+  private List<Ordering> columnExpansion() {
+    List<Ordering> orderings = Lists.newArrayList();
+    Direction direction = this.popConfig.getOrderings().get(0).getDirection();
+    RelFieldCollation.NullDirection nullDirection = this.popConfig.getOrderings().get(0).getNullDirection();
+
+    // Expand the star column
+    for(Ordering ordering : this.popConfig.getOrderings()) {
+      // If the sorting column is *
+      final PathSegment.NameSegment expr = ((SchemaPath) ordering.getExpr()).getRootSegment();
+      final boolean exprHasStar = expr.getPath().contains(StarColumnHelper.STAR_COLUMN);
+      final boolean exprHasPrefix = expr.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
+
+      // If the sorting column has *
+      if(exprHasStar) {
+        // If the sorting column is T# || *
+        if(exprHasPrefix)  {
+          String prefix = expr.getPath().substring(0,
+              expr.getPath().indexOf(StarColumnHelper.PREFIX_DELIMITER));
+
+          for(int i = 0; i < incoming.getSchema().getFieldCount(); ++i) {
+            if(incoming.getSchema().getColumn(i).getPath().getRootSegment().getPath().startsWith(prefix)) {
+              Ordering expandOrdering = new Ordering(incoming.getSchema().getColumn(i).getPath(),
+                  direction.shortString,
+                      nullDirection.name());
+              orderings.add(expandOrdering);
+            }
+          }
+          // If the sorting column has *
+        } else {
+          for(int i = 0; i < incoming.getSchema().getFieldCount(); ++i) {
+            Ordering expandOrdering = new Ordering(incoming.getSchema().getColumn(i).getPath(),
+                direction.shortString,
+                    nullDirection.name());
+            orderings.add(expandOrdering);
+          }
+        }
+      } else {
+        orderings.add(ordering);
+      }
+    }
+
+    return orderings;
+  }
 }
