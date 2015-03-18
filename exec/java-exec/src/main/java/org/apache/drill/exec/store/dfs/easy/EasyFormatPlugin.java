@@ -118,7 +118,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       List<SchemaPath> columns) throws ExecutionSetupException;
 
   RecordBatch getReaderBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
-    String partitionDesignator = context.getConfig().getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
+    String partitionDesignator = context.getOptions()
+      .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
     List<SchemaPath> columns = scan.getColumns();
     List<RecordReader> readers = Lists.newArrayList();
     List<String[]> partitionColumns = Lists.newArrayList();

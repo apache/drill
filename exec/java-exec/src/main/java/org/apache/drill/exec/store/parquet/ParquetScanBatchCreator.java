@@ -63,7 +63,8 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
   @Override
   public RecordBatch getBatch(FragmentContext context, ParquetRowGroupScan rowGroupScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    String partitionDesignator = context.getConfig().getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
+    String partitionDesignator = context.getOptions()
+      .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
     List<SchemaPath> columns = rowGroupScan.getColumns();
     List<RecordReader> readers = Lists.newArrayList();
     OperatorContext oContext = new OperatorContext(rowGroupScan, context,
