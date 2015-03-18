@@ -2,6 +2,8 @@
 title: "Advanced Properties"
 parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
 ---
+[Previous](/docs/configuring-odbc-connections-for-linux-and-mac-os-x)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/testing-the-odbc-connection-on-linux-and-mac-os-x)
+
 When you use advanced properties, you must separate them using a semi-colon
 (;).
 

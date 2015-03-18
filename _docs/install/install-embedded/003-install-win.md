@@ -2,6 +2,8 @@
 title: "Installing Drill on Windows"
 parent: "Installing Drill in Embedded Mode"
 ---
+[Previous](/docs/installing-drill-on-mac-os-x)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/installing-drill-in-distributed-mode)
+
 You can install Drill on Windows 7 or 8. To install Drill on Windows, you must
 have JDK 7, and you must set the `JAVA_HOME` path in the Windows Environment
 Variables. You must also have a utility, such as

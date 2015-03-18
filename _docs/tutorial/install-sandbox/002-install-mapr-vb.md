@@ -2,6 +2,8 @@
 title: "Installing the MapR Sandbox with Apache Drill on VirtualBox"
 parent: "Installing the Apache Drill Sandbox"
 ---
+[Previous](/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/getting-to-know-the-drill-sandbox)
+
 The MapR Sandbox for Apache Drill on VirtualBox comes with NAT port forwarding
 enabled, which allows you to access the sandbox using localhost as hostname.
 

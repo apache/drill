@@ -2,6 +2,8 @@
 title: "Installing the Apache Drill Sandbox"
 parent: "Apache Drill Tutorial"
 ---
+[Previous](/docs/apache-drill-tutorial)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion)
+
 ## Prerequisites
 
 The MapR Sandbox with Apache Drill runs on VMware Player and VirtualBox, free

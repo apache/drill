@@ -2,6 +2,8 @@
 title: "Installing Drill in Embedded Mode"
 parent: "Install Drill"
 ---
+[Previous](/docs/deploying-apache-drill-in-a-clustered-environment)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/installing-drill-on-linux)
+
 Installing Drill in embedded mode installs Drill locally on your machine.
 Embedded mode is a quick, easy way to install and try Drill without having to
 perform any configuration tasks. When you install Drill in embedded mode, the

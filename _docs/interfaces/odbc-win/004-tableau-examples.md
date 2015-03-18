@@ -2,6 +2,8 @@
 title: "Tableau Examples"
 parent: "Using the MapR ODBC Driver on Windows"
 ---
+[Previous](/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/using-drill-explorer-to-browse-data-and-create-views)
+
 You can generate reports in Tableau using ODBC connections to Drill data
 sources. Each example in this section takes you through the steps to create a
 DSN to a Drill data source and then access the data in Tableau 8.1.

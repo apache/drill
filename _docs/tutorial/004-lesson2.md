@@ -2,6 +2,8 @@
 title: "Lession 2: Run Queries with ANSI SQL"
 parent: "Apache Drill Tutorial"
 ---
+[Previous](/docs/lession-1-learn-about-the-data-set)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/lession-3-run-queries-on-complex-data-types)
+
 ## Goal
 
 This lesson shows how to do some standard SQL analysis in Apache Drill: for

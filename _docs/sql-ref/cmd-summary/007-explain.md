@@ -57,7 +57,6 @@ query plan text may help you isolate the problem.
 Use the following syntax:
 
     explain plan for <query> ;
-    explain plan with implementation for <query> ;
 
 The following set command increases the default text display (number of
 characters). By default, most of the plan output is not displayed.
@@ -69,26 +68,19 @@ Do not use a semicolon to terminate set commands.
 For example, here is the top portion of the explain output for a
 COUNT(DISTINCT) query on a JSON file:
 
-	0: jdbc:drill:zk=local> !set maxwidth 10000
-	 
-	0: jdbc:drill:zk=local> explain plan for 
-	select type t, count(distinct id) 
-	from dfs.`/Users/brumsby/drill/donuts.json` 
-	where type='donut' group by type;
-	 
+    0: jdbc:drill:zk=local> !set maxwidth 10000
+	0: jdbc:drill:zk=local> explain plan for select type t, count(distinct id) from dfs.`/home/donuts/donuts.json` where type='donut' group by type;
 	+------------+------------+
-	|    text    |    json    |
+	|   text    |   json    |
 	+------------+------------+
-	| 00-00    Screen
-	00-01      Project(t=[$0], EXPR$1=[$1])
-	00-02        Project(t=[$0], EXPR$1=[$1])
-	00-03          HashAgg(group=[{0}], EXPR$1=[COUNT($1)])
-	00-04            HashAgg(group=[{0, 1}])
-	00-05              SelectionVectorRemover
-	00-06                Filter(condition=[=(CAST($0):CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", 'donut')])
-	00-07                  Project(type=[$1], id=[$2])
-	00-08                    ProducerConsumer
-	00-09                      Scan(groupscan=[EasyGroupScan [selectionRoot=/Users/brumsby/drill/donuts.json, columns = null]])
+	| 00-00 Screen
+	00-01   Project(t=[$0], EXPR$1=[$1])
+	00-02       Project(t=[$0], EXPR$1=[$1])
+	00-03       HashAgg(group=[{0}], EXPR$1=[COUNT($1)])
+	00-04           HashAgg(group=[{0, 1}])
+	00-05           SelectionVectorRemover
+	00-06               Filter(condition=[=($0, 'donut')])
+	00-07               Scan(groupscan=[EasyGroupScan [selectionRoot=/home/donuts/donuts.json, numFiles=1, columns=[`type`, `id`], files=[file:/home/donuts/donuts.json]]])...
 	...
 
 Read the text output from bottom to top to understand the sequence of
@@ -119,19 +111,17 @@ Add the INCLUDING ALL ATTRIBUTES option to the EXPLAIN command to see cost
 estimates for the query plan. For example:
 
 	0: jdbc:drill:zk=local> !set maxwidth 10000
-	0: jdbc:drill:zk=local> explain plan including all attributes for 
-	select * from dfs.`/Users/brumsby/drill/donuts.json` where type='donut';
-	 
+	0: jdbc:drill:zk=local> explain plan including all attributes for select * from dfs.`/home/donuts/donuts.json` where type='donut';
 	+------------+------------+
-	|    text    |    json    |
+	|   text    |   json    |
 	+------------+------------+
-	 
-	| 00-00    Screen: rowcount = 1.0, cumulative cost = {4.1 rows, 14.1 cpu, 0.0 io, 0.0 network}, id = 3110
-	00-01      Project(*=[$0], type=[$1]): rowcount = 1.0, cumulative cost = {4.0 rows, 14.0 cpu, 0.0 io, 0.0 network}, id = 3109
-	00-02        SelectionVectorRemover: rowcount = 1.0, cumulative cost = {3.0 rows, 6.0 cpu, 0.0 io, 0.0 network}, id = 3108
-	00-03          Filter(condition=[=(CAST($1):CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", 'donut')]): rowcount = 1.0, cumulative cost = {2.0 rows, 5.0 cpu, 0.0 io, 0.0 network}, id = 3107
-	00-04            ProducerConsumer: rowcount = 1.0, cumulative cost = {1.0 rows, 1.0 cpu, 0.0 io, 0.0 network}, id = 3106
-	00-05              Scan(groupscan=[EasyGroupScan [selectionRoot=/Users/brumsby/drill/donuts.json, columns = null]]): rowcount = 1.0, cumulative cost = {0.0 rows, 0.0 cpu, 0.0 io, 0.0 network}, id = 3101
+	| 00-00 Screen: rowcount = 1.0, cumulative cost = {5.1 rows, 21.1 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 889
+	00-01   Project(*=[$0]): rowcount = 1.0, cumulative cost = {5.0 rows, 21.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 888
+	00-02       Project(T1¦¦*=[$0]): rowcount = 1.0, cumulative cost = {4.0 rows, 17.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 887
+	00-03       SelectionVectorRemover: rowcount = 1.0, cumulative cost = {3.0 rows, 13.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 886
+	00-04           Filter(condition=[=($1, 'donut')]): rowcount = 1.0, cumulative cost = {2.0 rows, 12.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 885
+	00-05           Project(T1¦¦*=[$0], type=[$1]): rowcount = 1.0, cumulative cost = {1.0 rows, 8.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 884
+	00-06               Scan(groupscan=[EasyGroupScan [selectionRoot=/home/donuts/donuts.json, numFiles=1, columns=[`*`], files=[file:/home/donuts/donuts.json]]]): rowcount = 1.0, cumulative cost = {0.0 rows, 0.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 883
 
 ## EXPLAIN for Logical Plans
 
@@ -142,25 +132,25 @@ query), use the EXPLAIN PLAN WITHOUT IMPLEMENTATION syntax:
 
 For example:
 
-	0: jdbc:drill:zk=local> explain plan without implementation for 
-	select a.id 
-	from dfs.`/Users/brumsby/drill/donuts.json` a, dfs.`/Users/brumsby/drill/moredonuts.json` b 
-	where a.id=b.id;
-	 
+	0: jdbc:drill:zk=local> explain plan without implementation for select type t, count(distinct id) from dfs.`/home/donuts/donuts.json` where type='donut' group by type;
 	+------------+------------+
-	|    text    |    json    |
+	|   text    |   json    |
 	+------------+------------+
 	| DrillScreenRel
-	  DrillProjectRel(id=[$1])
-	    DrillJoinRel(condition=[=($1, $3)], joinType=[inner])
-	      DrillScanRel(table=[[dfs, /Users/brumsby/drill/donuts.json]], groupscan=[EasyGroupScan [selectionRoot=/Users/brumsby/drill/donuts.json, columns = null]])
-	      DrillScanRel(table=[[dfs, /Users/brumsby/drill/moredonuts.json]], groupscan=[EasyGroupScan [selectionRoot=/Users/brumsby/drill/moredonuts.json, columns = null]])
-	 | {
+	  DrillProjectRel(t=[$0], EXPR$1=[$1])
+	    DrillAggregateRel(group=[{0}], EXPR$1=[COUNT($1)])
+	    DrillAggregateRel(group=[{0, 1}])
+	        DrillFilterRel(condition=[=($0, 'donut')])
+	        DrillScanRel(table=[[dfs, /home/donuts/donuts.json]], groupscan=[EasyGroupScan [selectionRoot=/home/donuts/donuts.json, numFiles=1, columns=[`type`, `id`], files=[file:/home/donuts/donuts.json]]]) | {
+	  | {
 	  "head" : {
 	    "version" : 1,
 	    "generator" : {
-	      "type" : "org.apache.drill.exec.planner.logical.DrillImplementor",
-	      "info" : ""
+	    "type" : "org.apache.drill.exec.planner.logical.DrillImplementor",
+	    "info" : ""
 	    },
-	...
-
+	    "type" : "APACHE_DRILL_LOGICAL",
+	    "options" : null,
+	    "queue" : 0,
+	    "resultMode" : "LOGICAL"
+	  },...

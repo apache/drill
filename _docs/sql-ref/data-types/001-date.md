@@ -1,10 +1,11 @@
 ---
-title: "Date/Time Formats"
-parent: "Data Type Casting"
+title: "Date, Time, and Timestamp"
+parent: "Data Types"
 ---
 Using familiar date and time formats, listed in the [SQL data types table](/docs/data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. 
 
-## Date, Time, and Timestamp
+DATE, TIME, and TIMESTAMP store values in Coordinated Universal Time (UTC). Currently, Drill does not support casting a TIMESTAMP with time zone, but you can use the TO_TIMESTAMP function (link to example) in a query to use time stamp data having a time zone.
+
 
 Before running a query, you can check the formatting of your dates and times. First, create a dummy JSON file to use in the FROM clause for testing queries as shown in the following examples. 
     {"dummy" : "data"}. 
@@ -14,8 +15,6 @@ Next, use the following literals in a SELECT statement.
 * `date`
 * `time`
 * `timestamp`
-
-You can also use `interval` as a literal in a SELECT statement. This usage is covered later.
 
     SELECT date '2010-2-15' FROM dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
     +------------+
@@ -41,7 +40,7 @@ You can also use `interval` as a literal in a SELECT statement. This usage is co
     +------------+
     1 row selected (0.071 seconds)
 
-## INTERVAL Type
+## INTERVAL
 
 The INTERVAL type represents a period of time. Use ISO 8601 syntax to format a value of this type:
 

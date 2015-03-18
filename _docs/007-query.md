@@ -1,6 +1,9 @@
 ---
 title: "Query Data"
 ---
+[Previous](
+/docs/using-drill-explorer-to-browse-data-and-create-views)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/getting-started-tutorial)
+
 You can query local and distributed file systems, Hive, and HBase data sources
 registered with Drill. If you connected directly to a particular schema when
 you invoked SQLLine, you can issue SQL queries against that schema. If you did

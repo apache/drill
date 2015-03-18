@@ -2,6 +2,8 @@
 title: "Configuring ODBC Connections for Linux and Mac OS X"
 parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
 ---
+[Previous](/docs/driver-configuration-options)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/advanced-properties)
+
 You can use a connection string to connect to your data source. For a list of
 all the properties that you can use in connection strings, see [Driver
 Configuration

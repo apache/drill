@@ -2,6 +2,8 @@
 title: "Step 3. Connect to Drill Data Sources from a BI Tool"
 parent: "Using the MapR ODBC Driver on Windows"
 ---
+[Previous](/docs/step-2-configure-odbc-connections-to-drill-data-sources)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/tableau-examples)
+
 After you create the ODBC DSN, you can use ODBC to directly connect to data
 that is defined by a schema, such as Hive, and data that is self-describing.
 Examples of self-describing data include HBase, Parquet, JSON, CSV,and TSV.
