@@ -228,7 +228,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
           resultSet = statement.executeQuery("DESCRIBE `TABLES`");
           Set<String> result = JdbcAssert.toStringSet(resultSet);
           resultSet.close();
-          ImmutableSet<String> expected = ImmutableSet.of("COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO");
+          ImmutableSet<String> expected = ImmutableSet.of("COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=YES");
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
           // Test describe of `TABLES` with a schema qualifier which is not in default schema

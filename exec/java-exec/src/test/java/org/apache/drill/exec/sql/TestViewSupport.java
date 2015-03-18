@@ -40,5 +40,41 @@ public class TestViewSupport extends BaseTestQuery{
     test(selectOutside);
   }
 
+  /**
+   * DRILL-2342 This test is for case where output columns are nullable. Existing tests already cover the case
+   * where columns are required.
+   */
+  @Test
+  public void testNullabilityPropertyInViewPersistence() throws Exception {
+    final String viewName = "testNullabilityPropertyInViewPersistence";
+    try {
 
+      test("USE dfs_test.tmp");
+      test(String.format("CREATE OR REPLACE VIEW %s AS SELECT " +
+          "CAST(customer_id AS BIGINT) as cust_id, " +
+          "CAST(fname AS VARCHAR(25)) as fname, " +
+          "CAST(country AS VARCHAR(20)) as country " +
+          "FROM cp.`customer.json` " +
+          "ORDER BY customer_id " +
+          "LIMIT 1;", viewName));
+
+      testBuilder()
+          .sqlQuery(String.format("DESCRIBE %s", viewName))
+          .unOrdered()
+          .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+          .baselineValues("cust_id", "BIGINT", "YES")
+          .baselineValues("fname", "VARCHAR", "YES")
+          .baselineValues("country", "VARCHAR", "YES")
+          .go();
+
+      testBuilder()
+          .sqlQuery(String.format("SELECT * FROM %s", viewName))
+          .ordered()
+          .baselineColumns("cust_id", "fname", "country")
+          .baselineValues(1L, "Sheri", "Mexico")
+          .go();
+    } finally {
+      test("drop view " + viewName + ";");
+    }
+  }
 }

@@ -350,8 +350,8 @@ public class TestViews extends JdbcTestQueryBase {
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
           expected =
-              "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO\n" +
-              "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=NO";
+              "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=YES\n" +
+              "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=YES";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 

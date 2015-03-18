@@ -52,13 +52,23 @@ public class View {
     public final SqlTypeName type;
     public final Integer precision;
     public final Integer scale;
+    public final Boolean isNullable;
 
     @JsonCreator
-    public FieldType(@JsonProperty("name") String name, @JsonProperty("type") SqlTypeName type, @JsonProperty("precision") Integer precision, @JsonProperty("scale") Integer scale){
+    public FieldType(
+        @JsonProperty("name") String name,
+        @JsonProperty("type") SqlTypeName type,
+        @JsonProperty("precision") Integer precision,
+        @JsonProperty("scale") Integer scale,
+        @JsonProperty("isNullable") Boolean isNullable){
       this.name = name;
       this.type = type;
       this.precision = precision;
       this.scale = scale;
+
+      // Property "isNullable" is not part of the initial view definition and added in DRILL-2342. If the
+      // default value is null, consider it as "true". It is safe to default to "nullable" than "required" type.
+      this.isNullable = (isNullable == null) ? true : isNullable;
     }
 
     public FieldType(String name, RelDataType dataType){
@@ -82,6 +92,7 @@ public class View {
 
       this.precision = p;
       this.scale = s;
+      this.isNullable = dataType.isNullable();
     }
   }
 
@@ -120,12 +131,19 @@ public class View {
 
     for(FieldType field : fields){
       names.add(field.name);
+      RelDataType type;
       if(field.precision == null && field.scale == null){
-        types.add(factory.createSqlType(field.type));
+        type = factory.createSqlType(field.type);
       }else if(field.precision != null && field.scale == null){
-        types.add(factory.createSqlType(field.type, field.precision));
+        type = factory.createSqlType(field.type, field.precision);
       }else{
-        types.add(factory.createSqlType(field.type, field.precision, field.scale));
+        type = factory.createSqlType(field.type, field.precision, field.scale);
+      }
+
+      if (field.isNullable) {
+        types.add(factory.createTypeWithNullability(type, true));
+      } else {
+        types.add(type);
       }
     }
     return factory.createStructType(types, names);
