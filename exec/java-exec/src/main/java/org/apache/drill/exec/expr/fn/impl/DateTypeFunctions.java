@@ -297,7 +297,7 @@ public class DateTypeFunctions {
 
         public void setup() {
 
-            org.joda.time.DateTime now = (new org.joda.time.DateTime(dateTime)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC);
+            org.joda.time.DateTime now = (new org.joda.time.DateTime(dateTime.getQueryStartTime())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC);
             queryStartDate = now.getMillis();
         }
 
