@@ -169,22 +169,6 @@
     </profile>
 
     <profile>
-      <id>build-interpreter</id>
-      <activation>
-        <property>
-          <name>!skipInterpreter</name>
-        </property>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.drill.exec</groupId>
-          <artifactId>drill-interpreter</artifactId>
-          <version>${project.version}</version>
-        </dependency>
-      </dependencies>
-    </profile>
-
-    <profile>
       <id>default-hadoop</id>
       <activation>
         <property>
