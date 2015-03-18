@@ -23,9 +23,9 @@ import java.util.Set;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -60,14 +60,14 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public HBaseGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
+  public HBaseGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
     HBaseScanSpec scanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<HBaseScanSpec>() {});
-    return new HBaseGroupScan(this, scanSpec, null);
+    return new HBaseGroupScan(userName, this, scanSpec, null);
   }
 
   @Override
-  public void registerSchemas(UserSession session, SchemaPlus parent) throws IOException {
-    schemaFactory.registerSchemas(session, parent);
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+    schemaFactory.registerSchemas(schemaConfig, parent);
   }
 
   @Override

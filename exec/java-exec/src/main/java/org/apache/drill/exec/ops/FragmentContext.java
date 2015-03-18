@@ -28,6 +28,7 @@ import net.hydromatic.optiq.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -48,7 +49,9 @@ import org.apache.drill.exec.server.options.FragmentOptionManager;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -201,7 +204,18 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
       return null;
     }
 
-    return queryContext.getRootSchema();
+    final boolean isImpersonationEnabled = isImpersonationEnabled();
+    // If impersonation is enabled, we want to view the schema as query user and suppress authorization errors. As for
+    // InfoSchema purpose we want to show tables the user has permissions to list or query. If  impersonation is
+    // disabled view the schema as Drillbit process user and throw authorization errors to client.
+    SchemaConfig schemaConfig = SchemaConfig
+        .newBuilder(
+            isImpersonationEnabled ? queryContext.getQueryUserName() : ImpersonationUtil.getProcessUserName(),
+            queryContext)
+        .setIgnoreAuthErrors(isImpersonationEnabled)
+        .build();
+
+    return queryContext.getRootSchema(schemaConfig);
   }
 
   /**
@@ -325,6 +339,20 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   public ExecutionControls getExecutionControls() {
     return executionControls;
+  }
+
+  public String getQueryUserName() {
+    return fragment.getCredentials().getUserName();
+  }
+
+  public boolean isImpersonationEnabled() {
+    // TODO(DRILL-2097): Until SimpleRootExec tests are removed, we need to consider impersonation disabled if there is
+    // no config
+    if (getConfig() == null) {
+      return false;
+    }
+
+    return getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   @Override

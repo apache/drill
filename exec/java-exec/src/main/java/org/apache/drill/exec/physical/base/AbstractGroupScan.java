@@ -30,6 +30,14 @@ import org.apache.drill.exec.physical.EndpointAffinity;
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractGroupScan.class);
 
+  public AbstractGroupScan(String userName) {
+    super(userName);
+  }
+
+  public AbstractGroupScan(AbstractGroupScan that) {
+    super(that);
+  }
+
   @Override
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.emptyIterator();

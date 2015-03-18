@@ -116,8 +116,14 @@ public abstract class RecordGenerator implements InfoSchemaConstants {
       // ... do for each of the schema's tables.
       for (String tableName: schema.getTableNames()) {
         Table table = schema.getTable(tableName);
-        // Visit the table, and if requested ...
 
+        if (table == null) {
+          // Schema may return NULL for table if the query user doesn't have permissions to load the table. Ignore such
+          // tables as INFO SCHEMA is about showing tables which the use has access to query.
+          continue;
+        }
+
+        // Visit the table, and if requested ...
         if (shouldVisitTable(schemaPath, tableName) && visitTable(schemaPath,  tableName, table)) {
           // ... do for each of the table's fields.
           RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl());

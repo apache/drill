@@ -54,11 +54,13 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
       @JsonProperty("table") SystemTable table, //
       @JacksonInject StoragePluginRegistry engineRegistry //
   ) throws IOException, ExecutionSetupException {
+    super((String)null);
     this.table = table;
     this.plugin = (SystemTablePlugin) engineRegistry.getPlugin(SystemTablePluginConfig.INSTANCE);
   }
 
   public SystemTableScan(SystemTable table, SystemTablePlugin plugin) {
+    super((String)null);
     this.table = table;
     this.plugin = plugin;
   }

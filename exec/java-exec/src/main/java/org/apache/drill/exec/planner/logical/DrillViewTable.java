@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.List;
-
 import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
 import net.hydromatic.optiq.TranslatableTable;
 
 import org.apache.drill.exec.dotdrill.View;
+import org.apache.drill.exec.ops.ViewExpansionContext;
+import org.apache.drill.exec.ops.ViewExpansionContext.ViewExpansionToken;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptTable.ToRelContext;
@@ -36,9 +36,13 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillViewTable.class);
 
   private final View view;
+  private final String viewOwner;
+  private final ViewExpansionContext viewExpansionContext;
 
-  public DrillViewTable(List<String> path, View view){
+  public DrillViewTable(View view, String viewOwner, ViewExpansionContext viewExpansionContext){
     this.view = view;
+    this.viewOwner = viewOwner;
+    this.viewExpansionContext = viewExpansionContext;
   }
 
   @Override
@@ -53,15 +57,28 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
 
   @Override
   public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
-    RelDataType rowType = relOptTable.getRowType();
-    RelNode rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath());
+    ViewExpansionToken token = null;
+    try {
+      RelDataType rowType = relOptTable.getRowType();
+      RelNode rel;
 
-    if (view.isDynamic() || view.hasStar()){
-      // if View's field has "*", return rel directly.
+      if (viewExpansionContext.isImpersonationEnabled()) {
+        token = viewExpansionContext.reserveViewExpansionToken(viewOwner);
+        rel = context.expandView(rowType, view.getSql(), token.getSchemaTree(), view.getWorkspaceSchemaPath());
+      } else {
+        rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath());
+      }
+
+      // If the View's field list is not "*", create a cast.
+      if (!view.isDynamic() && !view.hasStar()) {
+        rel = RelOptUtil.createCastRel(rel, rowType, true);
+      }
+
       return rel;
-    }else{
-      // if the View's field list is not "*", try to create a cast.
-      return RelOptUtil.createCastRel(rel, rowType, true);
+    } finally {
+      if (token != null) {
+        token.release();
+      }
     }
   }
 

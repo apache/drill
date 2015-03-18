@@ -28,6 +28,15 @@ public class DynamicDrillTable extends DrillTable{
 
   private RelDataTypeHolder holder = new RelDataTypeHolder();
 
+  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName, Object selection) {
+    super(storageEngineName, plugin, userName, selection);
+  }
+
+  /**
+   * TODO: Same purpose as other constructor except the impersonation user is the user who is running the Drillbit
+   * process. Once we add impersonation to non-FileSystem storage plugins such as Hive, HBase etc,
+   * we can remove this constructor.
+   */
   public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, Object selection) {
     super(storageEngineName, plugin, selection);
   }

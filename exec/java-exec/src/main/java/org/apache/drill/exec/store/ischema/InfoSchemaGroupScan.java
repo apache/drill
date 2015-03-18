@@ -54,11 +54,13 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
   @JsonCreator
   public InfoSchemaGroupScan(@JsonProperty("table") SelectedTable table,
                              @JsonProperty("filter") InfoSchemaFilter filter) {
+    super((String)null);
     this.table = table;
     this.filter = filter;
   }
 
   private InfoSchemaGroupScan(InfoSchemaGroupScan that) {
+    super(that);
     this.table = that.table;
     this.filter = that.filter;
     this.isFilterPushedDown = that.isFilterPushedDown;

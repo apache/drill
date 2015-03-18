@@ -27,7 +27,7 @@ public class DirectSubScan extends AbstractSubScan{
   private final RecordReader reader;
 
   public DirectSubScan(RecordReader reader) {
-    super();
+    super(null);
     this.reader = reader;
   }
 

@@ -19,12 +19,22 @@ package org.apache.drill.exec.store;
 
 import net.hydromatic.optiq.SchemaPlus;
 
-import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.ops.QueryContext;
 
 import java.io.IOException;
 
+/**
+ * StoragePlugins implements this interface to register the schemas they provide.
+ */
 public interface SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaFactory.class);
 
-  public void registerSchemas(UserSession session, SchemaPlus parent) throws IOException;
+  /**
+   * Register the schemas provided by this SchemaFactory implementation under the given parent schema.
+   *
+   * @param schemaConfig Configuration for schema objects.
+   * @param parent Reference to parent schema.
+   * @throws IOException
+   */
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException;
 }

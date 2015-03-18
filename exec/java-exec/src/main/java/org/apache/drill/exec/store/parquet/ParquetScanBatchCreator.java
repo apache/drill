@@ -39,6 +39,7 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -90,7 +91,8 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       }
       final int id = rowGroupScan.getOperatorId();
       // Create the new row group scan with the new columns
-      rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getStorageEngine(), rowGroupScan.getRowGroupReadEntries(), newColumns, rowGroupScan.getSelectionRoot());
+      rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getUserName(), rowGroupScan.getStorageEngine(),
+          rowGroupScan.getRowGroupReadEntries(), newColumns, rowGroupScan.getSelectionRoot());
       rowGroupScan.setOperatorId(id);
     }
 
@@ -100,7 +102,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     } catch(IOException e) {
       throw new ExecutionSetupException(String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
     }
-    Configuration conf = fs.getConf();
+    Configuration conf = new Configuration(fs.getConf());
     conf.setBoolean(ENABLE_BYTES_READ_COUNTER, false);
     conf.setBoolean(ENABLE_BYTES_TOTAL_COUNTER, false);
     conf.setBoolean(ENABLE_TIME_READ_COUNTER, false);
@@ -119,7 +121,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       try {
         if ( ! footers.containsKey(e.getPath())){
           footers.put(e.getPath(),
-              ParquetFileReader.readFooter( fs.getConf(), new Path(e.getPath())));
+              ParquetFileReader.readFooter(conf, new Path(e.getPath())));
         }
         if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
           readers.add(

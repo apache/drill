@@ -47,6 +47,7 @@ public class EasySubScan extends AbstractSubScan{
 
   @JsonCreator
   public EasySubScan(
+      @JsonProperty("userName") String userName,
       @JsonProperty("files") List<FileWorkImpl> files, //
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
@@ -54,7 +55,7 @@ public class EasySubScan extends AbstractSubScan{
       @JsonProperty("columns") List<SchemaPath> columns, //
       @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
-
+    super(userName);
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(this.formatPlugin);
     this.files = files;
@@ -62,7 +63,9 @@ public class EasySubScan extends AbstractSubScan{
     this.selectionRoot = selectionRoot;
   }
 
-  public EasySubScan(List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns, String selectionRoot){
+  public EasySubScan(String userName, List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns,
+      String selectionRoot){
+    super(userName);
     this.formatPlugin = plugin;
     this.files = files;
     this.columns = columns;

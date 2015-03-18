@@ -115,17 +115,20 @@ public class MongoGroupScan extends AbstractGroupScan implements
   private boolean filterPushedDown = false;
 
   @JsonCreator
-  public MongoGroupScan(@JsonProperty("mongoScanSpec") MongoScanSpec scanSpec,
+  public MongoGroupScan(
+      @JsonProperty("userName") String userName,
+      @JsonProperty("mongoScanSpec") MongoScanSpec scanSpec,
       @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
       @JsonProperty("columns") List<SchemaPath> columns,
       @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException,
       ExecutionSetupException {
-    this((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig),
+    this(userName, (MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig),
         scanSpec, columns);
   }
 
-  public MongoGroupScan(MongoStoragePlugin storagePlugin,
+  public MongoGroupScan(String userName, MongoStoragePlugin storagePlugin,
       MongoScanSpec scanSpec, List<SchemaPath> columns) throws IOException {
+    super(userName);
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.scanSpec = scanSpec;
@@ -140,6 +143,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
    *          The MongoGroupScan to clone
    */
   private MongoGroupScan(MongoGroupScan that) {
+    super(that);
     this.scanSpec = that.scanSpec;
     this.columns = that.columns;
     this.storagePlugin = that.storagePlugin;
@@ -446,7 +450,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
   @Override
   public MongoSubScan getSpecificScan(int minorFragmentId)
       throws ExecutionSetupException {
-    return new MongoSubScan(storagePlugin, storagePluginConfig,
+    return new MongoSubScan(getUserName(), storagePlugin, storagePluginConfig,
         endpointFragmentMapping.get(minorFragmentId), columns);
   }
 
@@ -554,6 +558,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   @VisibleForTesting
   MongoGroupScan() {
+    super((String)null);
   }
 
   @JsonIgnore

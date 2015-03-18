@@ -24,6 +24,13 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 public abstract class AbstractFileGroupScan extends AbstractGroupScan implements FileGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractFileGroupScan.class);
 
+  public AbstractFileGroupScan(String userName) {
+    super(userName);
+  }
+
+  public AbstractFileGroupScan(AbstractFileGroupScan that) {
+    super(that);
+  }
 
   @Override
   public void modifyFileSelection(FileSelection selection) {

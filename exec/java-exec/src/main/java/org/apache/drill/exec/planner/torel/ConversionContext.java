@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.torel;
 import java.util.List;
 import java.util.Map;
 
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.prepare.Prepare;
 
 import org.apache.drill.common.expression.LogicalExpression;
@@ -111,6 +112,11 @@ public class ConversionContext implements ToRelContext {
 
   @Override
   public RelNode expandView(RelDataType rowType, String queryString, List<String> schemaPath) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RelNode expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
     throw new UnsupportedOperationException();
   }
 

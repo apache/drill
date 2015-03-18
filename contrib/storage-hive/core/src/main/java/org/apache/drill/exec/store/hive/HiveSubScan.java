@@ -62,10 +62,12 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   private List<Partition> partitions;
 
   @JsonCreator
-  public HiveSubScan(@JsonProperty("splits") List<String> splits,
+  public HiveSubScan(@JsonProperty("userName") String userName,
+                     @JsonProperty("splits") List<String> splits,
                      @JsonProperty("hiveReadEntry") HiveReadEntry hiveReadEntry,
                      @JsonProperty("splitClasses") List<String> splitClasses,
                      @JsonProperty("columns") List<SchemaPath> columns) throws IOException, ReflectiveOperationException {
+    super(userName);
     this.hiveReadEntry = hiveReadEntry;
     this.table = hiveReadEntry.getTable();
     this.partitions = hiveReadEntry.getPartitions();
@@ -126,7 +128,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     try {
-      return new HiveSubScan(splits, hiveReadEntry, splitClasses, columns);
+      return new HiveSubScan(getUserName(), splits, hiveReadEntry, splitClasses, columns);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }

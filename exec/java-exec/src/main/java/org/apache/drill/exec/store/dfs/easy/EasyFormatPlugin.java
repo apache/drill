@@ -47,6 +47,7 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
@@ -147,7 +148,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
         newColumns.add(AbstractRecordReader.STAR_COLUMN);
       }
       // Create a new sub scan object with the new set of columns;
-      scan = new EasySubScan(scan.getWorkUnits(), scan.getFormatPlugin(), newColumns, scan.getSelectionRoot());
+      scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(), newColumns,
+          scan.getSelectionRoot());
     }
 
     int numParts = 0;
@@ -203,13 +205,9 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException {
-    return new EasyGroupScan(selection, this, selection.selectionRoot);
-  }
-
-  @Override
-  public AbstractGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException {
-    return new EasyGroupScan(selection, this, columns, selection.selectionRoot);
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
+      throws IOException {
+    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot);
   }
 
   @Override

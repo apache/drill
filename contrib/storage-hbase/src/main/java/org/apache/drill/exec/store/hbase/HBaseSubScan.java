@@ -55,17 +55,20 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
 
   @JsonCreator
   public HBaseSubScan(@JacksonInject StoragePluginRegistry registry,
+                      @JsonProperty("userName") String userName,
                       @JsonProperty("storage") StoragePluginConfig storage,
                       @JsonProperty("regionScanSpecList") LinkedList<HBaseSubScanSpec> regionScanSpecList,
                       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+    super(userName);
     hbaseStoragePlugin = (HBaseStoragePlugin) registry.getPlugin(storage);
     this.regionScanSpecList = regionScanSpecList;
     this.storage = (HBaseStoragePluginConfig) storage;
     this.columns = columns;
   }
 
-  public HBaseSubScan(HBaseStoragePlugin plugin, HBaseStoragePluginConfig config,
+  public HBaseSubScan(String userName, HBaseStoragePlugin plugin, HBaseStoragePluginConfig config,
       List<HBaseSubScanSpec> regionInfoList, List<SchemaPath> columns) {
+    super(userName);
     hbaseStoragePlugin = plugin;
     storage = config;
     this.regionScanSpecList = regionInfoList;
@@ -103,7 +106,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new HBaseSubScan(hbaseStoragePlugin, storage, regionScanSpecList, columns);
+    return new HBaseSubScan(getUserName(), hbaseStoragePlugin, storage, regionScanSpecList, columns);
   }
 
   @Override

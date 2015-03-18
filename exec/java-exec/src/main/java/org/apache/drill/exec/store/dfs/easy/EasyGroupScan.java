@@ -49,6 +49,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 @JsonTypeName("fs-scan")
 public class EasyGroupScan extends AbstractFileGroupScan{
@@ -66,6 +67,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
   @JsonCreator
   public EasyGroupScan(
+      @JsonProperty("userName") String userName,
       @JsonProperty("files") List<String> files, //
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
@@ -73,23 +75,26 @@ public class EasyGroupScan extends AbstractFileGroupScan{
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
-        this(new FileSelection(files, true),
+        this(ImpersonationUtil.resolveUserName(userName),
+            new FileSelection(files, true),
             (EasyFormatPlugin<?>)engineRegistry.getFormatPlugin(storageConfig, formatConfig),
             columns,
             selectionRoot);
   }
 
-  public EasyGroupScan(FileSelection selection, EasyFormatPlugin<?> formatPlugin, String selectionRoot)
+  public EasyGroupScan(String userName, FileSelection selection, EasyFormatPlugin<?> formatPlugin, String selectionRoot)
       throws IOException {
-    this(selection, formatPlugin, ALL_COLUMNS, selectionRoot);
+    this(userName, selection, formatPlugin, ALL_COLUMNS, selectionRoot);
   }
 
   public EasyGroupScan(
+      String userName,
       FileSelection selection, //
       EasyFormatPlugin<?> formatPlugin, //
       List<SchemaPath> columns,
       String selectionRoot
       ) throws IOException{
+    super(userName);
     this.selection = Preconditions.checkNotNull(selection);
     this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
@@ -98,7 +103,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
   }
 
   private EasyGroupScan(EasyGroupScan that) {
-    Preconditions.checkNotNull(that, "Unable to clone: source is null.");
+    super(that.getUserName());
     selection = that.selection;
     formatPlugin = that.formatPlugin;
     columns = that.columns;
@@ -110,7 +115,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
   }
 
   private void initFromSelection(FileSelection selection, EasyFormatPlugin<?> formatPlugin) throws IOException {
-    final DrillFileSystem dfs = new DrillFileSystem(formatPlugin.getFsConf());
+    final DrillFileSystem dfs = ImpersonationUtil.createFileSystem(getUserName(), formatPlugin.getFsConf());
     this.selection = selection;
     BlockMapBuilder b = new BlockMapBuilder(dfs, formatPlugin.getContext().getBits());
     this.chunks = b.generateFileWork(selection.getFileStatusList(dfs), formatPlugin.isBlockSplittable());
@@ -203,7 +208,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     Preconditions.checkArgument(!filesForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    return new EasySubScan(convert(filesForMinor), formatPlugin, columns, selectionRoot);
+    return new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin, columns, selectionRoot);
   }
 
   private List<FileWorkImpl> convert(List<CompleteFileWork> list) {

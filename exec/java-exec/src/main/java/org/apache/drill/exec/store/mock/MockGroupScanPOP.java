@@ -53,8 +53,8 @@ public class MockGroupScanPOP extends AbstractGroupScan {
 
   @JsonCreator
   public MockGroupScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockScanEntry> readEntries) {
+    super((String)null);
     this.readEntries = readEntries;
-
     this.url = url;
   }
 

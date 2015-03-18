@@ -161,14 +161,9 @@ public class ParquetFormatPlugin implements FormatPlugin{
   }
 
   @Override
-  public ParquetGroupScan getGroupScan(FileSelection selection) throws IOException {
-    return getGroupScan(selection, null);
-  }
-
-  @Override
-  public ParquetGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException {
-    final DrillFileSystem dfs = new DrillFileSystem(fsConf);
-    return new ParquetGroupScan(selection.getFileStatusList(dfs), this, selection.selectionRoot, columns);
+  public ParquetGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
+      throws IOException {
+    return new ParquetGroupScan(userName, selection, this, selection.selectionRoot, columns);
   }
 
   @Override

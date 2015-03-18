@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.FileStatus;
 
 import com.google.common.base.Preconditions;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 public class DotDrillFile {
@@ -51,6 +52,13 @@ public class DotDrillFile {
   }
 
   /**
+   * @return Return owner of the file in underlying file system.
+   */
+  public String getOwner() {
+    return status.getOwner();
+  }
+
+  /**
    * Return base file name without the parent directory and extensions.
    * @return Base file name.
    */
@@ -59,7 +67,7 @@ public class DotDrillFile {
     return fileName.substring(0, fileName.lastIndexOf(type.getEnding()));
   }
 
-  public View getView(DrillConfig config) throws Exception{
+  public View getView(DrillConfig config) throws IOException {
     Preconditions.checkArgument(type == DotDrillType.VIEW);
     try(InputStream is = fs.open(status.getPath())){
       return config.getMapper().readValue(is, View.class);

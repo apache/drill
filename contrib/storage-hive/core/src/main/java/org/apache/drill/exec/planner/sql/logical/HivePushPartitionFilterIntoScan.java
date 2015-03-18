@@ -132,7 +132,7 @@ public abstract class HivePushPartitionFilterIntoScan extends StoragePluginOptim
 
     try {
       HiveScan oldScan = (HiveScan) scanRel.getGroupScan();
-      HiveScan hiveScan = new HiveScan(newReadEntry, oldScan.storagePlugin, oldScan.columns);
+      HiveScan hiveScan = new HiveScan(oldScan.getUserName(), newReadEntry, oldScan.storagePlugin, oldScan.columns);
       PartitionPruningUtil.rewritePlan(call, filterRel, projectRel, scanRel, hiveScan, builder);
     } catch (ExecutionSetupException e) {
       throw new DrillRuntimeException(e);

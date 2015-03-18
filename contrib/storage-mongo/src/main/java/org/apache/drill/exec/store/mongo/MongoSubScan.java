@@ -57,10 +57,12 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   @JsonCreator
   public MongoSubScan(
       @JacksonInject StoragePluginRegistry registry,
+      @JsonProperty("userName") String userName,
       @JsonProperty("mongoPluginConfig") StoragePluginConfig mongoPluginConfig,
       @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
       @JsonProperty("columns") List<SchemaPath> columns)
       throws ExecutionSetupException {
+    super(userName);
     this.columns = columns;
     this.mongoPluginConfig = (MongoStoragePluginConfig) mongoPluginConfig;
     this.mongoStoragePlugin = (MongoStoragePlugin) registry
@@ -68,9 +70,10 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
-  public MongoSubScan(MongoStoragePlugin storagePlugin,
+  public MongoSubScan(String userName, MongoStoragePlugin storagePlugin,
       MongoStoragePluginConfig storagePluginConfig,
       List<MongoSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
+    super(userName);
     this.mongoStoragePlugin = storagePlugin;
     this.mongoPluginConfig = storagePluginConfig;
     this.columns = columns;
@@ -105,7 +108,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new MongoSubScan(mongoStoragePlugin, mongoPluginConfig,
+    return new MongoSubScan(getUserName(), mongoStoragePlugin, mongoPluginConfig,
         chunkScanSpecList, columns);
   }
 

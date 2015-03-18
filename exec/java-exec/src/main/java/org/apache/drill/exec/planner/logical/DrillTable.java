@@ -28,29 +28,48 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 
 public abstract class DrillTable implements Table {
 
   private final String storageEngineName;
-  public final StoragePluginConfig storageEngineConfig;
-  private Object selection;
-  private StoragePlugin plugin;
+  private final StoragePluginConfig storageEngineConfig;
+  private final Object selection;
+  private final StoragePlugin plugin;
+  private final String userName;
+
   private GroupScan scan;
 
-  /** Creates a DrillTable. */
-  public DrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
+  /**
+   * Creates a DrillTable instance.
+   * @param storageEngineName StorageEngine name.
+   * @param plugin Reference to StoragePlugin.
+   * @param userName Whom to impersonate while reading the contents of the table.
+   * @param selection Table contents (type and contents depend on type of StoragePlugin).
+   */
+  public DrillTable(String storageEngineName, StoragePlugin plugin, String userName, Object selection) {
     this.selection = selection;
     this.plugin = plugin;
 
     this.storageEngineConfig = plugin.getConfig();
     this.storageEngineName = storageEngineName;
+    this.userName = userName;
+  }
+
+  /**
+   * TODO: Same purpose as other constructor except the impersonation user is the user who is running the Drillbit
+   * process. Once we add impersonation to non-FileSystem storage plugins such as Hive, HBase etc,
+   * we can remove this constructor.
+   */
+  public DrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
+    this(storageEngineName, plugin, ImpersonationUtil.getProcessUserName(), selection);
   }
 
   public GroupScan getGroupScan() throws IOException{
     if (scan == null) {
-      this.scan = plugin.getPhysicalScan(new JSONOptions(selection));
+      this.scan = plugin.getPhysicalScan(userName, new JSONOptions(selection));
     }
     return scan;
   }
@@ -94,6 +113,7 @@ public abstract class DrillTable implements Table {
     result = prime * result + ((selection == null) ? 0 : selection.hashCode());
     result = prime * result + ((storageEngineConfig == null) ? 0 : storageEngineConfig.hashCode());
     result = prime * result + ((storageEngineName == null) ? 0 : storageEngineName.hashCode());
+    result = prime * result + ((userName == null) ? 0 : userName.hashCode());
     return result;
   }
 
@@ -128,6 +148,13 @@ public abstract class DrillTable implements Table {
         return false;
       }
     } else if (!storageEngineName.equals(other.storageEngineName)) {
+      return false;
+    }
+    if (userName == null) {
+      if (other.userName != null) {
+        return false;
+      }
+    } else if (!userName.equals(other.userName)) {
       return false;
     }
     return true;

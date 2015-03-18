@@ -29,6 +29,10 @@ import com.google.common.collect.Iterators;
 public abstract class AbstractSubScan extends AbstractBase implements SubScan{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSubScan.class);
 
+  public AbstractSubScan(String userName) {
+    super(userName);
+  }
+
   @Override
   public boolean isExecutable() {
     return true;

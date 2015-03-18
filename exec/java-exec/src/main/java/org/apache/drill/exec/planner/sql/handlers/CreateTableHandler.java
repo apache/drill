@@ -58,8 +58,8 @@ public class CreateTableHandler extends DefaultSqlHandler {
       AbstractSchema drillSchema = getDrillSchema(schema);
 
       if (!drillSchema.isMutable()) {
-        return DirectPlan.createDirectPlan(context, false, String.format("Current schema '%s' is not a mutable schema. " +
-            "Can't create tables in this schema.", drillSchema.getFullSchemaName()));
+        return DirectPlan.createDirectPlan(context, false, String.format("Unable to create table. " +
+            "Schema [%s] is immutable. ", drillSchema.getFullSchemaName()));
       }
 
       final String newTblName = sqlCreateTable.getName();

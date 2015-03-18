@@ -101,14 +101,17 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   private long scanSizeInBytes = 0;
 
   @JsonCreator
-  public HBaseGroupScan(@JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
+  public HBaseGroupScan(@JsonProperty("userName") String userName,
+                        @JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
                         @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this ((HBaseStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), hbaseScanSpec, columns);
+    this (userName, (HBaseStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), hbaseScanSpec, columns);
   }
 
-  public HBaseGroupScan(HBaseStoragePlugin storagePlugin, HBaseScanSpec scanSpec, List<SchemaPath> columns) {
+  public HBaseGroupScan(String userName, HBaseStoragePlugin storagePlugin, HBaseScanSpec scanSpec,
+      List<SchemaPath> columns) {
+    super(userName);
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.hbaseScanSpec = scanSpec;
@@ -121,6 +124,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
    * @param that The HBaseGroupScan to clone
    */
   private HBaseGroupScan(HBaseGroupScan that) {
+    super(that);
     this.columns = that.columns;
     this.hbaseScanSpec = that.hbaseScanSpec;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
@@ -342,7 +346,8 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     assert minorFragmentId < endpointFragmentMapping.size() : String.format(
         "Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(),
         minorFragmentId);
-    return new HBaseSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns);
+    return new HBaseSubScan(getUserName(), storagePlugin, storagePluginConfig,
+        endpointFragmentMapping.get(minorFragmentId), columns);
   }
 
   @Override
@@ -427,7 +432,9 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
    * Empty constructor, do not use, only for testing.
    */
   @VisibleForTesting
-  public HBaseGroupScan() { }
+  public HBaseGroupScan() {
+    super((String)null);
+  }
 
   /**
    * Do not use, only for testing.

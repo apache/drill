@@ -25,10 +25,25 @@ import com.google.common.base.Preconditions;
 public abstract class AbstractBase implements PhysicalOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBase.class);
 
+  private final String userName;
+
   protected long initialAllocation = 1000000L;
   protected long maxAllocation = 10000000000L;
   private int id;
   private double cost;
+
+  public AbstractBase() {
+    userName = null;
+  }
+
+  public AbstractBase(String userName) {
+    this.userName = userName;
+  }
+
+  public AbstractBase(AbstractBase that) {
+    Preconditions.checkNotNull(that, "Unable to clone: source is null.");
+    this.userName = that.userName;
+  }
 
   @Override
   public void accept(GraphVisitor<PhysicalOperator> visitor) {
@@ -48,6 +63,7 @@ public abstract class AbstractBase implements PhysicalOperator{
     return true;
   }
 
+  @Override
   public final void setOperatorId(int id) {
     this.id = id;
   }
@@ -80,4 +96,8 @@ public abstract class AbstractBase implements PhysicalOperator{
     return maxAllocation;
   }
 
+  @Override
+  public String getUserName() {
+    return userName;
+  }
 }

@@ -36,26 +36,24 @@ public interface StoragePlugin extends SchemaFactory {
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param selection
-   *          The configured storage engine specific selection.
+   * @param userName User whom to impersonate when when reading the contents as part of Scan.
+   * @param selection The configured storage engine specific selection.
    * @return
    * @throws IOException
    */
-  public AbstractGroupScan getPhysicalScan(JSONOptions selection)
-      throws IOException;
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException;
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param selection
-   *          The configured storage engine specific selection.
-   * @param columns
-   *          (optional) The list of column names to scan from the data source.
+   * @param userName User whom to impersonate when when reading the contents as part of Scan.
+   * @param selection The configured storage engine specific selection.
+   * @param columns (optional) The list of column names to scan from the data source.
    * @return
    * @throws IOException
    */
-  public AbstractGroupScan getPhysicalScan(JSONOptions selection,
-      List<SchemaPath> columns) throws IOException;
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
+      throws IOException;
 
   public StoragePluginConfig getConfig();
 

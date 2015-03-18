@@ -779,7 +779,7 @@ public class Foreman implements Runnable {
     if (logger.isDebugEnabled()) {
       logger.debug("Converting logical plan {}.", plan.toJsonStringSafe(queryContext.getConfig()));
     }
-    return new BasicOptimizer(queryContext).optimize(
+    return new BasicOptimizer(queryContext, initiatingClient).optimize(
         new BasicOptimizer.BasicOptimizationContext(queryContext), plan);
   }
 

@@ -68,7 +68,7 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
 
     MongoGroupScan newGroupsScan = null;
     try {
-      newGroupsScan = new MongoGroupScan(groupScan.getStoragePlugin(),
+      newGroupsScan = new MongoGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
           newScanSpec, groupScan.getColumns());
     } catch (IOException e) {
       logger.error(e.getMessage(), e);

@@ -25,6 +25,7 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -39,8 +40,10 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.PartitionExplorerImpl;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 // TODO except for a couple of tests, this is only created by Foreman
 // TODO the many methods that just return drillbitContext.getXxx() should be replaced with getDrillbitContext()
@@ -48,6 +51,9 @@ import org.apache.drill.exec.testing.ExecutionControls;
 // in fragment contexts
 public class QueryContext implements AutoCloseable, UdfUtilities {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
+
+  private static final int INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES = 1024 * 1024;
+  private static final int MAX_OFF_HEAP_ALLOCATION_IN_BYTES = 16 * 1024 * 1024;
 
   private final DrillbitContext drillbitContext;
   private final UserSession session;
@@ -59,8 +65,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
   private final BufferAllocator allocator;
   private final BufferManager bufferManager;
   private final QueryDateTimeInfo queryDateTimeInfo;
-  private static final int INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES = 1024 * 1024;
-  private static final int MAX_OFF_HEAP_ALLOCATION_IN_BYTES = 16 * 1024 * 1024;
+  private final ViewExpansionContext viewExpansionContext;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -89,6 +94,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     }
     // TODO(DRILL-1942) the new allocator has this capability built-in, so this can be removed once that is available
     bufferManager = new BufferManager(this.allocator, null);
+    viewExpansionContext = new ViewExpansionContext(this);
   }
 
   public PlannerSettings getPlannerSettings() {
@@ -103,6 +109,13 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     return allocator;
   }
 
+  /**
+   * Return reference to default schema instance in a schema tree. Each {@link net.hydromatic.optiq.SchemaPlus}
+   * instance can refer to its parent and its children. From the returned reference to default schema instance,
+   * clients can traverse the entire schema tree and know the default schema where to look up the tables first.
+   *
+   * @return Reference to default schema instance in a schema tree.
+   */
   public SchemaPlus getNewDefaultSchema() {
     final SchemaPlus rootSchema = getRootSchema();
     final SchemaPlus defaultSchema = session.getDefaultSchema(rootSchema);
@@ -113,16 +126,50 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     return defaultSchema;
   }
 
+  /**
+   * Get root schema with schema owner as the user who issued the query that is managed by this QueryContext.
+   * @return Root of the schema tree.
+   */
   public SchemaPlus getRootSchema() {
+    return getRootSchema(getQueryUserName());
+  }
+
+  /**
+   * Return root schema with schema owner as the given user.
+   *
+   * @param userName User who owns the schema tree.
+   * @return Root of the schema tree.
+   */
+  public SchemaPlus getRootSchema(String userName) {
+    final String schemaUser = isImpersonationEnabled() ? userName : ImpersonationUtil.getProcessUserName();
+    final SchemaConfig schemaConfig = SchemaConfig.newBuilder(schemaUser, this).build();
+    return getRootSchema(schemaConfig);
+  }
+
+  /**
+   *  Create and return a SchemaTree with given <i>schemaConfig</i>.
+   * @param schemaConfig
+   * @return
+   */
+  public SchemaPlus getRootSchema(SchemaConfig schemaConfig) {
     try {
       final SchemaPlus rootSchema = SimpleOptiqSchema.createRootSchema(false);
-      drillbitContext.getSchemaFactory().registerSchemas(session, rootSchema);
+      drillbitContext.getSchemaFactory().registerSchemas(schemaConfig, rootSchema);
       return rootSchema;
     } catch(IOException e) {
+      // We can't proceed further without a schema, throw a runtime exception.
       final String errMsg = String.format("Failed to create schema tree: %s", e.getMessage());
       logger.error(errMsg, e);
       throw new DrillRuntimeException(errMsg, e);
     }
+  }
+
+  /**
+   * Get the user name of the user who issued the query that is managed by this QueryContext.
+   * @return
+   */
+  public String getQueryUserName() {
+    return session.getCredentials().getUserName();
   }
 
   public OptionManager getOptions() {
@@ -151,6 +198,14 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
 
   public FunctionImplementationRegistry getFunctionRegistry() {
     return drillbitContext.getFunctionImplementationRegistry();
+  }
+
+  public ViewExpansionContext getViewExpansionContext() {
+    return viewExpansionContext;
+  }
+
+  public boolean isImpersonationEnabled() {
+     return getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   public DrillOperatorTable getDrillOperatorTable() {

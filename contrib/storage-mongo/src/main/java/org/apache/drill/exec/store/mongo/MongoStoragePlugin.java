@@ -25,9 +25,9 @@ import net.hydromatic.optiq.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory;
 import org.slf4j.Logger;
@@ -63,8 +63,8 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void registerSchemas(UserSession session, SchemaPlus parent) throws IOException {
-    schemaFactory.registerSchemas(session, parent);
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+    schemaFactory.registerSchemas(schemaConfig, parent);
   }
 
   @Override
@@ -73,12 +73,9 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public AbstractGroupScan getPhysicalScan(JSONOptions selection)
-      throws IOException {
-    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(),
-        new TypeReference<MongoScanSpec>() {
-        });
-    return new MongoGroupScan(this, mongoScanSpec, null);
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
+    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>() {});
+    return new MongoGroupScan(userName, this, mongoScanSpec, null);
   }
 
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {

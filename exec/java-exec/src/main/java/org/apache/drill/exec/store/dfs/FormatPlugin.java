@@ -44,11 +44,9 @@ public interface FormatPlugin {
 
   public AbstractWriter getWriter(PhysicalOperator child, String location) throws IOException;
 
-  public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException;
-
   public Set<StoragePluginOptimizerRule> getOptimizerRules();
 
-  public AbstractGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException;
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) throws IOException;
 
   public FormatPluginConfig getConfig();
   public StoragePluginConfig getStorageConfig();

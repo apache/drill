@@ -38,7 +38,7 @@ public class DirectGroupScan extends AbstractGroupScan{
   private final RecordReader reader;
 
   public DirectGroupScan(RecordReader reader) {
-    super();
+    super((String)null);
     this.reader = reader;
   }
 

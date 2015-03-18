@@ -19,6 +19,7 @@ package org.apache.drill.exec.testing;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -29,8 +30,9 @@ import static org.junit.Assert.fail;
 public class TestPauseInjection extends BaseTestQuery {
 
   private static final UserSession session = UserSession.Builder.newBuilder()
-    .withOptionManager(bits[0].getContext().getOptionManager())
-    .build();
+      .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+      .withOptionManager(bits[0].getContext().getOptionManager())
+      .build();
 
   /**
    * Class whose methods we want to simulate pauses at run-time for testing

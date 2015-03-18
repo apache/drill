@@ -42,6 +42,8 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -301,7 +303,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   public class DrillSchemaFactory implements SchemaFactory {
 
     @Override
-    public void registerSchemas(UserSession session, SchemaPlus parent) throws IOException {
+    public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
       Stopwatch watch = new Stopwatch();
       watch.start();
 
@@ -325,7 +327,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
         // finally register schemas with the refreshed plugins
         for (StoragePlugin plugin : plugins.values()) {
-          plugin.registerSchemas(session, parent);
+          plugin.registerSchemas(schemaConfig, parent);
         }
       } catch (ExecutionSetupException e) {
         throw new DrillRuntimeException("Failure while updating storage plugins", e);

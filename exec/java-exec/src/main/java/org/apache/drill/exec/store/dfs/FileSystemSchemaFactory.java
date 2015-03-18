@@ -27,10 +27,11 @@ import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 
@@ -58,8 +59,8 @@ public class FileSystemSchemaFactory implements SchemaFactory{
   }
 
   @Override
-  public void registerSchemas(UserSession session, SchemaPlus parent) throws IOException {
-    FileSystemSchema schema = new FileSystemSchema(schemaName, session);
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+    FileSystemSchema schema = new FileSystemSchema(schemaName, schemaConfig);
     SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
     schema.setPlus(plusOfThis);
   }
@@ -69,10 +70,10 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     private final WorkspaceSchema defaultSchema;
     private final Map<String, WorkspaceSchema> schemaMap = Maps.newHashMap();
 
-    public FileSystemSchema(String name, UserSession session) throws IOException {
+    public FileSystemSchema(String name, SchemaConfig schemaConfig) throws IOException {
       super(ImmutableList.<String>of(), name);
       for(WorkspaceSchemaFactory f :  factories){
-        WorkspaceSchema s = f.createSchema(getSchemaPath(), session);
+        WorkspaceSchema s = f.createSchema(getSchemaPath(), schemaConfig);
         schemaMap.put(s.getName(), s);
       }
 

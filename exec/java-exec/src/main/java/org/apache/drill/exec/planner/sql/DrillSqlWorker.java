@@ -49,6 +49,7 @@ import org.apache.drill.exec.testing.ExecutionControlsInjector;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanException;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.apache.hadoop.security.AccessControlException;
 import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.rel.rules.ReduceExpressionsRule;
 import org.eigenbase.rel.rules.WindowedAggSplitterRule;
@@ -159,6 +160,8 @@ public class DrillSqlWorker {
     } catch(ValidationException e) {
       String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
       throw UserException.parseError(e).message(errorMessage).build();
+    } catch (AccessControlException e) {
+      throw UserException.permissionError(e).build();
     } catch (IOException | RelConversionException e) {
       throw new QueryInputException("Failure handling SQL.", e);
     }

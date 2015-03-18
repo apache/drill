@@ -23,6 +23,7 @@ import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -38,8 +39,9 @@ public class TestExceptionInjection extends BaseTestQuery {
   private static final String NO_THROW_FAIL = "Didn't throw expected exception";
 
   private static final UserSession session = UserSession.Builder.newBuilder()
-    .withOptionManager(bits[0].getContext().getOptionManager())
-    .build();
+      .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+      .withOptionManager(bits[0].getContext().getOptionManager())
+      .build();
 
   /**
    * Class whose methods we want to simulate runtime at run-time for testing
@@ -248,8 +250,9 @@ public class TestExceptionInjection extends BaseTestQuery {
     final DrillbitContext drillbitContext2 = drillbit2.getContext();
 
     final UserSession session = UserSession.Builder.newBuilder()
-      .withOptionManager(drillbitContext1.getOptionManager())
-      .build();
+        .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+        .withOptionManager(drillbitContext1.getOptionManager())
+        .build();
 
     final String passthroughDesc = "<<injected from descPassthrough>>";
     final int nSkip = 7;

@@ -32,6 +32,7 @@ public class InfoSchemaSubScan extends AbstractSubScan{
   @JsonCreator
   public InfoSchemaSubScan(@JsonProperty("table") SelectedTable table,
                            @JsonProperty("filter") InfoSchemaFilter filter) {
+    super(null);
     this.table = table;
     this.filter = filter;
   }

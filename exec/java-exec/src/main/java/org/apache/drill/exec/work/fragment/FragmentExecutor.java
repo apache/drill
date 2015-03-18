@@ -18,6 +18,7 @@
 package org.apache.drill.exec.work.fragment;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,7 +39,9 @@ import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
+import org.apache.hadoop.security.UserGroupInformation;
 
 /**
  * Responsible for running a single fragment on a single Drillbit. Listens/responds to status request
@@ -182,13 +185,23 @@ public class FragmentExecutor implements Runnable {
         }
       }
 
-      injector.injectChecked(fragmentContext.getExecutionControls(), "fragment-execution", IOException.class);
-      /*
-       * Run the query until root.next returns false OR we no longer need to continue.
-       */
-      while (shouldContinue() && root.next()) {
-        // loop
-      }
+      final UserGroupInformation queryUserUgi = fragmentContext.isImpersonationEnabled() ?
+          ImpersonationUtil.createProxyUgi(fragmentContext.getQueryUserName()) :
+          ImpersonationUtil.getProcessUserUGI();
+
+      queryUserUgi.doAs(new PrivilegedExceptionAction<Void>() {
+        public Void run() throws Exception {
+          injector.injectChecked(fragmentContext.getExecutionControls(), "fragment-execution", IOException.class);
+          /*
+           * Run the query until root.next returns false OR we no longer need to continue.
+           */
+          while (shouldContinue() && root.next()) {
+            // loop
+          }
+
+          return null;
+        }
+      });
 
       updateState(FragmentState.FINISHED);
     } catch (AssertionError | Exception e) {
