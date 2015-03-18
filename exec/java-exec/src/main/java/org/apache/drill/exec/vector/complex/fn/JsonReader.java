@@ -33,7 +33,9 @@ import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.easy.json.JsonProcessor;
 import org.apache.drill.exec.store.easy.json.RewindableUtf8Reader;
+import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -53,12 +55,10 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.io.compress.CompressionInputStream;
 
-public class JsonReader {
+public class JsonReader extends BaseJsonProcessor implements JsonProcessor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
   public final static int MAX_RECORD_SIZE = 128*1024;
 
-  private final RewindableUtf8Reader parser;
-  private DrillBuf workBuf;
   private final List<SchemaPath> columns;
   private final boolean allTextMode;
   private boolean atLeastOneWrite = false;
@@ -71,11 +71,6 @@ public class JsonReader {
    */
   private boolean onReset = false;
 
-  public static enum ReadState {
-    WRITE_FAILURE,
-    END_OF_STREAM,
-    WRITE_SUCCEED
-  }
 
   public JsonReader() throws IOException {
     this(null, false);
@@ -86,23 +81,15 @@ public class JsonReader {
   }
 
   public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean allTextMode) {
-    BufferRecycler recycler = new BufferRecycler();
-    IOContext context = new IOContext(recycler, this, false);
-    final int features = JsonParser.Feature.collectDefaults() //
-        | Feature.ALLOW_COMMENTS.getMask() //
-        | Feature.ALLOW_UNQUOTED_FIELD_NAMES.getMask();
-
-    BytesToNameCanonicalizer can = BytesToNameCanonicalizer.createRoot();
-    parser = new RewindableUtf8Reader<>(context, features, can.makeChild(JsonFactory.Feature.collectDefaults()), context.allocReadIOBuffer());
+    super(managedBuf);
 
     assert Preconditions.checkNotNull(columns).size() > 0 : "json record reader requires at least a column";
-
     this.selection = FieldSelection.getFieldSelection(columns);
-    this.workBuf = managedBuf;
     this.allTextMode = allTextMode;
     this.columns = columns;
   }
 
+  @Override
   public void ensureAtLeastOneField(ComplexWriter writer){
     if(!atLeastOneWrite){
       // if we had no columns, create one empty one so we can return some data for count purposes.
@@ -117,6 +104,7 @@ public class JsonReader {
     }
   }
 
+  @Override
   public void setSource(InputStream is) throws IOException{
     parser.setInputStream(is);
     this.onReset = false;
@@ -136,6 +124,7 @@ public class JsonReader {
   }
 
 
+  @Override
   public ReadState write(ComplexWriter writer) throws IOException {
     JsonToken t = onReset ? parser.getCurrentToken() : parser.nextToken();
 
