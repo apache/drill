@@ -224,7 +224,6 @@ public class TestDateTypes extends PopUnitTestBase {
 
             String result[] = {"2008-02-27",
                                "2008-02-27 01:02:03.000",
-                               "2008-02-27 01:02:03.000 UTC",
                                "10:11:13.999",
                                "2 years 2 months 3 days 0:1:3.89"};
 

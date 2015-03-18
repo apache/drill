@@ -66,9 +66,6 @@ public class G${type}ToChar implements DrillSimpleFunc {
 
     public void eval() {
         temp.setMillis(left.value);
-        <#if type == "TimeStampTZ">
-        temp.setZoneRetainFields(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
-        </#if>
 
         // print current value in the desired format
         String str = format.print(temp);

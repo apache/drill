@@ -55,15 +55,10 @@
     {from: "VarBinary", to: "VarBinary", major: "SrcVarlenTargetVarlen"},
 
     {from: "Date", to: "TimeStamp", major: "Date"},
-    {from: "Date", to: "TimeStampTZ", major: "Date"},
     {from: "TimeStamp", to: "Date", major: "Date"},
-    {from: "TimeStamp", to: "TimeStampTZ", major: "Date"},
-    {from: "TimeStampTZ", to: "Date", major: "Date"},
-    {from: "TimeStampTZ", to: "TimeStamp", major: "Date"},
 
     {from: "VarChar", to: "Date", major: "VarCharDate", alias: "datetype"},
     {from: "VarChar", to: "TimeStamp", major: "VarCharDate", alias: "timestamptype"},
-    {from: "VarChar", to: "TimeStampTZ", major: "VarCharDate", alias: "timestamptztype"},
     {from: "VarChar", to: "Time", major: "VarCharDate", alias: "timetype"},
 
     {from: "VarBinary", to: "Date", major: "VarBinaryDate", alias: "datetype"},
@@ -73,7 +68,6 @@
     {from: "Date", to: "VarChar", major: "DateVarChar", bufferLength: "10"}
     {from: "TimeStamp", to: "VarChar", major: "DateVarChar", bufferLength: "23"},
     {from: "Time", to: "VarChar", major: "DateVarChar", bufferLength: "12"},
-    {from: "TimeStampTZ", to: "VarChar", major: "DateVarChar", bufferLength: "54"},
 
     {from: "VarChar", to: "Interval", major: "VarCharInterval"},
     {from: "VarChar", to: "IntervalDay", major: "VarCharInterval"},

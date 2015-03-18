@@ -588,7 +588,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       <#if type.major == "VarLen">lastSet = index;</#if>
     }
     
-    <#if !(type.major == "VarLen" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay")>
+    <#if !(type.major == "VarLen" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense" || minor.class == "Interval" || minor.class == "IntervalDay")>
       public void setSafe(int index, ${minor.javaType!type.javaType} value) {
         <#if type.major == "VarLen">
         fillEmpties(index);

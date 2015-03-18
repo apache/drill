@@ -49,12 +49,10 @@ import org.apache.drill.exec.expr.holders.NullableIntervalHolder;
 import org.apache.drill.exec.expr.holders.NullableIntervalYearHolder;
 import org.apache.drill.exec.expr.holders.NullableTimeHolder;
 import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
-import org.apache.drill.exec.expr.holders.NullableTimeStampTZHolder;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
-import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
@@ -87,7 +85,6 @@ public class ScalarReplacementTypes {
         DateHolder.class,
         TimeHolder.class,
         TimeStampHolder.class,
-        TimeStampTZHolder.class,
         VarCharHolder.class,
         VarBinaryHolder.class,
         NullableBitHolder.class,
@@ -109,7 +106,6 @@ public class ScalarReplacementTypes {
         NullableDateHolder.class,
         NullableTimeHolder.class,
         NullableTimeStampHolder.class,
-        NullableTimeStampTZHolder.class
     };
 
     CLASSES = ImmutableSet.copyOf(classList);

@@ -308,7 +308,7 @@ public class TypeHelper {
 <#list vv.types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case} :
-      <#if minor.class?starts_with("Var") || minor.class == "TimeStampTZ" || minor.class == "IntervalDay" || minor.class == "Interval" ||
+      <#if minor.class?starts_with("Var") || minor.class == "IntervalDay" || minor.class == "Interval" ||
         minor.class?starts_with("Decimal28") ||  minor.class?starts_with("Decimal38")>
         switch (type.getMode()) {
           case REQUIRED:

@@ -20,7 +20,7 @@
 
 
 <#list cast.types as type>
-<#if type.major == "DateVarChar">  <#-- Template to convert functions from Date, Time, TimeStamp, TimeStampTZ to VarChar -->
+<#if type.major == "DateVarChar">  <#-- Template to convert functions from Date, Time, TimeStamp to VarChar -->
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
 
@@ -67,11 +67,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       org.joda.time.LocalTime temp = new org.joda.time.LocalTime(in.value, org.joda.time.DateTimeZone.UTC);
       String str = temp.toString();
       <#else>
-      <#if type.from == "TimeStampTZ">
-      org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[in.index]));
-      <#else>
       org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.UTC);
-      </#if>
       String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.print(temp);
       </#if>
       out.buffer = buffer;

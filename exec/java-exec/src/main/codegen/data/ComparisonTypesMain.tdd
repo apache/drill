@@ -50,7 +50,6 @@
     {comparables: ["TimeStamp"], mode: "primitive"},
     {comparables: ["Date"], mode: "primitive"},
     {comparables: ["Time"], mode: "primitive"},
-    {comparables: ["TimeStampTZ"], mode: "primitive"},
     {comparables: ["IntervalYear"], mode: "primitive"},
 
     {comparables: ["IntervalDay"], mode: "intervalDay"},

@@ -62,16 +62,6 @@ public static class G${type}Difference implements DrillSimpleFunc {
         long difference = (left.value - right.value);
         out.milliseconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         out.days = (int) (difference / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-        <#elseif type == "TimeStampTZ">
-        if (left.index != right.index) {
-            // The two inputs are in different time zones convert one of them
-            org.joda.time.DateTime leftInput = new org.joda.time.DateTime(left.value, org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
-            // convert left timestamp to the time zone of the right timestamp
-            left.value = (leftInput.withZone(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[right.index]))).getMillis();
-        }
-        long difference = (left.value - right.value);
-        out.milliseconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-        out.days = (int) (difference / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         </#if>
     }
 }

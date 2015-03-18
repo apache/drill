@@ -231,11 +231,10 @@ public class TestJdbcQuery extends JdbcTestQueryBase{
           Statement statement = connection.createStatement();
 
           // show files
-          ResultSet resultSet = statement.executeQuery("select timestamp '2008-2-23 12:23:23', date '2001-01-01', timestamptztype('2008-2-23 1:20:23 US/Pacific') from cp.`employee.json` limit 1");
+          ResultSet resultSet = statement.executeQuery("select timestamp '2008-2-23 12:23:23', date '2001-01-01' from cp.`employee.json` limit 1");
 
           assert (resultSet.getMetaData().getColumnType(1) == Types.TIMESTAMP);
           assert (resultSet.getMetaData().getColumnType(2) == Types.DATE);
-          assert (resultSet.getMetaData().getColumnType(3) == Types.TIMESTAMP);
 
           System.out.println(JdbcAssert.toString(resultSet));
           resultSet.close();

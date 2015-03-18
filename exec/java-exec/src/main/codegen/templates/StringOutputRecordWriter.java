@@ -127,7 +127,6 @@ public abstract class StringOutputRecordWriter implements RecordWriter {
         minor.class == "Time" ||
         minor.class == "TimeTZ" ||
         minor.class == "TimeStamp" ||
-        minor.class == "TimeStampTZ" ||
         minor.class == "IntervalYear" ||
         minor.class == "IntervalDay" ||
         minor.class == "Interval" ||

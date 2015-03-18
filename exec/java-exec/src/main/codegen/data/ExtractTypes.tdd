@@ -16,5 +16,5 @@
 
 {
   toTypes: [Second, Minute, Hour, Day, Month, Year],
-  fromTypes: [Date, Time, TimeStamp, TimeStampTZ, Interval, IntervalDay, IntervalYear]
+  fromTypes: [Date, Time, TimeStamp, Interval, IntervalDay, IntervalYear]
 }

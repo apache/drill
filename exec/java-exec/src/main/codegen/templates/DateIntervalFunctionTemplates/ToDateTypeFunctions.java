@@ -65,10 +65,6 @@ public class GTo${type} implements DrillSimpleFunc {
         out.value = (org.joda.time.DateMidnight.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC)).getMillis();
         <#elseif type == "TimeStamp">
         out.value = org.joda.time.DateTime.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
-        <#elseif type == "TimeStampTZ">
-        org.joda.time.DateTime dt = org.joda.time.DateTime.parse(input, format);
-        out.value = dt.getMillis();
-        out.index = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(dt.getZone().toString());
         <#elseif type == "Time">
         out.value = (int) ((format.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
         </#if>

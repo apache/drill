@@ -260,26 +260,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return data.slice(index * ${type.width}, ${type.width});
     }
 
-    <#if (minor.class == "TimeStampTZ")>
-    public void get(int index, ${minor.class}Holder holder){
-      holder.value = data.getLong(index * ${type.width});
-      holder.index = data.getInt((index * ${type.width})+ ${minor.millisecondsSize});
-    }
-
-    public void get(int index, Nullable${minor.class}Holder holder){
-      holder.isSet = 1;
-      holder.value = data.getLong(index * ${type.width});
-      holder.index = data.getInt((index * ${type.width})+ ${minor.millisecondsSize});
-    }
-
-    @Override
-    public ${friendlyType} getObject(int index) {
-      long l = data.getLong(index * ${type.width});
-      DateTime t = new DateTime(l);
-      return t;
-    }
-
-    <#elseif (minor.class == "Interval")>
+    <#if (minor.class == "Interval")>
     public void get(int index, ${minor.class}Holder holder){
 
       int offsetIndex = index * ${type.width};
@@ -566,36 +547,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      data.setBytes(index * ${type.width}, value, 0, ${type.width});
    }
 
-   <#if (minor.class == "TimeStampTZ")>
-   public void set(int index, long timestamp, int tzindex){
-     data.setLong((index * ${type.width}), timestamp);
-     data.setInt(((index * ${type.width}) + ${minor.millisecondsSize}), tzindex);
-   }
-   
-   public void set(int index, ${minor.class}Holder holder){
-     set(index, holder.value, holder.index);
-   }
-
-   public void set(int index, Nullable${minor.class}Holder holder){
-     set(index, holder.value, holder.index);
-   }
-
-   public void setSafe(int index, long timestamp, int tzindex){
-     if(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, timestamp, tzindex);
-   }
-   
-   public void setSafe(int index, ${minor.class}Holder holder){
-     setSafe(index, holder.value, holder.index);
-   }
-
-   public void setSafe(int index, Nullable${minor.class}Holder holder){
-     setSafe(index, holder.value, holder.index);
-   }
-   
-   <#elseif (minor.class == "Interval")>
+  <#if (minor.class == "Interval")>
    public void set(int index, int months, int days, int milliseconds){
      int offsetIndex = index * ${type.width};
      data.setInt(offsetIndex, months);

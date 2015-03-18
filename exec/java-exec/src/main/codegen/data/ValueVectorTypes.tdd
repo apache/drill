@@ -90,7 +90,6 @@
       javaType: "DrillBuf",
       boxedType: "DrillBuf",
       minor: [
-        { class: "TimeStampTZ", millisecondsSize: 8, friendlyType: "DateTime", fields: [ {name: "value", type:"long"}, {name: "index", type: "int"}] },
         { class: "IntervalDay", millisecondsOffset: 4, friendlyType: "Period", fields: [ {name: "days", type:"int"}, {name: "milliseconds", type:"int"}] }
       ]
     },

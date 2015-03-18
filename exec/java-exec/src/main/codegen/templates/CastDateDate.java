@@ -18,7 +18,7 @@
 <@pp.dropOutputFile />
 
 <#list cast.types as type>
-<#if type.major == "Date">  <#-- Template file to convert between Date types (Date, TimeStamp, TimeStampTZ) -->
+<#if type.major == "Date">  <#-- Template file to convert between Date types (Date, TimeStamp) -->
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
 
@@ -56,10 +56,6 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
     out.value = (new org.joda.time.DateMidnight(in.value, org.joda.time.DateTimeZone.UTC)).getMillis();
     <#elseif type.to == "TimeStamp">
     out.value = in.value;
-    <#elseif type.to == "TimeStampTZ">
-    out.value = in.value;
-    // While casting from other date formats, we always use UTC as the timezone
-    out.index = org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneMap.get("UTC");
     </#if>
   }
 }

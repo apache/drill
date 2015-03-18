@@ -132,7 +132,6 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
               minor.class == "Time" ||
               minor.class == "TimeStamp" ||
               minor.class == "TimeTZ" ||
-              minor.class == "TimeStampTZ" ||
               minor.class == "IntervalDay" ||
               minor.class == "Interval" ||
               minor.class == "VarChar" ||

@@ -68,8 +68,8 @@ public static class G${type}DateTrunc implements DrillSimpleFunc {
         else if (org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(left.start, left.end, left.buffer).equalsIgnoreCase("SECOND")) dateTime.setRounding(dateTime.getChronology().secondOfMinute());
         else
         </#if>
-        <#if type == "TimeStamp" || type == "TimeStampTZ">
-            throw new UnsupportedOperationException("date_trunc function supports the following time units for TimeStamp(TZ): YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
+        <#if type == "TimeStamp">
+            throw new UnsupportedOperationException("date_trunc function supports the following time units for TimeStamp: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
         out.value = dateTime.getMillis();
         <#elseif type == "Date">
             throw new UnsupportedOperationException("date_trunc function supports the following time units for Date: YEAR, MONTH, DAY");

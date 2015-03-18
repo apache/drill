@@ -76,7 +76,6 @@ public class ParquetTypeHelper {
                     typeMap.put(MinorType.${minor.class?upper_case}, PrimitiveTypeName.BOOLEAN);
     <#elseif
             minor.class == "TimeTZ" ||
-            minor.class == "TimeStampTZ" ||
             minor.class == "IntervalDay" ||
             minor.class == "Interval" ||
             minor.class == "Decimal28Dense" ||

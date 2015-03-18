@@ -98,7 +98,6 @@ public class TestDateFunctions extends PopUnitTestBase {
 
         String[] expectedResults = {"P365D",
                                     "P-366DT-60S",
-                                    "PT10800S",
                                     "PT39600S"};
         testCommon(expectedResults, "/functions/date/date_difference_arithmetic.json", "/test_simple_date.json");
     }
@@ -136,8 +135,7 @@ public class TestDateFunctions extends PopUnitTestBase {
 
         String expectedResults[] = {"2008-Feb-23",
                                     "12 20 30",
-                                    "2008 Feb 23 12:00:00",
-                                    "2008-02-23 20:00:00 America/Los_Angeles"};
+                                    "2008 Feb 23 12:00:00"};
         testCommon(expectedResults, "/functions/date/to_char.json", "/test_simple_date.json");
     }
 

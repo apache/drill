@@ -45,7 +45,7 @@ public class ${name}Accessor extends AbstractSqlAccessor{
     this.ac = vector.getAccessor();
   }
 
-  <#if minor.class != "TimeStampTZ" && minor.class != "TimeStamp" && minor.class != "Time" && minor.class != "Date">
+  <#if minor.class != "TimeStamp" && minor.class != "Time" && minor.class != "Date">
   public Object getObject(int index){
     return ac.getObject(index);
   }
@@ -103,16 +103,7 @@ public class ${name}Accessor extends AbstractSqlAccessor{
   </#switch>
 
   <#else>
-  <#if minor.class == "TimeStampTZ">
-  public Object getObject(int index) {
-    return getTimestamp(index);
-  }
-
-  @Override
-  public Timestamp getTimestamp(int index) {
-    return new Timestamp(ac.getObject(index).getMillis());
-  }
-  <#elseif minor.class == "Interval" || minor.class == "IntervalDay" || minor.class == "IntervalYear">
+  <#if minor.class == "Interval" || minor.class == "IntervalDay" || minor.class == "IntervalYear">
   @Override
   public String getString(int index) {
       return String.valueOf(ac.getAsStringBuilder(index));

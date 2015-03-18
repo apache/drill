@@ -47,10 +47,7 @@ public class ${className} implements DrillSimpleFunc {
   public void eval() {
     output.isSet = 1;
 <#if type.major != "VarLen">
-  <#if (minor.class == "TimeStampTZ")>
-    output.value = input.value;
-    output.index = input.index;
-  <#elseif (minor.class == "Interval")>
+  <#if (minor.class == "Interval")>
     output.months = input.months;
     output.days = input.days;
     output.milliseconds = input.milliseconds;

@@ -33,7 +33,7 @@ import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
-import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
+import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.pop.PopUnitTestBase;
@@ -131,16 +131,13 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     org.joda.time.DateTime     now = new org.joda.time.DateTime(dateTime.getQueryStartTime(), timeZone);
 
     long queryStartDate = now.getMillis();
-    int timezoneIndex = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(now.getZone().toString());
 
-    TimeStampTZHolder out = new TimeStampTZHolder();
+    TimeStampHolder out = new TimeStampHolder();
 
     out.value = queryStartDate;
-    out.index = timezoneIndex;
 
     ByteBuffer buffer = ByteBuffer.allocate(12);
     buffer.putLong(out.value);
-    buffer.putInt(out.index);
     long l = buffer.getLong(0);
     DateTime t = new DateTime(l);
 

@@ -44,13 +44,11 @@ import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
 import org.apache.drill.exec.expr.holders.NullableTimeHolder;
 import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
-import org.apache.drill.exec.expr.holders.NullableTimeStampTZHolder;
 import org.apache.drill.exec.expr.holders.NullableVar16CharHolder;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
-import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
 import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
@@ -367,36 +365,6 @@ public class HashFunctions {
         out.value = 0;
       } else {
         out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
-      }
-    }
-  }
-
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class TimeStampTZHash implements DrillSimpleFunc {
-    @Param  TimeStampTZHolder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value ^ in.index, 0);
-    }
-  }
-
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class NullableTimeStampTZHash implements DrillSimpleFunc {
-    @Param  NullableTimeStampTZHolder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-      if (in.isSet == 0) {
-        out.value = 0;
-      } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value ^ in.index, 0);
       }
     }
   }

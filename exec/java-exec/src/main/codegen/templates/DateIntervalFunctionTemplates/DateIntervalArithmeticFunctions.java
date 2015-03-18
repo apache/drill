@@ -21,7 +21,7 @@
 <#list dateIntervalFunc.dates as datetype>
 <#list dateIntervalFunc.intervals as intervaltype>
 
-<#if datetype == "Date" || datetype == "TimeStamp" || datetype == "TimeStampTZ">
+<#if datetype == "Date" || datetype == "TimeStamp">
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/${datetype}${intervaltype}Functions.java" />
 
 <#include "/@includes/license.ftl" />
@@ -49,7 +49,7 @@ public class ${datetype}${intervaltype}Functions {
 <#macro dateIntervalArithmeticBlock left right temp op output intervaltype datetype>
 
     <#-- Throw exception if we are adding integer to a TIMESTAMP -->
-    <#if (datetype == "TimeStamp" || datetype == "TimeStampTZ") && (intervaltype == "Int" || intervaltype == "BigInt")>
+    <#if (datetype == "TimeStamp") && (intervaltype == "Int" || intervaltype == "BigInt")>
     if (1 == 1) {
         /* Since this will be included in the run time generated code, there might be other logic that follows this
          * if the exception is raised without a condition, we will hit compilation issues while compiling run time code
@@ -73,11 +73,6 @@ public class ${datetype}${intervaltype}Functions {
     ${temp}.addDays((int) ${right}.value <#if op == '-'> * -1 </#if>);
     </#if>
 
-    <#-- copy the time zone index if its a timestamp -->
-    <#if datetype == "TimeStampTZ">
-    ${output}.index = ${left}.index;
-    </#if>
-
     ${output}.value = ${temp}.getMillis();
     </#if>
 </#macro>
@@ -93,13 +88,8 @@ public class ${datetype}${intervaltype}Functions {
     <#else>
     @Output ${datetype}Holder out;
     </#if>
-
         public void setup() {
-            <#if datetype == "TimeStampTZ">
-            temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
-            <#else>
             temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
-            </#if>
         }
 
         public void eval() {
@@ -121,11 +111,7 @@ public class ${datetype}${intervaltype}Functions {
     @Output ${datetype}Holder out;
     </#if>
         public void setup() {
-            <#if datetype == "TimeStampTZ">
-            temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
-            <#else>
             temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
-            </#if>
         }
 
         public void eval() {
@@ -143,11 +129,7 @@ public class ${datetype}${intervaltype}Functions {
     @Output ${datetype}Holder out;
 
         public void setup() {
-            <#if datetype == "TimeStampTZ">
-            temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[left.index]));
-            <#else>
             temp = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
-            </#if>
         }
 
         public void eval() {

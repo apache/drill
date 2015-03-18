@@ -203,7 +203,6 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
       </#if>
   <#elseif
         minor.class == "TimeTZ" ||
-        minor.class == "TimeStampTZ" ||
         minor.class == "IntervalDay" ||
         minor.class == "Interval" ||
         minor.class == "Decimal28Dense" ||
