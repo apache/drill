@@ -736,4 +736,24 @@ public class TestExampleQueries extends BaseTestQuery{
         .baselineValues((long) 2, (long) 2)
         .build().run();
   }
+
+  @Test // DRILL-2094
+  public void testOrderbyArrayElement() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/json/orderByArrayElement.json").toURI().toString();
+
+    String query = String.format("select t.id, t.list[0] as SortingElem " +
+        "from dfs_test.`%s` t " +
+        "order by t.list[0]", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("id", "SortingElem")
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 5, (long) 2)
+        .baselineValues((long) 4, (long) 3)
+        .baselineValues((long) 2, (long) 5)
+        .baselineValues((long) 3, (long) 6)
+        .build().run();
+  }
 }

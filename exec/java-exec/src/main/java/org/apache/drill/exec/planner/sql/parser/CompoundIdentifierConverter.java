@@ -24,6 +24,7 @@ import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlJoin;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOrderBy;
 import org.eigenbase.sql.SqlSelect;
 import org.eigenbase.sql.util.SqlShuttle;
 import org.eigenbase.sql.util.SqlVisitor;
@@ -125,6 +126,18 @@ public class CompoundIdentifierConverter extends SqlShuttle {
     final RewriteType D =RewriteType.DISABLE;
     final RewriteType U =RewriteType.UNCHANGED;
 
+    /*
+    This map stores the rules that instruct each SqlCall class which data field needs
+    to be rewritten if that data field is a CompoundIdentifier
+
+    Key  : Each rule corresponds to a SqlCall class;
+    value: It is an array of RewriteType, each being associated with a data field
+           in that class.
+
+           For example, there are four data fields (query, orderList, offset, fetch)
+           in org.eigenbase.sql.SqlOrderBy. Since only orderList needs to be written,
+           RewriteType[] should be R(D, E, D, D).
+    */
     Map<Class<? extends SqlCall>, RewriteType[]> rules = Maps.newHashMap();
 
   //SqlNodeList keywordList,
@@ -146,9 +159,12 @@ public class CompoundIdentifierConverter extends SqlShuttle {
     rules.put(SqlShowSchemas.class, R(D, D));
     rules.put(SqlUseSchema.class, R(D));
     rules.put(SqlJoin.class, R(D, D, D, D, D, E));
+    rules.put(SqlOrderBy.class, R(D, E, D, D));
     REWRITE_RULES = ImmutableMap.copyOf(rules);
   }
 
+  // Each type in the input arguments refers to
+  // each data field in the class
   private static RewriteType[] R(RewriteType... types){
     return types;
   }
