@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRel;
@@ -46,7 +47,6 @@ import org.eigenbase.sql.fun.SqlAvgAggFunction;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlSumAggFunction;
 import org.eigenbase.sql.fun.SqlSumEmptyIsZeroAggFunction;
-import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.CompositeList;
 import org.eigenbase.util.ImmutableIntList;
 import org.eigenbase.util.Util;
@@ -247,8 +247,16 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       // anything else:  preserve original call
       RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
       final int nGroups = oldAggRel.getGroupCount();
-      List<RelDataType> oldArgTypes = SqlTypeUtil
-          .projectTypes(oldAggRel.getRowType(), oldCall.getArgList());
+
+      List<RelDataType> oldArgTypes = new ArrayList<>();
+      List<Integer> ordinals = oldCall.getArgList();
+
+      assert ordinals.size() <= inputExprs.size();
+
+      for (int ordinal : ordinals) {
+        oldArgTypes.add(inputExprs.get(ordinal).getType());
+      }
+
       return rexBuilder.addAggCall(
           oldCall,
           nGroups,
