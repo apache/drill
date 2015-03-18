@@ -15,6 +15,7 @@
 # limitations under the License.
 
 data: {
+    # TODO:  Rename to ~valueVectorModesAndTypes for clarity.
     vv:                       tdd(../data/ValueVectorTypes.tdd),
 
     # Most types for comparison functions (for templates/ComparisonFunctions.java).
