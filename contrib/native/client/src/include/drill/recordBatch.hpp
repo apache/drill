@@ -460,7 +460,7 @@ template <typename VALUE_TYPE>
 // We don't really need a destructor here, but we declare a virtual dtor in the base class in case we ever get
 // more complex and start doing dynamic allocations in these classes.
 
-struct DateTimeBase{
+struct DECLSPEC_DRILL_CLIENT DateTimeBase{
     DateTimeBase():m_datetime(0){}
     virtual ~DateTimeBase(){}
     int64_t m_datetime;
@@ -469,7 +469,7 @@ struct DateTimeBase{
     virtual std::string toString()=0;
 };
 
-struct DateHolder: public virtual DateTimeBase{
+struct DECLSPEC_DRILL_CLIENT DateHolder: public virtual DateTimeBase{
     DateHolder(){};
     DateHolder(int64_t d){m_datetime=d; load();}
     int32_t m_year;
@@ -479,7 +479,7 @@ struct DateHolder: public virtual DateTimeBase{
     std::string toString();
 };
 
-struct TimeHolder: public virtual DateTimeBase{
+struct DECLSPEC_DRILL_CLIENT TimeHolder: public virtual DateTimeBase{
     TimeHolder(){};
     TimeHolder(uint32_t d){m_datetime=d; load();}
     uint32_t m_hr;
@@ -490,14 +490,14 @@ struct TimeHolder: public virtual DateTimeBase{
     std::string toString();
 };
 
-struct DateTimeHolder: public DateHolder, public TimeHolder{
+struct DECLSPEC_DRILL_CLIENT DateTimeHolder: public DateHolder, public TimeHolder{
     DateTimeHolder(){};
     DateTimeHolder(int64_t d){m_datetime=d; load();}
     void load();
     std::string toString();
 };
 
-struct DateTimeTZHolder: public DateTimeHolder{
+struct DECLSPEC_DRILL_CLIENT DateTimeTZHolder: public DateTimeHolder{
     DateTimeTZHolder(ByteBuf_t b){
         m_datetime=*(int64_t*)b;
         m_tzIndex=*(uint32_t*)(b+sizeof(uint64_t));

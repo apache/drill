@@ -307,6 +307,14 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
          */
         void freeQueryIterator(RecordIterator** pIter){ delete *pIter; *pIter=NULL;};
 
+        /*
+         * Applications using the async query submit method should call freeRecordBatch to free up resources
+         * once the RecordBatch is processed and no longer needed.
+         */
+        void freeRecordBatch(RecordBatch* pRecordBatch);
+
+
+
     private:
         static DrillClientInitializer s_init;
         static DrillClientConfig s_config;
