@@ -128,6 +128,8 @@ Generally, you query JSON files using the following syntax, which includes a tab
     
   The first index position of an array is 0.
 
+* Do not use a map, array or repeated scalar type in GROUP BY, ORDER BY or in a comparison operator.
+
 Drill returns null when a document does not have the specified map or level.
 
 Using the following techniques, you can query complex, nested JSON:

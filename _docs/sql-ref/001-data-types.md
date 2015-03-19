@@ -467,7 +467,9 @@ Although you can use CAST to handle binary data, CONVERT_TO and CONVERT_FROM are
 
 ### Using CONVERT_TO and CONVERT_FROM
 
-To query HBase data in Drill, convert every column of an HBase table to/from byte arrays from/to an [SQL data type](/docs/data-types/) that Drill supports when writing/reading data. For examples of how to use these functions, see ["Convert and Cast Functions".](/docs/sql-functions#convert-and-cast-functions)
+CONVERT_TO converts an SQL data type to complex types, including Hbase byte arrays, JSON and Parquet arrays and mapsTo query HBase data in Drill, convert every column of an HBase table to/from byte arrays from/to an [SQL data type](/docs/data-types/) that Drill supports when writing/reading data. For examples of how to use these functions, see ["Convert and Cast Functions".](/docs/sql-functions#convert-and-cast-functions)
+
+CONVERT_FROM converts from complex types, including Hbase byte arrays, JSON and Parquet arrays and maps to an SQL data type.
 
 ## Handling Textual Data
 In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as previously mentioned. In addition to using the CAST function, you can also use [to_char](link), [to_date](line), [to_number](link), and [to_timestamp](link). If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause.

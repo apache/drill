@@ -3,7 +3,7 @@ title: "Data Sources and File Formats"
 ---
 Included in the data sources that  Drill supports are these key data sources:
 
-* Hbase
+* HBase
 * Hive
 * MapR-DB
 * File system

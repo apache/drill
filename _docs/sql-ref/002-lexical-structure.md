@@ -28,6 +28,14 @@ The upper/lowercase sensitivity of the parts differs.
 
 SQL function and command names are case-insensitive. Storage plugin and workspace names are case-sensitive. Column and table names are case-insensitive unless enclosed in double quotation marks. The double-quotation mark character can be used as an escape character for the double quotation mark.
 
+Although column names are case-insensitive in Drill, the names might be otherwise in the storage format:
+
+* JSON: insensitive
+* Hive: insensitive
+* Parquet: insensitive
+* MapR-DB: case-sensitive
+* HBase: case-sensitive
+
 Keywords are case-insensitive. For example, the keywords SELECT and select are equivalent. This document shows keywords in uppercase.
 
 The sys.options table name and values are case-sensitive. The following query works:
