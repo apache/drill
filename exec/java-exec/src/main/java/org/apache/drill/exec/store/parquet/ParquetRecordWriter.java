@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
@@ -148,7 +149,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
     schema = new MessageType("root", types);
 
-    Path fileName = new Path(location, prefix + "_" + index + ".parquet");
+    Path fileName = getPath();
     parquetFileWriter = new ParquetFileWriter(conf, schema, fileName);
     parquetFileWriter.start();
 
@@ -163,6 +164,13 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     MessageColumnIO columnIO = new ColumnIOFactory(validating).getColumnIO(this.schema);
     consumer = columnIO.getRecordWriter(store);
     setUp(schema, consumer);
+  }
+
+  /**
+   * @return Path for the latest file created
+   */
+  private Path getPath() {
+    return new Path(location, prefix + "_" + index + ".parquet");
   }
 
   private PrimitiveType getPrimitiveType(MaterializedField field) {
@@ -307,7 +315,8 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   @Override
   public void cleanup() throws IOException {
-    if (recordCount > 0) {
+    boolean hasRecords = recordCount > 0;
+    if (hasRecords) {
       parquetFileWriter.startBlock(recordCount);
       store.flush();
       ColumnChunkPageWriteStoreExposer.flushPageStore(pageStore, parquetFileWriter);
@@ -323,6 +332,18 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
     if(oContext!=null){
       oContext.close();
+    }
+
+    if (!hasRecords) {
+      // the very last file is empty, delete it (DRILL-2408)
+      Path path = getPath();
+      logger.debug("no record written, deleting parquet file {}", path);
+      FileSystem fs = path.getFileSystem(conf);
+      if (fs.exists(path)) {
+        if (!fs.delete(path, false)) {
+          throw new DrillRuntimeException("Couldn't delete empty file " + path);
+        }
+      }
     }
   }
 }

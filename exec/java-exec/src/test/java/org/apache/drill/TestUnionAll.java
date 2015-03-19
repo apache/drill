@@ -24,7 +24,7 @@ import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
 
 public class TestUnionAll extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
 
   @Test  // Simple Union-All over two scans
   public void testUnionAll1() throws Exception {
@@ -184,16 +184,16 @@ public class TestUnionAll extends BaseTestQuery{
   @Test
   public void testUnionAllViewExpandableStar() throws Exception {
     test("use dfs.tmp");
-    test("create view nation_view as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
+    test("create view nation_view_testunionall as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
     test("create view region_view as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
 
-    String query1 = "(select * from dfs.tmp.`nation_view`) " +
+    String query1 = "(select * from dfs.tmp.`nation_view_testunionall`) " +
                     "union all " +
                     "(select * from dfs.tmp.`region_view`) ";
 
     String query2 =  "(select r_name, r_regionkey from cp.`tpch/region.parquet`) " +
                      "union all " +
-                     "(select * from dfs.tmp.`nation_view`)";
+                     "(select * from dfs.tmp.`nation_view_testunionall`)";
 
     try {
       testBuilder()
@@ -212,7 +212,7 @@ public class TestUnionAll extends BaseTestQuery{
           .baselineColumns("r_name", "r_regionkey")
           .build().run();
     } finally {
-      test("drop view nation_view");
+      test("drop view nation_view_testunionall");
       test("drop view region_view");
     }
   }
@@ -220,28 +220,28 @@ public class TestUnionAll extends BaseTestQuery{
   @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2002
   public void testUnionAllViewUnExpandableStar() throws Exception {
     test("use dfs.tmp");
-    test("create view nation_view as select * from cp.`tpch/nation.parquet`;");
+    test("create view nation_view_testunionall as select * from cp.`tpch/nation.parquet`;");
 
     try {
-      String query = "(select * from dfs.tmp.`nation_view`) " +
+      String query = "(select * from dfs.tmp.`nation_view_testunionall`) " +
                      "union all (select * from cp.`tpch/region.parquet`)";
       test(query);
     } catch(Exception ex) {
       SqlUnsupportedException.errorMessageToException(ex.getMessage());
       throw ex;
     } finally {
-      test("drop view nation_view");
+      test("drop view nation_view_testunionall");
     }
   }
 
   @Test
   public void testDiffDataTypesAndModes() throws Exception {
     test("use dfs.tmp");
-    test("create view nation_view as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
+    test("create view nation_view_testunionall as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
     test("create view region_view as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
 
     String t1 = "(select n_comment, n_regionkey from cp.`tpch/nation.parquet` limit 5)";
-    String t2 = "(select * from nation_view  limit 5)";
+    String t2 = "(select * from nation_view_testunionall  limit 5)";
     String t3 = "(select full_name, store_id from cp.`employee.json` limit 5)";
     String t4 = "(select * from region_view  limit 5)";
 
@@ -256,7 +256,7 @@ public class TestUnionAll extends BaseTestQuery{
           .baselineColumns("n_comment", "n_regionkey")
           .build().run();
     } finally {
-      test("drop view nation_view");
+      test("drop view nation_view_testunionall");
       test("drop view region_view");
     }
   }

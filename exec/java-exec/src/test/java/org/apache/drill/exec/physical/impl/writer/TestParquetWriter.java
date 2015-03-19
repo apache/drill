@@ -24,6 +24,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -380,6 +381,50 @@ public class TestParquetWriter extends BaseTestQuery {
         .baselineColumns("col1", "col2")
         .baselineValues(result, result)
         .go();
+  }
+
+  @Test // see DRILL-2408
+  public void testWriteEmptyFile() throws Exception {
+    String outputFile = "testparquetwriter_test_write_empty_file";
+
+    Path path = new Path("/tmp/" + outputFile);
+    if (fs.exists(path)) {
+      fs.delete(path, true);
+    }
+
+//    test("ALTER SESSION SET `planner.add_producer_consumer` = false");
+    test("CREATE TABLE dfs.tmp.%s AS SELECT * FROM cp.`employee.json` WHERE 1=0", outputFile);
+
+    Assert.assertEquals(fs.listStatus(path).length, 0);
+  }
+
+  @Test // see DRILL-2408
+  public void testWriteEmptyFileAfterFlush() throws Exception {
+    String outputFile = "testparquetwriter_test_write_empty_file_after_flush";
+
+    Path path = new Path("/tmp/" + outputFile);
+    if (fs.exists(path)) {
+      fs.delete(path, true);
+    }
+
+    try {
+      // this specific value will force a flush just after the final row is written
+      // this will cause the creation of a new "empty" parquet file
+      test("ALTER SESSION SET `store.parquet.block-size` = 19926");
+
+      String query = "SELECT * FROM cp.`employee.json` LIMIT 100";
+      test("CREATE TABLE dfs.tmp.%s AS %s", outputFile, query);
+
+      // this query will fail if the "empty" file wasn't deleted
+      testBuilder()
+        .unOrdered()
+        .sqlQuery("SELECT * FROM dfs.tmp.%s", outputFile)
+        .sqlBaselineQuery(query)
+        .go();
+    } finally {
+      // restore the session option
+      test("ALTER SESSION SET `store.parquet.block-size` = %d", ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR.getDefault().num_val);
+    }
   }
 
   public void runTestAndValidate(String selection, String validationSelection, String inputTable, String outputFile) throws Exception {

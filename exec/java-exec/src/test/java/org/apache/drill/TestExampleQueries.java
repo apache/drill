@@ -23,14 +23,13 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
 
 public class TestExampleQueries extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
   @Test // see DRILL-2328
   public void testConcatOnNull() throws Exception {
@@ -125,9 +124,9 @@ public class TestExampleQueries extends BaseTestQuery{
   @Test // see DRILL-985
   public void testViewFileName() throws Exception {
     test("use dfs.tmp");
-    test("create view nation_view as select * from cp.`tpch/nation.parquet`;");
-    test("select * from dfs.tmp.`nation_view.view.drill`");
-    test("drop view nation_view");
+    test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
+    test("select * from dfs.tmp.`nation_view_testexamplequeries.view.drill`");
+    test("drop view nation_view_testexamplequeries");
   }
 
   @Test
@@ -378,29 +377,29 @@ public class TestExampleQueries extends BaseTestQuery{
   @Test // DRILL-811
   public void testDRILL_811View() throws Exception {
     test("use dfs.tmp");
-    test("create view nation_view as select * from cp.`tpch/nation.parquet`;");
+    test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
 
-    test("select n.n_nationkey, n.n_name, n.n_regionkey from nation_view n where n.n_nationkey > 8 order by n.n_regionkey");
+    test("select n.n_nationkey, n.n_name, n.n_regionkey from nation_view_testexamplequeries n where n.n_nationkey > 8 order by n.n_regionkey");
 
-    test("select n.n_regionkey, count(*) as cnt from nation_view n where n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
+    test("select n.n_regionkey, count(*) as cnt from nation_view_testexamplequeries n where n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
 
-    test("drop view nation_view ");
+    test("drop view nation_view_testexamplequeries ");
   }
 
   @Test  // DRILL-811
   public void testDRILL_811ViewJoin() throws Exception {
     test("use dfs.tmp");
-    test("create view nation_view as select * from cp.`tpch/nation.parquet`;");
+    test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
     test("create view region_view as select * from cp.`tpch/region.parquet`;");
 
-    test("select n.n_nationkey, n.n_regionkey, r.r_name from region_view r , nation_view n where r.r_regionkey = n.n_regionkey ");
+    test("select n.n_nationkey, n.n_regionkey, r.r_name from region_view r , nation_view_testexamplequeries n where r.r_regionkey = n.n_regionkey ");
 
-    test("select n.n_regionkey, count(*) as cnt from region_view r , nation_view n where r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
+    test("select n.n_regionkey, count(*) as cnt from region_view r , nation_view_testexamplequeries n where r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
 
-    test("select n.n_regionkey, count(*) as cnt from region_view r join nation_view n on r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
+    test("select n.n_regionkey, count(*) as cnt from region_view r join nation_view_testexamplequeries n on r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
 
     test("drop view region_view ");
-    test("drop view nation_view ");
+    test("drop view nation_view_testexamplequeries ");
   }
 
   @Test  // DRILL-811
