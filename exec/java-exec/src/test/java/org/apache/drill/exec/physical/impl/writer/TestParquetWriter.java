@@ -247,6 +247,27 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate(selection, validateSelection, inputTable, "region_star_exp");
   }
 
+  @Test // DRILL-2458
+  public void testWriterWithStarAndRegluarCol() throws Exception {
+    String outputFile = "region_sort";
+    String ctasStmt = "create table " + outputFile + " as select *, r_regionkey + 1 as key1 from cp.`tpch/region.parquet` order by r_name";
+    String query = "select r_regionkey, r_name, r_comment, r_regionkey +1 as key1 from cp.`tpch/region.parquet` order by r_name";
+    String queryFromWriteOut = "select * from " + outputFile;
+
+    Path path = new Path("/tmp/" + outputFile);
+    if (fs.exists(path)) {
+      fs.delete(path, true);
+    }
+
+    test("use dfs.tmp");
+    test(ctasStmt);
+    testBuilder()
+        .ordered()
+        .sqlQuery(queryFromWriteOut)
+        .sqlBaselineQuery(query)
+        .build().run();
+  }
+
   public void compareParquetReadersColumnar(String selection, String table) throws Exception {
     String query = "select " + selection + " from " + table;
 
