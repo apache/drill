@@ -346,7 +346,8 @@ DrillClientQueryResult* DrillClientImpl::SubmitQuery(::exec::shared::QueryType t
     uint64_t coordId;
     DrillClientQueryResult* pQuery=NULL;
     {
-        boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
+        boost::lock_guard<boost::mutex> prLock(this->m_prMutex);
+        boost::lock_guard<boost::mutex> dcLock(this->m_dcMutex);
         coordId = this->getNextCoordinationId();
         OutBoundRpcMessage out_msg(exec::rpc::REQUEST, exec::user::RUN_QUERY, coordId, &query);
         sendSync(out_msg);
@@ -782,6 +783,7 @@ void DrillClientImpl::handleRead(ByteBuf_t _buf,
     }
     if(!error){
         InBoundRpcMessage msg;
+        boost::lock_guard<boost::mutex> lock(this->m_prMutex);
 
         DRILL_LOG(LOG_TRACE) << "Getting new message" << std::endl;
         AllocatedBufferPtr allocatedBuffer=NULL;

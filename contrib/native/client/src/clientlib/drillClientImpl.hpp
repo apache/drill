@@ -306,6 +306,8 @@ class DrillClientImpl{
         // number of outstanding read requests.
         // handleRead will keep asking for more results as long as this number is not zero.
         size_t m_pendingRequests;
+        //mutex to protect m_pendingRequests
+        boost::mutex m_prMutex;
 
         // Error Object. NULL if no error. Set if the error is valid for ALL running queries.
         // All the query result objects will
