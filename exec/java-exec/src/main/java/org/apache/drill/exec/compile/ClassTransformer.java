@@ -30,6 +30,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.codehaus.commons.compiler.CompileException;
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -226,8 +227,8 @@ public class ClassTransformer {
       Map<String, ClassNode> classesToMerge = Maps.newHashMap();
       for (byte[] clazz : implementationClasses) {
         totalBytecodeSize += clazz.length;
-        final ClassNode node = AsmUtil.classFromBytes(clazz);
-        if (!AsmUtil.isClassOk(logger, node, "implementationClasses")) {
+        final ClassNode node = AsmUtil.classFromBytes(clazz, ClassReader.EXPAND_FRAMES);
+        if (!AsmUtil.isClassOk(logger, "implementationClasses", node)) {
           throw new IllegalStateException("Problem found with implementationClasses");
         }
         classesToMerge.put(node.name, node);

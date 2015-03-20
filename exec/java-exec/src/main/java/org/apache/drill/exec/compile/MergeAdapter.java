@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Iterator;
@@ -39,7 +37,6 @@ import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.util.TraceClassVisitor;
 
 import com.google.common.collect.Sets;
 
@@ -191,10 +188,10 @@ class MergeAdapter extends ClassVisitor {
   public static MergedClassResult getMergedClass(final ClassSet set, final byte[] precompiledClass,
       ClassNode generatedClass, final boolean scalarReplace) {
     if (verifyBytecode) {
-      if (!AsmUtil.isClassBytesOk(logger, precompiledClass, "precompiledClass")) {
+      if (!AsmUtil.isClassBytesOk(logger, "precompiledClass", precompiledClass)) {
         throw new IllegalStateException("Problem found in precompiledClass");
       }
-      if ((generatedClass != null) && !AsmUtil.isClassOk(logger, generatedClass, "generatedClass")) {
+      if ((generatedClass != null) && !AsmUtil.isClassOk(logger, "generatedClass", generatedClass)) {
         throw new IllegalStateException("Problem found in generatedClass");
       }
     }
@@ -225,7 +222,7 @@ class MergeAdapter extends ClassVisitor {
          */
         generatedClass.accept(new ValueHolderReplacementVisitor(mergeGenerator, verifyBytecode));
         if (verifyBytecode) {
-          if (!AsmUtil.isClassOk(logger, generatedMerged, "generatedMerged")) {
+          if (!AsmUtil.isClassOk(logger, "generatedMerged", generatedMerged)) {
             throw new IllegalStateException("Problem found with generatedMerged");
           }
         }
@@ -266,15 +263,13 @@ class MergeAdapter extends ClassVisitor {
     }
   }
 
-
-  static class RemapClasses extends Remapper {
-
+  private static class RemapClasses extends Remapper {
     final Set<String> innerClasses = Sets.newHashSet();
     ClassSet top;
     ClassSet current;
-    public RemapClasses(ClassSet set) {
-      super();
-      this.current = set;
+
+    public RemapClasses(final ClassSet set) {
+      current = set;
       ClassSet top = set;
       while (top.parent != null) {
         top = top.parent;
@@ -283,11 +278,9 @@ class MergeAdapter extends ClassVisitor {
     }
 
     @Override
-    public String map(String typeName) {
-
+    public String map(final String typeName) {
       // remap the names of all classes that start with the old class name.
       if (typeName.startsWith(top.precompiled.slash)) {
-
         // write down all the sub classes.
         if (typeName.startsWith(current.precompiled.slash + "$")) {
           innerClasses.add(typeName);
@@ -295,45 +288,12 @@ class MergeAdapter extends ClassVisitor {
 
         return typeName.replace(top.precompiled.slash, top.generated.slash);
       }
+
       return typeName;
     }
 
     public Set<String> getInnerClasses() {
       return innerClasses;
-    }
-
-  }
-
-  private static final void check(ClassNode node) {
-    Exception e = null;
-    String error = "";
-
-    try {
-      ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-      ClassVisitor cv = new DrillCheckClassAdapter(CompilationConfig.ASM_API_VERSION, cw, true);
-      node.accept(cv);
-
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      DrillCheckClassAdapter.verify(new ClassReader(cw.toByteArray()), false, pw);
-
-      error = sw.toString();
-    } catch (Exception ex) {
-      e = ex;
-    }
-
-    if (!error.isEmpty() || e != null) {
-      StringWriter sw2 = new StringWriter();
-      PrintWriter pw2 = new PrintWriter(sw2);
-      TraceClassVisitor v = new TraceClassVisitor(pw2);
-      node.accept(v);
-      if (e != null) {
-        throw new RuntimeException("Failure validating class.  ByteCode: \n" +
-            sw2.toString() + "\n\n====ERRROR====\n" + error, e);
-      } else {
-        throw new RuntimeException("Failure validating class.  ByteCode: \n" +
-            sw2.toString() + "\n\n====ERRROR====\n" + error);
-      }
     }
   }
 }

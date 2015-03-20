@@ -42,12 +42,12 @@ public class AsmUtil {
   /**
    * Check to see if a class is well-formed.
    *
-   * @param classNode the class to check
-   * @param logTag a tag to print to the log if a problem is found
    * @param logger the logger to write to if a problem is found
+   * @param logTag a tag to print to the log if a problem is found
+   * @param classNode the class to check
    * @return true if the class is ok, false otherwise
    */
-  public static boolean isClassOk(final Logger logger, final ClassNode classNode, final String logTag) {
+  public static boolean isClassOk(final Logger logger, final String logTag, final ClassNode classNode) {
     final StringWriter sw = new StringWriter();
     final ClassWriter verifyWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
     classNode.accept(verifyWriter);
@@ -71,26 +71,27 @@ public class AsmUtil {
   /**
    * Check to see if a class is well-formed.
    *
-   * @param classBytes the bytecode of the class to check
-   * @param logTag a tag to print to the log if a problem is found
    * @param logger the logger to write to if a problem is found
+   * @param logTag a tag to print to the log if a problem is found
+   * @param classBytes the bytecode of the class to check
    * @return true if the class is ok, false otherwise
    */
-  public static boolean isClassBytesOk(final Logger logger, final byte[] classBytes, final String logTag) {
-    final ClassNode classNode = classFromBytes(classBytes);
-    return isClassOk(logger, classNode, logTag);
+  public static boolean isClassBytesOk(final Logger logger, final String logTag, final byte[] classBytes) {
+    final ClassNode classNode = classFromBytes(classBytes, 0);
+    return isClassOk(logger, logTag, classNode);
   }
 
   /**
    * Create a ClassNode from bytecode.
    *
    * @param classBytes the bytecode
+   * @param asmReaderFlags flags for ASM; see {@link org.objectweb.asm.ClassReader#accept(org.objectweb.asm.ClassVisitor, int)}
    * @return the ClassNode
    */
-  public static ClassNode classFromBytes(final byte[] classBytes) {
+  public static ClassNode classFromBytes(final byte[] classBytes, final int asmReaderFlags) {
     final ClassNode classNode = new ClassNode(CompilationConfig.ASM_API_VERSION);
     final ClassReader classReader = new ClassReader(classBytes);
-    classReader.accept(classNode, 0);
+    classReader.accept(classNode, asmReaderFlags);
     return classNode;
   }
 
@@ -99,9 +100,9 @@ public class AsmUtil {
    *
    * <p>Writes at level DEBUG.
    *
+   * @param logger the logger to write to
    * @param logTag a tag to print to the log
    * @param classNode the class
-   * @param logger the logger to write to
    */
   public static void logClass(final Logger logger, final String logTag, final ClassNode classNode) {
     logger.debug(logTag);
@@ -122,7 +123,7 @@ public class AsmUtil {
    * @param logger the logger to write to
    */
   public static void logClassFromBytes(final Logger logger, final String logTag, final byte[] classBytes) {
-    final ClassNode classNode = classFromBytes(classBytes);
+    final ClassNode classNode = classFromBytes(classBytes, 0);
     logClass(logger, logTag, classNode);
   }
 
