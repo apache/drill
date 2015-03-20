@@ -22,6 +22,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
+import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 
 public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{
@@ -85,11 +86,14 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
     ValueVector vector = v;
     for (int i = 1; i < ids.length; i++) {
-      MapVector map = (MapVector) vector;
-      vector = map.getVectorById(ids[i]);
+      final AbstractMapVector mapLike = AbstractMapVector.class.cast(vector);
+      if (mapLike == null) {
+        return null;
+      }
+      vector = mapLike.getChildByOrdinal(ids[i]);
     }
 
-    return new SimpleVectorWrapper<ValueVector>(vector);
+    return new SimpleVectorWrapper<>(vector);
   }
 
   @Override

@@ -320,10 +320,6 @@ public class MapVector extends AbstractMapVector {
     }
   }
 
-  public ValueVector getVectorById(int id) {
-    return getChildByOrdinal(id);
-  }
-
   public class Mutator implements ValueVector.Mutator{
 
     @Override

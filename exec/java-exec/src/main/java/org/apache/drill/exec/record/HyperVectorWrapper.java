@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.AbstractMap;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
+import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 
 import com.google.common.base.Preconditions;
@@ -92,8 +95,11 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     for (ValueVector v : this.vectors) {
       ValueVector vector = v;
       for (int i = 1; i < ids.length; i++) {
-        MapVector map = (MapVector) vector;
-        vector = map.getVectorById(ids[i]);
+        final AbstractMapVector mapLike = AbstractMapVector.class.cast(vector);
+        if (mapLike == null) {
+          return null;
+        }
+        vector = mapLike.getChildByOrdinal(ids[i]);
       }
       vectors[index] = vector;
       index++;

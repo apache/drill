@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -37,6 +38,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.AllocationHelper;
@@ -164,6 +166,26 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
         p.copyValueSafe(fromSubIndex, toIndex);
       }
     }
+  }
+
+  @Override
+  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
+    if (seg != null && seg.isArray() && !seg.isLastPath()) {
+      if (addToBreadCrumb) {
+        addToBreadCrumb = false;
+        builder.remainder(seg);
+      }
+      // skip the first array segment as there is no corresponding child vector.
+      seg = seg.getChild();
+
+      // multi-level numbered access to a repeated map is not possible so return if the next part is also an array
+      // segment.
+      if (seg.isArray()) {
+        return null;
+      }
+    }
+
+    return super.getFieldIdIfMatches(builder, addToBreadCrumb, seg);
   }
 
   public TransferPair getTransferPairToSingleMap(FieldReference reference) {

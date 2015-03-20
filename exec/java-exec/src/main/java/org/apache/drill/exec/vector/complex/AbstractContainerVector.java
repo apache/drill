@@ -132,8 +132,6 @@ public abstract class AbstractContainerVector implements ValueVector {
           addToBreadCrumb = false;
           builder.remainder(seg);
         }
-        // this is a complex array reference, which means it doesn't correspond directly to a vector by itself.
-        seg = seg.getChild();
       }
     } else {
       // name segment.
