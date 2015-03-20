@@ -57,24 +57,16 @@ public class TestAllocators {
     }
   };
 
-  static String planFile="/physical_allocator_test.json";
-
-  BufferAllocator rootAllocator;
-  DrillConfig config;
-  Drillbit bit;
-  RemoteServiceSet serviceSet;
-  DrillbitContext bitContext;
+  private final static String planFile="/physical_allocator_test.json";
 
   @Test
   public void testAllocators() throws Exception {
-
     // Setup a drillbit (initializes a root allocator)
-
-    config = DrillConfig.create(TEST_CONFIGURATIONS);
-    serviceSet = RemoteServiceSet.getLocalServiceSet();
-    bit = new Drillbit(config, serviceSet);
+    final DrillConfig config = DrillConfig.create(TEST_CONFIGURATIONS);
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    final Drillbit bit = new Drillbit(config, serviceSet);
     bit.run();
-    bitContext = bit.getContext();
+    final DrillbitContext bitContext = bit.getContext();
     FunctionImplementationRegistry functionRegistry = bitContext.getFunctionImplementationRegistry();
     StoragePluginRegistry storageRegistry = new StoragePluginRegistry(bitContext);
 
@@ -185,7 +177,11 @@ public class TestAllocators {
     b31a.release();
     oContext31.close();
 
+    fragmentContext1.close();
+    fragmentContext2.close();
+    fragmentContext3.close();
+
+    bit.close();
+    serviceSet.close();
   }
-
 }
-

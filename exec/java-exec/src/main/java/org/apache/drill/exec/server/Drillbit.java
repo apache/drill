@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.server;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -56,6 +59,8 @@ public class Drillbit implements AutoCloseable {
   static {
     Environment.logEnv("Drillbit environment:.", logger);
   }
+
+  private boolean isClosed = false;
 
   public static Drillbit start(final StartupOptions options) throws DrillbitStartupException {
     return start(DrillConfig.create(options.getConfigLocation()), null);
@@ -237,11 +242,16 @@ public class Drillbit implements AutoCloseable {
     registrationHandle = coord.register(md);
     startJetty();
 
-    Runtime.getRuntime().addShutdownHook(new ShutdownThread(this));
+    Runtime.getRuntime().addShutdownHook(new ShutdownThread(this, new StackTrace()));
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
+    // avoid complaints about double closing
+    if (isClosed) {
+      return;
+    }
+
     if (coord != null && registrationHandle != null) {
       coord.unregister(registrationHandle);
     }
@@ -267,22 +277,44 @@ public class Drillbit implements AutoCloseable {
     Closeables.closeQuietly(context);
 
     logger.info("Shutdown completed.");
+    isClosed = true;
   }
 
+  /**
+   * Shutdown hook for Drillbit. Closes the drillbit, and reports on errors that
+   * occur during closure, as well as the location the drillbit was started from.
+   */
   private static class ShutdownThread extends Thread {
-    private static int idCounter = 0;
+    private final static AtomicInteger idCounter = new AtomicInteger(0);
     private final Drillbit drillbit;
+    private final StackTrace stackTrace;
 
-    ShutdownThread( Drillbit drillbit ) {
+    /**
+     * Constructor.
+     *
+     * @param drillbit the drillbit to close down
+     * @param stackTrace the stack trace from where the Drillbit was started;
+     *   use new StackTrace() to generate this
+     */
+    public ShutdownThread(final Drillbit drillbit, final StackTrace stackTrace) {
       this.drillbit = drillbit;
-      idCounter++;
-      setName("Drillbit-ShutdownHook#" + idCounter );
+      this.stackTrace = stackTrace;
+      /*
+       * TODO should we try to determine a test class name?
+       * See https://blogs.oracle.com/tor/entry/how_to_determine_the_junit
+       */
+
+      setName("Drillbit-ShutdownHook#" + idCounter.getAndIncrement());
     }
 
     @Override
     public void run() {
       logger.info("Received shutdown request.");
-      drillbit.close();
+      try {
+        drillbit.close();
+      } catch(Exception e) {
+        throw new RuntimeException("Caught exception closing Drillbit started from\n" + stackTrace, e);
+      }
     }
   }
 
