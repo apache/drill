@@ -28,6 +28,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
@@ -45,7 +46,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 
 public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnection> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserServer.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserServer.class);
 
   final UserWorker worker;
   final BufferAllocator alloc;
@@ -117,16 +118,19 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       return session;
     }
 
-    public void sendResult(RpcOutcomeListener<Ack> listener, QueryWritableBatch result){
+    public void sendResult(RpcOutcomeListener<Ack> listener, QueryResult result, boolean allowInEventThread){
       logger.trace("Sending result to client with {}", result);
-      send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, false, result.getBuffers());
+      send(listener, this, RpcType.QUERY_RESULT, result, Ack.class, allowInEventThread);
     }
 
-    public void sendResult(RpcOutcomeListener<Ack> listener, QueryWritableBatch result, boolean allowInEventThread){
-      logger.trace("Sending result to client with {}", result);
-      send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, allowInEventThread, result.getBuffers());
+    public void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result){
+      sendData(listener, result, false);
     }
 
+    public void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result, boolean allowInEventThread){
+      logger.trace("Sending data to client with {}", result);
+      send(listener, this, RpcType.QUERY_DATA, result.getHeader(), Ack.class, allowInEventThread, result.getBuffers());
+    }
     @Override
     public BufferAllocator getAllocator() {
       return alloc;

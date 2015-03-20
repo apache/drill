@@ -30,7 +30,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.BigIntVector;
@@ -52,9 +52,9 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
   @Test
   public void mergeSortWithSv2() throws Exception {
-    List<QueryResultBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending_sv2.json");
+    List<QueryDataBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending_sv2.json");
     int count = 0;
-    for(QueryResultBatch b : results) {
+    for(QueryDataBatch b : results) {
       if (b.getHeader().getRowCount() != 0) {
         count += b.getHeader().getRowCount();
       }
@@ -66,7 +66,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
     int recordCount = 0;
     int batchCount = 0;
 
-    for (QueryResultBatch b : results) {
+    for (QueryDataBatch b : results) {
       if (b.getHeader().getRowCount() == 0) {
         break;
       }
@@ -93,9 +93,9 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
   @Test
   public void sortOneKeyDescendingMergeSort() throws Throwable{
-    List<QueryResultBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending.json");
+    List<QueryDataBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending.json");
     int count = 0;
-    for (QueryResultBatch b : results) {
+    for (QueryDataBatch b : results) {
       if (b.getHeader().getRowCount() != 0) {
         count += b.getHeader().getRowCount();
       }
@@ -107,7 +107,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
     int recordCount = 0;
     int batchCount = 0;
 
-    for (QueryResultBatch b : results) {
+    for (QueryDataBatch b : results) {
       if (b.getHeader().getRowCount() == 0) {
         break;
       }
@@ -144,11 +144,11 @@ public class TestSimpleExternalSort extends BaseTestQuery {
       bit1.run();
       bit2.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/xsort/one_key_sort_descending.json"),
                       Charsets.UTF_8));
       int count = 0;
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }
@@ -160,7 +160,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
       int recordCount = 0;
       int batchCount = 0;
 
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() == 0) {
           break;
         }
@@ -196,11 +196,11 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
       bit1.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/xsort/oom_sort_test.json"),
                       Charsets.UTF_8));
       int count = 0;
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }
@@ -212,7 +212,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
       int recordCount = 0;
       int batchCount = 0;
 
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() == 0) {
           break;
         }

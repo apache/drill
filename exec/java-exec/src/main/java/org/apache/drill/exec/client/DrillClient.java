@@ -40,7 +40,6 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.proto.UserProtos.Property;
@@ -54,7 +53,7 @@ import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.TransportCheck;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserClient;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 
@@ -66,7 +65,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * String into ByteBuf.
  */
 public class DrillClient implements Closeable, ConnectionThrottle {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
 
   DrillConfig config;
   private UserClient client;
@@ -249,7 +248,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @return a handle for the query result
    * @throws RpcException
    */
-  public List<QueryResultBatch> runQuery(QueryType type, String plan) throws RpcException {
+  public List<QueryDataBatch> runQuery(QueryType type, String plan) throws RpcException {
     UserProtos.RunQuery query = newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build();
     ListHoldingResultsListener listener = new ListHoldingResultsListener(query);
     client.submitQuery(listener, query);
@@ -294,8 +293,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   private class ListHoldingResultsListener implements UserResultsListener {
-    private Vector<QueryResultBatch> results = new Vector<>();
-    private SettableFuture<List<QueryResultBatch>> future = SettableFuture.create();
+    private Vector<QueryDataBatch> results = new Vector<>();
+    private SettableFuture<List<QueryDataBatch>> future = SettableFuture.create();
     private UserProtos.RunQuery query ;
 
     public ListHoldingResultsListener(UserProtos.RunQuery query) {
@@ -321,6 +320,11 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       }
     }
 
+    @Override
+    public void queryCompleted() {
+      future.set(results);
+    }
+
     private void fail(Exception ex) {
       logger.debug("Submission failed.", ex);
       future.setException(ex);
@@ -328,24 +332,12 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     @Override
-    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
-      logger.debug(
-          "Result arrived:  Query state: {}.  Is last chunk: {}.  Result: {}",
-          result.getHeader().getQueryState(),
-          result.getHeader().getIsLastChunk(),
-          result );
+    public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
+      logger.debug("Result arrived:  Result: {}", result );
       results.add(result);
-      if (result.getHeader().getIsLastChunk()) {
-        future.set(results);
-      }
-      else {
-        assert QueryState.PENDING == result.getHeader().getQueryState()
-            : "For non-last chunk, expected query state of PENDING but got "
-              + result.getHeader().getQueryState();
-      }
     }
 
-    public List<QueryResultBatch> getResults() throws RpcException{
+    public List<QueryDataBatch> getResults() throws RpcException{
       try {
         return future.get();
       } catch (Throwable t) {

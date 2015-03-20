@@ -38,7 +38,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -188,19 +188,19 @@ public class BaseTestQuery extends ExecTest {
     listener.waitForCompletion();
   }
 
-  protected static List<QueryResultBatch> testSqlWithResults(String sql) throws Exception{
+  protected static List<QueryDataBatch> testSqlWithResults(String sql) throws Exception{
     return testRunAndReturn(QueryType.SQL, sql);
   }
 
-  protected static List<QueryResultBatch> testLogicalWithResults(String logical) throws Exception{
+  protected static List<QueryDataBatch> testLogicalWithResults(String logical) throws Exception{
     return testRunAndReturn(QueryType.LOGICAL, logical);
   }
 
-  protected static List<QueryResultBatch> testPhysicalWithResults(String physical) throws Exception{
+  protected static List<QueryDataBatch> testPhysicalWithResults(String physical) throws Exception{
     return testRunAndReturn(QueryType.PHYSICAL, physical);
   }
 
-  public static List<QueryResultBatch>  testRunAndReturn(QueryType type, String query) throws Exception{
+  public static List<QueryDataBatch>  testRunAndReturn(QueryType type, String query) throws Exception{
     query = QueryTestUtil.normalizeQuery(query);
     return client.runQuery(type, query);
   }
@@ -221,9 +221,9 @@ public class BaseTestQuery extends ExecTest {
     query = String.format(query, args);
     logger.debug("Running query:\n--------------\n"+query);
     for (int i = 0; i < interation; i++) {
-      List<QueryResultBatch> results = client.runQuery(QueryType.SQL, query);
-      for (QueryResultBatch queryResultBatch : results) {
-        queryResultBatch.release();
+      List<QueryDataBatch> results = client.runQuery(QueryType.SQL, query);
+      for (QueryDataBatch queryDataBatch : results) {
+        queryDataBatch.release();
       }
     }
   }
@@ -252,7 +252,7 @@ public class BaseTestQuery extends ExecTest {
     testPhysical(getFile(file));
   }
 
-  protected static List<QueryResultBatch> testPhysicalFromFileWithResults(String file) throws Exception {
+  protected static List<QueryDataBatch> testPhysicalFromFileWithResults(String file) throws Exception {
     return testRunAndReturn(QueryType.PHYSICAL, getFile(file));
   }
 
@@ -285,16 +285,18 @@ public class BaseTestQuery extends ExecTest {
     }
 
     @Override
-    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
+    public void queryCompleted() {
+      System.out.println("Query completed successfully with row count: " + count.get());
+      latch.countDown();
+    }
+
+    @Override
+    public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
       int rows = result.getHeader().getRowCount();
       if (result.getData() != null) {
         count.addAndGet(rows);
       }
       result.release();
-      if (result.getHeader().getIsLastChunk()) {
-        System.out.println("Query completed successfully with row count: " + count.get());
-        latch.countDown();
-      }
     }
 
     @Override
@@ -317,10 +319,10 @@ public class BaseTestQuery extends ExecTest {
     this.columnWidths = columnWidths;
   }
 
-  protected int printResult(List<QueryResultBatch> results) throws SchemaChangeException {
+  protected int printResult(List<QueryDataBatch> results) throws SchemaChangeException {
     int rowCount = 0;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryResultBatch result : results) {
+    for(QueryDataBatch result : results) {
       rowCount += result.getHeader().getRowCount();
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() <= 0) {
@@ -334,12 +336,12 @@ public class BaseTestQuery extends ExecTest {
     return rowCount;
   }
 
-  protected static String getResultString(List<QueryResultBatch> results, String delimiter)
+  protected static String getResultString(List<QueryDataBatch> results, String delimiter)
       throws SchemaChangeException {
     StringBuilder formattedResults = new StringBuilder();
     boolean includeHeader = true;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryResultBatch result : results) {
+    for(QueryDataBatch result : results) {
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() <= 0) {
         continue;

@@ -27,7 +27,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Test;
 
 public class TestComplexToJson extends BaseTestQuery {
@@ -36,7 +36,7 @@ public class TestComplexToJson extends BaseTestQuery {
   public void test() throws Exception {
     DrillClient parent_client = client;
 
-    List<QueryResultBatch> results;
+    List<QueryDataBatch> results;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
 
     client = new DrillClient(config, serviceSet.getCoordinator());
@@ -50,7 +50,7 @@ public class TestComplexToJson extends BaseTestQuery {
     // with setSupportComplexTypes == false, the column mode should be REQUIRED
     assertTrue(def.getField(0).getMajorType().getMode() == DataMode.REQUIRED);
     loader.clear();
-    for(QueryResultBatch result : results) {
+    for(QueryDataBatch result : results) {
       result.release();
     }
     client.close();
@@ -66,7 +66,7 @@ public class TestComplexToJson extends BaseTestQuery {
     // with setSupportComplexTypes == true, the column mode should be REPEATED
     assertTrue(def.getField(0).getMajorType().getMode() == DataMode.REPEATED);
     loader.clear();
-    for(QueryResultBatch result : results) {
+    for(QueryDataBatch result : results) {
       result.release();
     }
     client.close();

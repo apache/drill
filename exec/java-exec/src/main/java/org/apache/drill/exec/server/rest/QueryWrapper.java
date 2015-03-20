@@ -39,7 +39,7 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -49,8 +49,7 @@ import parquet.Preconditions;
 
 @XmlRootElement
 public class QueryWrapper {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWrapper.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWrapper.class);
 
   private String query;
   private String queryType;
@@ -137,7 +136,12 @@ public class QueryWrapper {
     }
 
     @Override
-    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
+    public void queryCompleted() {
+      latch.countDown();
+    }
+
+    @Override
+    public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
       try {
         final int rows = result.getHeader().getRowCount();
         if (result.hasData()) {
@@ -162,9 +166,6 @@ public class QueryWrapper {
         throw new RuntimeException(e);
       } finally {
         result.release();
-        if (result.getHeader().getIsLastChunk()) {
-          latch.countDown();
-        }
       }
     }
 

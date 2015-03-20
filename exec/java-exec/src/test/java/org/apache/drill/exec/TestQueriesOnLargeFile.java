@@ -27,7 +27,7 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -72,12 +72,12 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
 
   @Test
   public void testRead() throws Exception {
-    List<QueryResultBatch> results = testSqlWithResults(
+    List<QueryDataBatch> results = testSqlWithResults(
         String.format("SELECT count(*) FROM dfs_test.`default`.`%s`", dataFile.getPath()));
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
 
-    for(QueryResultBatch batch : results) {
+    for(QueryDataBatch batch : results) {
       batchLoader.load(batch.getHeader().getDef(), batch.getData());
 
       if (batchLoader.getRecordCount() <= 0) {
@@ -96,10 +96,10 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
   public void testMergingReceiver() throws Exception {
     String plan = Files.toString(FileUtils.getResourceAsFile("/largefiles/merging_receiver_large_data.json"),
         Charsets.UTF_8).replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
-    List<QueryResultBatch> results = testPhysicalWithResults(plan);
+    List<QueryDataBatch> results = testPhysicalWithResults(plan);
 
     int recordsInOutput = 0;
-    for(QueryResultBatch batch : results) {
+    for(QueryDataBatch batch : results) {
       recordsInOutput += batch.getHeader().getDef().getRecordCount();
       batch.release();
     }

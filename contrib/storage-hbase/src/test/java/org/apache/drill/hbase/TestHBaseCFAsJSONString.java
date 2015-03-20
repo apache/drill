@@ -21,7 +21,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -49,7 +50,7 @@ public class TestHBaseCFAsJSONString extends BaseHBaseTest {
   @Test
   public void testColumnFamiliesAsJSONString() throws Exception {
     setColumnWidths(new int[] {112, 12});
-    List<QueryResultBatch> resultList = runHBaseSQLlWithResults("SELECT f, f2 FROM hbase.`[TABLE_NAME]` tableName LIMIT 1");
+    List<QueryDataBatch> resultList = runHBaseSQLlWithResults("SELECT f, f2 FROM hbase.`[TABLE_NAME]` tableName LIMIT 1");
     printResult(resultList);
   }
 

@@ -26,6 +26,7 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
@@ -41,7 +42,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import com.google.protobuf.MessageLite;
 
 public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHandshake, BitToUserHandshake> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserClient.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserClient.class);
 
   private final QueryResultHandler queryResultHandler = new QueryResultHandler();
 
@@ -80,8 +81,10 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
       return BitToUserHandshake.getDefaultInstance();
     case RpcType.QUERY_HANDLE_VALUE:
       return QueryId.getDefaultInstance();
-    case RpcType.QUERY_RESULT_VALUE:
-      return QueryResult.getDefaultInstance();
+      case RpcType.QUERY_RESULT_VALUE:
+        return QueryResult.getDefaultInstance();
+    case RpcType.QUERY_DATA_VALUE:
+      return QueryData.getDefaultInstance();
     }
     throw new RpcException(String.format("Unable to deal with RpcType of %d", rpcType));
   }
@@ -89,8 +92,11 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   @Override
   protected Response handleReponse(ConnectionThrottle throttle, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     switch (rpcType) {
-    case RpcType.QUERY_RESULT_VALUE:
+    case RpcType.QUERY_DATA_VALUE:
       queryResultHandler.batchArrived(throttle, pBody, dBody);
+      return new Response(RpcType.ACK, Ack.getDefaultInstance());
+    case RpcType.QUERY_RESULT_VALUE:
+      queryResultHandler.resultArrived(pBody);
       return new Response(RpcType.ACK, Ack.getDefaultInstance());
     default:
       throw new RpcException(String.format("Unknown Rpc Type %d. ", rpcType));

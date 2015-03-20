@@ -19,15 +19,15 @@ package org.apache.drill.exec.rpc.user;
 
 import io.netty.buffer.DrillBuf;
 
-import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 
-public class QueryResultBatch {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResultBatch.class);
+public class QueryDataBatch {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResultBatch.class);
 
-  private final QueryResult header;
+  private final QueryData header;
   private final DrillBuf data;
 
-  public QueryResultBatch(QueryResult header, DrillBuf data) {
+  public QueryDataBatch(QueryData header, DrillBuf data) {
 //    logger.debug("New Result Batch with header {} and data {}", header, data);
     this.header = header;
     this.data = data;
@@ -36,7 +36,7 @@ public class QueryResultBatch {
     }
   }
 
-  public QueryResult getHeader() {
+  public QueryData getHeader() {
     return header;
   }
 

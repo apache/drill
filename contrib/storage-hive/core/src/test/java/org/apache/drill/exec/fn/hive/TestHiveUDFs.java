@@ -24,10 +24,8 @@ import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
-import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.Float4Vector;
-import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableVar16CharVector;
@@ -44,10 +42,10 @@ public class TestHiveUDFs extends BaseTestQuery {
 
     int numRecords = 0;
     String planString = Resources.toString(Resources.getResource("functions/hive/GenericUDF.json"), Charsets.UTF_8);
-    List<QueryResultBatch> results = testPhysicalWithResults(planString);
+    List<QueryDataBatch> results = testPhysicalWithResults(planString);
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-    for (QueryResultBatch result : results) {
+    for (QueryDataBatch result : results) {
       batchLoader.load(result.getHeader().getDef(), result.getData());
       if (batchLoader.getRecordCount() <= 0) {
         result.release();
@@ -115,10 +113,10 @@ public class TestHiveUDFs extends BaseTestQuery {
   public void testUDF() throws Throwable {
     int numRecords = 0;
     String planString = Resources.toString(Resources.getResource("functions/hive/UDF.json"), Charsets.UTF_8);
-    List<QueryResultBatch> results = testPhysicalWithResults(planString);
+    List<QueryDataBatch> results = testPhysicalWithResults(planString);
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-    for (QueryResultBatch result : results) {
+    for (QueryDataBatch result : results) {
       batchLoader.load(result.getHeader().getDef(), result.getData());
       if (batchLoader.getRecordCount() <= 0) {
         result.release();

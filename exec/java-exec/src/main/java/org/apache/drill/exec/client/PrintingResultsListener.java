@@ -20,16 +20,18 @@ package org.apache.drill.exec.client;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.util.VectorUtil;
 
@@ -58,12 +60,21 @@ public class PrintingResultsListener implements UserResultsListener {
   }
 
   @Override
-  public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
-    int rows = result.getHeader().getRowCount();
-    if (result.getData() != null) {
-      count.addAndGet(rows);
+  public void queryCompleted() {
+    allocator.close();
+    latch.countDown();
+    System.out.println("Total rows returned: " + count.get());
+  }
+
+  @Override
+  public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
+    final QueryData header = result.getHeader();
+    final DrillBuf data = result.getData();
+
+    if (data != null) {
+      count.addAndGet(header.getRowCount());
       try {
-        loader.load(result.getHeader().getDef(), result.getData());
+        loader.load(header.getDef(), data);
       } catch (SchemaChangeException e) {
         submissionFailed(new RpcException(e));
       }
@@ -82,15 +93,7 @@ public class PrintingResultsListener implements UserResultsListener {
       loader.clear();
     }
 
-    boolean isLastChunk = result.getHeader().getIsLastChunk();
     result.release();
-
-    if (isLastChunk) {
-      allocator.close();
-      latch.countDown();
-      System.out.println("Total rows returned: " + count.get());
-    }
-
   }
 
   public int await() throws Exception {

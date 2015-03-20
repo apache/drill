@@ -31,8 +31,7 @@ import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
 import org.apache.drill.exec.physical.impl.materialize.VectorRecordMaterializer;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
@@ -44,7 +43,7 @@ import org.apache.drill.exec.work.ErrorHelper;
 import com.google.common.base.Preconditions;
 
 public class ScreenCreator implements RootCreator<Screen>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
 
 
 
@@ -66,6 +65,8 @@ public class ScreenCreator implements RootCreator<Screen>{
     final FragmentContext context;
     final UserClientConnection connection;
     private RecordMaterializer materializer;
+
+    private boolean firstBatch = true;
 
     public enum Metric implements MetricDef {
       BYTES_SENT;
@@ -96,67 +97,45 @@ public class ScreenCreator implements RootCreator<Screen>{
       IterOutcome outcome = next(incoming);
       logger.trace("Screen Outcome {}", outcome);
       switch (outcome) {
-      case STOP: {
+      case STOP:
         this.internalStop();
-        boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-        QueryResult header = QueryResult.newBuilder() //
-              .setQueryId(context.getHandle().getQueryId()) //
-              .setRowCount(0) //
-              .setQueryState(QueryState.FAILED)
-              .addError(ErrorHelper.logAndConvertMessageError(context.getIdentity(), "Query stopped.",
-                context.getFailureCause(), logger, verbose))
-              .setDef(RecordBatchDef.getDefaultInstance()) //
-              .setIsLastChunk(true) //
-              .build();
-          QueryWritableBatch batch = new QueryWritableBatch(header);
+        return false;
+      case NONE:
+        if (firstBatch) {
+          // this is the only data message sent to the client and may contain the schema
+          this.internalStop();
+          QueryWritableBatch batch;
+          QueryData header = QueryData.newBuilder() //
+            .setQueryId(context.getHandle().getQueryId()) //
+            .setRowCount(0) //
+            .setDef(RecordBatchDef.getDefaultInstance()) //
+            .build();
+          batch = new QueryWritableBatch(header);
+
           stats.startWait();
           try {
-            connection.sendResult(listener, batch);
+            connection.sendData(listener, batch);
           } finally {
             stats.stopWait();
           }
+          firstBatch = false; // we don't really need to set this. But who knows!
           sendCount.increment();
-
-          return false;
-      }
-      case NONE: {
-        this.internalStop();
-        QueryWritableBatch batch;
-        //TODO: At some point we should make this the last message.
-        //For the moment though, to detect memory leaks, we need to delay sending the
-        //COMPLETED message until the Foreman calls cleanup.
-        QueryResult header = QueryResult.newBuilder() //
-            .setQueryId(context.getHandle().getQueryId()) //
-            .setRowCount(0) //
-            //.setQueryState(QueryState.COMPLETED) //
-            .setDef(RecordBatchDef.getDefaultInstance()) //
-            .setIsLastChunk(true) //
-            .build();
-        batch = new QueryWritableBatch(header);
-        stats.startWait();
-        try {
-          connection.sendResult(listener, batch);
-        } finally {
-          stats.stopWait();
         }
-        sendCount.increment();
 
         return false;
-      }
       case OK_NEW_SCHEMA:
         materializer = new VectorRecordMaterializer(context, incoming);
         //$FALL-THROUGH$
       case OK:
-//        context.getStats().batchesCompleted.inc(1);
-//        context.getStats().recordsCompleted.inc(incoming.getRecordCount());
-        QueryWritableBatch batch = materializer.convertNext(false);
+        QueryWritableBatch batch = materializer.convertNext();
         updateStats(batch);
         stats.startWait();
         try {
-          connection.sendResult(listener, batch);
+          connection.sendData(listener, batch);
         } finally {
           stats.stopWait();
         }
+        firstBatch = false;
         sendCount.increment();
 
         return true;

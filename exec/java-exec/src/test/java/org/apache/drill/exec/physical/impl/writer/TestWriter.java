@@ -26,7 +26,7 @@ import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.hadoop.conf.Configuration;
@@ -62,11 +62,11 @@ public class TestWriter extends BaseTestQuery {
 
     String plan = Files.toString(FileUtils.getResourceAsFile("/writer/simple_csv_writer.json"), Charsets.UTF_8);
 
-    List<QueryResultBatch> results = testPhysicalWithResults(plan);
+    List<QueryDataBatch> results = testPhysicalWithResults(plan);
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
 
-    QueryResultBatch batch = results.get(0);
+    QueryDataBatch batch = results.get(0);
     assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
     VarCharVector fragmentIdV = (VarCharVector) batchLoader.getValueAccessorById(VarCharVector.class, 0).getValueVector();
@@ -85,7 +85,7 @@ public class TestWriter extends BaseTestQuery {
     FileStatus[] fileStatuses = fs.globStatus(new Path(path.toString(), "*.csv"));
     assertTrue(2 == fileStatuses.length);
 
-    for (QueryResultBatch b : results) {
+    for (QueryDataBatch b : results) {
       b.release();
     }
     batchLoader.clear();
@@ -141,12 +141,12 @@ public class TestWriter extends BaseTestQuery {
       fs.delete(tableLocation, true);
     }
 
-    List<QueryResultBatch> results = testSqlWithResults(testQuery);
+    List<QueryDataBatch> results = testSqlWithResults(testQuery);
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
 
     int recordsWritten = 0;
-    for (QueryResultBatch batch : results) {
+    for (QueryDataBatch batch : results) {
       batchLoader.load(batch.getHeader().getDef(), batch.getData());
 
       if (batchLoader.getRecordCount() <= 0) {

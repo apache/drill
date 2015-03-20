@@ -30,7 +30,7 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -43,7 +43,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
 
 public class TestParquetPhysicalPlan extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetPhysicalPlan.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetPhysicalPlan.class);
 
   public String fileName = "parquet/parquet_scan_filter_union_screen_physical.json";
 
@@ -56,10 +56,10 @@ public class TestParquetPhysicalPlan extends ExecTest {
     try (Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
       bit1.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
       int count = 0;
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         count += b.getHeader().getRowCount();
         loader.load(b.getHeader().getDef(), b.getData());
@@ -96,13 +96,15 @@ public class TestParquetPhysicalPlan extends ExecTest {
     }
 
     @Override
-    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
+    public void queryCompleted() {
+      latch.countDown();
+    }
+
+    @Override
+    public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
       int rows = result.getHeader().getRowCount();
       System.out.println(String.format("Result batch arrived. Number of records: %d", rows));
       count.addAndGet(rows);
-      if (result.getHeader().getIsLastChunk()) {
-        latch.countDown();
-      }
       result.release();
     }
 

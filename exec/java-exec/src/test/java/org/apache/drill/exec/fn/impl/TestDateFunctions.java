@@ -27,7 +27,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
@@ -48,13 +48,13 @@ public class TestDateFunctions extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", resourceFile));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
 
@@ -67,7 +67,7 @@ public class TestDateFunctions extends PopUnitTestBase {
             }
 
             batchLoader.clear();
-            for(QueryResultBatch b : results){
+            for(QueryDataBatch b : results){
                 b.release();
             }
         }

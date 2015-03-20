@@ -29,7 +29,7 @@ import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
@@ -59,11 +59,11 @@ public class QueryTestUtil {
     final DrillClient drillClient = new DrillClient(drillConfig, remoteServiceSet.getCoordinator());
     drillClient.connect();
 
-    final List<QueryResultBatch> results = drillClient.runQuery(
+    final List<QueryDataBatch> results = drillClient.runQuery(
         QueryType.SQL, String.format("alter session set `%s` = %d",
             ExecConstants.MAX_WIDTH_PER_NODE_KEY, maxWidth));
-    for (QueryResultBatch queryResultBatch : results) {
-      queryResultBatch.release();
+    for (QueryDataBatch queryDataBatch : results) {
+      queryDataBatch.release();
     }
 
     return drillClient;

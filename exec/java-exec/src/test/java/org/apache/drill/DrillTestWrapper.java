@@ -29,7 +29,7 @@ import org.apache.drill.exec.record.HyperVectorWrapper;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.io.Text;
 
@@ -166,13 +166,13 @@ public class DrillTestWrapper {
     }
   }
 
-  private Map<String, HyperVectorValueIterator> addToHyperVectorMap(List<QueryResultBatch> records, RecordBatchLoader loader,
+  private Map<String, HyperVectorValueIterator> addToHyperVectorMap(List<QueryDataBatch> records, RecordBatchLoader loader,
                                                                       BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
     Map<String, HyperVectorValueIterator> combinedVectors = new HashMap();
 
     long totalRecords = 0;
-    QueryResultBatch batch;
+    QueryDataBatch batch;
     int size = records.size();
     for (int i = 0; i < size; i++) {
       batch = records.get(i);
@@ -213,13 +213,13 @@ public class DrillTestWrapper {
    * @throws SchemaChangeException
    * @throws UnsupportedEncodingException
    */
-   private Map<String, List> addToCombinedVectorResults(List<QueryResultBatch> records, RecordBatchLoader loader,
+   private Map<String, List> addToCombinedVectorResults(List<QueryDataBatch> records, RecordBatchLoader loader,
                                                          BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
     Map<String, List> combinedVectors = new HashMap();
 
     long totalRecords = 0;
-    QueryResultBatch batch;
+    QueryDataBatch batch;
     int size = records.size();
     for (int i = 0; i < size; i++) {
       batch = records.get(0);
@@ -268,14 +268,14 @@ public class DrillTestWrapper {
     BatchSchema schema = null;
 
     BaseTestQuery.test(testOptionSettingQueries);
-    List<QueryResultBatch> expected = BaseTestQuery.testRunAndReturn(queryType, query);
+    List<QueryDataBatch> expected = BaseTestQuery.testRunAndReturn(queryType, query);
 
     addTypeInfoIfMissing(expected.get(0), testBuilder);
 
     List<Map> expectedRecords = new ArrayList<>();
     addToMaterializedResults(expectedRecords, expected, loader, schema);
 
-    List<QueryResultBatch> results = new ArrayList();
+    List<QueryDataBatch> results = new ArrayList();
     List<Map> actualRecords = new ArrayList<>();
     // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
     // the cases where the baseline is stored in a file.
@@ -313,13 +313,13 @@ public class DrillTestWrapper {
     BatchSchema schema = null;
 
     BaseTestQuery.test(testOptionSettingQueries);
-    List<QueryResultBatch> results = BaseTestQuery.testRunAndReturn(queryType, query);
+    List<QueryDataBatch> results = BaseTestQuery.testRunAndReturn(queryType, query);
     // To avoid extra work for test writers, types can optionally be inferred from the test query
     addTypeInfoIfMissing(results.get(0), testBuilder);
 
     Map<String, List> actualSuperVectors = addToCombinedVectorResults(results, loader, schema);
 
-    List<QueryResultBatch> expected = null;
+    List<QueryDataBatch> expected = null;
     Map<String, List> expectedSuperVectors = null;
 
     // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
@@ -353,14 +353,14 @@ public class DrillTestWrapper {
     BatchSchema schema = null;
 
     BaseTestQuery.test(testOptionSettingQueries);
-    List<QueryResultBatch> results = BaseTestQuery.testRunAndReturn(queryType, query);
+    List<QueryDataBatch> results = BaseTestQuery.testRunAndReturn(queryType, query);
     // To avoid extra work for test writers, types can optionally be inferred from the test query
     addTypeInfoIfMissing(results.get(0), testBuilder);
 
     Map<String, HyperVectorValueIterator> actualSuperVectors = addToHyperVectorMap(results, loader, schema);
 
     BaseTestQuery.test(baselineOptionSettingQueries);
-    List<QueryResultBatch> expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+    List<QueryDataBatch> expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
 
     Map<String, HyperVectorValueIterator> expectedSuperVectors = addToHyperVectorMap(expected, loader, schema);
 
@@ -368,7 +368,7 @@ public class DrillTestWrapper {
     cleanupBatches(results, expected);
   }
 
-  private void addTypeInfoIfMissing(QueryResultBatch batch, TestBuilder testBuilder) {
+  private void addTypeInfoIfMissing(QueryDataBatch batch, TestBuilder testBuilder) {
     if (! testBuilder.typeInfoSet()) {
       Map<SchemaPath, TypeProtos.MajorType> typeMap = getTypeMapFromBatch(batch);
       testBuilder.baselineTypes(typeMap);
@@ -376,7 +376,7 @@ public class DrillTestWrapper {
 
   }
 
-  private Map<SchemaPath, TypeProtos.MajorType> getTypeMapFromBatch(QueryResultBatch batch) {
+  private Map<SchemaPath, TypeProtos.MajorType> getTypeMapFromBatch(QueryDataBatch batch) {
     Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap();
     for (int i = 0; i < batch.getHeader().getDef().getFieldCount(); i++) {
       typeMap.put(MaterializedField.create(batch.getHeader().getDef().getField(i)).getPath(),
@@ -385,18 +385,18 @@ public class DrillTestWrapper {
     return typeMap;
   }
 
-  private void cleanupBatches(List<QueryResultBatch>... results) {
-    for (List<QueryResultBatch> resultList : results ) {
-      for (QueryResultBatch result : resultList) {
+  private void cleanupBatches(List<QueryDataBatch>... results) {
+    for (List<QueryDataBatch> resultList : results ) {
+      for (QueryDataBatch result : resultList) {
         result.release();
       }
     }
   }
 
-  protected void addToMaterializedResults(List<Map> materializedRecords,  List<QueryResultBatch> records, RecordBatchLoader loader,
+  protected void addToMaterializedResults(List<Map> materializedRecords,  List<QueryDataBatch> records, RecordBatchLoader loader,
                                           BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
     long totalRecords = 0;
-    QueryResultBatch batch;
+    QueryDataBatch batch;
     int size = records.size();
     for (int i = 0; i < size; i++) {
       batch = records.get(0);

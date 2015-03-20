@@ -39,14 +39,14 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.testing.ExceptionInjectionUtil;
 import org.apache.drill.exec.testing.SimulatedExceptions.InjectionOption;
 import org.apache.drill.exec.testing.SimulatedExceptions.InjectionOptions;
@@ -184,11 +184,11 @@ public class TestDrillbitResilience extends ExecTest {
           private final RecordBatchLoader loader = new RecordBatchLoader(bufferAllocator);
 
           @Override
-          public void rowArrived(final QueryResultBatch queryResultBatch) {
+          public void rowArrived(final QueryDataBatch queryResultBatch) {
             // load the single record
-            final QueryResult queryResult = queryResultBatch.getHeader();
+            final QueryData queryData = queryResultBatch.getHeader();
             try {
-              loader.load(queryResult.getDef(), queryResultBatch.getData());
+              loader.load(queryData.getDef(), queryResultBatch.getData());
             } catch(SchemaChangeException e) {
               fail(e.toString());
             }

@@ -23,7 +23,7 @@ import java.util.Objects;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.ValueVector;
@@ -82,15 +82,15 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
   }
 
   protected void query(final String query, final Function<RecordBatchLoader> testBody) throws Exception {
-    List<QueryResultBatch> batches = testSqlWithResults(query);
+    List<QueryDataBatch> batches = testSqlWithResults(query);
     RecordBatchLoader loader = new RecordBatchLoader(client.getAllocator());
     try {
       // first batch at index 0 is empty and used for fast schema return. Load the second one for the tests
-      QueryResultBatch batch = batches.get(0);
+      QueryDataBatch batch = batches.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
       testBody.apply(loader);
     } finally {
-      for (QueryResultBatch batch:batches) {
+      for (QueryDataBatch batch:batches) {
         batch.release();
       }
       loader.clear();

@@ -45,7 +45,7 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -133,14 +133,14 @@ public class TestHashJoin extends PopUnitTestBase {
       // run query.
       bit.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/join/hash_join.json"), Charsets.UTF_8)
                       .replace("#{TEST_FILE_1}", FileUtils.getResourceAsFile("/build_side_input.json").toURI().toString())
                       .replace("#{TEST_FILE_2}", FileUtils.getResourceAsFile("/probe_side_input.json").toURI().toString()));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-      QueryResultBatch batch = results.get(1);
+      QueryDataBatch batch = results.get(1);
       assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
       Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
@@ -158,7 +158,7 @@ public class TestHashJoin extends PopUnitTestBase {
       assertEquals(6, intAccessor1.getValueCount());
 
       batchLoader.clear();
-      for (QueryResultBatch result : results) {
+      for (QueryDataBatch result : results) {
         result.release();
       }
     }
@@ -176,11 +176,11 @@ public class TestHashJoin extends PopUnitTestBase {
       // run query.
       bit.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/join/hj_exchanges.json"), Charsets.UTF_8));
 
       int count = 0;
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }
@@ -204,14 +204,14 @@ public class TestHashJoin extends PopUnitTestBase {
       // run query.
       bit.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/join/hj_multi_condition_join.json"), Charsets.UTF_8)
                       .replace("#{TEST_FILE_1}", FileUtils.getResourceAsFile("/build_side_input.json").toURI().toString())
                       .replace("#{TEST_FILE_2}", FileUtils.getResourceAsFile("/probe_side_input.json").toURI().toString()));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-      QueryResultBatch batch = results.get(1);
+      QueryDataBatch batch = results.get(1);
       assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
       Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
@@ -232,7 +232,7 @@ public class TestHashJoin extends PopUnitTestBase {
       assertEquals(3, intAccessor1.getValueCount());
 
       batchLoader.clear();
-      for (QueryResultBatch result : results) {
+      for (QueryDataBatch result : results) {
         result.release();
       }
     }
@@ -251,11 +251,11 @@ public class TestHashJoin extends PopUnitTestBase {
       // run query.
       bit.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Files.toString(FileUtils.getResourceAsFile("/join/hj_exchanges1.json"), Charsets.UTF_8));
 
       int count = 0;
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }
@@ -277,10 +277,10 @@ public class TestHashJoin extends PopUnitTestBase {
 
       bit1.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/join/hashJoinExpr.json"), Charsets.UTF_8));
       int count = 0;
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
           count += b.getHeader().getRowCount();
         }

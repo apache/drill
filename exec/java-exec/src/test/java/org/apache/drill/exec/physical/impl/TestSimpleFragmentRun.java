@@ -31,7 +31,7 @@ import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
@@ -56,12 +56,12 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
     client.connect();
     String path = "/physical_test2.json";
 //      String path = "/filter/test1.json";
-    List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(path), Charsets.UTF_8));
+    List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(path), Charsets.UTF_8));
 
     // look at records
     RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
     int recordCount = 0;
-    for (QueryResultBatch batch : results) {
+    for (QueryDataBatch batch : results) {
       boolean schemaChanged = batchLoader.load(batch.getHeader().getDef(), batch.getData());
       boolean firstColumn = true;
 
@@ -115,7 +115,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       // run query.
       bit.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL,
           Files.toString(FileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8)
               .replace("#{TEST_FILE}", FileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString())
       );
@@ -129,7 +129,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       //assertEquals(expectedBatchCount, results.size());
 
       for (int i = 0; i < results.size(); ++i) {
-        QueryResultBatch batch = results.get(i);
+        QueryDataBatch batch = results.get(i);
         if (i == 0) {
           assertTrue(batch.hasData());
         } else {

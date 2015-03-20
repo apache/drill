@@ -24,17 +24,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 
 /**
  * Result listener that is set up to receive a single row. Useful for queries
- * such with a count(*) or limit 1. The abstract method {@link #rowArrived(QueryResultBatch)} provides
+ * such with a count(*) or limit 1. The abstract method {@link #rowArrived(QueryDataBatch)} provides
  * the means for a derived class to get the expected record's data.
  */
 public abstract class SingleRowListener implements UserResultsListener {
@@ -51,14 +51,26 @@ public abstract class SingleRowListener implements UserResultsListener {
   @Override
   public void submissionFailed(final RpcException ex) {
     exception = ex;
+    synchronized(errorList) {
+      errorList.add(ex.getRemoteError());
+    }
     latch.countDown();
   }
 
   @Override
-  public void resultArrived(final QueryResultBatch result, final ConnectionThrottle throttle) {
-    final QueryResult queryResult = result.getHeader();
+  public void queryCompleted() {
+    try {
+      cleanup();
+    } finally {
+      latch.countDown();
+    }
+  }
+
+  @Override
+  public void dataArrived(final QueryDataBatch result, final ConnectionThrottle throttle) {
+    final QueryData queryData = result.getHeader();
     if (result.hasData()) {
-      final int nRows = this.nRows.addAndGet(queryResult.getRowCount());
+      final int nRows = this.nRows.addAndGet(queryData.getRowCount());
       if (nRows > 1) {
         throw new IllegalStateException("Expected exactly one row, but got " + nRows);
       }
@@ -66,22 +78,7 @@ public abstract class SingleRowListener implements UserResultsListener {
       rowArrived(result);
     }
 
-    // TODO this appears to never be set
-    if (queryResult.hasQueryState()) {
-      queryState = queryResult.getQueryState();
-    }
-
-    synchronized(errorList) {
-      errorList.addAll(queryResult.getErrorList());
-    }
-
-    final boolean isLastChunk = queryResult.getIsLastChunk();
     result.release();
-
-    if (isLastChunk) {
-      cleanup();
-      latch.countDown();
-    }
   }
 
   /**
@@ -110,9 +107,9 @@ public abstract class SingleRowListener implements UserResultsListener {
    * <p>Derived classes provide whatever implementation they require here to access
    * the record's data.
    *
-   * @param queryResultBatch result batch holding the row
+   * @param queryDataBatch result batch holding the row
    */
-  protected abstract void rowArrived(QueryResultBatch queryResultBatch);
+  protected abstract void rowArrived(QueryDataBatch queryDataBatch);
 
   /**
    * Wait for the completion of this query; receiving a record or an error will both cause the

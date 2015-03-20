@@ -21,15 +21,15 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
 
-import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 
 public class QueryWritableBatch {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWritableBatch.class);
 
-  private final QueryResult header;
+  private final QueryData header;
   private final ByteBuf[] buffers;
 
-  public QueryWritableBatch(QueryResult header, ByteBuf... buffers) {
+  public QueryWritableBatch(QueryData header, ByteBuf... buffers) {
     this.header = header;
     this.buffers = buffers;
   }
@@ -46,7 +46,7 @@ public class QueryWritableBatch {
     return n;
   }
 
-  public QueryResult getHeader() {
+  public QueryData getHeader() {
     return header;
   }
 

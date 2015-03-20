@@ -56,6 +56,10 @@ public final class UserProtos {
     RUN_QUERY(3, 3),
     /**
      * <code>CANCEL_QUERY = 4;</code>
+     *
+     * <pre>
+     * user is sending a query cancellation request to the drillbit
+     * </pre>
      */
     CANCEL_QUERY(4, 4),
     /**
@@ -63,13 +67,13 @@ public final class UserProtos {
      */
     REQUEST_RESULTS(5, 5),
     /**
-     * <code>QUERY_RESULT = 6;</code>
+     * <code>QUERY_DATA = 6;</code>
      *
      * <pre>
      * bit to user
      * </pre>
      */
-    QUERY_RESULT(6, 6),
+    QUERY_DATA(6, 6),
     /**
      * <code>QUERY_HANDLE = 7;</code>
      */
@@ -82,6 +86,14 @@ public final class UserProtos {
      * <code>RESP_FUNCTION_LIST = 9;</code>
      */
     RESP_FUNCTION_LIST(9, 9),
+    /**
+     * <code>QUERY_RESULT = 10;</code>
+     *
+     * <pre>
+     * drillbit is reporting a query status change, most likely a terminal message, to the user
+     * </pre>
+     */
+    QUERY_RESULT(10, 10),
     ;
 
     /**
@@ -106,6 +118,10 @@ public final class UserProtos {
     public static final int RUN_QUERY_VALUE = 3;
     /**
      * <code>CANCEL_QUERY = 4;</code>
+     *
+     * <pre>
+     * user is sending a query cancellation request to the drillbit
+     * </pre>
      */
     public static final int CANCEL_QUERY_VALUE = 4;
     /**
@@ -113,13 +129,13 @@ public final class UserProtos {
      */
     public static final int REQUEST_RESULTS_VALUE = 5;
     /**
-     * <code>QUERY_RESULT = 6;</code>
+     * <code>QUERY_DATA = 6;</code>
      *
      * <pre>
      * bit to user
      * </pre>
      */
-    public static final int QUERY_RESULT_VALUE = 6;
+    public static final int QUERY_DATA_VALUE = 6;
     /**
      * <code>QUERY_HANDLE = 7;</code>
      */
@@ -132,6 +148,14 @@ public final class UserProtos {
      * <code>RESP_FUNCTION_LIST = 9;</code>
      */
     public static final int RESP_FUNCTION_LIST_VALUE = 9;
+    /**
+     * <code>QUERY_RESULT = 10;</code>
+     *
+     * <pre>
+     * drillbit is reporting a query status change, most likely a terminal message, to the user
+     * </pre>
+     */
+    public static final int QUERY_RESULT_VALUE = 10;
 
 
     public final int getNumber() { return value; }
@@ -144,10 +168,11 @@ public final class UserProtos {
         case 3: return RUN_QUERY;
         case 4: return CANCEL_QUERY;
         case 5: return REQUEST_RESULTS;
-        case 6: return QUERY_RESULT;
+        case 6: return QUERY_DATA;
         case 7: return QUERY_HANDLE;
         case 8: return REQ_META_FUNCTIONS;
         case 9: return RESP_FUNCTION_LIST;
+        case 10: return QUERY_RESULT;
         default: return null;
       }
     }
@@ -4343,14 +4368,14 @@ public final class UserProtos {
       "lts_mode\030\001 \001(\0162\033.exec.user.QueryResultsM" +
       "ode\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryTyp" +
       "e\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022\023\n" +
-      "\013rpc_version\030\002 \001(\005*\270\001\n\007RpcType\022\r\n\tHANDSH" +
+      "\013rpc_version\030\002 \001(\005*\310\001\n\007RpcType\022\r\n\tHANDSH" +
       "AKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY" +
       "\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020" +
-      "\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n",
-      "\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_L" +
-      "IST\020\t*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL" +
-      "\020\001B+\n\033org.apache.drill.exec.protoB\nUserP" +
-      "rotosH\001"
+      "\005\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n\022R",
+      "EQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIS" +
+      "T\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResultsMod" +
+      "e\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.drill.e" +
+      "xec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

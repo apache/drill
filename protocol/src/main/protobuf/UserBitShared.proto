@@ -95,6 +95,9 @@ message NodeStatus {
 	optional int64 memory_footprint = 2;
 }
 
+/*
+ * Used by the server to report informations about the query state to the client
+ */
 message QueryResult {
 	enum QueryState {
 	  PENDING = 0;
@@ -107,15 +110,16 @@ message QueryResult {
 
 	optional QueryState query_state = 1;
 	optional QueryId query_id = 2;
-	optional bool is_last_chunk = 3;
-	optional int32 row_count = 4;
-	optional int64 records_scan = 5;
-	optional int64 records_error = 6;
-	optional int64 submission_time = 7;
-	repeated NodeStatus node_status = 8;
-	repeated DrillPBError error = 9;
-	optional RecordBatchDef def = 10;
-	optional bool schema_changed = 11;
+	repeated DrillPBError error = 3;
+}
+
+/*
+ * Used by the server when sending query result data batches to the client
+ */
+message QueryData {
+  optional QueryId query_id = 1;
+  optional int32 row_count = 2;
+  optional RecordBatchDef def = 3;
 }
 
 message QueryInfo {

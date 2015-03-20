@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.materialize;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.WritableBatch;
@@ -41,14 +41,14 @@ public class VectorRecordMaterializer implements RecordMaterializer{
 //    }
   }
 
-  public QueryWritableBatch convertNext(boolean isLast) {
+  public QueryWritableBatch convertNext() {
     //batch.getWritableBatch().getDef().getRecordCount()
     WritableBatch w = batch.getWritableBatch();
 
-    QueryResult header = QueryResult.newBuilder() //
+    QueryData header = QueryData.newBuilder() //
         .setQueryId(queryId) //
         .setRowCount(batch.getRecordCount()) //
-        .setDef(w.getDef()).setIsLastChunk(isLast).build();
+        .setDef(w.getDef()).build();
     QueryWritableBatch batch = new QueryWritableBatch(header, w.getBuffers());
     return batch;
   }

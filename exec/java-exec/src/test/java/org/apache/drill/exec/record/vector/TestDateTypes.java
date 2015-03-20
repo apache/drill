@@ -28,7 +28,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
@@ -42,7 +42,7 @@ import com.google.common.io.Files;
  * back to VarChar.
  */
 public class TestDateTypes extends PopUnitTestBase {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDateTypes.class);
+//    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDateTypes.class);
 
     @Test
     public void testDate() throws Exception {
@@ -53,13 +53,13 @@ public class TestDateTypes extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/record/vector/test_date.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             for (VectorWrapper<?> v : batchLoader) {
@@ -72,7 +72,7 @@ public class TestDateTypes extends PopUnitTestBase {
             }
 
             batchLoader.clear();
-            for(QueryResultBatch b : results){
+            for(QueryDataBatch b : results){
               b.release();
             }
         }
@@ -87,13 +87,13 @@ public class TestDateTypes extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/record/vector/test_sort_date.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryDataBatch batch = results.get(1);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             for (VectorWrapper<?> v : batchLoader) {
@@ -106,7 +106,7 @@ public class TestDateTypes extends PopUnitTestBase {
             }
 
             batchLoader.clear();
-            for(QueryResultBatch b : results){
+            for(QueryDataBatch b : results){
               b.release();
             }
         }
@@ -121,13 +121,13 @@ public class TestDateTypes extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/record/vector/test_timestamp.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             for (VectorWrapper<?> v : batchLoader) {
@@ -140,7 +140,7 @@ public class TestDateTypes extends PopUnitTestBase {
             }
 
             batchLoader.clear();
-            for(QueryResultBatch b : results){
+            for(QueryDataBatch b : results){
               b.release();
             }
         }
@@ -155,13 +155,13 @@ public class TestDateTypes extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/record/vector/test_interval.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_interval.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(0);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
@@ -198,7 +198,7 @@ public class TestDateTypes extends PopUnitTestBase {
             assertEquals((accessor.getObject(5).toString()), ("1 day 0:-39:-25.0"));
 
             batchLoader.clear();
-            for(QueryResultBatch b : results){
+            for(QueryDataBatch b : results){
               b.release();
             }
         }
@@ -213,13 +213,13 @@ public class TestDateTypes extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/record/vector/test_all_date_literals.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String result[] = {"2008-02-27",
@@ -237,7 +237,7 @@ public class TestDateTypes extends PopUnitTestBase {
             }
 
             batchLoader.clear();
-            for(QueryResultBatch b : results){
+            for(QueryDataBatch b : results){
               b.release();
             }
         }
@@ -252,13 +252,13 @@ public class TestDateTypes extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/record/vector/test_date_add.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             for (VectorWrapper<?> v : batchLoader) {
@@ -271,7 +271,7 @@ public class TestDateTypes extends PopUnitTestBase {
             }
 
             batchLoader.clear();
-            for(QueryResultBatch b : results){
+            for(QueryDataBatch b : results){
               b.release();
             }
         }

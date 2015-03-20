@@ -46,7 +46,6 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ExternalSort;
-import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
@@ -612,7 +611,6 @@ public class Foreman implements Runnable {
        * Construct the response based on the latest resultState. The builder shouldn't fail.
        */
       final QueryResult.Builder resultBuilder = QueryResult.newBuilder()
-          .setIsLastChunk(resultState != QueryState.COMPLETED) // TODO(DRILL-2498) temporary
           .setQueryId(queryId)
           .setQueryState(resultState);
       if (resultException != null) {
@@ -629,7 +627,7 @@ public class Foreman implements Runnable {
        */
       try {
         // send whatever result we ended up with
-        initiatingClient.sendResult(responseListener, new QueryWritableBatch(resultBuilder.build()), true);
+        initiatingClient.sendResult(responseListener, resultBuilder.build(), true);
       } catch(Exception e) {
         addException(e);
         logger.warn("Exception sending result to client", resultException);

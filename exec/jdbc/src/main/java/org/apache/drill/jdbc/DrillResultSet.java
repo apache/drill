@@ -19,8 +19,6 @@ package org.apache.drill.jdbc;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -30,24 +28,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.hydromatic.avatica.AvaticaPrepareResult;
 import net.hydromatic.avatica.AvaticaResultSet;
 import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.Cursor;
-import net.hydromatic.avatica.Cursor.Accessor;
 
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 
 import com.google.common.collect.Queues;
 
 public class DrillResultSet extends AvaticaResultSet {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillResultSet.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillResultSet.class);
 
   SchemaChangeListener changeListener;
   final ResultsListener resultslistener = new ResultsListener();
@@ -107,8 +102,7 @@ public class DrillResultSet extends AvaticaResultSet {
     // don't return with metadata until we've achieved at least one return message.
     try {
       resultslistener.latch.await();
-      boolean notAtEnd = cursor.next();
-      assert notAtEnd;
+      cursor.next();
     } catch (InterruptedException e) {
      // TODO:  Check:  Should this call Thread.currentThread.interrupt()?   If
      // not, at least document why this is empty.
@@ -137,7 +131,7 @@ public class DrillResultSet extends AvaticaResultSet {
 
 
 
-    final LinkedBlockingDeque<QueryResultBatch> queue = Queues.newLinkedBlockingDeque();
+    final LinkedBlockingDeque<QueryDataBatch> queue = Queues.newLinkedBlockingDeque();
 
     // TODO:  Doc.:  Release what if what is first relative to what?
     private boolean releaseIfFirst() {
@@ -151,7 +145,6 @@ public class DrillResultSet extends AvaticaResultSet {
 
     @Override
     public void submissionFailed(RpcException ex) {
-      releaseIfFirst();
       this.ex = ex;
       completed = true;
       close();
@@ -159,13 +152,14 @@ public class DrillResultSet extends AvaticaResultSet {
     }
 
     @Override
-    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
-      logger.debug("Result arrived {}", result);
+    public void queryCompleted() {
+      releaseIfFirst();
+      completed = true;
+    }
 
-      if (result.getHeader().hasQueryState() && result.getHeader().getQueryState() == QueryState.COMPLETED && result.getHeader().getRowCount() == 0) {
-        result.release();
-        return;
-      }
+    @Override
+    public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
+      logger.debug("Result arrived {}", result);
 
       // If we're in a closed state, just release the message.
       if (closed) {
@@ -182,20 +176,11 @@ public class DrillResultSet extends AvaticaResultSet {
         autoread = false;
       }
 
-      if (result.getHeader().getIsLastChunk()) {
-        completed = true;
-      }
-
-      if (result.getHeader().getErrorCount() > 0) {
-        submissionFailed(new RpcException(String.format("%s", result.getHeader().getErrorList())));
-      }
-
       releaseIfFirst();
-
     }
 
     // TODO:  Doc.:  Specify whether result can be null and what that means.
-    public QueryResultBatch getNext() throws RpcException, InterruptedException {
+    public QueryDataBatch getNext() throws RpcException, InterruptedException {
       while (true) {
         if (ex != null) {
           throw ex;
@@ -203,7 +188,7 @@ public class DrillResultSet extends AvaticaResultSet {
         if (completed && queue.isEmpty()) {
           return null;
         } else {
-          QueryResultBatch q = queue.poll(50, TimeUnit.MILLISECONDS);
+          QueryDataBatch q = queue.poll(50, TimeUnit.MILLISECONDS);
           if (q != null) {
             if (!autoread && queue.size() < MAX / 2) {
               autoread = true;
@@ -219,7 +204,7 @@ public class DrillResultSet extends AvaticaResultSet {
     void close() {
       closed = true;
       while (!queue.isEmpty()) {
-        QueryResultBatch qrb = queue.poll();
+        QueryDataBatch qrb = queue.poll();
         if (qrb != null && qrb.getData() != null) {
           qrb.getData().release();
         }

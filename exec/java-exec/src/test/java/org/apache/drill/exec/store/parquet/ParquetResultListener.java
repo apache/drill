@@ -31,7 +31,7 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -39,7 +39,7 @@ import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SettableFuture;
 
 public class ParquetResultListener implements UserResultsListener {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetResultListener.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetResultListener.class);
 
   private SettableFuture<Void> future = SettableFuture.create();
   int count = 0;
@@ -65,6 +65,10 @@ public class ParquetResultListener implements UserResultsListener {
     future.setException(ex);
   }
 
+  @Override
+  public void queryCompleted() {
+    checkLastChunk();
+  }
 
   private <T> void assertField(ValueVector valueVector, int index, TypeProtos.MinorType expectedMinorType, Object value, String name) {
     assertField(valueVector, index, expectedMinorType, value, name, 0);
@@ -94,11 +98,8 @@ public class ParquetResultListener implements UserResultsListener {
   }
 
   @Override
-  synchronized public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
+  synchronized public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
     logger.debug("result arrived in test batch listener.");
-    if(result.getHeader().getIsLastChunk()){
-      future.set(null);
-    }
     int columnValCounter = 0;
     FieldInfo currentField;
     count += result.getHeader().getRowCount();
@@ -147,15 +148,12 @@ public class ParquetResultListener implements UserResultsListener {
       printRowMajor(batchLoader);
     }
     batchCounter++;
-    if(result.getHeader().getIsLastChunk()){
-      checkLastChunk(batchLoader, result);
-    }
 
     batchLoader.clear();
     result.release();
   }
 
-  public void checkLastChunk(RecordBatchLoader batchLoader, QueryResultBatch result) {
+  private void checkLastChunk() {
     int recordsInBatch = -1;
     // ensure the right number of columns was returned, especially important to ensure selective column read is working
     if (testValues) {
@@ -173,8 +171,6 @@ public class ParquetResultListener implements UserResultsListener {
     }
 
     assert valuesChecked.keySet().size() > 0;
-    batchLoader.clear();
-    result.release();
     future.set(null);
   }
 

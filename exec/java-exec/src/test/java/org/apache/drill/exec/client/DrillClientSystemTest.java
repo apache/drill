@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.drill.exec.DrillSystemTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -53,8 +53,8 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
     startCluster(1);
     DrillClient client = new DrillClient();
     client.connect();
-    List<QueryResultBatch> results = client.runQuery(QueryType.LOGICAL, plan);
-    for (QueryResultBatch result : results) {
+    List<QueryDataBatch> results = client.runQuery(QueryType.LOGICAL, plan);
+    for (QueryDataBatch result : results) {
       System.out.println(result);
       result.release();
     }
@@ -66,8 +66,8 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
     startCluster(2);
     DrillClient client = new DrillClient();
     client.connect();
-    List<QueryResultBatch> results = client.runQuery(QueryType.LOGICAL, plan);
-    for (QueryResultBatch result : results) {
+    List<QueryDataBatch> results = client.runQuery(QueryType.LOGICAL, plan);
+    for (QueryDataBatch result : results) {
       System.out.println(result);
       result.release();
     }

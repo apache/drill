@@ -14,16 +14,18 @@ enum RpcType {
   GOODBYE = 2;
 
   // user to bit
-  RUN_QUERY = 3;
-  CANCEL_QUERY = 4;
+  RUN_QUERY = 3; // user is submitting a new query to the drillbit
+  CANCEL_QUERY = 4; // user is sending a query cancellation request to the drillbit
   REQUEST_RESULTS = 5;
 
   // bit to user
-  QUERY_RESULT = 6;
+  QUERY_DATA = 6; // drillbit is sending a query result data batch to the user
   QUERY_HANDLE = 7;
 
   REQ_META_FUNCTIONS = 8;
   RESP_FUNCTION_LIST = 9;
+
+  QUERY_RESULT = 10; // drillbit is reporting a query status change, most likely a terminal message, to the user
 }
 
 message Property {

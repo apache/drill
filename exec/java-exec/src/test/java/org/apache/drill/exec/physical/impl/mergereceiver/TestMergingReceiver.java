@@ -28,7 +28,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.junit.Test;
@@ -50,13 +50,13 @@ public class TestMergingReceiver extends PopUnitTestBase {
       bit1.run();
       bit2.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
         Files.toString(FileUtils.getResourceAsFile("/mergerecv/merging_receiver.json"),
           Charsets.UTF_8));
       int count = 0;
       RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       // print the results
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         count += b.getHeader().getRowCount();
         for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
           List<Object> row = Lists.newArrayList();
@@ -95,14 +95,14 @@ public class TestMergingReceiver extends PopUnitTestBase {
       bit1.run();
       bit2.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                                                         Files.toString(FileUtils.getResourceAsFile("/mergerecv/multiple_providers.json"),
                                                                         Charsets.UTF_8));
       int count = 0;
       RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       // print the results
       Long lastBlueValue = null;
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         count += b.getHeader().getRowCount();
         for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
           List<Object> row = Lists.newArrayList();
@@ -147,13 +147,13 @@ public class TestMergingReceiver extends PopUnitTestBase {
       bit1.run();
       bit2.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                                                         Files.toString(FileUtils.getResourceAsFile("/mergerecv/empty_batch.json"),
                                                                         Charsets.UTF_8));
       int count = 0;
       RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       // print the results
-      for (QueryResultBatch b : results) {
+      for (QueryDataBatch b : results) {
         count += b.getHeader().getRowCount();
         for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
           List<Object> row = Lists.newArrayList();

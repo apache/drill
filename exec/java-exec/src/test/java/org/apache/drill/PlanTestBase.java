@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.eigenbase.sql.SqlExplain.Depth;
@@ -288,12 +288,12 @@ public class PlanTestBase extends BaseTestQuery {
    */
   protected static String getPlanInString(String sql, String columnName)
       throws Exception {
-    List<QueryResultBatch> results = testSqlWithResults(sql);
+    List<QueryDataBatch> results = testSqlWithResults(sql);
 
     RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
     StringBuilder builder = new StringBuilder();
 
-    for (QueryResultBatch b : results) {
+    for (QueryDataBatch b : results) {
       if (!b.hasData()) {
         continue;
       }

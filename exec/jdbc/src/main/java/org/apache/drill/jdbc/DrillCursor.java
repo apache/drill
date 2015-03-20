@@ -29,7 +29,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 
 public class DrillCursor implements Cursor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillCursor.class);
@@ -113,7 +113,7 @@ public class DrillCursor implements Cursor {
       // Next index is not in current batch (including initial empty batch--
       // (try to) get next batch.
       try {
-        QueryResultBatch qrb = resultsListener.getNext();
+        QueryDataBatch qrb = resultsListener.getNext();
         recordBatchCount++;
         while (qrb != null && qrb.getHeader().getRowCount() == 0 && !first) {
           qrb.release();

@@ -29,7 +29,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
@@ -54,14 +54,14 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/cast_simple_decimal.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(0);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String decimal9Output[] = {"99.0000", "11.1235", "0.1000", "-0.1200", "-123.1234", "-1.0001"};
@@ -82,7 +82,7 @@ public class TestDecimal extends PopUnitTestBase{
             assertEquals(6, dec18Accessor.getValueCount());
 
             batchLoader.clear();
-            for (QueryResultBatch result : results) {
+            for (QueryDataBatch result : results) {
               result.release();
             }
         }
@@ -99,14 +99,14 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/cast_float_decimal.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(0);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String decimal9Output[] = {"99.0000", "11.1235", "0.1000", "-0.1200", "-123.1234", "-1.0001"};
@@ -127,7 +127,7 @@ public class TestDecimal extends PopUnitTestBase{
             assertEquals(6, dec38Accessor.getValueCount());
 
             batchLoader.clear();
-            for (QueryResultBatch result : results) {
+            for (QueryDataBatch result : results) {
               result.release();
             }
         }
@@ -144,14 +144,14 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/simple_decimal_arithmetic.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(0);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String addOutput[] = {"123456888.0", "22.2", "0.2", "-0.2", "-987654444.2","-3.0"};
@@ -176,7 +176,7 @@ public class TestDecimal extends PopUnitTestBase{
             assertEquals(6, mulAccessor.getValueCount());
 
             batchLoader.clear();
-            for (QueryResultBatch result : results) {
+            for (QueryDataBatch result : results) {
               result.release();
             }
         }
@@ -195,14 +195,14 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/test_decimal_complex.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_complex_decimal.json")
             );
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(0);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String addOutput[] = {"-99999998877.700000000", "11.423456789", "123456789.100000000", "-0.119998000", "100000000112.423456789" , "-99999999879.907000000", "123456789123456801.300000000"};
@@ -221,7 +221,7 @@ public class TestDecimal extends PopUnitTestBase{
             assertEquals(7, subAccessor.getValueCount());
 
             batchLoader.clear();
-            for (QueryResultBatch result : results) {
+            for (QueryDataBatch result : results) {
               result.release();
             }
         }
@@ -238,14 +238,14 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/test_decimal_sort_complex.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_sort_complex_decimal.json")
             );
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryDataBatch batch = results.get(1);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             String sortOutput[] = {"-100000000001.000000000000",
@@ -271,7 +271,7 @@ public class TestDecimal extends PopUnitTestBase{
             assertEquals(10, accessor.getValueCount());
 
             batchLoader.clear();
-            for (QueryResultBatch result : results) {
+            for (QueryDataBatch result : results) {
               result.release();
             }
         }
@@ -287,14 +287,14 @@ public class TestDecimal extends PopUnitTestBase{
       // run query.
       bit.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Files.toString(FileUtils.getResourceAsFile("/decimal/simple_decimal_math.json"), Charsets.UTF_8)
               .replace("#{TEST_FILE}", "/input_simple_decimal.json")
       );
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-      QueryResultBatch batch = results.get(0);
+      QueryDataBatch batch = results.get(0);
       assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
       Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
@@ -305,7 +305,7 @@ public class TestDecimal extends PopUnitTestBase{
       assertEquals(6, dec18Accessor.getValueCount());
 
       batchLoader.clear();
-      for (QueryResultBatch result : results) {
+      for (QueryDataBatch result : results) {
         result.release();
       }
     }

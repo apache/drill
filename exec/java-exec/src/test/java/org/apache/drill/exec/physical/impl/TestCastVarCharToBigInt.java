@@ -27,7 +27,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
@@ -38,7 +38,7 @@ import com.google.common.io.Files;
 
 
 public class TestCastVarCharToBigInt extends PopUnitTestBase {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCastVarCharToBigInt.class);
+//    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCastVarCharToBigInt.class);
 
     @Test
     public void testCastToBigInt() throws Exception {
@@ -49,14 +49,14 @@ public class TestCastVarCharToBigInt extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+            List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/functions/cast/test_cast_varchar_to_bigint.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/scan_json_test_cast.json")
             );
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
-            QueryResultBatch batch = results.get(1);
+            QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
             for (VectorWrapper<?> v : batchLoader) {
@@ -68,7 +68,7 @@ public class TestCastVarCharToBigInt extends PopUnitTestBase {
                 assertEquals(accessor.getObject(2), 2006L);
             }
 
-            for(QueryResultBatch b : results){
+            for(QueryDataBatch b : results){
               b.release();
             }
             batchLoader.clear();

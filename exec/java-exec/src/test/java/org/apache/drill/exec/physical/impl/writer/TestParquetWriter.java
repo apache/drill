@@ -213,7 +213,7 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testMulipleRowGroups() throws Exception {
     try {
-      test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 1*1024*1024));
+      test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 1024*1024));
       String selection = "mi";
       String inputTable = "cp.`customer.json`";
       runTestAndValidate(selection, selection, inputTable, "foodmart_customer_parquet");

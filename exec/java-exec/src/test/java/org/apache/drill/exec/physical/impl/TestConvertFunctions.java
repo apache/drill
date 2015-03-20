@@ -36,7 +36,7 @@ import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -48,6 +48,7 @@ import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.joda.time.DateTime;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -331,10 +332,10 @@ public class TestConvertFunctions extends BaseTestQuery {
   public void testBigIntVarCharReturnTripConvertLogical() throws Exception {
     final String logicalPlan = Resources.toString(
         Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), Charsets.UTF_8);
-    final List<QueryResultBatch> results =  testLogicalWithResults(logicalPlan);
+    final List<QueryDataBatch> results =  testLogicalWithResults(logicalPlan);
     int count = 0;
     final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for (QueryResultBatch result : results) {
+    for (QueryDataBatch result : results) {
       count += result.getHeader().getRowCount();
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() > 0) {
@@ -493,11 +494,11 @@ public class TestConvertFunctions extends BaseTestQuery {
   }
 
   protected Object[] getRunResult(QueryType queryType, String planString) throws Exception {
-    List<QueryResultBatch> resultList = testRunAndReturn(queryType, planString);
+    List<QueryDataBatch> resultList = testRunAndReturn(queryType, planString);
 
     List<Object> res = new ArrayList<Object>();
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryResultBatch result : resultList) {
+    for(QueryDataBatch result : resultList) {
       if (result.getData() != null) {
         loader.load(result.getHeader().getDef(), result.getData());
         ValueVector v = loader.iterator().next().getValueVector();

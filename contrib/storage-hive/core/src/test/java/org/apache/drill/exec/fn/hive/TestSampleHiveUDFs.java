@@ -22,14 +22,14 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import org.apache.drill.exec.hive.HiveTestBase;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestSampleHiveUDFs extends HiveTestBase {
 
   private void helper(String query, String expected) throws Exception {
-    List<QueryResultBatch> results = testSqlWithResults(query);
+    List<QueryDataBatch> results = testSqlWithResults(query);
     String actual = getResultString(results, ",");
     assertTrue(String.format("Result:\n%s\ndoes not match:\n%s", actual, expected), expected.equals(actual));
   }

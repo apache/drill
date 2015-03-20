@@ -87,15 +87,7 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
     
     private QueryState queryState;
     private QueryId queryId;
-    private Boolean isLastChunk;
-    private int rowCount;
-    private long recordsScan;
-    private long recordsError;
-    private long submissionTime;
-    private List<NodeStatus> nodeStatus;
     private List<DrillPBError> error;
-    private RecordBatchDef def;
-    private Boolean schemaChanged;
 
     public QueryResult()
     {
@@ -130,84 +122,6 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
         return this;
     }
 
-    // isLastChunk
-
-    public Boolean getIsLastChunk()
-    {
-        return isLastChunk;
-    }
-
-    public QueryResult setIsLastChunk(Boolean isLastChunk)
-    {
-        this.isLastChunk = isLastChunk;
-        return this;
-    }
-
-    // rowCount
-
-    public int getRowCount()
-    {
-        return rowCount;
-    }
-
-    public QueryResult setRowCount(int rowCount)
-    {
-        this.rowCount = rowCount;
-        return this;
-    }
-
-    // recordsScan
-
-    public long getRecordsScan()
-    {
-        return recordsScan;
-    }
-
-    public QueryResult setRecordsScan(long recordsScan)
-    {
-        this.recordsScan = recordsScan;
-        return this;
-    }
-
-    // recordsError
-
-    public long getRecordsError()
-    {
-        return recordsError;
-    }
-
-    public QueryResult setRecordsError(long recordsError)
-    {
-        this.recordsError = recordsError;
-        return this;
-    }
-
-    // submissionTime
-
-    public long getSubmissionTime()
-    {
-        return submissionTime;
-    }
-
-    public QueryResult setSubmissionTime(long submissionTime)
-    {
-        this.submissionTime = submissionTime;
-        return this;
-    }
-
-    // nodeStatus
-
-    public List<NodeStatus> getNodeStatusList()
-    {
-        return nodeStatus;
-    }
-
-    public QueryResult setNodeStatusList(List<NodeStatus> nodeStatus)
-    {
-        this.nodeStatus = nodeStatus;
-        return this;
-    }
-
     // error
 
     public List<DrillPBError> getErrorList()
@@ -218,32 +132,6 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
     public QueryResult setErrorList(List<DrillPBError> error)
     {
         this.error = error;
-        return this;
-    }
-
-    // def
-
-    public RecordBatchDef getDef()
-    {
-        return def;
-    }
-
-    public QueryResult setDef(RecordBatchDef def)
-    {
-        this.def = def;
-        return this;
-    }
-
-    // schemaChanged
-
-    public Boolean getSchemaChanged()
-    {
-        return schemaChanged;
-    }
-
-    public QueryResult setSchemaChanged(Boolean schemaChanged)
-    {
-        this.schemaChanged = schemaChanged;
         return this;
     }
 
@@ -309,39 +197,11 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
                     break;
 
                 case 3:
-                    message.isLastChunk = input.readBool();
-                    break;
-                case 4:
-                    message.rowCount = input.readInt32();
-                    break;
-                case 5:
-                    message.recordsScan = input.readInt64();
-                    break;
-                case 6:
-                    message.recordsError = input.readInt64();
-                    break;
-                case 7:
-                    message.submissionTime = input.readInt64();
-                    break;
-                case 8:
-                    if(message.nodeStatus == null)
-                        message.nodeStatus = new ArrayList<NodeStatus>();
-                    message.nodeStatus.add(input.mergeObject(null, NodeStatus.getSchema()));
-                    break;
-
-                case 9:
                     if(message.error == null)
                         message.error = new ArrayList<DrillPBError>();
                     message.error.add(input.mergeObject(null, DrillPBError.getSchema()));
                     break;
 
-                case 10:
-                    message.def = input.mergeObject(message.def, RecordBatchDef.getSchema());
-                    break;
-
-                case 11:
-                    message.schemaChanged = input.readBool();
-                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -358,47 +218,15 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
              output.writeObject(2, message.queryId, QueryId.getSchema(), false);
 
 
-        if(message.isLastChunk != null)
-            output.writeBool(3, message.isLastChunk, false);
-
-        if(message.rowCount != 0)
-            output.writeInt32(4, message.rowCount, false);
-
-        if(message.recordsScan != 0)
-            output.writeInt64(5, message.recordsScan, false);
-
-        if(message.recordsError != 0)
-            output.writeInt64(6, message.recordsError, false);
-
-        if(message.submissionTime != 0)
-            output.writeInt64(7, message.submissionTime, false);
-
-        if(message.nodeStatus != null)
-        {
-            for(NodeStatus nodeStatus : message.nodeStatus)
-            {
-                if(nodeStatus != null)
-                    output.writeObject(8, nodeStatus, NodeStatus.getSchema(), true);
-            }
-        }
-
-
         if(message.error != null)
         {
             for(DrillPBError error : message.error)
             {
                 if(error != null)
-                    output.writeObject(9, error, DrillPBError.getSchema(), true);
+                    output.writeObject(3, error, DrillPBError.getSchema(), true);
             }
         }
 
-
-        if(message.def != null)
-             output.writeObject(10, message.def, RecordBatchDef.getSchema(), false);
-
-
-        if(message.schemaChanged != null)
-            output.writeBool(11, message.schemaChanged, false);
     }
 
     public String getFieldName(int number)
@@ -407,15 +235,7 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
         {
             case 1: return "queryState";
             case 2: return "queryId";
-            case 3: return "isLastChunk";
-            case 4: return "rowCount";
-            case 5: return "recordsScan";
-            case 6: return "recordsError";
-            case 7: return "submissionTime";
-            case 8: return "nodeStatus";
-            case 9: return "error";
-            case 10: return "def";
-            case 11: return "schemaChanged";
+            case 3: return "error";
             default: return null;
         }
     }
@@ -431,15 +251,7 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
     {
         __fieldMap.put("queryState", 1);
         __fieldMap.put("queryId", 2);
-        __fieldMap.put("isLastChunk", 3);
-        __fieldMap.put("rowCount", 4);
-        __fieldMap.put("recordsScan", 5);
-        __fieldMap.put("recordsError", 6);
-        __fieldMap.put("submissionTime", 7);
-        __fieldMap.put("nodeStatus", 8);
-        __fieldMap.put("error", 9);
-        __fieldMap.put("def", 10);
-        __fieldMap.put("schemaChanged", 11);
+        __fieldMap.put("error", 3);
     }
     
 }

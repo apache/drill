@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseStoragePlugin;
 import org.apache.drill.exec.store.hbase.HBaseStoragePluginConfig;
@@ -76,22 +76,22 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected void runHBasePhysicalVerifyCount(String planFile, String tableName, int expectedRowCount) throws Exception{
     String physicalPlan = getPlanText(planFile, tableName);
-    List<QueryResultBatch> results = testPhysicalWithResults(physicalPlan);
+    List<QueryDataBatch> results = testPhysicalWithResults(physicalPlan);
     printResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  protected List<QueryResultBatch> runHBaseSQLlWithResults(String sql) throws Exception {
+  protected List<QueryDataBatch> runHBaseSQLlWithResults(String sql) throws Exception {
     sql = canonizeHBaseSQL(sql);
     System.out.println("Running query:\n" + sql);
     return testSqlWithResults(sql);
   }
 
   protected void runHBaseSQLVerifyCount(String sql, int expectedRowCount) throws Exception{
-    List<QueryResultBatch> results = runHBaseSQLlWithResults(sql);
+    List<QueryDataBatch> results = runHBaseSQLlWithResults(sql);
     printResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  private void printResultAndVerifyRowCount(List<QueryResultBatch> results, int expectedRowCount) throws SchemaChangeException {
+  private void printResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount) throws SchemaChangeException {
     int rowCount = printResult(results);
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);
