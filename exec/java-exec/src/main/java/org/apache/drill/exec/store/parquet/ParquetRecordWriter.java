@@ -315,8 +315,12 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
       parquetFileWriter.endBlock();
       parquetFileWriter.end(extraMetaData);
     }
-    store.close();
-    ColumnChunkPageWriteStoreExposer.close(pageStore);
+    if (store != null) {
+      store.close();
+    }
+    if (pageStore != null) {
+      ColumnChunkPageWriteStoreExposer.close(pageStore);
+    }
     if(oContext!=null){
       oContext.close();
     }
