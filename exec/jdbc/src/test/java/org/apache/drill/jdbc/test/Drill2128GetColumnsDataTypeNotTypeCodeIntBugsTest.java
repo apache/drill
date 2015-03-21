@@ -38,7 +38,7 @@ import org.apache.drill.jdbc.JdbcTest;
  * Basic (spot-check/incomplete) tests for DRILL-2128 bugs (many
  * DatabaseMetaData.getColumns(...) result table problems).
  */
-public class Drill2128GetColumnsBugsTest extends JdbcTest {
+public class Drill2128GetColumnsDataTypeNotTypeCodeIntBugsTest extends JdbcTest {
 
   private static Connection connection;
   private static DatabaseMetaData dbMetadata;
