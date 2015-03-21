@@ -270,6 +270,19 @@ public class ${name}Accessor extends AbstractSqlAccessor {
   }
   </#if>
 
+
+  <#if minor.class == "Bit" >
+  public boolean getBoolean(int index) {
+   <#if mode == "Nullable">
+    if (ac.isNull(index)) {
+      return false;
+    }
+   </#if>
+   return 1 == ac.get(index);
+  }
+ </#if>
+
+
  </#if> <#-- not VarLen -->
 
 }
