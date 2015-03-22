@@ -22,9 +22,13 @@ import java.util.List;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
+
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.sql.SqlIntervalQualifier;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -48,36 +52,50 @@ public class View {
 
   @JsonInclude(Include.NON_NULL)
   public static class FieldType {
-    public final String name;
-    public final SqlTypeName type;
-    public final Integer precision;
-    public final Integer scale;
-    public final Boolean isNullable;
+
+    private final String name;
+    private final SqlTypeName type;
+    private final Integer precision;
+    private final Integer scale;
+    private SqlIntervalQualifier intervalQualifier;
+    private final Boolean isNullable;
+
 
     @JsonCreator
     public FieldType(
-        @JsonProperty("name") String name,
-        @JsonProperty("type") SqlTypeName type,
-        @JsonProperty("precision") Integer precision,
-        @JsonProperty("scale") Integer scale,
-        @JsonProperty("isNullable") Boolean isNullable){
+        @JsonProperty("name")                       String name,
+        @JsonProperty("type")                       SqlTypeName type,
+        @JsonProperty("precision")                  Integer precision,
+        @JsonProperty("scale")                      Integer scale,
+        @JsonProperty("startUnit")                  SqlIntervalQualifier.TimeUnit startUnit,
+        @JsonProperty("endUnit")                    SqlIntervalQualifier.TimeUnit endUnit,
+        @JsonProperty("fractionalSecondPrecision")  Integer fractionalSecondPrecision,
+        @JsonProperty("isNullable")                 Boolean isNullable) {
       this.name = name;
       this.type = type;
       this.precision = precision;
       this.scale = scale;
+      this.intervalQualifier =
+          null == startUnit
+          ? null
+          : new SqlIntervalQualifier(
+              startUnit, precision, endUnit, fractionalSecondPrecision, SqlParserPos.ZERO );
 
-      // Property "isNullable" is not part of the initial view definition and added in DRILL-2342. If the
-      // default value is null, consider it as "true". It is safe to default to "nullable" than "required" type.
-      this.isNullable = (isNullable == null) ? true : isNullable;
+      // Property "isNullable" is not part of the initial view definition and
+      // was added in DRILL-2342.  If the default value is null, consider it as
+      // "true".  It is safe to default to "nullable" than "required" type.
+      this.isNullable = isNullable == null ? true : isNullable;
     }
 
-    public FieldType(String name, RelDataType dataType){
+    public FieldType(String name, RelDataType dataType) {
       this.name = name;
       this.type = dataType.getSqlTypeName();
+
       Integer p = null;
       Integer s = null;
+      Integer fractionalSecondPrecision = null;
 
-      switch(dataType.getSqlTypeName()){
+      switch (dataType.getSqlTypeName()) {
       case CHAR:
       case BINARY:
       case VARBINARY:
@@ -88,19 +106,100 @@ public class View {
         p = dataType.getPrecision();
         s = dataType.getScale();
         break;
+      case INTERVAL_YEAR_MONTH:
+      case INTERVAL_DAY_TIME:
+        p = dataType.getIntervalQualifier().getStartPrecision();
+      default:
+        break;
       }
 
       this.precision = p;
       this.scale = s;
+      this.intervalQualifier = dataType.getIntervalQualifier();
       this.isNullable = dataType.isNullable();
     }
+
+    /**
+     * Gets the name of this field.
+     */
+    public String getName() {
+      return name;
+    }
+
+    /**
+     * Gets the data type of this field.
+     * (Data type only; not full datatype descriptor.)
+     */
+    public SqlTypeName getType() {
+      return type;
+    }
+
+    /**
+     * Gets the precision of the data type descriptor of this field.
+     * The precision is the precision for a numeric type, the length for a
+     * string type, or the start unit precision for an interval type.
+     * */
+    public Integer getPrecision() {
+      return precision;
+    }
+
+    /**
+     * Gets the numeric scale of the data type descriptor of this field,
+     * for numeric types.
+     */
+    public Integer getScale() {
+      return scale;
+    }
+
+    /**
+     * Gets the interval type qualifier of the interval data type descriptor of
+     * this field (<i>iff</i> interval type). */
+    @JsonIgnore
+    public SqlIntervalQualifier getIntervalQualifier() {
+      return intervalQualifier;
+    }
+
+    /**
+     * Gets the time range start unit of the type qualifier of the interval data
+     * type descriptor of this field (<i>iff</i> interval type).
+     */
+    public SqlIntervalQualifier.TimeUnit getStartUnit() {
+      return null == intervalQualifier ? null : intervalQualifier.getStartUnit();
+    }
+
+    /**
+     * Gets the time range end unit of the type qualifier of the interval data
+     * type descriptor of this field (<i>iff</i> interval type).
+     */
+    public SqlIntervalQualifier.TimeUnit getEndUnit() {
+      return null == intervalQualifier ? null : intervalQualifier.getEndUnit();
+    }
+
+    /**
+     * Gets the fractional second precision of the type qualifier of the interval
+     * data type descriptor of this field (<i>iff</i> interval type).
+     * Gets the interval type descriptor's fractional second precision
+     * (<i>iff</i> interval type).
+     */
+    public Integer getFractionalSecondPrecision() {
+      return null == intervalQualifier ? null : intervalQualifier.getFractionalSecondPrecision();
+    }
+
+    /**
+     * Gets the nullability of the data type desription of this field.
+     */
+    public Boolean getIsNullable() {
+      return isNullable;
+    }
+
   }
 
-  public View(String name, String sql, RelDataType rowType, List<String> workspaceSchemaPath){
+
+  public View(String name, String sql, RelDataType rowType, List<String> workspaceSchemaPath) {
     this.name = name;
     this.sql = sql;
     fields = Lists.newArrayList();
-    for(RelDataTypeField f : rowType.getFieldList()){
+    for (RelDataTypeField f : rowType.getFieldList()) {
       fields.add(new FieldType(f.getName(), f.getType()));
     }
     this.workspaceSchemaPath =
@@ -119,28 +218,31 @@ public class View {
         workspaceSchemaPath == null ? ImmutableList.<String>of() : ImmutableList.copyOf(workspaceSchemaPath);
   }
 
-  public RelDataType getRowType(RelDataTypeFactory factory){
+  public RelDataType getRowType(RelDataTypeFactory factory) {
 
     // if there are no fields defined, this is a dynamic view.
-    if(isDynamic()){
+    if (isDynamic()) {
       return new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory);
     }
 
     List<RelDataType> types = Lists.newArrayList();
     List<String> names = Lists.newArrayList();
 
-    for(FieldType field : fields){
-      names.add(field.name);
+    for (FieldType field : fields) {
+      names.add(field.getName());
       RelDataType type;
-      if(field.precision == null && field.scale == null){
-        type = factory.createSqlType(field.type);
-      }else if(field.precision != null && field.scale == null){
-        type = factory.createSqlType(field.type, field.precision);
-      }else{
-        type = factory.createSqlType(field.type, field.precision, field.scale);
+      if (   SqlTypeFamily.INTERVAL_YEAR_MONTH == field.getType().getFamily()
+          || SqlTypeFamily.INTERVAL_DAY_TIME   == field.getType().getFamily() ) {
+       type = factory.createSqlIntervalType( field.getIntervalQualifier() );
+      } else if (field.getPrecision() == null && field.getScale() == null) {
+        type = factory.createSqlType(field.getType());
+      } else if (field.getPrecision() != null && field.getScale() == null) {
+        type = factory.createSqlType(field.getType(), field.getPrecision());
+      } else {
+        type = factory.createSqlType(field.getType(), field.getPrecision(), field.getScale());
       }
 
-      if (field.isNullable) {
+      if (field.getIsNullable()) {
         types.add(factory.createTypeWithNullability(type, true));
       } else {
         types.add(type);
@@ -157,7 +259,7 @@ public class View {
   @JsonIgnore
   public boolean hasStar() {
     for (FieldType field : fields) {
-      if (StarColumnHelper.isNonPrefixedStarColumn(field.name)) {
+      if (StarColumnHelper.isNonPrefixedStarColumn(field.getName())) {
         return true;
       }
     }
