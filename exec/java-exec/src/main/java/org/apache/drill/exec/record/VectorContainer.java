@@ -88,7 +88,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
         return (T) newVector;
       }
     } else {
-      v = TypeHelper.getNewVector(field, this.oContext.getAllocator());
+      v = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
       add(v);
     }
     return (T) v;

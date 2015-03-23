@@ -293,4 +293,16 @@ public class TestFlatten extends BaseTestQuery {
     test(q1);
     test(q2);
   }
+
+  @Test //DRILL-2099
+  public void testFlattenAfterSort() throws Exception {
+    String query = "select flatten(s1.rms.rptd) rptds from " +
+        "(select d.uid uid, flatten(d.map.rm) rms from cp.`jsoninput/flatten_post_sort.json` d order by d.uid) s1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .jsonBaselineFile("flatten/drill-2099-result.json")
+        .go();
+  }
 }
