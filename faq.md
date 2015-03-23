@@ -68,11 +68,11 @@ Yes, Drill provides JDBC/ODBC drivers for integrating with BI/SQL based tools.
 
 ## What SQL functionality can Drill support?
 
-Drill provides ANSI standard SQL (not SQL "Like" or Hive QL) with support for all key analytics functionality such as SQL data types, joins, aggregations, filters, sort, sub-queries (including correlated), joins in where clause etc. [Click here](https://cwiki.apache.org/confluence/display/DRILL/SQL+Overview) for reference on SQL functionality in Drill.
+Drill provides ANSI standard SQL (not SQL "Like" or Hive QL) with support for all key analytics functionality such as SQL data types, joins, aggregations, filters, sort, sub-queries (including correlated), joins in where clause etc. [Click here](https://cwiki.apache.org/confluence/display/DRILL/SQL+Reference) for reference on SQL functionality in Drill.
 
 ## What Hadoop distributions does Drill work with?
 
-Drill is not designed with a particular Hadoop distribution in mind and we expect it to work with all Hadoop distributions that support Hadoop 2.3.x+ API. We have validated it so far with Apache Hadoop/MapR/CDH/Amazon EMR distributions (Amazon EMR requires a custom configuration required - contact <drill-user@incubator.apache.org> for questions.
+Drill is not designed with a particular Hadoop distribution in mind and we expect it to work with all Hadoop distributions that support Hadoop 2.3.x+ API. We have validated it so far with Apache Hadoop/MapR/CDH/Amazon EMR distributions (Amazon EMR requires a custom configuration required - contact <user@drill.apache.org> for questions.
 
 ## How does Drill achieve performance?
 
@@ -98,7 +98,7 @@ The best way to get started is to just try it out. It just takes a few minutes e
 
 ## How can I ask questions and provide feedback?
 
-Please post your questions and feedback on <drill-user@incubator.apache.org>. We are happy to have you try out Drill and help with any questions!
+Please post your questions and feedback on <user@drill.apache.org>. We are happy to have you try out Drill and help with any questions!
 
 ## How can I contribute to Drill?
 
