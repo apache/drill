@@ -860,4 +860,94 @@ public class TestExampleQueries extends BaseTestQuery{
         .build()
         .run();
   }
+
+  @Test // DRILL-1927
+  public void testGroupByCaseInSubquery() throws Exception {
+    String query1 = "select (case when t.r_regionkey in (3) then 0 else 1 end) as col \n" +
+        "from cp.`tpch/region.parquet` t \n" +
+        "group by (case when t.r_regionkey in (3) then 0 else 1 end)";
+
+    String query2 = "select sum(case when t.r_regionkey in (3) then 0 else 1 end) as col \n" +
+        "from cp.`tpch/region.parquet` t";
+
+    String query3 = "select (case when (r_regionkey IN (0, 2, 3, 4)) then 0 else r_regionkey end) as col1, min(r_regionkey) as col2 \n" +
+        "from cp.`tpch/region.parquet` \n" +
+        "group by (case when (r_regionkey IN (0, 2, 3, 4)) then 0 else r_regionkey end)";
+
+    testBuilder()
+        .sqlQuery(query1)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(0)
+        .baselineValues(1)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query2)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues((long) 4)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query3)
+        .unOrdered()
+        .baselineColumns("col1", "col2")
+        .baselineValues(0, 0)
+        .baselineValues(1, 1)
+        .build()
+        .run();
+  }
+
+  @Test  // DRILL-2966
+  public void testHavingAggFunction() throws Exception {
+    String query1 = "select n_nationkey as col \n" +
+        "from cp.`tpch/nation.parquet` \n" +
+        "group by n_nationkey \n" +
+        "having sum(case when n_regionkey in (1, 2) then 1 else 0 end) + \n" +
+        "sum(case when n_regionkey in (2, 3) then 1 else 0 end) > 1";
+
+    String query2 = "select n_nationkey as col \n"
+        + "from cp.`tpch/nation.parquet` \n"
+        + "group by n_nationkey \n"
+        + "having n_nationkey in \n"
+            + "(select r_regionkey \n"
+            + "from cp.`tpch/region.parquet` \n"
+            + "group by r_regionkey \n"
+            + "having sum(r_regionkey) > 0)";
+
+    String query3 = "select n_nationkey as col \n"
+        + "from cp.`tpch/nation.parquet` \n"
+        + "group by n_nationkey \n"
+        + "having max(n_regionkey) > ((select min(r_regionkey) from cp.`tpch/region.parquet`) + 3)";
+
+    testBuilder()
+        .sqlQuery(query1)
+        .unOrdered()
+        .csvBaselineFile("testframework/testExampleQueries/testHavingAggFunction/q1.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineColumns("col")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query2)
+        .unOrdered()
+        .csvBaselineFile("testframework/testExampleQueries/testHavingAggFunction/q2.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineColumns("col")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query3)
+        .unOrdered()
+        .csvBaselineFile("testframework/testExampleQueries/testHavingAggFunction/q3.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineColumns("col")
+        .build()
+        .run();
+  }
 }
