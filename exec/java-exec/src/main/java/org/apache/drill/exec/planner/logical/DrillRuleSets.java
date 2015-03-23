@@ -120,8 +120,8 @@ public class DrillRuleSets {
         // Add support for WHERE style joins.
 //      PushFilterPastProjectRule.INSTANCE, // Replaced by DrillPushFilterPastProjectRule
       DrillPushFilterPastProjectRule.INSTANCE,
-      FilterJoinRule.FILTER_ON_JOIN,   // PushFilterPastJoinRule
-      FilterJoinRule.JOIN,             // PushFilterPastJoinRule
+      DrillFilterJoinRules.DRILL_FILTER_ON_JOIN, //FilterJoinRule.FILTER_ON_JOIN,   // PushFilterPastJoinRule
+      DrillFilterJoinRules.DRILL_JOIN, //FilterJoinRule.JOIN,             // PushFilterPastJoinRule
       JoinPushThroughJoinRule.RIGHT,   // PushJoinThroughJoinRule
       JoinPushThroughJoinRule.LEFT,    // PushJoinThroughJoinRule
       // End support for WHERE style joins.

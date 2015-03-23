@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.calcite.rel.InvalidRelException;
@@ -52,9 +53,13 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(condition.isAlwaysTrue()){
+    List<Integer> tmpLeftKeys = Lists.newArrayList();
+    List<Integer> tmpRightKeys = Lists.newArrayList();
+    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, tmpLeftKeys, tmpRightKeys);
+    if (!remaining.isAlwaysTrue() || (tmpLeftKeys.size() == 0 || tmpRightKeys.size() == 0)) {
       return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
     }
+
     return super.computeSelfCost(planner);
   }
 
