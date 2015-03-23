@@ -633,6 +633,9 @@ public class Foreman implements Runnable {
         logger.warn("Exception sending result to client", resultException);
       }
 
+      // Remove the Foreman from the running query list.
+      bee.retireForeman(Foreman.this);
+
       try {
         releaseLease();
       } finally {
