@@ -127,35 +127,41 @@ public class FileSelection {
     return statuses;
   }
 
-  public static FileSelection create(DrillFileSystem fs, String parent, String path) throws IOException {
-    if ( !(path.contains("*") || path.contains("?")) ) {
-      Path p = new Path(parent, removeLeadingSlash(path));
-      FileStatus status = fs.getFileStatus(p);
-      return new FileSelection(Collections.singletonList(status), p.toUri().getPath());
-    } else {
-      Path p = new Path(parent,removeLeadingSlash(path));
-      FileStatus[] status = fs.globStatus(p);
-      if (status == null || status.length == 0) {
-        return null;
-      }
-      String[] s = p.toUri().getPath().split("/");
-      int i = 0;
-
-      // get a selection root based on the portions of the selection path that don't contain a wildcard.
-      for(; i < s.length; i++){
-         if(s[i].contains("*") || s[i].contains("?")){
-           break;
-         }
-      }
-      String newPath;
-      if(i > 0){
-        newPath = StringUtils.join(ArrayUtils.subarray(s, 0, i), "/");
-      }else{
-        newPath = "/";
-      }
-
-      return new FileSelection(Lists.newArrayList(status), newPath);
+  public static String commonPath(FileStatus... paths){
+    String commonPath = "";
+    String[][] folders = new String[paths.length][];
+    for(int i = 0; i < paths.length; i++){
+      folders[i] = Path.getPathWithoutSchemeAndAuthority(paths[i].getPath()).toString().split("/");
     }
+    for(int j = 0; j < folders[0].length; j++){
+      String thisFolder = folders[0][j];
+      boolean allMatched = true;
+      for(int i = 1; i < folders.length && allMatched; i++){
+        if(folders[i].length < j){
+          allMatched = false;
+          break;
+        }
+        allMatched &= folders[i][j].equals(thisFolder);
+      }
+      if(allMatched){
+        commonPath += thisFolder + "/";
+      }else{
+        break;
+      }
+    }
+    return commonPath;
+  }
+
+  public static FileSelection create(DrillFileSystem fs, String parent, String path) throws IOException {
+    Path p = new Path(parent,removeLeadingSlash(path));
+    FileStatus[] status = fs.globStatus(p);
+    if (status == null || status.length == 0) {
+      return null;
+    }
+    if (status.length == 1) {
+      return new FileSelection(Collections.singletonList(status[0]), p.toUri().getPath());
+    }
+    return new FileSelection(Lists.newArrayList(status), commonPath(status));
   }
 
   private static String removeLeadingSlash(String path) {
