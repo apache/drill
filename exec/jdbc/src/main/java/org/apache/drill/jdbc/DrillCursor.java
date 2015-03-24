@@ -114,10 +114,14 @@ public class DrillCursor implements Cursor {
       try {
         QueryDataBatch qrb = resultsListener.getNext();
         recordBatchCount++;
-        while (qrb != null && qrb.getHeader().getRowCount() == 0 && !first) {
+        while (qrb != null && (qrb.getHeader().getRowCount() == 0 || qrb.getData() == null ) && !first) {
           qrb.release();
           qrb = resultsListener.getNext();
           recordBatchCount++;
+          if(qrb != null && qrb.getData()==null){
+            qrb.release();
+            return false;
+          }
         }
 
         first = false;
