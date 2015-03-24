@@ -42,6 +42,8 @@ import com.google.common.collect.Sets;
 public class ClassTransformer {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassTransformer.class);
 
+  private static final int MAX_SCALAR_REPLACE_CODE_SIZE = 2*1024*1024; // 2meg
+
   private final ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
   private final OptionManager optionManager;
 
@@ -257,7 +259,7 @@ public class ClassTransformer {
          *  we're using TRY.
          */
         MergedClassResult result = null;
-        boolean scalarReplace = scalarReplacementOption != ScalarReplacementOption.OFF;
+        boolean scalarReplace = scalarReplacementOption != ScalarReplacementOption.OFF && entireClass.length() < MAX_SCALAR_REPLACE_CODE_SIZE;
         while(true) {
           try {
             result = MergeAdapter.getMergedClass(nextSet, precompiledBytes, generatedNode, scalarReplace);
