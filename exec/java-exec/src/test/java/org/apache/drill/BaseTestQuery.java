@@ -176,6 +176,12 @@ public class BaseTestQuery extends ExecTest {
     }
   }
 
+  @AfterClass
+  public static void resetDrillbitCount() {
+    // some test classes assume this value to be 1 and will fail if run along other tests that increase it
+    drillbitCount = 1;
+  }
+
   protected static void runSQL(String sql) throws Exception {
     SilentListener listener = new SilentListener();
     testWithListener(QueryType.SQL, sql, listener);
