@@ -25,10 +25,10 @@ public final class ExecProtos {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface FragmentHandleOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.FragmentHandle)
-      com.google.protobuf.MessageOrBuilder {
+  public interface FragmentHandleOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.shared.QueryId query_id = 1;
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
@@ -42,6 +42,7 @@ public final class ExecProtos {
      */
     org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder();
 
+    // optional int32 major_fragment_id = 2;
     /**
      * <code>optional int32 major_fragment_id = 2;</code>
      */
@@ -51,6 +52,7 @@ public final class ExecProtos {
      */
     int getMajorFragmentId();
 
+    // optional int32 minor_fragment_id = 3;
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
      */
@@ -64,9 +66,8 @@ public final class ExecProtos {
    * Protobuf type {@code exec.bit.FragmentHandle}
    */
   public static final class FragmentHandle extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.bit.FragmentHandle)
-      FragmentHandleOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements FragmentHandleOrBuilder {
     // Use FragmentHandle.newBuilder() to construct.
     private FragmentHandle(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -175,6 +176,7 @@ public final class ExecProtos {
     }
 
     private int bitField0_;
+    // optional .exec.shared.QueryId query_id = 1;
     public static final int QUERY_ID_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
     /**
@@ -196,6 +198,7 @@ public final class ExecProtos {
       return queryId_;
     }
 
+    // optional int32 major_fragment_id = 2;
     public static final int MAJOR_FRAGMENT_ID_FIELD_NUMBER = 2;
     private int majorFragmentId_;
     /**
@@ -211,6 +214,7 @@ public final class ExecProtos {
       return majorFragmentId_;
     }
 
+    // optional int32 minor_fragment_id = 3;
     public static final int MINOR_FRAGMENT_ID_FIELD_NUMBER = 3;
     private int minorFragmentId_;
     /**
@@ -234,8 +238,7 @@ public final class ExecProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -356,9 +359,8 @@ public final class ExecProtos {
      * Protobuf type {@code exec.bit.FragmentHandle}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.FragmentHandle)
-        org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.ExecProtos.internal_static_exec_bit_FragmentHandle_descriptor;
@@ -498,6 +500,7 @@ public final class ExecProtos {
       }
       private int bitField0_;
 
+      // optional .exec.shared.QueryId query_id = 1;
       private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
@@ -606,7 +609,7 @@ public final class ExecProtos {
         if (queryIdBuilder_ == null) {
           queryIdBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>(
-                  getQueryId(),
+                  queryId_,
                   getParentForChildren(),
                   isClean());
           queryId_ = null;
@@ -614,6 +617,7 @@ public final class ExecProtos {
         return queryIdBuilder_;
       }
 
+      // optional int32 major_fragment_id = 2;
       private int majorFragmentId_ ;
       /**
        * <code>optional int32 major_fragment_id = 2;</code>
@@ -646,6 +650,7 @@ public final class ExecProtos {
         return this;
       }
 
+      // optional int32 minor_fragment_id = 3;
       private int minorFragmentId_ ;
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
@@ -689,7 +694,7 @@ public final class ExecProtos {
     // @@protoc_insertion_point(class_scope:exec.bit.FragmentHandle)
   }
 
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_FragmentHandle_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -711,27 +716,25 @@ public final class ExecProtos {
       ".drill.exec.protoB\nExecProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          internal_static_exec_bit_FragmentHandle_descriptor =
+            getDescriptor().getMessageTypes().get(0);
+          internal_static_exec_bit_FragmentHandle_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_FragmentHandle_descriptor,
+              new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", });
+          return null;
+        }
+      };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.exec.proto.CoordinationProtos.getDescriptor(),
           org.apache.drill.exec.proto.UserBitShared.getDescriptor(),
         }, assigner);
-    internal_static_exec_bit_FragmentHandle_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_exec_bit_FragmentHandle_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_bit_FragmentHandle_descriptor,
-        new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", });
-    org.apache.drill.exec.proto.CoordinationProtos.getDescriptor();
-    org.apache.drill.exec.proto.UserBitShared.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

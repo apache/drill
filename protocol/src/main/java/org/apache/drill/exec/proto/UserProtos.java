@@ -280,10 +280,10 @@ public final class UserProtos {
     // @@protoc_insertion_point(enum_scope:exec.user.QueryResultsMode)
   }
 
-  public interface PropertyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.user.Property)
-      com.google.protobuf.MessageOrBuilder {
+  public interface PropertyOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // required string key = 1;
     /**
      * <code>required string key = 1;</code>
      */
@@ -298,6 +298,7 @@ public final class UserProtos {
     com.google.protobuf.ByteString
         getKeyBytes();
 
+    // required string value = 2;
     /**
      * <code>required string value = 2;</code>
      */
@@ -316,9 +317,8 @@ public final class UserProtos {
    * Protobuf type {@code exec.user.Property}
    */
   public static final class Property extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.user.Property)
-      PropertyOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements PropertyOrBuilder {
     // Use Property.newBuilder() to construct.
     private Property(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -365,15 +365,13 @@ public final class UserProtos {
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              key_ = bs;
+              key_ = input.readBytes();
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              value_ = bs;
+              value_ = input.readBytes();
               break;
             }
           }
@@ -416,6 +414,7 @@ public final class UserProtos {
     }
 
     private int bitField0_;
+    // required string key = 1;
     public static final int KEY_FIELD_NUMBER = 1;
     private java.lang.Object key_;
     /**
@@ -458,6 +457,7 @@ public final class UserProtos {
       }
     }
 
+    // required string value = 2;
     public static final int VALUE_FIELD_NUMBER = 2;
     private java.lang.Object value_;
     /**
@@ -507,8 +507,7 @@ public final class UserProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (!hasKey()) {
         memoizedIsInitialized = 0;
@@ -630,9 +629,8 @@ public final class UserProtos {
      * Protobuf type {@code exec.user.Property}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.user.Property)
-        org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_Property_descriptor;
@@ -766,6 +764,7 @@ public final class UserProtos {
       }
       private int bitField0_;
 
+      // required string key = 1;
       private java.lang.Object key_ = "";
       /**
        * <code>required string key = 1;</code>
@@ -779,12 +778,9 @@ public final class UserProtos {
       public java.lang.String getKey() {
         java.lang.Object ref = key_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            key_ = s;
-          }
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          key_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -842,6 +838,7 @@ public final class UserProtos {
         return this;
       }
 
+      // required string value = 2;
       private java.lang.Object value_ = "";
       /**
        * <code>required string value = 2;</code>
@@ -855,12 +852,9 @@ public final class UserProtos {
       public java.lang.String getValue() {
         java.lang.Object ref = value_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            value_ = s;
-          }
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          value_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -929,10 +923,10 @@ public final class UserProtos {
     // @@protoc_insertion_point(class_scope:exec.user.Property)
   }
 
-  public interface UserPropertiesOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.user.UserProperties)
-      com.google.protobuf.MessageOrBuilder {
+  public interface UserPropertiesOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // repeated .exec.user.Property properties = 1;
     /**
      * <code>repeated .exec.user.Property properties = 1;</code>
      */
@@ -961,9 +955,8 @@ public final class UserProtos {
    * Protobuf type {@code exec.user.UserProperties}
    */
   public static final class UserProperties extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.user.UserProperties)
-      UserPropertiesOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements UserPropertiesOrBuilder {
     // Use UserProperties.newBuilder() to construct.
     private UserProperties(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1059,6 +1052,7 @@ public final class UserProtos {
       return PARSER;
     }
 
+    // repeated .exec.user.Property properties = 1;
     public static final int PROPERTIES_FIELD_NUMBER = 1;
     private java.util.List<org.apache.drill.exec.proto.UserProtos.Property> properties_;
     /**
@@ -1100,8 +1094,7 @@ public final class UserProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       for (int i = 0; i < getPropertiesCount(); i++) {
         if (!getProperties(i).isInitialized()) {
@@ -1214,9 +1207,8 @@ public final class UserProtos {
      * Protobuf type {@code exec.user.UserProperties}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.user.UserProperties)
-        org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_UserProperties_descriptor;
@@ -1366,6 +1358,7 @@ public final class UserProtos {
       }
       private int bitField0_;
 
+      // repeated .exec.user.Property properties = 1;
       private java.util.List<org.apache.drill.exec.proto.UserProtos.Property> properties_ =
         java.util.Collections.emptyList();
       private void ensurePropertiesIsMutable() {
@@ -1507,8 +1500,7 @@ public final class UserProtos {
           java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.Property> values) {
         if (propertiesBuilder_ == null) {
           ensurePropertiesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, properties_);
+          super.addAll(values, properties_);
           onChanged();
         } else {
           propertiesBuilder_.addAllMessages(values);
@@ -1617,10 +1609,10 @@ public final class UserProtos {
     // @@protoc_insertion_point(class_scope:exec.user.UserProperties)
   }
 
-  public interface UserToBitHandshakeOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.user.UserToBitHandshake)
-      com.google.protobuf.MessageOrBuilder {
+  public interface UserToBitHandshakeOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.shared.RpcChannel channel = 1 [default = USER];
     /**
      * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
      */
@@ -1630,6 +1622,7 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel();
 
+    // optional bool support_listening = 2;
     /**
      * <code>optional bool support_listening = 2;</code>
      */
@@ -1639,6 +1632,7 @@ public final class UserProtos {
      */
     boolean getSupportListening();
 
+    // optional int32 rpc_version = 3;
     /**
      * <code>optional int32 rpc_version = 3;</code>
      */
@@ -1648,6 +1642,7 @@ public final class UserProtos {
      */
     int getRpcVersion();
 
+    // optional .exec.shared.UserCredentials credentials = 4;
     /**
      * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
      */
@@ -1661,6 +1656,7 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder();
 
+    // optional .exec.user.UserProperties properties = 5;
     /**
      * <code>optional .exec.user.UserProperties properties = 5;</code>
      */
@@ -1674,6 +1670,7 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder getPropertiesOrBuilder();
 
+    // optional bool support_complex_types = 6 [default = false];
     /**
      * <code>optional bool support_complex_types = 6 [default = false];</code>
      */
@@ -1687,9 +1684,8 @@ public final class UserProtos {
    * Protobuf type {@code exec.user.UserToBitHandshake}
    */
   public static final class UserToBitHandshake extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.user.UserToBitHandshake)
-      UserToBitHandshakeOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements UserToBitHandshakeOrBuilder {
     // Use UserToBitHandshake.newBuilder() to construct.
     private UserToBitHandshake(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1827,6 +1823,7 @@ public final class UserProtos {
     }
 
     private int bitField0_;
+    // optional .exec.shared.RpcChannel channel = 1 [default = USER];
     public static final int CHANNEL_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.UserBitShared.RpcChannel channel_;
     /**
@@ -1842,6 +1839,7 @@ public final class UserProtos {
       return channel_;
     }
 
+    // optional bool support_listening = 2;
     public static final int SUPPORT_LISTENING_FIELD_NUMBER = 2;
     private boolean supportListening_;
     /**
@@ -1857,6 +1855,7 @@ public final class UserProtos {
       return supportListening_;
     }
 
+    // optional int32 rpc_version = 3;
     public static final int RPC_VERSION_FIELD_NUMBER = 3;
     private int rpcVersion_;
     /**
@@ -1872,6 +1871,7 @@ public final class UserProtos {
       return rpcVersion_;
     }
 
+    // optional .exec.shared.UserCredentials credentials = 4;
     public static final int CREDENTIALS_FIELD_NUMBER = 4;
     private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_;
     /**
@@ -1893,6 +1893,7 @@ public final class UserProtos {
       return credentials_;
     }
 
+    // optional .exec.user.UserProperties properties = 5;
     public static final int PROPERTIES_FIELD_NUMBER = 5;
     private org.apache.drill.exec.proto.UserProtos.UserProperties properties_;
     /**
@@ -1914,6 +1915,7 @@ public final class UserProtos {
       return properties_;
     }
 
+    // optional bool support_complex_types = 6 [default = false];
     public static final int SUPPORT_COMPLEX_TYPES_FIELD_NUMBER = 6;
     private boolean supportComplexTypes_;
     /**
@@ -1940,8 +1942,7 @@ public final class UserProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (hasProperties()) {
         if (!getProperties().isInitialized()) {
@@ -2089,9 +2090,8 @@ public final class UserProtos {
      * Protobuf type {@code exec.user.UserToBitHandshake}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.user.UserToBitHandshake)
-        org.apache.drill.exec.proto.UserProtos.UserToBitHandshakeOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.UserToBitHandshakeOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_UserToBitHandshake_descriptor;
@@ -2273,6 +2273,7 @@ public final class UserProtos {
       }
       private int bitField0_;
 
+      // optional .exec.shared.RpcChannel channel = 1 [default = USER];
       private org.apache.drill.exec.proto.UserBitShared.RpcChannel channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
       /**
        * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
@@ -2308,6 +2309,7 @@ public final class UserProtos {
         return this;
       }
 
+      // optional bool support_listening = 2;
       private boolean supportListening_ ;
       /**
        * <code>optional bool support_listening = 2;</code>
@@ -2340,6 +2342,7 @@ public final class UserProtos {
         return this;
       }
 
+      // optional int32 rpc_version = 3;
       private int rpcVersion_ ;
       /**
        * <code>optional int32 rpc_version = 3;</code>
@@ -2372,6 +2375,7 @@ public final class UserProtos {
         return this;
       }
 
+      // optional .exec.shared.UserCredentials credentials = 4;
       private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder> credentialsBuilder_;
@@ -2480,7 +2484,7 @@ public final class UserProtos {
         if (credentialsBuilder_ == null) {
           credentialsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder>(
-                  getCredentials(),
+                  credentials_,
                   getParentForChildren(),
                   isClean());
           credentials_ = null;
@@ -2488,6 +2492,7 @@ public final class UserProtos {
         return credentialsBuilder_;
       }
 
+      // optional .exec.user.UserProperties properties = 5;
       private org.apache.drill.exec.proto.UserProtos.UserProperties properties_ = org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserProtos.UserProperties, org.apache.drill.exec.proto.UserProtos.UserProperties.Builder, org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder> propertiesBuilder_;
@@ -2596,7 +2601,7 @@ public final class UserProtos {
         if (propertiesBuilder_ == null) {
           propertiesBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserProtos.UserProperties, org.apache.drill.exec.proto.UserProtos.UserProperties.Builder, org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder>(
-                  getProperties(),
+                  properties_,
                   getParentForChildren(),
                   isClean());
           properties_ = null;
@@ -2604,6 +2609,7 @@ public final class UserProtos {
         return propertiesBuilder_;
       }
 
+      // optional bool support_complex_types = 6 [default = false];
       private boolean supportComplexTypes_ ;
       /**
        * <code>optional bool support_complex_types = 6 [default = false];</code>
@@ -2647,10 +2653,10 @@ public final class UserProtos {
     // @@protoc_insertion_point(class_scope:exec.user.UserToBitHandshake)
   }
 
-  public interface RequestResultsOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.user.RequestResults)
-      com.google.protobuf.MessageOrBuilder {
+  public interface RequestResultsOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.shared.QueryId query_id = 1;
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
@@ -2664,6 +2670,7 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder();
 
+    // optional int32 maximum_responses = 2;
     /**
      * <code>optional int32 maximum_responses = 2;</code>
      */
@@ -2677,9 +2684,8 @@ public final class UserProtos {
    * Protobuf type {@code exec.user.RequestResults}
    */
   public static final class RequestResults extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.user.RequestResults)
-      RequestResultsOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements RequestResultsOrBuilder {
     // Use RequestResults.newBuilder() to construct.
     private RequestResults(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2783,6 +2789,7 @@ public final class UserProtos {
     }
 
     private int bitField0_;
+    // optional .exec.shared.QueryId query_id = 1;
     public static final int QUERY_ID_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
     /**
@@ -2804,6 +2811,7 @@ public final class UserProtos {
       return queryId_;
     }
 
+    // optional int32 maximum_responses = 2;
     public static final int MAXIMUM_RESPONSES_FIELD_NUMBER = 2;
     private int maximumResponses_;
     /**
@@ -2826,8 +2834,7 @@ public final class UserProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -2941,9 +2948,8 @@ public final class UserProtos {
      * Protobuf type {@code exec.user.RequestResults}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.user.RequestResults)
-        org.apache.drill.exec.proto.UserProtos.RequestResultsOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.RequestResultsOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_RequestResults_descriptor;
@@ -3074,6 +3080,7 @@ public final class UserProtos {
       }
       private int bitField0_;
 
+      // optional .exec.shared.QueryId query_id = 1;
       private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
@@ -3182,7 +3189,7 @@ public final class UserProtos {
         if (queryIdBuilder_ == null) {
           queryIdBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>(
-                  getQueryId(),
+                  queryId_,
                   getParentForChildren(),
                   isClean());
           queryId_ = null;
@@ -3190,6 +3197,7 @@ public final class UserProtos {
         return queryIdBuilder_;
       }
 
+      // optional int32 maximum_responses = 2;
       private int maximumResponses_ ;
       /**
        * <code>optional int32 maximum_responses = 2;</code>
@@ -3233,10 +3241,10 @@ public final class UserProtos {
     // @@protoc_insertion_point(class_scope:exec.user.RequestResults)
   }
 
-  public interface RunQueryOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.user.RunQuery)
-      com.google.protobuf.MessageOrBuilder {
+  public interface RunQueryOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.user.QueryResultsMode results_mode = 1;
     /**
      * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
      */
@@ -3246,6 +3254,7 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserProtos.QueryResultsMode getResultsMode();
 
+    // optional .exec.shared.QueryType type = 2;
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
      */
@@ -3255,6 +3264,7 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserBitShared.QueryType getType();
 
+    // optional string plan = 3;
     /**
      * <code>optional string plan = 3;</code>
      */
@@ -3273,9 +3283,8 @@ public final class UserProtos {
    * Protobuf type {@code exec.user.RunQuery}
    */
   public static final class RunQuery extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.user.RunQuery)
-      RunQueryOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements RunQueryOrBuilder {
     // Use RunQuery.newBuilder() to construct.
     private RunQuery(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -3344,9 +3353,8 @@ public final class UserProtos {
               break;
             }
             case 26: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000004;
-              plan_ = bs;
+              plan_ = input.readBytes();
               break;
             }
           }
@@ -3389,6 +3397,7 @@ public final class UserProtos {
     }
 
     private int bitField0_;
+    // optional .exec.user.QueryResultsMode results_mode = 1;
     public static final int RESULTS_MODE_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.UserProtos.QueryResultsMode resultsMode_;
     /**
@@ -3404,6 +3413,7 @@ public final class UserProtos {
       return resultsMode_;
     }
 
+    // optional .exec.shared.QueryType type = 2;
     public static final int TYPE_FIELD_NUMBER = 2;
     private org.apache.drill.exec.proto.UserBitShared.QueryType type_;
     /**
@@ -3419,6 +3429,7 @@ public final class UserProtos {
       return type_;
     }
 
+    // optional string plan = 3;
     public static final int PLAN_FIELD_NUMBER = 3;
     private java.lang.Object plan_;
     /**
@@ -3469,8 +3480,7 @@ public final class UserProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -3591,9 +3601,8 @@ public final class UserProtos {
      * Protobuf type {@code exec.user.RunQuery}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.user.RunQuery)
-        org.apache.drill.exec.proto.UserProtos.RunQueryOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.RunQueryOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_RunQuery_descriptor;
@@ -3726,6 +3735,7 @@ public final class UserProtos {
       }
       private int bitField0_;
 
+      // optional .exec.user.QueryResultsMode results_mode = 1;
       private org.apache.drill.exec.proto.UserProtos.QueryResultsMode resultsMode_ = org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
       /**
        * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
@@ -3761,6 +3771,7 @@ public final class UserProtos {
         return this;
       }
 
+      // optional .exec.shared.QueryType type = 2;
       private org.apache.drill.exec.proto.UserBitShared.QueryType type_ = org.apache.drill.exec.proto.UserBitShared.QueryType.SQL;
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
@@ -3796,6 +3807,7 @@ public final class UserProtos {
         return this;
       }
 
+      // optional string plan = 3;
       private java.lang.Object plan_ = "";
       /**
        * <code>optional string plan = 3;</code>
@@ -3809,12 +3821,9 @@ public final class UserProtos {
       public java.lang.String getPlan() {
         java.lang.Object ref = plan_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            plan_ = s;
-          }
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          plan_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -3883,10 +3892,10 @@ public final class UserProtos {
     // @@protoc_insertion_point(class_scope:exec.user.RunQuery)
   }
 
-  public interface BitToUserHandshakeOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.user.BitToUserHandshake)
-      com.google.protobuf.MessageOrBuilder {
+  public interface BitToUserHandshakeOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional int32 rpc_version = 2;
     /**
      * <code>optional int32 rpc_version = 2;</code>
      */
@@ -3900,9 +3909,8 @@ public final class UserProtos {
    * Protobuf type {@code exec.user.BitToUserHandshake}
    */
   public static final class BitToUserHandshake extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.user.BitToUserHandshake)
-      BitToUserHandshakeOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements BitToUserHandshakeOrBuilder {
     // Use BitToUserHandshake.newBuilder() to construct.
     private BitToUserHandshake(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -3993,6 +4001,7 @@ public final class UserProtos {
     }
 
     private int bitField0_;
+    // optional int32 rpc_version = 2;
     public static final int RPC_VERSION_FIELD_NUMBER = 2;
     private int rpcVersion_;
     /**
@@ -4014,8 +4023,7 @@ public final class UserProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -4122,9 +4130,8 @@ public final class UserProtos {
      * Protobuf type {@code exec.user.BitToUserHandshake}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.user.BitToUserHandshake)
-        org.apache.drill.exec.proto.UserProtos.BitToUserHandshakeOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.BitToUserHandshakeOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_BitToUserHandshake_descriptor;
@@ -4237,6 +4244,7 @@ public final class UserProtos {
       }
       private int bitField0_;
 
+      // optional int32 rpc_version = 2;
       private int rpcVersion_ ;
       /**
        * <code>optional int32 rpc_version = 2;</code>
@@ -4280,32 +4288,32 @@ public final class UserProtos {
     // @@protoc_insertion_point(class_scope:exec.user.BitToUserHandshake)
   }
 
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_Property_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_user_Property_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_UserProperties_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_user_UserProperties_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_UserToBitHandshake_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_user_UserToBitHandshake_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_RequestResults_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_user_RequestResults_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_RunQuery_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_user_RunQuery_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_BitToUserHandshake_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -4345,57 +4353,55 @@ public final class UserProtos {
       "rotosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          internal_static_exec_user_Property_descriptor =
+            getDescriptor().getMessageTypes().get(0);
+          internal_static_exec_user_Property_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_Property_descriptor,
+              new java.lang.String[] { "Key", "Value", });
+          internal_static_exec_user_UserProperties_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_exec_user_UserProperties_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_UserProperties_descriptor,
+              new java.lang.String[] { "Properties", });
+          internal_static_exec_user_UserToBitHandshake_descriptor =
+            getDescriptor().getMessageTypes().get(2);
+          internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_UserToBitHandshake_descriptor,
+              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", "SupportComplexTypes", });
+          internal_static_exec_user_RequestResults_descriptor =
+            getDescriptor().getMessageTypes().get(3);
+          internal_static_exec_user_RequestResults_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_RequestResults_descriptor,
+              new java.lang.String[] { "QueryId", "MaximumResponses", });
+          internal_static_exec_user_RunQuery_descriptor =
+            getDescriptor().getMessageTypes().get(4);
+          internal_static_exec_user_RunQuery_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_RunQuery_descriptor,
+              new java.lang.String[] { "ResultsMode", "Type", "Plan", });
+          internal_static_exec_user_BitToUserHandshake_descriptor =
+            getDescriptor().getMessageTypes().get(5);
+          internal_static_exec_user_BitToUserHandshake_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_BitToUserHandshake_descriptor,
+              new java.lang.String[] { "RpcVersion", });
+          return null;
+        }
+      };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.exec.proto.SchemaDefProtos.getDescriptor(),
           org.apache.drill.exec.proto.UserBitShared.getDescriptor(),
         }, assigner);
-    internal_static_exec_user_Property_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_exec_user_Property_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_user_Property_descriptor,
-        new java.lang.String[] { "Key", "Value", });
-    internal_static_exec_user_UserProperties_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_exec_user_UserProperties_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_user_UserProperties_descriptor,
-        new java.lang.String[] { "Properties", });
-    internal_static_exec_user_UserToBitHandshake_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_user_UserToBitHandshake_descriptor,
-        new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", "SupportComplexTypes", });
-    internal_static_exec_user_RequestResults_descriptor =
-      getDescriptor().getMessageTypes().get(3);
-    internal_static_exec_user_RequestResults_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_user_RequestResults_descriptor,
-        new java.lang.String[] { "QueryId", "MaximumResponses", });
-    internal_static_exec_user_RunQuery_descriptor =
-      getDescriptor().getMessageTypes().get(4);
-    internal_static_exec_user_RunQuery_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_user_RunQuery_descriptor,
-        new java.lang.String[] { "ResultsMode", "Type", "Plan", });
-    internal_static_exec_user_BitToUserHandshake_descriptor =
-      getDescriptor().getMessageTypes().get(5);
-    internal_static_exec_user_BitToUserHandshake_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_user_BitToUserHandshake_descriptor,
-        new java.lang.String[] { "RpcVersion", });
-    org.apache.drill.exec.proto.SchemaDefProtos.getDescriptor();
-    org.apache.drill.exec.proto.UserBitShared.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

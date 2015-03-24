@@ -815,10 +815,10 @@ public final class TypeProtos {
     // @@protoc_insertion_point(enum_scope:common.DataMode)
   }
 
-  public interface MajorTypeOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:common.MajorType)
-      com.google.protobuf.MessageOrBuilder {
+  public interface MajorTypeOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .common.MinorType minor_type = 1;
     /**
      * <code>optional .common.MinorType minor_type = 1;</code>
      */
@@ -828,6 +828,7 @@ public final class TypeProtos {
      */
     org.apache.drill.common.types.TypeProtos.MinorType getMinorType();
 
+    // optional .common.DataMode mode = 2;
     /**
      * <code>optional .common.DataMode mode = 2;</code>
      */
@@ -837,6 +838,7 @@ public final class TypeProtos {
      */
     org.apache.drill.common.types.TypeProtos.DataMode getMode();
 
+    // optional int32 width = 3;
     /**
      * <code>optional int32 width = 3;</code>
      *
@@ -854,6 +856,7 @@ public final class TypeProtos {
      */
     int getWidth();
 
+    // optional int32 precision = 4;
     /**
      * <code>optional int32 precision = 4;</code>
      *
@@ -871,6 +874,7 @@ public final class TypeProtos {
      */
     int getPrecision();
 
+    // optional int32 scale = 5;
     /**
      * <code>optional int32 scale = 5;</code>
      *
@@ -888,6 +892,7 @@ public final class TypeProtos {
      */
     int getScale();
 
+    // optional int32 timeZone = 6;
     /**
      * <code>optional int32 timeZone = 6;</code>
      *
@@ -909,9 +914,8 @@ public final class TypeProtos {
    * Protobuf type {@code common.MajorType}
    */
   public static final class MajorType extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:common.MajorType)
-      MajorTypeOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements MajorTypeOrBuilder {
     // Use MajorType.newBuilder() to construct.
     private MajorType(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1039,6 +1043,7 @@ public final class TypeProtos {
     }
 
     private int bitField0_;
+    // optional .common.MinorType minor_type = 1;
     public static final int MINOR_TYPE_FIELD_NUMBER = 1;
     private org.apache.drill.common.types.TypeProtos.MinorType minorType_;
     /**
@@ -1054,6 +1059,7 @@ public final class TypeProtos {
       return minorType_;
     }
 
+    // optional .common.DataMode mode = 2;
     public static final int MODE_FIELD_NUMBER = 2;
     private org.apache.drill.common.types.TypeProtos.DataMode mode_;
     /**
@@ -1069,6 +1075,7 @@ public final class TypeProtos {
       return mode_;
     }
 
+    // optional int32 width = 3;
     public static final int WIDTH_FIELD_NUMBER = 3;
     private int width_;
     /**
@@ -1092,6 +1099,7 @@ public final class TypeProtos {
       return width_;
     }
 
+    // optional int32 precision = 4;
     public static final int PRECISION_FIELD_NUMBER = 4;
     private int precision_;
     /**
@@ -1115,6 +1123,7 @@ public final class TypeProtos {
       return precision_;
     }
 
+    // optional int32 scale = 5;
     public static final int SCALE_FIELD_NUMBER = 5;
     private int scale_;
     /**
@@ -1138,6 +1147,7 @@ public final class TypeProtos {
       return scale_;
     }
 
+    // optional int32 timeZone = 6;
     public static final int TIMEZONE_FIELD_NUMBER = 6;
     private int timeZone_;
     /**
@@ -1172,8 +1182,7 @@ public final class TypeProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -1315,9 +1324,8 @@ public final class TypeProtos {
      * Protobuf type {@code common.MajorType}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:common.MajorType)
-        org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.common.types.TypeProtos.internal_static_common_MajorType_descriptor;
@@ -1475,6 +1483,7 @@ public final class TypeProtos {
       }
       private int bitField0_;
 
+      // optional .common.MinorType minor_type = 1;
       private org.apache.drill.common.types.TypeProtos.MinorType minorType_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
       /**
        * <code>optional .common.MinorType minor_type = 1;</code>
@@ -1510,6 +1519,7 @@ public final class TypeProtos {
         return this;
       }
 
+      // optional .common.DataMode mode = 2;
       private org.apache.drill.common.types.TypeProtos.DataMode mode_ = org.apache.drill.common.types.TypeProtos.DataMode.OPTIONAL;
       /**
        * <code>optional .common.DataMode mode = 2;</code>
@@ -1545,6 +1555,7 @@ public final class TypeProtos {
         return this;
       }
 
+      // optional int32 width = 3;
       private int width_ ;
       /**
        * <code>optional int32 width = 3;</code>
@@ -1593,6 +1604,7 @@ public final class TypeProtos {
         return this;
       }
 
+      // optional int32 precision = 4;
       private int precision_ ;
       /**
        * <code>optional int32 precision = 4;</code>
@@ -1641,6 +1653,7 @@ public final class TypeProtos {
         return this;
       }
 
+      // optional int32 scale = 5;
       private int scale_ ;
       /**
        * <code>optional int32 scale = 5;</code>
@@ -1689,6 +1702,7 @@ public final class TypeProtos {
         return this;
       }
 
+      // optional int32 timeZone = 6;
       private int timeZone_ ;
       /**
        * <code>optional int32 timeZone = 6;</code>
@@ -1748,7 +1762,7 @@ public final class TypeProtos {
     // @@protoc_insertion_point(class_scope:common.MajorType)
   }
 
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_common_MajorType_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -1784,23 +1798,23 @@ public final class TypeProtos {
       "apache.drill.common.typesB\nTypeProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          internal_static_common_MajorType_descriptor =
+            getDescriptor().getMessageTypes().get(0);
+          internal_static_common_MajorType_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_common_MajorType_descriptor,
+              new java.lang.String[] { "MinorType", "Mode", "Width", "Precision", "Scale", "TimeZone", });
+          return null;
+        }
+      };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_common_MajorType_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_common_MajorType_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_common_MajorType_descriptor,
-        new java.lang.String[] { "MinorType", "Mode", "Width", "Precision", "Scale", "TimeZone", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

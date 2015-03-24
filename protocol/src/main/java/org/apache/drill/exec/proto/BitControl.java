@@ -259,10 +259,10 @@ public final class BitControl {
     // @@protoc_insertion_point(enum_scope:exec.bit.control.RpcType)
   }
 
-  public interface BitControlHandshakeOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.control.BitControlHandshake)
-      com.google.protobuf.MessageOrBuilder {
+  public interface BitControlHandshakeOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional int32 rpc_version = 1;
     /**
      * <code>optional int32 rpc_version = 1;</code>
      */
@@ -272,6 +272,7 @@ public final class BitControl {
      */
     int getRpcVersion();
 
+    // optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];
     /**
      * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];</code>
      */
@@ -281,6 +282,7 @@ public final class BitControl {
      */
     org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel();
 
+    // optional .exec.DrillbitEndpoint endpoint = 3;
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      */
@@ -298,9 +300,8 @@ public final class BitControl {
    * Protobuf type {@code exec.bit.control.BitControlHandshake}
    */
   public static final class BitControlHandshake extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.bit.control.BitControlHandshake)
-      BitControlHandshakeOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements BitControlHandshakeOrBuilder {
     // Use BitControlHandshake.newBuilder() to construct.
     private BitControlHandshake(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -415,6 +416,7 @@ public final class BitControl {
     }
 
     private int bitField0_;
+    // optional int32 rpc_version = 1;
     public static final int RPC_VERSION_FIELD_NUMBER = 1;
     private int rpcVersion_;
     /**
@@ -430,6 +432,7 @@ public final class BitControl {
       return rpcVersion_;
     }
 
+    // optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];
     public static final int CHANNEL_FIELD_NUMBER = 2;
     private org.apache.drill.exec.proto.UserBitShared.RpcChannel channel_;
     /**
@@ -445,6 +448,7 @@ public final class BitControl {
       return channel_;
     }
 
+    // optional .exec.DrillbitEndpoint endpoint = 3;
     public static final int ENDPOINT_FIELD_NUMBER = 3;
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_;
     /**
@@ -474,8 +478,7 @@ public final class BitControl {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -596,9 +599,8 @@ public final class BitControl {
      * Protobuf type {@code exec.bit.control.BitControlHandshake}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.control.BitControlHandshake)
-        org.apache.drill.exec.proto.BitControl.BitControlHandshakeOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.BitControlHandshakeOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_BitControlHandshake_descriptor;
@@ -738,6 +740,7 @@ public final class BitControl {
       }
       private int bitField0_;
 
+      // optional int32 rpc_version = 1;
       private int rpcVersion_ ;
       /**
        * <code>optional int32 rpc_version = 1;</code>
@@ -770,6 +773,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];
       private org.apache.drill.exec.proto.UserBitShared.RpcChannel channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.BIT_CONTROL;
       /**
        * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];</code>
@@ -805,6 +809,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional .exec.DrillbitEndpoint endpoint = 3;
       private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> endpointBuilder_;
@@ -913,7 +918,7 @@ public final class BitControl {
         if (endpointBuilder_ == null) {
           endpointBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>(
-                  getEndpoint(),
+                  endpoint_,
                   getParentForChildren(),
                   isClean());
           endpoint_ = null;
@@ -932,10 +937,10 @@ public final class BitControl {
     // @@protoc_insertion_point(class_scope:exec.bit.control.BitControlHandshake)
   }
 
-  public interface BitStatusOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.control.BitStatus)
-      com.google.protobuf.MessageOrBuilder {
+  public interface BitStatusOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // repeated .exec.bit.control.FragmentStatus fragment_status = 1;
     /**
      * <code>repeated .exec.bit.control.FragmentStatus fragment_status = 1;</code>
      */
@@ -964,9 +969,8 @@ public final class BitControl {
    * Protobuf type {@code exec.bit.control.BitStatus}
    */
   public static final class BitStatus extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.bit.control.BitStatus)
-      BitStatusOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements BitStatusOrBuilder {
     // Use BitStatus.newBuilder() to construct.
     private BitStatus(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1062,6 +1066,7 @@ public final class BitControl {
       return PARSER;
     }
 
+    // repeated .exec.bit.control.FragmentStatus fragment_status = 1;
     public static final int FRAGMENT_STATUS_FIELD_NUMBER = 1;
     private java.util.List<org.apache.drill.exec.proto.BitControl.FragmentStatus> fragmentStatus_;
     /**
@@ -1103,8 +1108,7 @@ public final class BitControl {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -1211,9 +1215,8 @@ public final class BitControl {
      * Protobuf type {@code exec.bit.control.BitStatus}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.control.BitStatus)
-        org.apache.drill.exec.proto.BitControl.BitStatusOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.BitStatusOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_BitStatus_descriptor;
@@ -1357,6 +1360,7 @@ public final class BitControl {
       }
       private int bitField0_;
 
+      // repeated .exec.bit.control.FragmentStatus fragment_status = 1;
       private java.util.List<org.apache.drill.exec.proto.BitControl.FragmentStatus> fragmentStatus_ =
         java.util.Collections.emptyList();
       private void ensureFragmentStatusIsMutable() {
@@ -1498,8 +1502,7 @@ public final class BitControl {
           java.lang.Iterable<? extends org.apache.drill.exec.proto.BitControl.FragmentStatus> values) {
         if (fragmentStatusBuilder_ == null) {
           ensureFragmentStatusIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, fragmentStatus_);
+          super.addAll(values, fragmentStatus_);
           onChanged();
         } else {
           fragmentStatusBuilder_.addAllMessages(values);
@@ -1608,10 +1611,10 @@ public final class BitControl {
     // @@protoc_insertion_point(class_scope:exec.bit.control.BitStatus)
   }
 
-  public interface FragmentStatusOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.control.FragmentStatus)
-      com.google.protobuf.MessageOrBuilder {
+  public interface FragmentStatusOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.shared.MinorFragmentProfile profile = 1;
     /**
      * <code>optional .exec.shared.MinorFragmentProfile profile = 1;</code>
      */
@@ -1625,6 +1628,7 @@ public final class BitControl {
      */
     org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder getProfileOrBuilder();
 
+    // optional .exec.bit.FragmentHandle handle = 2;
     /**
      * <code>optional .exec.bit.FragmentHandle handle = 2;</code>
      */
@@ -1642,9 +1646,8 @@ public final class BitControl {
    * Protobuf type {@code exec.bit.control.FragmentStatus}
    */
   public static final class FragmentStatus extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.bit.control.FragmentStatus)
-      FragmentStatusOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements FragmentStatusOrBuilder {
     // Use FragmentStatus.newBuilder() to construct.
     private FragmentStatus(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1756,6 +1759,7 @@ public final class BitControl {
     }
 
     private int bitField0_;
+    // optional .exec.shared.MinorFragmentProfile profile = 1;
     public static final int PROFILE_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile profile_;
     /**
@@ -1777,6 +1781,7 @@ public final class BitControl {
       return profile_;
     }
 
+    // optional .exec.bit.FragmentHandle handle = 2;
     public static final int HANDLE_FIELD_NUMBER = 2;
     private org.apache.drill.exec.proto.ExecProtos.FragmentHandle handle_;
     /**
@@ -1805,8 +1810,7 @@ public final class BitControl {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -1920,9 +1924,8 @@ public final class BitControl {
      * Protobuf type {@code exec.bit.control.FragmentStatus}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.control.FragmentStatus)
-        org.apache.drill.exec.proto.BitControl.FragmentStatusOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.FragmentStatusOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_FragmentStatus_descriptor;
@@ -2062,6 +2065,7 @@ public final class BitControl {
       }
       private int bitField0_;
 
+      // optional .exec.shared.MinorFragmentProfile profile = 1;
       private org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile profile_ = org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder> profileBuilder_;
@@ -2170,7 +2174,7 @@ public final class BitControl {
         if (profileBuilder_ == null) {
           profileBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder>(
-                  getProfile(),
+                  profile_,
                   getParentForChildren(),
                   isClean());
           profile_ = null;
@@ -2178,6 +2182,7 @@ public final class BitControl {
         return profileBuilder_;
       }
 
+      // optional .exec.bit.FragmentHandle handle = 2;
       private org.apache.drill.exec.proto.ExecProtos.FragmentHandle handle_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.ExecProtos.FragmentHandle, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder, org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder> handleBuilder_;
@@ -2286,7 +2291,7 @@ public final class BitControl {
         if (handleBuilder_ == null) {
           handleBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.ExecProtos.FragmentHandle, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder, org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder>(
-                  getHandle(),
+                  handle_,
                   getParentForChildren(),
                   isClean());
           handle_ = null;
@@ -2305,10 +2310,10 @@ public final class BitControl {
     // @@protoc_insertion_point(class_scope:exec.bit.control.FragmentStatus)
   }
 
-  public interface InitializeFragmentsOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.control.InitializeFragments)
-      com.google.protobuf.MessageOrBuilder {
+  public interface InitializeFragmentsOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // repeated .exec.bit.control.PlanFragment fragment = 1;
     /**
      * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
      */
@@ -2337,9 +2342,8 @@ public final class BitControl {
    * Protobuf type {@code exec.bit.control.InitializeFragments}
    */
   public static final class InitializeFragments extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.bit.control.InitializeFragments)
-      InitializeFragmentsOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements InitializeFragmentsOrBuilder {
     // Use InitializeFragments.newBuilder() to construct.
     private InitializeFragments(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2435,6 +2439,7 @@ public final class BitControl {
       return PARSER;
     }
 
+    // repeated .exec.bit.control.PlanFragment fragment = 1;
     public static final int FRAGMENT_FIELD_NUMBER = 1;
     private java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> fragment_;
     /**
@@ -2476,8 +2481,7 @@ public final class BitControl {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -2584,9 +2588,8 @@ public final class BitControl {
      * Protobuf type {@code exec.bit.control.InitializeFragments}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.control.InitializeFragments)
-        org.apache.drill.exec.proto.BitControl.InitializeFragmentsOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.InitializeFragmentsOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_InitializeFragments_descriptor;
@@ -2730,6 +2733,7 @@ public final class BitControl {
       }
       private int bitField0_;
 
+      // repeated .exec.bit.control.PlanFragment fragment = 1;
       private java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> fragment_ =
         java.util.Collections.emptyList();
       private void ensureFragmentIsMutable() {
@@ -2871,8 +2875,7 @@ public final class BitControl {
           java.lang.Iterable<? extends org.apache.drill.exec.proto.BitControl.PlanFragment> values) {
         if (fragmentBuilder_ == null) {
           ensureFragmentIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, fragment_);
+          super.addAll(values, fragment_);
           onChanged();
         } else {
           fragmentBuilder_.addAllMessages(values);
@@ -2981,10 +2984,10 @@ public final class BitControl {
     // @@protoc_insertion_point(class_scope:exec.bit.control.InitializeFragments)
   }
 
-  public interface PlanFragmentOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.control.PlanFragment)
-      com.google.protobuf.MessageOrBuilder {
+  public interface PlanFragmentOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.bit.FragmentHandle handle = 1;
     /**
      * <code>optional .exec.bit.FragmentHandle handle = 1;</code>
      */
@@ -2998,6 +3001,7 @@ public final class BitControl {
      */
     org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder getHandleOrBuilder();
 
+    // optional float network_cost = 4;
     /**
      * <code>optional float network_cost = 4;</code>
      */
@@ -3007,6 +3011,7 @@ public final class BitControl {
      */
     float getNetworkCost();
 
+    // optional float cpu_cost = 5;
     /**
      * <code>optional float cpu_cost = 5;</code>
      */
@@ -3016,6 +3021,7 @@ public final class BitControl {
      */
     float getCpuCost();
 
+    // optional float disk_cost = 6;
     /**
      * <code>optional float disk_cost = 6;</code>
      */
@@ -3025,6 +3031,7 @@ public final class BitControl {
      */
     float getDiskCost();
 
+    // optional float memory_cost = 7;
     /**
      * <code>optional float memory_cost = 7;</code>
      */
@@ -3034,6 +3041,7 @@ public final class BitControl {
      */
     float getMemoryCost();
 
+    // optional string fragment_json = 8;
     /**
      * <code>optional string fragment_json = 8;</code>
      */
@@ -3048,6 +3056,7 @@ public final class BitControl {
     com.google.protobuf.ByteString
         getFragmentJsonBytes();
 
+    // optional .exec.DrillbitEndpoint assignment = 10;
     /**
      * <code>optional .exec.DrillbitEndpoint assignment = 10;</code>
      */
@@ -3061,6 +3070,7 @@ public final class BitControl {
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getAssignmentOrBuilder();
 
+    // optional bool leaf_fragment = 9;
     /**
      * <code>optional bool leaf_fragment = 9;</code>
      */
@@ -3070,6 +3080,7 @@ public final class BitControl {
      */
     boolean getLeafFragment();
 
+    // optional .exec.DrillbitEndpoint foreman = 11;
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 11;</code>
      */
@@ -3083,6 +3094,7 @@ public final class BitControl {
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getForemanOrBuilder();
 
+    // optional int64 mem_initial = 12 [default = 20000000];
     /**
      * <code>optional int64 mem_initial = 12 [default = 20000000];</code>
      *
@@ -3100,6 +3112,7 @@ public final class BitControl {
      */
     long getMemInitial();
 
+    // optional int64 mem_max = 13 [default = 2000000000];
     /**
      * <code>optional int64 mem_max = 13 [default = 2000000000];</code>
      *
@@ -3117,6 +3130,7 @@ public final class BitControl {
      */
     long getMemMax();
 
+    // optional int64 query_start_time = 14;
     /**
      * <code>optional int64 query_start_time = 14;</code>
      *
@@ -3134,6 +3148,7 @@ public final class BitControl {
      */
     long getQueryStartTime();
 
+    // optional .exec.shared.UserCredentials credentials = 15;
     /**
      * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
      */
@@ -3147,6 +3162,7 @@ public final class BitControl {
      */
     org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder();
 
+    // optional int32 time_zone = 16;
     /**
      * <code>optional int32 time_zone = 16;</code>
      */
@@ -3156,6 +3172,7 @@ public final class BitControl {
      */
     int getTimeZone();
 
+    // optional string options_json = 17;
     /**
      * <code>optional string options_json = 17;</code>
      */
@@ -3174,9 +3191,8 @@ public final class BitControl {
    * Protobuf type {@code exec.bit.control.PlanFragment}
    */
   public static final class PlanFragment extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.bit.control.PlanFragment)
-      PlanFragmentOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements PlanFragmentOrBuilder {
     // Use PlanFragment.newBuilder() to construct.
     private PlanFragment(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -3256,9 +3272,8 @@ public final class BitControl {
               break;
             }
             case 66: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000020;
-              fragmentJson_ = bs;
+              fragmentJson_ = input.readBytes();
               break;
             }
             case 72: {
@@ -3326,9 +3341,8 @@ public final class BitControl {
               break;
             }
             case 138: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00004000;
-              optionsJson_ = bs;
+              optionsJson_ = input.readBytes();
               break;
             }
           }
@@ -3371,6 +3385,7 @@ public final class BitControl {
     }
 
     private int bitField0_;
+    // optional .exec.bit.FragmentHandle handle = 1;
     public static final int HANDLE_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.ExecProtos.FragmentHandle handle_;
     /**
@@ -3392,6 +3407,7 @@ public final class BitControl {
       return handle_;
     }
 
+    // optional float network_cost = 4;
     public static final int NETWORK_COST_FIELD_NUMBER = 4;
     private float networkCost_;
     /**
@@ -3407,6 +3423,7 @@ public final class BitControl {
       return networkCost_;
     }
 
+    // optional float cpu_cost = 5;
     public static final int CPU_COST_FIELD_NUMBER = 5;
     private float cpuCost_;
     /**
@@ -3422,6 +3439,7 @@ public final class BitControl {
       return cpuCost_;
     }
 
+    // optional float disk_cost = 6;
     public static final int DISK_COST_FIELD_NUMBER = 6;
     private float diskCost_;
     /**
@@ -3437,6 +3455,7 @@ public final class BitControl {
       return diskCost_;
     }
 
+    // optional float memory_cost = 7;
     public static final int MEMORY_COST_FIELD_NUMBER = 7;
     private float memoryCost_;
     /**
@@ -3452,6 +3471,7 @@ public final class BitControl {
       return memoryCost_;
     }
 
+    // optional string fragment_json = 8;
     public static final int FRAGMENT_JSON_FIELD_NUMBER = 8;
     private java.lang.Object fragmentJson_;
     /**
@@ -3494,6 +3514,7 @@ public final class BitControl {
       }
     }
 
+    // optional .exec.DrillbitEndpoint assignment = 10;
     public static final int ASSIGNMENT_FIELD_NUMBER = 10;
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint assignment_;
     /**
@@ -3515,6 +3536,7 @@ public final class BitControl {
       return assignment_;
     }
 
+    // optional bool leaf_fragment = 9;
     public static final int LEAF_FRAGMENT_FIELD_NUMBER = 9;
     private boolean leafFragment_;
     /**
@@ -3530,6 +3552,7 @@ public final class BitControl {
       return leafFragment_;
     }
 
+    // optional .exec.DrillbitEndpoint foreman = 11;
     public static final int FOREMAN_FIELD_NUMBER = 11;
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint foreman_;
     /**
@@ -3551,6 +3574,7 @@ public final class BitControl {
       return foreman_;
     }
 
+    // optional int64 mem_initial = 12 [default = 20000000];
     public static final int MEM_INITIAL_FIELD_NUMBER = 12;
     private long memInitial_;
     /**
@@ -3574,6 +3598,7 @@ public final class BitControl {
       return memInitial_;
     }
 
+    // optional int64 mem_max = 13 [default = 2000000000];
     public static final int MEM_MAX_FIELD_NUMBER = 13;
     private long memMax_;
     /**
@@ -3597,6 +3622,7 @@ public final class BitControl {
       return memMax_;
     }
 
+    // optional int64 query_start_time = 14;
     public static final int QUERY_START_TIME_FIELD_NUMBER = 14;
     private long queryStartTime_;
     /**
@@ -3620,6 +3646,7 @@ public final class BitControl {
       return queryStartTime_;
     }
 
+    // optional .exec.shared.UserCredentials credentials = 15;
     public static final int CREDENTIALS_FIELD_NUMBER = 15;
     private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_;
     /**
@@ -3641,6 +3668,7 @@ public final class BitControl {
       return credentials_;
     }
 
+    // optional int32 time_zone = 16;
     public static final int TIME_ZONE_FIELD_NUMBER = 16;
     private int timeZone_;
     /**
@@ -3656,6 +3684,7 @@ public final class BitControl {
       return timeZone_;
     }
 
+    // optional string options_json = 17;
     public static final int OPTIONS_JSON_FIELD_NUMBER = 17;
     private java.lang.Object optionsJson_;
     /**
@@ -3718,8 +3747,7 @@ public final class BitControl {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -3924,9 +3952,8 @@ public final class BitControl {
      * Protobuf type {@code exec.bit.control.PlanFragment}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.control.PlanFragment)
-        org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_PlanFragment_descriptor;
@@ -4205,6 +4232,7 @@ public final class BitControl {
       }
       private int bitField0_;
 
+      // optional .exec.bit.FragmentHandle handle = 1;
       private org.apache.drill.exec.proto.ExecProtos.FragmentHandle handle_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.ExecProtos.FragmentHandle, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder, org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder> handleBuilder_;
@@ -4313,7 +4341,7 @@ public final class BitControl {
         if (handleBuilder_ == null) {
           handleBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.ExecProtos.FragmentHandle, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder, org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder>(
-                  getHandle(),
+                  handle_,
                   getParentForChildren(),
                   isClean());
           handle_ = null;
@@ -4321,6 +4349,7 @@ public final class BitControl {
         return handleBuilder_;
       }
 
+      // optional float network_cost = 4;
       private float networkCost_ ;
       /**
        * <code>optional float network_cost = 4;</code>
@@ -4353,6 +4382,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional float cpu_cost = 5;
       private float cpuCost_ ;
       /**
        * <code>optional float cpu_cost = 5;</code>
@@ -4385,6 +4415,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional float disk_cost = 6;
       private float diskCost_ ;
       /**
        * <code>optional float disk_cost = 6;</code>
@@ -4417,6 +4448,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional float memory_cost = 7;
       private float memoryCost_ ;
       /**
        * <code>optional float memory_cost = 7;</code>
@@ -4449,6 +4481,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional string fragment_json = 8;
       private java.lang.Object fragmentJson_ = "";
       /**
        * <code>optional string fragment_json = 8;</code>
@@ -4462,12 +4495,9 @@ public final class BitControl {
       public java.lang.String getFragmentJson() {
         java.lang.Object ref = fragmentJson_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            fragmentJson_ = s;
-          }
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          fragmentJson_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -4525,6 +4555,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional .exec.DrillbitEndpoint assignment = 10;
       private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint assignment_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> assignmentBuilder_;
@@ -4633,7 +4664,7 @@ public final class BitControl {
         if (assignmentBuilder_ == null) {
           assignmentBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>(
-                  getAssignment(),
+                  assignment_,
                   getParentForChildren(),
                   isClean());
           assignment_ = null;
@@ -4641,6 +4672,7 @@ public final class BitControl {
         return assignmentBuilder_;
       }
 
+      // optional bool leaf_fragment = 9;
       private boolean leafFragment_ ;
       /**
        * <code>optional bool leaf_fragment = 9;</code>
@@ -4673,6 +4705,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional .exec.DrillbitEndpoint foreman = 11;
       private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint foreman_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> foremanBuilder_;
@@ -4781,7 +4814,7 @@ public final class BitControl {
         if (foremanBuilder_ == null) {
           foremanBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>(
-                  getForeman(),
+                  foreman_,
                   getParentForChildren(),
                   isClean());
           foreman_ = null;
@@ -4789,6 +4822,7 @@ public final class BitControl {
         return foremanBuilder_;
       }
 
+      // optional int64 mem_initial = 12 [default = 20000000];
       private long memInitial_ = 20000000L;
       /**
        * <code>optional int64 mem_initial = 12 [default = 20000000];</code>
@@ -4837,6 +4871,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional int64 mem_max = 13 [default = 2000000000];
       private long memMax_ = 2000000000L;
       /**
        * <code>optional int64 mem_max = 13 [default = 2000000000];</code>
@@ -4885,6 +4920,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional int64 query_start_time = 14;
       private long queryStartTime_ ;
       /**
        * <code>optional int64 query_start_time = 14;</code>
@@ -4933,6 +4969,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional .exec.shared.UserCredentials credentials = 15;
       private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder> credentialsBuilder_;
@@ -5041,7 +5078,7 @@ public final class BitControl {
         if (credentialsBuilder_ == null) {
           credentialsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder>(
-                  getCredentials(),
+                  credentials_,
                   getParentForChildren(),
                   isClean());
           credentials_ = null;
@@ -5049,6 +5086,7 @@ public final class BitControl {
         return credentialsBuilder_;
       }
 
+      // optional int32 time_zone = 16;
       private int timeZone_ ;
       /**
        * <code>optional int32 time_zone = 16;</code>
@@ -5081,6 +5119,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional string options_json = 17;
       private java.lang.Object optionsJson_ = "";
       /**
        * <code>optional string options_json = 17;</code>
@@ -5094,12 +5133,9 @@ public final class BitControl {
       public java.lang.String getOptionsJson() {
         java.lang.Object ref = optionsJson_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            optionsJson_ = s;
-          }
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          optionsJson_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5168,10 +5204,10 @@ public final class BitControl {
     // @@protoc_insertion_point(class_scope:exec.bit.control.PlanFragment)
   }
 
-  public interface WorkQueueStatusOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.control.WorkQueueStatus)
-      com.google.protobuf.MessageOrBuilder {
+  public interface WorkQueueStatusOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.DrillbitEndpoint endpoint = 1;
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 1;</code>
      */
@@ -5185,6 +5221,7 @@ public final class BitControl {
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getEndpointOrBuilder();
 
+    // optional int32 queue_length = 2;
     /**
      * <code>optional int32 queue_length = 2;</code>
      */
@@ -5194,6 +5231,7 @@ public final class BitControl {
      */
     int getQueueLength();
 
+    // optional int64 report_time = 3;
     /**
      * <code>optional int64 report_time = 3;</code>
      */
@@ -5207,9 +5245,8 @@ public final class BitControl {
    * Protobuf type {@code exec.bit.control.WorkQueueStatus}
    */
   public static final class WorkQueueStatus extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.bit.control.WorkQueueStatus)
-      WorkQueueStatusOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements WorkQueueStatusOrBuilder {
     // Use WorkQueueStatus.newBuilder() to construct.
     private WorkQueueStatus(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -5318,6 +5355,7 @@ public final class BitControl {
     }
 
     private int bitField0_;
+    // optional .exec.DrillbitEndpoint endpoint = 1;
     public static final int ENDPOINT_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_;
     /**
@@ -5339,6 +5377,7 @@ public final class BitControl {
       return endpoint_;
     }
 
+    // optional int32 queue_length = 2;
     public static final int QUEUE_LENGTH_FIELD_NUMBER = 2;
     private int queueLength_;
     /**
@@ -5354,6 +5393,7 @@ public final class BitControl {
       return queueLength_;
     }
 
+    // optional int64 report_time = 3;
     public static final int REPORT_TIME_FIELD_NUMBER = 3;
     private long reportTime_;
     /**
@@ -5377,8 +5417,7 @@ public final class BitControl {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -5499,9 +5538,8 @@ public final class BitControl {
      * Protobuf type {@code exec.bit.control.WorkQueueStatus}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.control.WorkQueueStatus)
-        org.apache.drill.exec.proto.BitControl.WorkQueueStatusOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.WorkQueueStatusOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_WorkQueueStatus_descriptor;
@@ -5641,6 +5679,7 @@ public final class BitControl {
       }
       private int bitField0_;
 
+      // optional .exec.DrillbitEndpoint endpoint = 1;
       private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> endpointBuilder_;
@@ -5749,7 +5788,7 @@ public final class BitControl {
         if (endpointBuilder_ == null) {
           endpointBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>(
-                  getEndpoint(),
+                  endpoint_,
                   getParentForChildren(),
                   isClean());
           endpoint_ = null;
@@ -5757,6 +5796,7 @@ public final class BitControl {
         return endpointBuilder_;
       }
 
+      // optional int32 queue_length = 2;
       private int queueLength_ ;
       /**
        * <code>optional int32 queue_length = 2;</code>
@@ -5789,6 +5829,7 @@ public final class BitControl {
         return this;
       }
 
+      // optional int64 report_time = 3;
       private long reportTime_ ;
       /**
        * <code>optional int64 report_time = 3;</code>
@@ -5832,10 +5873,10 @@ public final class BitControl {
     // @@protoc_insertion_point(class_scope:exec.bit.control.WorkQueueStatus)
   }
 
-  public interface FinishedReceiverOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.bit.control.FinishedReceiver)
-      com.google.protobuf.MessageOrBuilder {
+  public interface FinishedReceiverOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.bit.FragmentHandle receiver = 1;
     /**
      * <code>optional .exec.bit.FragmentHandle receiver = 1;</code>
      */
@@ -5849,6 +5890,7 @@ public final class BitControl {
      */
     org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder getReceiverOrBuilder();
 
+    // optional .exec.bit.FragmentHandle sender = 2;
     /**
      * <code>optional .exec.bit.FragmentHandle sender = 2;</code>
      */
@@ -5866,9 +5908,8 @@ public final class BitControl {
    * Protobuf type {@code exec.bit.control.FinishedReceiver}
    */
   public static final class FinishedReceiver extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:exec.bit.control.FinishedReceiver)
-      FinishedReceiverOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements FinishedReceiverOrBuilder {
     // Use FinishedReceiver.newBuilder() to construct.
     private FinishedReceiver(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -5980,6 +6021,7 @@ public final class BitControl {
     }
 
     private int bitField0_;
+    // optional .exec.bit.FragmentHandle receiver = 1;
     public static final int RECEIVER_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.ExecProtos.FragmentHandle receiver_;
     /**
@@ -6001,6 +6043,7 @@ public final class BitControl {
       return receiver_;
     }
 
+    // optional .exec.bit.FragmentHandle sender = 2;
     public static final int SENDER_FIELD_NUMBER = 2;
     private org.apache.drill.exec.proto.ExecProtos.FragmentHandle sender_;
     /**
@@ -6029,8 +6072,7 @@ public final class BitControl {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -6144,9 +6186,8 @@ public final class BitControl {
      * Protobuf type {@code exec.bit.control.FinishedReceiver}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.bit.control.FinishedReceiver)
-        org.apache.drill.exec.proto.BitControl.FinishedReceiverOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.FinishedReceiverOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_FinishedReceiver_descriptor;
@@ -6286,6 +6327,7 @@ public final class BitControl {
       }
       private int bitField0_;
 
+      // optional .exec.bit.FragmentHandle receiver = 1;
       private org.apache.drill.exec.proto.ExecProtos.FragmentHandle receiver_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.ExecProtos.FragmentHandle, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder, org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder> receiverBuilder_;
@@ -6394,7 +6436,7 @@ public final class BitControl {
         if (receiverBuilder_ == null) {
           receiverBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.ExecProtos.FragmentHandle, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder, org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder>(
-                  getReceiver(),
+                  receiver_,
                   getParentForChildren(),
                   isClean());
           receiver_ = null;
@@ -6402,6 +6444,7 @@ public final class BitControl {
         return receiverBuilder_;
       }
 
+      // optional .exec.bit.FragmentHandle sender = 2;
       private org.apache.drill.exec.proto.ExecProtos.FragmentHandle sender_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.ExecProtos.FragmentHandle, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder, org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder> senderBuilder_;
@@ -6510,7 +6553,7 @@ public final class BitControl {
         if (senderBuilder_ == null) {
           senderBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.ExecProtos.FragmentHandle, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder, org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder>(
-                  getSender(),
+                  sender_,
                   getParentForChildren(),
                   isClean());
           sender_ = null;
@@ -6529,37 +6572,37 @@ public final class BitControl {
     // @@protoc_insertion_point(class_scope:exec.bit.control.FinishedReceiver)
   }
 
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_BitControlHandshake_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_BitControlHandshake_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_BitStatus_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_BitStatus_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_FragmentStatus_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_FragmentStatus_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_InitializeFragments_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_InitializeFragments_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_PlanFragment_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_PlanFragment_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_WorkQueueStatus_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_FinishedReceiver_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -6613,13 +6656,55 @@ public final class BitControl {
       ".apache.drill.exec.protoB\nBitControlH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          internal_static_exec_bit_control_BitControlHandshake_descriptor =
+            getDescriptor().getMessageTypes().get(0);
+          internal_static_exec_bit_control_BitControlHandshake_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_BitControlHandshake_descriptor,
+              new java.lang.String[] { "RpcVersion", "Channel", "Endpoint", });
+          internal_static_exec_bit_control_BitStatus_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_exec_bit_control_BitStatus_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_BitStatus_descriptor,
+              new java.lang.String[] { "FragmentStatus", });
+          internal_static_exec_bit_control_FragmentStatus_descriptor =
+            getDescriptor().getMessageTypes().get(2);
+          internal_static_exec_bit_control_FragmentStatus_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_FragmentStatus_descriptor,
+              new java.lang.String[] { "Profile", "Handle", });
+          internal_static_exec_bit_control_InitializeFragments_descriptor =
+            getDescriptor().getMessageTypes().get(3);
+          internal_static_exec_bit_control_InitializeFragments_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_InitializeFragments_descriptor,
+              new java.lang.String[] { "Fragment", });
+          internal_static_exec_bit_control_PlanFragment_descriptor =
+            getDescriptor().getMessageTypes().get(4);
+          internal_static_exec_bit_control_PlanFragment_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_PlanFragment_descriptor,
+              new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "Assignment", "LeafFragment", "Foreman", "MemInitial", "MemMax", "QueryStartTime", "Credentials", "TimeZone", "OptionsJson", });
+          internal_static_exec_bit_control_WorkQueueStatus_descriptor =
+            getDescriptor().getMessageTypes().get(5);
+          internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_WorkQueueStatus_descriptor,
+              new java.lang.String[] { "Endpoint", "QueueLength", "ReportTime", });
+          internal_static_exec_bit_control_FinishedReceiver_descriptor =
+            getDescriptor().getMessageTypes().get(6);
+          internal_static_exec_bit_control_FinishedReceiver_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_FinishedReceiver_descriptor,
+              new java.lang.String[] { "Receiver", "Sender", });
+          return null;
+        }
+      };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
@@ -6627,51 +6712,6 @@ public final class BitControl {
           org.apache.drill.exec.proto.CoordinationProtos.getDescriptor(),
           org.apache.drill.exec.proto.UserBitShared.getDescriptor(),
         }, assigner);
-    internal_static_exec_bit_control_BitControlHandshake_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_exec_bit_control_BitControlHandshake_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_bit_control_BitControlHandshake_descriptor,
-        new java.lang.String[] { "RpcVersion", "Channel", "Endpoint", });
-    internal_static_exec_bit_control_BitStatus_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_exec_bit_control_BitStatus_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_bit_control_BitStatus_descriptor,
-        new java.lang.String[] { "FragmentStatus", });
-    internal_static_exec_bit_control_FragmentStatus_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_exec_bit_control_FragmentStatus_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_bit_control_FragmentStatus_descriptor,
-        new java.lang.String[] { "Profile", "Handle", });
-    internal_static_exec_bit_control_InitializeFragments_descriptor =
-      getDescriptor().getMessageTypes().get(3);
-    internal_static_exec_bit_control_InitializeFragments_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_bit_control_InitializeFragments_descriptor,
-        new java.lang.String[] { "Fragment", });
-    internal_static_exec_bit_control_PlanFragment_descriptor =
-      getDescriptor().getMessageTypes().get(4);
-    internal_static_exec_bit_control_PlanFragment_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_bit_control_PlanFragment_descriptor,
-        new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "Assignment", "LeafFragment", "Foreman", "MemInitial", "MemMax", "QueryStartTime", "Credentials", "TimeZone", "OptionsJson", });
-    internal_static_exec_bit_control_WorkQueueStatus_descriptor =
-      getDescriptor().getMessageTypes().get(5);
-    internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_bit_control_WorkQueueStatus_descriptor,
-        new java.lang.String[] { "Endpoint", "QueueLength", "ReportTime", });
-    internal_static_exec_bit_control_FinishedReceiver_descriptor =
-      getDescriptor().getMessageTypes().get(6);
-    internal_static_exec_bit_control_FinishedReceiver_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_exec_bit_control_FinishedReceiver_descriptor,
-        new java.lang.String[] { "Receiver", "Sender", });
-    org.apache.drill.exec.proto.ExecProtos.getDescriptor();
-    org.apache.drill.exec.proto.CoordinationProtos.getDescriptor();
-    org.apache.drill.exec.proto.UserBitShared.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
