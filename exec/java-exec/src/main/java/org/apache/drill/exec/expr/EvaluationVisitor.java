@@ -373,6 +373,7 @@ public class EvaluationVisitor {
         JBlock eval = generator.getEvalBlock().block();
 
         // position to the correct value.
+        eval.add(expr.invoke("reset"));
         eval.add(expr.invoke("setPosition").arg(indexVariable));
         int listNum = 0;
 

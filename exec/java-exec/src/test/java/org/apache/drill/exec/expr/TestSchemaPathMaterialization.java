@@ -38,9 +38,23 @@ public class TestSchemaPathMaterialization extends BaseTestQuery {
   }
 
   @Test
-  @Ignore("Ignored until DRILL-2375 is fixed")
+  public void testMultiProjectionFromMultiLevelRepeatedListWhenFieldsExist() throws Exception {
+    final String query = "select t.odd[0][0][0] v1, t.odd[0][1][0] v2, t.odd[0][2][0] v3 " +
+        " from cp.`complex/json/repeated_list.json` t";
+
+    testRunAndPrint(UserBitShared.QueryType.SQL, query);
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("v1", "v2", "v3")
+        .baselineValues(1L, null, 3L)
+        .go();
+  }
+
+  @Test
+  @Ignore("Ignored until DRILL-2539 is fixed")
   public void testProjectionFromMultiLevelRepeatedList() throws Exception {
-    final String query = "select t.odd[0][0][0] v1, t.odd[0][0][1] v2, t.odd[0][0][2] v3, " +
+    final String query = "select t.odd[0][1][0] v1, t.odd[0][1][0] v2, t.odd[0][2][0] v3, " +
         " t.odd[1] v4, t.odd[2][0][0] v5, t.odd[2][1][0] v6" +
         " from cp.`complex/json/repeated_list.json` t";
 
@@ -54,7 +68,7 @@ public class TestSchemaPathMaterialization extends BaseTestQuery {
   }
 
   @Test
-  @Ignore("Ignored until DRILL-2375 is fixed")
+  @Ignore("Ignored until DRILL-2539 is fixed")
   public void testProjectionFromMultiLevelRepeatedListMap() throws Exception {
     final String query = "select t.odd[0][0].val[0] v1, t.odd[0][0].val[0] v2, " +
         " from cp.`complex/json/repeated_list_map.json` t";

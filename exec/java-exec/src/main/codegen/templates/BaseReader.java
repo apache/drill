@@ -32,6 +32,7 @@ package org.apache.drill.exec.vector.complex.reader;
 public interface BaseReader extends Positionable{
   MajorType getType();
   MaterializedField getField();
+  void reset();
 
   public interface MapReader extends BaseReader, Iterable<String>{
     FieldReader reader(String name);

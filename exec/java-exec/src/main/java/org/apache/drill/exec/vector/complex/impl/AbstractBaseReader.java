@@ -44,6 +44,11 @@ abstract class AbstractBaseReader implements FieldReader{
   }
 
   @Override
+  public void reset() {
+    index = 0;
+  }
+
+  @Override
   public Iterator<String> iterator() {
     throw new IllegalStateException("The current reader doesn't support reading as a map.");
   }

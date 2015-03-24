@@ -76,6 +76,17 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   private int maxOffset;
 
   @Override
+  public void reset() {
+    super.reset();
+    currentOffset = 0;
+    maxOffset = 0;
+    for (FieldReader reader:fields.values()) {
+      reader.reset();
+    }
+    fields.clear();
+  }
+
+  @Override
   public int size() {
     if (isNull()) {
       return 0;
