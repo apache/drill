@@ -252,6 +252,9 @@ public class Drillbit implements AutoCloseable {
       return;
     }
 
+    // wait for anything that is running to complete
+    manager.waitToExit();
+
     if (coord != null && registrationHandle != null) {
       coord.unregister(registrationHandle);
     }
