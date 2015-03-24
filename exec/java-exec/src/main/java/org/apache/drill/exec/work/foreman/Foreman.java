@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.base.Preconditions;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -118,6 +119,7 @@ public class Foreman implements Runnable {
   private final CountDownLatch acceptExternalEvents = new CountDownLatch(1); // gates acceptance of external events
   private final StateListener stateListener = new StateListener(); // source of external events
   private final ResponseSendListener responseListener = new ResponseSendListener();
+  private final StateSwitch stateSwitch = new StateSwitch();
   private final ForemanResult foremanResult = new ForemanResult();
 
   /**
@@ -644,87 +646,120 @@ public class Foreman implements Runnable {
     }
   }
 
+  private static class StateEvent {
+    final QueryState newState;
+    final Exception exception;
+
+    StateEvent(final QueryState newState, final Exception exception) {
+      this.newState = newState;
+      this.exception = exception;
+    }
+  }
+
+  private class StateSwitch extends EventProcessor<StateEvent> {
+    public void moveToState(final QueryState newState, final Exception exception) {
+      sendEvent(new StateEvent(newState, exception));
+    }
+
+    @Override
+    protected void processEvent(StateEvent event) {
+      final QueryState newState = event.newState;
+      final Exception exception = event.exception;
+
+      // TODO Auto-generated method stub
+      logger.info("State change requested.  {} --> {}", state, newState,
+          exception);
+      switch (state) {
+      case PENDING:
+        if (newState == QueryState.RUNNING) {
+          recordNewState(QueryState.RUNNING);
+          return;
+        }
+
+        //$FALL-THROUGH$
+
+      case RUNNING: {
+        /*
+         * For cases that cancel executing fragments, we have to record the new
+         * state first, because the cancellation of the local root fragment will
+         * cause this to be called recursively.
+         */
+        switch (newState) {
+        case CANCELLATION_REQUESTED: {
+          assert exception == null;
+          queryManager.markEndTime();
+          recordNewState(QueryState.CANCELLATION_REQUESTED);
+          queryManager.cancelExecutingFragments(drillbitContext, rootRunner);
+          foremanResult.setCompleted(QueryState.CANCELED);
+          /*
+           * We don't close the foremanResult until we've gotten
+           * acknowledgements, which happens below in the case for current state
+           * == CANCELLATION_REQUESTED.
+           */
+          return;
+        }
+
+        case COMPLETED: {
+          assert exception == null;
+          queryManager.markEndTime();
+          recordNewState(QueryState.COMPLETED);
+          foremanResult.setCompleted(QueryState.COMPLETED);
+          foremanResult.close();
+          return;
+        }
+
+        case FAILED: {
+          assert exception != null;
+          queryManager.markEndTime();
+          recordNewState(QueryState.FAILED);
+          queryManager.cancelExecutingFragments(drillbitContext, rootRunner);
+          foremanResult.setFailed(exception);
+          foremanResult.close();
+          return;
+        }
+
+        default:
+          throw new IllegalStateException("illegal transition from RUNNING to "
+              + newState);
+        }
+      }
+
+      case CANCELLATION_REQUESTED:
+        if ((newState == QueryState.CANCELED)
+            || (newState == QueryState.COMPLETED)
+            || (newState == QueryState.FAILED)) {
+          /*
+           * These amount to a completion of the cancellation requests' cleanup;
+           * now we can clean up and send the result.
+           */
+          foremanResult.close();
+        }
+        return;
+
+      case CANCELED:
+      case COMPLETED:
+      case FAILED:
+        logger
+            .warn(
+                "Dropping request to move to {} state as query is already at {} state (which is terminal).",
+                newState, state);
+        return;
+      }
+
+      throw new IllegalStateException(String.format(
+          "Failure trying to change states: %s --> %s", state.name(),
+          newState.name()));
+    }
+  }
+
   /**
    * Tells the foreman to move to a new state.
    *
    * @param newState the state to move to
    * @param exception if not null, the exception that drove this state transition (usually a failure)
    */
-  private synchronized void moveToState(final QueryState newState, final Exception exception) {
-    logger.info("State change requested.  {} --> {}", state, newState, exception);
-    switch(state) {
-    case PENDING:
-      if (newState == QueryState.RUNNING) {
-        recordNewState(QueryState.RUNNING);
-        return;
-      }
-
-      //$FALL-THROUGH$
-
-    case RUNNING: {
-      /*
-       * For cases that cancel executing fragments, we have to record the new state first, because
-       * the cancellation of the local root fragment will cause this to be called recursively.
-       */
-      switch(newState) {
-      case CANCELLATION_REQUESTED: {
-        assert exception == null;
-        queryManager.markEndTime();
-        recordNewState(QueryState.CANCELLATION_REQUESTED);
-        queryManager.cancelExecutingFragments(drillbitContext, rootRunner);
-        foremanResult.setCompleted(QueryState.CANCELED);
-        /*
-         * We don't close the foremanResult until we've gotten acknowledgements, which
-         * happens below in the case for current state == CANCELLATION_REQUESTED.
-         */
-        return;
-      }
-
-      case COMPLETED: {
-        assert exception == null;
-        queryManager.markEndTime();
-        recordNewState(QueryState.COMPLETED);
-        foremanResult.setCompleted(QueryState.COMPLETED);
-        foremanResult.close();
-        return;
-      }
-
-      case FAILED: {
-        assert exception != null;
-        queryManager.markEndTime();
-        recordNewState(QueryState.FAILED);
-        queryManager.cancelExecutingFragments(drillbitContext, rootRunner);
-        foremanResult.setFailed(exception);
-        foremanResult.close();
-        return;
-      }
-
-      default:
-        throw new IllegalStateException("illegal transition from RUNNING to " + newState);
-      }
-    }
-
-    case CANCELLATION_REQUESTED:
-      if ((newState == QueryState.CANCELED) || (newState == QueryState.COMPLETED)
-          || (newState == QueryState.FAILED)) {
-        /*
-         * These amount to a completion of the cancellation requests' cleanup; now we
-         * can clean up and send the result.
-         */
-        foremanResult.close();
-      }
-      return;
-
-    case CANCELED:
-    case COMPLETED:
-    case FAILED:
-      logger.warn("Dropping request to move to {} state as query is already at {} state (which is terminal).",
-          newState, state);
-      return;
-    }
-
-    throw new IllegalStateException(String.format("Failure trying to change states: %s --> %s",
-        state.name(), newState.name()));
+  private void moveToState(final QueryState newState, final Exception exception) {
+    stateSwitch.moveToState(newState, exception);
   }
 
   private void recordNewState(final QueryState newState) {
