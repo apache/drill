@@ -35,6 +35,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableIntHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
@@ -81,6 +82,50 @@ public class StringFunctions{
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer),
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(escape.start,  escape.end,  escape.buffer))).matcher("");
+    }
+
+    public void eval() {
+      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      matcher.reset(i);
+      out.value = matcher.matches()? 1:0;
+    }
+  }
+
+  @FunctionTemplate(name = "ilike", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ILike implements DrillSimpleFunc{
+
+    @Param VarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Output BitHolder out;
+    @Workspace java.util.regex.Matcher matcher;
+
+    public void setup() {
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)),
+          java.util.regex.Pattern.CASE_INSENSITIVE).matcher("");
+    }
+
+    public void eval() {
+      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      matcher.reset(i);
+      out.value = matcher.matches()? 1:0;
+    }
+  }
+
+  @FunctionTemplate(name = "ilike", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ILikeWithEscape implements DrillSimpleFunc{
+
+    @Param VarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Param(constant=true) VarCharHolder escape;
+    @Output BitHolder out;
+    @Workspace java.util.regex.Matcher matcher;
+
+    public void setup() {
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer),
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(escape.start,  escape.end,  escape.buffer)),
+          java.util.regex.Pattern.CASE_INSENSITIVE).matcher("");
     }
 
     public void eval() {
@@ -407,6 +452,64 @@ public class StringFunctions{
       }
     }
 
+  }
+
+  @FunctionTemplate(names = {"substring", "substr" }, scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class SubstringRegex implements DrillSimpleFunc{
+
+    @Param VarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Output NullableVarCharHolder out;
+    @Workspace java.util.regex.Matcher matcher;
+
+    public void setup() {
+      matcher = java.util.regex.Pattern.compile(
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))
+          .matcher("");
+    }
+
+    public void eval() {
+      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      matcher.reset(i);
+      if (matcher.find()) {
+        out.isSet = 1;
+        out.buffer = input.buffer;
+        out.start = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(input.buffer, input.start, input.end, matcher.start());
+        out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(input.buffer, input.start, input.end, matcher.end());
+      }
+    }
+  }
+
+  @FunctionTemplate(names = {"substring", "substr" }, scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class SubstringRegexNullable implements DrillSimpleFunc{
+
+    @Param NullableVarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Output NullableVarCharHolder out;
+    @Workspace java.util.regex.Matcher matcher;
+
+    public void setup() {
+      matcher = java.util.regex.Pattern.compile(
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))
+          .matcher("");
+    }
+
+    public void eval() {
+      if (input.isSet == 0) {
+        out.isSet = 0;
+      } else {
+        String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+        matcher.reset(i);
+        if (matcher.find()) {
+          out.isSet = 1;
+          out.buffer = input.buffer;
+          out.start = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(input.buffer, input.start, input.end, matcher.start());
+          out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(input.buffer, input.start, input.end, matcher.end());
+        } else {
+          out.isSet = 0;
+        }
+      }
+    }
   }
 
   // Return first length characters in the string. When length is negative, return all but last |length| characters.
