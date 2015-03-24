@@ -439,7 +439,7 @@ public class Foreman implements Runnable {
         queryId, queryContext.getActiveEndpoints(), drillbitContext.getPlanReader(), rootFragment,
         initiatingClient.getSession(), queryContext.getQueryDateTimeInfo());
 
-    if (logger.isInfoEnabled()) {
+    if (logger.isTraceEnabled()) {
       final StringBuilder sb = new StringBuilder();
       sb.append("PlanFragments for query ");
       sb.append(queryId);
@@ -477,7 +477,7 @@ public class Foreman implements Runnable {
         }
         sb.append(jsonString);
 
-        logger.info(sb.toString());
+        logger.trace(sb.toString());
       }
     }
 
