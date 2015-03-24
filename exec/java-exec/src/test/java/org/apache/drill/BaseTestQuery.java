@@ -186,12 +186,24 @@ public class BaseTestQuery extends ExecTest {
    * @param properties
    */
   public static void updateClient(Properties properties) throws Exception {
+    Preconditions.checkState(bits != null && bits[0] != null, "Drillbits are not setup.");
     if (client != null) {
       client.close();
       client = null;
     }
 
     client = QueryTestUtil.createClient(config, serviceSet, MAX_WIDTH_PER_NODE, properties);
+  }
+
+  /*
+   * Close the current <i>client</i> and open a new client for the given user. All tests executed
+   * after this method call use the new <i>client</i>.
+   * @param user
+   */
+  public static void updateClient(String user) throws Exception {
+    final Properties props = new Properties();
+    props.setProperty("user", user);
+    updateClient(props);
   }
 
   protected static BufferAllocator getAllocator() {
