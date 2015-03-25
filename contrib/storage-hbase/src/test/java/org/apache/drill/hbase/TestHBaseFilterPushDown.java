@@ -118,6 +118,19 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   }
 
   @Test
+  public void testFilterPushDownConvertExpressionWithNumber() throws Exception {
+    setColumnWidths(new int[] {8, 1100});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + "  row_key\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "WHERE\n"
+        + "  convert_from(row_key, 'INT_BE') = 75"
+        , 1);
+  }
+
+  @Test
   public void testFilterPushDownRowKeyLessThanOrEqualTo() throws Exception {
     setColumnWidths(new int[] {8, 74, 38});
     runHBaseSQLVerifyCount("SELECT\n"
