@@ -17,6 +17,9 @@
  */
 package org.apache.drill.jdbc;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaDatabaseMetaData;
 
@@ -26,28 +29,84 @@ public class DrillDatabaseMetaData extends AvaticaDatabaseMetaData {
     super( connection );
   }
 
+  /**
+   * Throws AlreadyClosedSqlException if the associated Connection is closed.
+   *
+   * @throws AlreadyClosedSqlException if Connection is closed
+   * @throws SQLException if error in calling {@link Connection#isClosed()}
+   */
+  private void checkNotClosed() throws AlreadyClosedSqlException,
+                                       SQLException {
+    if ( getConnection().isClosed() ) {
+      throw new AlreadyClosedSqlException(
+          "DatabaseMetaData's Connection is already closed." );
+    }
+  }
+
 
   // For omitted NULLS FIRST/NULLS HIGH, Drill sort NULL sorts as highest value:
 
   @Override
-  public boolean nullsAreSortedHigh() {
+  public boolean nullsAreSortedHigh() throws SQLException {
+    checkNotClosed();
     return true;
   }
 
   @Override
-  public boolean nullsAreSortedLow() {
+  public boolean nullsAreSortedLow() throws SQLException {
+    checkNotClosed();
     return false;
   }
 
   @Override
-  public boolean nullsAreSortedAtStart() {
+  public boolean nullsAreSortedAtStart() throws SQLException {
+    checkNotClosed();
     return false;
   }
 
   @Override
-  public boolean nullsAreSortedAtEnd() {
+  public boolean nullsAreSortedAtEnd() throws SQLException {
+    checkNotClosed();
     return false;
   }
 
+
+  // For now, check whether connection is closed for most important methods
+  // (DRILL-2565 (partial fix for DRILL-2489)):
+
+
+  @Override
+  public ResultSet getCatalogs() throws SQLException {
+    checkNotClosed();
+    return super.getCatalogs();
+  }
+
+  @Override
+  public ResultSet getSchemas() throws SQLException {
+    checkNotClosed();
+    return super.getSchemas();
+  }
+
+  @Override
+  public ResultSet getSchemas( String catalog, String schemaPattern ) throws SQLException {
+    checkNotClosed();
+    return super.getSchemas( catalog, schemaPattern );
+  }
+
+  @Override
+  public ResultSet getTables( String catalog,
+                              String schemaPattern,
+                              String tableNamePattern,
+                              String[] types ) throws SQLException {
+    checkNotClosed();
+    return super.getTables( catalog, schemaPattern,tableNamePattern, types );
+  }
+
+  @Override
+  public ResultSet getColumns( String catalog, String schema, String table,
+                               String columnNamePattern ) throws SQLException {
+    checkNotClosed();
+    return super.getColumns( catalog, schema, table, columnNamePattern );
+  }
 
 }

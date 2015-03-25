@@ -62,6 +62,25 @@ public class DrillResultSet extends AvaticaResultSet {
     cursor = new DrillCursor(this);
   }
 
+  /**
+   * Throws AlreadyClosedSqlException if this ResultSet is closed.
+   *
+   * @throws AlreadyClosedSqlException if ResultSe  is closed
+   * @throws SQLException if error in calling {@link #isClosed()}
+   */
+  private void checkNotClosed() throws SQLException {
+    if ( isClosed() ) {
+      throw new AlreadyClosedSqlException( "ResultSet is already closed." );
+    }
+  }
+
+  @Override
+  public ResultSetMetaData getMetaData() throws SQLException {
+    checkNotClosed();
+    return super.getMetaData();
+  }
+
+
   @Override
   protected void cancel() {
     cleanup();
@@ -78,6 +97,7 @@ public class DrillResultSet extends AvaticaResultSet {
 
   @Override
   public boolean next() throws SQLException {
+    checkNotClosed();
     // Next may be called after close has been called (for example after a user cancel) which in turn
     // sets the cursor to null. So we must check before we call next.
     // TODO: handle next() after close is called in the Avatica code.
@@ -90,6 +110,7 @@ public class DrillResultSet extends AvaticaResultSet {
 
   @Override
   protected DrillResultSet execute() throws SQLException{
+    checkNotClosed();
     // Call driver's callback. It is permitted to throw a RuntimeException.
     DrillConnectionImpl connection = (DrillConnectionImpl) statement.getConnection();
 

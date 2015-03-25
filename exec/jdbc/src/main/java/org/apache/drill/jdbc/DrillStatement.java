@@ -17,6 +17,9 @@
  */
 package org.apache.drill.jdbc;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import net.hydromatic.avatica.AvaticaStatement;
 
 public abstract class DrillStatement extends AvaticaStatement
@@ -27,9 +30,52 @@ public abstract class DrillStatement extends AvaticaStatement
     connection.openStatementsRegistry.addStatement(this);
   }
 
+  /**
+   * Throws AlreadyClosedSqlException if this Statement is closed.
+   *
+   * @throws AlreadyClosedSqlException if Statement is closed
+   * @throws SQLException if error in calling {@link #isClosed()}
+   */
+  private void checkNotClosed() throws SQLException {
+    if ( isClosed() ) {
+      throw new AlreadyClosedSqlException( "Statement is already closed." );
+    }
+  }
+
   @Override
   public DrillConnectionImpl getConnection() {
     return (DrillConnectionImpl) connection;
+  }
+
+
+  @Override
+  public boolean execute( String sql ) throws SQLException {
+    checkNotClosed();
+    return super.execute( sql );
+  }
+
+  @Override
+  public ResultSet  executeQuery( String sql ) throws SQLException {
+    checkNotClosed();
+    return super.executeQuery( sql );
+  }
+
+  @Override
+  public int executeUpdate( String sql ) throws SQLException {
+    checkNotClosed();
+    return super.executeUpdate( sql );
+  }
+
+  @Override
+  public int executeUpdate( String sql, int[] columnIndexes ) throws SQLException {
+    checkNotClosed();
+    return super.executeUpdate( sql, columnIndexes );
+  }
+
+  @Override
+  public int executeUpdate( String sql, String[] columnNames ) throws SQLException {
+    checkNotClosed();
+    return super.executeUpdate( sql, columnNames );
   }
 
   @Override

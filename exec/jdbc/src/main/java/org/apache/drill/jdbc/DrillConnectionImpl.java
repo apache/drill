@@ -55,6 +55,17 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements DrillCon
   private Drillbit bit;
   private RemoteServiceSet serviceSet;
 
+  /**
+   * Throws AlreadyClosedSqlException if this Connection is closed.
+   *
+   * @throws AlreadyClosedSqlException if Connection is closed
+   * @throws SQLException if error in calling {@link #isClosed()}
+   */
+  private void checkNotClosed() throws SQLException {
+    if ( isClosed() ) {
+      throw new AlreadyClosedSqlException( "Connection is already closed." );
+    }
+  }
 
   protected DrillConnectionImpl(Driver driver, AvaticaFactory factory, String url, Properties info) throws SQLException {
     super(driver, factory, url, info);
@@ -128,6 +139,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements DrillCon
   @Override
   public DrillStatement createStatement(int resultSetType, int resultSetConcurrency,
                                         int resultSetHoldability) throws SQLException {
+    checkNotClosed();
     DrillStatement statement =
         (DrillStatement) super.createStatement(resultSetType, resultSetConcurrency,
                                                resultSetHoldability);
@@ -138,6 +150,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements DrillCon
   public PreparedStatement prepareStatement(String sql, int resultSetType,
                                             int resultSetConcurrency,
                                             int resultSetHoldability) throws SQLException {
+    checkNotClosed();
     try {
       DrillPrepareResult prepareResult = new DrillPrepareResult(sql);
       DrillPreparedStatement statement =

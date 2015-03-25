@@ -19,57 +19,56 @@ package org.apache.drill.jdbc;
 
 import java.sql.ResultSet;
 
+
 /**
- * SQLException for invalid-cursor-state conditions, e.g., calling a column
- * accessor method before calling {@link ResultSet#next()} or after
- * {@link ResultSet#next()} returns false.
+ * SQLException for object-already-closed conditions, e.g., calling a method
+ * on a closed {@link Statement}.
  */
-class InvalidCursorStateSqlException extends JdbcApiSqlException {
+public class AlreadyClosedSqlException extends JdbcApiSqlException {
 
-  private static final long serialVersionUID = 2014_12_09L;
-
+  private static final long serialVersionUID = 2015_03_25L;
 
   /**
    * See {@link JdbcApiSqlException#JdbcApiSqlException(String, String, int)}.
-   */
-  public InvalidCursorStateSqlException( String reason,
-                                         String SQLState,
-                                         int vendorCode ) {
+   * /
+  public AlreadyClosedSqlException( String reason,
+                                    String SQLState,
+                                    int vendorCode ) {
     super( reason, SQLState, vendorCode );
   }
 
   /**
    * See {@link JdbcApiSqlException#JdbcApiSqlException(String, String)}.
-   */
-  public InvalidCursorStateSqlException( String reason, String SQLState ) {
+   * /
+  public AlreadyClosedSqlException( String reason, String SQLState ) {
     super( reason, SQLState );
   }
 
   /**
    * See {@link JdbcApiSqlException#JdbcApiSqlException(String)}.
    */
-  public InvalidCursorStateSqlException( String reason ) {
+  public AlreadyClosedSqlException( String reason ) {
     super( reason );
   }
 
   /**
    * See {@link JdbcApiSqlException#JdbcApiSqlException()}.
    */
-  public InvalidCursorStateSqlException() {
+  public AlreadyClosedSqlException() {
     super();
   }
 
   /**
    * See {@link JdbcApiSqlException#JdbcApiSqlException(Throwable cause)}.
    */
-  public InvalidCursorStateSqlException( Throwable cause ) {
+  public AlreadyClosedSqlException( Throwable cause ) {
     super( cause );
   }
 
   /**
    * See {@link JdbcApiSqlException#JdbcApiSqlException(String, Throwable)}.
    */
-  public InvalidCursorStateSqlException( String reason, Throwable cause ) {
+  public AlreadyClosedSqlException( String reason, Throwable cause ) {
     super( reason, cause );
   }
 
@@ -77,7 +76,7 @@ class InvalidCursorStateSqlException extends JdbcApiSqlException {
    * See
    * {@link JdbcApiSqlException#JdbcApiSqlException(String, String, Throwable)}.
    */
-  public InvalidCursorStateSqlException( String reason, String sqlState,
+  public AlreadyClosedSqlException( String reason, String sqlState,
                                          Throwable cause ) {
     super( reason, sqlState, cause );
   }
@@ -86,10 +85,10 @@ class InvalidCursorStateSqlException extends JdbcApiSqlException {
    * See
    * {@link JdbcApiSqlException#JdbcApiSqlException(String, String, int, Throwable)}.
    */
-  public InvalidCursorStateSqlException( String reason,
-                                         String sqlState,
-                                         int vendorCode,
-                                         Throwable cause ) {
+  public AlreadyClosedSqlException( String reason,
+                                    String sqlState,
+                                    int vendorCode,
+                                    Throwable cause ) {
     super( reason, sqlState, vendorCode, cause );
   }
 

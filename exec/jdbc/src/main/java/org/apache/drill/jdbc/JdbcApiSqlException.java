@@ -18,9 +18,10 @@
 package org.apache.drill.jdbc;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 
 /**
- * SQLException for JDBC API calling sequence/state problems.
+ * SQLException for JDBC API calling-sequence/state problems.
  *
  * <p>
  *   {@code JdbcApiSqlException} is intended for errors in using the JDBC API,
@@ -30,8 +31,10 @@ import java.sql.SQLException;
  * <p>
  *   ({@code JdbcApiSqlException} is not for errors that are not under direct
  *   control of the programmer writing JDBC API calls, for example, invalid SQL
- *   syntax, errors from SQL-vs.-data mismatches, data file format errors,
- *   resource availability errors, or internal Drill errors.)
+ *   syntax errors (which should use {@link SQLSyntaxErrorException}), errors
+ *   from SQL-vs.-data mismatches (which likely should use {@link SQLDataException}),
+ *   data file format errors, resource availability errors (which might use
+ *   {@link SQLTransientException}), or internal Drill errors.)
  * </p>
  * <p>
  *  TODO:  Consider having a DrillSqlException (in part for reviewing,
@@ -88,7 +91,7 @@ import java.sql.SQLException;
  *   etc.)
  * </p>
  */
-class JdbcApiSqlException extends SQLException {
+class JdbcApiSqlException extends SQLNonTransientException {
 
   private static final long serialVersionUID = 2014_12_12L;
 
