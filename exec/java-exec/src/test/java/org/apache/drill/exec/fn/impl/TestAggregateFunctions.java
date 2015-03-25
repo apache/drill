@@ -185,4 +185,13 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .go();
   }
 
+  @Test
+  public void testAvgOnKnownType() throws Exception {
+    testBuilder()
+        .sqlQuery("select avg(cast(employee_id as bigint)) as col from cp.`employee.json`")
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(578.9982683982684d)
+        .go();
+  }
 }

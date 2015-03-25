@@ -352,8 +352,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             SqlStdOperatorTable.DIVIDE,
             numeratorRef,
             denominatorRef);
-    return rexBuilder.makeCast(
-        oldCall.getType(), divideRef);
+    return divideRef;
   }
 
   private RexNode reduceSum(
@@ -557,7 +556,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           rexBuilder.makeCall(
               SqlStdOperatorTable.POWER, div, half);
     }
-
     return rexBuilder.makeCast(
         oldCall.getType(), result);
   }
