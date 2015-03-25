@@ -19,15 +19,13 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
-import org.apache.drill.exec.planner.StarColumnHelper;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlJoin;
 import org.eigenbase.sql.JoinType;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlNodeList;
-import org.eigenbase.sql.SqlSelect;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.util.SqlShuttle;
 import org.eigenbase.sql.SqlDataTypeSpec;
@@ -36,6 +34,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 public class UnsupportedOperatorsVisitor extends SqlShuttle {
+  private QueryContext context;
   private static List<String> disabledType = Lists.newArrayList();
   private static List<String> disabledOperators = Lists.newArrayList();
 
@@ -48,12 +47,13 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
 
   private UnsupportedOperatorCollector unsupportedOperatorCollector;
 
-  private UnsupportedOperatorsVisitor() {
-    unsupportedOperatorCollector = new UnsupportedOperatorCollector();
+  private UnsupportedOperatorsVisitor(QueryContext context) {
+    this.context = context;
+    this.unsupportedOperatorCollector = new UnsupportedOperatorCollector();
   }
 
-  public static UnsupportedOperatorsVisitor createVisitor() {
-    return new UnsupportedOperatorsVisitor();
+  public static UnsupportedOperatorsVisitor createVisitor(QueryContext context) {
+    return new UnsupportedOperatorsVisitor(context);
   }
 
   public void convertException() throws SqlUnsupportedException {
@@ -114,6 +114,15 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
             "See Apache Drill JIRA: DRILL-1921");
         throw new UnsupportedOperationException();
       }
+    }
+
+    // Throw exceptions if window functions are disabled
+    if(sqlCall.getOperator().getKind().equals(SqlKind.OVER)
+        && !context.getOptions().getOption(ExecConstants.ENABLE_WINDOW_FUNCTIONS).bool_val) {
+      unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+          "Window functions are disabled\n" +
+          "See Apache Drill JIRA: DRILL-2559");
+      throw new UnsupportedOperationException();
     }
 
     // Disable Function

@@ -37,7 +37,6 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
-import org.apache.drill.exec.physical.impl.window.OverFinder;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
@@ -146,18 +145,10 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   protected SqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException, ForemanSetupException {
-    final boolean enableWindow = context.getOptions().getOption(ExecConstants.ENABLE_WINDOW_FUNCTIONS).bool_val;
-    if (!enableWindow) {
-      final OverFinder overFinder = new OverFinder();
-      if (overFinder.findOver(sqlNode)) {
-        throw new ValidationException("Window Functions have been disabled");
-      }
-    }
-
     SqlNode sqlNodeValidated = planner.validate(sqlNode);
 
     // Check if the unsupported functionality is used
-    UnsupportedOperatorsVisitor visitor = UnsupportedOperatorsVisitor.createVisitor();
+    UnsupportedOperatorsVisitor visitor = UnsupportedOperatorsVisitor.createVisitor(context);
     try {
       sqlNodeValidated.accept(visitor);
     } catch (UnsupportedOperationException ex) {

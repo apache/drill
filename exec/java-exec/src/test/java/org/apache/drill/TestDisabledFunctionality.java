@@ -312,4 +312,17 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       throw ex;
     }
   }
+
+  @Test(expected = UnsupportedFunctionException.class) // see DRILL-2441
+  public void testDisabledWindowFunctions() throws Exception {
+    try {
+      test("SELECT employee_id,position_id, salary, avg(salary) " +
+          "OVER (PARTITION BY position_id order by position_id) " +
+          "FROM cp.`employee.json` " +
+          "order by employee_id;");
+    } catch(Exception ex) {
+      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+      throw ex;
+    }
+  }
 }
