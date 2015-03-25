@@ -119,7 +119,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       case "UINT4":
         if (valueArg instanceof IntExpression
             && (isEqualityFn || encodingType.startsWith("U"))) {
-          bb = Unpooled.wrappedBuffer(new byte[4]).order(encodingType.endsWith("_BE") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+          bb = newByteBuf(4, encodingType.endsWith("_BE"));
           bb.writeInt(((IntExpression)valueArg).getInt());
         }
         break;
@@ -129,39 +129,39 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       case "UINT8":
         if (valueArg instanceof LongExpression
             && (isEqualityFn || encodingType.startsWith("U"))) {
-          bb = Unpooled.wrappedBuffer(new byte[8]).order(encodingType.endsWith("_BE") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+          bb = newByteBuf(8, encodingType.endsWith("_BE"));
           bb.writeLong(((LongExpression)valueArg).getLong());
         }
         break;
       case "FLOAT":
         if (valueArg instanceof FloatExpression && isEqualityFn) {
-          bb = Unpooled.wrappedBuffer(new byte[4]).order(ByteOrder.BIG_ENDIAN);
+          bb = newByteBuf(4, true);
           bb.writeFloat(((FloatExpression)valueArg).getFloat());
         }
         break;
       case "DOUBLE":
         if (valueArg instanceof DoubleExpression && isEqualityFn) {
-          bb = Unpooled.wrappedBuffer(new byte[8]).order(ByteOrder.BIG_ENDIAN);;
+          bb = newByteBuf(8, true);
           bb.writeDouble(((DoubleExpression)valueArg).getDouble());
         }
         break;
       case "TIME_EPOCH":
       case "TIME_EPOCH_BE":
         if (valueArg instanceof TimeExpression) {
-          bb = Unpooled.wrappedBuffer(new byte[8]).order(encodingType.endsWith("_BE") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+          bb = newByteBuf(8, encodingType.endsWith("_BE"));
           bb.writeLong(((TimeExpression)valueArg).getTime());
         }
         break;
       case "DATE_EPOCH":
       case "DATE_EPOCH_BE":
         if (valueArg instanceof DateExpression) {
-          bb = Unpooled.wrappedBuffer(new byte[8]).order(encodingType.endsWith("_BE") ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+          bb = newByteBuf(8, encodingType.endsWith("_BE"));
           bb.writeLong(((DateExpression)valueArg).getDate());
         }
         break;
       case "BOOLEAN_BYTE":
         if (valueArg instanceof BooleanExpression) {
-          bb = Unpooled.wrappedBuffer(new byte[1]);
+          bb = newByteBuf(1, false /* does not matter */);
           bb.writeByte(((BooleanExpression)valueArg).getBoolean() ? 1 : 0);
         }
         break;
@@ -192,6 +192,12 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       return true;
     }
     return false;
+  }
+
+  private static ByteBuf newByteBuf(int size, boolean bigEndian) {
+    return Unpooled.wrappedBuffer(new byte[size])
+        .order(bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN)
+        .writerIndex(0);
   }
 
   private static final ImmutableSet<Class<? extends LogicalExpression>> VALUE_EXPRESSION_CLASSES;
