@@ -89,15 +89,15 @@ You can write data from Drill to a JSON file. The following setup is required:
 
 * In the storage plugin definition, include a writable (mutable) workspace. For example:
 
-    {
-    . . .
-      "workspaces": {
-    . . .
-        "myjsonstore": {
-          "location": "/tmp",
-          "writable": true,
-        }
-    . . .
+      {
+      . . .
+        "workspaces": {
+      . . .
+          "myjsonstore": {
+            "location": "/tmp",
+            "writable": true,
+          }
+      . . .
 
 * Set the output format to JSON. For example:
 

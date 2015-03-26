@@ -2,11 +2,22 @@
 title: "FLATTEN Function"
 parent: "Nested Data Functions"
 ---
+FLATTEN separates the elements in a repeated field into individual records.
+
+## Syntax
+
+    FLATTEN(z)
+
+*z* is a JSON array.
+
+## Usage Notes
+
 The FLATTEN function is useful for flexible exploration of repeated data.
-FLATTEN separates the elements in a repeated field into individual records. To
-maintain the association between each flattened value and the other fields in
-the record, all of the other columns are copied into each new record. A very
-simple example would turn this data (one record):
+
+To maintain the association between each flattened value and the other fields in
+the record, the FLATTEN function copies all of the other columns into each new record. 
+
+A very simple example would turn this data (one record):
 
     {
       "x" : 5,
@@ -16,7 +27,7 @@ simple example would turn this data (one record):
 
 into three distinct records:
 
-    select flatten(z) from table;
+    SELECT FLATTEN(z) FROM table;
     | x           | y              | z         |
     +-------------+----------------+-----------+
     | 5           | "a string"     | 1         |
@@ -26,7 +37,9 @@ into three distinct records:
 The function takes a single argument, which must be an array (the `z` column
 in this example).
 
-  
+Using the all (*) wildcard as the argument to flatten is not supported and returns an error.
+
+## Examples
 
 For a more interesting example, consider the JSON data in the publicly
 available [Yelp](https://www.yelp.com/dataset_challenge/dataset) data set. The
@@ -85,5 +98,5 @@ the categories array, then run a COUNT function on the flattened result:
     +---------------|------------+
 
 A common use case for FLATTEN is its use in conjunction with the
-[KVGEN](/docs/flatten-function) function.
+[KVGEN](/docs/flatten-function) function as shown in the section, ["JSON Data Model"](/docs/json-data-model/).
 

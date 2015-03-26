@@ -67,10 +67,10 @@ In some cases, such as stopping while a query is in progress, this command does 
 these steps:
 
   1. Issue a CTRL Z to stop the query, then start Drill again. If the startup message indicates success, skip the rest of the steps. If not, proceed to step 2.
-  2. Search for the Drill process ID.
+  2. Search for the Drill process IDs.
   
         $ ps auwx | grep drill
-  3. Kill the process using the process number in the grep output. For example:
+  3. Kill each process using the process numbers in the grep output. For example:
 
         $ sudo kill -9 2674
 

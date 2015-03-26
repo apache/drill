@@ -1,0 +1,80 @@
+---
+title: "REPEATED_CONTAINS Function"
+parent: "Nested Data Functions"
+---
+REPEATED CONTAINS searches for a keyword in an array. 
+
+## Syntax
+
+    REPEATED_CONTAINS(array_name, keyword)
+
+* array_name is a simple array, such as topping:
+
+		{
+		. . .
+		    "topping":
+		        [
+		            "None",
+		            "Glazed",
+		            "Sugar",
+		            "Powdered Sugar",
+		            "Chocolate with Sprinkles",
+		            "Chocolate",
+		            "Maple"
+		        ]
+		}
+
+* keyword is a value in the array, such as 'Glazed'.
+
+## Usage Notes
+REPEATED_CONTAINS returns true if Drill finds a match; otherwise, the function returns false. The function supports regular expression wildcards, such as *, ., and ?, but not at the beginning of the keyword. Enclose keyword string values in single quotation marks. Do not enclose numerical keyword values in single quotation marks.
+
+## Examples
+The examples in this section `testRepeatedWrite.json`. To download this file, go to [Drill test resources](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources) page, locate testRepeatedWrite.json.json in the list of files, and download it. For example, on the Mac right-click the five, select Save Link As, and then click Save.
+
+Which donuts having glazed or glaze toppings?
+
+		SELECT name, REPEATED_CONTAINS(topping, 'Glaze?') AS `Glazed?` FROM  dfs.`/Users/drill/testRepeatedWrite.json` WHERE type='donut';
+
+		+------------+------------+
+		|    name    |  Glazed?   |
+		+------------+------------+
+		| Cake       | true       |
+		| Raised     | true       |
+		| Old Fashioned | true       |
+		| Filled     | true       |
+		| Apple Fritter | true       |
+		+------------+------------+
+		5 rows selected (0.072 seconds)
+
+Which objects have powered sugar toppings? Use the asterisk wildcard instead of typing the entire keyword pair.
+
+    SELECT name, REPEATED_CONTAINS(topping, 'P*r') AS `Powdered Sugar?` FROM  dfs.`/Users/khahn/Documents/test_files_source/testRepeatedWrite.json` WHERE type='donut';
+
+	+------------+-----------------+
+	|    name    | Powdered Sugar? |
+	+------------+-----------------+
+	| Cake       | true            |
+	| Raised     | true            |
+	| Old Fashioned | false           |
+	| Filled     | true            |
+	| Apple Fritter | false           |
+	+------------+-----------------+
+	5 rows selected (0.089 seconds)
+
+Which donuts have toppings beginning with the letters "Map" and ending in any two letters?
+
+	SELECT name, REPEATED_CONTAINS(topping, 'Map..') AS `Maple?` FROM  dfs.`/Users/drill/testRepeatedWrite.json` WHERE type='donut';
+
+	+------------+------------+
+	|    name    |   Maple?   |
+	+------------+------------+
+	| Cake       | true       |
+	| Raised     | true       |
+	| Old Fashioned | true       |
+	| Filled     | true       |
+	| Apple Fritter | false      |
+	+------------+------------+
+	5 rows selected (0.085 seconds)
+
+

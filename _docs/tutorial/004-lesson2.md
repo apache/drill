@@ -237,7 +237,7 @@ register any sales in that state.
 
 Note the following features of this query:
 
-  * The CAST function is required for every column in the table. This function returns the MapR-DB/HBase binary data as readable integers and strings. Alternatively, you can use CONVERT_TO/CONVERT_FROM functions to decode the columns. CONVERT_TO and CONVERT_FROM are more efficient than CAST in most cases.
+  * The CAST function is required for every column in the table. This function returns the MapR-DB/HBase binary data as readable integers and strings. Alternatively, you can use CONVERT_TO/CONVERT_FROM functions to decode the string columns. CONVERT_TO/CONVERT_FROM are more efficient than CAST in most cases. Use only CONVERT_TO to convert binary types to any type other than VARCHAR.
   * The row_key column functions as the primary key of the table (a customer ID in this case).
   * The table alias t is required; otherwise the column family names would be parsed as table names and the query would return an error.
 

@@ -122,7 +122,7 @@ The following table lists data types top to bottom, in descending precedence. Dr
 Drill supports a number of functions to cast and convert compatible data types:
 
 * CAST  
-  Casts textual data from one data type to another.
+  Casts data from one data type to another.
 * CONVERT_TO and CONVERT_FROM  
   Converts data, including binary data, from one data type to another.
 * TO_CHAR
@@ -136,7 +136,7 @@ Drill supports a number of functions to cast and convert compatible data types:
 
 The following tables show data types that Drill can cast to/from other data types. Not all types are available for explicit casting in the current release.
 
-### Explicit type Casting: Numeric and Character types
+### Explicit Type Casting: Numeric and Character types
 
 <table>
   <tr>
@@ -463,7 +463,7 @@ If the SELECT statement includes a WHERE clause that compares a column of an unk
 
     SELECT c_row, CAST(c_int AS DECIMAL(28,8)) FROM mydata WHERE CAST(c_int AS CECIMAL(28,8)) > -3.0
 
-Although you can use CAST to handle binary data, CONVERT_TO and CONVERT_FROM are recommended for these conversions.
+Do not use CAST to handle binary data conversions. Use CONVERT_TO and CONVERT_FROM for these conversions.
 
 ### Using CONVERT_TO and CONVERT_FROM
 

@@ -16,29 +16,29 @@ Next, use the following literals in a SELECT statement.
 * `time`
 * `timestamp`
 
-    SELECT date '2010-2-15' FROM dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2010-02-15 |
-    +------------+
-    1 row selected (0.083 seconds)
+        SELECT date '2010-2-15' FROM dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 2010-02-15 |
+        +------------+
+        1 row selected (0.083 seconds)
 
-    SELECT time '15:20:30' from dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 15:20:30   |
-    +------------+
-    1 row selected (0.067 seconds)
+        SELECT time '15:20:30' from dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 15:20:30   |
+        +------------+
+        1 row selected (0.067 seconds)
 
-    SELECT timestamp '2015-03-11 6:50:08' FROM dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015-03-11 06:50:08.0 |
-    +------------+
-    1 row selected (0.071 seconds)
+        SELECT timestamp '2015-03-11 6:50:08' FROM dfs.`/Users/drilluser/apache-drill-0.8.0/dummy.json`;
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 2015-03-11 06:50:08.0 |
+        +------------+
+        1 row selected (0.071 seconds)
 
 ## INTERVAL
 
@@ -120,8 +120,7 @@ The following CTAS statement shows how to cast text from a JSON file to INTERVAL
            cast( INTERVALDAY_col as interval day) INTERVALDAY_col 
     FROM `/user/root/intervals.json`);
 
-Output is: 
+<!-- Text and include output -->
 
-TBD need to test in a future build.
 
 

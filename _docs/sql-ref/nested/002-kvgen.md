@@ -2,6 +2,16 @@
 title: "KVGEN Function"
 parent: "Nested Data Functions"
 ---
+Return a list of the keys that exist in the map.
+
+## Syntax
+
+    KVGEN(column)
+
+*column* is the name of a column.
+
+## Usage Notes
+
 KVGEN stands for _key-value generation_. This function is useful when complex
 data files contain arbitrary maps that consist of relatively "unknown" column
 names. Instead of having to specify columns in the map to access the data, you
@@ -12,8 +22,6 @@ In turn, you can write analytic queries that return a subset of the generated
 keys or constrain the keys in some way. For example, you can use the
 [FLATTEN](/docs/flatten-function) function to break the
 array down into multiple distinct rows and further query those rows.
-
-  
 
 For example, assume that a JSON file contains this data:  
 
@@ -146,5 +154,4 @@ distinct rows:
 	+------------+
 	9 rows selected (0.151 seconds)
 
-See the description of [FLATTEN](/docs/flatten-function)
-for an example of a query against the flattened data.
+For more examples of KVGEN and FLATTEN, see the examples in the section, ["JSON Data Model"](/docs/json-data-model).

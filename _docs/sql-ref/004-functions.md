@@ -5,6 +5,7 @@ parent: "SQL Reference"
 You can use the following types of functions in your Drill queries:
 
   * Math Functions
+  * Trig Functions
   * String Functions
   * Date/Time Functions
   * Data Type Formatting Functions
@@ -12,23 +13,6 @@ You can use the following types of functions in your Drill queries:
   * Aggregate Statistics Functions
   * Convert and Cast Functions
   * Nested Data Functions
-
-## Math
-
-You can use the following scalar math functions in your Drill queries:
-
-  * ABS
-  * CEIL
-  * CEILING
-  * DIV
-  * FLOOR
-  * MOD
-  * POWER 
-  * RANDOM
-  * ROUND
-  * SIGN
-  * SQRT
-  * TRUNC
 
 ## String Functions
 
@@ -136,11 +120,7 @@ CONVERT_FROM function on HBase, Drill decodes the data and converts it to the
 specified data type. In instances where Drill sends data back to HBase during
 a query, you can use the CONVERT_TO function to change the data type to bytes.
 
-Although you can achieve the same results by using the CAST function for some
-data types (such as VARBINARY to VARCHAR conversions), in general it is more
-efficient to use CONVERT functions when your data sources return binary data.
-When your data sources return more conventional data types, you can use the
-CAST function.
+Do not use the CAST function for converting binary data types to other types. Although CAST works for converting VARBINARY to VARCHAR, CAST does not work in other cases. CONVERT functions not only work regardless of the types you are converting but are also more efficient to use than CAST when your data sources return binary data.
 
 The following table provides the data types that you use with the CONVERT_TO
 and CONVERT_FROM functions:
