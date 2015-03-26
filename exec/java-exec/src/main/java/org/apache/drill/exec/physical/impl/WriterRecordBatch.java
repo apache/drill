@@ -47,7 +47,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
 
   private EventBasedRecordWriter eventBasedRecordWriter;
   private RecordWriter recordWriter;
-  private int counter = 0;
+  private long counter = 0;
   private final RecordBatch incoming;
   private boolean processed = false;
   private String fragmentUniqueId;
