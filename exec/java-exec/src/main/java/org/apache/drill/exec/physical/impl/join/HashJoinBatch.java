@@ -215,7 +215,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
       }
 
       // Store the number of records projected
-      if (hashTable != null || joinType != JoinRelType.INNER) {
+      if (!hashTable.isEmpty() || joinType != JoinRelType.INNER) {
 
         // Allocate the memory for the vectors in the output container
         allocateVectors();
