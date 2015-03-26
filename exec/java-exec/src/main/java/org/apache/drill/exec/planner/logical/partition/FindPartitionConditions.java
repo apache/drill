@@ -71,7 +71,9 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
       return booleanOp;
     }
     public void addChild(RexNode n) {
-      children.add(n);
+      if (!children.contains(n)) {
+        children.add(n);
+      }
     }
     public List<RexNode> getChildren() {
       return children;
