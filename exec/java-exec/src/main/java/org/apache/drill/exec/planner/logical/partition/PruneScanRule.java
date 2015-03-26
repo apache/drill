@@ -45,6 +45,7 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -119,7 +120,7 @@ public abstract class PruneScanRule extends RelOptRule {
   }
 
   protected void doOnMatch(RelOptRuleCall call, DrillFilterRel filterRel, DrillProjectRel projectRel, DrillScanRel scanRel) {
-    PlannerSettings settings = context.getPlannerSettings();
+    final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     FileSystemPartitionDescriptor descriptor = new FileSystemPartitionDescriptor(settings.getFsPartitionColumnLabel());
     final BufferAllocator allocator = context.getAllocator();
 
