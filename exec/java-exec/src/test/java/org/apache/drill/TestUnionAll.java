@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
@@ -353,5 +354,18 @@ public class TestUnionAll extends BaseTestQuery{
         .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT)
         .baselineColumns("calc1", "min", "max", "count")
         .build().run();
+  }
+
+  @Test(expected = RpcException.class) // see DRILL-2590
+  public void testUnionAllImplicitCastingFailure() throws Exception {
+    String rootInt = FileUtils.getResourceAsFile("/store/json/intData.json").toURI().toString();
+    String rootBoolean = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    String query = String.format(
+        "(select key from dfs_test.`%s` " +
+        "union all " +
+        "select key from dfs_test.`%s` )", rootInt, rootBoolean);
+
+    test(query);
   }
 }
