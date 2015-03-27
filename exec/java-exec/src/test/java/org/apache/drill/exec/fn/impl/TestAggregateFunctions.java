@@ -194,4 +194,14 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineValues(578.9982683982684d)
         .go();
   }
+
+  @Test
+  public void testStddevOnKnownType() throws Exception {
+    testBuilder()
+        .sqlQuery("select stddev_samp(cast(employee_id as int)) as col from cp.`employee.json`")
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(333.56708470261117d)
+        .go();
+  }
 }

@@ -47,6 +47,7 @@ import org.eigenbase.sql.fun.SqlAvgAggFunction;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlSumAggFunction;
 import org.eigenbase.sql.fun.SqlSumEmptyIsZeroAggFunction;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.CompositeList;
 import org.eigenbase.util.ImmutableIntList;
 import org.eigenbase.util.Util;
@@ -352,7 +353,8 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             SqlStdOperatorTable.DIVIDE,
             numeratorRef,
             denominatorRef);
-    return divideRef;
+    return rexBuilder.makeCast(
+        typeFactory.createSqlType(SqlTypeName.ANY), divideRef);
   }
 
   private RexNode reduceSum(
@@ -556,8 +558,17 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           rexBuilder.makeCall(
               SqlStdOperatorTable.POWER, div, half);
     }
+
+    /*
+     * Currently calcite's strategy to infer the return type of aggregate functions
+     * is wrong because it uses the first known argument to determine output type. For
+     * instance if we are performing stddev on an integer column then it interprets the
+     * output type to be integer which is incorrect as it should be double. So based on
+     * this if we add cast after rewriting the aggregate we add an additional cast which
+     * would cause wrong results. So we simply add a cast to ANY.
+     */
     return rexBuilder.makeCast(
-        oldCall.getType(), result);
+        typeFactory.createSqlType(SqlTypeName.ANY), result);
   }
 
   /**
