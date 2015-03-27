@@ -48,6 +48,7 @@ public class SingleConnectionCachingFactory implements CachingConnectionFactory 
   public void close() throws SQLException {
     if (connection != null) {
       connection.close();
+      connection = null;
     }
   }
 }
