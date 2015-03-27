@@ -51,7 +51,7 @@ public class JdbcTest extends ExecTest {
   public static void setUpTestCase() {
     factory = new SingleConnectionCachingFactory(new ConnectionFactory() {
       @Override
-      public Connection createConnection(ConnectionInfo info) throws Exception {
+      public Connection getConnection(ConnectionInfo info) throws Exception {
         Class.forName("org.apache.drill.jdbc.Driver");
         return DriverManager.getConnection(info.getUrl(), info.getParamsAsProperties());
       }
@@ -76,7 +76,7 @@ public class JdbcTest extends ExecTest {
    * @throws Exception if connection fails
    */
   protected static Connection connect(String url, Properties info) throws Exception {
-    final Connection conn = factory.createConnection(new ConnectionInfo(url, info));
+    final Connection conn = factory.getConnection(new ConnectionInfo(url, info));
     changeSchemaIfSupplied(conn, info);
     return conn;
   }
@@ -120,7 +120,7 @@ public class JdbcTest extends ExecTest {
    */
   protected static void reset() {
     try {
-      factory.close();
+      factory.closeConnections();
     } catch (SQLException e) {
       throw new RuntimeException("error while closing connection factory", e);
     }
@@ -128,6 +128,6 @@ public class JdbcTest extends ExecTest {
 
   @AfterClass
   public static void tearDownTestCase() throws Exception {
-    factory.close();
+    factory.closeConnections();
   }
 }

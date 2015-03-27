@@ -160,7 +160,7 @@ public class JdbcAssert {
       this.info = info;
       this.adapter = new ConnectionFactoryAdapter() {
         public Connection createConnection() throws Exception {
-          return factory.createConnection(new ConnectionInfo("jdbc:drill:zk=local", ModelAndSchema.this.info));
+          return factory.getConnection(new ConnectionInfo("jdbc:drill:zk=local", ModelAndSchema.this.info));
         }
       };
     }

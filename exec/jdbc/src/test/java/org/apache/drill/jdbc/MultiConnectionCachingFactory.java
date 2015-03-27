@@ -45,10 +45,10 @@ public class MultiConnectionCachingFactory implements CachingConnectionFactory {
    * {@link java.sql.Connection#close()}. Consumer must call {#close} to close the cached connections.
    */
   @Override
-  public Connection createConnection(ConnectionInfo info) throws Exception {
+  public Connection getConnection(ConnectionInfo info) throws Exception {
     Connection conn = cache.get(info);
     if (conn == null) {
-      conn = delegate.createConnection(info);
+      conn = delegate.getConnection(info);
       cache.put(info, conn);
     }
     return new NonClosableConnection(conn);
@@ -57,8 +57,8 @@ public class MultiConnectionCachingFactory implements CachingConnectionFactory {
   /**
    * Closes all active connections in the cache.
    */
-  public void close() throws SQLException {
-    for (Connection conn:cache.values()) {
+  public void closeConnections() throws SQLException {
+    for (Connection conn : cache.values()) {
       conn.close();
     }
   }

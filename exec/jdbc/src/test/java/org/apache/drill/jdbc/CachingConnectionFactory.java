@@ -25,7 +25,7 @@ import java.sql.SQLException;
 public interface CachingConnectionFactory extends ConnectionFactory {
 
   /**
-   * Closes all active connections in the cache.
+   * Closes all open connections in this factory's cache.
    */
-  void close() throws SQLException;
+  void closeConnections() throws SQLException;
 }

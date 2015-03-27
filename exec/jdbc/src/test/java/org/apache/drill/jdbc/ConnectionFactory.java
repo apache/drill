@@ -20,14 +20,16 @@ package org.apache.drill.jdbc;
 import java.sql.Connection;
 
 /**
- * A factory used to create {@link java.sql.Connection} instances.
+ * A factory used to get open {@link Connection} instances.
  */
 public interface ConnectionFactory {
+
   /**
-   * Creates a new {@link java.sql.Connection} based on the given {@link org.apache.drill.jdbc.ConnectionInfo info}
+   * Gets an open {@link Connection} based on given {@link ConnectionInfo
+   * connection parameters}.
    *
-   * @param info connection parameters
-   * @throws Exception if factory fails to create a connection.
+   * @param info the connection parameters
+   * @throws Exception if factory fails to get a connection.
    */
-  Connection createConnection(ConnectionInfo info) throws Exception;
+  Connection getConnection(ConnectionInfo info) throws Exception;
 }

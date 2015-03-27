@@ -39,9 +39,9 @@ import java.util.concurrent.Executor;
 import parquet.Preconditions;
 
 /**
- * A connection decorator that ignores {@link java.sql.Connection#close} calls.
+ * A connection decorator that ignores {@link Connection#close} calls.
  *
- * All other calls are delegated to inner {@link java.sql.Connection connection}.
+ * All other calls are delegated to inner {@link Connection connection}.
  */
 public final class NonClosableConnection implements Connection {
   private final Connection delegate;
