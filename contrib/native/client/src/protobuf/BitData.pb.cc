@@ -43,10 +43,9 @@ void protobuf_AssignDesc_BitData_2eproto() {
       "BitData.proto");
   GOOGLE_CHECK(file != NULL);
   BitClientHandshake_descriptor_ = file->message_type(0);
-  static const int BitClientHandshake_offsets_[3] = {
+  static const int BitClientHandshake_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitClientHandshake, rpc_version_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitClientHandshake, channel_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitClientHandshake, handle_),
   };
   BitClientHandshake_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -75,8 +74,10 @@ void protobuf_AssignDesc_BitData_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(BitServerHandshake));
   FragmentRecordBatch_descriptor_ = file->message_type(2);
-  static const int FragmentRecordBatch_offsets_[6] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, handle_),
+  static const int FragmentRecordBatch_offsets_[8] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, query_id_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, receiving_major_fragment_id_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, receiving_minor_fragment_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, sending_major_fragment_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, sending_minor_fragment_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, def_),
@@ -138,20 +139,21 @@ void protobuf_AddDesc_BitData_2eproto() {
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\rBitData.proto\022\rexec.bit.data\032\025Executio"
     "nProtos.proto\032\022Coordination.proto\032\023UserB"
-    "itShared.proto\"\207\001\n\022BitClientHandshake\022\023\n"
-    "\013rpc_version\030\001 \001(\005\0222\n\007channel\030\002 \001(\0162\027.ex"
-    "ec.shared.RpcChannel:\010BIT_DATA\022(\n\006handle"
-    "\030\003 \001(\0132\030.exec.bit.FragmentHandle\")\n\022BitS"
-    "erverHandshake\022\023\n\013rpc_version\030\001 \001(\005\"\342\001\n\023"
-    "FragmentRecordBatch\022(\n\006handle\030\001 \001(\0132\030.ex"
-    "ec.bit.FragmentHandle\022!\n\031sending_major_f"
-    "ragment_id\030\002 \001(\005\022!\n\031sending_minor_fragme"
-    "nt_id\030\003 \001(\005\022(\n\003def\030\004 \001(\0132\033.exec.shared.R"
-    "ecordBatchDef\022\023\n\013isLastBatch\030\005 \001(\010\022\034\n\ris"
-    "OutOfMemory\030\006 \001(\010:\005false*D\n\007RpcType\022\r\n\tH"
-    "ANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_"
-    "RECORD_BATCH\020\003B(\n\033org.apache.drill.exec."
-    "protoB\007BitDataH\001", 616);
+    "itShared.proto\"]\n\022BitClientHandshake\022\023\n\013"
+    "rpc_version\030\001 \001(\005\0222\n\007channel\030\002 \001(\0162\027.exe"
+    "c.shared.RpcChannel:\010BIT_DATA\")\n\022BitServ"
+    "erHandshake\022\023\n\013rpc_version\030\001 \001(\005\"\252\002\n\023Fra"
+    "gmentRecordBatch\022&\n\010query_id\030\001 \001(\0132\024.exe"
+    "c.shared.QueryId\022#\n\033receiving_major_frag"
+    "ment_id\030\002 \001(\005\022#\n\033receiving_minor_fragmen"
+    "t_id\030\003 \003(\005\022!\n\031sending_major_fragment_id\030"
+    "\004 \001(\005\022!\n\031sending_minor_fragment_id\030\005 \001(\005"
+    "\022(\n\003def\030\006 \001(\0132\033.exec.shared.RecordBatchD"
+    "ef\022\023\n\013isLastBatch\030\007 \001(\010\022\034\n\risOutOfMemory"
+    "\030\010 \001(\010:\005false*D\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022"
+    "\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BATC"
+    "H\020\003B(\n\033org.apache.drill.exec.protoB\007BitD"
+    "ataH\001", 645);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitData.proto", &protobuf_RegisterTypes);
   BitClientHandshake::default_instance_ = new BitClientHandshake();
@@ -191,7 +193,6 @@ bool RpcType_IsValid(int value) {
 #ifndef _MSC_VER
 const int BitClientHandshake::kRpcVersionFieldNumber;
 const int BitClientHandshake::kChannelFieldNumber;
-const int BitClientHandshake::kHandleFieldNumber;
 #endif  // !_MSC_VER
 
 BitClientHandshake::BitClientHandshake()
@@ -200,7 +201,6 @@ BitClientHandshake::BitClientHandshake()
 }
 
 void BitClientHandshake::InitAsDefaultInstance() {
-  handle_ = const_cast< ::exec::bit::FragmentHandle*>(&::exec::bit::FragmentHandle::default_instance());
 }
 
 BitClientHandshake::BitClientHandshake(const BitClientHandshake& from)
@@ -213,7 +213,6 @@ void BitClientHandshake::SharedCtor() {
   _cached_size_ = 0;
   rpc_version_ = 0;
   channel_ = 1;
-  handle_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -223,7 +222,6 @@ BitClientHandshake::~BitClientHandshake() {
 
 void BitClientHandshake::SharedDtor() {
   if (this != default_instance_) {
-    delete handle_;
   }
 }
 
@@ -252,9 +250,6 @@ void BitClientHandshake::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     rpc_version_ = 0;
     channel_ = 1;
-    if (has_handle()) {
-      if (handle_ != NULL) handle_->::exec::bit::FragmentHandle::Clear();
-    }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -298,20 +293,6 @@ bool BitClientHandshake::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_handle;
-        break;
-      }
-
-      // optional .exec.bit.FragmentHandle handle = 3;
-      case 3: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_handle:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_handle()));
-        } else {
-          goto handle_uninterpreted;
-        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -345,12 +326,6 @@ void BitClientHandshake::SerializeWithCachedSizes(
       2, this->channel(), output);
   }
 
-  // optional .exec.bit.FragmentHandle handle = 3;
-  if (has_handle()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      3, this->handle(), output);
-  }
-
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -368,13 +343,6 @@ void BitClientHandshake::SerializeWithCachedSizes(
   if (has_channel()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
       2, this->channel(), target);
-  }
-
-  // optional .exec.bit.FragmentHandle handle = 3;
-  if (has_handle()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteMessageNoVirtualToArray(
-        3, this->handle(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -399,13 +367,6 @@ int BitClientHandshake::ByteSize() const {
     if (has_channel()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->channel());
-    }
-
-    // optional .exec.bit.FragmentHandle handle = 3;
-    if (has_handle()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->handle());
     }
 
   }
@@ -441,9 +402,6 @@ void BitClientHandshake::MergeFrom(const BitClientHandshake& from) {
     if (from.has_channel()) {
       set_channel(from.channel());
     }
-    if (from.has_handle()) {
-      mutable_handle()->::exec::bit::FragmentHandle::MergeFrom(from.handle());
-    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -469,7 +427,6 @@ void BitClientHandshake::Swap(BitClientHandshake* other) {
   if (other != this) {
     std::swap(rpc_version_, other->rpc_version_);
     std::swap(channel_, other->channel_);
-    std::swap(handle_, other->handle_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -696,7 +653,9 @@ void BitServerHandshake::Swap(BitServerHandshake* other) {
 // ===================================================================
 
 #ifndef _MSC_VER
-const int FragmentRecordBatch::kHandleFieldNumber;
+const int FragmentRecordBatch::kQueryIdFieldNumber;
+const int FragmentRecordBatch::kReceivingMajorFragmentIdFieldNumber;
+const int FragmentRecordBatch::kReceivingMinorFragmentIdFieldNumber;
 const int FragmentRecordBatch::kSendingMajorFragmentIdFieldNumber;
 const int FragmentRecordBatch::kSendingMinorFragmentIdFieldNumber;
 const int FragmentRecordBatch::kDefFieldNumber;
@@ -710,7 +669,7 @@ FragmentRecordBatch::FragmentRecordBatch()
 }
 
 void FragmentRecordBatch::InitAsDefaultInstance() {
-  handle_ = const_cast< ::exec::bit::FragmentHandle*>(&::exec::bit::FragmentHandle::default_instance());
+  query_id_ = const_cast< ::exec::shared::QueryId*>(&::exec::shared::QueryId::default_instance());
   def_ = const_cast< ::exec::shared::RecordBatchDef*>(&::exec::shared::RecordBatchDef::default_instance());
 }
 
@@ -722,7 +681,8 @@ FragmentRecordBatch::FragmentRecordBatch(const FragmentRecordBatch& from)
 
 void FragmentRecordBatch::SharedCtor() {
   _cached_size_ = 0;
-  handle_ = NULL;
+  query_id_ = NULL;
+  receiving_major_fragment_id_ = 0;
   sending_major_fragment_id_ = 0;
   sending_minor_fragment_id_ = 0;
   def_ = NULL;
@@ -737,7 +697,7 @@ FragmentRecordBatch::~FragmentRecordBatch() {
 
 void FragmentRecordBatch::SharedDtor() {
   if (this != default_instance_) {
-    delete handle_;
+    delete query_id_;
     delete def_;
   }
 }
@@ -765,9 +725,10 @@ FragmentRecordBatch* FragmentRecordBatch::New() const {
 
 void FragmentRecordBatch::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_handle()) {
-      if (handle_ != NULL) handle_->::exec::bit::FragmentHandle::Clear();
+    if (has_query_id()) {
+      if (query_id_ != NULL) query_id_->::exec::shared::QueryId::Clear();
     }
+    receiving_major_fragment_id_ = 0;
     sending_major_fragment_id_ = 0;
     sending_minor_fragment_id_ = 0;
     if (has_def()) {
@@ -776,6 +737,7 @@ void FragmentRecordBatch::Clear() {
     islastbatch_ = false;
     isoutofmemory_ = false;
   }
+  receiving_minor_fragment_id_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -786,21 +748,59 @@ bool FragmentRecordBatch::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional .exec.bit.FragmentHandle handle = 1;
+      // optional .exec.shared.QueryId query_id = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_handle()));
+               input, mutable_query_id()));
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(16)) goto parse_sending_major_fragment_id;
+        if (input->ExpectTag(16)) goto parse_receiving_major_fragment_id;
         break;
       }
 
-      // optional int32 sending_major_fragment_id = 2;
+      // optional int32 receiving_major_fragment_id = 2;
       case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_receiving_major_fragment_id:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &receiving_major_fragment_id_)));
+          set_has_receiving_major_fragment_id();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(24)) goto parse_receiving_minor_fragment_id;
+        break;
+      }
+
+      // repeated int32 receiving_minor_fragment_id = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_receiving_minor_fragment_id:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 1, 24, input, this->mutable_receiving_minor_fragment_id())));
+        } else if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag)
+                   == ::google::protobuf::internal::WireFormatLite::
+                      WIRETYPE_LENGTH_DELIMITED) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, this->mutable_receiving_minor_fragment_id())));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(24)) goto parse_receiving_minor_fragment_id;
+        if (input->ExpectTag(32)) goto parse_sending_major_fragment_id;
+        break;
+      }
+
+      // optional int32 sending_major_fragment_id = 4;
+      case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_sending_major_fragment_id:
@@ -811,12 +811,12 @@ bool FragmentRecordBatch::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(24)) goto parse_sending_minor_fragment_id;
+        if (input->ExpectTag(40)) goto parse_sending_minor_fragment_id;
         break;
       }
 
-      // optional int32 sending_minor_fragment_id = 3;
-      case 3: {
+      // optional int32 sending_minor_fragment_id = 5;
+      case 5: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_sending_minor_fragment_id:
@@ -827,12 +827,12 @@ bool FragmentRecordBatch::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(34)) goto parse_def;
+        if (input->ExpectTag(50)) goto parse_def;
         break;
       }
 
-      // optional .exec.shared.RecordBatchDef def = 4;
-      case 4: {
+      // optional .exec.shared.RecordBatchDef def = 6;
+      case 6: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_def:
@@ -841,12 +841,12 @@ bool FragmentRecordBatch::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(40)) goto parse_isLastBatch;
+        if (input->ExpectTag(56)) goto parse_isLastBatch;
         break;
       }
 
-      // optional bool isLastBatch = 5;
-      case 5: {
+      // optional bool isLastBatch = 7;
+      case 7: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_isLastBatch:
@@ -857,12 +857,12 @@ bool FragmentRecordBatch::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(48)) goto parse_isOutOfMemory;
+        if (input->ExpectTag(64)) goto parse_isOutOfMemory;
         break;
       }
 
-      // optional bool isOutOfMemory = 6 [default = false];
-      case 6: {
+      // optional bool isOutOfMemory = 8 [default = false];
+      case 8: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_isOutOfMemory:
@@ -895,36 +895,47 @@ bool FragmentRecordBatch::MergePartialFromCodedStream(
 
 void FragmentRecordBatch::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // optional .exec.bit.FragmentHandle handle = 1;
-  if (has_handle()) {
+  // optional .exec.shared.QueryId query_id = 1;
+  if (has_query_id()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->handle(), output);
+      1, this->query_id(), output);
   }
 
-  // optional int32 sending_major_fragment_id = 2;
+  // optional int32 receiving_major_fragment_id = 2;
+  if (has_receiving_major_fragment_id()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->receiving_major_fragment_id(), output);
+  }
+
+  // repeated int32 receiving_minor_fragment_id = 3;
+  for (int i = 0; i < this->receiving_minor_fragment_id_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(
+      3, this->receiving_minor_fragment_id(i), output);
+  }
+
+  // optional int32 sending_major_fragment_id = 4;
   if (has_sending_major_fragment_id()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->sending_major_fragment_id(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->sending_major_fragment_id(), output);
   }
 
-  // optional int32 sending_minor_fragment_id = 3;
+  // optional int32 sending_minor_fragment_id = 5;
   if (has_sending_minor_fragment_id()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->sending_minor_fragment_id(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->sending_minor_fragment_id(), output);
   }
 
-  // optional .exec.shared.RecordBatchDef def = 4;
+  // optional .exec.shared.RecordBatchDef def = 6;
   if (has_def()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      4, this->def(), output);
+      6, this->def(), output);
   }
 
-  // optional bool isLastBatch = 5;
+  // optional bool isLastBatch = 7;
   if (has_islastbatch()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->islastbatch(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->islastbatch(), output);
   }
 
-  // optional bool isOutOfMemory = 6 [default = false];
+  // optional bool isOutOfMemory = 8 [default = false];
   if (has_isoutofmemory()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->isoutofmemory(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(8, this->isoutofmemory(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -935,38 +946,49 @@ void FragmentRecordBatch::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* FragmentRecordBatch::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // optional .exec.bit.FragmentHandle handle = 1;
-  if (has_handle()) {
+  // optional .exec.shared.QueryId query_id = 1;
+  if (has_query_id()) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        1, this->handle(), target);
+        1, this->query_id(), target);
   }
 
-  // optional int32 sending_major_fragment_id = 2;
+  // optional int32 receiving_major_fragment_id = 2;
+  if (has_receiving_major_fragment_id()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->receiving_major_fragment_id(), target);
+  }
+
+  // repeated int32 receiving_minor_fragment_id = 3;
+  for (int i = 0; i < this->receiving_minor_fragment_id_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteInt32ToArray(3, this->receiving_minor_fragment_id(i), target);
+  }
+
+  // optional int32 sending_major_fragment_id = 4;
   if (has_sending_major_fragment_id()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->sending_major_fragment_id(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->sending_major_fragment_id(), target);
   }
 
-  // optional int32 sending_minor_fragment_id = 3;
+  // optional int32 sending_minor_fragment_id = 5;
   if (has_sending_minor_fragment_id()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->sending_minor_fragment_id(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(5, this->sending_minor_fragment_id(), target);
   }
 
-  // optional .exec.shared.RecordBatchDef def = 4;
+  // optional .exec.shared.RecordBatchDef def = 6;
   if (has_def()) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        4, this->def(), target);
+        6, this->def(), target);
   }
 
-  // optional bool isLastBatch = 5;
+  // optional bool isLastBatch = 7;
   if (has_islastbatch()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->islastbatch(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->islastbatch(), target);
   }
 
-  // optional bool isOutOfMemory = 6 [default = false];
+  // optional bool isOutOfMemory = 8 [default = false];
   if (has_isoutofmemory()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(6, this->isoutofmemory(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(8, this->isoutofmemory(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -980,45 +1002,62 @@ int FragmentRecordBatch::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional .exec.bit.FragmentHandle handle = 1;
-    if (has_handle()) {
+    // optional .exec.shared.QueryId query_id = 1;
+    if (has_query_id()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->handle());
+          this->query_id());
     }
 
-    // optional int32 sending_major_fragment_id = 2;
+    // optional int32 receiving_major_fragment_id = 2;
+    if (has_receiving_major_fragment_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->receiving_major_fragment_id());
+    }
+
+    // optional int32 sending_major_fragment_id = 4;
     if (has_sending_major_fragment_id()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->sending_major_fragment_id());
     }
 
-    // optional int32 sending_minor_fragment_id = 3;
+    // optional int32 sending_minor_fragment_id = 5;
     if (has_sending_minor_fragment_id()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->sending_minor_fragment_id());
     }
 
-    // optional .exec.shared.RecordBatchDef def = 4;
+    // optional .exec.shared.RecordBatchDef def = 6;
     if (has_def()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->def());
     }
 
-    // optional bool isLastBatch = 5;
+    // optional bool isLastBatch = 7;
     if (has_islastbatch()) {
       total_size += 1 + 1;
     }
 
-    // optional bool isOutOfMemory = 6 [default = false];
+    // optional bool isOutOfMemory = 8 [default = false];
     if (has_isoutofmemory()) {
       total_size += 1 + 1;
     }
 
   }
+  // repeated int32 receiving_minor_fragment_id = 3;
+  {
+    int data_size = 0;
+    for (int i = 0; i < this->receiving_minor_fragment_id_size(); i++) {
+      data_size += ::google::protobuf::internal::WireFormatLite::
+        Int32Size(this->receiving_minor_fragment_id(i));
+    }
+    total_size += 1 * this->receiving_minor_fragment_id_size() + data_size;
+  }
+
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -1044,9 +1083,13 @@ void FragmentRecordBatch::MergeFrom(const ::google::protobuf::Message& from) {
 
 void FragmentRecordBatch::MergeFrom(const FragmentRecordBatch& from) {
   GOOGLE_CHECK_NE(&from, this);
+  receiving_minor_fragment_id_.MergeFrom(from.receiving_minor_fragment_id_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_handle()) {
-      mutable_handle()->::exec::bit::FragmentHandle::MergeFrom(from.handle());
+    if (from.has_query_id()) {
+      mutable_query_id()->::exec::shared::QueryId::MergeFrom(from.query_id());
+    }
+    if (from.has_receiving_major_fragment_id()) {
+      set_receiving_major_fragment_id(from.receiving_major_fragment_id());
     }
     if (from.has_sending_major_fragment_id()) {
       set_sending_major_fragment_id(from.sending_major_fragment_id());
@@ -1086,7 +1129,9 @@ bool FragmentRecordBatch::IsInitialized() const {
 
 void FragmentRecordBatch::Swap(FragmentRecordBatch* other) {
   if (other != this) {
-    std::swap(handle_, other->handle_);
+    std::swap(query_id_, other->query_id_);
+    std::swap(receiving_major_fragment_id_, other->receiving_major_fragment_id_);
+    receiving_minor_fragment_id_.Swap(&other->receiving_minor_fragment_id_);
     std::swap(sending_major_fragment_id_, other->sending_major_fragment_id_);
     std::swap(sending_minor_fragment_id_, other->sending_minor_fragment_id_);
     std::swap(def_, other->def_);

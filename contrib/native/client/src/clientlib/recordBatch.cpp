@@ -306,7 +306,7 @@ ret_t FieldBatch::loadNull(size_t nRecords){
     return RET_SUCCESS;
 }
     
-RecordBatch::RecordBatch(exec::shared::QueryResult* pResult, AllocatedBufferPtr r, ByteBuf_t b)
+RecordBatch::RecordBatch(exec::shared::QueryData* pResult, AllocatedBufferPtr r, ByteBuf_t b)
     :m_fieldDefs(new(std::vector<Drill::FieldMetadata*>)){
         m_pQueryResult=pResult;
         m_pRecordBatchDef=&pResult->def();
@@ -398,7 +398,7 @@ size_t RecordBatch::getNumFields(){
 }
 
 bool RecordBatch::isLastChunk(){
-    return m_pQueryResult->is_last_chunk(); 
+    return false;
 }
 
 

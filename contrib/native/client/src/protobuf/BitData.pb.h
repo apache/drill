@@ -134,32 +134,20 @@ class BitClientHandshake : public ::google::protobuf::Message {
   inline ::exec::shared::RpcChannel channel() const;
   inline void set_channel(::exec::shared::RpcChannel value);
 
-  // optional .exec.bit.FragmentHandle handle = 3;
-  inline bool has_handle() const;
-  inline void clear_handle();
-  static const int kHandleFieldNumber = 3;
-  inline const ::exec::bit::FragmentHandle& handle() const;
-  inline ::exec::bit::FragmentHandle* mutable_handle();
-  inline ::exec::bit::FragmentHandle* release_handle();
-  inline void set_allocated_handle(::exec::bit::FragmentHandle* handle);
-
   // @@protoc_insertion_point(class_scope:exec.bit.data.BitClientHandshake)
  private:
   inline void set_has_rpc_version();
   inline void clear_has_rpc_version();
   inline void set_has_channel();
   inline void clear_has_channel();
-  inline void set_has_handle();
-  inline void clear_has_handle();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::int32 rpc_version_;
   int channel_;
-  ::exec::bit::FragmentHandle* handle_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitData_2eproto();
   friend void protobuf_AssignDesc_BitData_2eproto();
@@ -306,56 +294,77 @@ class FragmentRecordBatch : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional .exec.bit.FragmentHandle handle = 1;
-  inline bool has_handle() const;
-  inline void clear_handle();
-  static const int kHandleFieldNumber = 1;
-  inline const ::exec::bit::FragmentHandle& handle() const;
-  inline ::exec::bit::FragmentHandle* mutable_handle();
-  inline ::exec::bit::FragmentHandle* release_handle();
-  inline void set_allocated_handle(::exec::bit::FragmentHandle* handle);
+  // optional .exec.shared.QueryId query_id = 1;
+  inline bool has_query_id() const;
+  inline void clear_query_id();
+  static const int kQueryIdFieldNumber = 1;
+  inline const ::exec::shared::QueryId& query_id() const;
+  inline ::exec::shared::QueryId* mutable_query_id();
+  inline ::exec::shared::QueryId* release_query_id();
+  inline void set_allocated_query_id(::exec::shared::QueryId* query_id);
 
-  // optional int32 sending_major_fragment_id = 2;
+  // optional int32 receiving_major_fragment_id = 2;
+  inline bool has_receiving_major_fragment_id() const;
+  inline void clear_receiving_major_fragment_id();
+  static const int kReceivingMajorFragmentIdFieldNumber = 2;
+  inline ::google::protobuf::int32 receiving_major_fragment_id() const;
+  inline void set_receiving_major_fragment_id(::google::protobuf::int32 value);
+
+  // repeated int32 receiving_minor_fragment_id = 3;
+  inline int receiving_minor_fragment_id_size() const;
+  inline void clear_receiving_minor_fragment_id();
+  static const int kReceivingMinorFragmentIdFieldNumber = 3;
+  inline ::google::protobuf::int32 receiving_minor_fragment_id(int index) const;
+  inline void set_receiving_minor_fragment_id(int index, ::google::protobuf::int32 value);
+  inline void add_receiving_minor_fragment_id(::google::protobuf::int32 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      receiving_minor_fragment_id() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_receiving_minor_fragment_id();
+
+  // optional int32 sending_major_fragment_id = 4;
   inline bool has_sending_major_fragment_id() const;
   inline void clear_sending_major_fragment_id();
-  static const int kSendingMajorFragmentIdFieldNumber = 2;
+  static const int kSendingMajorFragmentIdFieldNumber = 4;
   inline ::google::protobuf::int32 sending_major_fragment_id() const;
   inline void set_sending_major_fragment_id(::google::protobuf::int32 value);
 
-  // optional int32 sending_minor_fragment_id = 3;
+  // optional int32 sending_minor_fragment_id = 5;
   inline bool has_sending_minor_fragment_id() const;
   inline void clear_sending_minor_fragment_id();
-  static const int kSendingMinorFragmentIdFieldNumber = 3;
+  static const int kSendingMinorFragmentIdFieldNumber = 5;
   inline ::google::protobuf::int32 sending_minor_fragment_id() const;
   inline void set_sending_minor_fragment_id(::google::protobuf::int32 value);
 
-  // optional .exec.shared.RecordBatchDef def = 4;
+  // optional .exec.shared.RecordBatchDef def = 6;
   inline bool has_def() const;
   inline void clear_def();
-  static const int kDefFieldNumber = 4;
+  static const int kDefFieldNumber = 6;
   inline const ::exec::shared::RecordBatchDef& def() const;
   inline ::exec::shared::RecordBatchDef* mutable_def();
   inline ::exec::shared::RecordBatchDef* release_def();
   inline void set_allocated_def(::exec::shared::RecordBatchDef* def);
 
-  // optional bool isLastBatch = 5;
+  // optional bool isLastBatch = 7;
   inline bool has_islastbatch() const;
   inline void clear_islastbatch();
-  static const int kIsLastBatchFieldNumber = 5;
+  static const int kIsLastBatchFieldNumber = 7;
   inline bool islastbatch() const;
   inline void set_islastbatch(bool value);
 
-  // optional bool isOutOfMemory = 6 [default = false];
+  // optional bool isOutOfMemory = 8 [default = false];
   inline bool has_isoutofmemory() const;
   inline void clear_isoutofmemory();
-  static const int kIsOutOfMemoryFieldNumber = 6;
+  static const int kIsOutOfMemoryFieldNumber = 8;
   inline bool isoutofmemory() const;
   inline void set_isoutofmemory(bool value);
 
   // @@protoc_insertion_point(class_scope:exec.bit.data.FragmentRecordBatch)
  private:
-  inline void set_has_handle();
-  inline void clear_has_handle();
+  inline void set_has_query_id();
+  inline void clear_has_query_id();
+  inline void set_has_receiving_major_fragment_id();
+  inline void clear_has_receiving_major_fragment_id();
   inline void set_has_sending_major_fragment_id();
   inline void clear_has_sending_major_fragment_id();
   inline void set_has_sending_minor_fragment_id();
@@ -369,15 +378,17 @@ class FragmentRecordBatch : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::exec::bit::FragmentHandle* handle_;
+  ::exec::shared::QueryId* query_id_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > receiving_minor_fragment_id_;
+  ::google::protobuf::int32 receiving_major_fragment_id_;
   ::google::protobuf::int32 sending_major_fragment_id_;
-  ::google::protobuf::int32 sending_minor_fragment_id_;
   ::exec::shared::RecordBatchDef* def_;
+  ::google::protobuf::int32 sending_minor_fragment_id_;
   bool islastbatch_;
   bool isoutofmemory_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitData_2eproto();
   friend void protobuf_AssignDesc_BitData_2eproto();
@@ -438,44 +449,6 @@ inline void BitClientHandshake::set_channel(::exec::shared::RpcChannel value) {
   channel_ = value;
 }
 
-// optional .exec.bit.FragmentHandle handle = 3;
-inline bool BitClientHandshake::has_handle() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void BitClientHandshake::set_has_handle() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void BitClientHandshake::clear_has_handle() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void BitClientHandshake::clear_handle() {
-  if (handle_ != NULL) handle_->::exec::bit::FragmentHandle::Clear();
-  clear_has_handle();
-}
-inline const ::exec::bit::FragmentHandle& BitClientHandshake::handle() const {
-  return handle_ != NULL ? *handle_ : *default_instance_->handle_;
-}
-inline ::exec::bit::FragmentHandle* BitClientHandshake::mutable_handle() {
-  set_has_handle();
-  if (handle_ == NULL) handle_ = new ::exec::bit::FragmentHandle;
-  return handle_;
-}
-inline ::exec::bit::FragmentHandle* BitClientHandshake::release_handle() {
-  clear_has_handle();
-  ::exec::bit::FragmentHandle* temp = handle_;
-  handle_ = NULL;
-  return temp;
-}
-inline void BitClientHandshake::set_allocated_handle(::exec::bit::FragmentHandle* handle) {
-  delete handle_;
-  handle_ = handle;
-  if (handle) {
-    set_has_handle();
-  } else {
-    clear_has_handle();
-  }
-}
-
 // -------------------------------------------------------------------
 
 // BitServerHandshake
@@ -506,53 +479,100 @@ inline void BitServerHandshake::set_rpc_version(::google::protobuf::int32 value)
 
 // FragmentRecordBatch
 
-// optional .exec.bit.FragmentHandle handle = 1;
-inline bool FragmentRecordBatch::has_handle() const {
+// optional .exec.shared.QueryId query_id = 1;
+inline bool FragmentRecordBatch::has_query_id() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void FragmentRecordBatch::set_has_handle() {
+inline void FragmentRecordBatch::set_has_query_id() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void FragmentRecordBatch::clear_has_handle() {
+inline void FragmentRecordBatch::clear_has_query_id() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void FragmentRecordBatch::clear_handle() {
-  if (handle_ != NULL) handle_->::exec::bit::FragmentHandle::Clear();
-  clear_has_handle();
+inline void FragmentRecordBatch::clear_query_id() {
+  if (query_id_ != NULL) query_id_->::exec::shared::QueryId::Clear();
+  clear_has_query_id();
 }
-inline const ::exec::bit::FragmentHandle& FragmentRecordBatch::handle() const {
-  return handle_ != NULL ? *handle_ : *default_instance_->handle_;
+inline const ::exec::shared::QueryId& FragmentRecordBatch::query_id() const {
+  return query_id_ != NULL ? *query_id_ : *default_instance_->query_id_;
 }
-inline ::exec::bit::FragmentHandle* FragmentRecordBatch::mutable_handle() {
-  set_has_handle();
-  if (handle_ == NULL) handle_ = new ::exec::bit::FragmentHandle;
-  return handle_;
+inline ::exec::shared::QueryId* FragmentRecordBatch::mutable_query_id() {
+  set_has_query_id();
+  if (query_id_ == NULL) query_id_ = new ::exec::shared::QueryId;
+  return query_id_;
 }
-inline ::exec::bit::FragmentHandle* FragmentRecordBatch::release_handle() {
-  clear_has_handle();
-  ::exec::bit::FragmentHandle* temp = handle_;
-  handle_ = NULL;
+inline ::exec::shared::QueryId* FragmentRecordBatch::release_query_id() {
+  clear_has_query_id();
+  ::exec::shared::QueryId* temp = query_id_;
+  query_id_ = NULL;
   return temp;
 }
-inline void FragmentRecordBatch::set_allocated_handle(::exec::bit::FragmentHandle* handle) {
-  delete handle_;
-  handle_ = handle;
-  if (handle) {
-    set_has_handle();
+inline void FragmentRecordBatch::set_allocated_query_id(::exec::shared::QueryId* query_id) {
+  delete query_id_;
+  query_id_ = query_id;
+  if (query_id) {
+    set_has_query_id();
   } else {
-    clear_has_handle();
+    clear_has_query_id();
   }
 }
 
-// optional int32 sending_major_fragment_id = 2;
-inline bool FragmentRecordBatch::has_sending_major_fragment_id() const {
+// optional int32 receiving_major_fragment_id = 2;
+inline bool FragmentRecordBatch::has_receiving_major_fragment_id() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void FragmentRecordBatch::set_has_sending_major_fragment_id() {
+inline void FragmentRecordBatch::set_has_receiving_major_fragment_id() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void FragmentRecordBatch::clear_has_sending_major_fragment_id() {
+inline void FragmentRecordBatch::clear_has_receiving_major_fragment_id() {
   _has_bits_[0] &= ~0x00000002u;
+}
+inline void FragmentRecordBatch::clear_receiving_major_fragment_id() {
+  receiving_major_fragment_id_ = 0;
+  clear_has_receiving_major_fragment_id();
+}
+inline ::google::protobuf::int32 FragmentRecordBatch::receiving_major_fragment_id() const {
+  return receiving_major_fragment_id_;
+}
+inline void FragmentRecordBatch::set_receiving_major_fragment_id(::google::protobuf::int32 value) {
+  set_has_receiving_major_fragment_id();
+  receiving_major_fragment_id_ = value;
+}
+
+// repeated int32 receiving_minor_fragment_id = 3;
+inline int FragmentRecordBatch::receiving_minor_fragment_id_size() const {
+  return receiving_minor_fragment_id_.size();
+}
+inline void FragmentRecordBatch::clear_receiving_minor_fragment_id() {
+  receiving_minor_fragment_id_.Clear();
+}
+inline ::google::protobuf::int32 FragmentRecordBatch::receiving_minor_fragment_id(int index) const {
+  return receiving_minor_fragment_id_.Get(index);
+}
+inline void FragmentRecordBatch::set_receiving_minor_fragment_id(int index, ::google::protobuf::int32 value) {
+  receiving_minor_fragment_id_.Set(index, value);
+}
+inline void FragmentRecordBatch::add_receiving_minor_fragment_id(::google::protobuf::int32 value) {
+  receiving_minor_fragment_id_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+FragmentRecordBatch::receiving_minor_fragment_id() const {
+  return receiving_minor_fragment_id_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+FragmentRecordBatch::mutable_receiving_minor_fragment_id() {
+  return &receiving_minor_fragment_id_;
+}
+
+// optional int32 sending_major_fragment_id = 4;
+inline bool FragmentRecordBatch::has_sending_major_fragment_id() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void FragmentRecordBatch::set_has_sending_major_fragment_id() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void FragmentRecordBatch::clear_has_sending_major_fragment_id() {
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void FragmentRecordBatch::clear_sending_major_fragment_id() {
   sending_major_fragment_id_ = 0;
@@ -566,15 +586,15 @@ inline void FragmentRecordBatch::set_sending_major_fragment_id(::google::protobu
   sending_major_fragment_id_ = value;
 }
 
-// optional int32 sending_minor_fragment_id = 3;
+// optional int32 sending_minor_fragment_id = 5;
 inline bool FragmentRecordBatch::has_sending_minor_fragment_id() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void FragmentRecordBatch::set_has_sending_minor_fragment_id() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void FragmentRecordBatch::clear_has_sending_minor_fragment_id() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void FragmentRecordBatch::clear_sending_minor_fragment_id() {
   sending_minor_fragment_id_ = 0;
@@ -588,15 +608,15 @@ inline void FragmentRecordBatch::set_sending_minor_fragment_id(::google::protobu
   sending_minor_fragment_id_ = value;
 }
 
-// optional .exec.shared.RecordBatchDef def = 4;
+// optional .exec.shared.RecordBatchDef def = 6;
 inline bool FragmentRecordBatch::has_def() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void FragmentRecordBatch::set_has_def() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void FragmentRecordBatch::clear_has_def() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void FragmentRecordBatch::clear_def() {
   if (def_ != NULL) def_->::exec::shared::RecordBatchDef::Clear();
@@ -626,15 +646,15 @@ inline void FragmentRecordBatch::set_allocated_def(::exec::shared::RecordBatchDe
   }
 }
 
-// optional bool isLastBatch = 5;
+// optional bool isLastBatch = 7;
 inline bool FragmentRecordBatch::has_islastbatch() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void FragmentRecordBatch::set_has_islastbatch() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void FragmentRecordBatch::clear_has_islastbatch() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void FragmentRecordBatch::clear_islastbatch() {
   islastbatch_ = false;
@@ -648,15 +668,15 @@ inline void FragmentRecordBatch::set_islastbatch(bool value) {
   islastbatch_ = value;
 }
 
-// optional bool isOutOfMemory = 6 [default = false];
+// optional bool isOutOfMemory = 8 [default = false];
 inline bool FragmentRecordBatch::has_isoutofmemory() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void FragmentRecordBatch::set_has_isoutofmemory() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void FragmentRecordBatch::clear_has_isoutofmemory() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void FragmentRecordBatch::clear_isoutofmemory() {
   isoutofmemory_ = false;

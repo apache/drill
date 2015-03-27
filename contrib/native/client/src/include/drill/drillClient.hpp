@@ -167,7 +167,9 @@ typedef void* QueryHandle_t;
  * Query Results listener callback. This function is called for every record batch after it has
  * been received and decoded. The listener function should return a status.
  * If the listener returns failure, the query will be canceled.
- *
+ * The listener is also called one last time when the query is completed or gets an error. In that
+ * case the RecordBatch Parameter is NULL. The DrillClientError parameter is NULL is there was no
+ * error oterwise it will have a valid DrillClientError object.
  * DrillClientQueryResult will hold a listener & listener contxt for the call back function
  */
 typedef status_t (*pfnQueryResultsListener)(QueryHandle_t ctx, RecordBatch* b, DrillClientError* err);

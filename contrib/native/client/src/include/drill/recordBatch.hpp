@@ -56,6 +56,7 @@ namespace exec{
         class SerializedField;
         class RecordBatchDef;
         class QueryResult;
+        class QueryData;
     };
 };
 
@@ -863,7 +864,7 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
         //m_allocatedBuffer is the memory block allocated to hold the incoming RPC message. Record Batches operate on
         //slices of the allocated buffer. The first slice (the first Field Batch), begins at m_buffer. Data in the
         //allocated buffer before m_buffer is mostly the RPC header, and the QueryResult object.
-        RecordBatch(exec::shared::QueryResult* pResult, AllocatedBufferPtr r, ByteBuf_t b);
+        RecordBatch(exec::shared::QueryData* pResult, AllocatedBufferPtr r, ByteBuf_t b);
 
         ~RecordBatch();
 
@@ -876,7 +877,7 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
         size_t getNumRecords(){ return m_numRecords;}
         std::vector<FieldBatch*>& getFields(){ return m_fields;}
         size_t getNumFields();
-        bool isLastChunk();
+        DEPRECATED bool isLastChunk();
 
         boost::shared_ptr<std::vector<Drill::FieldMetadata*> > getColumnDefs(){ return m_fieldDefs;}
 
@@ -902,10 +903,10 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
         bool hasSchemaChanged(){ return m_bHasSchemaChanged;}
 
         #ifdef DEBUG
-        const exec::shared::QueryResult* getQueryResult(){ return this->m_pQueryResult;}
+        const exec::shared::QueryData* getQueryResult(){ return this->m_pQueryResult;}
         #endif
     private:
-        const exec::shared::QueryResult* m_pQueryResult;
+        const exec::shared::QueryData* m_pQueryResult;
         const exec::shared::RecordBatchDef* m_pRecordBatchDef;
         AllocatedBufferPtr m_allocatedBuffer;
         ByteBuf_t m_buffer;

@@ -71,15 +71,18 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
     // or
     // (received query state message passed by `err` and b is NULL)
     if(!err){
-        assert(b!=NULL);
-        b->print(std::cout, 0); // print all rows
-        std::cout << "DATA RECEIVED ..." << std::endl;
-        delete b; // we're done with this batch, we can delete it
-        if(bTestCancel){
-            return Drill::QRY_FAILURE;
+        if(b!=NULL){
+            b->print(std::cout, 0); // print all rows
+            std::cout << "DATA RECEIVED ..." << std::endl;
+            delete b; // we're done with this batch, we can delete it
+            if(bTestCancel){
+                return Drill::QRY_FAILURE;
+            }else{
+                return Drill::QRY_SUCCESS ;
+            }
         }else{
-            return Drill::QRY_SUCCESS ;
-        }
+            std::cout << "Query Complete." << std::endl;
+		}
     }else{
         assert(b==NULL);
         switch(err->status) {
@@ -392,6 +395,7 @@ int main(int argc, char* argv[]) {
                 }
                 client.freeQueryIterator(&pRecIter);
             }
+            client.waitForResults();
         }else{
             if(bSyncSend){
                 for(queryInpIter = queryInputs.begin(); queryInpIter != queryInputs.end(); queryInpIter++) {

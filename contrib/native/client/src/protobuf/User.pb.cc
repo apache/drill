@@ -220,14 +220,14 @@ void protobuf_AddDesc_User_2eproto() {
     "lts_mode\030\001 \001(\0162\033.exec.user.QueryResultsM"
     "ode\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryTyp"
     "e\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022\023\n"
-    "\013rpc_version\030\002 \001(\005*\270\001\n\007RpcType\022\r\n\tHANDSH"
+    "\013rpc_version\030\002 \001(\005*\310\001\n\007RpcType\022\r\n\tHANDSH"
     "AKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY"
     "\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020"
-    "\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n"
-    "\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_L"
-    "IST\020\t*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL"
-    "\020\001B+\n\033org.apache.drill.exec.protoB\nUserP"
-    "rotosH\001", 927);
+    "\005\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n\022R"
+    "EQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIS"
+    "T\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResultsMod"
+    "e\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.drill.e"
+    "xec.protoB\nUserProtosH\001", 943);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "User.proto", &protobuf_RegisterTypes);
   Property::default_instance_ = new Property();
@@ -267,6 +267,7 @@ bool RpcType_IsValid(int value) {
     case 7:
     case 8:
     case 9:
+    case 10:
       return true;
     default:
       return false;

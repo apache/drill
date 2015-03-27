@@ -34,7 +34,7 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
-#define DRILL_RPC_VERSION 3
+#define DRILL_RPC_VERSION 4
 
 #define LENGTH_PREFIX_MAX_LENGTH 5
 #define LEN_PREFIX_BUFLEN LENGTH_PREFIX_MAX_LENGTH
