@@ -45,14 +45,10 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
   @Override
   public Prel visitScreen(ScreenPrel prel, Void value) throws RuntimeException {
     Prel newChild = ((Prel) prel.getChild()).accept(this, value);
-    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel(newChild)));
+    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel(newChild, true)));
   }
 
   private Prel addTrivialOrderedProjectPrel(Prel prel) {
-    if (!prel.needsFinalColumnReordering()) {
-      return prel;
-    }
-
     RelDataType t = prel.getRowType();
 
     RexBuilder b = prel.getCluster().getRexBuilder();
@@ -64,16 +60,24 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
       return prel;
     }
 
-    for (int i =0; i < projectCount; i++) {
+    for (int i = 0; i < projectCount; i++) {
       projections.add(b.makeInputRef(prel, i));
     }
     return new ProjectPrel(prel.getCluster(), prel.getTraitSet(), prel, projections, prel.getRowType());
   }
 
+  private Prel addTrivialOrderedProjectPrel(Prel prel, boolean checkNecessity) {
+    if(checkNecessity && !prel.needsFinalColumnReordering()) {
+      return prel;
+    } else {
+      return addTrivialOrderedProjectPrel(prel);
+    }
+  }
+
   @Override
   public Prel visitWriter(WriterPrel prel, Void value) throws RuntimeException {
     Prel newChild = ((Prel) prel.getChild()).accept(this, null);
-    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel(newChild)));
+    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel(newChild, true)));
   }
 
   @Override
@@ -105,7 +109,7 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
 
       boolean needProjectBelowUnion = !(p instanceof ProjectPrel);
       if(needProjectBelowUnion) {
-        child = addTrivialOrderedProjectPrel(child);
+        child = addTrivialOrderedProjectPrel(child, false);
       }
 
       children.add(child);

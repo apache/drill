@@ -284,6 +284,11 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     private IterOutcome upstream = IterOutcome.NOT_YET;
     private boolean leftIsFinish = false;
 
+    // These two schemas are obtained from the first record batches of the left and right inputs
+    // They are used to check if the schema is changed between recordbatches
+    private BatchSchema leftSchema;
+    private BatchSchema rightSchema;
+
     public UnionAllInput(UnionAllRecordBatch unionAllRecordBatch, RecordBatch left, RecordBatch right) {
       this.unionAllRecordBatch = unionAllRecordBatch;
       leftSide = new OneSideInput(left);
@@ -321,13 +326,20 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
               upstream = iterOutcome;
               return upstream;
 
+            case OK_NEW_SCHEMA:
+              if(!rightSide.getRecordBatch().getSchema().equals(rightSchema)) {
+                throw new SchemaChangeException("Schema change detected in the right input of Union-All. This is not currently supported");
+              }
+
+              upstream = IterOutcome.OK;
+              // fall through
             case OK:
               unionAllRecordBatch.setCurrentRecordBatch(rightSide.getRecordBatch());
               upstream = iterOutcome;
               return upstream;
 
             default:
-              throw new SchemaChangeException("Schema change detected in the right input of Union-All. This is not currently supported");
+              throw new IllegalStateException(String.format("Unknown state %s.", upstream));
           }
         } else {
           IterOutcome iterOutcome = leftSide.nextBatch();
@@ -338,7 +350,14 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
               upstream = iterOutcome;
               return upstream;
 
-            case OK:
+            case OK_NEW_SCHEMA:
+              if(!leftSide.getRecordBatch().getSchema().equals(leftSchema)) {
+                throw new SchemaChangeException("Schema change detected in the left input of Union-All. This is not currently supported");
+              }
+
+              upstream = IterOutcome.OK;
+              // fall through
+              case OK:
               unionAllRecordBatch.setCurrentRecordBatch(leftSide.getRecordBatch());
               upstream = iterOutcome;
               return upstream;
@@ -350,7 +369,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
               return upstream;
 
             default:
-              throw new SchemaChangeException("Schema change detected in the left input of Union-All. This is not currently supported");
+              throw new IllegalStateException(String.format("Unknown state %s.", upstream));
           }
         }
       }
@@ -360,8 +379,10 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     // where the output type is chosen based on DRILL's implicit casting rules
     private void inferOutputFields() {
       outputFields = Lists.newArrayList();
-      Iterator<MaterializedField> leftIter = leftSide.getRecordBatch().getSchema().iterator();
-      Iterator<MaterializedField> rightIter = rightSide.getRecordBatch().getSchema().iterator();
+      leftSchema = leftSide.getRecordBatch().getSchema();
+      rightSchema = rightSide.getRecordBatch().getSchema();
+      Iterator<MaterializedField> leftIter = leftSchema.iterator();
+      Iterator<MaterializedField> rightIter = rightSchema.iterator();
 
       int index = 1;
       while(leftIter.hasNext() && rightIter.hasNext()) {

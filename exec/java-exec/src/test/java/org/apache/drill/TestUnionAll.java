@@ -25,7 +25,7 @@ import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
 
 public class TestUnionAll extends BaseTestQuery{
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
 
   @Test  // Simple Union-All over two scans
   public void testUnionAll1() throws Exception {
@@ -367,5 +367,66 @@ public class TestUnionAll extends BaseTestQuery{
         "select key from dfs_test.`%s` )", rootInt, rootBoolean);
 
     test(query);
+  }
+
+  @Test // see DRILL-2591
+  public void testDateAndTimestampJson() throws Exception {
+    String rootDate = FileUtils.getResourceAsFile("/store/json/dateData.json").toURI().toString();
+    String rootTimpStmp = FileUtils.getResourceAsFile("/store/json/timeStmpData.json").toURI().toString();
+
+    String query = String.format(
+        "(select max(key) as key from dfs_test.`%s` " +
+        "union all " +
+        "select key from dfs_test.`%s`)", rootDate, rootTimpStmp);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .csvBaselineFile("testframework/testUnionAllQueries/q18.tsv")
+        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("key")
+        .build().run();
+  }
+
+  @Test // see DRILL-2637
+  public void testUnionAllOneInputContainsAggFunction() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
+    String query1 = String.format("select * from ((select count(c1) as ct from (select columns[0] c1 from dfs.`%s`)) \n" +
+        "union all \n" +
+        "(select columns[0] c2 from dfs.`%s`)) order by ct limit 3", root, root);
+
+    String query2 = String.format("select * from ((select columns[0] ct from dfs.`%s`)\n" +
+        "union all \n" +
+        "(select count(c1) as c2 from (select columns[0] c1 from dfs.`%s`))) order by ct limit 3", root, root);
+
+    String query3 = String.format("select * from ((select count(c1) as ct from (select columns[0] c1 from dfs.`%s`))\n" +
+        "union all \n" +
+        "(select count(c1) as c2 from (select columns[0] c1 from dfs.`%s`))) order by ct", root, root);
+
+    testBuilder()
+        .sqlQuery(query1)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 10)
+        .baselineValues((long) 66)
+        .baselineValues((long) 99)
+        .build().run();
+
+    testBuilder()
+        .sqlQuery(query2)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 10)
+        .baselineValues((long) 66)
+        .baselineValues((long) 99)
+        .build().run();
+
+    testBuilder()
+        .sqlQuery(query3)
+         .ordered()
+         .baselineColumns("ct")
+         .baselineValues((long) 10)
+         .baselineValues((long) 10)
+         .build().run();
   }
 }
