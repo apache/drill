@@ -17,29 +17,21 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.vector.ValueVector;
+import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 
-public class GenericAccessor extends AbstractSqlAccessor {
+// ?????? TODO clean this up:
+// - determine and document conditions
+// - determine place in SQLException type hierarchy
+// - (Why are seemingly JDBC-specific SqlAccessor classes in
+//    org.apache.drill.exec.vector.accessor?  Can they be in
+//    org.apache.drill.jdbc.impl?
+//   Why are they in java-exec module?  Can they be in JDBC module?
 
-  private ValueVector v;
+public class InvalidAccessException extends SQLNonTransientException {
+  private static final long serialVersionUID = 2015_04_07L;
 
-  public GenericAccessor(ValueVector v) {
-    this.v = v;
-  }
-
-  @Override
-  public boolean isNull(int index) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Object getObject(int index) throws InvalidAccessException {
-    return v.getAccessor().getObject(index);
-  }
-
-  @Override
-  public TypeProtos.MajorType getType() {
-    return v.getMetadata().getMajorType();
+  public InvalidAccessException( String message ) {
+    super(message);
   }
 }

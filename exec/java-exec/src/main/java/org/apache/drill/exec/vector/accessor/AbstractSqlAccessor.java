@@ -21,80 +21,79 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-abstract class AbstractSqlAccessor implements SqlAccessor {
+public abstract class AbstractSqlAccessor implements SqlAccessor {
 
   @Override
   public abstract boolean isNull(int rowOffset);
 
   @Override
   public BigDecimal getBigDecimal(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("BigDecimal");
+    throw newInvalidAccessException("BigDecimal");
   }
 
   @Override
   public boolean getBoolean(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("boolean");
+    throw newInvalidAccessException("boolean");
   }
 
   @Override
   public byte getByte(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("byte");
+    throw newInvalidAccessException("byte");
   }
 
   @Override
   public byte[] getBytes(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("byte[]");
+    throw newInvalidAccessException("byte[]");
   }
 
   @Override
   public Date getDate(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("Date");
+    throw newInvalidAccessException("Date");
   }
 
   @Override
   public double getDouble(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("double");
+    throw newInvalidAccessException("double");
   }
 
   @Override
   public float getFloat(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("float");
+    throw newInvalidAccessException("float");
   }
 
   @Override
   public int getInt(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("int");
+    throw newInvalidAccessException("int");
   }
 
   @Override
   public long getLong(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("long");
+    throw newInvalidAccessException("long");
   }
 
   @Override
   public short getShort(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("short");
+    throw newInvalidAccessException("short");
   }
 
   @Override
   public InputStream getStream(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("InputStream");
+    throw newInvalidAccessException("InputStream");
   }
 
   @Override
   public char getChar(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("Char");
+    throw newInvalidAccessException("Char");
   }
 
   @Override
   public Reader getReader(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("Reader");
+    throw newInvalidAccessException("Reader");
   }
 
   @Override
@@ -104,20 +103,19 @@ abstract class AbstractSqlAccessor implements SqlAccessor {
 
   @Override
   public Time getTime(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("Time");
+    throw newInvalidAccessException("Time");
   }
 
   @Override
   public Timestamp getTimestamp(int rowOffset) throws InvalidAccessException{
-    throw new InvalidAccessException("Timestamp");
+    throw newInvalidAccessException("Timestamp");
   }
 
-  abstract MajorType getType();
 
-
-  public class InvalidAccessException extends SQLException{
-    public InvalidAccessException(String name){
-      super(String.format("Requesting class of type %s for an object of type %s:%s is not allowed.", name, getType().getMinorType().name(), getType().getMode().name()));
-    }
+  private InvalidAccessException newInvalidAccessException(String name) {
+    return new InvalidAccessException(
+        String.format(
+            "Requesting value of type %s for an object of type %s:%s is not allowed.",
+             name, getType().getMinorType().name(), getType().getMode().name()));
   }
 }

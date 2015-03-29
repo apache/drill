@@ -46,7 +46,7 @@ public class ${name}Accessor extends AbstractSqlAccessor {
   }
 
   @Override
-  MajorType getType() {
+  public MajorType getType() {
     return TYPE;
   };
 

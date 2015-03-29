@@ -15,31 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor;
+package org.apache.drill.jdbc;
 
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.InvalidAccessException;
 
-public class GenericAccessor extends AbstractSqlAccessor {
+public class SQLConversionException extends InvalidAccessException {
+  private static final long serialVersionUID = 2015_04-07L;
 
-  private ValueVector v;
-
-  public GenericAccessor(ValueVector v) {
-    this.v = v;
-  }
-
-  @Override
-  public boolean isNull(int index) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Object getObject(int index) throws InvalidAccessException {
-    return v.getAccessor().getObject(index);
-  }
-
-  @Override
-  public TypeProtos.MajorType getType() {
-    return v.getMetadata().getMajorType();
+  SQLConversionException( String message ) {
+    super( message );
   }
 }

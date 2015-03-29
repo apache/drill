@@ -24,7 +24,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import org.apache.drill.exec.vector.accessor.AbstractSqlAccessor.InvalidAccessException;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 
 // TODO:  Doc.:  Document more of basics of pattern of contracts for getXxx(...):
@@ -53,8 +53,14 @@ import org.apache.drill.exec.vector.accessor.AbstractSqlAccessor.InvalidAccessEx
  */
 public interface SqlAccessor {
 
-  // TODO:  Clean:  This interface refers to type InvalidAccessException
-  // defined in class implementing this interface.
+  /**
+   * Reports the (native) type of data accessed by this accessor.
+   * <p>
+   *   (Some implementations may support more than just the minimum
+   *   <code>get<i>Type</i>(<i>...</i>)</code> method implied by the type.
+   * </p>
+   */
+  MajorType getType();
 
   /**
    * Reports whether the logical value is a SQL NULL.
