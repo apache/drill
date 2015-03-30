@@ -478,4 +478,25 @@ public class TestUnionAll extends BaseTestQuery{
         .baselineValues((long) 4)
         .build().run();
   }
+
+  @Test // see DRILL-2612
+  public void testUnionAllRightEmptyJson() throws Exception {
+    String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    String queryRightEmpty = String.format(
+        "select key from dfs_test.`%s` " +
+        "union all " +
+        "select key from dfs_test.`%s`",
+        rootSimple,
+        rootEmpty);
+
+    testBuilder()
+      .sqlQuery(queryRightEmpty)
+      .unOrdered()
+      .baselineColumns("key")
+      .baselineValues(true)
+      .baselineValues(false)
+      .build().run();
+  }
 }
