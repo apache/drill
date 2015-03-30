@@ -1,9 +1,6 @@
 ---
 title: "Query Data"
 ---
-[Previous](
-/docs/using-drill-explorer-to-browse-data-and-create-views)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/getting-started-tutorial)
-
 You can query local and distributed file systems, Hive, and HBase data sources
 registered with Drill. If you connected directly to a particular schema when
 you invoked SQLLine, you can issue SQL queries against that schema. If you did
@@ -41,4 +38,5 @@ Remember the following tips when querying data with Drill:
     Example: ``SELECT * FROM dfs.default.`sample_data/my_sample.json`; ``
   * `CAST` data to `VARCHAR` if an expression in a query returns `VARBINARY` as the result type in order to view the `VARBINARY` types as readable data. If you do not use the `CAST` function, Drill returns the results as byte data.    
      Example: `CAST (VARBINARY_expr as VARCHAR(50))`
+  * When querying schema-less data using SELECT *, the order of the returned columns might differ from the stored order and vary from query to query.
 

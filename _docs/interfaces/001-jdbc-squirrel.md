@@ -2,8 +2,6 @@
 title: "Using the JDBC Driver"
 parent: "ODBC/JDBC Interfaces"
 ---
-[Previous](/docs/testing-the-odbc-connection-on-linux-and-mac-os-x)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/query-data)
-
 To use the JDBC Driver to access Drill through Squirrel, ensure that you meet the prerequisites and follow the steps in this section.
 ### Prerequisites
 

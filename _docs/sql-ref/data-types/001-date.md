@@ -6,9 +6,9 @@ Using familiar date and time formats, listed in the [SQL data types table](/docs
 
 DATE, TIME, and TIMESTAMP store values in Coordinated Universal Time (UTC). Currently, Drill does not support casting a TIMESTAMP with time zone, but you can use the TO_TIMESTAMP function (link to example) in a query to use time stamp data having a time zone.
 
+Before running a query, you can check the formatting of your dates and times as shown in the following examples. The examples refer to a dummy JSON file in the FROM clause. The dummy JSON file has following contents.
 
-Before running a query, you can check the formatting of your dates and times. First, create a dummy JSON file to use in the FROM clause for testing queries as shown in the following examples. 
-    {"dummy" : "data"}. 
+    {"dummy" : "data"}
 
 Next, use the following literals in a SELECT statement. 
 
@@ -99,28 +99,6 @@ You can run the dummy query described earlier to check the formatting of the fie
     +------------+
     1 row selected (0.076 seconds)
 
-To cast INTERVAL data use the following syntax:
-
-    CAST (column_name AS INTERVAL)
-    CAST (column_name AS INTERVAL DAY)
-    CAST (column_name AS INTERVAL YEAR)
-
-## Interval Example
-A JSON file contains the following objects:
-
-    { "INTERVALYEAR_col":"P1Y", "INTERVALDAY_col":"P1D", "INTERVAL_col":"P1Y1M1DT1H1M" }
-    { "INTERVALYEAR_col":"P2Y", "INTERVALDAY_col":"P2D", "INTERVAL_col":"P2Y2M2DT2H2M" }
-    { "INTERVALYEAR_col":"P3Y", "INTERVALDAY_col":"P3D", "INTERVAL_col":"P3Y3M3DT3H3M" }
-
-The following CTAS statement shows how to cast text from a JSON file to INTERVAL data types in a Parquet table:
-
-    CREATE TABLE dfs.tmp.parquet_intervals AS 
-    (SELECT cast (INTERVAL_col as interval),
-           cast( INTERVALYEAR_col as interval year) INTERVALYEAR_col, 
-           cast( INTERVALDAY_col as interval day) INTERVALDAY_col 
-    FROM `/user/root/intervals.json`);
-
-<!-- Text and include output -->
-
+For information about casting interval data, see the ["CAST"](/docs/data-type-fmt#cast) function.
 
 

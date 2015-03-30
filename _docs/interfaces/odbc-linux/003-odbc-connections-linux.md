@@ -2,8 +2,6 @@
 title: "Configuring ODBC Connections for Linux and Mac OS X"
 parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
 ---
-[Previous](/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/driver-configuration-options)
-
 ODBC driver managers use configuration files to define and configure ODBC data
 sources and drivers. Before you connect to Drill through an ODBC client tool
 on Linux or Mac OS X, you must update the following configuration files:

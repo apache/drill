@@ -1,5 +1,6 @@
 ---
 title: "Contribute to Drill"
+parent: "Developer Information"
 ---
 The Apache Drill community welcomes your support. Please read [Apache Drill
 Contribution Guidelines](/docs/apache-drill-contribution-guidelines) for information about how to contribute to

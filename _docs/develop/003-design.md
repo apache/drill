@@ -1,5 +1,6 @@
 ---
 title: "Design Docs"
+parent: "Developer Information"
 ---
 Review the Apache Drill design docs for early descriptions of Apache Drill
 functionality, terms, and goals, and reference the research articles to learn

@@ -1,5 +1,5 @@
 ---
-title: "REPEATED_CONTAINS Function"
+title: "REPEATED_CONTAINS"
 parent: "Nested Data Functions"
 ---
 REPEATED CONTAINS searches for a keyword in an array. 

@@ -2,8 +2,6 @@
 title: "Storage Plugin Configuration"
 parent: "Connect to a Data Source"
 ---
-[Previous](/docs/storage-plugin-registration)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/workspaces)
-
 When you add or update storage plugin instances on one Drill node in a Drill
 cluster, Drill broadcasts the information to all of the other Drill nodes 
 to have identical storage plugin configurations. You do not need to

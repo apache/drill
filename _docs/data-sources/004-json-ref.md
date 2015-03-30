@@ -459,8 +459,9 @@ Complex arrays and maps can be difficult or impossible to query.
 
 Workaround: Separate lengthy objects into objects delimited by curly braces using the following functions:
  
-[flatten](/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
-[kvgen](/docs/json-data-model#generate-key-value-pairs) separates objects having more elements than optimal for querying.
+* [flatten](/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
+
+* [kvgen](/docs/json-data-model#generate-key-value-pairs) separates objects having more elements than optimal for querying.
 
   
 ### Nested Column Names 

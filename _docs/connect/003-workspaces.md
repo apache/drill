@@ -2,8 +2,6 @@
 title: "Workspaces"
 parent: "Storage Plugin Configuration"
 ---
-[Previous](/docs/storage-plugin-configuration)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/file-system-storage-plugin)
-
 When you register an instance of a file system data source, you can configure
 one or more workspaces for the instance. A workspace is a directory within the
 file system that you define. Drill searches the workspace to locate data when

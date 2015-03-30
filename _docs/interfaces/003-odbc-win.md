@@ -2,8 +2,6 @@
 title: "Using the MapR ODBC Driver on Windows"
 parent: "ODBC/JDBC Interfaces"
 ---
-[Previous](/docs/testing-the-odbc-connection-on-linux-and-mac-os-x)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows)
-
 The MapR Drill ODBC driver provides BI tools access to Drill’s flexible query
 capabilities so that users can quickly explore various data sources. The MapR
 Drill ODBC driver includes Drill Explorer, which is a simple user interface

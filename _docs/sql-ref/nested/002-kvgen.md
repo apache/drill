@@ -1,8 +1,8 @@
 ---
-title: "KVGEN Function"
+title: "KVGEN"
 parent: "Nested Data Functions"
 ---
-Return a list of the keys that exist in the map.
+Returns a list of the keys that exist in the map.
 
 ## Syntax
 
@@ -12,7 +12,60 @@ Return a list of the keys that exist in the map.
 
 ## Usage Notes
 
-KVGEN stands for _key-value generation_. This function is useful when complex
+You use KVGEN (Key-Value Generation) to query maps that have keys instead of a schema to
+represent data. For example, you store statistics
+about the number of interactions between the users on a social network
+in a JSON document store. User records appear as follows:
+
+	{
+	   user_id : 12345,
+	   user_interactions : {
+	       "12633" : 10,
+	       "25678" : 25,
+	       "11111" : 5
+	   }
+	}
+
+This record summarizes the interaction of one user with others. The record contains the user_id and a map between other
+users' ids and the number of interactions recorded between them. A complete dataset stores the summary of user interactions and includes 12345 listed under user_interactions for user records 12633 and 25678. For example:
+
+	{
+	        user_id: 12633,
+	        user_interactions : {
+	            "12345" : 10,
+	            "27569" : 104,
+	            "93033" : 52
+	    }
+	}
+	{       user_id: 25678,
+	        user_interactions : {
+	            "12345" : 25,
+	            "37886" : 14,
+	            "87394" : 5
+	    }
+	}
+
+To list the users that interact most, you need to use a subquery; otherwise, Drill operates on the data before the flattening and key generation occurs:
+
+    SELECT t.flat_interactions.key, t.flat_interactions.`value` from (select flatten(kvgen(user_interactions)) as flat_interactions from dfs.`/Users/khahn/Documents/test_files_source/user_table.json`) as t order by t.flat_interactions.`value` DESC;
+
+    +------------+------------+
+	|   EXPR$0   |   EXPR$1   |
+	+------------+------------+
+	| 27569      | 104        |
+	| 93033      | 52         |
+	| 25678      | 25         |
+	| 12345      | 25         |
+	| 37886      | 14         |
+	| 12633      | 10         |
+	| 12345      | 10         |
+	| 11111      | 5          |
+	| 87394      | 5          |
+	+------------+------------+
+	9 rows selected (0.093 seconds)
+
+
+KVGEN is useful when complex
 data files contain arbitrary maps that consist of relatively "unknown" column
 names. Instead of having to specify columns in the map to access the data, you
 can use KVGEN to return a list of the keys that exist in the map. KVGEN turns
@@ -41,6 +94,8 @@ this data would return:
     {"key": "b", "value": "valB"}
     {"key": "c", "value": "valC"}
     {"key": "d", "value": "valD"}
+
+## Example: Different Data Type Values
 
 Assume that a JSON file called `kvgendata.json` includes multiple records that
 look like this one:
@@ -112,7 +167,7 @@ look like this one:
 
 A SELECT * query against this specific record returns the following row:
 
-    0: jdbc:drill:zk=local> select * from dfs.yelp.`kvgendata.json` where rownum=1;
+    0: jdbc:drill:zk=local> select * from dfs.`kvgendata.json` where rownum=1;
  
 	+------------+---------------+------------+------------+------------+------------+
 	|   rownum   | bigintegercol | varcharcol |  boolcol   | float8col  |  complex   |
@@ -153,5 +208,6 @@ distinct rows:
 	| {"key":"varchar_2","value":"def"} |
 	+------------+
 	9 rows selected (0.151 seconds)
+
 
 For more examples of KVGEN and FLATTEN, see the examples in the section, ["JSON Data Model"](/docs/json-data-model).

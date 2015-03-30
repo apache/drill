@@ -1,5 +1,5 @@
 ---
-title: "FLATTEN Function"
+title: "FLATTEN"
 parent: "Nested Data Functions"
 ---
 FLATTEN separates the elements in a repeated field into individual records.

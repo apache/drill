@@ -53,6 +53,11 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
     <td>Converts x radians to degrees.</td>
   </tr>
   <tr>
+    <td>E()</td>
+    <td>FLOAT8</td>
+    <td>Returns 2.718281828459045.</td>
+  </tr>
+  <tr>
     <td>EXP(x)</td>
     <td>FLOAT8</td>
     <td>Returns e (Euler's number) to the power of x.</td>
@@ -65,7 +70,17 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
   <tr>
     <td>LOG(x)</td>
     <td>FLOAT8</td>
-    <td>Returns the log value of x.</td>
+    <td>Returns the natural log (base e) of x.</td>
+  </tr>
+  <tr>
+    <td>LOG(x, y)</td>
+    <td>FLOAT8</td>
+    <td>Returns log base x to the y power.</td>
+  </tr>
+  <tr>
+    <td>LOG10(x)</td>
+    <td>FLOAT8</td>
+    <td>Returns the common log of x.</td>
   </tr>
   <tr>
     <td>LSHIFT(x, y)</td>
@@ -73,9 +88,34 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
     <td>Shifts the binary x by y times to the left.</td>
   </tr>
   <tr>
+    <td>MOD(x, y)</td>
+    <td>FLOAT8</td>
+    <td>Returns the remainder of x divided by y. Requires a cast to DECIMAL for consistent results when x and y are FLOAT or DOUBLE.</td>
+  </tr>
+  <tr>
+    <td>NEGATIVE(x)</td>
+    <td>Same as input</td>
+    <td>Returns x as a negative number.</td>
+  </tr>
+  <tr>
+    <td>PI</td>
+    <td>FLOAT8</td>
+    <td>Returns pi.</td>
+  </tr>
+  <tr>
+    <td>POW(x, y)</td>
+    <td>FLOAT8</td>
+    <td>Returns the value of x to the y power.</td>
+  </tr>
+  <tr>
     <td>RADIANS</td>
     <td>FLOAT8</td>
     <td>Converts x degress to radians.</td>
+  </tr>
+  <tr>
+    <td>RAND</td>
+    <td>FLOAT8</td>
+    <td>Returns a random number from 0-1.</td>
   </tr>
   <tr>
     <td>ROUND(x)</td>
@@ -103,9 +143,9 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
     <td>Returns the square root of x.</td>
   </tr>
   <tr>
-    <td>TRUNC(x)</td>
+    <td>TRUNC(x, y)</td>
     <td>Same as input</td>
-    <td>Truncates x toward zero.</td>
+    <td>Truncates x to y decimal places. Specifying y is optional. Default is 1.</td>
   </tr>
   <tr>
     <td>TRUNC(x, y)</td>
@@ -123,7 +163,7 @@ Examples in this section use the following files:
 
 Download the `input2.json` file from the [Drill source code](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources/jsoninput) page. On the Mac, for example, right-click input2.json and choose Save Link As, and then click Save.
 
-Create the a dummy JSON file having the following contents:
+The following examples refer to a dummy JSON file in the FROM clause. The dummy JSON file has following contents.
 
     {"dummy" : "data"}
 
@@ -207,7 +247,7 @@ Open input2.json and change the first float value from 17.4 to 3.14159. Get valu
 * Rounded to the nearest integer.
 * Rounded to the fourth decimal place.
 
-        SELECT ROUND(`float`) FROM dfs.`/Users/khahn/Documents/test_files_source/input2.json`;
+        SELECT ROUND(`float`) FROM dfs.`/Users/drill/input2.json`;
 
         +------------+
         |   EXPR$0   |

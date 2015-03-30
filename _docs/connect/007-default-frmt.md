@@ -2,8 +2,6 @@
 title: "Drill Default Input Format"
 parent: "Storage Plugin Configuration"
 ---
-[Previous](/docs/hive-storage-plugin)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/mongodb-plugin-for-apache-drill)
-
 You can define a default input format to tell Drill what file type exists in a
 workspace within a file system. Drill determines the file type based on file
 extensions and magic numbers when searching a workspace.

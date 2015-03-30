@@ -1,8 +1,6 @@
 ---
 title: "Analyzing Yelp JSON Data with Apache Drill"
 ---
-[Previous](/docs/summary)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/install-drill)
-
 [Apache Drill](https://www.mapr.com/products/apache-drill) is one of the
 fastest growing open source projects, with the community making rapid progress
 with monthly releases. The key difference is Drill’s agility and flexibility.

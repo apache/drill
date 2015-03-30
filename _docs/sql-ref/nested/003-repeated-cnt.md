@@ -1,5 +1,5 @@
 ---
-title: "REPEATED_COUNT Function"
+title: "REPEATED_COUNT"
 parent: "Nested Data Functions"
 ---
 This function counts the values in an array. 

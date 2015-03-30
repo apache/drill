@@ -2,8 +2,6 @@
 title: "Driver Configuration Options"
 parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
 ---
-[Previous](/docs/configuring-odbc-connections-for-linux-and-mac-os-x)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/configuring-odbc-connections-for-linux-and-mac-os-x)
-
 You can use various configuration options to control the behavior of the MapR
 Drill ODBC Driver. You can use these options in a connection string or in the
 `odbc.ini` configuration file for the Mac OS X version or the driver.
