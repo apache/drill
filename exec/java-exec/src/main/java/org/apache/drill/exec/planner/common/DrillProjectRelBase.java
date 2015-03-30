@@ -18,9 +18,20 @@
 package org.apache.drill.exec.planner.common;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexCorrelVariable;
+import org.apache.calcite.rex.RexDynamicParam;
+import org.apache.calcite.rex.RexFieldAccess;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexLocalRef;
+import org.apache.calcite.rex.RexOver;
+import org.apache.calcite.rex.RexRangeRef;
+import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
@@ -49,10 +60,13 @@ import com.google.common.collect.Lists;
  * Base class for logical and physical Project implemented in Drill
  */
 public abstract class DrillProjectRelBase extends Project implements DrillRelNode {
+  private final int nonSimpleFieldCount ;
+
   protected DrillProjectRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
       RelDataType rowType) {
     super(cluster, traits, child, exps, rowType, Flags.BOXED);
     assert getConvention() == convention;
+    nonSimpleFieldCount = this.getRowType().getFieldCount() - getSimpleFieldCount();
   }
 
   @Override
@@ -62,8 +76,9 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
     }
 
     // cost is proportional to the number of rows and number of columns being projected
-    double rowCount = RelMetadataQuery.getRowCount(this);
-    double cpuCost = DrillCostBase.PROJECT_CPU_COST * getRowType().getFieldCount();
+    double rowCount = nonSimpleFieldCount >0 ? RelMetadataQuery.getRowCount(this) : 0;
+    double cpuCost = DrillCostBase.PROJECT_CPU_COST * rowCount * nonSimpleFieldCount;
+
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(rowCount, cpuCost, 0, 0);
   }
@@ -98,6 +113,94 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
       }
     }
     return expressions;
+  }
+
+  private int getSimpleFieldCount() {
+    int cnt = 0;
+
+    final ComplexFieldWithNamedSegmentIdentifier complexFieldIdentifer = new ComplexFieldWithNamedSegmentIdentifier();
+    // SimpleField, either column name, or complex field reference with only named segment ==> no array segment
+    // a, a.b.c are simple fields.
+    // a[1].b.c, a.b[1], a.b.c[1] are not simple fields, since they all contain array segment.
+    //  a + b, a * 10 + b, etc are not simple fields, since they are expressions.
+    for (RexNode expr : this.getProjects()) {
+      if (expr instanceof RexInputRef) {
+        // Simple Field reference.
+        cnt ++;
+      } else if (expr instanceof RexCall && expr.accept(complexFieldIdentifer)) {
+        // Complex field with named segments only.
+        cnt ++;
+      }
+    }
+    return cnt;
+  }
+
+  private static class ComplexFieldWithNamedSegmentIdentifier extends RexVisitorImpl<Boolean> {
+    protected ComplexFieldWithNamedSegmentIdentifier() {
+      super(true);
+    }
+
+    @Override
+    public Boolean visitInputRef(RexInputRef inputRef) {
+      return true;
+    }
+
+    @Override
+    public Boolean visitLocalRef(RexLocalRef localRef) {
+      return doUnknown(localRef);
+    }
+
+    @Override
+    public Boolean visitLiteral(RexLiteral literal) {
+      return doUnknown(literal);
+    }
+
+    @Override
+    public Boolean visitOver(RexOver over) {
+      return doUnknown(over);
+    }
+
+    @Override
+    public Boolean visitCorrelVariable(RexCorrelVariable correlVariable) {
+      return doUnknown(correlVariable);
+    }
+
+    @Override
+    public Boolean visitCall(RexCall call) {
+      if (call.getOperator() == SqlStdOperatorTable.ITEM) {
+        final RexNode op0 = call.getOperands().get(0);
+        final RexNode op1 = call.getOperands().get(1);
+
+        if (op0 instanceof RexInputRef &&
+            op1 instanceof RexLiteral && ((RexLiteral) op1).getTypeName() == SqlTypeName.CHAR) {
+          return true;
+        } else if (op0 instanceof RexCall &&
+            op1 instanceof RexLiteral && ((RexLiteral) op1).getTypeName() == SqlTypeName.CHAR) {
+          return op0.accept(this);
+        }
+      }
+
+      return false;
+    }
+
+    @Override
+    public Boolean visitDynamicParam(RexDynamicParam dynamicParam) {
+      return doUnknown(dynamicParam);
+    }
+
+    @Override
+    public Boolean visitRangeRef(RexRangeRef rangeRef) {
+      return doUnknown(rangeRef);
+    }
+
+    @Override
+    public Boolean visitFieldAccess(RexFieldAccess fieldAccess) {
+      return doUnknown(fieldAccess);
+    }
+
+    private boolean doUnknown(Object o) {
+      return false;
+    }
   }
 
 }

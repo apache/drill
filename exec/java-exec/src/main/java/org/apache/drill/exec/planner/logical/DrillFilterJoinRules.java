@@ -60,23 +60,6 @@ public class DrillFilterJoinRules {
             return true;
           }
 
-          // following logic applies to INNER join only.
-//          if (RelOptUtil.isEqui(join.getLeft(), join.getRight(), exp)) {
-//            return true;
-//          }
-//          if (exp instanceof RexCall) {
-//            final RexCall call = (RexCall) exp;
-//            final SqlKind kind = call.getKind();
-//            final List<RexNode> operands = call.getOperands();
-//
-//            if (  (kind == SqlKind.EQUALS
-//                || kind == SqlKind.IS_DISTINCT_FROM)
-//               && operands.get(0) instanceof RexInputRef
-//               && operands.get(1) instanceof RexInputRef) {
-//              return true;
-//            }
-//          }
-
           return false;
         }
       };

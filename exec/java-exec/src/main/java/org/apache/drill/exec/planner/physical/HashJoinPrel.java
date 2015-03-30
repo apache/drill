@@ -22,17 +22,12 @@ import java.util.List;
 
 import org.apache.calcite.rel.core.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
-import org.apache.drill.exec.planner.cost.DrillCostBase;
-import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -72,34 +67,7 @@ public class HashJoinPrel  extends JoinPrel {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
-    double probeRowCount = RelMetadataQuery.getRowCount(this.getLeft());
-    double buildRowCount = RelMetadataQuery.getRowCount(this.getRight());
-
-    // cpu cost of hashing the join keys for the build side
-    double cpuCostBuild = DrillCostBase.HASH_CPU_COST * getRightKeys().size() * buildRowCount;
-    // cpu cost of hashing the join keys for the probe side
-    double cpuCostProbe = DrillCostBase.HASH_CPU_COST * getLeftKeys().size() * probeRowCount;
-
-    // cpu cost of evaluating each leftkey=rightkey join condition
-    double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
-
-    double cpuCost = joinConditionCost * (buildRowCount + probeRowCount) + cpuCostBuild + cpuCostProbe;
-
-    double factor = PrelUtil.getPlannerSettings(planner).getOptions()
-      .getOption(ExecConstants.HASH_JOIN_TABLE_FACTOR_KEY).float_val;
-    long fieldWidth = PrelUtil.getPlannerSettings(planner).getOptions()
-      .getOption(ExecConstants.AVERAGE_FIELD_WIDTH_KEY).num_val;
-
-    // table + hashValues + links
-    double memCost =
-      (
-        (fieldWidth * this.getRightKeys().size()) +
-          IntHolder.WIDTH +
-          IntHolder.WIDTH
-      ) * buildRowCount * factor;
-
-    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
-    return costFactory.makeCost(buildRowCount + probeRowCount, cpuCost, 0, 0, memCost);
+    return computeHashJoinCost(planner);
   }
 
   @Override

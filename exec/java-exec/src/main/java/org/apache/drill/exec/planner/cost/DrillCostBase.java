@@ -57,6 +57,9 @@ public class DrillCostBase implements DrillRelOptCost {
   // add to the end of hash chain if no match found
   public static final int HASH_CPU_COST = 8 * BASE_CPU_COST;
 
+  // The ratio to convert memory cost into CPU cost.
+  public static final double MEMORY_TO_CPU_RATIO = 1.0;
+
   public static final int RANGE_PARTITION_CPU_COST = 12 * BASE_CPU_COST;
 
   // cost of comparing one field with another (ignoring data types for now)
@@ -165,7 +168,8 @@ public class DrillCostBase implements DrillRelOptCost {
       || (this.cpu == Double.POSITIVE_INFINITY)
       || (this.io == Double.POSITIVE_INFINITY)
       || (this.network == Double.POSITIVE_INFINITY)
-      || (this.rowCount == Double.POSITIVE_INFINITY);
+      || (this.rowCount == Double.POSITIVE_INFINITY)
+      || (this.memory == Double.POSITIVE_INFINITY) ;
   }
 
   @Override
@@ -179,7 +183,8 @@ public class DrillCostBase implements DrillRelOptCost {
           && (this.cpu == ((DrillCostBase) other).cpu)
           && (this.io == ((DrillCostBase) other).io)
           && (this.network == ((DrillCostBase) other).network)
-          && (this.rowCount == ((DrillCostBase) other).rowCount));
+          && (this.rowCount == ((DrillCostBase) other).rowCount)
+          && (this.memory == ((DrillCostBase) other).memory));
   }
 
   @Override
@@ -192,7 +197,8 @@ public class DrillCostBase implements DrillRelOptCost {
       || ((Math.abs(this.cpu - that.cpu) < RelOptUtil.EPSILON)
           && (Math.abs(this.io - that.io) < RelOptUtil.EPSILON)
           && (Math.abs(this.network - that.network) < RelOptUtil.EPSILON)
-          && (Math.abs(this.rowCount - that.rowCount) < RelOptUtil.EPSILON));
+          && (Math.abs(this.rowCount - that.rowCount) < RelOptUtil.EPSILON)
+          && (Math.abs(this.memory - that.memory) < RelOptUtil.EPSILON));
   }
 
   @Override
@@ -200,20 +206,16 @@ public class DrillCostBase implements DrillRelOptCost {
     DrillCostBase that = (DrillCostBase) other;
 
     return this == that
-      || ( (this.cpu + this.io + this.network) <=
-           (that.cpu + that.io + that.network)
-          && this.rowCount <= that.rowCount
-         );
+      || ( (this.cpu + this.io + this.network + this.memory * DrillCostBase.MEMORY_TO_CPU_RATIO)
+        <= (that.cpu + that.io + that.network + that.memory * DrillCostBase.MEMORY_TO_CPU_RATIO));
   }
 
   @Override
   public boolean isLt(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
 
-     return ( (this.cpu + this.io + this.network) <
-             (that.cpu + that.io + that.network)
-            && this.rowCount <= that.rowCount
-           );
+     return  ( (this.cpu + this.io + this.network + this.memory * DrillCostBase.MEMORY_TO_CPU_RATIO)
+         < (that.cpu + that.io + that.network + that.memory * DrillCostBase.MEMORY_TO_CPU_RATIO) );
   }
 
   @Override
@@ -249,7 +251,7 @@ public class DrillCostBase implements DrillRelOptCost {
     if (this == INFINITY) {
       return this;
     }
-    return new DrillCostBase(rowCount * factor, cpu * factor, io * factor, network * factor);
+    return new DrillCostBase(rowCount * factor, cpu * factor, io * factor, network * factor, memory * factor);
   }
 
   @Override
