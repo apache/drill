@@ -37,4 +37,33 @@ public class TestNestedComplexSchema extends BaseTestQuery {
     test("select tbl.a.arrayval[0].val1[0] from cp.`nested/nested_3.json` tbl");
   }
 
+  @Test //DRILL-1649
+  public void testNestedFlattenWithJoin() throws Exception {
+
+    final String query="" +
+    "  select event_info.uid, transaction_info.trans_id, event_info.event.evnt_id  evnt_id "+
+    "from ( "+
+    "  select userinfo.transaction.trans_id trans_id, max(userinfo.event.event_time) max_event_time "+
+    "  from ( "+
+      "    select uid, flatten(events) event, flatten(transactions) transaction from cp.`complex/json/single-user-transactions.json` "+
+    ") userinfo "+
+    "where userinfo.transaction.trans_time >= userinfo.event.event_time "+
+    "group by userinfo.transaction.trans_id "+
+    ") transaction_info "+
+    "inner join "+
+    "( "+
+    "  select uid, flatten(events) event "+
+    "  from cp.`complex/json/single-user-transactions.json` "+
+    ") event_info "+
+    "on transaction_info.max_event_time = event_info.event.event_time "+
+    "";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .jsonBaselineFile("complex/drill-1649-result.json")
+      .go();
+  }
+
+
 }
