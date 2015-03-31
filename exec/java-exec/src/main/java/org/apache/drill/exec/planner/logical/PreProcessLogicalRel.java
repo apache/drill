@@ -54,20 +54,9 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
   private RelDataTypeFactory factory;
   private DrillOperatorTable table;
   private UnsupportedOperatorCollector unsupportedOperatorCollector;
-  private static PreProcessLogicalRel INSTANCE = null;
 
-  public static void initialize(RelDataTypeFactory factory, DrillOperatorTable table) {
-    if(INSTANCE == null) {
-      INSTANCE = new PreProcessLogicalRel(factory, table);
-    }
-  }
-
-  public static PreProcessLogicalRel getVisitor() {
-    if(INSTANCE == null) {
-      throw new IllegalStateException("PreProcessLogicalRel is not initialized properly");
-    }
-
-    return INSTANCE;
+  public static PreProcessLogicalRel createVisitor(RelDataTypeFactory factory, DrillOperatorTable table) {
+    return new PreProcessLogicalRel(factory, table);
   }
 
   private PreProcessLogicalRel(RelDataTypeFactory factory, DrillOperatorTable table) {

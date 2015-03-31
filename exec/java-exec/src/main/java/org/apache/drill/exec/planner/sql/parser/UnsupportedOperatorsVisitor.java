@@ -46,16 +46,14 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     disabledOperators.add("CARDINALITY");
   }
 
-  private static UnsupportedOperatorsVisitor visitor = new UnsupportedOperatorsVisitor();
-
   private UnsupportedOperatorCollector unsupportedOperatorCollector;
 
   private UnsupportedOperatorsVisitor() {
     unsupportedOperatorCollector = new UnsupportedOperatorCollector();
   }
 
-  public static UnsupportedOperatorsVisitor getVisitor() {
-    return visitor;
+  public static UnsupportedOperatorsVisitor createVisitor() {
+    return new UnsupportedOperatorsVisitor();
   }
 
   public void convertException() throws SqlUnsupportedException {

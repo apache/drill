@@ -157,7 +157,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     SqlNode sqlNodeValidated = planner.validate(sqlNode);
 
     // Check if the unsupported functionality is used
-    UnsupportedOperatorsVisitor visitor = UnsupportedOperatorsVisitor.getVisitor();
+    UnsupportedOperatorsVisitor visitor = UnsupportedOperatorsVisitor.createVisitor();
     try {
       sqlNodeValidated.accept(visitor);
     } catch (UnsupportedOperationException ex) {
@@ -189,8 +189,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * throw SqlUnsupportedException if there is
      */
 
-     PreProcessLogicalRel.initialize(planner.getTypeFactory(), context.getDrillOperatorTable());
-     PreProcessLogicalRel visitor =  PreProcessLogicalRel.getVisitor();
+     PreProcessLogicalRel visitor = PreProcessLogicalRel.createVisitor(planner.getTypeFactory(), context.getDrillOperatorTable());
      try {
         rel = rel.accept(visitor);
      } catch(UnsupportedOperationException ex) {
