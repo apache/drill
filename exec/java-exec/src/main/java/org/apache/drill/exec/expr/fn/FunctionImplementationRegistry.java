@@ -47,7 +47,7 @@ public class FunctionImplementationRegistry {
   public FunctionImplementationRegistry(DrillConfig config){
     Stopwatch w = new Stopwatch().start();
 
-    logger.debug("Generating Function Registry.");
+    logger.debug("Generating function registry.");
     drillFuncRegistry = new DrillFunctionRegistry(config);
 
     Set<Class<? extends PluggableFunctionRegistry>> registryClasses = PathScanner.scanForImplementations(
@@ -72,7 +72,7 @@ public class FunctionImplementationRegistry {
         break;
       }
     }
-    logger.debug("Function registry loaded.  {} functions loaded in {}ms.", drillFuncRegistry.size(), w.elapsed(TimeUnit.MILLISECONDS));
+    logger.info("Function registry loaded.  {} functions loaded in {} ms.", drillFuncRegistry.size(), w.elapsed(TimeUnit.MILLISECONDS));
   }
 
   public FunctionImplementationRegistry(DrillConfig config, OptionManager optionManager) {

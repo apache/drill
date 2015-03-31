@@ -57,7 +57,7 @@ import com.google.common.io.Closeables;
 public class Drillbit implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
   static {
-    Environment.logEnv("Drillbit environment:.", logger);
+    Environment.logEnv("Drillbit environment: ", logger);
   }
 
   private boolean isClosed = false;
@@ -72,7 +72,7 @@ public class Drillbit implements AutoCloseable {
 
   public static Drillbit start(final DrillConfig config, final RemoteServiceSet remoteServiceSet)
       throws DrillbitStartupException {
-    logger.debug("Setting up Drillbit.");
+    logger.debug("Starting new Drillbit.");
     Drillbit bit;
     try {
       bit = new Drillbit(config, remoteServiceSet);
@@ -80,13 +80,13 @@ public class Drillbit implements AutoCloseable {
       throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
     }
 
-    logger.debug("Starting Drillbit.");
     try {
       bit.run();
     } catch (Exception e) {
       bit.close();
       throw new DrillbitStartupException("Failure during initial startup of Drillbit.", e);
     }
+    logger.debug("Started new Drillbit.");
     return bit;
   }
 
@@ -175,6 +175,8 @@ public class Drillbit implements AutoCloseable {
   private RegistrationHandle registrationHandle;
 
   public Drillbit(DrillConfig config, RemoteServiceSet serviceSet) throws Exception {
+    final long startTime = System.currentTimeMillis();
+    logger.debug("Construction started.");
     final boolean allowPortHunting = serviceSet != null;
     final boolean enableHttp = config.getBoolean(ExecConstants.HTTP_ENABLE);
     context = new BootStrapContext(config);
@@ -195,6 +197,7 @@ public class Drillbit implements AutoCloseable {
       coord = new ZKClusterCoordinator(config);
       storeProvider = new PStoreRegistry(this.coord, config).newPStoreProvider();
     }
+    logger.info("Construction completed ({} ms).", System.currentTimeMillis() - startTime);
   }
 
   private void startJetty() throws Exception {
@@ -231,6 +234,8 @@ public class Drillbit implements AutoCloseable {
   }
 
   public void run() throws Exception {
+    final long startTime = System.currentTimeMillis();
+    logger.debug("Startup begun.");
     coord.start(10000);
     storeProvider.start();
     final DrillbitEndpoint md = engine.start();
@@ -243,6 +248,7 @@ public class Drillbit implements AutoCloseable {
     startJetty();
 
     Runtime.getRuntime().addShutdownHook(new ShutdownThread(this, new StackTrace()));
+    logger.info("Startup completed ({} ms).", System.currentTimeMillis() - startTime);
   }
 
   @Override
@@ -251,6 +257,8 @@ public class Drillbit implements AutoCloseable {
     if (isClosed) {
       return;
     }
+    final long startTime = System.currentTimeMillis();
+    logger.debug("Shutdown begun.");
 
     // wait for anything that is running to complete
     manager.waitToExit();
@@ -279,7 +287,7 @@ public class Drillbit implements AutoCloseable {
     AutoCloseables.close(manager, logger);
     Closeables.closeQuietly(context);
 
-    logger.info("Shutdown completed.");
+    logger.info("Shutdown completed ({} ms).", System.currentTimeMillis() - startTime);
     isClosed = true;
   }
 
@@ -324,4 +332,5 @@ public class Drillbit implements AutoCloseable {
   public DrillbitContext getContext() {
     return manager.getContext();
   }
+
 }
