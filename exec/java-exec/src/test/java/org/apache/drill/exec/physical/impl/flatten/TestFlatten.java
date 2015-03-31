@@ -305,4 +305,44 @@ public class TestFlatten extends BaseTestQuery {
         .jsonBaselineFile("flatten/drill-2099-result.json")
         .go();
   }
+
+  @Test //DRILL-2268
+  public void testFlattenAfterJoin1() throws Exception {
+    String query = "select flatten(sub1.events) flat_events  from "+
+      "(select t1.events events from cp.`complex/json/flatten_join.json` t1 "+
+      "inner join cp.`complex/json/flatten_join.json` t2 on t1.id=t2.id) sub1";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .jsonBaselineFile("complex/drill-2268-1-result.json")
+      .go();
+  }
+
+  @Test //DRILL-2268
+  public void testFlattenAfterJoin2() throws Exception {
+    String query = "select flatten(t1.events) flat_events from cp.`complex/json/flatten_join.json` t1 " +
+      "inner join cp.`complex/json/flatten_join.json` t2 on t1.id=t2.id";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .jsonBaselineFile("complex/drill-2268-2-result.json")
+      .go();
+  }
+
+  @Test //DRILL-2268
+  public void testFlattenAfterJoin3() throws Exception {
+    String query = "select flatten(sub1.lst_lst) flat_lst_lst from "+
+      "(select t1.lst_lst lst_lst from cp.`complex/json/flatten_join.json` t1 "+
+      "inner join cp.`complex/json/flatten_join.json` t2 on t1.id=t2.id) sub1";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .jsonBaselineFile("complex/drill-2268-3-result.json")
+      .go();
+  }
+
+
 }
