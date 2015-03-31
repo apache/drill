@@ -43,6 +43,12 @@ public class Drill2463GetNullsFailedWithAssertionsBugTest extends JdbcTest {
   public static void setUpConnection() throws SQLException {
     connection = new Driver().connect( "jdbc:drill:zk=local", null );
     statement = connection.createStatement();
+
+    boolean assertionsEnabled = false;
+    assert assertionsEnabled = true;
+    if ( ! assertionsEnabled ) {
+      throw new RuntimeException( "Assertions need to be enabled but are not." );
+    }
   }
 
   @AfterClass
@@ -73,7 +79,7 @@ public class Drill2463GetNullsFailedWithAssertionsBugTest extends JdbcTest {
   @Test
   public void testGetNonprimitiveTypeNullAsOwnType() throws Exception {
     ResultSet rs = statement.executeQuery(
-        "SELECT CAST( NULL AS VARCHAR) FROM INFORMATION_SCHEMA.CATALOGS" );
+        "SELECT CAST( NULL AS VARCHAR ) FROM INFORMATION_SCHEMA.CATALOGS" );
     assert rs.next();
     assertThat( "getString(...) for NULL", rs.getString( 1 ), nullValue() );
     assertThat( "wasNull", rs.wasNull(), equalTo( true ) );
