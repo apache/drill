@@ -58,7 +58,7 @@ s.java)** **
 
 Currently Drill supports text, JSON and Parquet file formats natively when
 interacting with file system. More readers/writers can be introduced by
-implementing custom storage plugins. Example formats include below.
+implementing custom storage plugins. Example formats are.
 
   * AVRO
   * Sequence
@@ -67,7 +67,24 @@ implementing custom storage plugins. Example formats include below.
   * Protobuf
   * XML
   * Thrift
-  * ....
+
+You can refer to the github commits to the mongo db and hbase storage plugin for implementation details: 
+
+* [mongodb_storage_plugin](https://github.com/apache/drill/commit/2ca9c907bff639e08a561eac32e0acab3a0b3304)
+* [hbase_storage_plugin](https://github.com/apache/drill/commit/3651182141b963e24ee48db0530ec3d3b8b6841a)
+
+Initially, concentrate on basics:
+
+* AbstractGroupScan (MongoGroupScan, HbaseGroupScan)  
+* SubScan (MongoSubScan, HbaseSubScan)  
+* RecordReader (MongoRecordReader, HbaseRecordReader)  
+* BatchCreator (MongoScanBatchCreator, HbaseScanBatchCreator)  
+* AbstractStoragePlugin (MongoStoragePlugin, HbaseStoragePlugin)  
+* StoragePluginConfig (MongoStoragePluginConfig, HbaseStoragePluginConfig)
+
+Focus on implementing/extending this list of classes and the corresponding implementations done by Mongo and Hbase. Ignore the mongo db plugin optimizer rules for pushing predicates into the scan.
+
+Writing a new file-based storage plugin, such as a JSON or text-based storage plugin, simply involves implementing a couple of interfaces. The JSON storage plugin is a good example. 
 
 ## Support for new data sources
 

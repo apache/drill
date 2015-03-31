@@ -152,9 +152,79 @@ In addition to the CAST, CONVERT_TO, and CONVERT_FROM functions, Drill supports 
 * A character string to a timestamp with time zone
 * A decimal type to a timestamp with time zone
 
+## Usage Notes
+
+Use the following format specifiers for numerical conversions:
+<table >
+     <tr >
+          <th align=left>Symbol
+          <th align=left>Location
+          <th align=left>Meaning
+     <tr valign=top>
+          <td><code>0</code>
+          <td>Number
+          <td>Digit
+     <tr >
+          <td><code>#</code>
+          <td>Number
+          <td>Digit, zero shows as absent
+     <tr valign=top>
+          <td><code>.</code>
+          <td>Number
+          <td>Decimal separator or monetary decimal separator
+     <tr >
+          <td><code>-</code>
+          <td>Number
+          <td>Minus sign
+     <tr valign=top>
+          <td><code>,</code>
+          <td>Number
+          <td>Grouping separator
+     <tr >
+          <td><code>E</code>
+          <td>Number
+          <td>Separates mantissa and exponent in scientific notation.
+              <em>Need not be quoted in prefix or suffix.</em>
+     <tr valign=top>
+          <td><code>;</code>
+          <td>Subpattern boundary
+          <td>Separates positive and negative subpatterns
+     <tr >
+          <td><code>%</code>
+          <td>Prefix or suffix
+          <td>Multiply by 100 and show as percentage
+     <tr valign=top>
+          <td><code>&#92;u2030</code>
+          <td>Prefix or suffix
+          <td>Multiply by 1000 and show as per mille value
+     <tr >
+          <td><code>&#164;</code> (<code>&#92;u00A4</code>)
+          <td>Prefix or suffix
+          <td>Currency sign, replaced by currency symbol.  If
+              doubled, replaced by international currency symbol.
+              If present in a pattern, the monetary decimal separator
+              is used instead of the decimal separator.
+     <tr valign=top>
+          <td><code>'</code>
+          <td>Prefix or suffix
+          <td>Used to quote special characters in a prefix or suffix,
+              for example, <code>"'#'#"</code> formats 123 to
+              <code>"#123"</code>.  To create a single quote
+              itself, use two in a row: <code>"# o''clock"</code>.
+ </table>
+
+Use the following format specifiers for data type conversions:
+
+
+
+For more information about specifying a format, refer to one of the following format specifier documents:
+
+* [Java DecimalFormat class](http://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html) format specifiers 
+* [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html) format specifiers
+
 # TO_CHAR
 
-TO_CHAR converts a date, time, timestamp, timestamp with timezone, or numerical expression to a character string.
+TO_CHAR converts a date, time, timestamp, or numerical expression to a character string.
 
 ## Syntax
 
@@ -164,12 +234,16 @@ TO_CHAR converts a date, time, timestamp, timestamp with timezone, or numerical 
 
 * 'format'* is format specifier enclosed in single quotation marks that sets a pattern for the output formatting. 
 
-## Usage Notes
-For information about specifying a format, refer to one of the following format specifier documents:
+### Usage Notes
+Currently Drill does not support a timestamp with time zone data type. Drill stores the timestamp and date in [UTC](http://www.timeanddate.com/time/aboututc.html) and maintains no timezone information. Currently, you cannot convert dates/timestamp to a specific timezone. However if your input data contains timezone information, Drill can use it as if it were UTC time.
 
-* [Java DecimalFormat class](http://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html) format specifiers 
-* [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html)
-
+SELECT to_char(cast('2008-2-23 12:00:00 America/Los_Angeles' as timestamp), 'yyyy MMM dd HH:mm:ss z') FROM dfs.`/Users/drill/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2008 Feb 23 12:00:00 UTC |
+    +------------+
+    1 row selected (0.108 seconds)
 
 ## Examples
 
@@ -227,11 +301,11 @@ Converts a character string or a UNIX epoch timestamp to a date.
 
 ## Syntax
 
-    TO_DATE (expression[, 'format']);
+    TO_DATE (expression [, 'format']);
 
-*expression* is a character string enclosed in single quotation marks or a UNIX epoch timestamp not enclosed in single quotation marks. 
+*expression* is a character string enclosed in single quotation marks or a UNIX epoch timestamp, not enclosed in single quotation marks. 
 
-* 'format'* is format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string. 
+* 'format'* is format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not a UNIX epoch timestamp. 
 
 ## Usage 
 Specify a format using patterns defined in [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html).

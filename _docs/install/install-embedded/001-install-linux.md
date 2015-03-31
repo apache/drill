@@ -7,7 +7,7 @@ Linux:
 
   1. Issue the following command to download the latest, stable version of Apache Drill to a directory on your machine:
     
-        wget http://www.apache.org/dyn/closer.cgi/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz
+        wget http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz
   2. Issue the following command to create a new directory to which you can extract the contents of the Drill `tar.gz` file:
   
         sudo mkdir -p /opt/drill

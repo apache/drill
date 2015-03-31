@@ -28,7 +28,7 @@ Complete the following steps to install Drill on designated nodes:
 
   1. Download the Drill tarball.
   
-        curl http://www.apache.org/dyn/closer.cgi/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz
+        curl http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz
   2. Issue the following command to create a Drill installation directory and then explode the tarball to the directory:
   
         mkdir /opt/drill

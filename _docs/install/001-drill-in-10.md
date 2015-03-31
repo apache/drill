@@ -108,7 +108,7 @@ Complete the following steps to install Drill:
 
   1. Issue the following command to download the latest, stable version of Apache Drill to a directory on your machine:
         
-        wget http://www.apache.org/dyn/closer.cgi/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz
+        wget http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz
   2. Issue the following command to create a new directory to which you can extract the contents of the Drill `tar.gz` file:
   
         sudo mkdir -p /opt/drill
@@ -137,7 +137,7 @@ Complete the following steps to install Drill:
         $ pwd
         /Users/max/drill
   2. Click the following link to download the latest, stable version of Apache Drill:  
-      [http://www.apache.org/dyn/closer.cgi/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz](http://www.apache.org/dyn/closer.cgi/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz)
+      [http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz)
   3. Open the downloaded `TAR` file with the Mac Archive utility or a similar tool for unzipping files.
   4. Move the resulting `apache-drill-<version>` folder into the `drill` directory that you created.
   5. Issue the following command to navigate to the `apache-drill-<version>` directory:
@@ -180,7 +180,7 @@ Complete the following steps to install Drill:
      Do not include spaces in your directory path. If you include spaces in the
 directory path, Drill fails to run.
   2. Click the following link to download the latest, stable version of Apache Drill: 
-      [http://www.apache.org/dyn/closer.cgi/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz](http://www.apache.org/dyn/closer.cgi/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz)
+      [http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz)
   3. Move the `apache-drill-<version>.tar.gz` file to the `drill` directory that you created on your `C:\` drive.
   4. Unzip the `TAR.GZ` file and the resulting `TAR` file.
      1. Right-click `apache-drill-<version>.tar.gz,` and select `7-Zip>Extract Here`. The utility extracts the `apache-drill-<version>.tar` file.
