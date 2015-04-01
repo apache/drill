@@ -19,6 +19,11 @@ package org.apache.drill.exec.planner.common;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.planner.logical.DrillOptiq;
+import org.apache.drill.exec.resolver.TypeCastRules;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.type.SqlTypeName;
@@ -31,7 +36,7 @@ import org.eigenbase.util.Pair;
 public abstract class DrillRelOptUtil {
 
   // Similar to RelOptUtil.areRowTypesEqual() with the additional check for allowSubstring
-  public static boolean areRowTypesEqual(
+  public static boolean areRowTypesCompatible(
       RelDataType rowType1,
       RelDataType rowType2,
       boolean compareNames,
@@ -63,6 +68,15 @@ public abstract class DrillRelOptUtil {
             && (type1.getPrecision() <= type2.getPrecision())) {
           return true;
         }
+
+        // Check if Drill implicit casting can resolve the incompatibility
+        List<TypeProtos.MinorType> types = Lists.newArrayListWithCapacity(2);
+        types.add(Types.getMinorTypeFromName(type1.getSqlTypeName().getName()));
+        types.add(Types.getMinorTypeFromName(type2.getSqlTypeName().getName()));
+        if(TypeCastRules.getLeastRestrictiveType(types) != null) {
+          return true;
+        }
+
         return false;
       }
     }

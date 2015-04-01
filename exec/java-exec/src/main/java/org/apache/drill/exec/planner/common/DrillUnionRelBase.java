@@ -43,7 +43,7 @@ public abstract class DrillUnionRelBase extends UnionRelBase implements DrillRel
   public boolean isCompatible(boolean compareNames, boolean allowSubstring) {
     RelDataType unionType = getRowType();
     for (RelNode input : getInputs()) {
-      if (! DrillRelOptUtil.areRowTypesEqual(
+      if (! DrillRelOptUtil.areRowTypesCompatible(
           input.getRowType(), unionType, compareNames, allowSubstring)) {
         return false;
       }

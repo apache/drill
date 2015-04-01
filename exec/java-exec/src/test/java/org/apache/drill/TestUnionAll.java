@@ -459,4 +459,23 @@ public class TestUnionAll extends BaseTestQuery{
         .baselineValues("99")
         .build().run();
   }
+
+  @Test // see DRILL-2639
+  public void testUnionAllDiffTypesAtPlanning() throws Exception {
+    String query = "select count(c1) as ct from (select cast(r_regionkey as int) c1 from cp.`tpch/region.parquet`) " +
+        "union all " +
+        "(select cast(r_regionkey as int) c2 from cp.`tpch/region.parquet`)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 5)
+        .baselineValues((long) 0)
+        .baselineValues((long) 1)
+        .baselineValues((long) 2)
+        .baselineValues((long) 3)
+        .baselineValues((long) 4)
+        .build().run();
+  }
 }
