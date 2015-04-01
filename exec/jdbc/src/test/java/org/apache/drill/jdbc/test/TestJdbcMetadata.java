@@ -21,12 +21,18 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.apache.drill.common.util.TestTools;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 
 public class TestJdbcMetadata extends JdbcTestActionBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcMetadata.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcMetadata.class);
 
+
+  @Rule
+  public TestRule TIMEOUT = TestTools.getTimeoutRule( 90_000 /* ms */ );
 
   @Test
   public void catalogs() throws Exception{

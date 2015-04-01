@@ -23,7 +23,9 @@ import static org.hamcrest.CoreMatchers.*;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -31,6 +33,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.jdbc.JdbcTest;
 
 
@@ -42,6 +45,9 @@ public class Drill2128GetColumnsDataTypeNotTypeCodeIntBugsTest extends JdbcTest 
 
   private static Connection connection;
   private static DatabaseMetaData dbMetadata;
+
+  @Rule
+  public TestRule TIMEOUT = TestTools.getTimeoutRule( 90_000 /* ms */ );
 
   @BeforeClass
   public static void setUpConnection() throws Exception {
