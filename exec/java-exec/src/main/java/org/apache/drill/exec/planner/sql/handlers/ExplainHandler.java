@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.TypedSqlNode;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 
@@ -53,12 +55,15 @@ public class ExplainHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode node) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     SqlNode sqlNode = rewrite(node);
-    SqlNode validated = validateNode(sqlNode);
+    TypedSqlNode validatedTypedSqlNode = validateNode(sqlNode);
+    SqlNode validated = validatedTypedSqlNode.getSqlNode();
+    RelDataType validatedRowType = validatedTypedSqlNode.getType();
+
     RelNode rel = convertToRel(validated);
     rel = preprocessNode(rel);
 
     log("Optiq Logical", rel);
-    DrillRel drel = convertToDrel(rel);
+    DrillRel drel = convertToDrel(rel, validatedRowType);
     log("Drill Logical", drel);
 
     if (mode == ResultMode.LOGICAL) {

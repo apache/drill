@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.TypedSqlNode;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;

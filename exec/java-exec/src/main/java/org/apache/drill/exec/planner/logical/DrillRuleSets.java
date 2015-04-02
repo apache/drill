@@ -131,7 +131,7 @@ public class DrillRuleSets {
 //      SwapJoinRule.INSTANCE,
       AggregateRemoveRule.INSTANCE,   // RemoveDistinctRule
 //      UnionToDistinctRule.INSTANCE,
-      ProjectRemoveRule.INSTANCE,     // RemoveTrivialProjectRule
+      ProjectRemoveRule.NAME_CALC_INSTANCE,     // RemoveTrivialProjectRule
 //      RemoveTrivialCalcRule.INSTANCE,
       SortRemoveRule.INSTANCE,      //RemoveSortRule.INSTANCE,
 

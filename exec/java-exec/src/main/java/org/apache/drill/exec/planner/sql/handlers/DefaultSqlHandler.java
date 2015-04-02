@@ -22,6 +22,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.rules.ProjectRemoveRule;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.TypedSqlNode;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
@@ -37,6 +46,7 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
+import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
@@ -45,6 +55,7 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
@@ -129,12 +140,17 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     SqlNode rewrittenSqlNode = rewrite(sqlNode);
-    SqlNode validated = validateNode(rewrittenSqlNode);
+    TypedSqlNode validatedTypedSqlNode = validateNode(rewrittenSqlNode);
+    SqlNode validated = validatedTypedSqlNode.getSqlNode();
+    RelDataType validatedRowType = validatedTypedSqlNode.getType();
+
     RelNode rel = convertToRel(validated);
     rel = preprocessNode(rel);
 
+
     log("Optiq Logical", rel);
-    DrillRel drel = convertToDrel(rel);
+    DrillRel drel = convertToDrel(rel, validatedRowType);
+
     log("Drill Logical", drel);
     Prel prel = convertToPrel(drel);
     log("Drill Physical", prel);
@@ -144,8 +160,37 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return plan;
   }
 
-  protected SqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException, ForemanSetupException {
-    SqlNode sqlNodeValidated = planner.validate(sqlNode);
+  protected DrillRel addRenamedProject(DrillRel rel, RelDataType validatedRowType) {
+    RelDataType t = rel.getRowType();
+
+    RexBuilder b = rel.getCluster().getRexBuilder();
+    List<RexNode> projections = Lists.newArrayList();
+    int projectCount = t.getFieldList().size();
+
+    for (int i =0; i < projectCount; i++) {
+      projections.add(b.makeInputRef(rel, i));
+    }
+
+    final List<String> fieldNames2 = SqlValidatorUtil.uniquify(validatedRowType.getFieldNames(), SqlValidatorUtil.F_SUGGESTER2);
+
+    RelDataType newRowType = RexUtil.createStructType(rel.getCluster().getTypeFactory(), projections, fieldNames2);
+
+    DrillProjectRel topProj = DrillProjectRel.create(rel.getCluster(), rel.getTraitSet(), rel, projections, newRowType);
+
+    if (ProjectRemoveRule.isTrivial(topProj, true)) {
+      return rel;
+    } else{
+      return topProj;
+    }
+    //return RelOptUtil.createProject(rel, projections, fieldNames2);
+
+  }
+
+
+  protected TypedSqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException, ForemanSetupException {
+    TypedSqlNode typedSqlNode = planner.validateAndGetType(sqlNode);
+
+    SqlNode sqlNodeValidated = typedSqlNode.getSqlNode();
 
     // Check if the unsupported functionality is used
     UnsupportedOperatorsVisitor visitor = UnsupportedOperatorsVisitor.createVisitor(context);
@@ -159,7 +204,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       throw ex;
     }
 
-    return sqlNodeValidated;
+    return typedSqlNode;
   }
 
   protected RelNode convertToRel(SqlNode node) throws RelConversionException {
@@ -191,14 +236,16 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return rel;
   }
 
-  protected DrillRel convertToDrel(RelNode relNode) throws RelConversionException, SqlUnsupportedException {
+  protected DrillRel convertToDrel(RelNode relNode, RelDataType validatedRowType) throws RelConversionException, SqlUnsupportedException {
     try {
       RelNode convertedRelNode = planner.transform(DrillSqlWorker.LOGICAL_RULES,
           relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
       if (convertedRelNode instanceof DrillStoreRel) {
         throw new UnsupportedOperationException();
       } else {
-        return new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode);
+        // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
+        DrillRel topPreservedNameProj = addRenamedProject((DrillRel)convertedRelNode, validatedRowType);
+        return new DrillScreenRel(topPreservedNameProj.getCluster(), topPreservedNameProj.getTraitSet(), topPreservedNameProj);
       }
     } catch (RelOptPlanner.CannotPlanException ex) {
       logger.error(ex.getMessage());

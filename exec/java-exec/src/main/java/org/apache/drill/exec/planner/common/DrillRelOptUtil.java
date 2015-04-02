@@ -92,8 +92,6 @@ public abstract class DrillRelOptUtil {
    * Returns a relational expression which has the same fields as the
    * underlying expression, but the fields have different names.
    *
-   * Note: This method is copied from {@link org.eigenbase.rel.CalcRel#createRename(RelNode, List)} because it has a bug
-   * which doesn't rename the exprs. This bug is fixed in latest version of Apache Calcite (1.2).
    *
    * @param rel        Relational expression
    * @param fieldNames Field names
@@ -104,19 +102,17 @@ public abstract class DrillRelOptUtil {
       final List<String> fieldNames) {
     final List<RelDataTypeField> fields = rel.getRowType().getFieldList();
     assert fieldNames.size() == fields.size();
-    final List<Pair<RexNode, String>> refs =
-        new AbstractList<Pair<RexNode, String>>() {
+    final List<RexNode> refs =
+        new AbstractList<RexNode>() {
           public int size() {
             return fields.size();
           }
 
-          public Pair<RexNode, String> get(int index) {
-            return Pair.of(
-                (RexNode) new RexInputRef(index, fields.get(index).getType()),
-                fieldNames.get(index));
+          public RexNode get(int index) {
+            return RexInputRef.of(index, fields);
           }
         };
-    return RelOptUtil.createRename(rel, fieldNames);
-    // return Calc.createProject(rel, refs, true);
+
+    return RelOptUtil.createProject(rel, refs, fieldNames, false);
   }
 }

@@ -83,8 +83,7 @@ public class SqlHandlerUtil {
       //        SELECT col1, median(col2), avg(col3) FROM sourcetbl GROUP BY col1 ;
       // Similary for CREATE VIEW.
 
-      return RelOptUtil.createRename(validatedQueryRelNode, tableFieldNames);
-      // return DrillRelOptUtil.createRename(validatedQueryRelNode, tableFieldNames);
+      return DrillRelOptUtil.createRename(validatedQueryRelNode, tableFieldNames);
     }
 
     return validatedQueryRelNode;

@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.core.Calc;
 import org.apache.calcite.rel.logical.LogicalCalc;
 import org.apache.calcite.rel.core.Filter;
@@ -76,7 +77,7 @@ public class DrillReduceExpressionsRule {
   }
 
   private static RelNode createEmptyEmptyRelHelper(SingleRel input) {
-    return LogicalSort.create(input.getInput(), RelCollationImpl.EMPTY,
+    return LogicalSort.create(input.getInput(), RelCollations.EMPTY,
         input.getCluster().getRexBuilder().makeExactLiteral(BigDecimal.valueOf(0)),
         input.getCluster().getRexBuilder().makeExactLiteral(BigDecimal.valueOf(0)));
   }

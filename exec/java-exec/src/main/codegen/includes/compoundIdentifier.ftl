@@ -24,10 +24,16 @@ SqlIdentifier CompoundIdentifier() :
     }
     (
         (
-          <DOT> p = Identifier()
-          {
-              builder.addString(p, getPos());
-          }
+        <DOT>
+        (
+            p = Identifier() {
+                builder.addString(p, getPos());
+            }
+        |
+            <STAR> {
+                builder.addString("*", getPos());
+            }
+        )
         )
         |
         (

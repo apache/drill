@@ -76,7 +76,7 @@ public class DrillPushProjIntoScan extends RelOptRule {
               newProjects,
               proj.getRowType());
 
-      if (ProjectRemoveRule.isTrivial(newProj)) {
+      if (ProjectRemoveRule.isTrivial(newProj, true)) {
         call.transformTo(newScan);
       } else {
         call.transformTo(newProj);

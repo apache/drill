@@ -58,7 +58,7 @@ public class DrillSqlOperator extends SqlFunction {
     if (MinorType.BIT.equals(returnType.getMinorType())) {
       return factory.createSqlType(SqlTypeName.BOOLEAN);
     }
-    return factory.createSqlType(SqlTypeName.ANY);
+    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
   }
 
   private RelDataType getNullableReturnDataType(final RelDataTypeFactory factory) {
@@ -81,10 +81,6 @@ public class DrillSqlOperator extends SqlFunction {
 
   @Override
   public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-    if (NONE.equals(returnType)) {
-      return super.inferReturnType(opBinding);
-    }
-
     return getNullableReturnDataType(opBinding.getTypeFactory());
   }
 }

@@ -75,4 +75,17 @@ public class DrillProjectRel extends DrillProjectRelBase implements DrillRel {
     return new DrillProjectRel(context.getCluster(), context.getLogicalTraits(), input, exps, new RelRecordType(fields));
   }
 
+  /** provide a public method to create an instance of DrillProjectRel.
+   *
+   * @param cluster
+   * @param traits
+   * @param child
+   * @param exps
+   * @param rowType
+   * @return new instance of DrillProjectRel
+   */
+  public static DrillProjectRel create(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
+                                       RelDataType rowType) {
+    return new DrillProjectRel(cluster, traits, child, exps, rowType);
+  }
 }
