@@ -25,6 +25,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.CreateTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
+import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.relopt.hep.HepPlanner;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlIdentifier;
@@ -93,7 +94,13 @@ public class SqlCreateTable extends DrillSqlCall {
 
   @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
-    return new CreateTableHandler(config);
+    return getSqlHandler(config, null);
+  }
+
+  @Override
+  public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config, Pointer<String> textPlan) {
+    assert textPlan != null : "Create table statement should have a plan";
+    return new CreateTableHandler(config, textPlan);
   }
 
   public List<String> getSchemaPath() {

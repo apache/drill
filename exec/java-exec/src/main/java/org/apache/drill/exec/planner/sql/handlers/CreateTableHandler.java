@@ -38,6 +38,7 @@ import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
@@ -46,9 +47,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlNode;
 
 public class CreateTableHandler extends DefaultSqlHandler {
-
-  public CreateTableHandler(SqlHandlerConfig config) {
-    super(config);
+  public CreateTableHandler(SqlHandlerConfig config, Pointer<String> textPlan) {
+    super(config, textPlan);
   }
 
   @Override

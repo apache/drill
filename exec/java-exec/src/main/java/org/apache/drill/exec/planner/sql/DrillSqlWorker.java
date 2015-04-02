@@ -41,6 +41,7 @@ import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
+import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.Pointer;
@@ -132,6 +133,11 @@ public class DrillSqlWorker {
       handler = new SetOptionHandler(context);
       break;
     case OTHER:
+      if(sqlNode instanceof SqlCreateTable) {
+        handler = ((DrillSqlCall)sqlNode).getSqlHandler(config, textPlan);
+        break;
+      }
+
       if (sqlNode instanceof DrillSqlCall) {
         handler = ((DrillSqlCall)sqlNode).getSqlHandler(config);
         break;
