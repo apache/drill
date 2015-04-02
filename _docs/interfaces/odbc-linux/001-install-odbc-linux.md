@@ -42,8 +42,8 @@ To install the driver, you need Administrator privileges on the computer.
 
 Click on a link below to download the driver:
 
-  * [MapRDrillODBC-32bit-0.07.0.i686.rpm](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc/MapRDrillODBC-32bit-0.07.0.i686.rpm) (32-bit)
-  * [MapRDrillODBC-0.07.0.x86_64.rpm](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc/MapRDrillODBC-0.07.0.x86_64.rpm) (64-bit)
+  * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.08.1.0618/MapRDrillODBC-32bit-0.08.1.i686_DriverOnly.rpm)
+  * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.08.1.0618/MapRDrillODBC-0.08.1.x86_64_DriverOnly.rpm)
 
 ## Step 2: Installing the MapR Drill ODBC Driver
 

@@ -75,7 +75,7 @@ You can run the dummy query described earlier to check the formatting of the fie
     +------------+
     1 row selected (0.054 seconds)
 
-    SELECT INTERVAL '1-2' year to month FROM dfs.`/Users/khahn/drill/apache-drill-0.8.0-SNAPSHOT/dummy.json`;
+    SELECT INTERVAL '1-2' year to month FROM dfs.`/Users/drill/dummy.json`;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -83,7 +83,7 @@ You can run the dummy query described earlier to check the formatting of the fie
     +------------+
     1 row selected (0.927 seconds)
 
-    SELECT INTERVAL '1' year FROM dfs.`/Users/khahn/drill/apache-drill-0.8.0-SNAPSHOT/dummy.json`;
+    SELECT INTERVAL '1' year FROM dfs.`/Users/drill/dummy.json`;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -91,7 +91,7 @@ You can run the dummy query described earlier to check the formatting of the fie
     +------------+
     1 row selected (0.088 seconds)
 
-    SELECT INTERVAL '13' month FROM dfs.`/Users/khahn/drill/apache-drill-0.8.0-SNAPSHOT/dummy.json`;
+    SELECT INTERVAL '13' month FROM dfs.`/Users/drill/dummy.json`;
     +------------+
     |   EXPR$0   |
     +------------+

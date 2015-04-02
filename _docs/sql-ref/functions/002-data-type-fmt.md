@@ -150,7 +150,8 @@ In addition to the CAST, CONVERT_TO, and CONVERT_FROM functions, Drill supports 
 * A character string to a date
 * A character string to a number
 * A character string to a timestamp with time zone
-* A decimal type to a timestamp with time zone
+
+<!-- A decimal type to a timestamp with time zone -->
 
 ## Usage Notes
 
@@ -213,9 +214,148 @@ Use the following format specifiers for numerical conversions:
               itself, use two in a row: <code>"# o''clock"</code>.
  </table>
 
-Use the following format specifiers for data type conversions:
+Use the following format specifiers for date/time conversions:
 
-
+<table>
+  <tr>
+    <th>Symbol</th>
+    <th>Meaning</th>
+    <th>Presentation</th>
+    <th>Examples</th>
+  </tr>
+  <tr>
+    <td>G</td>
+    <td>era</td>
+    <td>text</td>
+    <td>AD</td>
+  </tr>
+  <tr>
+    <td>C</td>
+    <td>century of era (&gt;=0)</td>
+    <td>number</td>
+    <td>20</td>
+  </tr>
+  <tr>
+    <td>Y</td>
+    <td>year of era (&gt;=0)</td>
+    <td>year</td>
+    <td>1996</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>weekyear</td>
+    <td>year</td>
+    <td>1996</td>
+  </tr>
+  <tr>
+    <td>w</td>
+    <td>week of weekyear</td>
+    <td>number</td>
+    <td>27</td>
+  </tr>
+  <tr>
+    <td>e</td>
+    <td>day of week</td>
+    <td>number</td>
+    <td>2</td>
+  </tr>
+  <tr>
+    <td>E</td>
+    <td>day of week</td>
+    <td>text</td>
+    <td>Tuesday; Tue</td>
+  </tr>
+  <tr>
+    <td>y</td>
+    <td>year</td>
+    <td>year</td>
+    <td>1996</td>
+  </tr>
+  <tr>
+    <td>D</td>
+    <td>day of year</td>
+    <td>number</td>
+    <td>189</td>
+  </tr>
+  <tr>
+    <td>M</td>
+    <td>month of year</td>
+    <td>month</td>
+    <td>July; Jul; 07</td>
+  </tr>
+  <tr>
+    <td>d</td>
+    <td>day of month</td>
+    <td>number</td>
+    <td>10</td>
+  </tr>
+  <tr>
+    <td>a</td>
+    <td>halfday of day</td>
+    <td>text</td>
+    <td>PM</td>
+  </tr>
+  <tr>
+    <td>K</td>
+    <td>hour of halfday (0~11)</td>
+    <td>number</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>h</td>
+    <td>clockhour of halfday (1~12)number</td>
+    <td>12</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>H</td>
+    <td>hour of day (0~23)</td>
+    <td>number</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>k</td>
+    <td>clockhour of day (1~24)</td>
+    <td>number</td>
+    <td>24</td>
+  </tr>
+  <tr>
+    <td>m</td>
+    <td>minute of hour</td>
+    <td>number</td>
+    <td>30</td>
+  </tr>
+  <tr>
+    <td>s</td>
+    <td>second of minute</td>
+    <td>number</td>
+    <td>55</td>
+  </tr>
+  <tr>
+    <td>S</td>
+    <td>fraction of second</td>
+    <td>number</td>
+    <td>978</td>
+  </tr>
+  <tr>
+    <td>z</td>
+    <td>time zone</td>
+    <td>text</td>
+    <td>Pacific Standard Time; PST</td>
+  </tr>
+  <tr>
+    <td>Z</td>
+    <td>time zone offset/id</td>
+    <td>zone</td>
+    <td>-0800; -08:00; America/Los_Angeles</td>
+  </tr>
+  <tr>
+    <td>escape for text delimiter   '</td>
+    <td>single quote</td>
+    <td>literal</td>
+    <td></td>
+  </tr>
+</table>
 
 For more information about specifying a format, refer to one of the following format specifier documents:
 
@@ -232,18 +372,10 @@ TO_CHAR converts a date, time, timestamp, or numerical expression to a character
 
 *expression* is a float, integer, decimal, date, time, or timestamp expression. 
 
-* 'format'* is format specifier enclosed in single quotation marks that sets a pattern for the output formatting. 
+*'format'* is format specifier enclosed in single quotation marks that sets a pattern for the output formatting. 
 
 ### Usage Notes
-Currently Drill does not support a timestamp with time zone data type. Drill stores the timestamp and date in [UTC](http://www.timeanddate.com/time/aboututc.html) and maintains no timezone information. Currently, you cannot convert dates/timestamp to a specific timezone. However if your input data contains timezone information, Drill can use it as if it were UTC time.
-
-SELECT to_char(cast('2008-2-23 12:00:00 America/Los_Angeles' as timestamp), 'yyyy MMM dd HH:mm:ss z') FROM dfs.`/Users/drill/dummy.json`;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2008 Feb 23 12:00:00 UTC |
-    +------------+
-    1 row selected (0.108 seconds)
+Currently Drill does not support a timestamp with time zone data type. Drill stores the timestamp and date in [UTC](http://www.timeanddate.com/time/aboututc.html) and maintains no timezone information. Currently, you cannot convert dates/timestamp to a specific timezone. However if your input data contains timezone information, Drill can use it as if it were UTC time. 
 
 ## Examples
 
@@ -303,7 +435,7 @@ Converts a character string or a UNIX epoch timestamp to a date.
 
     TO_DATE (expression [, 'format']);
 
-*expression* is a character string enclosed in single quotation marks or a UNIX epoch timestamp, not enclosed in single quotation marks. 
+*expression* is a character string enclosed in single quotation marks or a UNIX epoch timestamp in milliseconds, not enclosed in single quotation marks. 
 
 * 'format'* is format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not a UNIX epoch timestamp. 
 
@@ -312,7 +444,7 @@ Specify a format using patterns defined in [Java DateTimeFormat class](http://jo
 
 
 ## Examples
-The first example converts a character string to a date. The second example extracts the year to verify that Drill recognizes the date as a date type.
+The first example converts a character string to a date. The second example extracts the year to verify that Drill recognizes the date as a date type. 
 
     SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') FROM dfs.`/Users/drill/dummy.json`;
     +------------+
@@ -330,6 +462,16 @@ The first example converts a character string to a date. The second example extr
     | 2015       |
     +------------+
     1 row selected (0.128 seconds)
+
+The following example converts a UNIX epoch timestamp to a date.
+
+    SELECT TO_DATE(1427849046000) FROM dfs.`/Users/drill/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2015-04-01 |
+    +------------+
+    1 row selected (0.082 seconds)
 
 # TO_NUMBER
 
@@ -389,7 +531,11 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
 
 # TO_TIME
 
-    SELECT to_time('12:20:30', 'HH:mm:ss') FROM dfs.`/Users/khahn/Documents/test_files_source/dummy.json`;
+Converts a character string to a time.
+
+## Examples
+
+    SELECT TO_TIME('12:20:30', 'HH:mm:ss') FROM dfs.`/Users/Drill/test_files_source/dummy.json`;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -397,17 +543,31 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
     +------------+
     1 row selected (0.067 seconds)
 
+# TO_TIMESTAMP
 
-    # TO_TIMESTAMP
+Converts a date or Unix Epoch timestamp to a timestamp.
 
-    SELECT to_timestamp('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') FROM dfs.`/Users/khahn/Documents/test_files_source/dummy.json`;
+    SELECT to_timestamp('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') FROM dfs.`/Users/Drill/dummy.json`;
     +------------+
     |   EXPR$0   |
     +------------+
     | 2008-02-23 12:00:00.0 |
     +------------+
 
+    SELECT to_timestamp(1427936330) FROM dfs.`/Users/drill/dummy.json`;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2015-04-01 17:58:50.0 |
+    +------------+
+    1 row selected (0.094 seconds)
 
+<!--     FROM Andries
+    select to_timestamp('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') as Original, to_char(to_timestamp('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') as New_TZ from sys.version;
+
+    Using ‘Z’ will provide offset from UTC as opposed to the 3 letter timezone code.
+ -->
+<!-- DRILL-448 Support timestamp with time zone -->
 
 
 <!-- Apache Drill    
