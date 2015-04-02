@@ -305,6 +305,138 @@ public final class UserProtos {
     // @@protoc_insertion_point(enum_scope:exec.user.QueryResultsMode)
   }
 
+  /**
+   * Protobuf enum {@code exec.user.HandshakeStatus}
+   */
+  public enum HandshakeStatus
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>SUCCESS = 1;</code>
+     *
+     * <pre>
+     * Handshake is successful (including authentication if any)
+     * </pre>
+     */
+    SUCCESS(0, 1),
+    /**
+     * <code>RPC_VERSION_MISMATCH = 2;</code>
+     *
+     * <pre>
+     * Client and Server RPC versions are different
+     * </pre>
+     */
+    RPC_VERSION_MISMATCH(1, 2),
+    /**
+     * <code>AUTH_FAILED = 3;</code>
+     *
+     * <pre>
+     * User authentication failed
+     * </pre>
+     */
+    AUTH_FAILED(2, 3),
+    /**
+     * <code>UNKNOWN_FAILURE = 4;</code>
+     *
+     * <pre>
+     * Unknown failure, refer to the error message for more details
+     * </pre>
+     */
+    UNKNOWN_FAILURE(3, 4),
+    ;
+
+    /**
+     * <code>SUCCESS = 1;</code>
+     *
+     * <pre>
+     * Handshake is successful (including authentication if any)
+     * </pre>
+     */
+    public static final int SUCCESS_VALUE = 1;
+    /**
+     * <code>RPC_VERSION_MISMATCH = 2;</code>
+     *
+     * <pre>
+     * Client and Server RPC versions are different
+     * </pre>
+     */
+    public static final int RPC_VERSION_MISMATCH_VALUE = 2;
+    /**
+     * <code>AUTH_FAILED = 3;</code>
+     *
+     * <pre>
+     * User authentication failed
+     * </pre>
+     */
+    public static final int AUTH_FAILED_VALUE = 3;
+    /**
+     * <code>UNKNOWN_FAILURE = 4;</code>
+     *
+     * <pre>
+     * Unknown failure, refer to the error message for more details
+     * </pre>
+     */
+    public static final int UNKNOWN_FAILURE_VALUE = 4;
+
+
+    public final int getNumber() { return value; }
+
+    public static HandshakeStatus valueOf(int value) {
+      switch (value) {
+        case 1: return SUCCESS;
+        case 2: return RPC_VERSION_MISMATCH;
+        case 3: return AUTH_FAILED;
+        case 4: return UNKNOWN_FAILURE;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<HandshakeStatus>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<HandshakeStatus>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<HandshakeStatus>() {
+            public HandshakeStatus findValueByNumber(int number) {
+              return HandshakeStatus.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(2);
+    }
+
+    private static final HandshakeStatus[] VALUES = values();
+
+    public static HandshakeStatus valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private HandshakeStatus(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.HandshakeStatus)
+  }
+
   public interface PropertyOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -3929,6 +4061,46 @@ public final class UserProtos {
      * <code>optional int32 rpc_version = 2;</code>
      */
     int getRpcVersion();
+
+    // optional .exec.user.HandshakeStatus status = 3;
+    /**
+     * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+     */
+    boolean hasStatus();
+    /**
+     * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.HandshakeStatus getStatus();
+
+    // optional string errorId = 4;
+    /**
+     * <code>optional string errorId = 4;</code>
+     */
+    boolean hasErrorId();
+    /**
+     * <code>optional string errorId = 4;</code>
+     */
+    java.lang.String getErrorId();
+    /**
+     * <code>optional string errorId = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getErrorIdBytes();
+
+    // optional string errorMessage = 5;
+    /**
+     * <code>optional string errorMessage = 5;</code>
+     */
+    boolean hasErrorMessage();
+    /**
+     * <code>optional string errorMessage = 5;</code>
+     */
+    java.lang.String getErrorMessage();
+    /**
+     * <code>optional string errorMessage = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getErrorMessageBytes();
   }
   /**
    * Protobuf type {@code exec.user.BitToUserHandshake}
@@ -3984,6 +4156,27 @@ public final class UserProtos {
             case 16: {
               bitField0_ |= 0x00000001;
               rpcVersion_ = input.readInt32();
+              break;
+            }
+            case 24: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.HandshakeStatus value = org.apache.drill.exec.proto.UserProtos.HandshakeStatus.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(3, rawValue);
+              } else {
+                bitField0_ |= 0x00000002;
+                status_ = value;
+              }
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000004;
+              errorId_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000008;
+              errorMessage_ = input.readBytes();
               break;
             }
           }
@@ -4042,8 +4235,113 @@ public final class UserProtos {
       return rpcVersion_;
     }
 
+    // optional .exec.user.HandshakeStatus status = 3;
+    public static final int STATUS_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserProtos.HandshakeStatus status_;
+    /**
+     * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+     */
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.HandshakeStatus getStatus() {
+      return status_;
+    }
+
+    // optional string errorId = 4;
+    public static final int ERRORID_FIELD_NUMBER = 4;
+    private java.lang.Object errorId_;
+    /**
+     * <code>optional string errorId = 4;</code>
+     */
+    public boolean hasErrorId() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string errorId = 4;</code>
+     */
+    public java.lang.String getErrorId() {
+      java.lang.Object ref = errorId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          errorId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string errorId = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getErrorIdBytes() {
+      java.lang.Object ref = errorId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        errorId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string errorMessage = 5;
+    public static final int ERRORMESSAGE_FIELD_NUMBER = 5;
+    private java.lang.Object errorMessage_;
+    /**
+     * <code>optional string errorMessage = 5;</code>
+     */
+    public boolean hasErrorMessage() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string errorMessage = 5;</code>
+     */
+    public java.lang.String getErrorMessage() {
+      java.lang.Object ref = errorMessage_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          errorMessage_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string errorMessage = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getErrorMessageBytes() {
+      java.lang.Object ref = errorMessage_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        errorMessage_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       rpcVersion_ = 0;
+      status_ = org.apache.drill.exec.proto.UserProtos.HandshakeStatus.SUCCESS;
+      errorId_ = "";
+      errorMessage_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4060,6 +4358,15 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeInt32(2, rpcVersion_);
       }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeEnum(3, status_.getNumber());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(4, getErrorIdBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(5, getErrorMessageBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -4072,6 +4379,18 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, rpcVersion_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(3, status_.getNumber());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getErrorIdBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getErrorMessageBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4191,6 +4510,12 @@ public final class UserProtos {
         super.clear();
         rpcVersion_ = 0;
         bitField0_ = (bitField0_ & ~0x00000001);
+        status_ = org.apache.drill.exec.proto.UserProtos.HandshakeStatus.SUCCESS;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        errorId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        errorMessage_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -4223,6 +4548,18 @@ public final class UserProtos {
           to_bitField0_ |= 0x00000001;
         }
         result.rpcVersion_ = rpcVersion_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.status_ = status_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.errorId_ = errorId_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.errorMessage_ = errorMessage_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4241,6 +4578,19 @@ public final class UserProtos {
         if (other == org.apache.drill.exec.proto.UserProtos.BitToUserHandshake.getDefaultInstance()) return this;
         if (other.hasRpcVersion()) {
           setRpcVersion(other.getRpcVersion());
+        }
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        if (other.hasErrorId()) {
+          bitField0_ |= 0x00000004;
+          errorId_ = other.errorId_;
+          onChanged();
+        }
+        if (other.hasErrorMessage()) {
+          bitField0_ |= 0x00000008;
+          errorMessage_ = other.errorMessage_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4298,6 +4648,190 @@ public final class UserProtos {
       public Builder clearRpcVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
         rpcVersion_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.user.HandshakeStatus status = 3;
+      private org.apache.drill.exec.proto.UserProtos.HandshakeStatus status_ = org.apache.drill.exec.proto.UserProtos.HandshakeStatus.SUCCESS;
+      /**
+       * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+       */
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.HandshakeStatus getStatus() {
+        return status_;
+      }
+      /**
+       * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+       */
+      public Builder setStatus(org.apache.drill.exec.proto.UserProtos.HandshakeStatus value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000002;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        status_ = org.apache.drill.exec.proto.UserProtos.HandshakeStatus.SUCCESS;
+        onChanged();
+        return this;
+      }
+
+      // optional string errorId = 4;
+      private java.lang.Object errorId_ = "";
+      /**
+       * <code>optional string errorId = 4;</code>
+       */
+      public boolean hasErrorId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string errorId = 4;</code>
+       */
+      public java.lang.String getErrorId() {
+        java.lang.Object ref = errorId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          errorId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string errorId = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getErrorIdBytes() {
+        java.lang.Object ref = errorId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          errorId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string errorId = 4;</code>
+       */
+      public Builder setErrorId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        errorId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string errorId = 4;</code>
+       */
+      public Builder clearErrorId() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        errorId_ = getDefaultInstance().getErrorId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string errorId = 4;</code>
+       */
+      public Builder setErrorIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        errorId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string errorMessage = 5;
+      private java.lang.Object errorMessage_ = "";
+      /**
+       * <code>optional string errorMessage = 5;</code>
+       */
+      public boolean hasErrorMessage() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string errorMessage = 5;</code>
+       */
+      public java.lang.String getErrorMessage() {
+        java.lang.Object ref = errorMessage_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          errorMessage_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string errorMessage = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getErrorMessageBytes() {
+        java.lang.Object ref = errorMessage_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          errorMessage_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string errorMessage = 5;</code>
+       */
+      public Builder setErrorMessage(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        errorMessage_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string errorMessage = 5;</code>
+       */
+      public Builder clearErrorMessage() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        errorMessage_ = getDefaultInstance().getErrorMessage();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string errorMessage = 5;</code>
+       */
+      public Builder setErrorMessageBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        errorMessage_ = value;
         onChanged();
         return this;
       }
@@ -4367,15 +4901,20 @@ public final class UserProtos {
       "imum_responses\030\002 \001(\005\"q\n\010RunQuery\0221\n\014resu" +
       "lts_mode\030\001 \001(\0162\033.exec.user.QueryResultsM" +
       "ode\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryTyp" +
-      "e\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022\023\n" +
-      "\013rpc_version\030\002 \001(\005*\310\001\n\007RpcType\022\r\n\tHANDSH" +
-      "AKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY" +
-      "\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020" +
-      "\005\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n\022R",
-      "EQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIS" +
-      "T\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResultsMod" +
-      "e\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.drill.e" +
-      "xec.protoB\nUserProtosH\001"
+      "e\022\014\n\004plan\030\003 \001(\t\"|\n\022BitToUserHandshake\022\023\n" +
+      "\013rpc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exe" +
+      "c.user.HandshakeStatus\022\017\n\007errorId\030\004 \001(\t\022" +
+      "\024\n\014errorMessage\030\005 \001(\t*\310\001\n\007RpcType\022\r\n\tHAN" +
+      "DSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QU",
+      "ERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESUL" +
+      "TS\020\005\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026" +
+      "\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_" +
+      "LIST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResults" +
+      "Mode\022\017\n\013STREAM_FULL\020\001*^\n\017HandshakeStatus" +
+      "\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022" +
+      "\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004B+\n" +
+      "\033org.apache.drill.exec.protoB\nUserProtos" +
+      "H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4417,7 +4956,7 @@ public final class UserProtos {
           internal_static_exec_user_BitToUserHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_BitToUserHandshake_descriptor,
-              new java.lang.String[] { "RpcVersion", });
+              new java.lang.String[] { "RpcVersion", "Status", "ErrorId", "ErrorMessage", });
           return null;
         }
       };

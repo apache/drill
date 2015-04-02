@@ -135,7 +135,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @throws RpcException
    */
   public void connect() throws RpcException {
-    connect(null, new Properties());
+    connect(null, null);
   }
 
   public void connect(Properties props) throws RpcException {
@@ -365,7 +365,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
     @Override
     public void connectionFailed(FailureType type, Throwable t) {
-      getInner().setException(new RpcException(String.format("Failure connecting to server. Failure of type %s.", type.name()), t));
+      getInner().setException(new RpcException(String.format("%s : %s", type.name(), t.getMessage()), t));
     }
 
     private SettableFuture<Void> getInner() {

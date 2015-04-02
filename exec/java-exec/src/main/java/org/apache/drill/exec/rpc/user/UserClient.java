@@ -28,6 +28,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
+import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
@@ -42,7 +43,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import com.google.protobuf.MessageLite;
 
 public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHandshake, BitToUserHandshake> {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserClient.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserClient.class);
 
   private final QueryResultHandler queryResultHandler = new QueryResultHandler();
 
@@ -107,11 +108,12 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   @Override
   protected void validateHandshake(BitToUserHandshake inbound) throws RpcException {
 //    logger.debug("Handling handshake from bit to user. {}", inbound);
-    if (inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) {
-      throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(),
-          UserRpcConfig.RPC_VERSION));
+    if (inbound.getStatus() != HandshakeStatus.SUCCESS) {
+      final String errMsg = String.format("Status: %s, Error Id: %s, Error message: %s",
+          inbound.getStatus(), inbound.getErrorId(), inbound.getErrorMessage());
+      logger.error(errMsg);
+      throw new RpcException(errMsg);
     }
-
   }
 
   @Override

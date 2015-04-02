@@ -663,6 +663,12 @@ public final class SchemaUserProtos
             {
                 if(message.hasRpcVersion())
                     output.writeInt32(2, message.getRpcVersion(), false);
+                if(message.hasStatus())
+                    output.writeEnum(3, message.getStatus().getNumber(), false);
+                if(message.hasErrorId())
+                    output.writeString(4, message.getErrorId(), false);
+                if(message.hasErrorMessage())
+                    output.writeString(5, message.getErrorMessage(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.BitToUserHandshake message)
             {
@@ -705,6 +711,15 @@ public final class SchemaUserProtos
                         case 2:
                             builder.setRpcVersion(input.readInt32());
                             break;
+                        case 3:
+                            builder.setStatus(org.apache.drill.exec.proto.UserProtos.HandshakeStatus.valueOf(input.readEnum()));
+                            break;
+                        case 4:
+                            builder.setErrorId(input.readString());
+                            break;
+                        case 5:
+                            builder.setErrorMessage(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -746,6 +761,9 @@ public final class SchemaUserProtos
             switch(number)
             {
                 case 2: return "rpcVersion";
+                case 3: return "status";
+                case 4: return "errorId";
+                case 5: return "errorMessage";
                 default: return null;
             }
         }
@@ -758,6 +776,9 @@ public final class SchemaUserProtos
         static
         {
             fieldMap.put("rpcVersion", 2);
+            fieldMap.put("status", 3);
+            fieldMap.put("errorId", 4);
+            fieldMap.put("errorMessage", 5);
         }
     }
 

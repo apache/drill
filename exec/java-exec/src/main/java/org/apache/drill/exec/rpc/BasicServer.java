@@ -108,7 +108,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
     }
 
     @Override
-    protected final void consumeHandshake(ChannelHandlerContext ctx, T inbound) throws Exception {
+    protected void consumeHandshake(ChannelHandlerContext ctx, T inbound) throws Exception {
       OutboundRpcMessage msg = new OutboundRpcMessage(RpcMode.RESPONSE, this.handshakeType, coordinationId,
           getHandshakeResponse(inbound));
       ctx.writeAndFlush(msg);

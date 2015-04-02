@@ -98,7 +98,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements DrillCon
         this.client.connect(config.getZookeeperConnectionString(), info);
       }
     } catch (RpcException e) {
-      throw new SQLException("Failure while attempting to connect to Drill.", e);
+      throw new SQLException("Failure while attempting to connect to Drill: " + e.getMessage(), e);
     }
   }
 

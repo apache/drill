@@ -20,21 +20,26 @@ package org.apache.drill.exec.rpc.user;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoopGroup;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
+import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.BasicServer;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
+import org.apache.drill.exec.rpc.OutboundRpcMessage;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.Response;
@@ -149,19 +154,67 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     return new ServerHandshakeHandler<UserToBitHandshake>(RpcType.HANDSHAKE, UserToBitHandshake.PARSER){
 
       @Override
-      public MessageLite getHandshakeResponse(UserToBitHandshake inbound) throws Exception {
-        logger.trace("Handling handshake from user to bit. {}", inbound);
-        if(inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) {
-          throw new RpcException(String.format("Invalid rpc version. Expected %d, actual %d.", inbound.getRpcVersion(), UserRpcConfig.RPC_VERSION));
+      protected void consumeHandshake(ChannelHandlerContext ctx, UserToBitHandshake inbound) throws Exception {
+        BitToUserHandshake handshakeResp = getHandshakeResponse(inbound);
+        OutboundRpcMessage msg = new OutboundRpcMessage(RpcMode.RESPONSE, this.handshakeType, coordinationId, handshakeResp);
+        ctx.writeAndFlush(msg);
+
+        if (handshakeResp.getStatus() != HandshakeStatus.SUCCESS) {
+          // If handling handshake results in an error, throw an exception to terminate the connection.
+          throw new RpcException("Handshake request failed: " + handshakeResp.getErrorMessage());
         }
-
-        connection.setUser(inbound);
-
-        return BitToUserHandshake.newBuilder().setRpcVersion(UserRpcConfig.RPC_VERSION).build();
       }
 
-    };
+      @Override
+      public BitToUserHandshake getHandshakeResponse(UserToBitHandshake inbound) throws Exception {
+        logger.trace("Handling handshake from user to bit. {}", inbound);
 
+        BitToUserHandshake.Builder respBuilder = BitToUserHandshake.newBuilder()
+            .setRpcVersion(UserRpcConfig.RPC_VERSION);
+
+        try {
+          if (inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) {
+            final String errMsg = String.format("Invalid rpc version. Expected %d, actual %d.",
+                UserRpcConfig.RPC_VERSION, inbound.getRpcVersion());
+
+            return handleFailure(respBuilder, HandshakeStatus.RPC_VERSION_MISMATCH, errMsg, null);
+          }
+
+          connection.setUser(inbound);
+
+          return respBuilder.setStatus(HandshakeStatus.SUCCESS).build();
+        } catch (Exception e) {
+          return handleFailure(respBuilder, HandshakeStatus.UNKNOWN_FAILURE, e.getMessage(), e);
+        }
+      }
+    };
+  }
+
+  /**
+   * Complete building the given builder for <i>BitToUserHandshake</i> message with given status and error details.
+   *
+   * @param respBuilder Instance of {@link org.apache.drill.exec.proto.UserProtos.BitToUserHandshake} builder which
+   *                    has RPC version field already set.
+   * @param status  Status of handling handshake request.
+   * @param errMsg  Error message.
+   * @param exception Optional exception.
+   * @return
+   */
+  private static BitToUserHandshake handleFailure(BitToUserHandshake.Builder respBuilder, HandshakeStatus status,
+      String errMsg, Exception exception) {
+    final String errorId = UUID.randomUUID().toString();
+
+    if (exception != null) {
+      logger.error("Error {} in Handling handshake request: {}, {}", errorId, status, errMsg, exception);
+    } else {
+      logger.error("Error {} in Handling handshake request: {}, {}", errorId, status, errMsg);
+    }
+
+    return respBuilder
+        .setStatus(status)
+        .setErrorId(errorId)
+        .setErrorMessage(errMsg)
+        .build();
   }
 
   @Override

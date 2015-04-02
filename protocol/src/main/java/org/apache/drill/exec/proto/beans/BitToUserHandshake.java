@@ -48,6 +48,9 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
 
     
     private int rpcVersion;
+    private HandshakeStatus status;
+    private String errorId;
+    private String errorMessage;
 
     public BitToUserHandshake()
     {
@@ -66,6 +69,45 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
     public BitToUserHandshake setRpcVersion(int rpcVersion)
     {
         this.rpcVersion = rpcVersion;
+        return this;
+    }
+
+    // status
+
+    public HandshakeStatus getStatus()
+    {
+        return status == null ? HandshakeStatus.SUCCESS : status;
+    }
+
+    public BitToUserHandshake setStatus(HandshakeStatus status)
+    {
+        this.status = status;
+        return this;
+    }
+
+    // errorId
+
+    public String getErrorId()
+    {
+        return errorId;
+    }
+
+    public BitToUserHandshake setErrorId(String errorId)
+    {
+        this.errorId = errorId;
+        return this;
+    }
+
+    // errorMessage
+
+    public String getErrorMessage()
+    {
+        return errorMessage;
+    }
+
+    public BitToUserHandshake setErrorMessage(String errorMessage)
+    {
+        this.errorMessage = errorMessage;
         return this;
     }
 
@@ -126,6 +168,15 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
                 case 2:
                     message.rpcVersion = input.readInt32();
                     break;
+                case 3:
+                    message.status = HandshakeStatus.valueOf(input.readEnum());
+                    break;
+                case 4:
+                    message.errorId = input.readString();
+                    break;
+                case 5:
+                    message.errorMessage = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -137,6 +188,15 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
     {
         if(message.rpcVersion != 0)
             output.writeInt32(2, message.rpcVersion, false);
+
+        if(message.status != null)
+             output.writeEnum(3, message.status.number, false);
+
+        if(message.errorId != null)
+            output.writeString(4, message.errorId, false);
+
+        if(message.errorMessage != null)
+            output.writeString(5, message.errorMessage, false);
     }
 
     public String getFieldName(int number)
@@ -144,6 +204,9 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
         switch(number)
         {
             case 2: return "rpcVersion";
+            case 3: return "status";
+            case 4: return "errorId";
+            case 5: return "errorMessage";
             default: return null;
         }
     }
@@ -158,6 +221,9 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
     static
     {
         __fieldMap.put("rpcVersion", 2);
+        __fieldMap.put("status", 3);
+        __fieldMap.put("errorId", 4);
+        __fieldMap.put("errorMessage", 5);
     }
     
 }

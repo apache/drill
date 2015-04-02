@@ -63,6 +63,16 @@ enum QueryResultsMode {
   // QUERY_FOR_STATUS = 3; // Client will need to query for status of query.
 }
 
+enum HandshakeStatus {
+  SUCCESS = 1; // Handshake is successful (including authentication if any)
+  RPC_VERSION_MISMATCH = 2; // Client and Server RPC versions are different
+  AUTH_FAILED = 3; // User authentication failed
+  UNKNOWN_FAILURE = 4; // Unknown failure, refer to the error message for more details
+}
+
 message BitToUserHandshake {
   optional int32 rpc_version = 2;
+  optional HandshakeStatus status = 3;
+  optional string errorId = 4;
+  optional string errorMessage = 5;
 }
