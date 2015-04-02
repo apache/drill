@@ -44,7 +44,7 @@ public class ValueExpressions {
     return new DoubleExpression(d, ExpressionPosition.UNKNOWN);
   }
   public static LogicalExpression getFloat4(float f){
-    return new DoubleExpression(f, ExpressionPosition.UNKNOWN);
+    return new FloatExpression(f, ExpressionPosition.UNKNOWN);
   }
 
   public static LogicalExpression getBit(boolean b){

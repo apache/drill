@@ -294,6 +294,82 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .go();
   }
 
+
+  // From DRILL-2668:  "CAST ( 1.1 AS FLOAT )" yielded TYPE DOUBLE:
+
+  /**
+   * Test for DRILL-2668, that "CAST ( 1.5 AS FLOAT )" really yields type FLOAT
+   * (rather than type DOUBLE).
+   */
+  @Test
+  public void testLiteralCastToFLOATYieldsFLOAT() throws Exception {
+    testBuilder()
+    .sqlQuery( "SELECT CAST( 1.5 AS FLOAT ) AS ShouldBeFLOAT "
+               + "FROM cp.`employee.json` LIMIT 1" )
+    .unOrdered()
+    .baselineColumns("ShouldBeFLOAT")
+    .baselineValues(new Float(1.5f))
+    .go();
+  }
+
+  @Test
+  public void testLiteralCastToDOUBLEYieldsDOUBLE() throws Exception {
+    testBuilder()
+    .sqlQuery( "SELECT CAST( 1.25 AS DOUBLE PRECISION ) AS ShouldBeDOUBLE "
+               + "FROM cp.`employee.json` LIMIT 1" )
+    .unOrdered()
+    .baselineColumns("ShouldBeDOUBLE")
+    .baselineValues(new Double(1.25))
+    .go();
+  }
+
+  @Test
+  public void testLiteralCastToBIGINTYieldsBIGINT() throws Exception {
+    testBuilder()
+    .sqlQuery( "SELECT CAST( 64 AS BIGINT ) AS ShouldBeBIGINT "
+               + "FROM cp.`employee.json` LIMIT 1" )
+    .unOrdered()
+    .baselineColumns("ShouldBeBIGINT")
+    .baselineValues(new Long(64))
+    .go();
+  }
+
+  @Test
+  public void testLiteralCastToINTEGERYieldsINTEGER() throws Exception {
+    testBuilder()
+    .sqlQuery( "SELECT CAST( 32 AS INTEGER ) AS ShouldBeINTEGER "
+               + "FROM cp.`employee.json` LIMIT 1" )
+    .unOrdered()
+    .baselineColumns("ShouldBeINTEGER")
+    .baselineValues(new Integer(32))
+    .go();
+  }
+
+  @Ignore( "until SMALLINT is supported (DRILL-2470)" )
+  @Test
+  public void testLiteralCastToSMALLINTYieldsSMALLINT() throws Exception {
+    testBuilder()
+    .sqlQuery( "SELECT CAST( 16 AS SMALLINT ) AS ShouldBeSMALLINT "
+               + "FROM cp.`employee.json` LIMIT 1" )
+    .unOrdered()
+    .baselineColumns("ShouldBeSMALLINT")
+    .baselineValues(new Short((short) 16))
+    .go();
+  }
+
+  @Ignore( "until TINYINT is supported (~DRILL-2470)" )
+  @Test
+  public void testLiteralCastToTINYINTYieldsTINYINT() throws Exception {
+    testBuilder()
+    .sqlQuery( "SELECT CAST( 8 AS TINYINT ) AS ShouldBeTINYINT "
+               + "FROM cp.`employee.json` LIMIT 1" )
+    .unOrdered()
+    .baselineColumns("ShouldBeTINYINT")
+    .baselineValues(new Byte((byte) 8))
+    .go();
+  }
+
+
   @Test
   public void testDecimalMultiplicationOverflowHandling() throws Exception {
     String query = "select cast('1' as decimal(9, 5)) * cast ('999999999999999999999999999.999999999' as decimal(38, 9)) as DEC38_1, " +

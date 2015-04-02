@@ -40,6 +40,7 @@ import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
@@ -244,6 +245,14 @@ public class EvaluationVisitor {
         throws RuntimeException {
       HoldingContainer out = generator.declare(e.getMajorType());
       generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getTimeStamp()));
+      return out;
+    }
+
+    @Override
+    public HoldingContainer visitFloatConstant(FloatExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
+      HoldingContainer out = generator.declare(e.getMajorType());
+      generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getFloat()));
       return out;
     }
 
@@ -940,6 +949,22 @@ public class EvaluationVisitor {
         return super.visitTimeStampConstant(e, generator).setConstant(true);
       } else {
         return super.visitTimeStampConstant(e, generator);
+      }
+    }
+
+    @Override
+    public HoldingContainer visitFloatConstant(FloatExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitFloatConstant(e, generator);
+        // generator.getMappingSet().exitConstant();
+        // return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitFloatConstant(e, generator).setConstant(true);
+      } else {
+        return super.visitFloatConstant(e, generator);
       }
     }
 
