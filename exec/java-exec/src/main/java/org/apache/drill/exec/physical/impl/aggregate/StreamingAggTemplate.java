@@ -79,11 +79,12 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     }
     try { // outside loop to ensure that first is set to false after the first run.
       outputCount = 0;
+      // allocate outgoing since either this is the first time or if a subsequent time we would
+      // have sent the previous outgoing batch to downstream operator
+      allocateOutgoing();
 
-      // if we're in the first state, allocate outgoing.
       if (first) {
         this.currentIndex = incoming.getRecordCount() == 0 ? 0 : this.getVectorIndex(underlyingIndex);
-        allocateOutgoing();
       }
 
       if (incoming.getRecordCount() == 0) {
@@ -232,11 +233,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                   }
                   previousIndex = currentIndex;
                   if (addedRecordCount > 0) {
-                    if (!outputToBatchPrev(previous, previousIndex, outputCount)) {
+                    if (outputToBatchPrev(previous, previousIndex, outputCount)) {
                       if (EXTRA_DEBUG) {
                         logger.debug("Output container is full. flushing it.");
-                        return setOkAndReturn();
                       }
+                      return setOkAndReturn();
                     }
                     continue outside;
                   }
@@ -319,7 +320,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
     outputRecordKeysPrev(b1, inIndex, outIndex);
     outputRecordValues(outIndex);
-    resetValues();
     resetValues();
     outputCount++;
     addedRecordCount = 0;

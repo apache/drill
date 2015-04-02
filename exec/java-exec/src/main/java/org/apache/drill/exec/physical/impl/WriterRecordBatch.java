@@ -126,8 +126,8 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
         }
       } while(upstream != IterOutcome.NONE);
     }catch(Exception ex){
-      kill(false);
       logger.error("Failure during query", ex);
+      kill(false);
       context.fail(ex);
       return IterOutcome.STOP;
     }
