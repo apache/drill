@@ -938,4 +938,29 @@ public class TypeCastRules {
     return cost;
   }
 
+  /*
+   * Simple helper function to determine if input type is numeric
+   */
+  public static boolean isNumericType(MinorType inputType) {
+    switch (inputType) {
+      case TINYINT:
+      case SMALLINT:
+      case INT:
+      case BIGINT:
+      case UINT1:
+      case UINT2:
+      case UINT4:
+      case UINT8:
+      case DECIMAL9:
+      case DECIMAL18:
+      case DECIMAL28SPARSE:
+      case DECIMAL38SPARSE:
+      case FLOAT4:
+      case FLOAT8:
+        return true;
+      default:
+        return false;
+    }
+  }
+
 }

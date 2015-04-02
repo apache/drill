@@ -309,6 +309,14 @@ public class ChainedHashTable {
       MinorType probeType = probeExpr.getMajorType().getMinorType();
 
       if (buildType != probeType) {
+
+        // currently we only support implicit casts if the input types are numeric or varchar/varbinary
+        if (!allowImplicitCast(buildType, probeType)) {
+          throw new DrillRuntimeException(String.format("Hash join only supports implicit casts between " +
+              "1. Numeric data\n 2. Varchar, Varbinary data " +
+              "Build type: %s, Probe type: %s. Add explicit casts to avoid this error", buildType, probeType));
+        }
+
         // We need to add a cast to one of the expressions
         List<MinorType> types = new LinkedList<>();
         types.add(buildType);
@@ -349,11 +357,32 @@ public class ChainedHashTable {
       return;
     }
 
-    LogicalExpression hashExpression = PrelUtil.getHashExpression(Arrays.asList(keyExprs));
+    /*
+     * We use the same logic to generate run time code for the hash function both for hash join and hash
+     * aggregate. For join we need to hash everything as double (both for distribution and for comparison) but
+     * for aggregation we can avoid the penalty of casting to double
+     */
+    LogicalExpression hashExpression = PrelUtil.getHashExpression(Arrays.asList(keyExprs),
+        incomingProbe != null ? true : false);
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
     HoldingContainer hash = cg.addExpr(materializedExpr);
     cg.getEvalBlock()._return(hash.getValue());
 
 
+  }
+
+  private boolean allowImplicitCast(MinorType input1, MinorType input2) {
+    // allow implicit cast if both the input types are numeric
+    if (TypeCastRules.isNumericType(input1) && TypeCastRules.isNumericType(input2)) {
+      return true;
+    }
+
+    // allow implicit cast if both the input types are varbinary/ varchar
+    if ((input1 == MinorType.VARCHAR || input1 == MinorType.VARBINARY) &&
+        (input2 == MinorType.VARCHAR || input2 == MinorType.VARBINARY)) {
+      return true;
+    }
+
+    return false;
   }
 }

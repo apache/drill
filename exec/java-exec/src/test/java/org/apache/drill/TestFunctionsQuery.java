@@ -709,4 +709,29 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineValues(new BigDecimal("1.00000"))
         .go();
   }
+
+  /*
+   * We may apply implicit casts in Hash Join while dealing with different numeric data types
+   * For this to work we need to distribute the data based on a common key, below method
+   * makes sure the hash value for different numeric types is the same for the same key
+   */
+  @Test
+  public void testHash64() throws Exception {
+    String query = "select " +
+        "hash64AsDouble(cast(employee_id as int)) = hash64AsDouble(cast(employee_id as bigint)) col1, " +
+        "hash64AsDouble(cast(employee_id as bigint)) = hash64AsDouble(cast(employee_id as float)) col2, " +
+        "hash64AsDouble(cast(employee_id as float)) = hash64AsDouble(cast(employee_id as double)) col3, " +
+        "hash64AsDouble(cast(employee_id as double)) = hash64AsDouble(cast(employee_id as decimal(9, 0))) col4, " +
+        "hash64AsDouble(cast(employee_id as decimal(9, 0))) = hash64AsDouble(cast(employee_id as decimal(18, 0))) col5, " +
+        "hash64AsDouble(cast(employee_id as decimal(18, 0))) = hash64AsDouble(cast(employee_id as decimal(28, 0))) col6, " +
+        "hash64AsDouble(cast(employee_id as decimal(28, 0))) = hash64AsDouble(cast(employee_id as decimal(38, 0))) col7 " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
+        .baselineValues(true, true, true, true, true, true, true)
+        .go();
+  }
 }

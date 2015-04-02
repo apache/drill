@@ -53,6 +53,9 @@ import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
+/*
+ * Class contains hash64 function definitions for different data types.
+ */
 public class Hash64FunctionsWithSeed {
   @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableFloatHash implements DrillSimpleFunc {
@@ -126,7 +129,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableVarBinaryHash implements DrillSimpleFunc {
 
     @Param NullableVarBinaryHolder in;
@@ -146,7 +149,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableVarCharHash implements DrillSimpleFunc {
 
     @Param NullableVarCharHolder in;
@@ -166,7 +169,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableVar16CharHash implements DrillSimpleFunc {
 
     @Param NullableVar16CharHolder in;
@@ -227,7 +230,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class VarBinaryHash implements DrillSimpleFunc {
 
     @Param VarBinaryHolder in;
@@ -243,7 +246,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class VarCharHash implements DrillSimpleFunc {
 
     @Param VarCharHolder in;
@@ -259,7 +262,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class Var16CharHash implements DrillSimpleFunc {
 
     @Param Var16CharHolder in;
@@ -306,7 +309,7 @@ public class Hash64FunctionsWithSeed {
       out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
     }
   }
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class DateHash implements DrillSimpleFunc {
     @Param  DateHolder in;
     @Param BigIntHolder seed;
@@ -321,7 +324,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableDateHash implements DrillSimpleFunc {
     @Param  NullableDateHolder in;
     @Param BigIntHolder seed;
@@ -340,7 +343,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class TimeStampHash implements DrillSimpleFunc {
     @Param  TimeStampHolder in;
     @Param BigIntHolder seed;
@@ -355,7 +358,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableTimeStampHash implements DrillSimpleFunc {
     @Param  NullableTimeStampHolder in;
     @Param BigIntHolder seed;
@@ -374,7 +377,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class TimeHash implements DrillSimpleFunc {
     @Param  TimeHolder in;
     @Param BigIntHolder seed;
@@ -389,7 +392,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableTimeHash implements DrillSimpleFunc {
     @Param  NullableTimeHolder in;
     @Param BigIntHolder seed;
@@ -544,7 +547,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableBitHash implements DrillSimpleFunc {
 
     @Param NullableBitHolder in;
@@ -564,7 +567,7 @@ public class Hash64FunctionsWithSeed {
     }
   }
 
-  @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash64", "hash64AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class BitHash implements DrillSimpleFunc {
 
     @Param BitHolder in;

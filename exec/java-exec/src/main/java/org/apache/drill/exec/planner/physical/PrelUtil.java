@@ -68,6 +68,8 @@ import com.google.common.collect.Sets;
 public class PrelUtil {
 
   public static final String HASH_EXPR_NAME = "E_X_P_R_H_A_S_H_F_I_E_L_D";
+  private static final String HASH64_FUNCTION_NAME = "hash64";
+  private static final String HASH64_DOUBLE_FUNCTION_NAME = "hash64AsDouble";
 
   public static List<Ordering> getOrdering(RelCollation collation, RelDataType rowType) {
     List<Ordering> orderExpr = Lists.newArrayList();
@@ -85,12 +87,13 @@ public class PrelUtil {
   /*
    * Return a hash expression :  (int) hash(field1, hash(field2, hash(field3, 0)));
    */
-  public static LogicalExpression getHashExpression(List<LogicalExpression> fields){
+  public static LogicalExpression getHashExpression(List<LogicalExpression> fields, boolean hashAsDouble){
     assert fields.size() > 0;
 
-    FunctionCall func = new FunctionCall("hash64",  ImmutableList.of(fields.get(0)), ExpressionPosition.UNKNOWN);
+    String functionName = hashAsDouble ? HASH64_DOUBLE_FUNCTION_NAME : HASH64_FUNCTION_NAME;
+    FunctionCall func = new FunctionCall(functionName,  ImmutableList.of(fields.get(0)), ExpressionPosition.UNKNOWN);
     for (int i = 1; i<fields.size(); i++) {
-      func = new FunctionCall("hash64",  ImmutableList.of(fields.get(i), func), ExpressionPosition.UNKNOWN);
+      func = new FunctionCall(functionName,  ImmutableList.of(fields.get(i), func), ExpressionPosition.UNKNOWN);
     }
 
     return new CastExpression(func, Types.required(MinorType.INT), ExpressionPosition.UNKNOWN);
@@ -111,7 +114,9 @@ public class PrelUtil {
     for(int i =0; i < fields.size(); i++){
       expressions.add(new FieldReference(childFields.get(fields.get(i).getFieldId()), ExpressionPosition.UNKNOWN));
     }
-    return getHashExpression(expressions);
+
+    // for distribution always hash as double
+    return getHashExpression(expressions, true);
   }
 
   public static Iterator<Prel> iter(RelNode... nodes) {
