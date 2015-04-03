@@ -29,8 +29,7 @@ These guidelines include the following topics:
 
 First, you need the Drill source code.
 
-Get the source code on your local drive using [Git](https://git-wip-
-us.apache.org/repos/asf/incubator-drill.git). Most development is done on
+Get the source code on your local drive using [Git](git clone https://git-wip-us.apache.org/repos/asf/incubator-drill.git). Most development is done on
 "master":
 
     git clone https://git-wip-us.apache.org/repos/asf/drill.git

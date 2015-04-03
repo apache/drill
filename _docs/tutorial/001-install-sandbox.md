@@ -18,8 +18,7 @@ verify that the host system meets the following prerequisites:
 
 ### VM Player Downloads
 
-For Linux, Mac, or Windows, download the free [VMware Player](https://my.vmwar
-e.com/web/vmware/free#desktop_end_user_computing/vmware_player/6_0) or
+For Linux, Mac, or Windows, download the free [VMware Player](https://my.vmware.com/web/vmware/free#desktop_end_user_computing/vmware_player/6_0 "VMwarePlayer") or
 [VirtualBox](https://www.virtualbox.org/wiki/Downloads). Optionally, you can
 purchase [VMware Fusion](http://www.vmware.com/products/fusion/) for Mac.
 

@@ -156,16 +156,10 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
 
 ## Math Function Examples
 
-Examples in this section use the following files:
+Examples in this section use the `input2.json` file
 
-* The `input2.json` file
-* A dummy JSON file
 
 Download the `input2.json` file from the [Drill source code](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources/jsoninput) page. On the Mac, for example, right-click input2.json and choose Save Link As, and then click Save.
-
-The following examples refer to a dummy JSON file in the FROM clause. The dummy JSON file has following contents.
-
-    {"dummy" : "data"}
 
 #### ABS Example
 Get the absolute value of the integer key in `input2.json`. The following snippet of input2.json shows the relevant integer content:
@@ -259,7 +253,7 @@ Open input2.json and change the first float value from 17.4 to 3.14159. Get valu
         +------------+
         4 rows selected (0.061 seconds)
 
-        SELECT ROUND(`float`, 4) FROM dfs.`/Users/khahn/Documents/test_files_source/input2.json`;
+        SELECT ROUND(`float`, 4) FROM dfs.`/Users/drill/input2.json`;
 
         +------------+
         |   EXPR$0   |
@@ -275,7 +269,7 @@ Open input2.json and change the first float value from 17.4 to 3.14159. Get valu
 
 Get the base 2 log of 64.
 
-    SELECT log(2, 64) FROM dfs.`/Users/drill/dummy.json`;
+    SELECT log(2, 64) FROM sys.drillbits;
 
     +------------+
     |   EXPR$0   |
@@ -286,7 +280,7 @@ Get the base 2 log of 64.
 
 Get the common log of 100.
 
-    SELECT log10(100) FROM dfs.`/Users/drill/dummy.json`;
+    SELECT log10(100) FROM sys.drillbits;
 
     +------------+
     |   EXPR$0   |
@@ -297,7 +291,7 @@ Get the common log of 100.
 
 Get the natural log of 7.5.
 
-    SELECT log(7.5) FROM dfs.`/Users/drill/sample-data/dummy.json`;
+    SELECT log(7.5) FROM sys.drillbits;
 
     +------------+
     |   EXPR$0   |
@@ -341,7 +335,7 @@ Drill supports the following trig functions, which return a FLOAT8 result.
 
 Find the sine and tangent of a 45 degree angle. First convert degrees to radians for use in the SIN() function.
 
-    SELECT RADIANS(30) AS Degrees FROM dfs.`/Users/drill/dummy.json`;
+    SELECT RADIANS(30) AS Degrees FROM sys.drillbits;
 
     +------------+
     |  Degrees   |
@@ -350,7 +344,7 @@ Find the sine and tangent of a 45 degree angle. First convert degrees to radians
     +------------+
     1 row selected (0.045 seconds)
 
-    SELECT SIN(0.7853981633974483) AS `Sine of 30 degrees` FROM dfs.`/Users/drill/dummy.json`;
+    SELECT SIN(0.7853981633974483) AS `Sine of 30 degrees` FROM sys.drillbits;
 
     +-----------------------+
     |  Sine of 45 degrees   |
@@ -359,7 +353,7 @@ Find the sine and tangent of a 45 degree angle. First convert degrees to radians
     +-----------------------+
     1 row selected (0.059 seconds)
 
-    SELECT TAN(0.7853981633974483) AS `Tangent of 30 degrees` from dfs.`/Users/drill/dummy.json`;
+    SELECT TAN(0.7853981633974483) AS `Tangent of 30 degrees` from sys.drillbits;
 
     +-----------------------+
     | Tangent of 45 degrees |
