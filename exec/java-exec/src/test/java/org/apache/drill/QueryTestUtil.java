@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,14 +51,14 @@ public class QueryTestUtil {
    * @param drillConfig
    * @param remoteServiceSet remote service set
    * @param maxWidth maximum width per node
+   * @param props Connection properties contains properties such as "user", "password", "schema" etc
    * @return the newly created client
    * @throws RpcException if there is a problem setting up the client
    */
-  public static DrillClient createClient(
-      final DrillConfig drillConfig, final RemoteServiceSet remoteServiceSet, final int maxWidth)
-      throws RpcException {
+  public static DrillClient createClient(final DrillConfig drillConfig, final RemoteServiceSet remoteServiceSet,
+      final int maxWidth, final Properties props) throws RpcException {
     final DrillClient drillClient = new DrillClient(drillConfig, remoteServiceSet.getCoordinator());
-    drillClient.connect();
+    drillClient.connect(props);
 
     final List<QueryDataBatch> results = drillClient.runQuery(
         QueryType.SQL, String.format("alter session set `%s` = %d",

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import io.netty.channel.EventLoopGroup;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -49,8 +50,11 @@ public class ServiceEngine implements Closeable{
   boolean useIP = false;
   private final boolean allowPortHunting;
 
-  public ServiceEngine(ControlMessageHandler controlMessageHandler, UserWorker userWorker, BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting){
-    this.userServer = new UserServer(context.getAllocator(), TransportCheck.createEventLoopGroup(context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-"), userWorker);
+  public ServiceEngine(ControlMessageHandler controlMessageHandler, UserWorker userWorker, BootStrapContext context,
+      WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting) throws DrillbitStartupException {
+    final EventLoopGroup eventLoopGroup = TransportCheck.createEventLoopGroup(
+        context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-");
+    this.userServer = new UserServer(context.getConfig(), context.getAllocator(), eventLoopGroup, userWorker);
     this.controller = new ControllerImpl(context, controlMessageHandler, allowPortHunting);
     this.dataPool = new DataConnectionCreator(context, workBus, dataHandler, allowPortHunting);
     this.config = context.getConfig();

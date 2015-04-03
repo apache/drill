@@ -148,7 +148,7 @@ public class TestPartitionSender extends PlanTestBase {
 
     final TopNBatch.SimpleRecordBatch incoming = new TopNBatch.SimpleRecordBatch(container, sv, null);
 
-    setDrillbitCount(DRILLBITS_COUNT);
+    updateTestCluster(DRILLBITS_COUNT, null);
 
     test("ALTER SESSION SET `planner.slice_target`=1");
     String plan = getPlanInString("EXPLAIN PLAN FOR " + groupByQuery, JSON_FORMAT);

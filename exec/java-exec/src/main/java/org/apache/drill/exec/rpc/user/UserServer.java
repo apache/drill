@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.user;
 
+import com.google.common.io.Closeables;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
@@ -26,6 +27,9 @@ import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -34,8 +38,10 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
+import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.BasicServer;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
@@ -45,6 +51,9 @@ import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.user.security.UserAuthenticationException;
+import org.apache.drill.exec.rpc.user.security.UserAuthenticator;
+import org.apache.drill.exec.rpc.user.security.UserAuthenticatorFactory;
 import org.apache.drill.exec.work.user.UserWorker;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -55,11 +64,18 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   final UserWorker worker;
   final BufferAllocator alloc;
+  final UserAuthenticator authenticator;
 
-  public UserServer(BufferAllocator alloc, EventLoopGroup eventLoopGroup, UserWorker worker) {
+  public UserServer(DrillConfig config, BufferAllocator alloc, EventLoopGroup eventLoopGroup,
+      UserWorker worker) throws DrillbitStartupException {
     super(UserRpcConfig.MAPPING, alloc.getUnderlyingAllocator(), eventLoopGroup);
     this.worker = worker;
     this.alloc = alloc;
+    if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
+      authenticator = UserAuthenticatorFactory.createAuthenticator(config);
+    } else {
+      authenticator = null;
+    }
   }
 
   @Override
@@ -100,7 +116,6 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     }
 
   }
-
 
   public class UserClientConnection extends RemoteConnection {
 
@@ -180,6 +195,23 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
             return handleFailure(respBuilder, HandshakeStatus.RPC_VERSION_MISMATCH, errMsg, null);
           }
 
+          if (authenticator != null) {
+            try {
+              String password = "";
+              final UserProperties props = inbound.getProperties();
+              for (int i = 0; i < props.getPropertiesCount(); i++) {
+                Property prop = props.getProperties(i);
+                if (UserSession.PASSWORD.equalsIgnoreCase(prop.getKey())) {
+                  password = prop.getValue();
+                  break;
+                }
+              }
+              authenticator.authenticate(inbound.getCredentials().getUserName(), password);
+            } catch (UserAuthenticationException ex) {
+              return handleFailure(respBuilder, HandshakeStatus.AUTH_FAILED, ex.getMessage(), ex);
+            }
+          }
+
           connection.setUser(inbound);
 
           return respBuilder.setStatus(HandshakeStatus.SUCCESS).build();
@@ -220,5 +252,11 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
     return new UserProtobufLengthDecoder(allocator, outOfMemoryHandler);
+  }
+
+  @Override
+  public void close() throws IOException {
+    Closeables.closeQuietly(authenticator);
+    super.close();
   }
 }

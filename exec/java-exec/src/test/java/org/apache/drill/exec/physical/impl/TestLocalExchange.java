@@ -109,7 +109,7 @@ public class TestLocalExchange extends PlanTestBase {
 
   @BeforeClass
   public static void setupClusterSize() {
-    setDrillbitCount(CLUSTER_SIZE);
+    updateTestCluster(CLUSTER_SIZE, null);
   }
 
   @BeforeClass

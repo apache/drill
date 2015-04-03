@@ -56,16 +56,8 @@ import com.google.common.io.Resources;
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
-  /**
-   * Number of Drillbits in test cluster. Default is 1.
-   *
-   * Tests can update the cluster size through {@link #setDrillbitCount(int)}
-   */
-  private static int drillbitCount = 1;
-
-  private int[] columnWidths = new int[] { 8 };
-
   private static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
+  private static final int MAX_WIDTH_PER_NODE = 2;
 
   @SuppressWarnings("serial")
   private static final Properties TEST_CONFIGURATIONS = new Properties() {
@@ -93,17 +85,37 @@ public class BaseTestQuery extends ExecTest {
   protected static QuerySubmitter submitter = new QuerySubmitter();
   protected static BufferAllocator allocator;
 
-  protected static void setDrillbitCount(int newDrillbitCount) {
+  /**
+   * Number of Drillbits in test cluster. Default is 1.
+   *
+   * Tests can update the cluster size through {@link #updateTestCluster(int, DrillConfig)}
+   */
+  private static int drillbitCount = 1;
+
+  private int[] columnWidths = new int[] { 8 };
+
+  @BeforeClass
+  public static void setupDefaultTestCluster() throws Exception {
+    config = DrillConfig.create(TEST_CONFIGURATIONS);
+    openClient();
+  }
+
+  protected static void updateTestCluster(int newDrillbitCount, DrillConfig newConfig) {
     Preconditions.checkArgument(newDrillbitCount > 0, "Number of Drillbits must be at least one");
-    if (drillbitCount != newDrillbitCount) {
+    if (drillbitCount != newDrillbitCount || config != null) {
       // TODO: Currently we have to shutdown the existing Drillbit cluster before starting a new one with the given
       // Drillbit count. Revisit later to avoid stopping the cluster.
       try {
         closeClient();
         drillbitCount = newDrillbitCount;
+        if (newConfig != null) {
+          // For next test class, updated DrillConfig will be replaced by default DrillConfig in BaseTestQuery as part
+          // of the @BeforeClass method of test class.
+          config = newConfig;
+        }
         openClient();
       } catch(Exception e) {
-        throw new RuntimeException("Failure while changing the number of Drillbits in test cluster.", e);
+        throw new RuntimeException("Failure while updating the test Drillbit cluster.", e);
       }
     }
   }
@@ -118,14 +130,12 @@ public class BaseTestQuery extends ExecTest {
     return bits[0].getContext();
   }
 
-  static void resetClientAndBit() throws Exception{
+  private static void resetClientAndBit() throws Exception{
     closeClient();
     openClient();
   }
 
-  @BeforeClass
-  public static void openClient() throws Exception {
-    config = DrillConfig.create(TEST_CONFIGURATIONS);
+  private static void openClient() throws Exception {
     allocator = new TopLevelAllocator(config);
     if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
       serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
@@ -139,7 +149,22 @@ public class BaseTestQuery extends ExecTest {
       bits[i].run();
     }
 
-    client = QueryTestUtil.createClient(config,  serviceSet, 2);
+    client = QueryTestUtil.createClient(config,  serviceSet, MAX_WIDTH_PER_NODE, null);
+  }
+
+  /**
+   * Close the current <i>client</i> and open a new client using the given <i>properties</i>. All tests executed
+   * after this method call use the new <i>client</i>.
+   *
+   * @param properties
+   */
+  public static void updateClient(Properties properties) throws Exception {
+    if (client != null) {
+      client.close();
+      client = null;
+    }
+
+    client = QueryTestUtil.createClient(config, serviceSet, MAX_WIDTH_PER_NODE, properties);
   }
 
   protected static BufferAllocator getAllocator() {

@@ -33,6 +33,8 @@ public class UserSession {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
 
   public static final String SCHEMA = "schema";
+  public static final String USER = "user";
+  public static final String PASSWORD = "password";
 
   private DrillUser user;
   private boolean enableExchanges = true;

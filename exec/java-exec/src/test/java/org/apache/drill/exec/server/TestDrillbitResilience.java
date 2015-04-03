@@ -143,7 +143,7 @@ public class TestDrillbitResilience extends ExecTest {
 
     // create a client
     final DrillConfig drillConfig = zkHelper.getConfig();
-    drillClient = QueryTestUtil.createClient(drillConfig, remoteServiceSet, 1);
+    drillClient = QueryTestUtil.createClient(drillConfig, remoteServiceSet, 1, null);
   }
 
   @AfterClass
