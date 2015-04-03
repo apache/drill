@@ -41,6 +41,7 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
   BitToUserHandshake_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* QueryResultsMode_descriptor_ = NULL;
+const ::google::protobuf::EnumDescriptor* HandshakeStatus_descriptor_ = NULL;
 
 }  // namespace
 
@@ -136,8 +137,11 @@ void protobuf_AssignDesc_User_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(RunQuery));
   BitToUserHandshake_descriptor_ = file->message_type(5);
-  static const int BitToUserHandshake_offsets_[1] = {
+  static const int BitToUserHandshake_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, rpc_version_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, status_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, errorid_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, errormessage_),
   };
   BitToUserHandshake_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -152,6 +156,7 @@ void protobuf_AssignDesc_User_2eproto() {
       sizeof(BitToUserHandshake));
   RpcType_descriptor_ = file->enum_type(0);
   QueryResultsMode_descriptor_ = file->enum_type(1);
+  HandshakeStatus_descriptor_ = file->enum_type(2);
 }
 
 namespace {
@@ -219,15 +224,20 @@ void protobuf_AddDesc_User_2eproto() {
     "imum_responses\030\002 \001(\005\"q\n\010RunQuery\0221\n\014resu"
     "lts_mode\030\001 \001(\0162\033.exec.user.QueryResultsM"
     "ode\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryTyp"
-    "e\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022\023\n"
-    "\013rpc_version\030\002 \001(\005*\310\001\n\007RpcType\022\r\n\tHANDSH"
-    "AKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY"
-    "\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020"
-    "\005\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n\022R"
-    "EQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIS"
-    "T\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResultsMod"
-    "e\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.drill.e"
-    "xec.protoB\nUserProtosH\001", 943);
+    "e\022\014\n\004plan\030\003 \001(\t\"|\n\022BitToUserHandshake\022\023\n"
+    "\013rpc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exe"
+    "c.user.HandshakeStatus\022\017\n\007errorId\030\004 \001(\t\022"
+    "\024\n\014errorMessage\030\005 \001(\t*\310\001\n\007RpcType\022\r\n\tHAN"
+    "DSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QU"
+    "ERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESUL"
+    "TS\020\005\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026"
+    "\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_"
+    "LIST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResults"
+    "Mode\022\017\n\013STREAM_FULL\020\001*^\n\017HandshakeStatus"
+    "\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022"
+    "\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004B+\n"
+    "\033org.apache.drill.exec.protoB\nUserProtos"
+    "H\001", 1122);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "User.proto", &protobuf_RegisterTypes);
   Property::default_instance_ = new Property();
@@ -281,6 +291,22 @@ const ::google::protobuf::EnumDescriptor* QueryResultsMode_descriptor() {
 bool QueryResultsMode_IsValid(int value) {
   switch(value) {
     case 1:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const ::google::protobuf::EnumDescriptor* HandshakeStatus_descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return HandshakeStatus_descriptor_;
+}
+bool HandshakeStatus_IsValid(int value) {
+  switch(value) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
       return true;
     default:
       return false;
@@ -1774,6 +1800,9 @@ void RunQuery::Swap(RunQuery* other) {
 
 #ifndef _MSC_VER
 const int BitToUserHandshake::kRpcVersionFieldNumber;
+const int BitToUserHandshake::kStatusFieldNumber;
+const int BitToUserHandshake::kErrorIdFieldNumber;
+const int BitToUserHandshake::kErrorMessageFieldNumber;
 #endif  // !_MSC_VER
 
 BitToUserHandshake::BitToUserHandshake()
@@ -1793,6 +1822,9 @@ BitToUserHandshake::BitToUserHandshake(const BitToUserHandshake& from)
 void BitToUserHandshake::SharedCtor() {
   _cached_size_ = 0;
   rpc_version_ = 0;
+  status_ = 1;
+  errorid_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  errormessage_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1801,6 +1833,12 @@ BitToUserHandshake::~BitToUserHandshake() {
 }
 
 void BitToUserHandshake::SharedDtor() {
+  if (errorid_ != &::google::protobuf::internal::kEmptyString) {
+    delete errorid_;
+  }
+  if (errormessage_ != &::google::protobuf::internal::kEmptyString) {
+    delete errormessage_;
+  }
   if (this != default_instance_) {
   }
 }
@@ -1829,6 +1867,17 @@ BitToUserHandshake* BitToUserHandshake::New() const {
 void BitToUserHandshake::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     rpc_version_ = 0;
+    status_ = 1;
+    if (has_errorid()) {
+      if (errorid_ != &::google::protobuf::internal::kEmptyString) {
+        errorid_->clear();
+      }
+    }
+    if (has_errormessage()) {
+      if (errormessage_ != &::google::protobuf::internal::kEmptyString) {
+        errormessage_->clear();
+      }
+    }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -1848,6 +1897,61 @@ bool BitToUserHandshake::MergePartialFromCodedStream(
                    ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
                  input, &rpc_version_)));
           set_has_rpc_version();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(24)) goto parse_status;
+        break;
+      }
+
+      // optional .exec.user.HandshakeStatus status = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_status:
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::exec::user::HandshakeStatus_IsValid(value)) {
+            set_status(static_cast< ::exec::user::HandshakeStatus >(value));
+          } else {
+            mutable_unknown_fields()->AddVarint(3, value);
+          }
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(34)) goto parse_errorId;
+        break;
+      }
+
+      // optional string errorId = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_errorId:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_errorid()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->errorid().data(), this->errorid().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(42)) goto parse_errorMessage;
+        break;
+      }
+
+      // optional string errorMessage = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_errorMessage:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_errormessage()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->errormessage().data(), this->errormessage().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
         } else {
           goto handle_uninterpreted;
         }
@@ -1878,6 +1982,30 @@ void BitToUserHandshake::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->rpc_version(), output);
   }
 
+  // optional .exec.user.HandshakeStatus status = 3;
+  if (has_status()) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      3, this->status(), output);
+  }
+
+  // optional string errorId = 4;
+  if (has_errorid()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->errorid().data(), this->errorid().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      4, this->errorid(), output);
+  }
+
+  // optional string errorMessage = 5;
+  if (has_errormessage()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->errormessage().data(), this->errormessage().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      5, this->errormessage(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -1889,6 +2017,32 @@ void BitToUserHandshake::SerializeWithCachedSizes(
   // optional int32 rpc_version = 2;
   if (has_rpc_version()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->rpc_version(), target);
+  }
+
+  // optional .exec.user.HandshakeStatus status = 3;
+  if (has_status()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      3, this->status(), target);
+  }
+
+  // optional string errorId = 4;
+  if (has_errorid()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->errorid().data(), this->errorid().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        4, this->errorid(), target);
+  }
+
+  // optional string errorMessage = 5;
+  if (has_errormessage()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->errormessage().data(), this->errormessage().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        5, this->errormessage(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1907,6 +2061,26 @@ int BitToUserHandshake::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->rpc_version());
+    }
+
+    // optional .exec.user.HandshakeStatus status = 3;
+    if (has_status()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->status());
+    }
+
+    // optional string errorId = 4;
+    if (has_errorid()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->errorid());
+    }
+
+    // optional string errorMessage = 5;
+    if (has_errormessage()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->errormessage());
     }
 
   }
@@ -1939,6 +2113,15 @@ void BitToUserHandshake::MergeFrom(const BitToUserHandshake& from) {
     if (from.has_rpc_version()) {
       set_rpc_version(from.rpc_version());
     }
+    if (from.has_status()) {
+      set_status(from.status());
+    }
+    if (from.has_errorid()) {
+      set_errorid(from.errorid());
+    }
+    if (from.has_errormessage()) {
+      set_errormessage(from.errormessage());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -1963,6 +2146,9 @@ bool BitToUserHandshake::IsInitialized() const {
 void BitToUserHandshake::Swap(BitToUserHandshake* other) {
   if (other != this) {
     std::swap(rpc_version_, other->rpc_version_);
+    std::swap(status_, other->status_);
+    std::swap(errorid_, other->errorid_);
+    std::swap(errormessage_, other->errormessage_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

@@ -243,12 +243,15 @@ void DrillClientImpl::handleHandshake(ByteBuf_t _buf,
         exec::user::BitToUserHandshake b2u;
         b2u.ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size());
         this->m_handshakeVersion=b2u.rpc_version();
+        this->m_handshakeStatus=b2u.status();
+        this->m_handshakeErrorId=b2u.errorid();
+        this->m_handshakeErrorMsg=b2u.errormessage();
 
     }else{
         // boost error
         if(error==boost::asio::error::eof){ // Server broke off the connection
-        handleConnError(CONN_HANDSHAKE_FAILED,
-                getMessage(ERR_CONN_NOHSHAKE, DRILL_RPC_VERSION, m_handshakeVersion));
+            handleConnError(CONN_HANDSHAKE_FAILED,
+                getMessage(ERR_CONN_NOHSHAKE, DRILL_RPC_VERSION));
         }else{
             handleConnError(CONN_FAILURE, getMessage(ERR_CONN_RDFAIL, error.message().c_str()));
         }
@@ -284,12 +287,13 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
     u2b.set_support_listening(true);
 
     if(properties != NULL && properties->size()>0){
+        std::string username;
         std::string err;
         if(!properties->validate(err)){
             DRILL_LOG(LOG_INFO) << "Invalid user input:" << err << std::endl;
         }
         exec::user::UserProperties* userProperties = u2b.mutable_properties();
-          
+
         std::map<char,int>::iterator it;
         for(size_t i=0; i<properties->size(); i++){
             std::map<std::string,uint32_t>::const_iterator it=DrillUserProperties::USER_PROPERTIES.find(properties->keyAt(i));
@@ -302,6 +306,13 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
                 exec::user::Property* connProp = userProperties->add_properties();
                 connProp->set_key(properties->keyAt(i));
                 connProp->set_value(properties->valueAt(i));
+                //Username(but not the password) also needs to be set in UserCredentials
+                if(IS_BITSET((*it).second,USERPROP_FLAGS_USERNAME)){
+                    exec::shared::UserCredentials* creds = u2b.mutable_credentials();
+                    username=properties->valueAt(i);
+                    creds->set_user_name(username);
+                    //u2b.set_credentials(&creds);
+                }
                 if(IS_BITSET((*it).second,USERPROP_FLAGS_PASSWORD)){
                     DRILL_LOG(LOG_INFO) <<  properties->keyAt(i) << ": ********** " << std::endl;
                 }else{
@@ -324,11 +335,31 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
     if(ret!=CONN_SUCCESS){
         return ret;
     }
-    if(m_handshakeVersion != u2b.rpc_version()) {
-        DRILL_LOG(LOG_TRACE) << "Invalid rpc version.  Expected "
-            << DRILL_RPC_VERSION << ", actual "<< m_handshakeVersion << "." << std::endl;
-        return handleConnError(CONN_HANDSHAKE_FAILED,
-                getMessage(ERR_CONN_NOHSHAKE, DRILL_RPC_VERSION, m_handshakeVersion));
+    if(this->m_handshakeStatus != exec::user::SUCCESS){
+        switch(this->m_handshakeStatus){
+            case exec::user::RPC_VERSION_MISMATCH:
+                DRILL_LOG(LOG_TRACE) << "Invalid rpc version.  Expected "
+                    << DRILL_RPC_VERSION << ", actual "<< m_handshakeVersion << "." << std::endl;
+                return handleConnError(CONN_HANDSHAKE_FAILED,
+                        getMessage(ERR_CONN_BAD_RPC_VER, DRILL_RPC_VERSION,
+                            m_handshakeVersion,
+                            this->m_handshakeErrorId.c_str(),
+                            this->m_handshakeErrorMsg.c_str()));
+            case exec::user::AUTH_FAILED:
+                DRILL_LOG(LOG_TRACE) << "Authentication failed." << std::endl;
+                return handleConnError(CONN_HANDSHAKE_FAILED,
+                        getMessage(ERR_CONN_AUTHFAIL,
+                            this->m_handshakeErrorId.c_str(),
+                            this->m_handshakeErrorMsg.c_str()));
+            case exec::user::UNKNOWN_FAILURE:
+                DRILL_LOG(LOG_TRACE) << "Unknown error during handshake." << std::endl;
+                return handleConnError(CONN_HANDSHAKE_FAILED,
+                        getMessage(ERR_CONN_UNKNOWN_ERR,
+                            this->m_handshakeErrorId.c_str(),
+                            this->m_handshakeErrorMsg.c_str()));
+            default:
+                break;
+        }
     }
     // reset io_service after handshake is validated before running queries
     m_io_service.reset();

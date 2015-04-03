@@ -90,6 +90,27 @@ inline bool QueryResultsMode_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<QueryResultsMode>(
     QueryResultsMode_descriptor(), name, value);
 }
+enum HandshakeStatus {
+  SUCCESS = 1,
+  RPC_VERSION_MISMATCH = 2,
+  AUTH_FAILED = 3,
+  UNKNOWN_FAILURE = 4
+};
+bool HandshakeStatus_IsValid(int value);
+const HandshakeStatus HandshakeStatus_MIN = SUCCESS;
+const HandshakeStatus HandshakeStatus_MAX = UNKNOWN_FAILURE;
+const int HandshakeStatus_ARRAYSIZE = HandshakeStatus_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* HandshakeStatus_descriptor();
+inline const ::std::string& HandshakeStatus_Name(HandshakeStatus value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    HandshakeStatus_descriptor(), value);
+}
+inline bool HandshakeStatus_Parse(
+    const ::std::string& name, HandshakeStatus* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<HandshakeStatus>(
+    HandshakeStatus_descriptor(), name, value);
+}
 // ===================================================================
 
 class Property : public ::google::protobuf::Message {
@@ -677,17 +698,57 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 rpc_version() const;
   inline void set_rpc_version(::google::protobuf::int32 value);
 
+  // optional .exec.user.HandshakeStatus status = 3;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 3;
+  inline ::exec::user::HandshakeStatus status() const;
+  inline void set_status(::exec::user::HandshakeStatus value);
+
+  // optional string errorId = 4;
+  inline bool has_errorid() const;
+  inline void clear_errorid();
+  static const int kErrorIdFieldNumber = 4;
+  inline const ::std::string& errorid() const;
+  inline void set_errorid(const ::std::string& value);
+  inline void set_errorid(const char* value);
+  inline void set_errorid(const char* value, size_t size);
+  inline ::std::string* mutable_errorid();
+  inline ::std::string* release_errorid();
+  inline void set_allocated_errorid(::std::string* errorid);
+
+  // optional string errorMessage = 5;
+  inline bool has_errormessage() const;
+  inline void clear_errormessage();
+  static const int kErrorMessageFieldNumber = 5;
+  inline const ::std::string& errormessage() const;
+  inline void set_errormessage(const ::std::string& value);
+  inline void set_errormessage(const char* value);
+  inline void set_errormessage(const char* value, size_t size);
+  inline ::std::string* mutable_errormessage();
+  inline ::std::string* release_errormessage();
+  inline void set_allocated_errormessage(::std::string* errormessage);
+
   // @@protoc_insertion_point(class_scope:exec.user.BitToUserHandshake)
  private:
   inline void set_has_rpc_version();
   inline void clear_has_rpc_version();
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_errorid();
+  inline void clear_has_errorid();
+  inline void set_has_errormessage();
+  inline void clear_has_errormessage();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::int32 rpc_version_;
+  int status_;
+  ::std::string* errorid_;
+  ::std::string* errormessage_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -1251,6 +1312,169 @@ inline void BitToUserHandshake::set_rpc_version(::google::protobuf::int32 value)
   rpc_version_ = value;
 }
 
+// optional .exec.user.HandshakeStatus status = 3;
+inline bool BitToUserHandshake::has_status() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void BitToUserHandshake::set_has_status() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void BitToUserHandshake::clear_has_status() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void BitToUserHandshake::clear_status() {
+  status_ = 1;
+  clear_has_status();
+}
+inline ::exec::user::HandshakeStatus BitToUserHandshake::status() const {
+  return static_cast< ::exec::user::HandshakeStatus >(status_);
+}
+inline void BitToUserHandshake::set_status(::exec::user::HandshakeStatus value) {
+  assert(::exec::user::HandshakeStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
+// optional string errorId = 4;
+inline bool BitToUserHandshake::has_errorid() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void BitToUserHandshake::set_has_errorid() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void BitToUserHandshake::clear_has_errorid() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void BitToUserHandshake::clear_errorid() {
+  if (errorid_ != &::google::protobuf::internal::kEmptyString) {
+    errorid_->clear();
+  }
+  clear_has_errorid();
+}
+inline const ::std::string& BitToUserHandshake::errorid() const {
+  return *errorid_;
+}
+inline void BitToUserHandshake::set_errorid(const ::std::string& value) {
+  set_has_errorid();
+  if (errorid_ == &::google::protobuf::internal::kEmptyString) {
+    errorid_ = new ::std::string;
+  }
+  errorid_->assign(value);
+}
+inline void BitToUserHandshake::set_errorid(const char* value) {
+  set_has_errorid();
+  if (errorid_ == &::google::protobuf::internal::kEmptyString) {
+    errorid_ = new ::std::string;
+  }
+  errorid_->assign(value);
+}
+inline void BitToUserHandshake::set_errorid(const char* value, size_t size) {
+  set_has_errorid();
+  if (errorid_ == &::google::protobuf::internal::kEmptyString) {
+    errorid_ = new ::std::string;
+  }
+  errorid_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* BitToUserHandshake::mutable_errorid() {
+  set_has_errorid();
+  if (errorid_ == &::google::protobuf::internal::kEmptyString) {
+    errorid_ = new ::std::string;
+  }
+  return errorid_;
+}
+inline ::std::string* BitToUserHandshake::release_errorid() {
+  clear_has_errorid();
+  if (errorid_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = errorid_;
+    errorid_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void BitToUserHandshake::set_allocated_errorid(::std::string* errorid) {
+  if (errorid_ != &::google::protobuf::internal::kEmptyString) {
+    delete errorid_;
+  }
+  if (errorid) {
+    set_has_errorid();
+    errorid_ = errorid;
+  } else {
+    clear_has_errorid();
+    errorid_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string errorMessage = 5;
+inline bool BitToUserHandshake::has_errormessage() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void BitToUserHandshake::set_has_errormessage() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void BitToUserHandshake::clear_has_errormessage() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void BitToUserHandshake::clear_errormessage() {
+  if (errormessage_ != &::google::protobuf::internal::kEmptyString) {
+    errormessage_->clear();
+  }
+  clear_has_errormessage();
+}
+inline const ::std::string& BitToUserHandshake::errormessage() const {
+  return *errormessage_;
+}
+inline void BitToUserHandshake::set_errormessage(const ::std::string& value) {
+  set_has_errormessage();
+  if (errormessage_ == &::google::protobuf::internal::kEmptyString) {
+    errormessage_ = new ::std::string;
+  }
+  errormessage_->assign(value);
+}
+inline void BitToUserHandshake::set_errormessage(const char* value) {
+  set_has_errormessage();
+  if (errormessage_ == &::google::protobuf::internal::kEmptyString) {
+    errormessage_ = new ::std::string;
+  }
+  errormessage_->assign(value);
+}
+inline void BitToUserHandshake::set_errormessage(const char* value, size_t size) {
+  set_has_errormessage();
+  if (errormessage_ == &::google::protobuf::internal::kEmptyString) {
+    errormessage_ = new ::std::string;
+  }
+  errormessage_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* BitToUserHandshake::mutable_errormessage() {
+  set_has_errormessage();
+  if (errormessage_ == &::google::protobuf::internal::kEmptyString) {
+    errormessage_ = new ::std::string;
+  }
+  return errormessage_;
+}
+inline ::std::string* BitToUserHandshake::release_errormessage() {
+  clear_has_errormessage();
+  if (errormessage_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = errormessage_;
+    errormessage_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void BitToUserHandshake::set_allocated_errormessage(::std::string* errormessage) {
+  if (errormessage_ != &::google::protobuf::internal::kEmptyString) {
+    delete errormessage_;
+  }
+  if (errormessage) {
+    set_has_errormessage();
+    errormessage_ = errormessage;
+  } else {
+    clear_has_errormessage();
+    errormessage_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -1268,6 +1492,10 @@ inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::RpcType>() {
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::QueryResultsMode>() {
   return ::exec::user::QueryResultsMode_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::HandshakeStatus>() {
+  return ::exec::user::HandshakeStatus_descriptor();
 }
 
 }  // namespace google

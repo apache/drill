@@ -32,7 +32,8 @@ static Drill::ErrorMessages errorMessages[]={
     {ERR_CONN_RDFAIL, ERR_CATEGORY_CONN, 0, "Connection failed with error: %s."},
     {ERR_CONN_WFAIL, ERR_CATEGORY_CONN, 0, "Synchronous socket write failed with error: %s."},
     {ERR_CONN_ZOOKEEPER, ERR_CATEGORY_CONN, 0, "Zookeeper error. %s"},
-    {ERR_CONN_NOHSHAKE, ERR_CATEGORY_CONN, 0, "Handshake failed: Expected RPC version %d, got %d."},
+    {ERR_CONN_NOHSHAKE, ERR_CATEGORY_CONN, 0, "Handshake failed because the server killed the connection. "
+        "Expected RPC version %d."},
     {ERR_CONN_ZKFAIL, ERR_CATEGORY_CONN, 0, "Failed to connect to Zookeeper."},
     {ERR_CONN_ZKTIMOUT, ERR_CATEGORY_CONN, 0, "Timed out while waiting to connect."},
     {ERR_CONN_ZKERR, ERR_CATEGORY_CONN, 0, "Error in reading from Zookeeper (error code: %d)."},
@@ -41,6 +42,11 @@ static Drill::ErrorMessages errorMessages[]={
     {ERR_CONN_ZKNOAUTH, ERR_CATEGORY_CONN, 0, "Authentication failed."},
     {ERR_CONN_ZKEXP, ERR_CATEGORY_CONN, 0, "Session expired."},
     {ERR_CONN_HSHAKETIMOUT, ERR_CATEGORY_CONN, 0, "Handshake Timeout."},
+    {ERR_CONN_BAD_RPC_VER, ERR_CATEGORY_CONN, 0, "Handshake failed because of a RPC version mismatch. "
+        "Expected RPC version %d, got %d. [Server message was: (%s) %s]"},
+    {ERR_CONN_AUTHFAIL, ERR_CATEGORY_CONN, 0, "User authentication failed (please check the username and password)."
+        "[Server message was: (%s) %s]"},
+    {ERR_CONN_UNKNOWN_ERR, ERR_CATEGORY_CONN, 0, "Handshake Failed due to an error on the server. [Server message was: (%s) %s]"},
     {ERR_QRY_OUTOFMEM, ERR_CATEGORY_QRY, 0, "Out of memory."},
     {ERR_QRY_COMMERR, ERR_CATEGORY_QRY, 0, "Communication error. %s"},
     {ERR_QRY_INVREADLEN, ERR_CATEGORY_QRY, 0, "Internal Error: Received a message with an invalid read length."},

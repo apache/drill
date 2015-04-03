@@ -193,12 +193,13 @@ class DrillClientImpl{
         DrillClientImpl():
             m_coordinationId(1),
             m_handshakeVersion(0),
+            m_handshakeStatus(exec::user::SUCCESS),
             m_bIsConnected(false),
             m_pendingRequests(0),
             m_pError(NULL),
             m_pListenerThread(NULL),
-            m_socket(m_io_service),
             m_pWork(NULL),
+            m_socket(m_io_service),
             m_deadlineTimer(m_io_service),
             m_rbuf(NULL),
             m_wbuf(MAX_SOCK_RD_BUFSIZE)
@@ -307,6 +308,9 @@ class DrillClientImpl{
 
         int32_t m_coordinationId;
         int32_t m_handshakeVersion;
+        exec::user::HandshakeStatus m_handshakeStatus;
+        std::string m_handshakeErrorId;
+        std::string m_handshakeErrorMsg;
         bool m_bIsConnected;
 
         // number of outstanding read requests.
