@@ -390,24 +390,24 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testDRILL_811ViewJoin() throws Exception {
     test("use dfs.tmp");
     test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
-    test("create view region_view as select * from cp.`tpch/region.parquet`;");
+    test("create view region_view_testexamplequeries as select * from cp.`tpch/region.parquet`;");
 
-    test("select n.n_nationkey, n.n_regionkey, r.r_name from region_view r , nation_view_testexamplequeries n where r.r_regionkey = n.n_regionkey ");
+    test("select n.n_nationkey, n.n_regionkey, r.r_name from region_view_testexamplequeries r , nation_view_testexamplequeries n where r.r_regionkey = n.n_regionkey ");
 
-    test("select n.n_regionkey, count(*) as cnt from region_view r , nation_view_testexamplequeries n where r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
+    test("select n.n_regionkey, count(*) as cnt from region_view_testexamplequeries r , nation_view_testexamplequeries n where r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
 
-    test("select n.n_regionkey, count(*) as cnt from region_view r join nation_view_testexamplequeries n on r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
+    test("select n.n_regionkey, count(*) as cnt from region_view_testexamplequeries r join nation_view_testexamplequeries n on r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
 
-    test("drop view region_view ");
+    test("drop view region_view_testexamplequeries ");
     test("drop view nation_view_testexamplequeries ");
   }
 
   @Test  // DRILL-811
   public void testDRILL_811Json() throws Exception {
     test("use dfs.tmp");
-    test("create view region_view as select * from cp.`region.json`;");
-    test("select sales_city, sales_region from region_view where region_id > 50 order by sales_country; ");
-    test("drop view region_view ");
+    test("create view region_view_testexamplequeries as select * from cp.`region.json`;");
+    test("select sales_city, sales_region from region_view_testexamplequeries where region_id > 50 order by sales_country; ");
+    test("drop view region_view_testexamplequeries ");
   }
 
   @Test

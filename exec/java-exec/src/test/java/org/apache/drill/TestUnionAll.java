@@ -186,11 +186,11 @@ public class TestUnionAll extends BaseTestQuery{
   public void testUnionAllViewExpandableStar() throws Exception {
     test("use dfs.tmp");
     test("create view nation_view_testunionall as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
-    test("create view region_view as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
+    test("create view region_view_testunionall as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
 
     String query1 = "(select * from dfs.tmp.`nation_view_testunionall`) " +
                     "union all " +
-                    "(select * from dfs.tmp.`region_view`) ";
+                    "(select * from dfs.tmp.`region_view_testunionall`) ";
 
     String query2 =  "(select r_name, r_regionkey from cp.`tpch/region.parquet`) " +
                      "union all " +
@@ -214,7 +214,7 @@ public class TestUnionAll extends BaseTestQuery{
           .build().run();
     } finally {
       test("drop view nation_view_testunionall");
-      test("drop view region_view");
+      test("drop view region_view_testunionall");
     }
   }
 
@@ -239,12 +239,12 @@ public class TestUnionAll extends BaseTestQuery{
   public void testDiffDataTypesAndModes() throws Exception {
     test("use dfs.tmp");
     test("create view nation_view_testunionall as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
-    test("create view region_view as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
+    test("create view region_view_testunionall as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
 
     String t1 = "(select n_comment, n_regionkey from cp.`tpch/nation.parquet` limit 5)";
     String t2 = "(select * from nation_view_testunionall  limit 5)";
     String t3 = "(select full_name, store_id from cp.`employee.json` limit 5)";
-    String t4 = "(select * from region_view  limit 5)";
+    String t4 = "(select * from region_view_testunionall  limit 5)";
 
     String query1 = t1 + " union all " + t2 + " union all " + t3 + " union all " + t4;
 
@@ -258,7 +258,7 @@ public class TestUnionAll extends BaseTestQuery{
           .build().run();
     } finally {
       test("drop view nation_view_testunionall");
-      test("drop view region_view");
+      test("drop view region_view_testunionall");
     }
   }
 
