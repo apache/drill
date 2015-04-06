@@ -141,7 +141,7 @@ class DECLSPEC_DRILL_CLIENT DrillUserProperties{
 
         DrillUserProperties(){};
 
-        void setProperty( std::string propName, std::string propValue){
+        void setProperty( const std::string& propName, const std::string& propValue){
             std::pair< std::string, std::string> in = make_pair(propName, propValue);
             m_properties.push_back(in);
         }
