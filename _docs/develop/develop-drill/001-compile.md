@@ -15,7 +15,7 @@ Maven and JDK installed:
 
 ## 1\. Clone the Repository
 
-    git clone https://git-wip-us.apache.org/repos/asf/incubator-drill.git
+    git clone https://git-wip-us.apache.org/repos/asf/drill.git
 
 ## 2\. Compile the Code
 

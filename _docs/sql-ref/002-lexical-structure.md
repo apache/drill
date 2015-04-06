@@ -21,6 +21,9 @@ A SQL statement used in Drill can include one or more of the following parts:
 * Predicate, such as a > b in `SELECT * FROM myfile WHERE a > b`.
 * [Storage plugin and workspace reference](/docs/lexical-structure#storage-plugin-and-workspace-references)
 * Whitespace
+* Comment in the following format: 
+
+        /* This is a comment. */
 
 The upper/lowercase sensitivity of the parts differs.
 

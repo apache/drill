@@ -24,8 +24,7 @@ This is a good place to begin if you are new to Drill. Feel free to pick
 issues from the Drill JIRA list. When you pick an issue, assign it to
 yourself, inform the team, and start fixing it.
 
-For any questions, seek help from the team by sending email to [drill-
-dev@incubator.apache.org](mailto:drill-dev@incubator.apache.org).
+For any questions, seek help from the team through the [mailing list](http://drill.apache.org/community/#mailinglists).
 
 [https://issues.apache.org/jira/browse/DRILL/?selectedTab=com.atlassian.jira
 .jira-projects-plugin:summary-panel](https://issues.apache.org/jira/browse/DRILL/?selectedTab=com.atlassian.jira
@@ -40,13 +39,8 @@ put together a JIRA for one of the DrillFunc's we don't yet have but should
 own use case). Then try to implement one.
 
 One example DrillFunc:  
-[https://github.com/apache/incubator-
-drill/blob/103072a619741d5e228fdb181501ec2f82e111a3/sandbox/prototype/exec
-/java-exec/src/main/java/org/apache/drill/exec/expr/fn/impl/ComparisonFunction
-s.java](https://github.com/apache/incubator-
-drill/blob/103072a619741d5e228fdb181501ec2f82e111a3/sandbox/prototype/exec
-/java-exec/src/main/java/org/apache/drill/exec/expr/fn/impl/ComparisonFunction
-s.java)** **
+[ComparisonFunctions.java](https://github.com/apache/drill/blob/3f93454f014196a4da198ce012b605b70081fde0/exec/java-exec/src/main/codegen/templates/ComparisonFunctions.java)
+** **
 
 **Additional ideas on functions that can be added to SQL support**
 
@@ -68,10 +62,16 @@ implementing custom storage plugins. Example formats are.
   * XML
   * Thrift
 
+## Support for new data sources
+
+Writing a new file-based storage plugin, such as a JSON or text-based storage plugin, simply involves implementing a couple of interfaces. The JSON storage plugin is a good example. 
+
 You can refer to the github commits to the mongo db and hbase storage plugin for implementation details: 
 
 * [mongodb_storage_plugin](https://github.com/apache/drill/commit/2ca9c907bff639e08a561eac32e0acab3a0b3304)
 * [hbase_storage_plugin](https://github.com/apache/drill/commit/3651182141b963e24ee48db0530ec3d3b8b6841a)
+
+Focus on implementing/extending this list of classes and the corresponding implementations done by Mongo and Hbase. Ignore the mongo db plugin optimizer rules for pushing predicates into the scan.
 
 Initially, concentrate on basics:
 
@@ -81,12 +81,6 @@ Initially, concentrate on basics:
 * BatchCreator (MongoScanBatchCreator, HbaseScanBatchCreator)  
 * AbstractStoragePlugin (MongoStoragePlugin, HbaseStoragePlugin)  
 * StoragePluginConfig (MongoStoragePluginConfig, HbaseStoragePluginConfig)
-
-Focus on implementing/extending this list of classes and the corresponding implementations done by Mongo and Hbase. Ignore the mongo db plugin optimizer rules for pushing predicates into the scan.
-
-Writing a new file-based storage plugin, such as a JSON or text-based storage plugin, simply involves implementing a couple of interfaces. The JSON storage plugin is a good example. 
-
-## Support for new data sources
 
 Implement custom storage plugins for the following non-Hadoop data sources:
 
@@ -99,10 +93,7 @@ Implement custom storage plugins for the following non-Hadoop data sources:
 
 ## New query language parsers
 
-Drill exposes strongly typed JSON APIs for logical and physical plans (plan
-syntax at [https://docs.google.com/a/maprtech.com/document/d/1QTL8warUYS2KjldQ
-rGUse7zp8eA72VKtLOHwfXy6c7I/edit#heading=h.n9gdb1ek71hf](https://docs.google.com/a/maprtech.com/document/d/1QTL8warUYS2KjldQ
-rGUse7zp8eA72VKtLOHwfXy6c7I/edit#heading=h.n9gdb1ek71hf) ). Drill provides a
+Drill exposes strongly typed JSON APIs for logical and physical plans. Drill provides a
 SQL language parser today, but any language parser that can generate
 logical/physical plans can use Drill's power on the backend as the distributed
 low latency query execution engine along with its support for self-describing

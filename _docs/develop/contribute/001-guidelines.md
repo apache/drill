@@ -29,15 +29,14 @@ These guidelines include the following topics:
 
 First, you need the Drill source code.
 
-Get the source code on your local drive using [Git](git clone https://git-wip-us.apache.org/repos/asf/incubator-drill.git). Most development is done on
+Get the source code on your local drive using Git. Most development is done on
 "master":
 
     git clone https://git-wip-us.apache.org/repos/asf/drill.git
 
 ### Making Changes
 
-Before you start, send a message to the [Drill developer mailing list](http
-://mail-archives.apache.org/mod_mbox/incubator-drill-dev/), or file a bug
+Before you start, send a message to the [Drill developer mailing list](http://mail-archives.apache.org/mod_mbox/drill-dev/), or file a bug
 report in [JIRA](https://issues.apache.org/jira/browse/DRILL). Describe your
 proposed changes and check that they fit in with what others are doing and
 have planned for the project. Be patient, it may take folks a while to
@@ -51,7 +50,7 @@ Please take care about the following points
 
   * All public classes and methods should have informative [Javadoc comments](http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html).
     * Do not use @author tags.
-  * Code should be formatted according to [Sun's conventions](http://www.oracle.com/technetwork/java/codeconv-138413.html), with one exception:
+  * Code should be formatted according to [Sun's conventions](http://www.oracle.com/technetwork/java/codeconvtoc-136057.html), with one exception:
     * Indent two (2) spaces per level, not four (4).
     * Line length limit is 120 chars, instead of 80 chars.
   * Contributions should not introduce new Checkstyle violations.
@@ -68,8 +67,7 @@ following settings into your browser:
 IntelliJ IDEA formatter: [settings
 jar](https://cwiki.apache.org/confluence/download/attachments/30757399/idea-settings.jar?version=1&modificationDate=1363022308000&api=v2)
 
-Eclipse: [formatter xml from HBase](https://issues.apache.org/jira/secure/atta
-chment/12474245/eclipse_formatter_apache.xml)
+Eclipse: [formatter xml](https://issues.apache.org/jira/secure/attachment/12474245/eclipse_formatter_apache.xml)
 
 #### Understanding Maven
 
@@ -154,16 +152,9 @@ or SQL Server). Then try to implement one.
 
 One example DrillFunc:
 
-[https://github.com/apache/incubator-
-drill/blob/103072a619741d5e228fdb181501ec2f82e111a3/sandbox/prototype/exec/java-exec/src/main/java/org/apache/drill/exec/expr/fn/impl/ComparisonFunction
-s.java](https://github.com/apache/incubator-
-drill/blob/103072a619741d5e228fdb181501ec2f82e111a3/sandbox/prototype/exec/java-exec/src/main/java/org/apache/drill/exec/expr/fn/impl/ComparisonFunction
-s.java)
+[ComparisonFunctions.java](https://github.com/apache/drill/blob/3f93454f014196a4da198ce012b605b70081fde0/exec/java-exec/src/main/codegen/templates/ComparisonFunctions.java)
 
-Also one can visit the JIRA issues and implement one of those too. A list of
-functions which need to be implemented can be found
-[here](https://docs.google.com/spreadsheet/ccc?key=0AgAGbQ6asvQ-
-dDRrUUxVSVlMVXRtanRoWk9JcHgteUE&usp=sharing#gid=0) (WIP).
+Also one can visit the JIRA issues and implement one of those too. 
 
 More contribution ideas are located on the [Contribution Ideas](/docs/apache-drill-contribution-ideas) page.
 

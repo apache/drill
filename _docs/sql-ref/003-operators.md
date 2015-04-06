@@ -62,9 +62,14 @@ You can use the following subquery operators in your Drill queries:
 
 See [SELECT Statements](/docs/select-statements).
 
-## String Operators
+## String Concatenate Operator
 
-You can use the following string operators in your Drill queries:
+You can use the following string operators in your Drill queries to concatenate strings:
 
   * string || string
   * string || non-string or non-string || string
+
+The concatenate operator is an alternative to the [concat function](/docs/string-manipulation#concat).
+
+The concat function treets NULL as an empty string. The concatenate operator (||) returns NULL if any input is NULL.
+

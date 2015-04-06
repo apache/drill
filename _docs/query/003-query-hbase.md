@@ -2,25 +2,28 @@
 title: "Querying HBase"
 parent: "Query Data"
 ---
-This is a simple exercise that provides steps for creating a “students” table
-and a “clicks” table in HBase that you can query with Drill.
+This exercise creates two tables in HBase, students and clicks, that you can query with Drill. You can use the Drill Sandbox to step through the exercise.
 
-To create the HBase tables and query them with Drill, complete the following
+## Create the HBase tables
+
+To create the HBase tables and start Drill, complete the following
 steps:
 
-  1. Issue the following command to start the HBase shell:
+1. Pipe the following commands to the HBase shell to create students and  clicks tables in HBase:
   
-        hbase shell
-  2. Issue the following commands to create a ‘students’ table and a ‘clicks’ table with column families in HBase:
-    
-        echo "create 'students','account','address'" | hbase shell
-    
-        echo "create 'clicks','clickinfo','iteminfo'" | hbase shell
-  3. Issue the following command with the provided data to create a `testdata.txt` file:
+      echo "create 'students','account','address'" | hbase shell
+  
+      echo "create 'clicks','clickinfo','iteminfo'" | hbase shell
 
-        cat > testdata.txt
+   On the Drill Sandbox, HBase tables are located in:
 
-     **Sample Data**
+        /mapr/demo.mapr.com/tables
+
+2. Issue the following command to create a `testdata.txt` file:
+
+      cat > testdata.txt
+
+3. Copy and paste the following `put` commands on the line below the **cat** command. Press Return, and then CTRL Z to close the file.
 
         put 'students','student1','account:name','Alice'
         put 'students','student1','address:street','123 Ballmer Av'
@@ -84,68 +87,75 @@ steps:
         put 'clicks','click9','iteminfo:itemtype','image'
         put 'clicks','click9','iteminfo:quantity','10'
 
-  4. Issue the following command to verify that the data is in the `testdata.txt` file:  
-    
-         cat testdata.txt | hbase shell
-  5. Issue `exit` to leave the `hbase shell`.
-  6. Start Drill. Refer to [Starting/Stopping Drill](/docs/starting-stopping-drill) for instructions.
-  7. Use Drill to issue the following SQL queries on the “students” and “clicks” tables:  
+4. Issue the following command to put the data into hbase:  
   
-     1. Issue the following query to see the data in the “students” table:  
+        cat testdata.txt | hbase shell
+5. Start Drill. Type `sqlline` on the terminal command line if you are using the Drill Sandbox; otherwise, see [Starting/Stopping Drill]({{ site.baseurl }}/docs/starting-stopping-drill).
+6. Use the `maprdb` storage plugin, which includes the [MapR-DB format](/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services. 
 
-            SELECT * FROM hbase.`students`;
-        The query returns binary results:
-        
-            Query finished, fetching results ...
-            +----------+----------+----------+-----------+----------+----------+----------+-----------+
-            |id    | name        | state       | street      | zipcode |`
-            +----------+----------+----------+-----------+----------+-----------+----------+-----------
-            | [B@1ee37126 | [B@661985a1 | [B@15944165 | [B@385158f4 |[B@3e08d131 |
-            | [B@64a7180e | [B@161c72c2 | [B@25b229e5 | [B@53dc8cb8 |[B@1d11c878 |
-            | [B@349aaf0b | [B@175a1628 | [B@1b64a812 | [B@6d5643ca |[B@147db06f |
-            | [B@3a7cbada | [B@52cf5c35 | [B@2baec60c | [B@5f4c543b |[B@2ec515d6 |
+         USE hbase; /* If you have installed HBase services. */ 
 
-        Since Drill does not require metadata, you must use the SQL `CAST` function in
-some queries to get readable query results.
+   Or:
 
-     2. Issue the following query, that includes the `CAST` function, to see the data in the “`students`” table:
+         USE maprdb; /* If you are using the Drill Sandbox */
 
-            SELECT CAST(students.clickinfo.studentid as VarChar(20)),
-            CAST(students.account.name as VarChar(20)), CAST (students.address.state as
-            VarChar(20)), CAST (students.address.street as VarChar(20)), CAST
-            (students.address.zipcode as VarChar(20)), FROM hbase.students;
+The `maprdb` storage plugin provides access to the `/tables` directory. Use Drill to query the students and clicks tables on the Drill Sandbox.  
 
-        **Note:** Use the following format when you query a column in an HBase table:
-          
-             tablename.columnfamilyname.columnname
-            
-        For more information about column families, refer to [5.6. Column
-Family](http://hbase.apache.org/book/columnfamily.html).
+## Query HBase Tables
+1. Issue the following query to see the data in the students table:  
 
-        The query returns the data:
+       SELECT * FROM students;
+   The query returns binary results:
+  
+        +------------+------------+------------+
+        |  row_key   |  account   |  address   |
+        +------------+------------+------------+
+        | [B@e6d9eb7 | {"name":"QWxpY2U="} | {"state":"Q0E=","street":"MTIzIEJhbGxtZXIgQXY=","zipcode":"MTIzNDU="} |
+        | [B@2823a2b4 | {"name":"Qm9i"} | {"state":"Q0E=","street":"MSBJbmZpbml0ZSBMb29w","zipcode":"MTIzNDU="} |
+        | [B@3b8eec02 | {"name":"RnJhbms="} | {"state":"Q0E=","street":"NDM1IFdhbGtlciBDdA==","zipcode":"MTIzNDU="} |
+        | [B@242895da | {"name":"TWFyeQ=="} | {"state":"Q0E=","street":"NTYgU291dGhlcm4gUGt3eQ==","zipcode":"MTIzNDU="} |
+        +------------+------------+------------+
+        4 rows selected (1.335 seconds)
+   The Drill output reflects the actual data type of the HBase data, which is binary.
 
-            Query finished, fetching results ...
-            +----------+-------+-------+------------------+---------+`
-            | studentid | name  | state | street           | zipcode |`
-            +----------+-------+-------+------------------+---------+`
-            | student1 | Alice | CA    | 123 Ballmer Av   | 12345   |`
-            | student2 | Bob   | CA    | 1 Infinite Loop  | 12345   |`
-            | student3 | Frank | CA    | 435 Walker Ct    | 12345   |`
-            | student4 | Mary  | CA    | 56 Southern Pkwy | 12345   |`
-            +----------+-------+-------+------------------+---------+`
+2. Issue the following query, that includes the CONVERT_FROM function, to convert the `students` table to readable data:
 
-     3. Issue the following query on the “clicks” table to find out which students clicked on google.com:
-        
-              SELECT CAST(clicks.clickinfo.studentid as VarChar(200)), CAST(clicks.clickinfo.url as VarChar(200)) FROM hbase.`clicks` WHERE URL LIKE '%google%';  
+         SELECT CONVERT_FROM(row_key, 'UTF8') AS studentid, 
+                CONVERT_FROM(students.account.name, 'UTF8') AS name, 
+                CONVERT_FROM(students.address.state, 'UTF8') AS state, 
+                CONVERT_FROM(students.address.street, 'UTF8') AS street, 
+                CONVERT_FROM(t.students.address.zipcode, 'UTF8') AS zipcode 
+         FROM students;
 
-        The query returns the data:
-        
-            Query finished, fetching results ...`
-        
-            +---------+-----------+-------------------------------+-----------------------+----------+----------+
-            | clickid | studentid | time                          | url                   | itemtype | quantity |
-            +---------+-----------+-------------------------------+-----------------------+----------+----------+
-            | click1  | student1  | 2014-01-01 12:01:01.000100000 | http://www.google.com | image    | 1        |
-            | click3  | student2  | 2014-01-01 01:02:01.000100000 | http://www.google.com | text     | 2        |
-            | click6  | student3  | 2013-02-01 12:01:01.000100000 | http://www.google.com | image    | 1        |
-            +---------+-----------+-------------------------------+-----------------------+----------+----------+
+    **Note:** Use dot notation to drill down to a column in an HBase table:
+    
+        tablename.columnfamilyname.columnnname
+
+    The query returns readable data:
+
+        +------------+------------+------------+------------+------------+
+        | studentid  |    name    |   state    |   street   |  zipcode   |
+        +------------+------------+------------+------------+------------+
+        | student1   | Alice      | CA         | 123 Ballmer Av | 12345      |
+        | student2   | Bob        | CA         | 1 Infinite Loop | 12345      |
+        | student3   | Frank      | CA         | 435 Walker Ct | 12345      |
+        | student4   | Mary       | CA         | 56 Southern Pkwy | 12345      |
+        +------------+------------+------------+------------+------------+
+        4 rows selected (0.504 seconds)
+
+3. Query the clicks table to see which students visited google.com:
+  
+        SELECT CONVERT_FROM(row_key, 'UTF8') AS clickid, 
+               CONVERT_FROM(clicks.clickinfo.studentid, 'UTF8') AS studentid, 
+               CONVERT_FROM(clicks.clickinfo.`time`, 'UTF8') AS `time`,
+               CONVERT_FROM(clicks.clickinfo.url, 'UTF8') AS url 
+        FROM clicks WHERE clicks.clickinfo.url LIKE '%google%'; 
+
+        +------------+------------+------------+------------+
+        |  clickid   | studentid  |    time    |    url     |
+        +------------+------------+------------+------------+
+        | click1     | student1   | 2014-01-01 12:01:01.0001 | http://www.google.com |
+        | click3     | student2   | 2014-01-01 01:02:01.0001 | http://www.google.com |
+        | click6     | student3   | 2013-02-01 12:01:01.0001 | http://www.google.com |
+        +------------+------------+------------+------------+
+        3 rows selected (0.294 seconds)

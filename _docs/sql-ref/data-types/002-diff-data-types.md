@@ -2,8 +2,6 @@
 title: "Handling Different Data Types"
 parent: "Data Types"
 ---
-[Previous](/docs/supported-date-time-data-type-formats)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Back to Table of Contents](/docs)<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[Next](/docs/lexical-structure)
-
 ## Handling HBase Data
 To query HBase data in Drill, convert every column of an HBase table to/from byte arrays from/to an SQL data type using CONVERT_TO or CONVERT_FROM. For examples of how to use these functions, see "Convert and Cast Functions".
 

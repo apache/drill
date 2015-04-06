@@ -95,6 +95,6 @@ You can run the query described earlier to check the formatting of the fields. T
     +------------+
     1 row selected (0.076 seconds)
 
-For information about casting interval data, see the ["CAST"](/docs/data-type-fmt#cast) function.
+For information about casting interval data, see the ["CAST"](/docs/conversion#cast) function.
 
 

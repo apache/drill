@@ -3,7 +3,22 @@ title: "Date/Time Functions and Arithmetic"
 parent: "SQL Functions"
 ---
 
-In addition to the TO_DATE, TO_TIME, and TO_TIMESTAMP functions, Drill supports a number of other date/time functions and arithmetic operators for use with dates, times, and intervals. 
+In addition to the TO_DATE, TO_TIME, and TO_TIMESTAMP functions, Drill supports a number of other date/time functions and arithmetic operators for use with dates, times, and intervals. The following table lists date/time functions described in this section:
+
+**Function**| **Return Type**  
+---|---  
+[AGE(TIMESTAMP)](/docs/date-time-functions-and-arithmetic#age)| INTERVAL
+[CURRENT_DATE](/docs/date-time-functions-and-arithmetic#current_date)| DATE  
+[CURRENT_TIME](/docs/date-time-functions-and-arithmetic#current_time)| TIME   
+[CURRENT_TIMESTAMP](/docs/date-time-functions-and-arithmetic#current_timestamp)| TIMESTAMP 
+[DATE_ADD(DATE,INTERVAL expr type)](/docs/date-time-functions-and-arithmetic#date_add)| date/datetime  
+[DATE_PART(text, time_expression)](/docs/date-time-functions-and-arithmetic#date_part)| double precision  
+[DATE_SUB(DATE,INTERVAL expr type)](/docs/date-time-functions-and-arithmetic#date_sub)| date/datetime  
+[EXTRACT(field from time_expression)](/docs/date-time-functions-and-arithmetic#extract)| double precision   
+[LOCALTIME](/docs/date-time-functions-and-arithmetic#localtime)| TIME  
+[LOCALTIMESTAMP](/docs/date-time-functions-and-arithmetic#localtimestamp)| TIMESTAMP  
+[NOW()](/docs/date-time-functions-and-arithmetic#now)| TIMESTAMP  
+[TIMEOFDAY()](/docs/date-time-functions-and-arithmetic#timeofday)| text  
 
 ## Date/Time Functions and Utilities
 
@@ -11,7 +26,9 @@ The following functions perform date/time-related operations:
 
 * AGE
 * EXTRACT
+* DATE_ADD
 * DATE_PART
+* DATE_SUB
 
 Drill supports the following utilities:
 
@@ -118,6 +135,22 @@ What is the second component of this timestamp: 2001-02-16 20:38:40
     +------------+
     1 row selected (0.062 seconds)
 
+### DATE_ADD
+Returns the sum of a date and an interval.
+
+#### Syntax
+
+    DATE_ADD(date, interval);
+
+#### Example
+
+    SELECT CAST(DATE_ADD(datetype(2008, 2, 27), intervaltype(0, 1, 0, 0, 0, 0, 0)) as VARCHAR(100)) FROM sys.drillbits;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2008-03-27 00:00:00.000 |
+    +------------+
+    1 row selected (0.247 seconds)
 
 ### DATE_PART
 Returns a field of a date, time, timestamp, or interval.
@@ -171,8 +204,22 @@ Return the day part of the one year, 2 months, 10 days interval.
     +------------+
     1 row selected (0.069 seconds)
 
-<!-- date_add
-date_sub -->
+### DATE_SUB
+Returns the sum of a date and an interval.
+
+#### Syntax
+
+    DATE_SUB(date, interval);
+
+#### Example
+
+    SELECT CAST(DATE_SUB(datetype(2008, 2, 27), intervaltype(0, 1, 0, 0, 0, 0, 0)) as VARCHAR(100)) FROM sys.drillbits;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2008-01-27 |
+    +------------+
+    1 row selected (0.199 seconds)
 
 ### Date/Time Utilities
 The utilities are:
