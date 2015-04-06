@@ -71,5 +71,5 @@ You can use the following string operators in your Drill queries to concatenate 
 
 The concatenate operator is an alternative to the [concat function](/docs/string-manipulation#concat).
 
-The concat function treets NULL as an empty string. The concatenate operator (||) returns NULL if any input is NULL.
+The concat function treats NULL as an empty string. The concatenate operator (||) returns NULL if any input is NULL.
 

@@ -11,9 +11,9 @@ steps:
 
 1. Pipe the following commands to the HBase shell to create students and  clicks tables in HBase:
   
-      echo "create 'students','account','address'" | hbase shell
+          echo "create 'students','account','address'" | hbase shell
   
-      echo "create 'clicks','clickinfo','iteminfo'" | hbase shell
+          echo "create 'clicks','clickinfo','iteminfo'" | hbase shell
 
    On the Drill Sandbox, HBase tables are located in:
 

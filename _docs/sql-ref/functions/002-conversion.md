@@ -4,9 +4,9 @@ parent: "SQL Functions"
 ---
 Drill supports the following functions for casting and converting data types:
 
-* [CAST](/docs/conversion#cast)
-* [CONVERT TO/FROM](/docs/conversion#convert-to-and-convert-from)
-* [Other data type conversion functions](/docs/conversion#other-data-type-conversion-functions)
+* [CAST](/docs/data-type-conversion#cast)
+* [CONVERT_TO and CONVERT_FROM](/docs/data-type-conversion#convert-to-and-convert-from)
+* [Other data type conversion functions](/docs/data-type-conversion#functions-for-handling-nulls)
 
 ## CAST
 
@@ -173,7 +173,7 @@ Use the CONVERT_TO function to change the data type to binary when sending data 
 
 ### Examples
 
-This example shows how to use the CONVERT_FROM function to convert complex HBase data to a readable type. The example summarizes and continues the ["Query HBase"](/docs/query-hbase) example. The ["Query HBase"](/docs/query-hbase) example stores the following data in the students table on the Drill Sandbox:  
+This example shows how to use the CONVERT_FROM function to convert complex HBase data to a readable type. The example summarizes and continues the ["Query HBase"](/docs/querying-hbase) example. The ["Query HBase"](/docs/querying-hbase) example stores the following data in the students table on the Drill Sandbox:  
 
     USE maprdb;
 

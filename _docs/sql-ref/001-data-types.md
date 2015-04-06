@@ -119,7 +119,7 @@ The following table lists data types top to bottom, in descending order of prece
 
 In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as previously mentioned. To handle textual data, you can use the following functions to cast and convert compatible data types:
 
-* [CAST](/docs/conversion#cast)  
+* [CAST](/docs/data-type-conversion#cast)  
   Casts data from one data type to another.
 * [CONVERT_TO and CONVERT_FROM](/docs/conversion#convert-to-and-convert-from)  
   Converts data, including binary data, from one data type to another.

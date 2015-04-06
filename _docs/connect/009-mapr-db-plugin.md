@@ -21,7 +21,7 @@ in the Web UI of the Drill Sandbox to view the configuration for the `dfs` insta
 ![drill query flow]({{ site.baseurl }}/docs/img/18.png)
 
 
-The examples of the [CONVERT_TO/FROM functions](/docs/conversion#convert-to-and-convert-from) show how to adapt the `dfs` storage plugin to use the `maprdb` format plugin to query HBase tables on the Sandbox.
+The examples of the [CONVERT_TO/FROM functions](/docs/data-type-conversion#convert-to-and-convert-from) show how to adapt the `dfs` storage plugin to use the `maprdb` format plugin to query HBase tables on the Sandbox.
 
 You modify the `dfs` storage plugin to create a table mapping to a directory in the MapR-FS file system. You then select the table by name.
 
