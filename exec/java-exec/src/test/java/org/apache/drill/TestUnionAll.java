@@ -429,4 +429,34 @@ public class TestUnionAll extends BaseTestQuery{
          .baselineValues((long) 10)
          .build().run();
   }
+
+  @Test // see DRILL-2717
+  public void testUnionInputsGroupByOnCSV() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
+    String query = String.format("select * from \n" +
+            "((select columns[0] as col0 from dfs.`%s` t1 \n" +
+            "where t1.columns[0] = 66) \n" +
+            "union all \n" +
+            "(select columns[0] c2 from dfs.`%s` t2 \n" +
+            "where t2.columns[0] is not null \n" +
+            "group by columns[0])) \n" +
+        "group by col0"
+        , root, root);
+    
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col0")
+        .baselineValues("290")
+        .baselineValues("291")
+        .baselineValues("323")
+        .baselineValues("352")
+        .baselineValues("389")
+        .baselineValues("417")
+        .baselineValues("66")
+        .baselineValues("673")
+        .baselineValues("833")
+        .baselineValues("99")
+        .build().run();
+  }
 }
