@@ -121,7 +121,7 @@ In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as pr
 
 * [CAST](/docs/data-type-conversion#cast)  
   Casts data from one data type to another.
-* [CONVERT_TO and CONVERT_FROM](/docs/conversion#convert-to-and-convert-from)  
+* [CONVERT_TO and CONVERT_FROM](/docs/data-type-conversion#convert_to-and-convert_from)  
   Converts data, including binary data, from one data type to another.
 * [TO_CHAR]()  
   Converts a TIMESTAMP, INTERVAL, INTEGER, DOUBLE, or DECIMAL to a string.

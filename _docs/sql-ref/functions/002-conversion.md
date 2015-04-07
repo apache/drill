@@ -5,8 +5,7 @@ parent: "SQL Functions"
 Drill supports the following functions for casting and converting data types:
 
 * [CAST](/docs/data-type-conversion#cast)
-* [CONVERT_TO and CONVERT_FROM](/docs/data-type-conversion#convert-to-and-convert-from)
-* [Other data type conversion functions](/docs/data-type-conversion#functions-for-handling-nulls)
+* [CONVERT_TO and CONVERT_FROM](/docs/data-type-conversion#convert_to-and-convert_from)
 
 ## CAST
 
