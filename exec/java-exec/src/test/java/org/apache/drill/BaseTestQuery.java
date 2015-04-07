@@ -25,11 +25,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.client.QuerySubmitter;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -43,6 +44,11 @@ import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -82,7 +88,6 @@ public class BaseTestQuery extends ExecTest {
   protected static Drillbit[] bits;
   protected static RemoteServiceSet serviceSet;
   protected static DrillConfig config;
-  protected static QuerySubmitter submitter = new QuerySubmitter();
   protected static BufferAllocator allocator;
 
   /**
@@ -91,6 +96,11 @@ public class BaseTestQuery extends ExecTest {
    * Tests can update the cluster size through {@link #updateTestCluster(int, DrillConfig)}
    */
   private static int drillbitCount = 1;
+
+  /**
+   * Location of the dfs_test.tmp schema on local filesystem.
+   */
+  private static String dfsTestTmpSchemaLocation;
 
   private int[] columnWidths = new int[] { 8 };
 
@@ -130,6 +140,19 @@ public class BaseTestQuery extends ExecTest {
     return bits[0].getContext();
   }
 
+  protected static Properties cloneDefaultTestConfigProperties() {
+    final Properties props = new Properties();
+    for(String propName : TEST_CONFIGURATIONS.stringPropertyNames()) {
+      props.put(propName, TEST_CONFIGURATIONS.getProperty(propName));
+    }
+
+    return props;
+  }
+
+  protected static String getDfsTestTmpSchemaLocation() {
+    return dfsTestTmpSchemaLocation;
+  }
+
   private static void resetClientAndBit() throws Exception{
     closeClient();
     openClient();
@@ -148,6 +171,10 @@ public class BaseTestQuery extends ExecTest {
       bits[i] = new Drillbit(config, serviceSet);
       bits[i].run();
     }
+
+    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    dfsTestTmpSchemaLocation = TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry);
+    TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
 
     client = QueryTestUtil.createClient(config,  serviceSet, MAX_WIDTH_PER_NODE, null);
   }

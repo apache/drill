@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.cache;
 
+import java.io.File;
 import java.util.List;
 
+import com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
@@ -43,11 +46,15 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import org.junit.rules.TestRule;
 
 public class TestWriteToDisk extends ExecTest {
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(90000); // 90secs
+
   @Test
   @SuppressWarnings("static-method")
   public void test() throws Exception {
@@ -98,11 +105,9 @@ public class TestWriteToDisk extends ExecTest {
         final VectorAccessibleSerializable newWrap = new VectorAccessibleSerializable(
             context.getAllocator());
         try (final FileSystem fs = FileSystem.get(conf)) {
-          final Path path = new Path("/tmp/drillSerializable");
-          if (fs.exists(path)) {
-            fs.delete(path, false);
-          }
-
+          final File tempDir = Files.createTempDir();
+          tempDir.deleteOnExit();
+          final Path path = new Path(tempDir.getAbsolutePath(), "drillSerializable");
           try (final FSDataOutputStream out = fs.create(path)) {
             wrap.writeToStream(out);
             out.close();

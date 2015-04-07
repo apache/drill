@@ -41,7 +41,7 @@ public class TestCustomUserAuthenticator extends BaseTestQuery {
   public static void setupCluster() {
     // Create a new DrillConfig which has user authentication enabled and authenticator set to
     // UserAuthenticatorTestImpl.
-    final Properties props = new Properties();
+    final Properties props = cloneDefaultTestConfigProperties();
     props.setProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, "true");
     props.setProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE);
     final DrillConfig newConfig = DrillConfig.create(props);

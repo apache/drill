@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.rules.TestRule;
 
 public class TestLargeFileCompilation extends BaseTestQuery {
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(120000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(150000); // 150secs
 
   private static final String LARGE_QUERY_GROUP_BY;
 

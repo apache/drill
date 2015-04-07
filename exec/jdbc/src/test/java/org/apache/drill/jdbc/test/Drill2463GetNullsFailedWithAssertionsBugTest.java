@@ -41,7 +41,7 @@ public class Drill2463GetNullsFailedWithAssertionsBugTest extends JdbcTest {
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
-    connection = new Driver().connect( "jdbc:drill:zk=local", null );
+    connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
     statement = connection.createStatement();
 
     boolean assertionsEnabled = false;

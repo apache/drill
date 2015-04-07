@@ -34,7 +34,7 @@ public class TestExampleQueries extends BaseTestQuery{
   @Test // see DRILL-2328
   public void testConcatOnNull() throws Exception {
     try {
-      test("use dfs.tmp");
+      test("use dfs_test.tmp");
       test("create view concatNull as (select * from cp.`customer.json` where customer_id < 5);");
 
       // Test Left Null
@@ -123,9 +123,9 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test // see DRILL-985
   public void testViewFileName() throws Exception {
-    test("use dfs.tmp");
+    test("use dfs_test.tmp");
     test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
-    test("select * from dfs.tmp.`nation_view_testexamplequeries.view.drill`");
+    test("select * from dfs_test.tmp.`nation_view_testexamplequeries.view.drill`");
     test("drop view nation_view_testexamplequeries");
   }
 
@@ -376,7 +376,7 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test // DRILL-811
   public void testDRILL_811View() throws Exception {
-    test("use dfs.tmp");
+    test("use dfs_test.tmp");
     test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
 
     test("select n.n_nationkey, n.n_name, n.n_regionkey from nation_view_testexamplequeries n where n.n_nationkey > 8 order by n.n_regionkey");
@@ -388,7 +388,7 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test  // DRILL-811
   public void testDRILL_811ViewJoin() throws Exception {
-    test("use dfs.tmp");
+    test("use dfs_test.tmp");
     test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
     test("create view region_view_testexamplequeries as select * from cp.`tpch/region.parquet`;");
 
@@ -404,7 +404,7 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test  // DRILL-811
   public void testDRILL_811Json() throws Exception {
-    test("use dfs.tmp");
+    test("use dfs_test.tmp");
     test("create view region_view_testexamplequeries as select * from cp.`region.json`;");
     test("select sales_city, sales_region from region_view_testexamplequeries where region_id > 50 order by sales_country; ");
     test("drop view region_view_testexamplequeries ");
@@ -699,7 +699,7 @@ public class TestExampleQueries extends BaseTestQuery{
         "select cast(r_regionkey as BIGINT) BIGINT_col, cast(r_regionkey as DECIMAL) bigint_col \n" +
         "FROM cp.`tpch/region.parquet`;\n";
 
-    test("USE dfs.tmp");
+    test("USE dfs_test.tmp");
     test(creatTable);
 
     testBuilder()

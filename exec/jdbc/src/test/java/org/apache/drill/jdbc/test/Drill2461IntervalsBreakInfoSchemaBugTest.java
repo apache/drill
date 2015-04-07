@@ -62,10 +62,10 @@ public class Drill2461IntervalsBreakInfoSchemaBugTest extends JdbcTest {
     ResultSet util;
 
     // Create a view using an INTERVAL type:
-    util = stmt.executeQuery( "USE dfs.tmp" );
+    util = stmt.executeQuery( "USE dfs_test.tmp" );
     assert util.next();
     assert util.getBoolean( 1 )
-        : "Error setting schema to dfs.tmp: " + util.getString( 2 );
+        : "Error setting schema to dfs_test.tmp: " + util.getString( 2 );
     util = stmt.executeQuery(
         "CREATE OR REPLACE VIEW " + VIEW_NAME + " AS "
       + "\n  SELECT CAST( NULL AS INTERVAL HOUR(4) TO MINUTE ) AS optINTERVAL_HM "

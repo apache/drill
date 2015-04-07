@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import com.google.common.io.Files;
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaFactory;
 import net.hydromatic.avatica.Helper;
@@ -30,12 +31,19 @@ import net.hydromatic.avatica.Meta;
 import net.hydromatic.avatica.UnregisteredDriver;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.exec.util.TestUtilities;
 
 /**
  * Implementation of JDBC connection in Drill.
@@ -96,6 +104,9 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements DrillCon
           serviceSet = null;
           bit = null;
         }
+
+        makeTmpSchemaLocationsUnique(bit.getContext().getStorage(), info);
+
         this.client = new DrillClient(dConfig, set.getCoordinator());
         this.client.connect(null, info);
       } else {
@@ -200,4 +211,26 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements DrillCon
     }
   }
 
+  /**
+   * Test only code to make JDBC tests run concurrently. If the property <i>drillJDBCUnitTests</i> is set to
+   * <i>true</i> in connection properties:
+   *   - Update dfs_test.tmp workspace location with a temp directory. This temp is for exclusive use for test jvm.
+   *   - Update dfs.tmp workspace to immutable, so that test writer don't try to create views in dfs.tmp
+   * @param pluginRegistry
+   */
+  private static void makeTmpSchemaLocationsUnique(StoragePluginRegistry pluginRegistry, Properties props) {
+    try {
+      if (props != null && "true".equalsIgnoreCase(props.getProperty("drillJDBCUnitTests"))) {
+        TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry);
+        TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
+      }
+    } catch(Throwable e) {
+      // Reason for catching Throwable is to capture NoSuchMethodError etc which depend on certain classed to be
+      // present in classpath which may not be available when just using the standalone JDBC. This is unlikely to
+      // happen, but just a safeguard to avoid failing user applications.
+      logger.warn("Failed to update tmp schema locations. This step is purely for testing purpose. " +
+          "Shouldn't be seen in production code.");
+      // Ignore the error and go with defaults
+    }
+  }
 }

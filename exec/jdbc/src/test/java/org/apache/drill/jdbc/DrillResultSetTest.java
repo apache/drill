@@ -39,6 +39,7 @@ import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.util.Hook;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.jdbc.test.JdbcAssert;
 import org.apache.drill.test.DrillTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -84,7 +85,7 @@ public class DrillResultSetTest extends DrillTest {
   public void test_next_blocksFurtherAccessAfterEnd()
       throws SQLException
   {
-    Connection connection = new Driver().connect( "jdbc:drill:zk=local", null );
+    Connection connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
     Statement statement = connection.createStatement();
     ResultSet resultSet =
         statement.executeQuery( "SELECT 1 AS x \n" +
@@ -124,7 +125,7 @@ public class DrillResultSetTest extends DrillTest {
   public void test_next_blocksFurtherAccessWhenNoRows()
     throws Exception
   {
-    Connection connection = new Driver().connect( "jdbc:drill:zk=local", null );
+    Connection connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
     Statement statement = connection.createStatement();
     ResultSet resultSet =
         statement.executeQuery( "SELECT 'Hi' AS x \n" +

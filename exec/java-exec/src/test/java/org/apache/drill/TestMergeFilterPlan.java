@@ -59,7 +59,7 @@ public class TestMergeFilterPlan extends PlanTestBase {
     String expectedPattern2 = "Filter(condition=[AND(OR(=($0, 1), =($0, 2), =($0, 3)), LIKE($1, '%VP%'))])";
     String excludedPattern = "Filter(condition=[OR(=($0, 1), =($0, 2), =($0, 3))])";
 
-    test("use dfs.tmp");
+    test("use dfs_test.tmp");
 
     test(viewDDL);
 

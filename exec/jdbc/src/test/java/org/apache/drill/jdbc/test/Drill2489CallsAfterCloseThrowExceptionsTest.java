@@ -77,7 +77,7 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTest {
 
   @BeforeClass
   public static void setUpConnection() throws Exception {
-    final Connection connection = new Driver().connect( "jdbc:drill:zk=local", null );
+    final Connection connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
     final Statement stmt = connection.createStatement();
     final ResultSet result =
         stmt.executeQuery( "SELECT * FROM INFORMATION_SCHEMA.CATALOGS" );
@@ -422,7 +422,7 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTest {
   @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_addBatch_throws() throws SQLException {
-    closedStatement.addBatch( "USE dfs.tmp" );
+    closedStatement.addBatch( "USE dfs_test.tmp" );
   }
 
   @Ignore( "until DRILL-2489 addressed" )
@@ -446,24 +446,24 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTest {
   @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_execute1_throws() throws SQLException {
-    closedStatement.execute( "USE dfs.tmp", Statement.RETURN_GENERATED_KEYS );
+    closedStatement.execute( "USE dfs_test.tmp", Statement.RETURN_GENERATED_KEYS );
   }
 
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_execute2_throws() throws SQLException {
-    closedStatement.execute( "USE dfs.tmp" );
+    closedStatement.execute( "USE dfs_test.tmp" );
   }
 
   @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_execute3_throws() throws SQLException {
-    closedStatement.execute( "USE dfs.tmp", (int[]) null );
+    closedStatement.execute( "USE dfs_test.tmp", (int[]) null );
   }
 
   @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_execute4_throws() throws SQLException {
-    closedStatement.execute( "USE dfs.tmp", (String[]) null );
+    closedStatement.execute( "USE dfs_test.tmp", (String[]) null );
   }
 
   @Ignore( "until DRILL-2489 addressed" )
@@ -474,28 +474,28 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTest {
 
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_executeQuery_throws() throws SQLException {
-    closedStatement.executeQuery( "USE dfs.tmp" );
+    closedStatement.executeQuery( "USE dfs_test.tmp" );
   }
 
   @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_executeUpdate1_throws() throws SQLException {
-    closedStatement.executeUpdate( "USE dfs.tmp", Statement.RETURN_GENERATED_KEYS );
+    closedStatement.executeUpdate( "USE dfs_test.tmp", Statement.RETURN_GENERATED_KEYS );
   }
 
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_executeUpdate2_throws() throws SQLException {
-    closedStatement.executeUpdate( "USE dfs.tmp", (int[]) null );
+    closedStatement.executeUpdate( "USE dfs_test.tmp", (int[]) null );
   }
 
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_executeUpdate3_throws() throws SQLException {
-    closedStatement.executeUpdate( "USE dfs.tmp", (String[]) null );
+    closedStatement.executeUpdate( "USE dfs_test.tmp", (String[]) null );
   }
 
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_executeUpdate4_throws() throws SQLException {
-    closedStatement.executeUpdate( "USE dfs.tmp" );
+    closedStatement.executeUpdate( "USE dfs_test.tmp" );
   }
 
   @Ignore( "until DRILL-2489 addressed" )

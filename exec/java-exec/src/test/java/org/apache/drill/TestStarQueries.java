@@ -233,7 +233,7 @@ public class TestStarQueries extends BaseTestQuery{
 
   @Test // DRILL-1293
   public void testStarView1() throws Exception {
-    test("use dfs.tmp");
+    test("use dfs_test.tmp");
     test("create view vt1 as select * from cp.`tpch/region.parquet` r, cp.`tpch/nation.parquet` n where r.r_regionkey = n.n_regionkey");
     test("select * from vt1");
     test("drop view vt1");

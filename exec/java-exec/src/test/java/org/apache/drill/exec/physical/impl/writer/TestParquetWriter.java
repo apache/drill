@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.writer;
 
+import java.io.File;
 import java.math.BigDecimal;
 
 import org.apache.drill.BaseTestQuery;
@@ -37,7 +38,7 @@ public class TestParquetWriter extends BaseTestQuery {
   @BeforeClass
   public static void initFs() throws Exception {
     Configuration conf = new Configuration();
-    conf.set("fs.name.default", "local");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
 
     fs = FileSystem.get(conf);
   }
@@ -254,18 +255,17 @@ public class TestParquetWriter extends BaseTestQuery {
     String query = "select r_regionkey, r_name, r_comment, r_regionkey +1 as key1 from cp.`tpch/region.parquet` order by r_name";
     String queryFromWriteOut = "select * from " + outputFile;
 
-    Path path = new Path("/tmp/" + outputFile);
-    if (fs.exists(path)) {
-      fs.delete(path, true);
+    try {
+      test("use dfs_test.tmp");
+      test(ctasStmt);
+      testBuilder()
+          .ordered()
+          .sqlQuery(queryFromWriteOut)
+          .sqlBaselineQuery(query)
+          .build().run();
+    } finally {
+      deleteTableIfExists(outputFile);
     }
-
-    test("use dfs.tmp");
-    test(ctasStmt);
-    testBuilder()
-        .ordered()
-        .sqlQuery(queryFromWriteOut)
-        .sqlBaselineQuery(query)
-        .build().run();
   }
 
   public void compareParquetReadersColumnar(String selection, String table) throws Exception {
@@ -383,50 +383,47 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testWriteDecimal() throws Exception {
     String outputTable = "decimal_test";
-    Path path = new Path("/tmp/" + outputTable);
-    if (fs.exists(path)) {
-      fs.delete(path, true);
+
+    try {
+      String ctas = String.format("use dfs_test.tmp; " +
+          "create table %s as select " +
+          "cast('1.2' as decimal(38, 2)) col1, cast('1.2' as decimal(28, 2)) col2 " +
+          "from cp.`employee.json` limit 1", outputTable);
+
+      test(ctas);
+
+      BigDecimal result = new BigDecimal("1.20");
+
+      testBuilder()
+          .unOrdered()
+          .sqlQuery(String.format("select col1, col2 from %s ", outputTable))
+          .baselineColumns("col1", "col2")
+          .baselineValues(result, result)
+          .go();
+    } finally {
+      deleteTableIfExists(outputTable);
     }
-    String ctas = String.format("use dfs.tmp; " +
-        "create table %s as select " +
-        "cast('1.2' as decimal(38, 2)) col1, cast('1.2' as decimal(28, 2)) col2 " +
-        "from cp.`employee.json` limit 1", outputTable);
-
-    test(ctas);
-
-    BigDecimal result = new BigDecimal("1.20");
-
-    testBuilder()
-        .unOrdered()
-        .sqlQuery(String.format("select col1, col2 from %s ", outputTable))
-        .baselineColumns("col1", "col2")
-        .baselineValues(result, result)
-        .go();
   }
+
 
   @Test // see DRILL-2408
   public void testWriteEmptyFile() throws Exception {
     String outputFile = "testparquetwriter_test_write_empty_file";
 
-    Path path = new Path("/tmp/" + outputFile);
-    if (fs.exists(path)) {
-      fs.delete(path, true);
+    try {
+      Path path = new Path(getDfsTestTmpSchemaLocation(), outputFile);
+      //    test("ALTER SESSION SET `planner.add_producer_consumer` = false");
+      test("CREATE TABLE dfs_test.tmp.%s AS SELECT * FROM cp.`employee.json` WHERE 1=0", outputFile);
+
+      Assert.assertEquals(fs.listStatus(path).length, 0);
+    } finally {
+      deleteTableIfExists(outputFile);
     }
-
-//    test("ALTER SESSION SET `planner.add_producer_consumer` = false");
-    test("CREATE TABLE dfs.tmp.%s AS SELECT * FROM cp.`employee.json` WHERE 1=0", outputFile);
-
-    Assert.assertEquals(fs.listStatus(path).length, 0);
   }
 
   @Test // see DRILL-2408
   public void testWriteEmptyFileAfterFlush() throws Exception {
     String outputFile = "testparquetwriter_test_write_empty_file_after_flush";
-
-    Path path = new Path("/tmp/" + outputFile);
-    if (fs.exists(path)) {
-      fs.delete(path, true);
-    }
 
     try {
       // this specific value will force a flush just after the final row is written
@@ -434,39 +431,49 @@ public class TestParquetWriter extends BaseTestQuery {
       test("ALTER SESSION SET `store.parquet.block-size` = 19926");
 
       String query = "SELECT * FROM cp.`employee.json` LIMIT 100";
-      test("CREATE TABLE dfs.tmp.%s AS %s", outputFile, query);
+      test("CREATE TABLE dfs_test.tmp.%s AS %s", outputFile, query);
 
       // this query will fail if the "empty" file wasn't deleted
       testBuilder()
         .unOrdered()
-        .sqlQuery("SELECT * FROM dfs.tmp.%s", outputFile)
+        .sqlQuery("SELECT * FROM dfs_test.tmp.%s", outputFile)
         .sqlBaselineQuery(query)
         .go();
     } finally {
       // restore the session option
       test("ALTER SESSION SET `store.parquet.block-size` = %d", ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR.getDefault().num_val);
+      deleteTableIfExists(outputFile);
+    }
+  }
+
+  private static void deleteTableIfExists(String tableName) {
+    try {
+      Path path = new Path(getDfsTestTmpSchemaLocation(), tableName);
+      if (fs.exists(path)) {
+        fs.delete(path, true);
+      }
+    } catch (Exception e) {
+      // ignore exceptions.
     }
   }
 
   public void runTestAndValidate(String selection, String validationSelection, String inputTable, String outputFile) throws Exception {
+    try {
+      test("use dfs_test.tmp");
+  //    test("ALTER SESSION SET `planner.add_producer_consumer` = false");
+      String query = String.format("SELECT %s FROM %s", selection, inputTable);
+      String create = "CREATE TABLE " + outputFile + " AS " + query;
+      String validateQuery = String.format("SELECT %s FROM " + outputFile, validationSelection);
+      test(create);
 
-    Path path = new Path("/tmp/" + outputFile);
-    if (fs.exists(path)) {
-      fs.delete(path, true);
+      testBuilder()
+          .unOrdered()
+          .sqlQuery(query)
+          .sqlBaselineQuery(validateQuery)
+          .go();
+
+    } finally {
+      deleteTableIfExists(outputFile);
     }
-
-    test("use dfs.tmp");
-//    test("ALTER SESSION SET `planner.add_producer_consumer` = false");
-    String query = String.format("SELECT %s FROM %s", selection, inputTable);
-    String create = "CREATE TABLE " + outputFile + " AS " + query;
-    String validateQuery = String.format("SELECT %s FROM " + outputFile, validationSelection);
-    test(create);
-
-    testBuilder()
-        .unOrdered()
-        .sqlQuery(query)
-        .sqlBaselineQuery(validateQuery)
-        .go();
   }
-
 }

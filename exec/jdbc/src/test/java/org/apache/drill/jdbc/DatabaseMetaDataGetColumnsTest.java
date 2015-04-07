@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
 
 import org.apache.drill.jdbc.Driver;
+import org.apache.drill.jdbc.test.JdbcAssert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -168,7 +169,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTest {
   public static void setUpConnectionAndMetadataToCheck() throws Exception {
 
     // Get JDBC connection to Drill:
-    connection = new Driver().connect( "jdbc:drill:zk=local", null );
+    connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties());
     dbMetadata = connection.getMetaData();
     Statement stmt = connection.createStatement();
 
@@ -205,7 +206,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTest {
     // Note: Assertions must be enabled (as they have been so far in tests).
 
     // Create temporary test-columns view:
-    util = stmt.executeQuery( "USE dfs.tmp" );
+    util = stmt.executeQuery( "USE dfs_test.tmp" );
     assert util.next();
     assert util.getBoolean( 1 )
         : "Error setting schema for test: " + util.getString( 2 );
@@ -248,31 +249,31 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTest {
 
     // Set up result rows for temporary test view and Hivetest columns:
 
-    mdrOptBOOLEAN        = setUpRow( "dfs.tmp", VIEW_NAME, "optBOOLEAN" );
+    mdrOptBOOLEAN        = setUpRow( "dfs_test.tmp", VIEW_NAME, "optBOOLEAN" );
 
-    mdrReqTINYINT        = setUpRow( "dfs.tmp", VIEW_NAME, "reqTINYINT" );
-    mdrOptSMALLINT       = setUpRow( "dfs.tmp", VIEW_NAME, "optSMALLINT" );
-    mdrReqINTEGER        = setUpRow( "dfs.tmp", VIEW_NAME, "reqINTEGER" );
-    mdrOptBIGINT         = setUpRow( "dfs.tmp", VIEW_NAME, "optBIGINT" );
+    mdrReqTINYINT        = setUpRow( "dfs_test.tmp", VIEW_NAME, "reqTINYINT" );
+    mdrOptSMALLINT       = setUpRow( "dfs_test.tmp", VIEW_NAME, "optSMALLINT" );
+    mdrReqINTEGER        = setUpRow( "dfs_test.tmp", VIEW_NAME, "reqINTEGER" );
+    mdrOptBIGINT         = setUpRow( "dfs_test.tmp", VIEW_NAME, "optBIGINT" );
 
-    mdrOptFLOAT          = setUpRow( "dfs.tmp", VIEW_NAME, "optFLOAT" );
-    mdrReqDOUBLE         = setUpRow( "dfs.tmp", VIEW_NAME, "reqDOUBLE" );
-    mdrOptREAL           = setUpRow( "dfs.tmp", VIEW_NAME, "optREAL" );
+    mdrOptFLOAT          = setUpRow( "dfs_test.tmp", VIEW_NAME, "optFLOAT" );
+    mdrReqDOUBLE         = setUpRow( "dfs_test.tmp", VIEW_NAME, "reqDOUBLE" );
+    mdrOptREAL           = setUpRow( "dfs_test.tmp", VIEW_NAME, "optREAL" );
 
-    mdrReqDECIMAL_5_3    = setUpRow( "dfs.tmp", VIEW_NAME, "reqDECIMAL_5_3" );
+    mdrReqDECIMAL_5_3    = setUpRow( "dfs_test.tmp", VIEW_NAME, "reqDECIMAL_5_3" );
 
-    mdrReqVARCHAR_10     = setUpRow( "dfs.tmp", VIEW_NAME, "reqVARCHAR_10" );
-    mdrOptVARCHAR        = setUpRow( "dfs.tmp", VIEW_NAME, "optVARCHAR" );
-    mdrReqCHAR_5         = setUpRow( "dfs.tmp", VIEW_NAME, "reqCHAR_5" );
-    mdrOptVARBINARY_16   = setUpRow( "dfs.tmp", VIEW_NAME, "optVARBINARY_16" );
-    mdrOptBINARY_1048576 = setUpRow( "dfs.tmp", VIEW_NAME, "optBINARY_1048576" );
+    mdrReqVARCHAR_10     = setUpRow( "dfs_test.tmp", VIEW_NAME, "reqVARCHAR_10" );
+    mdrOptVARCHAR        = setUpRow( "dfs_test.tmp", VIEW_NAME, "optVARCHAR" );
+    mdrReqCHAR_5         = setUpRow( "dfs_test.tmp", VIEW_NAME, "reqCHAR_5" );
+    mdrOptVARBINARY_16   = setUpRow( "dfs_test.tmp", VIEW_NAME, "optVARBINARY_16" );
+    mdrOptBINARY_1048576 = setUpRow( "dfs_test.tmp", VIEW_NAME, "optBINARY_1048576" );
 
-    mdrReqDATE           = setUpRow( "dfs.tmp", VIEW_NAME, "reqDATE" );
-    mdrOptTIME           = setUpRow( "dfs.tmp", VIEW_NAME, "optTIME" );
-    mdrOptTIME_7         = setUpRow( "dfs.tmp", VIEW_NAME, "optTIME_7" );
-    mdrOptTIMESTAMP      = setUpRow( "dfs.tmp", VIEW_NAME, "optTIMESTAMP" );
-    mdrOptINTERVAL_H_S3  = setUpRow( "dfs.tmp", VIEW_NAME, "optINTERVAL_H_S3" );
-    mdrOptINTERVAL_Y4    = setUpRow( "dfs.tmp", VIEW_NAME, "optINTERVAL_Y4" );
+    mdrReqDATE           = setUpRow( "dfs_test.tmp", VIEW_NAME, "reqDATE" );
+    mdrOptTIME           = setUpRow( "dfs_test.tmp", VIEW_NAME, "optTIME" );
+    mdrOptTIME_7         = setUpRow( "dfs_test.tmp", VIEW_NAME, "optTIME_7" );
+    mdrOptTIMESTAMP      = setUpRow( "dfs_test.tmp", VIEW_NAME, "optTIMESTAMP" );
+    mdrOptINTERVAL_H_S3  = setUpRow( "dfs_test.tmp", VIEW_NAME, "optINTERVAL_H_S3" );
+    mdrOptINTERVAL_Y4    = setUpRow( "dfs_test.tmp", VIEW_NAME, "optINTERVAL_Y4" );
 
     /* TODO(start): Uncomment this block once we have a test plugin which supports all the needed types.
     mdrReqARRAY   = setUpRow( "hive_test.default", "infoschematest", "listtype" );
@@ -380,7 +381,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTest {
 
   @Test
   public void test_TABLE_SCHEM_hasRightValue_optBOOLEAN() throws SQLException {
-    assertThat( mdrOptBOOLEAN.getString( "TABLE_SCHEM" ), equalTo( "dfs.tmp" ) );
+    assertThat( mdrOptBOOLEAN.getString( "TABLE_SCHEM" ), equalTo( "dfs_test.tmp" ) );
   }
 
   // Not bothering with other _local_view_ test columns for TABLE_SCHEM.
