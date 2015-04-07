@@ -23,7 +23,7 @@ example is downloadable from [Yelp](http://www.yelp.com/dataset_challenge)
 
 ### Step 1: Download Apache Drill onto your local machine
 
-[http://incubator.apache.org/drill/download/](http://incubator.apache.org/drill/download/)
+[http://drill.apache.org/download/](http://drill.apache.org/download/)
 
 You can also [deploy Drill in clustered mode](/docs/deploying-apache-drill-in-a-clustered-environment) if you
 want to scale your environment.

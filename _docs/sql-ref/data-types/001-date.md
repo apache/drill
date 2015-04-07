@@ -12,7 +12,7 @@ Next, use the following literals in a SELECT statement.
 * `time`
 * `timestamp`
 
-        SELECT date '2010-2-15' FROM sys.drillbits;
+        SELECT date '2010-2-15' FROM sys.version;
         +------------+
         |   EXPR$0   |
         +------------+
@@ -20,7 +20,7 @@ Next, use the following literals in a SELECT statement.
         +------------+
         1 row selected (0.083 seconds)
 
-        SELECT time '15:20:30' from sys.drillbits;
+        SELECT time '15:20:30' from sys.version;
         +------------+
         |   EXPR$0   |
         +------------+
@@ -28,7 +28,7 @@ Next, use the following literals in a SELECT statement.
         +------------+
         1 row selected (0.067 seconds)
 
-        SELECT timestamp '2015-03-11 6:50:08' FROM sys.drillbits;
+        SELECT timestamp '2015-03-11 6:50:08' FROM sys.version;
         +------------+
         |   EXPR$0   |
         +------------+
@@ -63,7 +63,7 @@ The format of INTERVAL data in the data source differs from the query format.
 
 You can run the query described earlier to check the formatting of the fields. The input to the following SELECT statements show how to format INTERVAL data in the query. The output shows how to format the data in the data source.
 
-    SELECT INTERVAL '1 10:20:30.123' day to second FROM sys.drillbits;
+    SELECT INTERVAL '1 10:20:30.123' day to second FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -71,7 +71,7 @@ You can run the query described earlier to check the formatting of the fields. T
     +------------+
     1 row selected (0.054 seconds)
 
-    SELECT INTERVAL '1-2' year to month FROM sys.drillbits;
+    SELECT INTERVAL '1-2' year to month FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -79,7 +79,7 @@ You can run the query described earlier to check the formatting of the fields. T
     +------------+
     1 row selected (0.927 seconds)
 
-    SELECT INTERVAL '1' year FROM sys.drillbits;
+    SELECT INTERVAL '1' year FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -87,7 +87,7 @@ You can run the query described earlier to check the formatting of the fields. T
     +------------+
     1 row selected (0.088 seconds)
 
-    SELECT INTERVAL '13' month FROM sys.drillbits;
+    SELECT INTERVAL '13' month FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+

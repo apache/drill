@@ -269,7 +269,7 @@ Open input2.json and change the first float value from 17.4 to 3.14159. Get valu
 
 Get the base 2 log of 64.
 
-    SELECT log(2, 64) FROM sys.drillbits;
+    SELECT log(2, 64) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -280,7 +280,7 @@ Get the base 2 log of 64.
 
 Get the common log of 100.
 
-    SELECT log10(100) FROM sys.drillbits;
+    SELECT log10(100) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -291,7 +291,7 @@ Get the common log of 100.
 
 Get the natural log of 7.5.
 
-    SELECT log(7.5) FROM sys.drillbits;
+    SELECT log(7.5) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -335,7 +335,7 @@ Drill supports the following trig functions, which return a FLOAT8 result.
 
 Find the sine and tangent of a 45 degree angle. First convert degrees to radians for use in the SIN() function.
 
-    SELECT RADIANS(30) AS Degrees FROM sys.drillbits;
+    SELECT RADIANS(30) AS Degrees FROM sys.version;
 
     +------------+
     |  Degrees   |
@@ -344,7 +344,7 @@ Find the sine and tangent of a 45 degree angle. First convert degrees to radians
     +------------+
     1 row selected (0.045 seconds)
 
-    SELECT SIN(0.7853981633974483) AS `Sine of 30 degrees` FROM sys.drillbits;
+    SELECT SIN(0.7853981633974483) AS `Sine of 30 degrees` FROM sys.version;
 
     +-----------------------+
     |  Sine of 45 degrees   |
@@ -353,7 +353,7 @@ Find the sine and tangent of a 45 degree angle. First convert degrees to radians
     +-----------------------+
     1 row selected (0.059 seconds)
 
-    SELECT TAN(0.7853981633974483) AS `Tangent of 30 degrees` from sys.drillbits;
+    SELECT TAN(0.7853981633974483) AS `Tangent of 30 degrees` from sys.version;
 
     +-----------------------+
     | Tangent of 45 degrees |

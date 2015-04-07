@@ -8,8 +8,8 @@ You can use the following types of functions in your Drill queries:
   * [Casting and Converting Data Types](/docs/casting-converting-data-types/)
   * [Date/Time and Arithmetic](/docs/date-time-functions-and-arithmetic/)
   * [String Manipulation](/docs/string-manipulation)
-  * [Aggregate and Aggregate Statistics]()
+  * [Aggregate and Aggregate Statistical](/docs/aggregate-and-aggregate-statistical)
   * [Nested Data](/docs/nested-data-functions/)
-  * [Other functions]()
+  * [Functions for Handling Nulls](/docs/functions-for-handling-nulls)
 
 

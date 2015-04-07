@@ -39,7 +39,7 @@ be used to get an overview on Apache Drill in a Hadoop environment. Business
 and technical analysts, product managers, and developers can use the sandbox
 environment to get a feel for the power and capabilities of Apache Drill by
 performing various types of queries. Once you get a flavor for the technology,
-refer to the [Apache Drill web site](http://incubator.apache.org/drill/) and
+refer to the [Apache Drill web site](http://drill.apache.org) and
 [Apache Drill documentation
 ](/docs)for more
 details.

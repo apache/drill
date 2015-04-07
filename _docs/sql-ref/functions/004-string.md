@@ -69,7 +69,7 @@ Returns the number of characters in a string.
 
 ### Example
 
-    SELECT CHAR_LENGTH('Drill rocks') FROM sys.drillbits;
+    SELECT CHAR_LENGTH('Drill rocks') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -87,7 +87,7 @@ Concatenates arguments.
 
 ### Example
 
-    SELECT CONCAT('Drill', ' ', 1.0, ' ', 'release') FROM sys.drillbits;
+    SELECT CONCAT('Drill', ' ', 1.0, ' ', 'release') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -107,7 +107,7 @@ Returns the string using initial caps.
 
 ### Examples
 
-    SELECT INITCAP('apache drill release 1.0') FROM sys.drillbits;
+    SELECT INITCAP('apache drill release 1.0') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -124,7 +124,7 @@ Returns the number of characters in the string.
 
 ### Example
 
-    SELECT LENGTH('apache drill release 1.0') FROM sys.drillbits;
+    SELECT LENGTH('apache drill release 1.0') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -154,7 +154,7 @@ Converts characters in the string to lower case.
 
 ### Example
 
-    SELECT LOWER('Apache Drill') FROM sys.drillbits;
+    SELECT LOWER('Apache Drill') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -173,7 +173,7 @@ Pads the string to the length specified by prepending the fill or a space. Trunc
 
 ### Example
 
-    SELECT LPAD('Release 1.0', 27, 'of Apache Drill 1.0') FROM sys.drillbits;
+    SELECT LPAD('Release 1.0', 27, 'of Apache Drill 1.0') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -191,7 +191,7 @@ Removes the longest string having only characters specified in the second argume
 
 ### Example
 
-    SELECT LTRIM('Apache Drill', 'Apache ') FROM sys.drillbits;
+    SELECT LTRIM('Apache Drill', 'Apache ') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -209,7 +209,7 @@ Returns the location of a substring.
 
 ### Example
 
-    SELECT POSITION('c' in 'Apache Drill') FROM sys.drillbits;
+    SELECT POSITION('c' in 'Apache Drill') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -274,7 +274,7 @@ Pads the string to the length specified by appending the fill or a space. Trunca
 
 ### Example
 
-    SELECT RPAD('Apache Drill ', 22, 'Release 1.0') FROM sys.drillbits;
+    SELECT RPAD('Apache Drill ', 22, 'Release 1.0') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -291,7 +291,7 @@ Removes the longest string having only characters specified in the second argume
 
 ### Example
 
-    SELECT RTRIM('Apache Drill', 'Drill ') FROM sys.drillbits;
+    SELECT RTRIM('Apache Drill', 'Drill ') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -309,7 +309,7 @@ STRPOS(string, substring)
 
 ### Example
 
-    SELECT STRPOS('Apache Drill', 'Drill') FROM sys.drillbits;
+    SELECT STRPOS('Apache Drill', 'Drill') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -328,7 +328,7 @@ Extracts characters from position 1 - x of the string an optional y times.
 
 ### Example
 
-    SELECT SUBSTR('Apache Drill', 8) FROM sys.drillbits;
+    SELECT SUBSTR('Apache Drill', 8) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -337,7 +337,7 @@ Extracts characters from position 1 - x of the string an optional y times.
     +------------+
     1 row selected (0.134 seconds)
 
-    SELECT SUBSTR('Apache Drill', 3, 2) FROM sys.drillbits;
+    SELECT SUBSTR('Apache Drill', 3, 2) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -355,7 +355,7 @@ Removes the longest string having only the characters from the beginning, end, o
 
 ### Example
 
-    SELECT TRIM(trailing 'l' from 'Drill') FROM sys.drillbits;
+    SELECT TRIM(trailing 'l' from 'Drill') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -372,7 +372,7 @@ Converts characters in the string to lower case.
 
 ### Example
 
-    SELECT UPPER('Apache Drill') FROM sys.drillbits;
+    SELECT UPPER('Apache Drill') FROM sys.version;
 
     +------------+
     |   EXPR$0   |

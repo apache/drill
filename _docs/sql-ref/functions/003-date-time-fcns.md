@@ -56,7 +56,7 @@ Cast string arguments to timestamp to include time data in the calculations of t
 
 Find the interval between midnight April 3, 2015 and June 13, 1957.
 
-    SELECT AGE('1957-06-13') FROM sys.drillbits;
+    SELECT AGE('1957-06-13') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -66,7 +66,7 @@ Find the interval between midnight April 3, 2015 and June 13, 1957.
 
 Find the interval between 11:10:10 PM on January 1, 2001 and 10:10:10 PM on January 1, 2001.
 
-    SELECT AGE(CAST('2010-01-01 10:10:10' AS TIMESTAMP), CAST('2001-01-01 11:10:10' AS TIMESTAMP)) FROM sys.drillbits;
+    SELECT AGE(CAST('2010-01-01 10:10:10' AS TIMESTAMP), CAST('2001-01-01 11:10:10' AS TIMESTAMP)) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -94,7 +94,7 @@ Returns a component of a timestamp, time, date, or interval.
 
 On the third day of the month, run the following function:
 
-    SELECT EXTRACT(day FROM NOW()), EXTRACT(day FROM CURRENT_DATE) FROM sys.drillbits;
+    SELECT EXTRACT(day FROM NOW()), EXTRACT(day FROM CURRENT_DATE) FROM sys.version;
 
     +------------+------------+
     |   EXPR$0   |   EXPR$1   |
@@ -105,7 +105,7 @@ On the third day of the month, run the following function:
 
 At 8:00 am, extract the hour from the value of CURRENT_DATE.
 
-    SELECT EXTRACT(hour FROM CURRENT_DATE) FROM sys.drillbits;
+    SELECT EXTRACT(hour FROM CURRENT_DATE) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -115,7 +115,7 @@ At 8:00 am, extract the hour from the value of CURRENT_DATE.
 
 What is the hour component of this time: 17:12:28.5?
 
-    SELECT EXTRACT(hour FROM TIME '17:12:28.5') from sys.drillbits;
+    SELECT EXTRACT(hour FROM TIME '17:12:28.5') from sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -126,7 +126,7 @@ What is the hour component of this time: 17:12:28.5?
 
 What is the second component of this timestamp: 2001-02-16 20:38:40
 
-    SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') from sys.drillbits;
+    SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') from sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -144,7 +144,7 @@ Returns the sum of a date and an interval.
 
 #### Example
 
-    SELECT CAST(DATE_ADD(datetype(2008, 2, 27), intervaltype(0, 1, 0, 0, 0, 0, 0)) as VARCHAR(100)) FROM sys.drillbits;
+    SELECT CAST(DATE_ADD(datetype(2008, 2, 27), intervaltype(0, 1, 0, 0, 0, 0, 0)) as VARCHAR(100)) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -168,7 +168,7 @@ Use Unix Epoch timestamp in milliseconds as the expression to get the field of a
 
 #### Examples
 
-    SELECT DATE_PART('day', '2015-04-02') FROM sys.drillbits;
+    SELECT DATE_PART('day', '2015-04-02') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -176,7 +176,7 @@ Use Unix Epoch timestamp in milliseconds as the expression to get the field of a
     +------------+
     1 row selected (0.098 seconds)
 
-    SELECT DATE_PART('hour', '23:14:30.076') FROM sys.drillbits;
+    SELECT DATE_PART('hour', '23:14:30.076') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -186,7 +186,7 @@ Use Unix Epoch timestamp in milliseconds as the expression to get the field of a
 
 Find the hour part of the timestamp for April 2, 2015 23:25:43. Use Unix Epoch timestamp in milliseconds, which is 1428017143000 in UTC.
 
-    SELECT DATE_PART('hour', 1428017143000) FROM sys.drillbits;
+    SELECT DATE_PART('hour', 1428017143000) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -196,7 +196,7 @@ Find the hour part of the timestamp for April 2, 2015 23:25:43. Use Unix Epoch t
 
 Return the day part of the one year, 2 months, 10 days interval.
 
-    SELECT DATE_PART('day', '1:2:10') FROM sys.drillbits;
+    SELECT DATE_PART('day', '1:2:10') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -213,7 +213,7 @@ Returns the sum of a date and an interval.
 
 #### Example
 
-    SELECT CAST(DATE_SUB(datetype(2008, 2, 27), intervaltype(0, 1, 0, 0, 0, 0, 0)) as VARCHAR(100)) FROM sys.drillbits;
+    SELECT CAST(DATE_SUB(datetype(2008, 2, 27), intervaltype(0, 1, 0, 0, 0, 0, 0)) as VARCHAR(100)) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -234,7 +234,7 @@ The utilities are:
 
 The following examples show how to use the utilities:
 
-    SELECT CURRENT_DATE FROM sys.drillbits;
+    SELECT CURRENT_DATE FROM sys.version;
     +--------------+
     | current_date |
     +--------------+
@@ -242,7 +242,7 @@ The following examples show how to use the utilities:
     +--------------+
     1 row selected (0.077 seconds)
 
-    SELECT CURRENT_TIME FROM sys.drillbits;
+    SELECT CURRENT_TIME FROM sys.version;
     +--------------+
     | current_time |
     +--------------+
@@ -250,7 +250,7 @@ The following examples show how to use the utilities:
     +--------------+
     1 row selected (0.073 seconds)
 
-    SELECT CURRENT_TIMESTAMP FROM sys.drillbits;
+    SELECT CURRENT_TIMESTAMP FROM sys.version;
     +-------------------+
     | current_timestamp |
     +-------------------+
@@ -258,7 +258,7 @@ The following examples show how to use the utilities:
     +-------------------+
     1 row selected (0.061 seconds)
 
-    SELECT LOCALTIME FROM sys.drillbits;
+    SELECT LOCALTIME FROM sys.version;
 
     +------------+
     | localtime  |
@@ -267,7 +267,7 @@ The following examples show how to use the utilities:
     +------------+
     1 row selected (0.051 seconds)
 
-    SELECT LOCALTIMESTAMP FROM sys.drillbits;
+    SELECT LOCALTIMESTAMP FROM sys.version;
 
     +----------------+
     | LOCALTIMESTAMP |
@@ -276,7 +276,7 @@ The following examples show how to use the utilities:
     +----------------+
     1 row selected (0.105 seconds)
 
-    SELECT NOW() FROM sys.drillbits;
+    SELECT NOW() FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -286,7 +286,7 @@ The following examples show how to use the utilities:
 
 If you set up Drill for [UTC time](/docs/casting-converting-data-types/time-zone-limitation), TIMEOFDAY returns the result for the UTC time zone.
 
-    SELECT TIMEOFDAY() FROM sys.drillbits;
+    SELECT TIMEOFDAY() FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -296,7 +296,7 @@ If you set up Drill for [UTC time](/docs/casting-converting-data-types/time-zone
 
 If you did not set up Drill for UTC time, TIMEOFDAY returns the local date and time with time zone information.
 
-    SELECT TIMEOFDAY() FROM sys.drillbits;
+    SELECT TIMEOFDAY() FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -311,7 +311,7 @@ date + interval  -->
 
 Is the day returned from the NOW function the same as the day returned from the CURRENT_DATE function?
 
-    SELECT EXTRACT(day FROM NOW()) = EXTRACT(day FROM CURRENT_DATE) FROM sys.drillbits;
+    SELECT EXTRACT(day FROM NOW()) = EXTRACT(day FROM CURRENT_DATE) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -321,7 +321,7 @@ Is the day returned from the NOW function the same as the day returned from the 
 
 Every 23 hours, a 4 hour task started. What time does the task end? 
 
-    SELECT TIME '04:00:00' + interval '23:00:00' hour to second FROM sys.drillbits;
+    SELECT TIME '04:00:00' + interval '23:00:00' hour to second FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -331,7 +331,7 @@ Every 23 hours, a 4 hour task started. What time does the task end?
 
 Is the time 2:00 PM?
 
-    SELECT EXTRACT(hour FROM CURRENT_DATE) = 2 FROM sys.drillbits;
+    SELECT EXTRACT(hour FROM CURRENT_DATE) = 2 FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+

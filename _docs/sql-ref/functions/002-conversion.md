@@ -6,6 +6,7 @@ Drill supports the following functions for casting and converting data types:
 
 * [CAST](/docs/data-type-conversion#cast)
 * [CONVERT_TO and CONVERT_FROM](/docs/data-type-conversion#convert_to-and-convert_from)
+* [Other Data Type Conversions](/docs/data-type-conversion#other-data-type-conversions)
 
 ## CAST
 
@@ -46,7 +47,7 @@ You cannot cast a character string that includes a decimal point to an INT or BI
 
 The following example shows how to cast a character to a DECIMAL having two decimal places.
 
-    SELECT CAST('1' as DECIMAL(28, 2)) FROM sys.drillbits;
+    SELECT CAST('1' as DECIMAL(28, 2)) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -56,7 +57,7 @@ The following example shows how to cast a character to a DECIMAL having two deci
 #### Casting a number to a character string
 The first example shows that Drill uses a default limit of 1 character if you omit the VARCHAR limit: The result is truncated to 1 character.  The second example casts the same number to a VARCHAR having a limit of 3 characters: The result is a 3-character string, 456. The third example shows that you can use CHAR as an alias for VARCHAR. You can also use CHARACTER or CHARACTER VARYING.
 
-    SELECT CAST(456 as VARCHAR) FROM sys.drillbits;
+    SELECT CAST(456 as VARCHAR) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -64,7 +65,7 @@ The first example shows that Drill uses a default limit of 1 character if you om
     +------------+
     1 row selected (0.063 seconds)
 
-    SELECT CAST(456 as VARCHAR(3)) FROM sys.drillbits;
+    SELECT CAST(456 as VARCHAR(3)) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -72,7 +73,7 @@ The first example shows that Drill uses a default limit of 1 character if you om
     +------------+
     1 row selected (0.08 seconds)
 
-    SELECT CAST(456 as CHAR(3)) FROM sys.drillbits;
+    SELECT CAST(456 as CHAR(3)) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -84,7 +85,7 @@ The first example shows that Drill uses a default limit of 1 character if you om
 
 Cast an integer to a decimal.
 
-    SELECT CAST(-2147483648 AS DECIMAL(28,8)) FROM sys.drillbits;
+    SELECT CAST(-2147483648 AS DECIMAL(28,8)) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -371,7 +372,7 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
 
 1. Take a look at the Drill time zone configuration by running the TIMEOFDAY function. This function returns the local date and time with time zone information.
 
-        SELECT TIMEOFDAY() FROM sys.drillbits;
+        SELECT TIMEOFDAY() FROM sys.version;
 
         +------------+
         |   EXPR$0   |
@@ -380,15 +381,19 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
         +------------+
         1 row selected (1.199 seconds)
 
-2. Configure the default time zone format in <drill installation directory>/conf/drill-env.sh by adding `-Duser.timezone=UTC` to DRILL_JAVA_OPTS. For example:
+2. Configure the default time zone format in the drill-override.conf. For example:
 
-        export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea -Duser.timezone=UTC"
+        drill.exec: {
+          cluster-id: “xyz",
+          zk.connect: “abc:5181",
+          user.timezone: "UTC"
+        }
 
 3. Restart sqlline.
 
 4. Confirm that Drill is now set to UTC:
 
-        SELECT TIMEOFDAY() FROM sys.drillbits;
+        SELECT TIMEOFDAY() FROM sys.version;
 
         +------------+
         |   EXPR$0   |
@@ -411,9 +416,18 @@ TO_NUMBER(text, format)| numeric
 TO_TIMESTAMP(text, format)| timestamp
 TO_TIMESTAMP(double precision)| timestamp
 
-<!-- A character string to a timestamp with time zone
+Use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it. Also, use the ‘z’ option to identify the time zone in a timestamp using the TO_CHAR function. For example:
 
-A decimal type to a timestamp with time zone -->
+    SELECT TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') AS Original, 
+           TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS TimeZone 
+           FROM sys.version;
+
+    +------------+------------+
+    |  Original  |  TimeZone  |
+    +------------+------------+
+    | 2015-03-30 20:49:00.0 | UTC        |
+    +------------+------------+
+    1 row selected (0.299 seconds)
 
 ### Format Specifiers for Numerical Conversions
 Use the following format specifiers for numerical conversions:
@@ -644,7 +658,7 @@ TO_CHAR converts a date, time, timestamp, or numerical expression to a character
 
 Convert a FLOAT to a character string.
 
-    SELECT TO_CHAR(125.789383, '#,###.###') FROM sys.drillbits;
+    SELECT TO_CHAR(125.789383, '#,###.###') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -653,7 +667,7 @@ Convert a FLOAT to a character string.
 
 Convert an integer to a character string.
 
-    SELECT TO_CHAR(125, '#,###.###') FROM sys.drillbits;
+    SELECT TO_CHAR(125, '#,###.###') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -663,7 +677,7 @@ Convert an integer to a character string.
 
 Convert a date to a character string.
 
-    SELECT TO_CHAR((CAST('2008-2-23' AS DATE)), 'yyyy-MMM-dd') FROM sys.drillbits;
+    SELECT TO_CHAR((CAST('2008-2-23' AS DATE)), 'yyyy-MMM-dd') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -672,7 +686,7 @@ Convert a date to a character string.
 
 Convert a time to a string.
 
-    SELECT TO_CHAR(CAST('12:20:30' AS TIME), 'HH mm ss') FROM sys.drillbits;
+    SELECT TO_CHAR(CAST('12:20:30' AS TIME), 'HH mm ss') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -683,7 +697,7 @@ Convert a time to a string.
 
 Convert a timestamp to a string.
 
-    SELECT TO_CHAR(CAST('2015-2-23 12:00:00' AS TIMESTAMP), 'yyyy MMM dd HH:mm:ss') FROM sys.drillbits;
+    SELECT TO_CHAR(CAST('2015-2-23 12:00:00' AS TIMESTAMP), 'yyyy MMM dd HH:mm:ss') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -702,18 +716,43 @@ Converts a character string or a UNIX epoch timestamp to a date.
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not a UNIX epoch timestamp. 
 
-### Usage 
+### Usage Notes
 Specify a format using patterns defined in [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
 
 To compare dates in the WHERE clause, use TO_DATE on the value in the date column and in the comparison value. For example:
 
-    SELECT <fields> FROM <plugin> WHERE TO_DATE(<column>, <format>) <
- TO_DATE(<value>, <format>);
+    SELECT <fields> FROM <plugin> WHERE TO_DATE(<field>, <format>) < TO_DATE (<value>, <format>);
+
+For example:
+
+    SELECT TO_DATE(`date`, 'yyyy-MM-dd') FROM `sample.json`;
+
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2013-07-26 |
+    | 2013-05-16 |
+    | 2013-06-09 |
+    | 2013-07-19 |
+    | 2013-07-21 |
+    +------------+
+    5 rows selected (0.134 seconds)
+
+    SELECT TO_DATE(`date`, 'yyyy-MM-dd') FROM `sample.json` WHERE TO_DATE(`date`, 'yyyy-MM-dd') < TO_DATE('2013-07-20', 'yyyy-MM-dd');
+    
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2013-05-16 |
+    | 2013-06-09 |
+    | 2013-07-19 |
+    +------------+
+    3 rows selected (0.177 seconds)
 
 ### Examples
 The first example converts a character string to a date. The second example extracts the year to verify that Drill recognizes the date as a date type. 
 
-    SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') FROM sys.drillbits;
+    SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -721,7 +760,7 @@ The first example converts a character string to a date. The second example extr
     +------------+
     1 row selected (0.077 seconds)
 
-    SELECT EXTRACT(year from mydate) `extracted year` FROM (SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') AS mydate FROM sys.drillbits);
+    SELECT EXTRACT(year from mydate) `extracted year` FROM (SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') AS mydate FROM sys.version);
 
     +------------+
     |   myyear   |
@@ -732,7 +771,7 @@ The first example converts a character string to a date. The second example extr
 
 The following example converts a UNIX epoch timestamp to a date.
 
-    SELECT TO_DATE(1427849046000) FROM sys.drillbits;
+    SELECT TO_DATE(1427849046000) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -773,14 +812,14 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
 
 ### Examples
 
-    SELECT TO_NUMBER('987,966', '######') FROM sys.drillbits;
+    SELECT TO_NUMBER('987,966', '######') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
     | 987.0      |
     +------------+
 
-    SELECT TO_NUMBER('987.966', '###.###') FROM sys.drillbits;
+    SELECT TO_NUMBER('987.966', '###.###') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -788,7 +827,7 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
     +------------+
     1 row selected (0.063 seconds)
 
-    SELECT TO_NUMBER('12345', '##0.##E0') FROM sys.drillbits;
+    SELECT TO_NUMBER('12345', '##0.##E0') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -812,7 +851,7 @@ Specify a format using patterns defined in [Java DateTimeFormat class](http://jo
 
 ### Examples
 
-    SELECT TO_TIME('12:20:30', 'HH:mm:ss') FROM sys.drillbits;
+    SELECT TO_TIME('12:20:30', 'HH:mm:ss') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -822,7 +861,7 @@ Specify a format using patterns defined in [Java DateTimeFormat class](http://jo
 
 Convert 828550000 milliseconds (23 hours 55 seconds) to the time.
 
-    SELECT to_time(82855000) FROM sys.drillbits;
+    SELECT to_time(82855000) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -847,7 +886,7 @@ Specify a format using patterns defined in [Java DateTimeFormat class](http://jo
 
 Convert a date to a timestamp. 
 
-    SELECT TO_TIMESTAMP('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') FROM sys.drillbits;
+    SELECT TO_TIMESTAMP('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -856,7 +895,7 @@ Convert a date to a timestamp.
 
 Convert Unix Epoch time to a timestamp.
 
-    SELECT TO_TIMESTAMP(1427936330) FROM sys.drillbits;
+    SELECT TO_TIMESTAMP(1427936330) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -868,7 +907,7 @@ Connvert a UTC date to a timestamp offset from the UTC time zone code.
 
     SELECT TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') AS Original, 
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS New_TZ 
-    FROM sys.drillbits;
+    FROM sys.version;
 
     +------------+------------+
     |  Original  |   New_TZ   |

@@ -2,7 +2,7 @@
 title: "MapR-DB Format"
 parent: "Connect to a Data Source"
 ---
-Drill includes a `maprdb` format plugin for handling MapR-DB and HBase data. The Drill Sandbox also includes the following `maprdb` storage plugin on a MapR node:
+Drill includes a `maprdb` format plugin for handling MapR-DB and HBase data. The Drill Sandbox also includes the following `maprdb` format plugin on a MapR node:
 
     {
       "type": "hbase",
@@ -13,7 +13,7 @@ Drill includes a `maprdb` format plugin for handling MapR-DB and HBase data. The
       "enabled": true
     }
 
-Using the Sandbox and this `maprdb` storage plugin, you can query HBase tables located in the `/tables` directory, as shown in the ["Query HBase"](/docs/querying-hbase) examples.
+Using the Sandbox and this `maprdb` format plugin, you can query HBase tables located in the `/tables` directory, as shown in the ["Query HBase"](/docs/querying-hbase) examples.
 
 The `dfs` storage plugin includes the maprdb format when you install Drill from the `mapr-drill` package on a MapR node. Click **Update** next to the `dfs` instance
 in the Web UI of the Drill Sandbox to view the configuration for the `dfs` instance:
