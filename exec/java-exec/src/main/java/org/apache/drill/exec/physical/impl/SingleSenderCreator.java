@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -34,7 +35,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.data.DataTunnel;
 
 public class SingleSenderCreator implements RootCreator<SingleSender>{
 
@@ -48,15 +48,13 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
   private static class SingleSenderRootExec extends BaseRootExec {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSenderRootExec.class);
 
-    private final SendingAccountor sendCount = new SendingAccountor();
     private final FragmentHandle oppositeHandle;
 
     private RecordBatch incoming;
-    private DataTunnel tunnel;
+    private AccountingDataTunnel tunnel;
     private FragmentHandle handle;
     private SingleSender config;
     private int recMajor;
-    private FragmentContext context;
     private volatile boolean ok = true;
     private volatile boolean done = false;
 
@@ -71,7 +69,6 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
     public SingleSenderRootExec(FragmentContext context, RecordBatch batch, SingleSender config) throws OutOfMemoryException {
       super(context, new OperatorContext(config, context, null, false), config);
-      //super(context, config);
       this.incoming = batch;
       assert(incoming != null);
       this.handle = context.getHandle();
@@ -83,7 +80,6 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
           .setMinorFragmentId(config.getOppositeMinorFragmentId())
           .build();
       tunnel = context.getDataTunnel(config.getDestination());
-      this.context = context;
     }
 
     @Override
@@ -108,10 +104,9 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLastWithSchema(handle.getQueryId(),
             handle.getMajorFragmentId(), handle.getMinorFragmentId(), recMajor, oppositeHandle.getMinorFragmentId(),
             incoming.getSchema());
-        sendCount.increment();
         stats.startWait();
         try {
-          tunnel.sendRecordBatch(new RecordSendFailure(), b2);
+          tunnel.sendRecordBatch(b2);
         } finally {
           stats.stopWait();
         }
@@ -122,10 +117,9 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(),
                 handle.getMinorFragmentId(), recMajor, oppositeHandle.getMinorFragmentId(), incoming.getWritableBatch());
         updateStats(batch);
-        sendCount.increment();
         stats.startWait();
         try {
-          tunnel.sendRecordBatch(new RecordSendFailure(), batch);
+          tunnel.sendRecordBatch(batch);
         } finally {
           stats.stopWait();
         }
@@ -143,8 +137,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
     @Override
     public void stop() {
-      ok = false;
-      sendCount.waitForSendComplete();
+      super.stop();
       oContext.close();
       incoming.cleanup();
     }
@@ -153,33 +146,6 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     public void receivingFragmentFinished(FragmentHandle handle) {
       done = true;
     }
-
-    private class RecordSendFailure extends BaseRpcOutcomeListener<Ack>{
-
-      @Override
-      public void failed(RpcException ex) {
-        sendCount.decrement();
-        if (!context.isCancelled() && !context.isFailed()) {
-          context.fail(ex);
-        }
-        done = true;
-      }
-
-      @Override
-      public void success(Ack value, ByteBuf buf) {
-        sendCount.decrement();
-        if (value.getOk()) {
-          return;
-        }
-
-        logger.error("Downstream fragment was not accepted.  Stopping future sends.");
-        // if we didn't get ack ok, we'll need to kill the query.
-        context.fail(new RpcException("A downstream fragment batch wasn't accepted.  This fragment thus fails."));
-        done = true;
-      }
-
-    }
-
   }
 
 }

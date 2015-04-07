@@ -17,29 +17,21 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.broadcastsender;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.List;
 
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.BroadcastSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
-import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos;
-import org.apache.drill.exec.proto.GeneralRPCProtos;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.data.DataTunnel;
-import org.apache.drill.exec.work.ErrorHelper;
 
 import com.google.common.collect.ArrayListMultimap;
 
@@ -50,11 +42,10 @@ import com.google.common.collect.ArrayListMultimap;
  */
 public class BroadcastSenderRootExec extends BaseRootExec {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BroadcastSenderRootExec.class);
-  private final StatusHandler statusHandler = new StatusHandler();
   private final FragmentContext context;
   private final BroadcastSender config;
   private final int[][] receivingMinorFragments;
-  private final DataTunnel[] tunnels;
+  private final AccountingDataTunnel[] tunnels;
   private final ExecProtos.FragmentHandle handle;
   private volatile boolean ok;
   private final RecordBatch incoming;
@@ -87,7 +78,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
     int destCount = dests.keySet().size();
     int i = 0;
 
-    this.tunnels = new DataTunnel[destCount];
+    this.tunnels = new AccountingDataTunnel[destCount];
     this.receivingMinorFragments = new int[destCount][];
     for(DrillbitEndpoint ep : dests.keySet()){
       List<Integer> minorsList= dests.get(ep);
@@ -104,11 +95,6 @@ public class BroadcastSenderRootExec extends BaseRootExec {
 
   @Override
   public boolean innerNext() {
-    if(!ok) {
-      context.fail(statusHandler.ex);
-      return false;
-    }
-
     RecordBatch.IterOutcome out = next(incoming);
     logger.debug("Outcome of sender next {}", out);
     switch(out){
@@ -123,8 +109,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
               receivingMinorFragments[i]);
           stats.startWait();
           try {
-            tunnels[i].sendRecordBatch(this.statusHandler, b2);
-            statusHandler.sendCount.increment();
+            tunnels[i].sendRecordBatch(b2);
           } finally {
             stats.stopWait();
           }
@@ -149,8 +134,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
           updateStats(batch);
           stats.startWait();
           try {
-            tunnels[i].sendRecordBatch(this.statusHandler, batch);
-            statusHandler.sendCount.increment();
+            tunnels[i].sendRecordBatch(batch);
           } finally {
             stats.stopWait();
           }
@@ -171,29 +155,8 @@ public class BroadcastSenderRootExec extends BaseRootExec {
 
   @Override
   public void stop() {
-      ok = false;
-      statusHandler.sendCount.waitForSendComplete();
-      oContext.close();
-      incoming.cleanup();
-  }
-
-  private class StatusHandler extends BaseRpcOutcomeListener<GeneralRPCProtos.Ack> {
-    volatile RpcException ex;
-    private final SendingAccountor sendCount = new SendingAccountor();
-
-    @Override
-    public void success(Ack value, ByteBuf buffer) {
-      sendCount.decrement();
-      super.success(value, buffer);
-    }
-
-    @Override
-    public void failed(RpcException ex) {
-      sendCount.decrement();
-      logger.error("Failure while sending data to user.", ex);
-      ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
-      ok = false;
-      this.ex = ex;
-    }
+    super.stop();
+    oContext.close();
+    incoming.cleanup();
   }
 }

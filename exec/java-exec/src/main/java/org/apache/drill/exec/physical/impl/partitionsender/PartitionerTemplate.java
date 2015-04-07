@@ -28,12 +28,12 @@ import org.apache.drill.exec.compile.sig.RuntimeOverridden;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
-import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec.Metric;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema;
@@ -47,7 +47,6 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
@@ -89,9 +88,7 @@ public abstract class PartitionerTemplate implements Partitioner {
                           RecordBatch incoming,
                           HashPartitionSender popConfig,
                           OperatorStats stats,
-                          SendingAccountor sendingAccountor,
                           OperatorContext oContext,
-                          StatusHandler statusHandler,
                           int start, int end) throws SchemaChangeException {
 
     this.incoming = incoming;
@@ -112,8 +109,8 @@ public abstract class PartitionerTemplate implements Partitioner {
       // create outgoingBatches only for subset of Destination Points
       if ( fieldId >= start && fieldId < end ) {
         logger.debug("start: {}, count: {}, fieldId: {}", start, end, fieldId);
-        outgoingBatches.add(new OutgoingRecordBatch(stats, sendingAccountor, popConfig,
-          context.getDataTunnel(destination.getEndpoint()), context, oContext.getAllocator(), destination.getId(), statusHandler));
+        outgoingBatches.add(new OutgoingRecordBatch(stats, popConfig,
+          context.getDataTunnel(destination.getEndpoint()), context, oContext.getAllocator(), destination.getId()));
       }
       fieldId++;
     }
@@ -202,7 +199,6 @@ public abstract class PartitionerTemplate implements Partitioner {
   /**
    * Helper method to copy data based on partition
    * @param svIndex
-   * @param incoming
    * @throws IOException
    */
   private void doCopy(int svIndex) throws IOException {
@@ -225,14 +221,12 @@ public abstract class PartitionerTemplate implements Partitioner {
 
   public class OutgoingRecordBatch implements PartitionOutgoingBatch, VectorAccessible {
 
-    private final DataTunnel tunnel;
+    private final AccountingDataTunnel tunnel;
     private final HashPartitionSender operator;
     private final FragmentContext context;
     private final BufferAllocator allocator;
     private final VectorContainer vectorContainer = new VectorContainer();
-    private final SendingAccountor sendCount;
     private final int oppositeMinorFragmentId;
-    private final StatusHandler statusHandler;
     private final OperatorStats stats;
 
     private boolean isLast = false;
@@ -241,17 +235,14 @@ public abstract class PartitionerTemplate implements Partitioner {
     private int recordCount;
     private int totalRecords;
 
-    public OutgoingRecordBatch(OperatorStats stats, SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel,
-                               FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId,
-                               StatusHandler statusHandler) {
+    public OutgoingRecordBatch(OperatorStats stats, HashPartitionSender operator, AccountingDataTunnel tunnel,
+                               FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId) {
       this.context = context;
       this.allocator = allocator;
       this.operator = operator;
       this.tunnel = tunnel;
-      this.sendCount = sendCount;
       this.stats = stats;
       this.oppositeMinorFragmentId = oppositeMinorFragmentId;
-      this.statusHandler = statusHandler;
     }
 
     protected void copy(int inIndex) throws IOException {
@@ -308,11 +299,10 @@ public abstract class PartitionerTemplate implements Partitioner {
       updateStats(writableBatch);
       stats.startWait();
       try {
-        tunnel.sendRecordBatch(statusHandler, writableBatch);
+        tunnel.sendRecordBatch(writableBatch);
       } finally {
         stats.stopWait();
       }
-      sendCount.increment();
 
       // If the current batch is the last batch, then set a flag to ignore any requests to flush the data
       // This is possible when the receiver is terminated, but we still get data from input operator
@@ -328,10 +318,6 @@ public abstract class PartitionerTemplate implements Partitioner {
         recordCount = 0;
         vectorContainer.zeroVectors();
         allocateOutgoingRecordBatch();
-      }
-
-      if (!statusHandler.isOk()) {
-        throw new IOException(statusHandler.getException());
       }
     }
 

@@ -32,27 +32,33 @@ public abstract class BaseRootExec implements RootExec {
 
   protected OperatorStats stats = null;
   protected OperatorContext oContext = null;
+  protected FragmentContext fragmentContext = null;
 
-  public BaseRootExec(FragmentContext context, PhysicalOperator config) throws OutOfMemoryException {
-    this.oContext = new OperatorContext(config, context, stats, true);
+  public BaseRootExec(FragmentContext fragmentContext, PhysicalOperator config) throws OutOfMemoryException {
+    this.oContext = new OperatorContext(config, fragmentContext, stats, true);
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
         config.getOperatorType(), OperatorContext.getChildCount(config)),
         oContext.getAllocator());
-    context.getStats().addOperatorStats(this.stats);
+    fragmentContext.getStats().addOperatorStats(this.stats);
+    this.fragmentContext = fragmentContext;
   }
 
-  public BaseRootExec(FragmentContext context, OperatorContext oContext, PhysicalOperator config) throws OutOfMemoryException {
+  public BaseRootExec(FragmentContext fragmentContext, OperatorContext oContext, PhysicalOperator config) throws OutOfMemoryException {
     this.oContext = oContext;
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
       config.getOperatorType(), OperatorContext.getChildCount(config)),
       oContext.getAllocator());
-    context.getStats().addOperatorStats(this.stats);
+    fragmentContext.getStats().addOperatorStats(this.stats);
+    this.fragmentContext = fragmentContext;
   }
 
   @Override
   public final boolean next() {
     // Stats should have been initialized
     assert stats != null;
+    if (fragmentContext.isFailed()) {
+      return false;
+    }
     try {
       stats.startProcessing();
       return innerNext();
@@ -86,5 +92,18 @@ public abstract class BaseRootExec implements RootExec {
   @Override
   public void receivingFragmentFinished(FragmentHandle handle) {
     logger.warn("Currently not handling FinishedFragment message");
+  }
+
+  @Override
+  public void stop() {
+    // We want to account for the time spent waiting here as Wait time in the operator profile
+    try {
+      stats.startProcessing();
+      stats.startWait();
+      fragmentContext.waitForSendComplete();
+    } finally {
+      stats.stopWait();
+      stats.stopProcessing();
+    }
   }
 }

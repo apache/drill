@@ -32,6 +32,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -39,7 +40,6 @@ import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
-import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema;
@@ -48,7 +48,6 @@ import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.CopyUtil;
 
@@ -66,10 +65,8 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
   private FragmentContext context;
   private boolean ok = true;
-  private final SendingAccountor sendCount = new SendingAccountor();
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
-  private final StatusHandler statusHandler;
   private final double cost;
 
   private final AtomicIntegerArray remainingReceivers;
@@ -107,7 +104,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
     this.context = context;
     this.outGoingBatchCount = operator.getDestinations().size();
     this.popConfig = operator;
-    this.statusHandler = new StatusHandler(sendCount, context);
     this.remainingReceivers = new AtomicIntegerArray(outGoingBatchCount);
     this.remaingReceiverCount = new AtomicInteger(outGoingBatchCount);
     stats.setLongStat(Metric.N_RECEIVERS, outGoingBatchCount);
@@ -239,7 +235,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
         endIndex++;
       }
       final OperatorStats partitionStats = new OperatorStats(stats, true);
-      subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, sendCount, oContext, statusHandler,
+      subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, oContext,
         startIndex, endIndex);
     }
     partitioner = new PartitionerDecorator(subPartitioners, stats, context);
@@ -310,15 +306,11 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
   public void stop() {
     logger.debug("Partition sender stopping.");
+    super.stop();
     ok = false;
     if (partitioner != null) {
       updateAggregateStats();
       partitioner.clear();
-    }
-    sendCount.waitForSendComplete();
-
-    if (!statusHandler.isOk()) {
-      context.fail(statusHandler.getException());
     }
 
     oContext.close();
@@ -334,9 +326,8 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
 
     FragmentHandle handle = context.getHandle();
-    StatusHandler statusHandler = new StatusHandler(sendCount, context);
     for (MinorFragmentEndpoint destination : popConfig.getDestinations()) {
-      DataTunnel tunnel = context.getDataTunnel(destination.getEndpoint());
+      AccountingDataTunnel tunnel = context.getDataTunnel(destination.getEndpoint());
       FragmentWritableBatch writableBatch = FragmentWritableBatch.getEmptyBatchWithSchema(
           isLast,
           handle.getQueryId(),
@@ -347,11 +338,10 @@ public class PartitionSenderRootExec extends BaseRootExec {
           schema);
       stats.startWait();
       try {
-        tunnel.sendRecordBatch(statusHandler, writableBatch);
+        tunnel.sendRecordBatch(writableBatch);
       } finally {
         stats.stopWait();
       }
-      sendCount.increment();
     }
     stats.addLongStat(Metric.BATCHES_SENT, 1);
   }

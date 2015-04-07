@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl;
+package org.apache.drill.exec.ops;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,17 +26,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * TODO: Need to update to use long for number of pending messages.
  */
-public class SendingAccountor {
+class SendingAccountor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SendingAccountor.class);
 
   private final AtomicInteger batchesSent = new AtomicInteger(0);
   private final Semaphore wait = new Semaphore(0);
 
-  public void increment() {
+  void increment() {
     batchesSent.incrementAndGet();
   }
 
-  public void decrement() {
+  void decrement() {
     wait.release();
   }
 

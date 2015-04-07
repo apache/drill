@@ -23,6 +23,7 @@ import io.netty.channel.EventLoopGroup;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack.Builder;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
@@ -33,6 +34,7 @@ import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
+import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.BasicClientWithConnection;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
@@ -95,10 +97,10 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     switch (rpcType) {
     case RpcType.QUERY_DATA_VALUE:
       queryResultHandler.batchArrived(throttle, pBody, dBody);
-      return new Response(RpcType.ACK, Ack.getDefaultInstance());
+      return new Response(RpcType.ACK, Acks.OK);
     case RpcType.QUERY_RESULT_VALUE:
       queryResultHandler.resultArrived(pBody);
-      return new Response(RpcType.ACK, Ack.getDefaultInstance());
+      return new Response(RpcType.ACK, Acks.OK);
     default:
       throw new RpcException(String.format("Unknown Rpc Type %d. ", rpcType));
     }
