@@ -148,8 +148,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    DrillBuf[] buffers = ObjectArrays.concat(offsetVector.getBuffers(clear), super.getBuffers(clear), DrillBuf.class);
+    DrillBuf[] buffers = ObjectArrays.concat(offsetVector.getBuffers(false), super.getBuffers(false), DrillBuf.class);
     if (clear) {
+      // does not make much sense but we have to retain buffers even when clear is set. refactor this interface.
+      for (DrillBuf buffer:buffers) {
+        buffer.retain();
+      }
       clear();
     }
     return buffers;

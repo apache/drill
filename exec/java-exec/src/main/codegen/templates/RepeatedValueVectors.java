@@ -285,8 +285,11 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    DrillBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(clear), values.getBuffers(clear), DrillBuf.class);
+    DrillBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(false), values.getBuffers(false), DrillBuf.class);
     if (clear) {
+      for (DrillBuf buffer:buffers) {
+        buffer.retain();
+      }
       clear();
     }
     return buffers;

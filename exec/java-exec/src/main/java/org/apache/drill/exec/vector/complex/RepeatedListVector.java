@@ -345,7 +345,15 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    return ArrayUtils.addAll(offsets.getBuffers(clear), vector.getBuffers(clear));
+    DrillBuf[] buffers = ArrayUtils.addAll(offsets.getBuffers(false), vector.getBuffers(false));
+    if (clear) {
+      // does not make much sense but we have to retain buffers even when clear is set. refactor this interface.
+      for (DrillBuf buffer:buffers) {
+        buffer.retain();
+      }
+      clear();
+    }
+    return buffers;
   }
 
   protected void setVector(ValueVector newVector) {

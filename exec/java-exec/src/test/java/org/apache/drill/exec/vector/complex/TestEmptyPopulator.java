@@ -43,11 +43,13 @@ public class TestEmptyPopulator extends ExecTest {
   private EmptyValuePopulator populator;
 
   private final ByteBuffer buffer = ByteBuffer.allocateDirect(BUF_SIZE);
+  private final ByteBuffer empty = ByteBuffer.allocateDirect(0);
 
 
   @Before
   public void initialize() {
     Mockito.when(allocator.buffer(Mockito.anyInt())).thenReturn(DrillBuf.wrapByteBuffer(buffer));
+    Mockito.when(allocator.getEmpty()).thenReturn(DrillBuf.wrapByteBuffer(empty));
     offsets = new UInt4Vector(null, allocator);
     offsets.allocateNewSafe();
     accessor = offsets.getAccessor();

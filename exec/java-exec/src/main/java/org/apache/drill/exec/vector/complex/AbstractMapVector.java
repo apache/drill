@@ -216,9 +216,15 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   public DrillBuf[] getBuffers(boolean clear) {
     List<DrillBuf> buffers = Lists.newArrayList();
 
-    for (ValueVector v : vectors.values()) {
-      for (DrillBuf buf : v.getBuffers(clear)) {
+    for (ValueVector vector : vectors.values()) {
+      for (DrillBuf buf : vector.getBuffers(false)) {
         buffers.add(buf);
+        if (clear) {
+          buf.retain();
+        }
+      }
+      if (clear) {
+        vector.clear();
       }
     }
 

@@ -79,8 +79,11 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    DrillBuf[] buffers = ObjectArrays.concat(bits.getBuffers(clear), values.getBuffers(clear), DrillBuf.class);
+    DrillBuf[] buffers = ObjectArrays.concat(bits.getBuffers(false), values.getBuffers(false), DrillBuf.class);
     if (clear) {
+      for (DrillBuf buffer:buffers) {
+        buffer.retain();
+      }
       clear();
     }
     return buffers;

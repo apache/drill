@@ -23,7 +23,6 @@ import java.util.Iterator;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
-import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 
 import com.google.common.collect.Iterators;
@@ -36,7 +35,7 @@ public abstract class BaseDataValueVector extends BaseValueVector{
 
   public BaseDataValueVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-
+    this.data = allocator.getEmpty();
   }
 
   /**
@@ -44,14 +43,8 @@ public abstract class BaseDataValueVector extends BaseValueVector{
    */
   @Override
   public void clear() {
-    if (data == null) {
-      data = DeadBuf.DEAD_BUFFER;
-    }
-    if (data != DeadBuf.DEAD_BUFFER) {
-      data.release();
-      data = data.getAllocator().getEmpty();
-      valueCount = 0;
-    }
+    data.release();
+    data = allocator.getEmpty();
   }
 
   public void setCurrentValueCount(int count) {
@@ -66,7 +59,7 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
     DrillBuf[] out;
-    if (valueCount == 0) {
+    if (getBufferSize() == 0) {
       out = new DrillBuf[0];
     } else {
       out = new DrillBuf[]{data};
@@ -82,7 +75,7 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   }
 
   public int getBufferSize() {
-    if (valueCount == 0) {
+    if (getAccessor().getValueCount() == 0) {
       return 0;
     }
     return data.writerIndex();
