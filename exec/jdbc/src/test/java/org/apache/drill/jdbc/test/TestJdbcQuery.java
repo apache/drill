@@ -102,9 +102,9 @@ public class TestJdbcQuery extends JdbcTestQueryBase{
       .sql("SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS " +
         "WHERE TABLE_NAME NOT LIKE 'C%' AND COLUMN_NAME LIKE 'TABLE_%E'")
       .returns(
-        "TABLE_NAME=VIEWS; COLUMN_NAME=TABLE_NAME\n" +
         "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_NAME\n" +
-        "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_TYPE\n"
+        "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_TYPE\n" +
+        "TABLE_NAME=VIEWS; COLUMN_NAME=TABLE_NAME\n"
       );
   }
 
@@ -114,8 +114,8 @@ public class TestJdbcQuery extends JdbcTestQueryBase{
       .sql("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.`TABLES` "+
         "WHERE TABLE_NAME SIMILAR TO '%(H|I)E%' AND TABLE_NAME NOT SIMILAR TO 'C%'")
       .returns(
-        "TABLE_NAME=VIEWS\n" +
-        "TABLE_NAME=SCHEMATA\n"
+        "TABLE_NAME=SCHEMATA\n" +
+        "TABLE_NAME=VIEWS\n"
       );
   }
 

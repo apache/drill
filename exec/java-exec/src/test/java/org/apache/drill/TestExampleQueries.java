@@ -694,6 +694,7 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-2311
+  @Ignore ("Move to TestParquetWriter. Have to ensure same file name does not exist on filesystem.")
   public void testCreateTableSameColumnNames() throws Exception {
     String creatTable = "CREATE TABLE CaseInsensitiveColumnNames as " +
         "select cast(r_regionkey as BIGINT) BIGINT_col, cast(r_regionkey as DECIMAL) bigint_col \n" +

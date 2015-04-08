@@ -20,10 +20,23 @@ package org.apache.drill.exec.physical.impl.join;
 
 
 import org.apache.drill.BaseTestQuery;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestHashJoinAdvanced extends BaseTestQuery {
 
+  // Have to disable merge join, if this testcase is to test "HASH-JOIN".
+  @BeforeClass
+  public static void disableMergeJoin() throws Exception {
+    test("alter session set `planner.enable_mergejoin` = false");
+  }
+
+  @AfterClass
+  public static void enableMergeJoin() throws Exception {
+    test("alter session set `planner.enable_mergejoin` = true");
+  }
 
   @Test //DRILL-2197 Left Self Join with complex type in projection
   public void testLeftSelfHashJoinWithMap() throws Exception {

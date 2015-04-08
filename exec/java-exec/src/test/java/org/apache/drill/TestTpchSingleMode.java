@@ -111,6 +111,7 @@ public class TestTpchSingleMode extends BaseTestQuery{
   }
 
   @Test
+  @Ignore // invalid plan, due to Nulls value NOT IN sub-q
   public void tpch16() throws Exception{
     testSingleMode("queries/tpch/16.sql");
   }
