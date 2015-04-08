@@ -10,7 +10,7 @@ Drill supports the following functions for casting and converting data types:
 
 ## CAST
 
-The CAST function converts an entity having a single data value, such as a column name, from one type to another.
+The CAST function converts an expression from one type to another.
 
 ### Syntax
 
@@ -18,7 +18,7 @@ The CAST function converts an entity having a single data value, such as a colum
 
 *expression*
 
-An entity that evaluates to one or more values, such as a column name or literal
+A combination of one or more values, operators, and SQL functions that evaluate to a value
 
 *data type*
 
@@ -381,13 +381,9 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
         +------------+
         1 row selected (1.199 seconds)
 
-2. Configure the default time zone format in the drill-override.conf. For example:
+2. Configure the default time zone format in <drill installation directory>/conf/drill-env.sh by adding `-Duser.timezone=UTC` to DRILL_JAVA_OPTS. For example:
 
-        drill.exec: {
-          cluster-id: “xyz",
-          zk.connect: “abc:5181",
-          user.timezone: "UTC"
-        }
+        export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea -Duser.timezone=UTC"
 
 3. Restart sqlline.
 
@@ -416,7 +412,7 @@ TO_NUMBER(text, format)| numeric
 TO_TIMESTAMP(text, format)| timestamp
 TO_TIMESTAMP(double precision)| timestamp
 
-Use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it. Also, use the ‘z’ option to identify the time zone in a timestamp using the TO_CHAR function. For example:
+You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it. Also, use the ‘z’ option to identify the time zone in a timestamp using the TO_CHAR function. For example:
 
     SELECT TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') AS Original, 
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS TimeZone 

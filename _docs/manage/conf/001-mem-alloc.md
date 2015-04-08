@@ -2,7 +2,7 @@
 title: "Overview"
 parent: "Configuration Options"
 ---
-The sys.options table in Drill contains information about boot and system options described in the following tables. You configure some of the options to tune performance. You can configure the options using the ALTER SESSION or ALTER SYSTEM command.
+The sys.options table in Drill contains information about boot and system options listed in the following tables. To tune performance, you adjust some of the options to suit your application. Configure the options using the ALTER SESSION or ALTER SYSTEM command.
 
 ## Boot Options
 
@@ -10,7 +10,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <th>Name</th>
     <th>Default</th>
-    <th>Description</th>
+    <th>Comments</th>
   </tr>
   <tr>
     <td>drill.exec.buffer.impl</td>
@@ -128,9 +128,9 @@ The sys.options table in Drill contains information about boot and system option
 
 <table>
   <tr>
-    <th>name</th>
+    <th>Name</th>
     <th>Default</th>
-    <th>Description</th>
+    <th>Comments</th>
   </tr>
   <tr>
     <td>drill.exec.functions.cast_empty_string_to_null</td>
@@ -140,12 +140,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>drill.exec.storage.file.partition.column.label</td>
     <td>dir</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td>drill.exec.testing.exception-injections</td>
-    <td></td>
-    <td></td>
+    <td>Accepts a string input.</td>
   </tr>
   <tr>
     <td>exec.errors.verbose</td>
@@ -155,27 +150,27 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>exec.java_compiler</td>
     <td>DEFAULT</td>
-    <td></td>
+    <td>Switches between DEFAULT, JDK, and JANINO mode for the current session. Uses Janino by default for generated source code of less than exec.java_compiler_janino_maxsize; otherwise, switches to the JDK compiler.</td>
   </tr>
   <tr>
     <td>exec.java_compiler_debug</td>
     <td>TRUE</td>
-    <td></td>
+    <td>Toggles the output of debug-level compiler error messages in runtime generated code.</td>
   </tr>
   <tr>
     <td>exec.java_compiler_janino_maxsize</td>
     <td>262144</td>
-    <td></td>
+    <td>See the exec.java_compiler option comment. Accepts inputs of type LONG.</td>
   </tr>
   <tr>
     <td>exec.max_hash_table_size</td>
     <td>1073741824</td>
-    <td>Starting size for hash tables. Increase according to available memory to improve performance.</td>
+    <td>Ending size for hash tables. Range: 0 - 1073741824</td>
   </tr>
   <tr>
     <td>exec.min_hash_table_size</td>
     <td>65536</td>
-    <td></td>
+    <td>Starting size for hash tables. Increase according to available memory to improve performance. Range: 0 - 1073741824</td>
   </tr>
   <tr>
     <td>exec.queue.enable</td>
@@ -185,27 +180,22 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>exec.queue.large</td>
     <td>10</td>
-    <td></td>
+    <td>Range: 0-1000</td>
   </tr>
   <tr>
     <td>exec.queue.small</td>
     <td>100</td>
-    <td></td>
+    <td>Range: 0-1001</td>
   </tr>
   <tr>
     <td>exec.queue.threshold</td>
     <td>30000000</td>
-    <td></td>
+    <td>Range: 0-9223372036854775807</td>
   </tr>
   <tr>
     <td>exec.queue.timeout_millis</td>
     <td>300000</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td>org.apache.drill.exec.compile.ClassTransformer.scalar_replacement</td>
-    <td>try</td>
-    <td></td>
+    <td>Range: 0-9223372036854775807</td>
   </tr>
   <tr>
     <td>planner.add_producer_consumer</td>
@@ -215,7 +205,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>planner.affinity_factor</td>
     <td>1.2</td>
-    <td></td>
+    <td>Accepts inputs of type DOUBLE.</td>
   </tr>
   <tr>
     <td>planner.broadcast_factor</td>
@@ -225,22 +215,22 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>planner.broadcast_threshold</td>
     <td>10000000</td>
-    <td></td>
+    <td>Threshold in number of rows that triggers a broadcast join for a query if the right side of the join contains fewer rows than the threshold. Avoids broadcasting too many rows to join. Range: 0-2147483647</td>
   </tr>
   <tr>
     <td>planner.disable_exchanges</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Toggles the state of hashing to a random exchange.</td>
   </tr>
   <tr>
     <td>planner.enable_broadcast_join</td>
     <td>TRUE</td>
-    <td></td>
+    <td>Changes the state of aggregation and join operators. Do not disable.</td>
   </tr>
   <tr>
     <td>planner.enable_demux_exchange</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Toggles the state of hashing to a demulitplexed exchange.</td>
   </tr>
   <tr>
     <td>planner.enable_hash_single_key</td>
@@ -250,12 +240,12 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>planner.enable_hashagg</td>
     <td>TRUE</td>
-    <td></td>
+    <td>Enable hash aggregation; otherwise, Drill does a sort-based aggregation. Does not write to disk. Enable is recommended.</td>
   </tr>
   <tr>
     <td>planner.enable_hashjoin</td>
     <td>TRUE</td>
-    <td></td>
+    <td>Enable the memory hungry hash join. Does not write to disk.</td>
   </tr>
   <tr>
     <td>planner.enable_hashjoin_swap</td>
@@ -265,7 +255,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>planner.enable_mergejoin</td>
     <td>TRUE</td>
-    <td></td>
+    <td>Sort-based operation. Writes to disk.</td>
   </tr>
   <tr>
     <td>planner.enable_multiphase_agg</td>
@@ -275,12 +265,12 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>planner.enable_mux_exchange</td>
     <td>TRUE</td>
-    <td></td>
+    <td>Toggles the state of hashing to a multiplexed exchange.</td>
   </tr>
   <tr>
     <td>planner.enable_streamagg</td>
     <td>TRUE</td>
-    <td></td>
+    <td>Sort-based operation. Writes to disk.</td>
   </tr>
   <tr>
     <td>planner.identifier_max_length</td>
@@ -325,7 +315,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>planner.memory.non_blocking_operators_memory</td>
     <td>64</td>
-    <td></td>
+    <td>Range: 0-2048</td>
   </tr>
   <tr>
     <td>planner.partitioner_sender_max_threads</td>
@@ -345,27 +335,27 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>planner.producer_consumer_queue_size</td>
     <td>10</td>
-    <td></td>
+    <td>How much data to prefetch from disk (in record batches) out of band of query execution</td>
   </tr>
   <tr>
     <td>planner.slice_target</td>
     <td>100000</td>
-    <td></td>
+    <td>The number of records manipulated within a fragment before Drill parallelizes operations.</td>
   </tr>
   <tr>
     <td>planner.width.max_per_node</td>
     <td>3</td>
-    <td></td>
+    <td>The maximum degree of distribution of a query across cores and cluster nodes.</td>
   </tr>
   <tr>
     <td>planner.width.max_per_query</td>
     <td>1000</td>
-    <td></td>
+    <td>Same as planner but applies to the query as executed by the entire cluster.</td>
   </tr>
   <tr>
     <td>store.format</td>
     <td>parquet</td>
-    <td></td>
+    <td>Output format for data written to tables with the CREATE TABLE AS (CTAS) command. Allowed values are parquet, json, or text. Allowed values: 0, -1, 1000000</td>
   </tr>
   <tr>
     <td>store.json.all_text_mode</td>
@@ -375,17 +365,17 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>store.mongo.all_text_mode</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Similar to store.json.all_text_mode for MongoDB.</td>
   </tr>
   <tr>
     <td>store.parquet.block-size</td>
     <td>536870912</td>
-    <td></td>
+    <td>Sets the size of a Parquet row group to the number of bytes less than or equal to the block size of MFS, HDFS, or the file system.</td>
   </tr>
   <tr>
     <td>store.parquet.compression</td>
     <td>snappy</td>
-    <td></td>
+    <td>Compression type for storing Parquet output. Allowed values: snappy, gzip, none</td>
   </tr>
   <tr>
     <td>store.parquet.enable_dictionary_encoding</td>
@@ -398,21 +388,13 @@ The sys.options table in Drill contains information about boot and system option
     <td></td>
   </tr>
   <tr>
-    <td>store.parquet.vector_fill_check_threshold</td>
-    <td>10</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td>store.parquet.vector_fill_threshold</td>
-    <td>85</td>
-    <td></td>
-  </tr>
-  <tr>
     <td>window.enable</td>
     <td>FALSE</td>
     <td></td>
   </tr>
 </table>
+
+## Memory Allocation
 
 You can configure the amount of direct memory allocated to a Drillbit for
 query processing. The default limit is 8G, but Drill prefers 16G or more
