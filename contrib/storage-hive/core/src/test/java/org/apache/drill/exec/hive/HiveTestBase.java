@@ -31,14 +31,14 @@ public class HiveTestBase extends PlanTestBase {
 
   @BeforeClass
   public static void generateHive() throws Exception{
-    hiveTest = new HiveTestDataGenerator(getDrillbitContext().getStorage());
-    hiveTest.createAndAddHiveTestPlugin();
+    hiveTest = HiveTestDataGenerator.getInstance();
+    hiveTest.addHiveTestPlugin(getDrillbitContext().getStorage());
   }
 
   @AfterClass
   public static void cleanupHiveTestData() throws Exception{
     if (hiveTest != null) {
-      hiveTest.deleteHiveTestPlugin();
+      hiveTest.deleteHiveTestPlugin(getDrillbitContext().getStorage());
     }
   }
 }

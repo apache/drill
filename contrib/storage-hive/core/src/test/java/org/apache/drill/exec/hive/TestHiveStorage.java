@@ -163,7 +163,8 @@ public class TestHiveStorage extends HiveTestBase {
   @Test
   public void queryingTablesInNonDefaultFS() throws Exception {
     // Update the default FS settings in Hive test storage plugin to non-local FS
-    hiveTest.updatePluginConfig(ImmutableMap.of(FileSystem.FS_DEFAULT_NAME_KEY, "hdfs://localhost:9001"));
+    hiveTest.updatePluginConfig(getDrillbitContext().getStorage(),
+        ImmutableMap.of(FileSystem.FS_DEFAULT_NAME_KEY, "hdfs://localhost:9001"));
 
     testBuilder()
         .sqlQuery("SELECT * FROM hive.`default`.kv LIMIT 1")

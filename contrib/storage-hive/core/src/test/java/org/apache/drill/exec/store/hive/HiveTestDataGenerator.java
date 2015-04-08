@@ -19,12 +19,12 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Map;
 
+import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -38,42 +38,47 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import com.google.common.collect.Maps;
 
 public class HiveTestDataGenerator {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveTestDataGenerator.class);
-
-  static int RETRIES = 5;
   private static final String HIVE_TEST_PLUGIN_NAME = "hive";
-  private Driver hiveDriver = null;
-  private static final String DB_DIR = "/tmp/drill_hive_db";
-  private static final String WH_DIR = "/tmp/drill_hive_wh";
-  private final StoragePluginRegistry pluginRegistry;
+  private static final int RETRIES = 5;
+  private static HiveTestDataGenerator instance;
 
-  public HiveTestDataGenerator(StoragePluginRegistry pluginRegistry) {
-    this.pluginRegistry = pluginRegistry;
+  private final String dbDir;
+  private final String whDir;
+  private final Map<String, String> config;
+
+  public static synchronized HiveTestDataGenerator getInstance() throws Exception {
+    if (instance == null) {
+      final File db = Files.createTempDir();
+      db.deleteOnExit();
+      final String dbDir = db.getAbsolutePath() + File.separator + "metastore_db";
+
+      final File wh = Files.createTempDir();
+      wh.deleteOnExit();
+      final String whDir = wh.getAbsolutePath();
+
+      instance = new HiveTestDataGenerator(dbDir, whDir);
+      instance.generateTestData();
+    }
+
+    return instance;
   }
 
-  private void cleanDir(String dir) throws IOException{
-    File f = new File(dir);
-    if (f.exists()) {
-      FileUtils.cleanDirectory(f);
-      FileUtils.forceDelete(f);
-    }
+  private HiveTestDataGenerator(final String dbDir, final String whDir) {
+    this.dbDir = dbDir;
+    this.whDir = whDir;
+
+    config = Maps.newHashMap();
+    config.put("hive.metastore.uris", "");
+    config.put("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
+    config.put("hive.metastore.warehouse.dir", whDir);
+    config.put(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
   }
 
   /**
-   * Create a Hive test storage plugin and add it to the plugin registry.
+   * Add Hive test storage plugin to the given plugin registry.
    * @throws Exception
    */
-  public void createAndAddHiveTestPlugin() throws Exception {
-    // generate test tables and data
-    generateTestData();
-
-    // add Hive plugin to given registry
-    Map<String, String> config = Maps.newHashMap();
-    config.put("hive.metastore.uris", "");
-    config.put("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", DB_DIR));
-    config.put("hive.metastore.warehouse.dir", WH_DIR);
-    config.put(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
-
+  public void addHiveTestPlugin(final StoragePluginRegistry pluginRegistry) throws Exception {
     HiveStoragePluginConfig pluginConfig = new HiveStoragePluginConfig(config);
     pluginConfig.setEnabled(true);
 
@@ -81,17 +86,17 @@ public class HiveTestDataGenerator {
   }
 
   /**
-   * Update the current HiveStoragePlugin with new config.
+   * Update the current HiveStoragePlugin in given plugin registry with given <i>configOverride</i>.
    *
    * @param configOverride
-   * @throws DrillException if fails to update or no plugin exists.
+   * @throws DrillException if fails to update or no Hive plugin currently exists in given plugin registry.
    */
-  public void updatePluginConfig(Map<String, String> configOverride)
+  public void updatePluginConfig(final StoragePluginRegistry pluginRegistry, Map<String, String> configOverride)
       throws DrillException {
     HiveStoragePlugin storagePlugin = (HiveStoragePlugin) pluginRegistry.getPlugin(HIVE_TEST_PLUGIN_NAME);
     if (storagePlugin == null) {
       throw new DrillException(
-          "Hive test storage plugin doesn't exist. Add a plugin using createAndAddHiveTestPlugin()");
+          "Hive test storage plugin doesn't exist. Add a plugin using addHiveTestPlugin()");
     }
 
     HiveStoragePluginConfig newPluginConfig = storagePlugin.getConfig();
@@ -103,48 +108,41 @@ public class HiveTestDataGenerator {
   /**
    * Delete the Hive test plugin from registry.
    */
-  public void deleteHiveTestPlugin() {
+  public void deleteHiveTestPlugin(final StoragePluginRegistry pluginRegistry) {
     pluginRegistry.deletePlugin(HIVE_TEST_PLUGIN_NAME);
   }
 
-  // TODO: Make this method private once hive related tests in exec/jdbc are moved to contrib/storage-hive/core module.
-  // Tests in exec/jdbc just need the Hive metastore and test data and don't need adding storage plugin to registry.
-  public void generateTestData() throws Exception {
-
-    // remove data from previous runs.
-    cleanDir(DB_DIR);
-    cleanDir(WH_DIR);
-
+  private void generateTestData() throws Exception {
     HiveConf conf = new HiveConf(SessionState.class);
 
-    conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", DB_DIR));
+    conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
-    conf.set("hive.metastore.warehouse.dir", WH_DIR);
+    conf.set("hive.metastore.warehouse.dir", whDir);
 
     SessionState ss = new SessionState(conf);
     SessionState.start(ss);
-    hiveDriver = new Driver(conf);
+    Driver hiveDriver = new Driver(conf);
 
     // generate (key, value) test data
     String testDataFile = generateTestDataFile();
 
-    createTableAndLoadData("default", "kv", testDataFile);
-    executeQuery("CREATE DATABASE IF NOT EXISTS db1");
-    createTableAndLoadData("db1", "kv_db1", testDataFile);
+    createTableAndLoadData(hiveDriver, "default", "kv", testDataFile);
+    executeQuery(hiveDriver, "CREATE DATABASE IF NOT EXISTS db1");
+    createTableAndLoadData(hiveDriver, "db1", "kv_db1", testDataFile);
 
-    executeQuery("USE default");
+    executeQuery(hiveDriver, "USE default");
 
     // create a table with no data
-    executeQuery("CREATE TABLE IF NOT EXISTS empty_table(a INT, b STRING)");
+    executeQuery(hiveDriver, "CREATE TABLE IF NOT EXISTS empty_table(a INT, b STRING)");
     // delete the table location of empty table
-    File emptyTableLocation = new File(WH_DIR + "/empty_table");
+    File emptyTableLocation = new File(whDir, "empty_table");
     if (emptyTableLocation.exists()) {
       FileUtils.forceDelete(emptyTableLocation);
     }
 
     // create a Hive table that has columns with data types which are supported for reading in Drill.
     testDataFile = generateAllTypesDataFile();
-    executeQuery(
+    executeQuery(hiveDriver,
         "CREATE TABLE IF NOT EXISTS readtest (" +
         "  binary_field BINARY," +
         "  boolean_field BOOLEAN," +
@@ -185,7 +183,7 @@ public class HiveTestDataGenerator {
     );
 
     // Add a partition to table 'readtest'
-    executeQuery(
+    executeQuery(hiveDriver,
         "ALTER TABLE readtest ADD IF NOT EXISTS PARTITION ( " +
         "  binary_part='binary', " +
         "  boolean_part='true', " +
@@ -207,7 +205,8 @@ public class HiveTestDataGenerator {
     );
 
     // Load data into table 'readtest'
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.readtest PARTITION (" +
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.readtest PARTITION (" +
         "  binary_part='binary', " +
         "  boolean_part='true', " +
         "  tinyint_part='64', " +
@@ -228,7 +227,8 @@ public class HiveTestDataGenerator {
 
     // create a table that has all Hive types. This is to test how hive tables metadata is populated in
     // Drill's INFORMATION_SCHEMA.
-    executeQuery("CREATE TABLE IF NOT EXISTS infoschematest(" +
+    executeQuery(hiveDriver,
+        "CREATE TABLE IF NOT EXISTS infoschematest(" +
         "booleanType BOOLEAN, " +
         "tinyintType TINYINT, " +
         "smallintType SMALLINT, " +
@@ -249,52 +249,49 @@ public class HiveTestDataGenerator {
     );
 
     // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA
-    executeQuery("CREATE VIEW IF NOT EXISTS hiveview AS SELECT * FROM kv");
+    executeQuery(hiveDriver, "CREATE VIEW IF NOT EXISTS hiveview AS SELECT * FROM kv");
 
     // Generate data with date and timestamp data type
     String testDateDataFile = generateTestDataFileWithDate();
 
     // create partitioned hive table to test partition pruning
-    executeQuery("CREATE TABLE IF NOT EXISTS default.partition_pruning_test(a DATE, b TIMESTAMP) "+
+    executeQuery(hiveDriver,
+        "CREATE TABLE IF NOT EXISTS default.partition_pruning_test(a DATE, b TIMESTAMP) "+
         "partitioned by (c int, d int, e int) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=1)", testDateDataFile));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=2)", testDateDataFile));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=2, e=1)", testDateDataFile));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=2)", testDateDataFile));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=1, e=1)", testDateDataFile));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=1, e=2)", testDateDataFile));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=3, e=1)", testDateDataFile));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=3, e=2)", testDateDataFile));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=1)", testDateDataFile));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=2)", testDateDataFile));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=2, e=1)", testDateDataFile));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=2)", testDateDataFile));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=1, e=1)", testDateDataFile));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=1, e=2)", testDateDataFile));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=3, e=1)", testDateDataFile));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=3, e=2)", testDateDataFile));
 
     ss.close();
   }
 
-  private void createTableAndLoadData(String dbName, String tblName, String dataFile) {
-    executeQuery(String.format("USE %s", dbName));
-    executeQuery(String.format("CREATE TABLE IF NOT EXISTS %s.%s(key INT, value STRING) "+
+  private void createTableAndLoadData(Driver hiveDriver, String dbName, String tblName, String dataFile) {
+    executeQuery(hiveDriver, String.format("USE %s", dbName));
+    executeQuery(hiveDriver, String.format("CREATE TABLE IF NOT EXISTS %s.%s(key INT, value STRING) "+
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE", dbName, tblName));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE %s.%s", dataFile, dbName, tblName));
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE %s.%s", dataFile, dbName, tblName));
   }
 
   private File getTempFile() throws Exception {
-    File file = null;
-    while (true) {
-      file = File.createTempFile("drill-hive-test", ".txt");
-      if (file.exists()) {
-        boolean success = file.delete();
-        if (success) {
-          break;
-        }
-      }
-      logger.debug("retry creating tmp file");
-    }
-
-    return file;
+    return java.nio.file.Files.createTempFile("drill-hive-test", ".txt").toFile();
   }
 
   private String generateTestDataFile() throws Exception {
-    File file = getTempFile();
-
+    final File file = getTempFile();
     PrintWriter printWriter = new PrintWriter(file);
     for (int i=1; i<=5; i++) {
       printWriter.println (String.format("%d, key_%d", i, i));
@@ -305,7 +302,7 @@ public class HiveTestDataGenerator {
   }
 
   private String generateTestDataFileWithDate() throws Exception {
-    File file = getTempFile();
+    final File file = getTempFile();
 
     PrintWriter printWriter = new PrintWriter(file);
     for (int i=1; i<=5; i++) {
@@ -331,7 +328,7 @@ public class HiveTestDataGenerator {
     return file.getPath();
   }
 
-  private void executeQuery(String query) {
+  private void executeQuery(Driver hiveDriver, String query) {
     CommandProcessorResponse response = null;
     boolean failed = false;
     int retryCount = RETRIES;

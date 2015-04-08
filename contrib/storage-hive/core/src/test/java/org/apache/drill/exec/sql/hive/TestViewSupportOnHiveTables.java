@@ -31,8 +31,8 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
 
   @BeforeClass
   public static void generateHive() throws Exception{
-    hiveTest = new HiveTestDataGenerator(getDrillbitContext().getStorage());
-    hiveTest.createAndAddHiveTestPlugin();
+    hiveTest = HiveTestDataGenerator.getInstance();
+    hiveTest.addHiveTestPlugin(getDrillbitContext().getStorage());
   }
 
   @Test
@@ -109,7 +109,7 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
   @AfterClass
   public static void cleanupHiveTestData() throws Exception{
     if (hiveTest != null) {
-      hiveTest.deleteHiveTestPlugin();
+      hiveTest.deleteHiveTestPlugin(getDrillbitContext().getStorage());
     }
   }
 }
