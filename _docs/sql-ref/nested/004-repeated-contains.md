@@ -27,12 +27,21 @@ REPEATED CONTAINS searches for a keyword in an array.
 * keyword is a value in the array, such as 'Glazed'.
 
 ## Usage Notes
-REPEATED_CONTAINS returns true if Drill finds a match; otherwise, the function returns false. The function supports regular expression wildcards, such as *, ., and ?, but not at the beginning of the keyword. Enclose keyword string values in single quotation marks. Do not enclose numerical keyword values in single quotation marks.
+REPEATED_CONTAINS returns true if Drill finds a match; otherwise, the function returns false. The function supports regular expression wildcards, but not at the beginning of the keyword:
+
+* Asterisk (*)
+* Period (.)
+* Question mark (?)
+* Square bracketed ranges [a-z]
+* Square bracketed characters [ch]
+* Negated square bracketed ranges or characters [!ch].
+
+Enclose keyword string values in single quotation marks. Do not enclose numerical keyword values in single quotation marks.
 
 ## Examples
-The examples in this section `testRepeatedWrite.json`. To download this file, go to [Drill test resources](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources) page, locate testRepeatedWrite.json.json in the list of files, and download it. For example, on the Mac right-click the five, select Save Link As, and then click Save.
+The examples in this section use `testRepeatedWrite.json`. To download this file, go to [Drill test resources](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources) page, locate testRepeatedWrite.json in the list of files, and download it.
 
-Which donuts having glazed or glaze toppings?
+Which donuts have glazed or glaze toppings?
 
 		SELECT name, REPEATED_CONTAINS(topping, 'Glaze?') AS `Glazed?` FROM  dfs.`/Users/drill/testRepeatedWrite.json` WHERE type='donut';
 
@@ -47,7 +56,7 @@ Which donuts having glazed or glaze toppings?
 		+------------+------------+
 		5 rows selected (0.072 seconds)
 
-Which objects have powered sugar toppings? Use the asterisk wildcard instead of typing the entire keyword pair.
+Which objects have powdered sugar toppings? Use the asterisk wildcard instead of typing the entire keyword pair.
 
     SELECT name, REPEATED_CONTAINS(topping, 'P*r') AS `Powdered Sugar?` FROM  dfs.`/Users/khahn/Documents/test_files_source/testRepeatedWrite.json` WHERE type='donut';
 

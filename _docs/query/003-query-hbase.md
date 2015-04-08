@@ -91,7 +91,7 @@ steps:
   
         cat testdata.txt | hbase shell
 5. Start Drill. Type `sqlline` on the terminal command line if you are using the Drill Sandbox; otherwise, see [Starting/Stopping Drill]({{ site.baseurl }}/docs/starting-stopping-drill).
-6. Use the `maprdb` storage plugin, which includes the [MapR-DB format](/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services. 
+6. Use the [MapR-DB format plugin](/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services. 
 
          USE hbase; /* If you have installed HBase services. */ 
 
@@ -99,7 +99,7 @@ steps:
 
          USE maprdb; /* If you are using the Drill Sandbox */
 
-The `maprdb` storage plugin provides access to the `/tables` directory. Use Drill to query the students and clicks tables on the Drill Sandbox.  
+The `maprdb` format plugin provides access to the `/tables` directory. Use Drill to query the students and clicks tables on the Drill Sandbox.  
 
 ## Query HBase Tables
 1. Issue the following query to see the data in the students table:  

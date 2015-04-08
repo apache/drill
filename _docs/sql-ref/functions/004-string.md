@@ -146,7 +146,7 @@ Returns the number of characters in the string.
     4 rows selected (0.259 seconds)
 
 ## LOWER
-Converts characters in the string to lower case.
+Converts characters in the string to lowercase.
 
 ### Syntax
 
@@ -364,7 +364,7 @@ Removes the longest string having only the characters from the beginning, end, o
     1 row selected (0.172 seconds)
 
 ## UPPER
-Converts characters in the string to lower case.
+Converts characters in the string to uppercase.
 
 ### Syntax
 

@@ -19,7 +19,7 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
 * DECIMAL9
 * DECIMAL18
 
-**Math Functions**
+# Math Functions
 
 <table>
   <tr>
@@ -156,10 +156,9 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
 
 ## Math Function Examples
 
-Examples in this section use the `input2.json` file
+Examples in this section use the `input2.json` file. Download the `input2.json` file from the [Drill source code](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources/jsoninput) page. 
 
-
-Download the `input2.json` file from the [Drill source code](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources/jsoninput) page. On the Mac, for example, right-click input2.json and choose Save Link As, and then click Save.
+You need to use a FROM clause in Drill queries. This document often uses the sys.version table in the FROM clause of the query for example purposes.
 
 #### ABS Example
 Get the absolute value of the integer key in `input2.json`. The following snippet of input2.json shows the relevant integer content:
@@ -177,6 +176,8 @@ Get the absolute value of the integer key in `input2.json`. The following snippe
     . . .
 
     SELECT `integer` FROM dfs.`/Users/drill/input2.json`;
+
+The output shows values not shown in the snippet. You can take a look at all the values in the input2.json file.
 
     +------------+
     |  integer   |
@@ -200,7 +201,7 @@ Get the absolute value of the integer key in `input2.json`. The following snippe
     +------------+
     4 rows selected (0.357 seconds)
 
-## CEIL Example
+### CEIL Example
 Get the ceiling of float key values in input2.json. The input2.json file contains these float key values:
 
 * 17.4
@@ -300,7 +301,7 @@ Get the natural log of 7.5.
     +------------+
     1 row selected (0.063 seconds)
 
-**Trig Functions**
+# Trig Functions
 
 Drill supports the following trig functions, which return a FLOAT8 result.
 
@@ -331,7 +332,7 @@ Drill supports the following trig functions, which return a FLOAT8 result.
 * TANH()  
   Hyperbolic tangent of hyperbolic angle x in radians
 
-**Examples**
+## Examples
 
 Find the sine and tangent of a 45 degree angle. First convert degrees to radians for use in the SIN() function.
 

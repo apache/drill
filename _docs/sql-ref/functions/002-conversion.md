@@ -211,7 +211,7 @@ You use the CONVERT_FROM function to decode the binary data to render it readabl
 
 This example assumes you are working in the Drill Sandbox. The `maprdb` storage plugin definition is limited, so you modify the `dfs` storage plugin slightly and use that plugin for this example.
 
-1. Copy/paste the `dfs` storage plugin defintion to a newly created plugin called myplugin.
+1. Copy/paste the `dfs` storage plugin definition to a newly created plugin called myplugin.
 
 2. Change the root location to "/mapr/demo.mapr.com/tables". This change allows you to query tables for reading in the tables directory by workspace.table name. This change allows you to read a table in the `tables` directory. You can write a converted version of the table in the `tmp` directory because the writable property is true.
 
@@ -651,8 +651,6 @@ TO_CHAR converts a date, time, timestamp, or numerical expression to a character
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. 
 
-### Usage Notes
-
 
 ### Examples
 
@@ -796,10 +794,10 @@ TO_NUMBER converts a character string to a formatted number using a format speci
 The data type of the output of TO_NUMBER is a numeric. You can use the following [Java DecimalFormat class](http://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html) specifiers to set the output formatting. 
 
 * #  
-  Digit place holder. 
+  Digit placeholder. 
 
 * 0  
-  Digit place holder. If a value has a digit in the position where the zero '0' appears in the format string, that digit appears in the output; otherwise, a '0' appears in that position in the output.
+  Digit placeholder. If a value has a digit in the position where the zero '0' appears in the format string, that digit appears in the output; otherwise, a '0' appears in that position in the output.
 
 * .  
   Decimal point. Make the first '.' character in the format string the location of the decimal separator in the value; ignore any additional '.' characters.
@@ -903,7 +901,7 @@ Convert Unix Epoch time to a timestamp.
     +------------+
     1 row selected (0.094 seconds)
 
-Connvert a UTC date to a timestamp offset from the UTC time zone code.
+Convert a UTC date to a timestamp offset from the UTC time zone code.
 
     SELECT TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') AS Original, 
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS New_TZ 
