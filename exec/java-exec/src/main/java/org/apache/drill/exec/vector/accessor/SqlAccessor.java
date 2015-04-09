@@ -28,13 +28,16 @@ import org.apache.drill.exec.vector.accessor.AbstractSqlAccessor.InvalidAccessEx
 
 
 // TODO:  Doc.:  Document more of basics of pattern of contracts for getXxx(...):
-// - What index is (especially since is not 1-based JDBC/SQL column index).
 // - What constitutes invalid access (that throws InvalidAccessException):
 //   - Does it include out-of-bound index values?  (The lack of "throws
 //     InvalidAccessException" on isNull(...) suggests no, but ...)
 
 /**
  * Column-data accessor that implements JDBC's Java-null--when--SQL-NULL mapping.
+ * <p>
+ *  Each {@code rowOffset} parameter specifies the (zero-based) offset (in rows)
+ *  of the requested value.
+ * </p>
  * <p>
  *   When the requested value is logically a SQL NULL:
  * </p>
@@ -56,60 +59,60 @@ public interface SqlAccessor {
   /**
    * Reports whether the logical value is a SQL NULL.
    */
-  boolean isNull(int index);
+  boolean isNull(int rowOffset);
 
   /** (See {@link SqlAccessor class description}.) */
-  BigDecimal getBigDecimal(int index) throws InvalidAccessException;
+  BigDecimal getBigDecimal(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  boolean getBoolean(int index) throws InvalidAccessException;
+  boolean getBoolean(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  byte getByte(int index) throws InvalidAccessException;
+  byte getByte(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  byte[] getBytes(int index) throws InvalidAccessException;
+  byte[] getBytes(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  Date getDate(int index) throws InvalidAccessException;
+  Date getDate(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  double getDouble(int index) throws InvalidAccessException;
+  double getDouble(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  float getFloat(int index) throws InvalidAccessException;
+  float getFloat(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  char getChar(int index) throws InvalidAccessException;
+  char getChar(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  int getInt(int index) throws InvalidAccessException;
+  int getInt(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  long getLong(int index) throws InvalidAccessException;
+  long getLong(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  short getShort(int index) throws InvalidAccessException;
+  short getShort(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  InputStream getStream(int index) throws InvalidAccessException;
+  InputStream getStream(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  Reader getReader(int index) throws InvalidAccessException;
+  Reader getReader(int rowOffset) throws InvalidAccessException;
 
   // TODO: Doc./Spec.:  What should happen if called on non-string type?  (Most
   // are convertible to string.  Does that result in error or conversion?)
   // Similar question for many other methods.
   /** (See {@link SqlAccessor class description}.) */
-  String getString(int index) throws InvalidAccessException;
+  String getString(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  Time getTime(int index) throws InvalidAccessException;
+  Time getTime(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  Timestamp getTimestamp(int index) throws InvalidAccessException;
+  Timestamp getTimestamp(int rowOffset) throws InvalidAccessException;
 
   /** (See {@link SqlAccessor class description}.) */
-  Object getObject(int index) throws InvalidAccessException;
+  Object getObject(int rowOffset) throws InvalidAccessException;
 
 }

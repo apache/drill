@@ -39,88 +39,88 @@ public class BoundCheckingAccessor implements SqlAccessor {
   }
 
   @Override
-  public boolean isNull(int index) {
-    return delegate.isNull(index);
+  public boolean isNull(int rowOffset) {
+    return delegate.isNull(rowOffset);
   }
 
   @Override
-  public BigDecimal getBigDecimal(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getBigDecimal(index);
+  public BigDecimal getBigDecimal(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getBigDecimal(rowOffset);
   }
 
   @Override
-  public boolean getBoolean(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getBoolean(index);
+  public boolean getBoolean(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getBoolean(rowOffset);
   }
 
   @Override
-  public byte getByte(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getByte(index);
+  public byte getByte(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getByte(rowOffset);
   }
 
   @Override
-  public byte[] getBytes(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getBytes(index);
+  public byte[] getBytes(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getBytes(rowOffset);
   }
 
   @Override
-  public Date getDate(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getDate(index);
+  public Date getDate(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getDate(rowOffset);
   }
 
   @Override
-  public double getDouble(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getDouble(index);
+  public double getDouble(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getDouble(rowOffset);
   }
 
   @Override
-  public float getFloat(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getFloat(index);
+  public float getFloat(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getFloat(rowOffset);
   }
 
   @Override
-  public char getChar(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getChar(index);
+  public char getChar(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getChar(rowOffset);
   }
 
   @Override
-  public int getInt(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getInt(index);
+  public int getInt(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getInt(rowOffset);
   }
 
   @Override
-  public long getLong(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getLong(index);
+  public long getLong(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getLong(rowOffset);
   }
 
   @Override
-  public short getShort(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getShort(index);
+  public short getShort(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getShort(rowOffset);
   }
 
   @Override
-  public InputStream getStream(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getStream(index);
+  public InputStream getStream(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getStream(rowOffset);
   }
 
   @Override
-  public Reader getReader(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getReader(index);
+  public Reader getReader(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getReader(rowOffset);
   }
 
   @Override
-  public String getString(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getString(index);
+  public String getString(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getString(rowOffset);
   }
 
   @Override
-  public Time getTime(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getTime(index);
+  public Time getTime(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getTime(rowOffset);
   }
 
   @Override
-  public Timestamp getTimestamp(int index) throws AbstractSqlAccessor.InvalidAccessException {
-    return delegate.getTimestamp(index);
+  public Timestamp getTimestamp(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
+    return delegate.getTimestamp(rowOffset);
   }
 
   /**
@@ -129,12 +129,12 @@ public class BoundCheckingAccessor implements SqlAccessor {
    * @see org.apache.drill.exec.vector.accessor.SqlAccessor#getObject(int)
    */
   @Override
-  public Object getObject(int index) throws AbstractSqlAccessor.InvalidAccessException {
+  public Object getObject(int rowOffset) throws AbstractSqlAccessor.InvalidAccessException {
     // In case some vectors have fewer values than others, and callee invokes
     // this method with index >= getValueCount(), this should still yield null.
     final ValueVector.Accessor accessor = vector.getAccessor();
-    if (index < accessor.getValueCount()) {
-      return delegate.getObject(index);
+    if (rowOffset < accessor.getValueCount()) {
+      return delegate.getObject(rowOffset);
     }
     return null;
   }

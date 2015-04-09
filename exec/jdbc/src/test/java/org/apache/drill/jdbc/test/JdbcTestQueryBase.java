@@ -19,7 +19,6 @@ package org.apache.drill.jdbc.test;
 
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
@@ -53,7 +52,7 @@ public class JdbcTestQueryBase extends JdbcTest {
         Stopwatch watch = new Stopwatch().start();
         Statement s = conn.createStatement();
         ResultSet r = s.executeQuery(sql);
-        System.out.println(String.format("QueryId: %s", ((DrillResultSet) r).getQueryId()));
+        System.out.println(String.format("QueryId: %s", r.unwrap(DrillResultSet.class).getQueryId()));
         boolean first = true;
         while (r.next()) {
           ResultSetMetaData md = r.getMetaData();

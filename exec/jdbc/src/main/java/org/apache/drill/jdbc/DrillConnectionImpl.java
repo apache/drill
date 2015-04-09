@@ -45,6 +45,7 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.util.TestUtilities;
 
+// (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
 /**
  * Implementation of JDBC connection in Drill.
  *
@@ -52,7 +53,7 @@ import org.apache.drill.exec.util.TestUtilities;
  * Abstract to allow newer versions of JDBC to add methods.
  * </p>
  */
-abstract class DrillConnectionImpl extends AvaticaConnection implements DrillConnection {
+public abstract class DrillConnectionImpl extends AvaticaConnection implements DrillConnection {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
 
   final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
@@ -181,8 +182,9 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements DrillCon
     return config.getTimeZone();
   }
 
+  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
   // do not make public
-  UnregisteredDriver getDriver() {
+  public UnregisteredDriver getDriver() {
     return driver;
   }
 

@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import org.apache.drill.jdbc.impl.DrillResultSetImpl;
+
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaDatabaseMetaData;
 import net.hydromatic.avatica.AvaticaPrepareResult;
@@ -79,9 +81,9 @@ public class DrillJdbc41Factory extends DrillFactory {
   }
 
   @Override
-  public DrillResultSet newResultSet(AvaticaStatement statement, AvaticaPrepareResult prepareResult, TimeZone timeZone) {
+  public DrillResultSetImpl newResultSet(AvaticaStatement statement, AvaticaPrepareResult prepareResult, TimeZone timeZone) {
     final ResultSetMetaData metaData = newResultSetMetaData(statement, prepareResult.getColumnList());
-    return new DrillResultSet(statement, (DrillPrepareResult) prepareResult, metaData, timeZone);
+    return new DrillResultSetImpl(statement, (DrillPrepareResult) prepareResult, metaData, timeZone);
   }
 
   @Override

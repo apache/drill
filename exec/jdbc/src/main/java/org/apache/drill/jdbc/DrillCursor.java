@@ -30,6 +30,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.jdbc.impl.DrillResultSetImpl;
 
 public class DrillCursor implements Cursor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillCursor.class);
@@ -37,10 +38,10 @@ public class DrillCursor implements Cursor {
   private static final String UNKNOWN = "--UNKNOWN--";
 
   /** The associated java.sql.ResultSet implementation. */
-  private final DrillResultSet resultSet;
+  private final DrillResultSetImpl resultSet;
 
   private final RecordBatchLoader currentBatch;
-  private final DrillResultSet.ResultsListener resultsListener;
+  private final DrillResultSetImpl.ResultsListener resultsListener;
 
   // TODO:  Doc.:  Say what's started (set of rows?  just current result batch?)
   private boolean started = false;
@@ -63,13 +64,13 @@ public class DrillCursor implements Cursor {
    *
    * @param  resultSet  the associated ResultSet implementation
    */
-  public DrillCursor(final DrillResultSet resultSet) {
+  public DrillCursor(final DrillResultSetImpl resultSet) {
     this.resultSet = resultSet;
     currentBatch = resultSet.currentBatch;
     resultsListener = resultSet.resultslistener;
   }
 
-  public DrillResultSet getResultSet() {
+  public DrillResultSetImpl getResultSet() {
     return resultSet;
   }
 

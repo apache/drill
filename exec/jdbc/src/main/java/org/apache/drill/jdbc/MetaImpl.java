@@ -20,7 +20,6 @@ package org.apache.drill.jdbc;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Types;
-
 import java.util.List;
 
 import net.hydromatic.avatica.AvaticaPrepareResult;
@@ -31,6 +30,7 @@ import net.hydromatic.avatica.Meta;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.jdbc.impl.DrillResultSetImpl;
 
 
 public class MetaImpl implements Meta {
@@ -619,7 +619,7 @@ public class MetaImpl implements Meta {
   }
 
   public Cursor createCursor(AvaticaResultSet resultSet_) {
-    return ((DrillResultSet) resultSet_).cursor;
+    return ((DrillResultSetImpl) resultSet_).cursor;
   }
 
   public AvaticaPrepareResult prepare(AvaticaStatement statement_, String sql) {
