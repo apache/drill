@@ -541,7 +541,7 @@ public class HiveRecordReader extends AbstractRecordReader {
       Decimal9Holder holder = new Decimal9Holder();
       holder.scale = scale;
       holder.precision = precision;
-      holder.value = DecimalUtility.getDecimal9FromBigDecimal(bigDecimal, precision, scale);
+      holder.value = DecimalUtility.getDecimal9FromBigDecimal(bigDecimal, scale, precision);
       Decimal9Vector v = (Decimal9Vector) vector;
       for (int j = 0; j < recordCount; j++) {
         v.getMutator().setSafe(j, holder);
@@ -550,7 +550,7 @@ public class HiveRecordReader extends AbstractRecordReader {
       Decimal18Holder holder = new Decimal18Holder();
       holder.scale = scale;
       holder.precision = precision;
-      holder.value = DecimalUtility.getDecimal18FromBigDecimal(bigDecimal, precision, scale);
+      holder.value = DecimalUtility.getDecimal18FromBigDecimal(bigDecimal, scale, precision);
       Decimal18Vector v = (Decimal18Vector) vector;
       for (int j = 0; j < recordCount; j++) {
         v.getMutator().setSafe(j, holder);

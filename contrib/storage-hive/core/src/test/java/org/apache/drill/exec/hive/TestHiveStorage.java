@@ -106,9 +106,9 @@ public class TestHiveStorage extends HiveTestBase {
             "binary",
             true,
             (byte) 64,
-            new BigDecimal("370000000000"),   // TODO(DRILL-2729) Should be 37
-            new BigDecimal("369000.00"),      // TODO(DRILL-2729) Should be 36.90
-            new BigDecimal("-66367900898250.61888"), // TODO(DRILL-2729) Should be 3289379872.94565
+            new BigDecimal("37"),
+            new BigDecimal("36.90"),
+            new BigDecimal("3289379872.94565"),
             new BigDecimal("39579334534534.4"),
             new BigDecimal("363945093845093890.900"),
             8.345d,
@@ -129,9 +129,9 @@ public class TestHiveStorage extends HiveTestBase {
             "binary",
             true,
             (byte) 64,
-            new BigDecimal("370000000000"),  // TODO(DRILL-2729) Should be 37
-            new BigDecimal("369000.00"), // TODO(DRILL-2729) Should be 36.90
-            new BigDecimal("-66367900898250.61888"), // TODO(DRILL-2729) Should be 3289379872.94565
+            new BigDecimal("37"),
+            new BigDecimal("36.90"),
+            new BigDecimal("3289379872.94565"),
             new BigDecimal("39579334534534.4"),
             new BigDecimal("363945093845093890.900"),
             8.345d,
