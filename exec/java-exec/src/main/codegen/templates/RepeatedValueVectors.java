@@ -118,7 +118,7 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     
     values.splitAndTransferTo(startPos, valuesToCopy, to.values);
     to.offsets.clear();
-    to.offsets.allocateNew(valuesToCopy + 1);
+    to.offsets.allocateNew(groups + 1);
     int normalizedPos = 0;
     for (int i=0; i < groups + 1;i++ ) {
       normalizedPos = a.get(startIndex+i) - startPos;

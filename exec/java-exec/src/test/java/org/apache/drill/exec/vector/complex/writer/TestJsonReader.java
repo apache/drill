@@ -61,6 +61,34 @@ public class TestJsonReader extends BaseTestQuery {
   }
 
   @Test
+  public void testSplitAndTransferFailure() throws Exception {
+    final String testVal = "a string";
+    testBuilder()
+        .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list.json`")
+        .ordered()
+        .baselineColumns("flat")
+        .baselineValues(list())
+        .baselineValues(list(testVal))
+        .go();
+
+    testBuilder()
+        .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list_v2.json`")
+        .ordered()
+        .baselineColumns("flat")
+        .baselineValues(map("repeated_varchar", list()))
+        .baselineValues(map("repeated_varchar", list(testVal)))
+        .go();
+
+    testBuilder()
+        .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list_v3.json`")
+        .ordered()
+        .baselineColumns("flat")
+        .baselineValues(map("repeated_map", list(map("repeated_varchar", list()))))
+        .baselineValues(map("repeated_map", list(map("repeated_varchar", list(testVal)))))
+        .go();
+  }
+
+  @Test
   @Ignore("DRILL-1824")
   public void schemaChangeValidate() throws Exception {
     testBuilder() //
@@ -122,7 +150,7 @@ public class TestJsonReader extends BaseTestQuery {
         .build().run();
   }
 
-  public void gzipIt(File sourceFile) throws IOException {
+  public static void gzipIt(File sourceFile) throws IOException {
 
     // modified from: http://www.mkyong.com/java/how-to-compress-a-file-in-gzip-format/
     byte[] buffer = new byte[1024];

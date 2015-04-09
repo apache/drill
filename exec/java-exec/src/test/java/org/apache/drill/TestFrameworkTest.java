@@ -134,40 +134,20 @@ public class TestFrameworkTest extends BaseTestQuery{
 
   @Test
   public void testBaselineValsVerificationWithComplexAndNulls() throws Exception {
-    JsonStringArrayList list = new JsonStringArrayList();
-    JsonStringArrayList innerList1 = new JsonStringArrayList();
-    innerList1.add(2l);
-    innerList1.add(1l);
-    JsonStringArrayList innerList2 = new JsonStringArrayList();
-    innerList2.add(4l);
-    innerList2.add(6l);
-    list.add(innerList1);
-    list.add(innerList2);
-
-    JsonStringArrayList l_list = new JsonStringArrayList();
-    l_list.add(4l);
-    l_list.add(2l);
-
-    JsonStringHashMap x = new JsonStringHashMap();
-    x.put("y", new Text("kevin"));
-    x.put("z", new Text("paul"));
-
-    // [{"orange":"yellow","pink":"red"},{"pink":"purple"}]
-    JsonStringArrayList z = new JsonStringArrayList();
-    JsonStringHashMap z_1 = new JsonStringHashMap();
-    z_1.put("orange", new Text("yellow"));
-    z_1.put("pink", new Text("red"));
-
-    JsonStringHashMap z_2 = new JsonStringHashMap();
-    z_2.put("pink", new Text("purple"));
-    z.add(z_1);
-    z.add(z_2);
-
     testBuilder()
         .sqlQuery("select * from cp.`/jsoninput/input2.json` limit 1")
         .ordered()
         .baselineColumns("integer", "float", "x", "z", "l", "rl")
-        .baselineValues(2010l, 17.4, x, z, l_list, list)
+        .baselineValues(2010l,
+                        17.4,
+                        map("y", "kevin",
+                            "z", "paul"),
+                        list(map("orange", "yellow",
+                                 "pink", "red"),
+                             map("pink", "purple")),
+                        list(4l, 2l),
+                        list(list(2l, 1l),
+                             list(4l, 6l)))
         .build().run();
   }
 
