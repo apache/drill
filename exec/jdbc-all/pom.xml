@@ -264,6 +264,7 @@
                     <exclude name="**/*.SF"/>
                     <exclude name="**/*.RSA"/>
                     <exclude name="**/*.DSA"/>
+                    <exclude name="META-INF/services/*"/>
                     <exclude name="META-INF/*.SF"/>
                     <exclude name="META-INF/*.RSA"/>
                     <exclude name="META-INF/*.DSA"/>
