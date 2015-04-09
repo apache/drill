@@ -41,14 +41,14 @@ class SendingAccountor {
   }
 
   public synchronized void waitForSendComplete() {
-    try {
-      int waitForBatches;
-      while((waitForBatches = batchesSent.getAndSet(0)) != 0) {
-        wait.acquire(waitForBatches);
+      int waitForBatches = batchesSent.get();
+      while(waitForBatches != 0) {
+        try {
+          wait.acquire(waitForBatches);
+          waitForBatches = batchesSent.addAndGet(-1 * waitForBatches);
+        } catch (InterruptedException e) {
+          logger.warn("Interrupted while waiting for send complete. Continuing to wait.", e);
+        }
       }
-    } catch (InterruptedException e) {
-      logger.warn("Failure while waiting for send complete.", e);
-      // TODO InterruptedException
-    }
   }
 }
