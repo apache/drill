@@ -23,15 +23,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Preconditions;
-
 import org.apache.drill.common.EventProcessor;
+import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
@@ -77,8 +77,10 @@ import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.RootFragmentManager;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * Foreman manages all the fragments (local and remote) for a single query where this
@@ -99,6 +101,7 @@ import com.google.common.collect.Multimap;
 public class Foreman implements Runnable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Foreman.class);
   private final static ExceptionInjector injector = ExceptionInjector.getInjector(Foreman.class);
+  private static final int RPC_WAIT_IN_SECONDS = 90;
 
   private final QueryId queryId;
   private final RunQuery queryRequest;
@@ -113,7 +116,7 @@ public class Foreman implements Runnable {
 
   private FragmentExecutor rootRunner; // root Fragment
 
-  private final CountDownLatch acceptExternalEvents = new CountDownLatch(1); // gates acceptance of external events
+  private final ExtendedLatch acceptExternalEvents = new ExtendedLatch(); // gates acceptance of external events
   private final StateListener stateListener = new StateListener(); // source of external events
   private final ResponseSendListener responseListener = new ResponseSendListener();
   private final StateSwitch stateSwitch = new StateSwitch();
@@ -204,12 +207,12 @@ public class Foreman implements Runnable {
         throw new IllegalStateException();
       }
       injector.injectChecked(drillbitContext, "run-try-end", ForemanException.class);
-    } catch (ForemanException e) {
+    } catch (final ForemanException e) {
       moveToState(QueryState.FAILED, e);
     } catch (AssertionError | Exception ex) {
       moveToState(QueryState.FAILED,
           new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
-    } catch (OutOfMemoryError e) {
+    } catch (final OutOfMemoryError e) {
       /*
        * FragmentExecutors use a DrillbitStatusListener to watch out for the death of their query's Foreman.
        * So, if we die here, they should get notified about that, and cancel themselves; we don't have to
@@ -255,9 +258,9 @@ public class Foreman implements Runnable {
       try {
         lease.close();
         lease = null;
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
         // if we end up here, the while loop will try again
-      } catch (Exception e) {
+      } catch (final Exception e) {
         logger.warn("Failure while releasing lease.", e);
         break;
       }
@@ -268,7 +271,7 @@ public class Foreman implements Runnable {
     LogicalPlan logicalPlan;
     try {
       logicalPlan = drillbitContext.getPlanReader().readLogicalPlan(json);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new ForemanException("Failure parsing logical plan.", e);
     }
 
@@ -299,9 +302,9 @@ public class Foreman implements Runnable {
   private void log(final PhysicalPlan plan) {
     if (logger.isDebugEnabled()) {
       try {
-        String planText = queryContext.getConfig().getMapper().writeValueAsString(plan);
+        final String planText = queryContext.getConfig().getMapper().writeValueAsString(plan);
         logger.debug("Physical {}", planText);
-      } catch (IOException e) {
+      } catch (final IOException e) {
         logger.warn("Error while attempting to log physical plan.", e);
       }
     }
@@ -324,7 +327,7 @@ public class Foreman implements Runnable {
     try {
       final PhysicalPlan plan = drillbitContext.getPlanReader().readPhysicalPlan(json);
       runPhysicalPlan(plan);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new ForemanSetupException("Failure while parsing physical plan.", e);
     }
   }
@@ -339,8 +342,8 @@ public class Foreman implements Runnable {
     final PlanFragment rootPlanFragment = work.getRootFragment();
     assert queryId == rootPlanFragment.getHandle().getQueryId();
 
-    drillbitContext.getWorkBus().addFragmentStatusListener(queryId, queryManager);
-    drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager);
+    drillbitContext.getWorkBus().addFragmentStatusListener(queryId, queryManager.getFragmentStatusListener());
+    drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager.getDrillbitStatusListener());
 
     logger.debug("Submitting fragments to run.");
 
@@ -365,7 +368,7 @@ public class Foreman implements Runnable {
   private void setupSortMemoryAllocations(final PhysicalPlan plan) {
     // look for external sorts
     final List<ExternalSort> sortList = new LinkedList<>();
-    for (PhysicalOperator op : plan.getSortedOperators()) {
+    for (final PhysicalOperator op : plan.getSortedOperators()) {
       if (op instanceof ExternalSort) {
         sortList.add((ExternalSort) op);
       }
@@ -382,7 +385,7 @@ public class Foreman implements Runnable {
       final long maxSortAlloc = maxAllocPerNode / (sortList.size() * maxWidthPerNode);
       logger.debug("Max sort alloc: {}", maxSortAlloc);
 
-      for(ExternalSort externalSort : sortList) {
+      for(final ExternalSort externalSort : sortList) {
         externalSort.setMaxAllocation(maxSortAlloc);
       }
     }
@@ -403,7 +406,7 @@ public class Foreman implements Runnable {
     if (queuingEnabled) {
       final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_KEY).num_val;
       double totalCost = 0;
-      for (PhysicalOperator ops : plan.getSortedOperators()) {
+      for (final PhysicalOperator ops : plan.getSortedOperators()) {
         totalCost += ops.getCost();
       }
 
@@ -423,7 +426,7 @@ public class Foreman implements Runnable {
 
         final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT_KEY).num_val;
         lease = distributedSemaphore.acquire(queueTimeout, TimeUnit.MILLISECONDS);
-      } catch (Exception e) {
+      } catch (final Exception e) {
         throw new ForemanSetupException("Unable to acquire slot for query.", e);
       }
     }
@@ -447,7 +450,7 @@ public class Foreman implements Runnable {
       final List<PlanFragment> planFragments = queryWorkUnit.getFragments();
       final int fragmentCount = planFragments.size();
       int fragmentIndex = 0;
-      for(PlanFragment planFragment : planFragments) {
+      for(final PlanFragment planFragment : planFragments) {
         final FragmentHandle fragmentHandle = planFragment.getHandle();
         sb.append("PlanFragment(");
         sb.append(++fragmentIndex);
@@ -471,7 +474,7 @@ public class Foreman implements Runnable {
         {
           final Object json = objectMapper.readValue(planFragment.getFragmentJson(), Object.class);
           jsonString = objectMapper.defaultPrettyPrintingWriter().writeValueAsString(json);
-        } catch(Exception e) {
+        } catch(final Exception e) {
           // we've already set jsonString to a fallback value
         }
         sb.append(jsonString);
@@ -567,7 +570,7 @@ public class Foreman implements Runnable {
 
       try {
         autoCloseable.close();
-      } catch(Exception e) {
+      } catch(final Exception e) {
         /*
          * Even if the query completed successfully, we'll still report failure if we have
          * problems cleaning up.
@@ -582,11 +585,11 @@ public class Foreman implements Runnable {
       Preconditions.checkState(!isClosed);
       Preconditions.checkState(resultState != null);
 
-      logger.info("foreman cleaning up - status: {}", queryManager.getFragmentStatesAsString());
+      logger.info("foreman cleaning up.");
 
       // These are straight forward removals from maps, so they won't throw.
       drillbitContext.getWorkBus().removeFragmentStatusListener(queryId);
-      drillbitContext.getClusterCoordinator().removeDrillbitStatusListener(queryManager);
+      drillbitContext.getClusterCoordinator().removeDrillbitStatusListener(queryManager.getDrillbitStatusListener());
 
       suppressingClose(queryContext);
 
@@ -612,8 +615,8 @@ public class Foreman implements Runnable {
           .setQueryId(queryId)
           .setQueryState(resultState);
       if (resultException != null) {
-        boolean verbose = queryContext.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-        UserException uex = UserException.systemError(resultException).addIdentity(queryContext.getCurrentEndpoint()).build();
+        final boolean verbose = queryContext.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
+        final UserException uex = UserException.systemError(resultException).addIdentity(queryContext.getCurrentEndpoint()).build();
         resultBuilder.addError(uex.getOrCreatePBError(verbose));
       }
 
@@ -626,7 +629,7 @@ public class Foreman implements Runnable {
       try {
         // send whatever result we ended up with
         initiatingClient.sendResult(responseListener, resultBuilder.build(), true);
-      } catch(Exception e) {
+      } catch(final Exception e) {
         addException(e);
         logger.warn("Exception sending result to client", resultException);
       }
@@ -658,7 +661,7 @@ public class Foreman implements Runnable {
     }
 
     @Override
-    protected void processEvent(StateEvent event) {
+    protected void processEvent(final StateEvent event) {
       final QueryState newState = event.newState;
       final Exception exception = event.exception;
 
@@ -803,7 +806,7 @@ public class Foreman implements Runnable {
     queryManager.addFragmentStatusTracker(rootFragment, true);
 
     rootRunner = new FragmentExecutor(rootContext, rootOperator,
-        queryManager.getRootStatusHandler(rootContext));
+        queryManager.newRootStatusHandler(rootContext));
     final RootFragmentManager fragmentManager =
         new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
 
@@ -836,7 +839,7 @@ public class Foreman implements Runnable {
     final Multimap<DrillbitEndpoint, PlanFragment> intFragmentMap = ArrayListMultimap.create();
 
     // record all fragments for status purposes.
-    for (PlanFragment planFragment : fragments) {
+    for (final PlanFragment planFragment : fragments) {
       logger.trace("Tracking intermediate remote node {} with data {}",
                    planFragment.getAssignment(), planFragment.getFragmentJson());
       queryManager.addFragmentStatusTracker(planFragment, false);
@@ -855,40 +858,53 @@ public class Foreman implements Runnable {
      * count down (see FragmentSubmitFailures), but we count the number of failures so that we'll
      * know if any submissions did fail.
      */
-    final CountDownLatch endpointLatch = new CountDownLatch(intFragmentMap.keySet().size());
+    final ExtendedLatch endpointLatch = new ExtendedLatch(intFragmentMap.keySet().size());
     final FragmentSubmitFailures fragmentSubmitFailures = new FragmentSubmitFailures();
 
     // send remote intermediate fragments
-    for (DrillbitEndpoint ep : intFragmentMap.keySet()) {
+    for (final DrillbitEndpoint ep : intFragmentMap.keySet()) {
       sendRemoteFragments(ep, intFragmentMap.get(ep), endpointLatch, fragmentSubmitFailures);
     }
 
-    // wait for the status of all requests sent above to be known
-    boolean ready = false;
-    while(!ready) {
-      try {
-        endpointLatch.await();
-        ready = true;
-      } catch (InterruptedException e) {
-        // if we weren't ready, the while loop will continue to wait
-      }
+    if(!endpointLatch.awaitUninterruptibly(RPC_WAIT_IN_SECONDS * 1000)){
+      long numberRemaining = endpointLatch.getCount();
+      throw UserException.connectionError()
+          .message(
+              "Exceeded timeout while waiting send intermediate work fragments to remote nodes.  Sent %d and only heard response back from %d nodes.",
+              intFragmentMap.keySet().size(), intFragmentMap.keySet().size() - numberRemaining)
+          .build();
     }
 
+
     // if any of the intermediate fragment submissions failed, fail the query
-    final List<FragmentSubmitFailures.SubmissionException> submissionExceptions =
-        fragmentSubmitFailures.submissionExceptions;
+    final List<FragmentSubmitFailures.SubmissionException> submissionExceptions = fragmentSubmitFailures.submissionExceptions;
     if (submissionExceptions.size() > 0) {
-      throw new ForemanSetupException("Error setting up remote intermediate fragment execution",
-          submissionExceptions.get(0).rpcException);
-      // TODO indicate the failing drillbit?
-      // TODO report on all the failures?
+      Set<DrillbitEndpoint> endpoints = Sets.newHashSet();
+      StringBuilder sb = new StringBuilder();
+      boolean first = true;
+
+      for (FragmentSubmitFailures.SubmissionException e : fragmentSubmitFailures.submissionExceptions) {
+        DrillbitEndpoint endpoint = e.drillbitEndpoint;
+        if (endpoints.add(endpoint)) {
+          if (first) {
+            first = false;
+          } else {
+            sb.append(", ");
+          }
+          sb.append(endpoint.getAddress());
+        }
+      }
+      throw UserException.connectionError(submissionExceptions.get(0).rpcException)
+          .message("Error setting up remote intermediate fragment execution")
+          .addContext("Nodes with failures", sb.toString())
+          .build();
     }
 
     /*
      * Send the remote (leaf) fragments; we don't wait for these. Any problems will come in through
      * the regular sendListener event delivery.
      */
-    for (DrillbitEndpoint ep : leafFragmentMap.keySet()) {
+    for (final DrillbitEndpoint ep : leafFragmentMap.keySet()) {
       sendRemoteFragments(ep, leafFragmentMap.get(ep), null, null);
     }
   }
@@ -906,7 +922,7 @@ public class Foreman implements Runnable {
     @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     final InitializeFragments.Builder fb = InitializeFragments.newBuilder();
-    for(PlanFragment planFragment : fragments) {
+    for(final PlanFragment planFragment : fragments) {
       fb.addFragment(planFragment);
     }
     final InitializeFragments initFrags = fb.build();
@@ -926,12 +942,12 @@ public class Foreman implements Runnable {
    */
   private static class FragmentSubmitFailures {
     static class SubmissionException {
-//      final DrillbitEndpoint drillbitEndpoint;
+      final DrillbitEndpoint drillbitEndpoint;
       final RpcException rpcException;
 
       SubmissionException(@SuppressWarnings("unused") final DrillbitEndpoint drillbitEndpoint,
           final RpcException rpcException) {
-//        this.drillbitEndpoint = drillbitEndpoint;
+        this.drillbitEndpoint = drillbitEndpoint;
         this.rpcException = rpcException;
       }
     }
@@ -999,16 +1015,7 @@ public class Foreman implements Runnable {
      *   to the user
      */
     public void moveToState(final QueryState newState, final Exception ex) {
-      boolean ready = false;
-      while(!ready) {
-        try {
-          acceptExternalEvents.await();
-          ready = true;
-        } catch(InterruptedException e) {
-          // if we're still not ready, the while loop will cause us to wait again
-          logger.warn("Interrupted while waiting to move state.", e);
-        }
-      }
+      acceptExternalEvents.awaitUninterruptibly();
 
       Foreman.this.moveToState(newState, ex);
     }

@@ -27,10 +27,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.rpc.Response;
-import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.data.AckSender;
-import org.apache.drill.exec.rpc.data.DataRpcConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -84,6 +81,7 @@ public class TestUnlimitedBatchBuffer extends ExecTest {
     context = Mockito.mock(FragmentContext.class);
 
     Mockito.when(context.getConfig()).thenReturn(dc);
+    Mockito.when(context.shouldContinue()).thenReturn(true);
 
     rawBuffer = new UnlimitedRawBatchBuffer(context, FRAGMENT_COUNT);
 

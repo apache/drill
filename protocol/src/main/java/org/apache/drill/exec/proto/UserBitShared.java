@@ -236,6 +236,10 @@ public final class UserBitShared {
      * <code>FAILED = 5;</code>
      */
     FAILED(5, 5),
+    /**
+     * <code>CANCELLATION_REQUESTED = 6;</code>
+     */
+    CANCELLATION_REQUESTED(6, 6),
     ;
 
     /**
@@ -262,6 +266,10 @@ public final class UserBitShared {
      * <code>FAILED = 5;</code>
      */
     public static final int FAILED_VALUE = 5;
+    /**
+     * <code>CANCELLATION_REQUESTED = 6;</code>
+     */
+    public static final int CANCELLATION_REQUESTED_VALUE = 6;
 
 
     public final int getNumber() { return value; }
@@ -274,6 +282,7 @@ public final class UserBitShared {
         case 3: return FINISHED;
         case 4: return CANCELLED;
         case 5: return FAILED;
+        case 6: return CANCELLATION_REQUESTED;
         default: return null;
       }
     }
@@ -15705,6 +15714,26 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getEndpointOrBuilder();
+
+    // optional int64 last_update = 10;
+    /**
+     * <code>optional int64 last_update = 10;</code>
+     */
+    boolean hasLastUpdate();
+    /**
+     * <code>optional int64 last_update = 10;</code>
+     */
+    long getLastUpdate();
+
+    // optional int64 last_progress = 11;
+    /**
+     * <code>optional int64 last_progress = 11;</code>
+     */
+    boolean hasLastProgress();
+    /**
+     * <code>optional int64 last_progress = 11;</code>
+     */
+    long getLastProgress();
   }
   /**
    * Protobuf type {@code exec.shared.MinorFragmentProfile}
@@ -15825,6 +15854,16 @@ public final class UserBitShared {
                 endpoint_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000080;
+              break;
+            }
+            case 80: {
+              bitField0_ |= 0x00000100;
+              lastUpdate_ = input.readInt64();
+              break;
+            }
+            case 88: {
+              bitField0_ |= 0x00000200;
+              lastProgress_ = input.readInt64();
               break;
             }
           }
@@ -16046,6 +16085,38 @@ public final class UserBitShared {
       return endpoint_;
     }
 
+    // optional int64 last_update = 10;
+    public static final int LAST_UPDATE_FIELD_NUMBER = 10;
+    private long lastUpdate_;
+    /**
+     * <code>optional int64 last_update = 10;</code>
+     */
+    public boolean hasLastUpdate() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional int64 last_update = 10;</code>
+     */
+    public long getLastUpdate() {
+      return lastUpdate_;
+    }
+
+    // optional int64 last_progress = 11;
+    public static final int LAST_PROGRESS_FIELD_NUMBER = 11;
+    private long lastProgress_;
+    /**
+     * <code>optional int64 last_progress = 11;</code>
+     */
+    public boolean hasLastProgress() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional int64 last_progress = 11;</code>
+     */
+    public long getLastProgress() {
+      return lastProgress_;
+    }
+
     private void initFields() {
       state_ = org.apache.drill.exec.proto.UserBitShared.FragmentState.SENDING;
       error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
@@ -16056,6 +16127,8 @@ public final class UserBitShared {
       memoryUsed_ = 0L;
       maxMemoryUsed_ = 0L;
       endpoint_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
+      lastUpdate_ = 0L;
+      lastProgress_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -16095,6 +16168,12 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeMessage(9, endpoint_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeInt64(10, lastUpdate_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeInt64(11, lastProgress_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -16140,6 +16219,14 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, endpoint_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(10, lastUpdate_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(11, lastProgress_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -16290,6 +16377,10 @@ public final class UserBitShared {
           endpointBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000100);
+        lastUpdate_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000200);
+        lastProgress_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000400);
         return this;
       }
 
@@ -16367,6 +16458,14 @@ public final class UserBitShared {
         } else {
           result.endpoint_ = endpointBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.lastUpdate_ = lastUpdate_;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.lastProgress_ = lastProgress_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -16432,6 +16531,12 @@ public final class UserBitShared {
         }
         if (other.hasEndpoint()) {
           mergeEndpoint(other.getEndpoint());
+        }
+        if (other.hasLastUpdate()) {
+          setLastUpdate(other.getLastUpdate());
+        }
+        if (other.hasLastProgress()) {
+          setLastProgress(other.getLastProgress());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -17133,6 +17238,72 @@ public final class UserBitShared {
           endpoint_ = null;
         }
         return endpointBuilder_;
+      }
+
+      // optional int64 last_update = 10;
+      private long lastUpdate_ ;
+      /**
+       * <code>optional int64 last_update = 10;</code>
+       */
+      public boolean hasLastUpdate() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional int64 last_update = 10;</code>
+       */
+      public long getLastUpdate() {
+        return lastUpdate_;
+      }
+      /**
+       * <code>optional int64 last_update = 10;</code>
+       */
+      public Builder setLastUpdate(long value) {
+        bitField0_ |= 0x00000200;
+        lastUpdate_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 last_update = 10;</code>
+       */
+      public Builder clearLastUpdate() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        lastUpdate_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 last_progress = 11;
+      private long lastProgress_ ;
+      /**
+       * <code>optional int64 last_progress = 11;</code>
+       */
+      public boolean hasLastProgress() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional int64 last_progress = 11;</code>
+       */
+      public long getLastProgress() {
+        return lastProgress_;
+      }
+      /**
+       * <code>optional int64 last_progress = 11;</code>
+       */
+      public Builder setLastProgress(long value) {
+        bitField0_ |= 0x00000400;
+        lastProgress_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 last_progress = 11;</code>
+       */
+      public Builder clearLastProgress() {
+        bitField0_ = (bitField0_ & ~0x00000400);
+        lastProgress_ = 0L;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.shared.MinorFragmentProfile)
@@ -19954,7 +20125,7 @@ public final class UserBitShared {
       "jorFragmentProfile\"t\n\024MajorFragmentProfi" +
       "le\022\031\n\021major_fragment_id\030\001 \001(\005\022A\n\026minor_f" +
       "ragment_profile\030\002 \003(\0132!.exec.shared.Mino" +
-      "rFragmentProfile\"\274\002\n\024MinorFragmentProfil" +
+      "rFragmentProfile\"\350\002\n\024MinorFragmentProfil" +
       "e\022)\n\005state\030\001 \001(\0162\032.exec.shared.FragmentS" +
       "tate\022(\n\005error\030\002 \001(\0132\031.exec.shared.DrillP" +
       "BError\022\031\n\021minor_fragment_id\030\003 \001(\005\0226\n\020ope" +
@@ -19962,42 +20133,44 @@ public final class UserBitShared {
       "orProfile\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_tim" +
       "e\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max_memo",
       "ry_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.D" +
-      "rillbitEndpoint\"\377\001\n\017OperatorProfile\0221\n\ri" +
-      "nput_profile\030\001 \003(\0132\032.exec.shared.StreamP" +
-      "rofile\022\023\n\013operator_id\030\003 \001(\005\022\025\n\roperator_" +
-      "type\030\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rproce" +
-      "ss_nanos\030\006 \001(\003\022#\n\033peak_local_memory_allo" +
-      "cated\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.share" +
-      "d.MetricValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStr" +
-      "eamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002" +
-      " \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\t",
-      "metric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014d" +
-      "ouble_value\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013BIT_C" +
-      "ONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\tQuer" +
-      "yType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020" +
-      "\003*k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAIT" +
-      "ING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHE" +
-      "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005*\335\005\n\020CoreO" +
-      "peratorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADC" +
-      "AST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGA" +
-      "TE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025H",
-      "ASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MER" +
-      "GING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SEN" +
-      "DER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER" +
-      "\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELE" +
-      "CTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGGR" +
-      "EGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT" +
-      "\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032" +
-      "\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_S" +
-      "CAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB" +
-      "_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SU",
-      "B_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SC" +
-      "AN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_S" +
-      "UB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUC" +
-      "ER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WIN" +
-      "DOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_" +
-      "SCAN\020$B.\n\033org.apache.drill.exec.protoB\rU" +
-      "serBitSharedH\001"
+      "rillbitEndpoint\022\023\n\013last_update\030\n \001(\003\022\025\n\r" +
+      "last_progress\030\013 \001(\003\"\377\001\n\017OperatorProfile\022" +
+      "1\n\rinput_profile\030\001 \003(\0132\032.exec.shared.Str" +
+      "eamProfile\022\023\n\013operator_id\030\003 \001(\005\022\025\n\ropera" +
+      "tor_type\030\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rp" +
+      "rocess_nanos\030\006 \001(\003\022#\n\033peak_local_memory_" +
+      "allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.s" +
+      "hared.MetricValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n" +
+      "\rStreamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batch",
+      "es\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue" +
+      "\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022" +
+      "\024\n\014double_value\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013B" +
+      "IT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\t" +
+      "QueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSI" +
+      "CAL\020\003*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023" +
+      "AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FI" +
+      "NISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026C" +
+      "ANCELLATION_REQUESTED\020\006*\335\005\n\020CoreOperator" +
+      "Type\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SEN",
+      "DER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n" +
+      "\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PAR" +
+      "TITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RE" +
+      "CEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013" +
+      "\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014R" +
+      "ANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_V" +
+      "ECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017" +
+      "\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005T" +
+      "RACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQU" +
+      "ET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025",
+      "\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030" +
+      "\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020" +
+      "\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n" +
+      "\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN" +
+      "\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONS" +
+      "UMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024" +
+      "\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B" +
+      ".\n\033org.apache.drill.exec.protoB\rUserBitS" +
+      "haredH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -20099,7 +20272,7 @@ public final class UserBitShared {
           internal_static_exec_shared_MinorFragmentProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MinorFragmentProfile_descriptor,
-              new java.lang.String[] { "State", "Error", "MinorFragmentId", "OperatorProfile", "StartTime", "EndTime", "MemoryUsed", "MaxMemoryUsed", "Endpoint", });
+              new java.lang.String[] { "State", "Error", "MinorFragmentId", "OperatorProfile", "StartTime", "EndTime", "MemoryUsed", "MaxMemoryUsed", "Endpoint", "LastUpdate", "LastProgress", });
           internal_static_exec_shared_OperatorProfile_descriptor =
             getDescriptor().getMessageTypes().get(16);
           internal_static_exec_shared_OperatorProfile_fieldAccessorTable = new

@@ -76,13 +76,13 @@ public class Drillbit implements AutoCloseable {
     Drillbit bit;
     try {
       bit = new Drillbit(config, remoteServiceSet);
-    } catch (Exception ex) {
+    } catch (final Exception ex) {
       throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
     }
 
     try {
       bit.run();
-    } catch (Exception e) {
+    } catch (final Exception e) {
       bit.close();
       throw new DrillbitStartupException("Failure during initial startup of Drillbit.", e);
     }
@@ -131,7 +131,7 @@ public class Drillbit implements AutoCloseable {
 
     // parse out the properties, validate, and then set them
     final String systemProps[] = allSystemProps.split(",");
-    for(String systemProp : systemProps) {
+    for(final String systemProp : systemProps) {
       final String keyValue[] = systemProp.split("=");
       if (keyValue.length != 2) {
         throwInvalidSystemOption(systemProp, "does not contain a key=value assignment");
@@ -162,7 +162,7 @@ public class Drillbit implements AutoCloseable {
   }
 
   public static void main(final String[] cli) throws DrillbitStartupException {
-    StartupOptions options = StartupOptions.parse(cli);
+    final StartupOptions options = StartupOptions.parse(cli);
     start(options);
   }
 
@@ -174,7 +174,7 @@ public class Drillbit implements AutoCloseable {
   private final Server embeddedJetty;
   private RegistrationHandle registrationHandle;
 
-  public Drillbit(DrillConfig config, RemoteServiceSet serviceSet) throws Exception {
+  public Drillbit(final DrillConfig config, final RemoteServiceSet serviceSet) throws Exception {
     final long startTime = System.currentTimeMillis();
     logger.debug("Construction started.");
     final boolean allowPortHunting = serviceSet != null;
@@ -269,14 +269,14 @@ public class Drillbit implements AutoCloseable {
 
     try {
       Thread.sleep(context.getConfig().getInt(ExecConstants.ZK_REFRESH) * 2);
-    } catch (InterruptedException e) {
+    } catch (final InterruptedException e) {
       logger.warn("Interrupted while sleeping during coordination deregistration.");
     }
 
     if (embeddedJetty != null) {
       try {
         embeddedJetty.stop();
-      } catch (Exception e) {
+      } catch (final Exception e) {
         logger.warn("Failure while shutting down embedded jetty server.");
       }
     }
@@ -323,7 +323,7 @@ public class Drillbit implements AutoCloseable {
       logger.info("Received shutdown request.");
       try {
         drillbit.close();
-      } catch(Exception e) {
+      } catch(final Exception e) {
         throw new RuntimeException("Caught exception closing Drillbit started from\n" + stackTrace, e);
       }
     }

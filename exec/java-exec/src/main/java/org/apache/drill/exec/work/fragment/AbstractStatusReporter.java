@@ -24,29 +24,29 @@ import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
 public abstract class AbstractStatusReporter implements StatusReporter{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStatusReporter.class);
 
-  private FragmentContext context;
-  private volatile long startNanos;
+  private final FragmentContext context;
 
-  public AbstractStatusReporter(FragmentContext context) {
+  public AbstractStatusReporter(final FragmentContext context) {
     super();
     this.context = context;
   }
 
-  private  FragmentStatus.Builder getBuilder(FragmentState state){
+  private  FragmentStatus.Builder getBuilder(final FragmentState state){
     return getBuilder(context, state, null);
   }
 
-  public static FragmentStatus.Builder getBuilder(FragmentContext context, FragmentState state, UserException ex){
-    FragmentStatus.Builder status = FragmentStatus.newBuilder();
-    MinorFragmentProfile.Builder b = MinorFragmentProfile.newBuilder();
+  public static FragmentStatus.Builder getBuilder(final FragmentContext context, final FragmentState state, final UserException ex){
+    final FragmentStatus.Builder status = FragmentStatus.newBuilder();
+    final MinorFragmentProfile.Builder b = MinorFragmentProfile.newBuilder();
     context.getStats().addMetricsToStatus(b);
     b.setState(state);
     if(ex != null){
-      boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
+      final boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
       b.setError(ex.getOrCreatePBError(verbose));
     }
     status.setHandle(context.getHandle());
@@ -57,60 +57,36 @@ public abstract class AbstractStatusReporter implements StatusReporter{
   }
 
   @Override
-  public void stateChanged(FragmentHandle handle, FragmentState newState) {
-    FragmentStatus.Builder status = getBuilder(newState);
-
+  public void stateChanged(final FragmentHandle handle, final FragmentState newState) {
+    final FragmentStatus.Builder status = getBuilder(newState);
+    logger.info("State changed for {}. New state: {}", QueryIdHelper.getQueryIdentifier(handle), newState);
     switch(newState){
     case AWAITING_ALLOCATION:
-      awaitingAllocation(handle, status);
-      break;
+    case CANCELLATION_REQUESTED:
     case CANCELLED:
-      cancelled(handle, status);
-      break;
-    case FAILED:
-      // no op since fail should have also been called.
-      break;
     case FINISHED:
-      finished(handle, status);
-      break;
     case RUNNING:
-      this.startNanos = System.nanoTime();
-      running(handle, status);
+      statusChange(handle, status.build());
       break;
     case SENDING:
       // no op.
       break;
+    case FAILED:
+      // shouldn't get here since fail() should be called.
     default:
-      break;
-
+      throw new IllegalStateException(String.format("Received state changed event for unexpected state of %s.", newState));
     }
-  }
-
-  protected void awaitingAllocation(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
-    statusChange(handle, statusBuilder.build());
-  }
-
-  protected void running(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
-    statusChange(handle, statusBuilder.build());
-  }
-
-  protected void cancelled(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
-    statusChange(handle, statusBuilder.build());
-  }
-
-  protected void finished(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
-    statusChange(handle, statusBuilder.build());
   }
 
   protected abstract void statusChange(FragmentHandle handle, FragmentStatus status);
 
   @Override
-  public final void fail(FragmentHandle handle, String message, UserException excep) {
-    FragmentStatus.Builder status = getBuilder(context, FragmentState.FAILED, excep);
+  public final void fail(final FragmentHandle handle, final UserException excep) {
+    final FragmentStatus.Builder status = getBuilder(context, FragmentState.FAILED, excep);
     fail(handle, status);
   }
 
-  protected void fail(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
+  private void fail(final FragmentHandle handle, final FragmentStatus.Builder statusBuilder) {
     statusChange(handle, statusBuilder.build());
   }
 

@@ -71,9 +71,32 @@ public class DeferredException implements AutoCloseable {
    *
    * @return the deferred exception, or null
    */
-  public Exception getException() {
-    synchronized(this) {
-      return exception;
+  public synchronized Exception getException() {
+    return exception;
+  }
+
+  public synchronized Exception getAndClear() {
+    Preconditions.checkState(!isClosed);
+
+    if (exception != null) {
+      final Exception local = exception;
+      exception = null;
+      return local;
+    }
+
+    return null;
+  }
+
+  /**
+   * If an exception exists, will throw the exception and then clear it. This is so in cases where want to reuse
+   * DeferredException, we don't double report the same exception.
+   *
+   * @throws Exception
+   */
+  public synchronized void throwAndClear() throws Exception{
+    final Exception e = getAndClear();
+    if (e != null) {
+      throw e;
     }
   }
 
@@ -98,24 +121,18 @@ public class DeferredException implements AutoCloseable {
 
       try {
         autoCloseable.close();
-      } catch(Exception e) {
+      } catch(final Exception e) {
         addException(e);
       }
     }
   }
 
   @Override
-  public void close() throws Exception {
-    synchronized(this) {
-      Preconditions.checkState(!isClosed);
-
-      try {
-        if (exception != null) {
-          throw exception;
-        }
-      } finally {
-        isClosed = true;
-      }
+  public synchronized void close() throws Exception {
+    try {
+      throwAndClear();
+    } finally {
+      isClosed = true;
     }
   }
 }

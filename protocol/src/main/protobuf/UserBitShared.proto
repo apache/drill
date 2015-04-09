@@ -208,6 +208,8 @@ message MinorFragmentProfile {
   optional int64 memory_used = 7;
   optional int64 max_memory_used = 8;
   optional DrillbitEndpoint endpoint = 9;
+  optional int64 last_update = 10;
+  optional int64 last_progress = 11;
 }
 
 message OperatorProfile {
@@ -240,6 +242,7 @@ enum FragmentState {
   FINISHED = 3;
   CANCELLED = 4;
   FAILED = 5;
+  CANCELLATION_REQUESTED = 6;
 }
 
 enum CoreOperatorType {

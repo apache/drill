@@ -60,14 +60,14 @@ public class ScalarReplacementNode extends MethodNode {
     Frame<BasicValue>[] frames;
     try {
       frames = analyzer.analyze(className, this);
-    } catch (AnalyzerException e) {
+    } catch (final AnalyzerException e) {
       throw new IllegalStateException(e);
     }
 
-    if (logger.isDebugEnabled()) {
+    if (logger.isTraceEnabled()) {
       final StringBuilder sb = new StringBuilder();
       sb.append("ReplacingBasicValues for " + className + "\n");
-      for(ReplacingBasicValue value : valueList) {
+      for(final ReplacingBasicValue value : valueList) {
         value.dump(sb, 2);
         sb.append('\n');
       }
@@ -75,14 +75,14 @@ public class ScalarReplacementNode extends MethodNode {
     }
 
     // wrap the instruction handler so that we can do additional things
-    TrackingInstructionList list = new TrackingInstructionList(frames, this.instructions);
+    final TrackingInstructionList list = new TrackingInstructionList(frames, this.instructions);
     this.instructions = list;
 
     MethodVisitor methodVisitor = inner;
     if (verifyBytecode) {
       methodVisitor = new CheckMethodVisitorFsm(CompilationConfig.ASM_API_VERSION, methodVisitor);
     }
-    InstructionModifier holderV = new InstructionModifier(this.access, this.name, this.desc,
+    final InstructionModifier holderV = new InstructionModifier(this.access, this.name, this.desc,
         this.signature, this.exceptionsArr, list, methodVisitor);
     accept(holderV);
   }

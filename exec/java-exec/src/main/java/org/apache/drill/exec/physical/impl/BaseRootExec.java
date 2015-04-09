@@ -34,7 +34,7 @@ public abstract class BaseRootExec implements RootExec {
   protected OperatorContext oContext = null;
   protected FragmentContext fragmentContext = null;
 
-  public BaseRootExec(FragmentContext fragmentContext, PhysicalOperator config) throws OutOfMemoryException {
+  public BaseRootExec(final FragmentContext fragmentContext, final PhysicalOperator config) throws OutOfMemoryException {
     this.oContext = new OperatorContext(config, fragmentContext, stats, true);
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
         config.getOperatorType(), OperatorContext.getChildCount(config)),
@@ -43,7 +43,7 @@ public abstract class BaseRootExec implements RootExec {
     this.fragmentContext = fragmentContext;
   }
 
-  public BaseRootExec(FragmentContext fragmentContext, OperatorContext oContext, PhysicalOperator config) throws OutOfMemoryException {
+  public BaseRootExec(final FragmentContext fragmentContext, final OperatorContext oContext, final PhysicalOperator config) throws OutOfMemoryException {
     this.oContext = oContext;
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
       config.getOperatorType(), OperatorContext.getChildCount(config)),
@@ -56,7 +56,7 @@ public abstract class BaseRootExec implements RootExec {
   public final boolean next() {
     // Stats should have been initialized
     assert stats != null;
-    if (fragmentContext.isFailed()) {
+    if (!fragmentContext.shouldContinue()) {
       return false;
     }
     try {
@@ -67,7 +67,7 @@ public abstract class BaseRootExec implements RootExec {
     }
   }
 
-  public final IterOutcome next(RecordBatch b){
+  public final IterOutcome next(final RecordBatch b){
     stats.stopProcessing();
     IterOutcome next;
     try {
@@ -90,7 +90,7 @@ public abstract class BaseRootExec implements RootExec {
   public abstract boolean innerNext();
 
   @Override
-  public void receivingFragmentFinished(FragmentHandle handle) {
+  public void receivingFragmentFinished(final FragmentHandle handle) {
     logger.warn("Currently not handling FinishedFragment message");
   }
 

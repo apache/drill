@@ -23,7 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.SelfCleaningRunnable;
@@ -47,6 +48,7 @@ import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.batch.ControlHandlerImpl;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.foreman.Foreman;
+import org.apache.drill.exec.work.foreman.QueryManager;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
@@ -101,7 +103,17 @@ public class WorkManager implements AutoCloseable {
      * threads that can be created. Ideally, this might be computed based on the number of cores or
      * some similar metric; ThreadPoolExecutor can impose an upper bound, and might be a better choice.
      */
-    executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
+    executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+        new NamedThreadFactory("WorkManager-")) {
+            @Override
+            protected void afterExecute(final Runnable r, final Throwable t) {
+              if(t != null){
+                logger.error("{}.run() leaked an exception.", r.getClass().getName(), t);
+              }
+              super.afterExecute(r, t);
+            }
+      };
+
 
     // TODO references to this escape here (via WorkerBee) before construction is done
     controlMessageWorker = new ControlHandlerImpl(bee); // TODO getFragmentRunner(), getForemanForQueryId()
@@ -125,7 +137,7 @@ public class WorkManager implements AutoCloseable {
                   return runningFragments.size();
                 }
           });
-    } catch (IllegalArgumentException e) {
+    } catch (final IllegalArgumentException e) {
       logger.warn("Exception while registering metrics", e);
     }
   }
@@ -160,7 +172,7 @@ public class WorkManager implements AutoCloseable {
       if (executor != null) {
         executor.awaitTermination(1, TimeUnit.SECONDS);
       }
-    } catch (InterruptedException e) {
+    } catch (final InterruptedException e) {
       logger.warn("Executor interrupted while awaiting termination");
     }
   }
@@ -188,7 +200,7 @@ public class WorkManager implements AutoCloseable {
     while(true) {
       try {
         exitLatch.await(5, TimeUnit.SECONDS);
-      } catch(InterruptedException e) {
+      } catch(final InterruptedException e) {
         // keep waiting
       }
       break;
@@ -263,6 +275,7 @@ public class WorkManager implements AutoCloseable {
         @Override
         protected void cleanup() {
           runningFragments.remove(fragmentHandle);
+          workBus.removeFragmentManager(fragmentHandle);
           indicateIfSafeToExit();
         }
       });
@@ -289,28 +302,29 @@ public class WorkManager implements AutoCloseable {
     @Override
     public void run() {
       while(true) {
+        final Controller controller = dContext.getController();
         final List<DrillRpcFuture<Ack>> futures = Lists.newArrayList();
-        for(FragmentExecutor fragmentExecutor : runningFragments.values()) {
+        for(final FragmentExecutor fragmentExecutor : runningFragments.values()) {
           final FragmentStatus status = fragmentExecutor.getStatus();
           if (status == null) {
             continue;
           }
 
           final DrillbitEndpoint ep = fragmentExecutor.getContext().getForemanEndpoint();
-          futures.add(dContext.getController().getTunnel(ep).sendFragmentStatus(status));
+          futures.add(controller.getTunnel(ep).sendFragmentStatus(status));
         }
 
-        for(DrillRpcFuture<Ack> future : futures) {
+        for(final DrillRpcFuture<Ack> future : futures) {
           try {
             future.checkedGet();
-          } catch(RpcException ex) {
+          } catch(final RpcException ex) {
             logger.info("Failure while sending intermediate fragment status to Foreman", ex);
           }
         }
 
         try {
           Thread.sleep(STATUS_PERIOD_SECONDS * 1000);
-        } catch(InterruptedException e) {
+        } catch(final InterruptedException e) {
           // exit status thread on interrupt.
           break;
         }

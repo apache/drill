@@ -41,19 +41,20 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
   private long compares;
   private Queue<Integer> runStarts = Queues.newLinkedBlockingQueue();
   private Queue<Integer> newRunStarts;
-
+  private FragmentContext context;
 
   @Override
-  public void setup(FragmentContext context, BufferAllocator allocator, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException{
+  public void setup(final FragmentContext context, final BufferAllocator allocator, final SelectionVector4 vector4, final VectorContainer hyperBatch) throws SchemaChangeException{
     // we pass in the local hyperBatch since that is where we'll be reading data.
     Preconditions.checkNotNull(vector4);
     this.vector4 = vector4.createNewWrapperCurrent();
+    this.context = context;
     vector4.clear();
     doSetup(context, hyperBatch, null);
     runStarts.add(0);
     int batch = 0;
     for (int i = 0; i < this.vector4.getTotalCount(); i++) {
-      int newBatch = this.vector4.get(i) >>> 16;
+      final int newBatch = this.vector4.get(i) >>> 16;
       if (newBatch == batch) {
         continue;
       } else if(newBatch == batch + 1) {
@@ -63,7 +64,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
         throw new UnsupportedOperationException("Missing batch");
       }
     }
-    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
+    final BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
     preAlloc.preAllocate(4 * this.vector4.getTotalCount());
     aux = new SelectionVector4(preAlloc.getAllocation(), this.vector4.getTotalCount(), Character.MAX_VALUE);
   }
@@ -75,12 +76,12 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
    * @param recordCount
    * @return
    */
-  public static long memoryNeeded(int recordCount) {
+  public static long memoryNeeded(final int recordCount) {
     // We need 4 bytes (SV4) for each record.
     return recordCount * 4;
   }
 
-  private int merge(int leftStart, int rightStart, int rightEnd, int outStart) {
+  private int merge(final int leftStart, final int rightStart, final int rightEnd, final int outStart) {
     int l = leftStart;
     int r = rightStart;
     int o = outStart;
@@ -107,17 +108,23 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
   }
 
   @Override
-  public void sort(VectorContainer container) {
-    Stopwatch watch = new Stopwatch();
+  public void sort(final VectorContainer container) {
+    final Stopwatch watch = new Stopwatch();
     watch.start();
     while (runStarts.size() > 1) {
+
+      // check if we're cancelled/failed frequently
+      if (!context.shouldContinue()) {
+        return;
+      }
+
       int outIndex = 0;
       newRunStarts = Queues.newLinkedBlockingQueue();
       newRunStarts.add(outIndex);
-      int size = runStarts.size();
+      final int size = runStarts.size();
       for (int i = 0; i < size / 2; i++) {
-        int left = runStarts.poll();
-        int right = runStarts.poll();
+        final int left = runStarts.poll();
+        final int right = runStarts.poll();
         Integer end = runStarts.peek();
         if (end == null) {
           end = vector4.getTotalCount();
@@ -130,7 +137,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
       if (outIndex < vector4.getTotalCount()) {
         copyRun(outIndex, vector4.getTotalCount());
       }
-      SelectionVector4 tmp = aux.createNewWrapperCurrent();
+      final SelectionVector4 tmp = aux.createNewWrapperCurrent();
       aux.clear();
       aux = this.vector4.createNewWrapperCurrent();
       vector4.clear();
@@ -141,23 +148,23 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
     aux.clear();
   }
 
-  private void copyRun(int start, int end) {
+  private void copyRun(final int start, final int end) {
     for (int i = start; i < end; i++) {
       aux.set(i, vector4.get(i));
     }
   }
 
   @Override
-  public void swap(int sv0, int sv1) {
-    int tmp = vector4.get(sv0);
+  public void swap(final int sv0, final int sv1) {
+    final int tmp = vector4.get(sv0);
     vector4.set(sv0, vector4.get(sv1));
     vector4.set(sv1, tmp);
   }
 
   @Override
-  public int compare(int leftIndex, int rightIndex) {
-    int sv1 = vector4.get(leftIndex);
-    int sv2 = vector4.get(rightIndex);
+  public int compare(final int leftIndex, final int rightIndex) {
+    final int sv1 = vector4.get(leftIndex);
+    final int sv2 = vector4.get(rightIndex);
     compares++;
     return doEval(sv1, sv2);
   }

@@ -22,11 +22,16 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
+import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
 public class FragmentData {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentData.class);
+
   private final boolean isLocal;
   private volatile FragmentStatus status;
-  private volatile long lastStatusUpdate = 0;
+  private volatile long lastStatusUpdate = System.currentTimeMillis();
+  private volatile long lastProgress = System.currentTimeMillis();
   private final DrillbitEndpoint endpoint;
 
   public FragmentData(final FragmentHandle handle, final DrillbitEndpoint endpoint, final boolean isLocal) {
@@ -43,13 +48,45 @@ public class FragmentData {
         .build();
   }
 
-  public void setStatus(final FragmentStatus status) {
-    this.status = status;
-    lastStatusUpdate = System.currentTimeMillis();
+  /**
+   * Update the status for this fragment.  Also records last update and last progress time.
+   * @param status Updated status
+   * @return Whether or not the status update resulted in a FragmentState change.
+   */
+  public boolean setStatus(final FragmentStatus newStatus) {
+    final long time = System.currentTimeMillis();
+    final FragmentState oldState = status.getProfile().getState();
+    final boolean inTerminalState = oldState == FragmentState.FAILED || oldState == FragmentState.FINISHED || oldState == FragmentState.CANCELLED;
+    final FragmentState currentState = newStatus.getProfile().getState();
+    final boolean stateChanged = currentState != oldState;
+
+    if (inTerminalState) {
+      // already in a terminal state. This shouldn't happen.
+      logger.warn(String.format("Received status message for fragment %s after fragment was in state %s. New state was %s",
+          QueryIdHelper.getQueryIdentifier(getHandle()), oldState, currentState));
+      return false;
+    }
+
+    this.lastStatusUpdate = time;
+    if (madeProgress(status, newStatus)) {
+      this.lastProgress = time;
+    }
+    status = newStatus;
+
+    return stateChanged;
   }
 
-  public FragmentStatus getStatus() {
-    return status;
+  public FragmentState getState() {
+    return status.getProfile().getState();
+  }
+
+  public MinorFragmentProfile getProfile() {
+    return status
+        .getProfile()
+        .toBuilder()
+        .setLastUpdate(lastStatusUpdate)
+        .setLastProgress(lastProgress)
+        .build();
   }
 
   public boolean isLocal() {
@@ -62,6 +99,34 @@ public class FragmentData {
 
   public FragmentHandle getHandle() {
     return status.getHandle();
+  }
+
+  private boolean madeProgress(final FragmentStatus prev, final FragmentStatus cur) {
+    final MinorFragmentProfile previous = prev.getProfile();
+    final MinorFragmentProfile current = cur.getProfile();
+
+    if (previous.getState() != current.getState()) {
+      return true;
+    }
+
+    if (previous.getOperatorProfileCount() != current.getOperatorProfileCount()) {
+      return true;
+    }
+
+    for(int i =0; i < current.getOperatorProfileCount(); i++){
+      if (madeProgress(previous.getOperatorProfile(i), current.getOperatorProfile(i))) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean madeProgress(final OperatorProfile prev, final OperatorProfile cur) {
+    return prev.getInputProfileCount() != cur.getInputProfileCount()
+        || !prev.getInputProfileList().equals(cur.getInputProfileList())
+        || prev.getMetricCount() != cur.getMetricCount()
+        || !prev.getMetricList().equals(cur.getMetricList());
   }
 
   @Override

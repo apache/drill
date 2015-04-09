@@ -36,9 +36,9 @@ public class RootFragmentManager implements FragmentManager{
   private final FragmentExecutor runner;
   private final FragmentHandle handle;
   private volatile boolean cancel = false;
-  private List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
+  private final List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
 
-  public RootFragmentManager(FragmentHandle handle, IncomingBuffers buffers, FragmentExecutor runner) {
+  public RootFragmentManager(final FragmentHandle handle, final IncomingBuffers buffers, final FragmentExecutor runner) {
     super();
     this.handle = handle;
     this.buffers = buffers;
@@ -46,8 +46,13 @@ public class RootFragmentManager implements FragmentManager{
   }
 
   @Override
-  public boolean handle(RawFragmentBatch batch) throws FragmentSetupException, IOException {
+  public boolean handle(final RawFragmentBatch batch) throws FragmentSetupException, IOException {
     return buffers.batchArrived(batch);
+  }
+
+  @Override
+  public void receivingFragmentFinished(final FragmentHandle handle) {
+    throw new IllegalStateException("The root fragment should not be sending any messages to receiver.");
   }
 
   @Override
@@ -75,13 +80,13 @@ public class RootFragmentManager implements FragmentManager{
   }
 
   @Override
-  public void addConnection(RemoteConnection connection) {
+  public void addConnection(final RemoteConnection connection) {
     connections.add(connection);
   }
 
   @Override
-  public void setAutoRead(boolean autoRead) {
-    for (RemoteConnection c : connections) {
+  public void setAutoRead(final boolean autoRead) {
+    for (final RemoteConnection c : connections) {
       c.setAutoRead(autoRead);
     }
   }

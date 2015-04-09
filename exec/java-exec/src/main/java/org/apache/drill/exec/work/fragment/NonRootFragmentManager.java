@@ -33,19 +33,23 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.exec.work.foreman.ForemanException;
 
+import com.google.common.base.Preconditions;
+
 /**
  * This managers determines when to run a non-root fragment node.
  */
 // TODO a lot of this is the same as RootFragmentManager
 public class NonRootFragmentManager implements FragmentManager {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NonRootFragmentManager.class);
+
   private final PlanFragment fragment;
   private FragmentRoot root;
   private final IncomingBuffers buffers;
-  private final StatusReporter runnerListener;
-  private volatile FragmentExecutor runner;
+  private final FragmentExecutor runner;
   private volatile boolean cancel = false;
   private final FragmentContext context;
-  private List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
+  private final List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
+  private volatile boolean runnerRetrieved = false;
 
   public NonRootFragmentManager(final PlanFragment fragment, final DrillbitContext context)
       throws ExecutionSetupException {
@@ -54,8 +58,10 @@ public class NonRootFragmentManager implements FragmentManager {
       this.root = context.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
       this.context = new FragmentContext(context, fragment, null, context.getFunctionImplementationRegistry());
       this.buffers = new IncomingBuffers(root, this.context);
+      final StatusReporter reporter = new NonRootStatusReporter(this.context, context.getController().getTunnel(
+          fragment.getForeman()));
+      this.runner = new FragmentExecutor(this.context, root, reporter);
       this.context.setBuffers(buffers);
-      this.runnerListener = new NonRootStatusReporter(this.context, context.getController().getTunnel(fragment.getForeman()));
 
     } catch (ForemanException | IOException e) {
       throw new FragmentSetupException("Failure while decoding fragment.", e);
@@ -66,7 +72,7 @@ public class NonRootFragmentManager implements FragmentManager {
    * @see org.apache.drill.exec.work.fragment.FragmentHandler#handle(org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle, org.apache.drill.exec.record.RawFragmentBatch)
    */
   @Override
-  public boolean handle(RawFragmentBatch batch) throws FragmentSetupException, IOException {
+  public boolean handle(final RawFragmentBatch batch) throws FragmentSetupException, IOException {
     return buffers.batchArrived(batch);
   }
 
@@ -76,16 +82,22 @@ public class NonRootFragmentManager implements FragmentManager {
   @Override
   public FragmentExecutor getRunnable() {
     synchronized(this) {
-      if (runner != null) {
-        throw new IllegalStateException("Get Runnable can only be run once.");
-      }
+
+      // historically, we had issues where we tried to run the same fragment multiple times. Let's check to make sure
+      // this isn't happening.
+      Preconditions.checkArgument(!runnerRetrieved, "Get Runnable can only be run once.");
+
       if (cancel) {
         return null;
       }
-      runner = new FragmentExecutor(context, root, runnerListener);
+      runnerRetrieved = true;
       return runner;
     }
+  }
 
+  @Override
+  public void receivingFragmentFinished(final FragmentHandle handle) {
+    runner.receivingFragmentFinished(handle);
   }
 
   /* (non-Javadoc)
@@ -95,9 +107,7 @@ public class NonRootFragmentManager implements FragmentManager {
   public void cancel() {
     synchronized(this) {
       cancel = true;
-      if (runner != null) {
-        runner.cancel();
-      }
+      runner.cancel();
     }
   }
 
@@ -117,13 +127,13 @@ public class NonRootFragmentManager implements FragmentManager {
   }
 
   @Override
-  public void addConnection(RemoteConnection connection) {
+  public void addConnection(final RemoteConnection connection) {
     connections.add(connection);
   }
 
   @Override
-  public void setAutoRead(boolean autoRead) {
-    for (RemoteConnection c : connections) {
+  public void setAutoRead(final boolean autoRead) {
+    for (final RemoteConnection c : connections) {
       c.setAutoRead(autoRead);
     }
   }

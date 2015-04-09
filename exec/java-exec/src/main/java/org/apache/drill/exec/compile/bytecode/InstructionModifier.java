@@ -51,12 +51,6 @@ public class InstructionModifier extends MethodVisitor {
 
   private int stackIncrease = 0; // how much larger we have to make the stack
 
-  /*
-   * True if we've transferred holder members to locals. If so, then the maximum stack
-   * size must be increased by one to accommodate the extra DUP that is used to do so.
-   */
-  private boolean transferredToLocals = false;
-
   public InstructionModifier(final int access, final String name, final String desc,
       final String signature, final String[] exceptions, final TrackingInstructionList list,
       final MethodVisitor inner) {
@@ -116,7 +110,7 @@ public class InstructionModifier extends MethodVisitor {
   }
 
   @Override
-  public void visitInsn(int opcode) {
+  public void visitInsn(final int opcode) {
     switch (opcode) {
     case Opcodes.DUP:
       /*
@@ -276,7 +270,7 @@ public class InstructionModifier extends MethodVisitor {
   }
 
   @Override
-  public void visitTypeInsn(int opcode, String type) {
+  public void visitTypeInsn(final int opcode, final String type) {
     /*
      * This includes NEW, NEWARRAY, CHECKCAST, or INSTANCEOF.
      *
@@ -285,9 +279,9 @@ public class InstructionModifier extends MethodVisitor {
      * replaced the values for those, but we might find other reasons to replace
      * things, in which case this will be too broad.
      */
-    ReplacingBasicValue r = getFunctionReturn();
+    final ReplacingBasicValue r = getFunctionReturn();
     if (r != null) {
-      ValueHolderSub sub = r.getIden().getHolderSub(adder);
+      final ValueHolderSub sub = r.getIden().getHolderSub(adder);
       oldToNew.put(r.getIndex(), sub);
     } else {
       super.visitTypeInsn(opcode, type);
@@ -295,7 +289,7 @@ public class InstructionModifier extends MethodVisitor {
   }
 
   @Override
-  public void visitLineNumber(int line, Label start) {
+  public void visitLineNumber(final int line, final Label start) {
     lastLineNumber = line;
     super.visitLineNumber(line, start);
   }
@@ -347,7 +341,7 @@ public class InstructionModifier extends MethodVisitor {
 
   @Override
   public void visitMaxs(final int maxStack, final int maxLocals) {
-    super.visitMaxs(maxStack + stackIncrease + (transferredToLocals ? 1 : 0), maxLocals);
+    super.visitMaxs(maxStack + stackIncrease, maxLocals);
   }
 
   @Override
@@ -397,7 +391,7 @@ public class InstructionModifier extends MethodVisitor {
   }
 
   @Override
-  public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+  public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc) {
     /*
      * This method was deprecated in the switch from api version ASM4 to ASM5.
      * If we ever go back (via CompilationConfig.ASM_API_VERSION), we need to
@@ -408,7 +402,7 @@ public class InstructionModifier extends MethodVisitor {
   }
 
   @Override
-  public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+  public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc, final boolean itf) {
     // this version of visitMethodInsn() came after ASM4
     assert CompilationConfig.ASM_API_VERSION != Opcodes.ASM4;
 
@@ -471,7 +465,7 @@ public class InstructionModifier extends MethodVisitor {
 
   @Override
   public void visitEnd() {
-    if (logger.isDebugEnabled()) {
+    if (logger.isTraceEnabled()) {
       final StringBuilder sb = new StringBuilder();
       sb.append("InstructionModifier ");
       sb.append(name);
@@ -488,7 +482,7 @@ public class InstructionModifier extends MethodVisitor {
       int itemCount = 0; // counts up the number of items found
       final HashMap<ValueHolderIden, Integer> seenIdens = new HashMap<>(); // iden -> idenId
       sb.append(" .oldToNew:\n");
-      for (IntObjectCursor<ValueHolderIden.ValueHolderSub> ioc : oldToNew) {
+      for (final IntObjectCursor<ValueHolderIden.ValueHolderSub> ioc : oldToNew) {
         final ValueHolderIden iden = ioc.value.iden();
         if (!seenIdens.containsKey(iden)) {
           seenIdens.put(iden, ++idenId);
@@ -501,7 +495,7 @@ public class InstructionModifier extends MethodVisitor {
       }
 
       sb.append(" .oldLocalToFirst:\n");
-      for (IntIntCursor iic : oldLocalToFirst) {
+      for (final IntIntCursor iic : oldLocalToFirst) {
         sb.append("  " + iic.key + " => " + iic.value + '\n');
         ++itemCount;
       }

@@ -54,7 +54,7 @@ public class AsmUtil {
     final ClassReader ver = new ClassReader(verifyWriter.toByteArray());
     try {
       DrillCheckClassAdapter.verify(ver, false, new PrintWriter(sw));
-    } catch(Exception e) {
+    } catch(final Exception e) {
       logger.info("Caught exception verifying class:");
       logClass(logger, logTag, classNode);
       throw e;
@@ -98,19 +98,25 @@ public class AsmUtil {
   /**
    * Write a class to the log.
    *
-   * <p>Writes at level DEBUG.
+   * <p>
+   * Writes at level TRACE.
    *
-   * @param logger the logger to write to
-   * @param logTag a tag to print to the log
-   * @param classNode the class
+   * @param logger
+   *          the logger to write to
+   * @param logTag
+   *          a tag to print to the log
+   * @param classNode
+   *          the class
    */
   public static void logClass(final Logger logger, final String logTag, final ClassNode classNode) {
-    logger.debug(logTag);
-    final StringWriter stringWriter = new StringWriter();
-    final PrintWriter printWriter = new PrintWriter(stringWriter);
-    final TraceClassVisitor traceClassVisitor = new TraceClassVisitor(printWriter);
-    classNode.accept(traceClassVisitor);
-    logger.debug(stringWriter.toString());
+    if (logger.isTraceEnabled()) {
+      logger.trace(logTag);
+      final StringWriter stringWriter = new StringWriter();
+      final PrintWriter printWriter = new PrintWriter(stringWriter);
+      final TraceClassVisitor traceClassVisitor = new TraceClassVisitor(printWriter);
+      classNode.accept(traceClassVisitor);
+      logger.trace(stringWriter.toString());
+    }
   }
 
   /**

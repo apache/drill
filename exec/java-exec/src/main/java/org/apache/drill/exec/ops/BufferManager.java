@@ -58,6 +58,7 @@ public class BufferManager implements AutoCloseable {
         ((DrillBuf)mbuffers[i]).release();
       }
     }
+    managedBuffers.clear();
   }
 
   public DrillBuf replace(DrillBuf old, int newSize) {

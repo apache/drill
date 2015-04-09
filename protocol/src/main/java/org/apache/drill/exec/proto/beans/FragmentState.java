@@ -27,7 +27,8 @@ public enum FragmentState implements com.dyuproject.protostuff.EnumLite<Fragment
     RUNNING(2),
     FINISHED(3),
     CANCELLED(4),
-    FAILED(5);
+    FAILED(5),
+    CANCELLATION_REQUESTED(6);
     
     public final int number;
     
@@ -51,6 +52,7 @@ public enum FragmentState implements com.dyuproject.protostuff.EnumLite<Fragment
             case 3: return FINISHED;
             case 4: return CANCELLED;
             case 5: return FAILED;
+            case 6: return CANCELLATION_REQUESTED;
             default: return null;
         }
     }

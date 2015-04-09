@@ -20,8 +20,10 @@ package org.apache.drill.exec.physical.impl;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContext.ExecutorState;
 import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RecordBatch;
@@ -40,15 +42,41 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
   private final RecordBatch incoming;
   private final ScreenRoot screenRoot;
 
-  public SimpleRootExec(RootExec e) {
+  public SimpleRootExec(final RootExec e) {
     if (e instanceof ScreenRoot) {
       incoming = ((ScreenRoot)e).getIncoming();
       screenRoot = (ScreenRoot) e;
     } else {
       throw new UnsupportedOperationException();
     }
+    incoming.getContext().setExecutorState(new DummyExecutorState());
+  }
+
+  private class DummyExecutorState implements ExecutorState {
+    final DeferredException ex = new DeferredException();
+
+    @Override
+    public boolean shouldContinue() {
+      return !isFailed();
+    }
+
+    @Override
+    public void fail(final Throwable t) {
+      ex.addThrowable(t);
+    }
+
+    @Override
+    public boolean isFailed() {
+      return ex.getException() != null;
+    }
+
+    @Override
+    public Throwable getFailureCause() {
+      return ex.getException();
+    }
 
   }
+
 
   public FragmentContext getContext() {
     return incoming.getContext();
@@ -63,8 +91,8 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends ValueVector> T getValueVectorById(SchemaPath path, Class<?> vvClass) {
-    TypedFieldId tfid = incoming.getValueVectorId(path);
+  public <T extends ValueVector> T getValueVectorById(final SchemaPath path, final Class<?> vvClass) {
+    final TypedFieldId tfid = incoming.getValueVectorId(path);
     return (T) incoming.getValueAccessorById(vvClass, tfid.getFieldIds()).getValueVector();
   }
 
@@ -86,14 +114,14 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
   }
 
   @Override
-  public void receivingFragmentFinished(FragmentHandle handle) {
+  public void receivingFragmentFinished(final FragmentHandle handle) {
     //no op
   }
 
   @Override
   public Iterator<ValueVector> iterator() {
-    List<ValueVector> vv = Lists.newArrayList();
-    for (VectorWrapper<?> vw : incoming) {
+    final List<ValueVector> vv = Lists.newArrayList();
+    for (final VectorWrapper<?> vw : incoming) {
       vv.add(vw.getValueVector());
     }
     return vv.iterator();

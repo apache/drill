@@ -38,7 +38,7 @@ public class ProfileWrapper {
   public QueryProfile profile;
   public String id;
 
-  public ProfileWrapper(QueryProfile profile) {
+  public ProfileWrapper(final QueryProfile profile) {
     this.profile = profile;
     this.id = QueryIdHelper.getQueryId(profile.getId());
   }
@@ -56,25 +56,25 @@ public class ProfileWrapper {
   }
 
   public List<OperatorWrapper> getOperatorProfiles() {
-    List<OperatorWrapper> ows = Lists.newArrayList();
-    Map<ImmutablePair<Integer, Integer>, List<ImmutablePair<OperatorProfile, Integer>>> opmap = Maps.newHashMap();
+    final List<OperatorWrapper> ows = Lists.newArrayList();
+    final Map<ImmutablePair<Integer, Integer>, List<ImmutablePair<OperatorProfile, Integer>>> opmap = Maps.newHashMap();
 
-    List<MajorFragmentProfile> majors = new ArrayList<>(profile.getFragmentProfileList());
+    final List<MajorFragmentProfile> majors = new ArrayList<>(profile.getFragmentProfileList());
     Collections.sort(majors, Comparators.majorIdCompare);
-    for (MajorFragmentProfile major : majors) {
+    for (final MajorFragmentProfile major : majors) {
 
-      List<MinorFragmentProfile> minors = new ArrayList<>(major.getMinorFragmentProfileList());
+      final List<MinorFragmentProfile> minors = new ArrayList<>(major.getMinorFragmentProfileList());
       Collections.sort(minors, Comparators.minorIdCompare);
-      for (MinorFragmentProfile minor : minors) {
+      for (final MinorFragmentProfile minor : minors) {
 
-        List<OperatorProfile> ops = new ArrayList<>(minor.getOperatorProfileList());
+        final List<OperatorProfile> ops = new ArrayList<>(minor.getOperatorProfileList());
         Collections.sort(ops, Comparators.operatorIdCompare);
-        for (OperatorProfile op : ops) {
+        for (final OperatorProfile op : ops) {
 
-          ImmutablePair<Integer, Integer> ip = new ImmutablePair<>(
+          final ImmutablePair<Integer, Integer> ip = new ImmutablePair<>(
               major.getMajorFragmentId(), op.getOperatorId());
           if (!opmap.containsKey(ip)) {
-            List<ImmutablePair<OperatorProfile, Integer>> l = Lists.newArrayList();
+            final List<ImmutablePair<OperatorProfile, Integer>> l = Lists.newArrayList();
             opmap.put(ip, l);
           }
           opmap.get(ip).add(new ImmutablePair<>(op, minor.getMinorFragmentId()));
@@ -82,10 +82,10 @@ public class ProfileWrapper {
       }
     }
 
-    List<ImmutablePair<Integer, Integer>> keys = new ArrayList<>(opmap.keySet());
+    final List<ImmutablePair<Integer, Integer>> keys = new ArrayList<>(opmap.keySet());
     Collections.sort(keys);
 
-    for (ImmutablePair<Integer, Integer> ip : keys) {
+    for (final ImmutablePair<Integer, Integer> ip : keys) {
       ows.add(new OperatorWrapper(ip.getLeft(), opmap.get(ip)));
     }
 
@@ -93,11 +93,11 @@ public class ProfileWrapper {
   }
 
   public List<FragmentWrapper> getFragmentProfiles() {
-    List<FragmentWrapper> fws = Lists.newArrayList();
+    final List<FragmentWrapper> fws = Lists.newArrayList();
 
-    List<MajorFragmentProfile> majors = new ArrayList<>(profile.getFragmentProfileList());
+    final List<MajorFragmentProfile> majors = new ArrayList<>(profile.getFragmentProfileList());
     Collections.sort(majors, Comparators.majorIdCompare);
-    for (MajorFragmentProfile major : majors) {
+    for (final MajorFragmentProfile major : majors) {
       fws.add(new FragmentWrapper(major, profile.getStart()));
     }
 
@@ -105,10 +105,11 @@ public class ProfileWrapper {
   }
 
   public String getFragmentsOverview() {
-    final String[] columns = {"Major Fragment", "Minor Fragments Reporting", "First Start", "Last Start", "First End", "Last End", "tmin", "tavg", "tmax", "memmax"};
-    TableBuilder tb = new TableBuilder(columns);
-    for (FragmentWrapper fw : getFragmentProfiles()) {
-      fw.addSummary(tb);
+    final String[] columns = { "Major Fragment", "Minor Fragments Reporting", "First Start", "Last Start", "First End",
+        "Last End", "tmin", "tavg", "tmax", "last update", "last progress", "memmax" };
+    final TableBuilder tb = new TableBuilder(columns);
+    for (final FragmentWrapper fw : getFragmentProfiles()) {
+      fw.addSummary(tb, columns.length);
     }
     return tb.toString();
   }
@@ -117,17 +118,17 @@ public class ProfileWrapper {
 
   public String getOperatorsOverview() {
     final String [] columns = {"Operator", "Type", "Setup (min)", "Setup (avg)", "Setup (max)", "Process (min)", "Process (avg)", "Process (max)", "Wait (min)", "Wait (avg)", "Wait (max)", "Mem (avg)", "Mem (max)"};
-    TableBuilder tb = new TableBuilder(columns);
-    for (OperatorWrapper ow : getOperatorProfiles()) {
+    final TableBuilder tb = new TableBuilder(columns);
+    for (final OperatorWrapper ow : getOperatorProfiles()) {
       ow.addSummary(tb);
     }
     return tb.toString();
   }
 
   public String getOperatorsJSON() {
-    StringBuilder sb = new StringBuilder("{");
+    final StringBuilder sb = new StringBuilder("{");
     String sep = "";
-    for (CoreOperatorType op : CoreOperatorType.values()) {
+    for (final CoreOperatorType op : CoreOperatorType.values()) {
       sb.append(String.format("%s\"%d\" : \"%s\"", sep, op.ordinal(), op));
       sep = ", ";
     }

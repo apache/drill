@@ -19,13 +19,13 @@ package org.apache.drill.exec.rpc.data;
 
 import io.netty.buffer.DrillBuf;
 
+import java.io.IOException;
+
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.fragment.FragmentManager;
-
-import java.io.IOException;
 
 public class DataResponseHandlerImpl implements DataResponseHandler{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataResponseHandlerImpl.class);
@@ -45,7 +45,7 @@ public class DataResponseHandlerImpl implements DataResponseHandler{
       final DrillBuf data, final AckSender sender) throws FragmentSetupException, IOException {
 //      logger.debug("Fragment Batch received {}", fragmentBatch);
 
-    boolean canRun = manager.handle(new RawFragmentBatch(fragmentBatch, data, sender));
+    final boolean canRun = manager.handle(new RawFragmentBatch(fragmentBatch, data, sender));
     if (canRun) {
 //    logger.debug("Arriving batch means local batch can run, starting local batch.");
       /*
@@ -53,11 +53,6 @@ public class DataResponseHandlerImpl implements DataResponseHandler{
        * only return a single true.
        */
       bee.startFragmentPendingRemote(manager);
-    }
-    if (fragmentBatch.getIsLastBatch() && !manager.isWaiting()) {
-//    logger.debug("Removing handler.  Is Last Batch {}.  Is Waiting for more {}", fragmentBatch.getIsLastBatch(),
-//        manager.isWaiting());
-      bee.getContext().getWorkBus().removeFragmentManager(manager.getHandle());
     }
   }
 }

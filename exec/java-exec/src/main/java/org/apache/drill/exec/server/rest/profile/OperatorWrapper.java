@@ -81,7 +81,6 @@ public class OperatorWrapper {
     CoreOperatorType operatorType = CoreOperatorType.valueOf(ops.get(0).getLeft().getOperatorType());
     tb.appendCell(operatorType == null ? "UNKNOWN_OPERATOR" : operatorType.toString(), null);
 
-    int li = ops.size() - 1;
     String fmt = " (%s)";
 
     double setupSum = 0.0;
@@ -95,23 +94,26 @@ public class OperatorWrapper {
       memSum += ip.getLeft().getPeakLocalMemoryAllocated();
     }
 
-    Collections.sort(ops, Comparators.setupTimeSort);
-    tb.appendNanos(ops.get(0).getLeft().getSetupNanos(), String.format(fmt, ops.get(0).getRight()));
+    final ImmutablePair<OperatorProfile, Integer> shortSetup = Collections.min(ops, Comparators.setupTimeSort);
+    final ImmutablePair<OperatorProfile, Integer> longSetup = Collections.max(ops, Comparators.setupTimeSort);
+    tb.appendNanos(shortSetup.getLeft().getSetupNanos(), String.format(fmt, shortSetup.getRight()));
     tb.appendNanos((long) (setupSum / ops.size()), null);
-    tb.appendNanos(ops.get(li).getLeft().getSetupNanos(), String.format(fmt, ops.get(li).getRight()));
+    tb.appendNanos(longSetup.getLeft().getSetupNanos(), String.format(fmt, longSetup.getRight()));
 
-    Collections.sort(ops, Comparators.processTimeSort);
-    tb.appendNanos(ops.get(0).getLeft().getProcessNanos(), String.format(fmt, ops.get(0).getRight()));
+    final ImmutablePair<OperatorProfile, Integer> shortProcess = Collections.min(ops, Comparators.processTimeSort);
+    final ImmutablePair<OperatorProfile, Integer> longProcess = Collections.max(ops, Comparators.processTimeSort);
+    tb.appendNanos(shortProcess.getLeft().getProcessNanos(), String.format(fmt, shortProcess.getRight()));
     tb.appendNanos((long) (processSum / ops.size()), null);
-    tb.appendNanos(ops.get(li).getLeft().getProcessNanos(), String.format(fmt, ops.get(li).getRight()));
+    tb.appendNanos(longProcess.getLeft().getProcessNanos(), String.format(fmt, longProcess.getRight()));
 
-    Collections.sort(ops, Comparators.waitTimeSort);
-    tb.appendNanos(ops.get(0).getLeft().getWaitNanos(), String.format(fmt, ops.get(0).getRight()));
+    final ImmutablePair<OperatorProfile, Integer> shortWait = Collections.min(ops, Comparators.waitTimeSort);
+    final ImmutablePair<OperatorProfile, Integer> longWait = Collections.max(ops, Comparators.waitTimeSort);
+    tb.appendNanos(shortWait.getLeft().getWaitNanos(), String.format(fmt, shortWait.getRight()));
     tb.appendNanos((long) (waitSum / ops.size()), null);
-    tb.appendNanos(ops.get(li).getLeft().getWaitNanos(), String.format(fmt, ops.get(li).getRight()));
+    tb.appendNanos(longWait.getLeft().getWaitNanos(), String.format(fmt, longWait.getRight()));
 
-    Collections.sort(ops, Comparators.opPeakMem);
+    final ImmutablePair<OperatorProfile, Integer> peakMem = Collections.max(ops, Comparators.opPeakMem);
     tb.appendBytes((long) (memSum / ops.size()), null);
-    tb.appendBytes(ops.get(li).getLeft().getPeakLocalMemoryAllocated(), null);
+    tb.appendBytes(peakMem.getLeft().getPeakLocalMemoryAllocated(), null);
   }
 }

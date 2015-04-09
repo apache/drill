@@ -58,6 +58,8 @@ public final class MinorFragmentProfile implements Externalizable, Message<Minor
     private long memoryUsed;
     private long maxMemoryUsed;
     private DrillbitEndpoint endpoint;
+    private long lastUpdate;
+    private long lastProgress;
 
     public MinorFragmentProfile()
     {
@@ -183,6 +185,32 @@ public final class MinorFragmentProfile implements Externalizable, Message<Minor
         return this;
     }
 
+    // lastUpdate
+
+    public long getLastUpdate()
+    {
+        return lastUpdate;
+    }
+
+    public MinorFragmentProfile setLastUpdate(long lastUpdate)
+    {
+        this.lastUpdate = lastUpdate;
+        return this;
+    }
+
+    // lastProgress
+
+    public long getLastProgress()
+    {
+        return lastProgress;
+    }
+
+    public MinorFragmentProfile setLastProgress(long lastProgress)
+    {
+        this.lastProgress = lastProgress;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -269,6 +297,12 @@ public final class MinorFragmentProfile implements Externalizable, Message<Minor
                     message.endpoint = input.mergeObject(message.endpoint, DrillbitEndpoint.getSchema());
                     break;
 
+                case 10:
+                    message.lastUpdate = input.readInt64();
+                    break;
+                case 11:
+                    message.lastProgress = input.readInt64();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -313,6 +347,12 @@ public final class MinorFragmentProfile implements Externalizable, Message<Minor
         if(message.endpoint != null)
              output.writeObject(9, message.endpoint, DrillbitEndpoint.getSchema(), false);
 
+
+        if(message.lastUpdate != 0)
+            output.writeInt64(10, message.lastUpdate, false);
+
+        if(message.lastProgress != 0)
+            output.writeInt64(11, message.lastProgress, false);
     }
 
     public String getFieldName(int number)
@@ -328,6 +368,8 @@ public final class MinorFragmentProfile implements Externalizable, Message<Minor
             case 7: return "memoryUsed";
             case 8: return "maxMemoryUsed";
             case 9: return "endpoint";
+            case 10: return "lastUpdate";
+            case 11: return "lastProgress";
             default: return null;
         }
     }
@@ -350,6 +392,8 @@ public final class MinorFragmentProfile implements Externalizable, Message<Minor
         __fieldMap.put("memoryUsed", 7);
         __fieldMap.put("maxMemoryUsed", 8);
         __fieldMap.put("endpoint", 9);
+        __fieldMap.put("lastUpdate", 10);
+        __fieldMap.put("lastProgress", 11);
     }
     
 }

@@ -2081,6 +2081,10 @@ public final class SchemaUserBitShared
                 if(message.hasEndpoint())
                     output.writeObject(9, message.getEndpoint(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.WRITE, false);
 
+                if(message.hasLastUpdate())
+                    output.writeInt64(10, message.getLastUpdate(), false);
+                if(message.hasLastProgress())
+                    output.writeInt64(11, message.getLastProgress(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile message)
             {
@@ -2150,6 +2154,12 @@ public final class SchemaUserBitShared
                             builder.setEndpoint(input.mergeObject(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.newBuilder(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.MERGE));
 
                             break;
+                        case 10:
+                            builder.setLastUpdate(input.readInt64());
+                            break;
+                        case 11:
+                            builder.setLastProgress(input.readInt64());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -2199,6 +2209,8 @@ public final class SchemaUserBitShared
                 case 7: return "memoryUsed";
                 case 8: return "maxMemoryUsed";
                 case 9: return "endpoint";
+                case 10: return "lastUpdate";
+                case 11: return "lastProgress";
                 default: return null;
             }
         }
@@ -2219,6 +2231,8 @@ public final class SchemaUserBitShared
             fieldMap.put("memoryUsed", 7);
             fieldMap.put("maxMemoryUsed", 8);
             fieldMap.put("endpoint", 9);
+            fieldMap.put("lastUpdate", 10);
+            fieldMap.put("lastProgress", 11);
         }
     }
 

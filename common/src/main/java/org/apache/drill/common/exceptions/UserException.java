@@ -53,7 +53,7 @@ public class UserException extends DrillRuntimeException {
    *             Rpc layer or UserResultListener.submitFailed()
    */
   @Deprecated
-  public static Builder systemError(Throwable cause) {
+  public static Builder systemError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.SYSTEM, cause);
   }
 
@@ -79,7 +79,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder connectionError(Throwable cause) {
+  public static Builder connectionError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.CONNECTION, cause);
   }
 
@@ -105,7 +105,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder dataReadError(Throwable cause) {
+  public static Builder dataReadError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.DATA_READ, cause);
   }
 
@@ -131,7 +131,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder dataWriteError(Throwable cause) {
+  public static Builder dataWriteError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.DATA_WRITE, cause);
   }
 
@@ -157,7 +157,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder functionError(Throwable cause) {
+  public static Builder functionError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.FUNCTION, cause);
   }
 
@@ -183,7 +183,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder parseError(Throwable cause) {
+  public static Builder parseError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.PARSE, cause);
   }
 
@@ -209,7 +209,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder permissionError(Throwable cause) {
+  public static Builder permissionError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.PERMISSION, cause);
   }
 
@@ -235,7 +235,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder planError(Throwable cause) {
+  public static Builder planError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.PLAN, cause);
   }
 
@@ -261,7 +261,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder resourceError(Throwable cause) {
+  public static Builder resourceError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.RESOURCE, cause);
   }
 
@@ -287,7 +287,7 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
-  public static Builder unsupportedError(Throwable cause) {
+  public static Builder unsupportedError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.UNSUPPORTED_OPERATION, cause);
   }
 
@@ -313,7 +313,7 @@ public class UserException extends DrillRuntimeException {
      *                  or doesn't wrap a user exception
      * @param cause exception to wrap inside a user exception. Can be null
      */
-    private Builder(DrillPBError.ErrorType errorType, Throwable cause) {
+    private Builder(final DrillPBError.ErrorType errorType, final Throwable cause) {
       this.cause = cause;
 
       //TODO handle the improbable case where cause is a SYSTEM exception ?
@@ -339,7 +339,7 @@ public class UserException extends DrillRuntimeException {
      * @param args Arguments referenced by the format specifiers in the format string
      * @return this builder
      */
-    public Builder message(String format, Object... args) {
+    public Builder message(final String format, final Object... args) {
       // we can't replace the message of a user exception
       if (uex == null && format != null) {
         this.message = String.format(format, args);
@@ -353,7 +353,7 @@ public class UserException extends DrillRuntimeException {
      *
      * @param endpoint drillbit endpoint identity
      */
-    public Builder addIdentity(CoordinationProtos.DrillbitEndpoint endpoint) {
+    public Builder addIdentity(final CoordinationProtos.DrillbitEndpoint endpoint) {
       context.add(endpoint);
       return this;
     }
@@ -363,7 +363,7 @@ public class UserException extends DrillRuntimeException {
      * @param value string line
      * @return this builder
      */
-    public Builder addContext(String value) {
+    public Builder addContext(final String value) {
       context.add(value);
       return this;
     }
@@ -375,7 +375,7 @@ public class UserException extends DrillRuntimeException {
      * @param value context value
      * @return this builder
      */
-    public Builder addContext(String name, String value) {
+    public Builder addContext(final String name, final String value) {
       context.add(name, value);
       return this;
     }
@@ -387,7 +387,7 @@ public class UserException extends DrillRuntimeException {
      * @param value context value
      * @return this builder
      */
-    public Builder addContext(String name, long value) {
+    public Builder addContext(final String name, final long value) {
       context.add(name, value);
       return this;
     }
@@ -399,7 +399,7 @@ public class UserException extends DrillRuntimeException {
      * @param value context value
      * @return this builder
      */
-    public Builder addContext(String name, double value) {
+    public Builder addContext(final String name, final double value) {
       context.add(name, value);
       return this;
     }
@@ -410,7 +410,7 @@ public class UserException extends DrillRuntimeException {
      * @param value context value
      * @return this builder
      */
-    public Builder pushContext(String value) {
+    public Builder pushContext(final String value) {
       context.push(value);
       return this;
     }
@@ -422,7 +422,7 @@ public class UserException extends DrillRuntimeException {
      * @param value context value
      * @return this builder
      */
-    public Builder pushContext(String name, String value) {
+    public Builder pushContext(final String name, final String value) {
       context.push(name, value);
       return this;
     }
@@ -434,7 +434,7 @@ public class UserException extends DrillRuntimeException {
      * @param value context value
      * @return this builder
      */
-    public Builder pushContext(String name, long value) {
+    public Builder pushContext(final String name, final long value) {
       context.push(name, value);
       return this;
     }
@@ -446,7 +446,7 @@ public class UserException extends DrillRuntimeException {
      * @param value context value
      * @return this builder
      */
-    public Builder pushContext(String name, double value) {
+    public Builder pushContext(final String name, final double value) {
       context.push(name, value);
       return this;
     }
@@ -462,7 +462,19 @@ public class UserException extends DrillRuntimeException {
         return uex;
       }
 
-      return new UserException(this);
+      final UserException newException = new UserException(this);
+
+      // since we just created a new exception, we should log it for later reference. If this is a system error, this is
+      // an issue that the Drill admin should pay attention to and we should log as ERROR. However, if this is a user
+      // mistake or data read issue, the system admin should not be concerned about these and thus we'll log this
+      // as an INFO message.
+      if (errorType == DrillPBError.ErrorType.SYSTEM) {
+        logger.error(newException.getMessage(), newException);
+      } else {
+        logger.info("User Error Occurred", newException);
+      }
+
+      return newException;
     }
   }
 
@@ -470,14 +482,14 @@ public class UserException extends DrillRuntimeException {
 
   private final UserExceptionContext context;
 
-  protected UserException(DrillPBError.ErrorType errorType, String message, Throwable cause) {
+  protected UserException(final DrillPBError.ErrorType errorType, final String message, final Throwable cause) {
     super(message, cause);
 
     this.errorType = errorType;
     this.context = new UserExceptionContext();
   }
 
-  private UserException(Builder builder) {
+  private UserException(final Builder builder) {
     super(builder.message, builder.cause);
     this.errorType = builder.errorType;
     this.context = builder.context;
@@ -516,10 +528,10 @@ public class UserException extends DrillRuntimeException {
    * @param verbose should the error object contain the verbose error message ?
    * @return protobuf error object
    */
-  public DrillPBError getOrCreatePBError(boolean verbose) {
-    String message = verbose ? getVerboseMessage() : getMessage();
+  public DrillPBError getOrCreatePBError(final boolean verbose) {
+    final String message = verbose ? getVerboseMessage() : getMessage();
 
-    DrillPBError.Builder builder = DrillPBError.newBuilder();
+    final DrillPBError.Builder builder = DrillPBError.newBuilder();
     builder.setErrorType(errorType);
     builder.setErrorId(context.getErrorId());
     if (context.getEndpoint() != null) {

@@ -347,6 +347,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         mSorter.setup(context, oContext.getAllocator(), getSelectionVector4(), this.container);
         mSorter.sort(this.container);
 
+        // sort may have prematurely exited due to should continue returning false.
+        if (!context.shouldContinue()) {
+          return IterOutcome.STOP;
+        }
         sv4 = mSorter.getSV4();
 
         long t = watch.elapsed(TimeUnit.MICROSECONDS);

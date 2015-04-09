@@ -17,26 +17,26 @@
  */
 package org.apache.drill.exec.work.fragment;
 
-import org.apache.drill.common.exceptions.DrillException;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 
-public class StateTransitionException extends DrillException {
+public class StateTransitionException extends DrillRuntimeException {
   public StateTransitionException() {
     super();
   }
 
-  public StateTransitionException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+  public StateTransitionException(final String message, final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
   }
 
-  public StateTransitionException(String message, Throwable cause) {
+  public StateTransitionException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  public StateTransitionException(String message) {
+  public StateTransitionException(final String message) {
     super(message);
   }
 
-  public StateTransitionException(Throwable cause) {
+  public StateTransitionException(final Throwable cause) {
     super(cause);
   }
 }

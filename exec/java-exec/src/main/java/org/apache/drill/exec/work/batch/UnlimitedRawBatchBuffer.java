@@ -47,10 +47,10 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   private final AtomicBoolean outOfMemory = new AtomicBoolean(false);
   private final ResponseSenderQueue readController = new ResponseSenderQueue();
   private int streamCounter;
-  private int fragmentCount;
-  private FragmentContext context;
+  private final int fragmentCount;
+  private final FragmentContext context;
 
-  public UnlimitedRawBatchBuffer(FragmentContext context, int fragmentCount) {
+  public UnlimitedRawBatchBuffer(final FragmentContext context, final int fragmentCount) {
     bufferSizePerSocket = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
 
     this.softlimit = bufferSizePerSocket * fragmentCount;
@@ -63,7 +63,14 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   }
 
   @Override
-  public void enqueue(RawFragmentBatch batch) throws IOException {
+  public void enqueue(final RawFragmentBatch batch) throws IOException {
+
+    // if this fragment is already canceled or failed, we shouldn't need any or more stuff. We do the null check to
+    // ensure that tests run.
+    if (context != null && !context.shouldContinue()) {
+      this.kill(context);
+    }
+
     if (isFinished()) {
       if (state == BufferState.KILLED) {
         // do not even enqueue just release and send ack back
@@ -76,8 +83,8 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     }
     if (batch.getHeader().getIsOutOfMemory()) {
       logger.trace("Setting autoread false");
-      RawFragmentBatch firstBatch = buffer.peekFirst();
-      FragmentRecordBatch header = firstBatch == null ? null :firstBatch.getHeader();
+      final RawFragmentBatch firstBatch = buffer.peekFirst();
+      final FragmentRecordBatch header = firstBatch == null ? null :firstBatch.getHeader();
       if (!outOfMemory.get() && !(header == null) && header.getIsOutOfMemory()) {
         buffer.addFirst(batch);
       }
@@ -96,16 +103,16 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public void cleanup() {
-    if (!isFinished() && !context.isCancelled()) {
-      String msg = String.format("Cleanup before finished. " + (fragmentCount - streamCounter) + " out of " + fragmentCount + " streams have finished.");
+    if (!isFinished() && context.shouldContinue()) {
+      final String msg = String.format("Cleanup before finished. " + (fragmentCount - streamCounter) + " out of " + fragmentCount + " streams have finished.");
       logger.error(msg);
-      IllegalStateException e = new IllegalStateException(msg);
+      final IllegalStateException e = new IllegalStateException(msg);
       context.fail(e);
       throw e;
     }
 
     if (!buffer.isEmpty()) {
-      if (!context.isFailed() && !context.isCancelled()) {
+      if (context.shouldContinue()) {
         context.fail(new IllegalStateException("Batches still in queue during cleanup"));
         logger.error("{} Batches in queue.", buffer.size());
       }
@@ -114,7 +121,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   }
 
   @Override
-  public void kill(FragmentContext context) {
+  public void kill(final FragmentContext context) {
     state = BufferState.KILLED;
     clearBufferWithBody();
   }
@@ -125,7 +132,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
    */
   private void clearBufferWithBody() {
     while (!buffer.isEmpty()) {
-      RawFragmentBatch batch = buffer.poll();
+      final RawFragmentBatch batch = buffer.poll();
       if (batch.getBody() != null) {
         batch.getBody().release();
       }
@@ -160,7 +167,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     if (b == null && (!isFinished() || !buffer.isEmpty())) {
       try {
         b = buffer.take();
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
         return null;
         // TODO InterruptedException
       }
@@ -175,9 +182,9 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     // try to flush the difference between softlimit and queue size, so every flush we are reducing backlog
     // when queue size is lower then softlimit - the bigger the difference the more we can flush
     if (!isFinished() && overlimit.get()) {
-      int flushCount = softlimit - buffer.size();
+      final int flushCount = softlimit - buffer.size();
       if ( flushCount > 0 ) {
-        int flushed = readController.flushResponses(flushCount);
+        final int flushed = readController.flushResponses(flushCount);
         logger.trace("flush {} entries, flushed {} entries ", flushCount, flushed);
         if ( flushed == 0 ) {
           // queue is empty - nothing to do for now

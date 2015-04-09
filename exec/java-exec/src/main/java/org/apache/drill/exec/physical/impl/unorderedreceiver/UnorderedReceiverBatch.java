@@ -27,9 +27,9 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
+import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
-import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
@@ -53,13 +53,13 @@ import org.apache.drill.exec.rpc.RpcOutcomeListener;
 public class UnorderedReceiverBatch implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiverBatch.class);
 
-  private RecordBatchLoader batchLoader;
-  private RawFragmentBatchProvider fragProvider;
-  private FragmentContext context;
+  private final RecordBatchLoader batchLoader;
+  private final RawFragmentBatchProvider fragProvider;
+  private final FragmentContext context;
   private BatchSchema schema;
-  private OperatorStats stats;
+  private final OperatorStats stats;
   private boolean first = true;
-  private UnorderedReceiver config;
+  private final UnorderedReceiver config;
   OperatorContext oContext;
 
   public enum Metric implements MetricDef {
@@ -72,7 +72,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
     }
   }
 
-  public UnorderedReceiverBatch(FragmentContext context, RawFragmentBatchProvider fragProvider, UnorderedReceiver config) throws OutOfMemoryException {
+  public UnorderedReceiverBatch(final FragmentContext context, final RawFragmentBatchProvider fragProvider, final UnorderedReceiver config) throws OutOfMemoryException {
     this.fragProvider = fragProvider;
     this.context = context;
     // In normal case, batchLoader does not require an allocator. However, in case of splitAndTransfer of a value vector,
@@ -101,7 +101,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
+  public void kill(final boolean sendUpstream) {
     if (sendUpstream) {
       informSenders();
     }
@@ -124,12 +124,12 @@ public class UnorderedReceiverBatch implements RecordBatch {
   }
 
   @Override
-  public TypedFieldId getValueVectorId(SchemaPath path) {
+  public TypedFieldId getValueVectorId(final SchemaPath path) {
     return batchLoader.getValueVectorId(path);
   }
 
   @Override
-  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+  public VectorWrapper<?> getValueAccessorById(final Class<?> clazz, final int... ids) {
     return batchLoader.getValueAccessorById(clazz, ids);
   }
 
@@ -154,7 +154,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
 
       if (batch == null) {
         batchLoader.clear();
-        if (context.isCancelled()) {
+        if (!context.shouldContinue()) {
           return IterOutcome.STOP;
         }
         return IterOutcome.NONE;
@@ -167,8 +167,8 @@ public class UnorderedReceiverBatch implements RecordBatch {
 
 //      logger.debug("Next received batch {}", batch);
 
-      RecordBatchDef rbd = batch.getHeader().getDef();
-      boolean schemaChanged = batchLoader.load(rbd, batch.getBody());
+      final RecordBatchDef rbd = batch.getHeader().getDef();
+      final boolean schemaChanged = batchLoader.load(rbd, batch.getBody());
       stats.addLongStat(Metric.BYTES_RECEIVED, batch.getByteCount());
 
       batch.release();
@@ -206,15 +206,16 @@ public class UnorderedReceiverBatch implements RecordBatch {
   }
 
   private void informSenders() {
-    FragmentHandle handlePrototype = FragmentHandle.newBuilder()
+    logger.info("Informing senders of request to terminate sending.");
+    final FragmentHandle handlePrototype = FragmentHandle.newBuilder()
             .setMajorFragmentId(config.getOppositeMajorFragmentId())
             .setQueryId(context.getHandle().getQueryId())
             .build();
-    for (MinorFragmentEndpoint providingEndpoint : config.getProvidingEndpoints()) {
-      FragmentHandle sender = FragmentHandle.newBuilder(handlePrototype)
+    for (final MinorFragmentEndpoint providingEndpoint : config.getProvidingEndpoints()) {
+      final FragmentHandle sender = FragmentHandle.newBuilder(handlePrototype)
               .setMinorFragmentId(providingEndpoint.getId())
               .build();
-      FinishedReceiver finishedReceiver = FinishedReceiver.newBuilder()
+      final FinishedReceiver finishedReceiver = FinishedReceiver.newBuilder()
               .setReceiver(context.getHandle())
               .setSender(sender)
               .build();
@@ -225,12 +226,12 @@ public class UnorderedReceiverBatch implements RecordBatch {
   private class OutcomeListener implements RpcOutcomeListener<Ack> {
 
     @Override
-    public void failed(RpcException ex) {
+    public void failed(final RpcException ex) {
       logger.warn("Failed to inform upstream that receiver is finished");
     }
 
     @Override
-    public void success(Ack value, ByteBuf buffer) {
+    public void success(final Ack value, final ByteBuf buffer) {
       // Do nothing
     }
   }

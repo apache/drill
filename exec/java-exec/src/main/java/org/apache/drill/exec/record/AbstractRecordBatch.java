@@ -41,15 +41,15 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   protected BatchState state;
 
-  protected AbstractRecordBatch(T popConfig, FragmentContext context) throws OutOfMemoryException {
+  protected AbstractRecordBatch(final T popConfig, final FragmentContext context) throws OutOfMemoryException {
     this(popConfig, context, true, new OperatorContext(popConfig, context, true));
   }
 
-  protected AbstractRecordBatch(T popConfig, FragmentContext context, boolean buildSchema) throws OutOfMemoryException {
+  protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema) throws OutOfMemoryException {
     this(popConfig, context, buildSchema, new OperatorContext(popConfig, context, true));
   }
 
-  protected AbstractRecordBatch(T popConfig, FragmentContext context, boolean buildSchema, OperatorContext oContext) throws OutOfMemoryException {
+  protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema, final OperatorContext oContext) throws OutOfMemoryException {
     super();
     this.context = context;
     this.popConfig = popConfig;
@@ -84,16 +84,18 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     return popConfig;
   }
 
-  public final IterOutcome next(RecordBatch b) {
-
+  public final IterOutcome next(final RecordBatch b) {
+    if(!context.shouldContinue()) {
+      return IterOutcome.STOP;
+    }
     return next(0, b);
   }
 
-  public final IterOutcome next(int inputIndex, RecordBatch b){
+  public final IterOutcome next(final int inputIndex, final RecordBatch b){
     IterOutcome next = null;
     stats.stopProcessing();
     try{
-      if (context.isCancelled()) {
+      if (!context.shouldContinue()) {
         return IterOutcome.STOP;
       }
       next = b.next();
@@ -141,7 +143,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
         default:
           return innerNext();
       }
-    } catch (SchemaChangeException e) {
+    } catch (final SchemaChangeException e) {
       throw new DrillRuntimeException(e);
     } finally {
       stats.stopProcessing();
@@ -159,7 +161,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
+  public void kill(final boolean sendUpstream) {
     killIncoming(sendUpstream);
   }
 
@@ -182,12 +184,12 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   @Override
-  public TypedFieldId getValueVectorId(SchemaPath path) {
+  public TypedFieldId getValueVectorId(final SchemaPath path) {
     return container.getValueVectorId(path);
   }
 
   @Override
-  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+  public VectorWrapper<?> getValueAccessorById(final Class<?> clazz, final int... ids) {
     return container.getValueAccessorById(clazz, ids);
   }
 
@@ -195,7 +197,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   @Override
   public WritableBatch getWritableBatch() {
 //    logger.debug("Getting writable batch.");
-    WritableBatch batch = WritableBatch.get(this);
+    final WritableBatch batch = WritableBatch.get(this);
     return batch;
 
   }
