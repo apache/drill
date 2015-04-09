@@ -15,29 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.rpc;
+package org.apache.drill.common.exceptions;
 
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
-import org.apache.drill.exec.work.ErrorHelper;
 
-public class RemoteRpcException extends RpcException{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteRpcException.class);
+/**
+ * Wraps a DrillPBError object so we don't need to rebuilt it multiple times when sending it to the client. It also
+ * gives access to the original exception className and message.
+ */
+public class DrillRemoteException extends DrillUserException {
 
-  private final DrillPBError failure;
+  private final DrillPBError error;
 
-  public RemoteRpcException(DrillPBError failure) {
-    super(ErrorHelper.getErrorMessage(failure, false));
-    this.failure = failure;
+  public DrillRemoteException(DrillPBError error) {
+    super(null, "Drill Remote Exception", null);
+    this.error = error;
   }
 
   @Override
-  public DrillPBError getRemoteError() {
-    return failure;
+  public String getMessage() {
+    return error.getMessage(); // we don't want super class to generate the error message
   }
 
   @Override
-  public boolean isRemote() {
-    return true;
+  public DrillPBError getOrCreatePBError(boolean verbose) {
+    return error;
   }
-
 }

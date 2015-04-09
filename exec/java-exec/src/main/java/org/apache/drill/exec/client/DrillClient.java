@@ -33,6 +33,7 @@ import java.util.Vector;
 
 import io.netty.channel.EventLoopGroup;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
@@ -307,9 +308,9 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     @Override
-    public void submissionFailed(RpcException ex) {
+    public void submissionFailed(DrillUserException ex) {
       // or  !client.isActive()
-      if (ex instanceof ChannelClosedException) {
+      if (ex.getCause() instanceof ChannelClosedException) {
         if (reconnect()) {
           try {
             client.submitQuery(this, query);

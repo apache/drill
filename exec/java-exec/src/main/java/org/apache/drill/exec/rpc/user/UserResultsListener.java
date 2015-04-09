@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.rpc.user;
 
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.rpc.RpcException;
 
 public interface UserResultsListener {
 
@@ -33,7 +33,7 @@ public interface UserResultsListener {
    * {@link #dataArrived(QueryDataBatch, ConnectionThrottle) dataArrived()} throws an exception
    * @param ex exception describing the cause of the failure
    */
-  void submissionFailed(RpcException ex);
+  void submissionFailed(DrillUserException ex);
 
   /**
    * The query has completed (successsful completion or cancellation). The listener will not receive any other

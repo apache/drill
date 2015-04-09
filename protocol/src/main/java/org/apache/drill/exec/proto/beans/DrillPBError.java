@@ -35,6 +35,50 @@ import com.dyuproject.protostuff.Schema;
 
 public final class DrillPBError implements Externalizable, Message<DrillPBError>, Schema<DrillPBError>
 {
+    public enum ErrorType implements com.dyuproject.protostuff.EnumLite<ErrorType>
+    {
+        CONNECTION(0),
+        DATA_READ(1),
+        DATA_WRITE(2),
+        FUNCTION(3),
+        PARSE(4),
+        PERMISSION(5),
+        PLAN(6),
+        RESOURCE(7),
+        SYSTEM(8),
+        UNSUPPORTED_OPERATION(9);
+        
+        public final int number;
+        
+        private ErrorType (int number)
+        {
+            this.number = number;
+        }
+        
+        public int getNumber()
+        {
+            return number;
+        }
+        
+        public static ErrorType valueOf(int number)
+        {
+            switch(number) 
+            {
+                case 0: return CONNECTION;
+                case 1: return DATA_READ;
+                case 2: return DATA_WRITE;
+                case 3: return FUNCTION;
+                case 4: return PARSE;
+                case 5: return PERMISSION;
+                case 6: return PLAN;
+                case 7: return RESOURCE;
+                case 8: return SYSTEM;
+                case 9: return UNSUPPORTED_OPERATION;
+                default: return null;
+            }
+        }
+    }
+
 
     public static Schema<DrillPBError> getSchema()
     {
@@ -51,7 +95,7 @@ public final class DrillPBError implements Externalizable, Message<DrillPBError>
     
     private String errorId;
     private DrillbitEndpoint endpoint;
-    private int errorType;
+    private ErrorType errorType;
     private String message;
     private ExceptionWrapper exception;
     private List<ParsingError> parsingError;
@@ -91,12 +135,12 @@ public final class DrillPBError implements Externalizable, Message<DrillPBError>
 
     // errorType
 
-    public int getErrorType()
+    public ErrorType getErrorType()
     {
-        return errorType;
+        return errorType == null ? ErrorType.CONNECTION : errorType;
     }
 
-    public DrillPBError setErrorType(int errorType)
+    public DrillPBError setErrorType(ErrorType errorType)
     {
         this.errorType = errorType;
         return this;
@@ -203,7 +247,7 @@ public final class DrillPBError implements Externalizable, Message<DrillPBError>
                     break;
 
                 case 3:
-                    message.errorType = input.readInt32();
+                    message.errorType = ErrorType.valueOf(input.readEnum());
                     break;
                 case 4:
                     message.message = input.readString();
@@ -234,8 +278,8 @@ public final class DrillPBError implements Externalizable, Message<DrillPBError>
              output.writeObject(2, message.endpoint, DrillbitEndpoint.getSchema(), false);
 
 
-        if(message.errorType != 0)
-            output.writeInt32(3, message.errorType, false);
+        if(message.errorType != null)
+             output.writeEnum(3, message.errorType.number, false);
 
         if(message.message != null)
             output.writeString(4, message.message, false);

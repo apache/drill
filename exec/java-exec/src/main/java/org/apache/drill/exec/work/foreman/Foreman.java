@@ -28,9 +28,10 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
@@ -56,7 +57,6 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -71,7 +71,6 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.testing.ExceptionInjector;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.EndpointListener;
-import org.apache.drill.exec.work.ErrorHelper;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
@@ -500,7 +499,7 @@ public class Foreman implements Runnable {
    */
   private class ForemanResult implements AutoCloseable {
     private QueryState resultState = null;
-    private Exception resultException = null;
+    private DrillUserException resultException = null;
     private boolean isClosed = false;
 
     /**
@@ -533,7 +532,7 @@ public class Foreman implements Runnable {
       Preconditions.checkState(resultState == null);
 
       resultState = QueryState.FAILED;
-      resultException = exception;
+      addException(exception);
     }
 
     /**
@@ -546,7 +545,8 @@ public class Foreman implements Runnable {
       Preconditions.checkNotNull(exception);
 
       if (resultException == null) {
-        resultException = exception;
+        resultException = ErrorHelper.wrap(exception);
+        resultException.getContext().add(queryContext.getCurrentEndpoint());
       } else {
         resultException.addSuppressed(exception);
       }
@@ -614,9 +614,8 @@ public class Foreman implements Runnable {
           .setQueryId(queryId)
           .setQueryState(resultState);
       if (resultException != null) {
-        final DrillPBError error = ErrorHelper.logAndConvertError(queryContext.getCurrentEndpoint(),
-            ExceptionUtils.getRootCauseMessage(resultException), resultException, logger);
-        resultBuilder.addError(error);
+        boolean verbose = queryContext.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
+        resultBuilder.addError(resultException.getOrCreatePBError(verbose));
       }
 
       /*

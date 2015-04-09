@@ -17,9 +17,9 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
@@ -227,8 +227,8 @@ public class TestUnionAll extends BaseTestQuery{
       String query = "(select * from dfs_test.tmp.`nation_view_testunionall`) " +
                      "union all (select * from cp.`tpch/region.parquet`)";
       test(query);
-    } catch(Exception ex) {
-      SqlUnsupportedException.errorMessageToException(ex.getMessage());
+    } catch(DrillUserException ex) {
+      SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
       throw ex;
     } finally {
       test("drop view nation_view_testunionall");
@@ -356,7 +356,7 @@ public class TestUnionAll extends BaseTestQuery{
         .build().run();
   }
 
-  @Test(expected = RpcException.class) // see DRILL-2590
+  @Test(expected = DrillUserException.class) // see DRILL-2590
   public void testUnionAllImplicitCastingFailure() throws Exception {
     String rootInt = FileUtils.getResourceAsFile("/store/json/intData.json").toURI().toString();
     String rootBoolean = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();

@@ -270,7 +270,7 @@ public final class SchemaUserBitShared
                     output.writeObject(2, message.getEndpoint(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.WRITE, false);
 
                 if(message.hasErrorType())
-                    output.writeInt32(3, message.getErrorType(), false);
+                    output.writeEnum(3, message.getErrorType().getNumber(), false);
                 if(message.hasMessage())
                     output.writeString(4, message.getMessage(), false);
                 if(message.hasException())
@@ -326,7 +326,7 @@ public final class SchemaUserBitShared
 
                             break;
                         case 3:
-                            builder.setErrorType(input.readInt32());
+                            builder.setErrorType(org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.valueOf(input.readEnum()));
                             break;
                         case 4:
                             builder.setMessage(input.readString());

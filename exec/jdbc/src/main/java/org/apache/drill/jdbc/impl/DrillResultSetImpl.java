@@ -29,12 +29,12 @@ import net.hydromatic.avatica.AvaticaPrepareResult;
 import net.hydromatic.avatica.AvaticaResultSet;
 import net.hydromatic.avatica.AvaticaStatement;
 
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
@@ -160,7 +160,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
   public class ResultsListener implements UserResultsListener {
     private static final int MAX = 100;
-    private volatile RpcException ex;
+    private volatile DrillUserException ex;
     volatile boolean completed = false;
     private volatile boolean autoread = true;
     private volatile ConnectionThrottle throttle;
@@ -183,7 +183,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     }
 
     @Override
-    public void submissionFailed(RpcException ex) {
+    public void submissionFailed(DrillUserException ex) {
       this.ex = ex;
       completed = true;
       close();
@@ -219,7 +219,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     }
 
     // TODO:  Doc.:  Specify whether result can be null and what that means.
-    public QueryDataBatch getNext() throws RpcException, InterruptedException {
+    public QueryDataBatch getNext() throws Exception {
       while (true) {
         if (ex != null) {
           throw ex;

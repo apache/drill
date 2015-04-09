@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.work.fragment;
 
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
-import org.apache.drill.exec.work.ErrorHelper;
 
 public abstract class AbstractStatusReporter implements StatusReporter{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStatusReporter.class);
@@ -37,17 +37,17 @@ public abstract class AbstractStatusReporter implements StatusReporter{
   }
 
   private  FragmentStatus.Builder getBuilder(FragmentState state){
-    return getBuilder(context, state, null, null);
+    return getBuilder(context, state, null);
   }
 
-  public static FragmentStatus.Builder getBuilder(FragmentContext context, FragmentState state, String message, Throwable t){
+  public static FragmentStatus.Builder getBuilder(FragmentContext context, FragmentState state, DrillUserException ex){
     FragmentStatus.Builder status = FragmentStatus.newBuilder();
     MinorFragmentProfile.Builder b = MinorFragmentProfile.newBuilder();
     context.getStats().addMetricsToStatus(b);
     b.setState(state);
-    if(t != null){
+    if(ex != null){
       boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-      b.setError(ErrorHelper.logAndConvertMessageError(context.getIdentity(), message, t, logger, verbose));
+      b.setError(ex.getOrCreatePBError(verbose));
     }
     status.setHandle(context.getHandle());
     b.setMemoryUsed(context.getAllocator().getAllocatedMemory());
@@ -105,8 +105,8 @@ public abstract class AbstractStatusReporter implements StatusReporter{
   protected abstract void statusChange(FragmentHandle handle, FragmentStatus status);
 
   @Override
-  public final void fail(FragmentHandle handle, String message, Throwable excep) {
-    FragmentStatus.Builder status = getBuilder(context, FragmentState.FAILED, message, excep);
+  public final void fail(FragmentHandle handle, String message, DrillUserException excep) {
+    FragmentStatus.Builder status = getBuilder(context, FragmentState.FAILED, excep);
     fail(handle, status);
   }
 

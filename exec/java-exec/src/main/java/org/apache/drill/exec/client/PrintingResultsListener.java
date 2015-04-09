@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -29,7 +31,6 @@ import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
@@ -42,7 +43,7 @@ public class PrintingResultsListener implements UserResultsListener {
   Format format;
   int    columnWidth;
   BufferAllocator allocator;
-  volatile Exception exception;
+  volatile DrillUserException exception;
   QueryId queryId;
 
   public PrintingResultsListener(DrillConfig config, Format format, int columnWidth) {
@@ -53,7 +54,7 @@ public class PrintingResultsListener implements UserResultsListener {
   }
 
   @Override
-  public void submissionFailed(RpcException ex) {
+  public void submissionFailed(DrillUserException ex) {
     exception = ex;
     System.out.println("Exception (no rows returned): " + ex );
     latch.countDown();
@@ -76,7 +77,7 @@ public class PrintingResultsListener implements UserResultsListener {
       try {
         loader.load(header.getDef(), data);
       } catch (SchemaChangeException e) {
-        submissionFailed(new RpcException(e));
+        submissionFailed(ErrorHelper.wrap(e));
       }
 
       switch(format) {

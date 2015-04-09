@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
@@ -30,6 +30,7 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.reader.CountingJsonReader;
@@ -90,14 +91,27 @@ public class JSONRecordReader extends AbstractRecordReader {
     }
   }
 
-  protected void handleAndRaise(String msg, Exception e) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(msg).append(" - In ").append(hadoopPath.toUri().getPath()).append(" parser was at record: ").append(recordCount+1);
+  protected void handleAndRaise(String suffix, Exception e) throws DrillUserException {
+
+    String message = e.getMessage();
+    int columnNr = -1;
+
     if (e instanceof JsonParseException) {
-      JsonParseException ex = JsonParseException.class.cast(e);
-      sb.append(" column: ").append(ex.getLocation().getColumnNr());
+      JsonParseException ex = (JsonParseException) e;
+      message = ex.getOriginalMessage();
+      columnNr = ex.getLocation().getColumnNr();
     }
-    throw new DrillRuntimeException(sb.toString(), e);
+
+    DrillUserException.Builder builder = new DrillUserException.Builder(ErrorType.DATA_READ, e, "%s - %s", suffix, message);
+
+    // add context information
+    builder.add("Filename: " + hadoopPath.toUri().getPath());
+    builder.add("Record", recordCount + 1);
+    if (columnNr != -1) {
+      builder.add("Column", columnNr);
+    }
+
+    throw builder.build();
   }
 
 

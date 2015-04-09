@@ -23,6 +23,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -60,7 +62,7 @@ public class ParquetResultListener implements UserResultsListener {
   }
 
   @Override
-  public void submissionFailed(RpcException ex) {
+  public void submissionFailed(DrillUserException ex) {
     logger.error("Submission failed.", ex);
     future.setException(ex);
   }
@@ -167,7 +169,9 @@ public class ParquetResultListener implements UserResultsListener {
           assertEquals("Mismatched record counts in vectors.", recordsInBatch, valuesChecked.get(s).intValue());
         }
         assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
-      } catch (AssertionError e) { submissionFailed(new RpcException(e)); }
+      } catch (AssertionError e) {
+        submissionFailed(ErrorHelper.wrap(e));
+      }
     }
 
     assert valuesChecked.keySet().size() > 0;

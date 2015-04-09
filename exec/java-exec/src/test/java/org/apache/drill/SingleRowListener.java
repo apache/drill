@@ -23,11 +23,11 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
@@ -49,10 +49,10 @@ public abstract class SingleRowListener implements UserResultsListener {
   }
 
   @Override
-  public void submissionFailed(final RpcException ex) {
+  public void submissionFailed(final DrillUserException ex) {
     exception = ex;
     synchronized(errorList) {
-      errorList.add(ex.getRemoteError());
+      errorList.add(ex.getOrCreatePBError(false));
     }
     latch.countDown();
   }

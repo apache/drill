@@ -18,7 +18,6 @@
 package org.apache.drill.exec.ops;
 
 import com.google.common.base.Preconditions;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
@@ -30,6 +29,8 @@ import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
 import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -37,18 +38,14 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.record.FragmentWritableBatch;
-import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
-import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.FragmentOptionManager;
@@ -150,10 +147,16 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   public void fail(Throwable cause) {
     final FragmentHandle fragmentHandle = fragment.getHandle();
+
+    DrillUserException dse = ErrorHelper.wrap(cause);
+    dse.getContext().add(getIdentity());
+
+    // log the error id
     logger.error("Fragment Context received failure -- Fragment: {}:{}",
-      fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId(), cause);
+      fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId(), dse);
+
     setState(FragmentContextState.FAILED);
-    deferredException.addThrowable(cause);
+    deferredException.addThrowable(dse);
   }
 
   public void cancel() {

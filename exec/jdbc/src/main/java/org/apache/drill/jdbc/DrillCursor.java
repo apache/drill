@@ -25,10 +25,8 @@ import net.hydromatic.avatica.ArrayImpl.Factory;
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.Cursor;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.jdbc.impl.DrillResultSetImpl;
 
@@ -141,7 +139,7 @@ public class DrillCursor implements Cursor {
           }
           return true;
         }
-      } catch (RpcException | InterruptedException | SchemaChangeException e) {
+      } catch (Exception e) {
         throw new SQLException("Failure while executing query.", e);
       }
 

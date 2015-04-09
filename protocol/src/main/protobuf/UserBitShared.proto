@@ -30,9 +30,21 @@ message QueryId {
 }
 
 message DrillPBError{
+  enum ErrorType {
+    CONNECTION = 0;
+    DATA_READ = 1;
+    DATA_WRITE = 2;
+    FUNCTION = 3;
+    PARSE = 4;
+    PERMISSION = 5;
+    PLAN = 6;
+    RESOURCE = 7;
+    SYSTEM = 8;
+    UNSUPPORTED_OPERATION = 9;
+  }
   optional string error_id = 1; // for debug tracing purposes
   optional DrillbitEndpoint endpoint = 2;
-  optional int32 error_type = 3;
+  optional ErrorType error_type = 3;
   optional string message = 4;
   optional ExceptionWrapper exception = 5;
   repeated ParsingError parsing_error = 6; //optional, used when providing location of error within a piece of text.

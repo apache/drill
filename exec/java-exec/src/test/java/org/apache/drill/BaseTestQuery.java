@@ -25,9 +25,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
@@ -37,7 +36,6 @@ import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
@@ -45,9 +43,6 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.AfterClass;
@@ -325,12 +320,12 @@ public class BaseTestQuery extends ExecTest {
   }
 
   private static class SilentListener implements UserResultsListener {
-    private volatile Exception exception;
+    private volatile DrillUserException exception;
     private AtomicInteger count = new AtomicInteger();
     private CountDownLatch latch = new CountDownLatch(1);
 
     @Override
-    public void submissionFailed(RpcException ex) {
+    public void submissionFailed(DrillUserException ex) {
       exception = ex;
       System.out.println("Query failed: " + ex.getMessage());
       latch.countDown();

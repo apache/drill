@@ -29,6 +29,7 @@ import org.apache.drill.QueryTestUtil;
 import org.apache.drill.SingleRowListener;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillUserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
@@ -39,13 +40,13 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.testing.ExceptionInjectionUtil;
 import org.apache.drill.exec.testing.SimulatedExceptions.InjectionOption;
@@ -311,13 +312,10 @@ public class TestDrillbitResilience extends ExecTest {
    * @param desc the expected exception site description
    */
   private static void assertInjected(
-      final Throwable caught, final Class<? extends Throwable> exceptionClass, final String desc) {
-    final String cause = caught.getMessage();
-    final String[] causeParts = cause.split(":");
-    final String causeShortName = causeParts[0].trim();
-    final String causeDesc = causeParts[1].trim();
-    assertTrue(exceptionClass.getName().endsWith(causeShortName));
-    assertEquals(desc, causeDesc);
+      final DrillUserException caught, final Class<? extends Throwable> exceptionClass, final String desc) {
+    ExceptionWrapper cause = caught.getOrCreatePBError(false).getException();
+    assertEquals(exceptionClass.getName(), cause.getExceptionClass());
+    assertEquals(desc, cause.getMessage());
   }
 
   @Test
@@ -341,8 +339,8 @@ public class TestDrillbitResilience extends ExecTest {
     try {
       QueryTestUtil.test(drillClient, "select * from sys.drillbits");
       fail();
-    } catch(RpcException rpce) {
-      assertInjected(rpce, ForemanException.class, desc);
+    } catch(DrillUserException dre) {
+      assertInjected(dre, ForemanException.class, desc);
     }
   }
 
@@ -367,8 +365,8 @@ public class TestDrillbitResilience extends ExecTest {
     try {
       QueryTestUtil.test(drillClient, "select * from sys.drillbits");
       fail();
-    } catch(RpcException rpce) {
-      assertInjected(rpce, ForemanException.class, exceptionDesc);
+    } catch(DrillUserException dre) {
+      assertInjected(dre, ForemanException.class, exceptionDesc);
     }
   }
 
