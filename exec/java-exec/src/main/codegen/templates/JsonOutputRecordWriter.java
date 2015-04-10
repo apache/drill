@@ -89,13 +89,8 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
     @Override
     public void writeField() throws IOException {
   <#if mode.prefix == "Repeated" >
-    // empty lists are represented by simply not starting a field, rather than starting one and putting in 0 elements
-    if (reader.size() == 0) {
-      return;
-    }
     gen.writeStartArray();
     for (int i = 0; i < reader.size(); i++) {
-  <#else>
   </#if>
   
   <#assign typeName = minor.class >

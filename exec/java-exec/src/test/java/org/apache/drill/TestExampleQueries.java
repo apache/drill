@@ -831,4 +831,16 @@ public class TestExampleQueries extends BaseTestQuery{
         .baselineValues("MIDDLE EAST")
         .build().run();
   }
+
+  @Test // DRILL-2221
+  public void createJsonWithEmptyList() throws Exception {
+    final String file = FileUtils.getResourceAsFile("/store/json/record_with_empty_list.json").toURI().toString();
+    final String tableName = "jsonWithEmptyList";
+    test("USE dfs_test.tmp");
+    test("ALTER SESSION SET `store.format`='json'");
+    test(String.format("CREATE TABLE %s AS SELECT * FROM `%s`", tableName, file));
+    test(String.format("SELECT COUNT(*) FROM %s", tableName));
+    test("ALTER SESSION SET `store.format`='parquet'");
+  }
+
 }
