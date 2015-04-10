@@ -22,7 +22,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 
 public class TestSystemTable extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSystemTable.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSystemTable.class);
 
   @Test
   public void alterSessionOption() throws Exception {
@@ -45,15 +45,19 @@ public class TestSystemTable extends BaseTestQuery {
       .go();
   }
 
-  // need to enhance this
+  // DRILL-2670
   @Test
-  public void testThreadsTable() throws Exception {
+  public void optionsOrderBy() throws Exception {
+    test("select * from sys.options order by name");
+  }
+
+  @Test
+  public void threadsTable() throws Exception {
     test("select * from sys.threads");
   }
 
-  // need to enhance this
   @Test
-  public void testMemoryTable() throws Exception {
+  public void memoryTable() throws Exception {
     test("select * from sys.memory");
   }
 }

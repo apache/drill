@@ -35,6 +35,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.pojo.PojoDataType;
 
 /**
  * A "storage" plugin for system tables.
@@ -101,7 +102,8 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
     public DrillTable getTable(String name) {
       for (SystemTable table : SystemTable.values()) {
         if (table.getTableName().equalsIgnoreCase(name)) {
-          return new StaticDrillTable(SystemTablePlugin.this.name, SystemTablePlugin.this, table, table.getDataType());
+          return new StaticDrillTable(SystemTablePlugin.this.name, SystemTablePlugin.this, table,
+            new PojoDataType(table.getPojoClass()));
         }
       }
       return null;

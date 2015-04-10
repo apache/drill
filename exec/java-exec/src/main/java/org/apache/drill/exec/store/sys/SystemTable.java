@@ -22,8 +22,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.options.DrillConfigIterator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.store.RecordDataType;
-import org.apache.drill.exec.store.pojo.PojoDataType;
 
 import java.util.Iterator;
 
@@ -35,40 +33,40 @@ import java.util.Iterator;
  */
 public enum SystemTable {
 
-  OPTION("options", false, new PojoDataType(OptionValue.class)) {
+  OPTION("options", false, OptionValue.class) {
     @Override
-    public Iterator<Object> getLocalIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final FragmentContext context) {
       final DrillConfigIterator configOptions = new DrillConfigIterator(context.getConfig());
       final OptionManager fragmentOptions = context.getOptions();
       return (Iterator<Object>) (Object) Iterators.concat(configOptions.iterator(), fragmentOptions.iterator());
     }
   },
 
-  DRILLBITS("drillbits", false, new PojoDataType(DrillbitIterator.DrillbitInstance.class)) {
+  DRILLBITS("drillbits", false,DrillbitIterator.DrillbitInstance.class) {
     @Override
-    public Iterator<Object> getLocalIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final FragmentContext context) {
       return new DrillbitIterator(context);
     }
   },
 
-  VERSION("version", false, new PojoDataType(VersionIterator.VersionInfo.class)) {
+  VERSION("version", false, VersionIterator.VersionInfo.class) {
     @Override
-    public Iterator<Object> getLocalIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final FragmentContext context) {
       return new VersionIterator();
     }
   },
 
-  MEMORY("memory", true, MemoryRecord.getInstance()) {
+  MEMORY("memory", true, MemoryIterator.MemoryInfo.class) {
     @Override
-    public SystemRecord getSystemRecord() {
-      return MemoryRecord.getInstance();
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new MemoryIterator(context);
     }
   },
 
-  THREADS("threads", true, ThreadsRecord.getInstance()) {
+  THREADS("threads", true, ThreadsIterator.ThreadsInfo.class) {
     @Override
-    public SystemRecord getSystemRecord() {
-      return ThreadsRecord.getInstance();
+  public Iterator<Object> getIterator(final FragmentContext context) {
+      return new ThreadsIterator(context);
     }
   };
 
@@ -76,22 +74,16 @@ public enum SystemTable {
 
   private final String tableName;
   private final boolean distributed;
-  private final RecordDataType dataType;
+  private final Class<?> pojoClass;
 
-  SystemTable(String tableName, boolean distributed, RecordDataType dataType) {
+  SystemTable(final String tableName, final boolean distributed, final Class<?> pojoClass) {
     this.tableName = tableName;
     this.distributed = distributed;
-    this.dataType = dataType;
+    this.pojoClass = pojoClass;
   }
 
-  // Distributed tables must override this method
-  public SystemRecord getSystemRecord() {
-    throw new UnsupportedOperationException("Local table does not support this function.");
-  }
-
-  // Local tables must override this method
-  public Iterator<Object> getLocalIterator(FragmentContext context) {
-    throw new UnsupportedOperationException("Distributed table does not support this function.");
+  public Iterator<Object> getIterator(final FragmentContext context) {
+    throw new UnsupportedOperationException(tableName + " must override this method.");
   }
 
   public String getTableName() {
@@ -102,8 +94,8 @@ public enum SystemTable {
     return distributed;
   }
 
-  public RecordDataType getDataType() {
-    return dataType;
+  public Class getPojoClass() {
+    return pojoClass;
   }
 
 }

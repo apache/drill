@@ -27,7 +27,6 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.pojo.PojoDataType;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
 /**
@@ -44,15 +43,8 @@ public class SystemTableBatchCreator implements BatchCreator<SystemTableScan> {
                               final List<RecordBatch> children)
     throws ExecutionSetupException {
     final SystemTable table = scan.getTable();
-    final RecordReader reader;
-    if (table.isDistributed()) {
-      final SystemRecord record = table.getSystemRecord();
-      reader = new SystemRecordReader(context, record);
-    } else {
-      final Iterator<Object> iter = table.getLocalIterator(context);
-      final PojoDataType type = (PojoDataType) table.getDataType();
-      reader = new PojoRecordReader(type.getPojoClass(), iter);
-    }
+    final Iterator<Object> iterator = table.getIterator(context);
+    final RecordReader reader = new PojoRecordReader(table.getPojoClass(), iterator);
 
     return new ScanBatch(scan, context, Collections.singleton(reader).iterator());
   }
