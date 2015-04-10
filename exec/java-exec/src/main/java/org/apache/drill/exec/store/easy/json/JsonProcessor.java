@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.easy.json;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,4 +39,15 @@ public interface JsonProcessor {
   void setSource(JsonNode node);
 
   void ensureAtLeastOneField(BaseWriter.ComplexWriter writer);
+
+  public UserException.Builder getExceptionWithContext(UserException.Builder exceptionBuilder,
+                                                       String field,
+                                                       String msg,
+                                                       Object... args);
+
+  public UserException.Builder getExceptionWithContext(Throwable exception,
+                                                       String field,
+                                                       String msg,
+                                                       Object... args);
+
 }

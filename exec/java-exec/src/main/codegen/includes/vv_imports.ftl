@@ -21,9 +21,12 @@ import io.netty.buffer.*;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionUtil;
 import org.apache.drill.exec.memory.*;
 import org.apache.drill.exec.proto.SchemaDefProtos;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.vector.*;

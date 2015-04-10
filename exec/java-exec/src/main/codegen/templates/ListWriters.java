@@ -97,8 +97,8 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     case IN_MAP:
       return writer;
     }
-    
-    throw new IllegalStateException(String.format("Needed to be in state INIT or IN_MAP but in mode %s", mode.name()));
+
+  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("MAP", mode.name())).build();
 
   }
   
@@ -116,8 +116,8 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     case IN_LIST:
       return writer;
     }
-    
-    throw new IllegalStateException(String.format("Needed to be in state INIT or IN_LIST but in mode %s", mode.name()));
+
+  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("LIST", mode.name())).build();
 
   }
   
@@ -143,8 +143,9 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     case IN_${upperName}:
       return writer;
     }
-    
-    throw new IllegalStateException(String.format("Needed to be in state INIT or IN_${upperName} but in mode %s", mode.name()));
+
+  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("${upperName}", mode.name())).build();
+
   }
   </#list></#list>
 
@@ -198,7 +199,15 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   }
   </#if>
 
-}
+  private String getUnsupportedErrorMsg(String expected, String found ){
+    String f = found.substring(3);
+    return String.format("In a list of type %s, encountered a value of type %s. "+
+      "Drill does not support lists of different types.",
+       f, expected
+    );
+  }
+
+  }
 </#list>
 
 

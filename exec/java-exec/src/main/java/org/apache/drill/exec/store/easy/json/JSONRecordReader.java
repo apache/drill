@@ -124,7 +124,7 @@ public class JSONRecordReader extends AbstractRecordReader {
       }
       setupParser();
     }catch(final Exception e){
-      handleAndRaise("Failure reading JSON file.", e);
+      handleAndRaise("Failure reading JSON file", e);
     }
   }
 
@@ -159,12 +159,15 @@ public class JSONRecordReader extends AbstractRecordReader {
       columnNr = ex.getLocation().getColumnNr();
     }
 
-    throw UserException.dataReadError(e)
-      .message("%s - %s", suffix, message)
-      .addContext("Filename", hadoopPath.toUri().getPath())
-      .addContext("Record", recordCount + 1)
-      .addContext("Column", columnNr)
-      .build();
+    UserException.Builder exceptionBuilder = UserException.dataReadError(e)
+            .message("%s - %s", suffix, message);
+    if (columnNr > 0) {
+      exceptionBuilder.pushContext("Column ", columnNr);
+    }
+    exceptionBuilder.pushContext("Record ", recordCount + 1)
+            .pushContext("File ", hadoopPath.toUri().getPath());
+
+    throw exceptionBuilder.build();
   }
 
 
@@ -208,10 +211,8 @@ public class JSONRecordReader extends AbstractRecordReader {
 
       return recordCount;
 
-    } catch (final JsonParseException e) {
-      handleAndRaise("Error parsing JSON.", e);
-    } catch (final IOException e) {
-      handleAndRaise("Error reading JSON.", e);
+    } catch (final Exception e) {
+      handleAndRaise("Error parsing JSON", e);
     }
     // this is never reached
     return 0;
