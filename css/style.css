@@ -3,30 +3,28 @@
 
 @import url(http://fonts.googleapis.com/css?family=Lato:400,300,700);
 
-* { outline:none; }
+* {
+  outline:none;
+}
+
+html {
+  height: 100%;
+}
 
 body {
 	font-family:"Lato";
-	margin:0;
-	padding:0;	
+	padding:0;
+  margin: 0;
+  height: 100%;
+}
+.page-wrap{
+  min-height: 100%;
+  margin-bottom: -60px; /* negative value of footer height */
 }
 
 .mw { min-width:999px; width:100%; }
 
 .nw { white-space:nowrap; }
-
-pre {
-    font-family: 'Consolas', 'DejaVu Sans Mono',
-                 'Bitstream Vera Sans Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.015em;
-    line-height: 120%;
-    padding: 0.5em;
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    background-color: #f8f8f8;
-		overflow: auto;
-}
 
 a.anchor {
 	display:none;
@@ -91,7 +89,7 @@ a.anchor {
 #menu ul li a {
 	color:#FFF;
 	text-decoration:none;
-	line-height:50px;
+	line-height:45px;
 	padding:14px 20px;
 }
 /*
@@ -613,6 +611,10 @@ table.intro a {
 	padding:0;
 }
 
+.page-wrap:after {
+  display: block;
+  content: "";
+}
 #footer {
 	background:#232323;
 	color:#FFF;
@@ -621,6 +623,9 @@ table.intro a {
 	line-height:20px;
 	padding:30px 0;
 	text-align:center;
+}
+#footer, .page-wrap:after {
+  height: 60px;
 }
 
 #footer .wrapper {
@@ -660,7 +665,7 @@ table.intro a {
 }
 
 .int_text {
-	margin:60px auto 100px auto;
+	margin:60px auto 60px auto;
 	width:780px;
 }
 
@@ -717,7 +722,7 @@ ul.num {
 	font-size:16px;
 	font-weight:lighter;
 	margin:auto;
-	margin-top:110px;
+	margin-top:60px;
 	padding:0 0 15px 0;
 	position:relative;
 	text-align:center;
@@ -833,3 +838,69 @@ p.info {
 li p {
 	margin-top: 0px;
 }
+
+.hidden {
+  display:none;
+}
+
+/******************
+ Search Bar
+******************/
+
+#menu .search-bar {
+  line-height: 30px;
+  margin: 0 20px 0 20px;
+}
+
+#menu .search-bar form {
+  border-radius: 6px;
+  border: solid 1px black;
+  background-color: #1A6BC7;
+}
+
+#menu .search-bar input[type='text'] {
+  border: none;
+  color: white;
+  background-color: transparent !important;
+  font-family: lato;
+  font-size: 14px;
+  font-weight: inherit;
+  padding: 0 0 0 8px;
+  line-height: 20px;
+  width: 44px;
+}
+#menu .search-bar input[placeholder] {
+  opacity: .7;
+}
+
+#menu .search-bar:hover {
+  background-color: black;
+}
+
+#menu .search-bar button[type='submit'] {
+  display: inline;
+  border: none;
+  background:none;
+  position: relative;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  width: 33px;
+}
+#menu .search-bar ::-webkit-input-placeholder {
+   color: white;
+}
+
+#menu .search-bar :-moz-placeholder { /* Firefox 18- */
+   color: white;  
+}
+
+#menu .search-bar ::-moz-placeholder {  /* Firefox 19+ */
+   color: white;  
+}
+
+#menu .search-bar :-ms-input-placeholder {  
+   color: white;
+}
+
+

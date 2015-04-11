@@ -5,25 +5,7 @@
 var reelPointer = null;
 $(document).ready(function(e) {
 	
-	$("a.anchor").css({ display: "inline" });
-	if (location.hash) {
-		var hash = location.hash.replace("#","");
-		var aOffset = $('a[name='+hash+']').offset();
-		$('html, body').animate({
-           'scrollTop': aOffset.top
-        }, 500);
-	}
-	/*
-	$("a[href~='#']").not("a[href^='http']").click(function(e) {
-		e.preventDefault();
-		var hash = $(this).attr("href").replace("#","");
-		var aOffset = $('a[name='+hash+']').offset();
-		$('html, body').animate({
-           'scrollTop': aOffset.top - 60
-        }, 500);	
-	});
-	*/
-	$(".aLeft").click(function() {
+  $(".aLeft").click(function() {
 		moveReel("prev");
 	});
 	$(".aRight").click(function() {

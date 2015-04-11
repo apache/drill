@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+
+{% include head.html %}
+
+<body onResize="resized();">
+<div class="page-wrap">
+  {% include menu.html %}
+  {{ content }}
+</div>
+
+{% include footer.html %}
+{% include scripts.html %}
+</body>
+</html>

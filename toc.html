@@ -1,0 +1,48 @@
+---
+layout: null
+---
+{% comment %}
+Notes:
+* Other doc attributes: relative_path, url
+* Directories don't matter at all. You don't have to use them.
+* File names don't matter either, except the alphabetical order between them.
+{% endcomment %}
+
+<aside class="sidebar">
+  <div class="docsidebar">
+    <div class="docsidebarwrapper">
+
+<ul class="current" style="display: block;">
+{% for doc0 in site.docs %}
+  {% if doc0.parent == null %}
+    {% if doc0.nocontent %}<li class="toctree-l1">{{ doc0.title }}</li>{% else %}<li class="toctree-l1"><a class="reference internal" href="{{ site.baseurl }}/docs/{{ doc0.title | slugify }}/">{{ doc0.title }}</a></li>{% endif %}
+    {% assign doc0_has_children = false %}
+    {% for doc1 in site.docs %}{% if doc1.parent == doc0.title %}{% assign doc0_has_children = true %}{% endif %}{% endfor %}
+    {% if doc0_has_children %}
+      <ul style="display: none;">
+      {% for doc1 in site.docs %}
+        {% if doc1.parent == doc0.title %}
+          {% if doc1.nocontent %}<li class="toctree-l2">{{ doc1.title }}</li>{% else %}<li class="toctree-l2"><a class="reference internal" href="{{ site.baseurl }}/docs/{{ doc1.title | slugify }}/">{{ doc1.title }}</a></li>{% endif %}
+          {% assign doc1_has_children = false %}
+          {% for doc2 in site.docs %}{% if doc2.parent == doc1.title %}{% assign doc1_has_children = true %}{% endif %}{% endfor %}
+          {% if doc1_has_children %}
+            <ul style="display: none;">
+            {% for doc2 in site.docs %}
+              {% if doc2.parent == doc1.title %}
+                <li class="toctree-l3"><a class="reference internal" href="{{ site.baseurl }}/docs/{{ doc2.title | slugify }}/">{{ doc2.title }}</a></li>
+              {% endif %}
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+</ul>
+
+    </div>
+  </div>
+</aside>
+
