@@ -590,4 +590,43 @@ public class TestViewSupport extends TestBaseViewSupport {
         .baselineValues(false, errorMsg)
         .go();
   }
+
+  @Test // DRILL-2423
+  public void showProperMsgWhenDroppingNonExistentView() throws Exception{
+    testBuilder()
+        .sqlQuery("DROP VIEW dfs_test.tmp.nonExistentView")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, "Unknown view [nonExistentView] in schema [dfs_test.tmp].")
+        .go();
+  }
+
+  @Test // DRILL-2423
+  public void showProperMsgWhenTryingToDropAViewInImmutableSchema() throws Exception{
+    testBuilder()
+        .sqlQuery("DROP VIEW cp.nonExistentView")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, "Schema [cp.default] is immutable.")
+        .go();
+  }
+
+  @Test // DRILL-2423
+  public void showProperMsgWhenTryingToDropANonViewTable() throws Exception{
+    final String testTableName = "testTableShowErrorMsg";
+    try {
+      test(String.format("CREATE TABLE %s.%s AS SELECT c_custkey, c_nationkey from cp.`tpch/customer.parquet`",
+          TEMP_SCHEMA, testTableName));
+
+      testBuilder()
+          .sqlQuery(String.format("DROP VIEW %s.%s", TEMP_SCHEMA, testTableName))
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(false, "[testTableShowErrorMsg] is not a VIEW in schema [dfs_test.tmp]")
+          .go();
+    } finally {
+      File tblPath = new File(getDfsTestTmpSchemaLocation(), testTableName);
+      FileUtils.deleteQuietly(tblPath);
+    }
+  }
 }

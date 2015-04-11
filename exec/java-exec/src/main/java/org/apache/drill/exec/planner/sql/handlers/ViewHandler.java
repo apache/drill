@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.calcite.schema.Schema;
+import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.tools.Planner;
@@ -134,6 +135,7 @@ public abstract class ViewHandler extends AbstractSqlHandler {
     @Override
     public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
       SqlDropView dropView = unwrap(sqlNode, SqlDropView.class);
+      final String viewToDrop = dropView.getName();
 
       try {
         SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(), dropView.getSchemaPath());
@@ -141,20 +143,29 @@ public abstract class ViewHandler extends AbstractSqlHandler {
 
         String schemaPath = drillSchema.getFullSchemaName();
         if (!drillSchema.isMutable()) {
-          return DirectPlan.createDirectPlan(context, false, String.format("Schema '%s' is not a mutable schema. " +
-              "Views don't exist in this schema", schemaPath));
+          return DirectPlan.createDirectPlan(context, false, String.format("Schema [%s] is immutable.", schemaPath));
         }
 
-        if (drillSchema instanceof WorkspaceSchema) {
-          ((WorkspaceSchema) drillSchema).dropView(dropView.getName());;
-        } else {
-          return DirectPlan.createDirectPlan(context, false, "Schema provided was not a workspace schema.");
+        if (!(drillSchema instanceof WorkspaceSchema)) {
+          return DirectPlan.createDirectPlan(context, false,
+              String.format("Schema [%s] doesn't support creating/dropping views.", schemaPath));
         }
+
+        final Table existingTable = SqlHandlerUtil.getTableFromSchema(drillSchema, viewToDrop);
+        if (existingTable != null && existingTable.getJdbcTableType() != Schema.TableType.VIEW) {
+          return DirectPlan.createDirectPlan(context, false,
+              String.format("[%s] is not a VIEW in schema [%s]", viewToDrop, schemaPath));
+        } else if (existingTable == null) {
+          return DirectPlan.createDirectPlan(context, false,
+              String.format("Unknown view [%s] in schema [%s].", viewToDrop, schemaPath));
+        }
+
+        ((WorkspaceSchema) drillSchema).dropView(viewToDrop);
 
         return DirectPlan.createDirectPlan(context, true,
-            String.format("View '%s' deleted successfully from '%s' schema", dropView.getName(), schemaPath));
+            String.format("View [%s] deleted successfully from schema [%s].", viewToDrop, schemaPath));
       } catch(Exception e) {
-        logger.debug("Failed to delete view {}", dropView.getName(), e);
+        logger.debug("Failed to delete view {}", viewToDrop, e);
         return DirectPlan.createDirectPlan(context, false, String.format("Error: %s", e.getMessage()));
       }
     }

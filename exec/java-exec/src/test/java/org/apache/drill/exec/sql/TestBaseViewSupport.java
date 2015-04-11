@@ -100,7 +100,7 @@ public class TestBaseViewSupport extends BaseTestQuery {
         .sqlQuery(String.format("DROP VIEW %s", viewFullName))
         .unOrdered()
         .baselineColumns("ok", "summary")
-        .baselineValues(true, String.format("View '%s' deleted successfully from '%s' schema", viewName, finalSchema))
+        .baselineValues(true, String.format("View [%s] deleted successfully from schema [%s].", viewName, finalSchema))
         .go();
   }
 
