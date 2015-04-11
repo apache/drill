@@ -2,7 +2,7 @@ The Apache Drill website is built using [Jekyll](http://jekyllrb.com/).
 
 # Developing and Previewing the Website
 
-To preview the website through GitHub Pages: <http://apache.github.io/drill>
+The expectation was that we would be able to preview the website through GitHub Pages: <http://apache.github.io/drill>. For some reason, this is not working. Instead, you should fork the repository to your personal GitHub, then push some commit to the `gh-pages` branch in your fork, and you should be able to preview the site at <http://tshiran.github.io/drill> (replace `tshiran` with your own username, and `drill` with the name of the repostitory).
 
 To preview the website on your local machine:
 
