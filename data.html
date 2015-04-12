@@ -1,0 +1,12 @@
+---
+layout: null
+---
+[
+{% for doc in site.docs %}{% if forloop.first == false %},
+{% endif %}{
+    "url": "{{ doc.url }}",
+    "title": "{{ doc.title }}",
+    "parent": "{{ doc.parent }}",
+    "relative_path": "{{ doc.relative_path }}"
+}{% endfor %}
+]

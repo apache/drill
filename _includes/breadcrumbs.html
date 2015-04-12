@@ -1,6 +1,8 @@
 <nav class="breadcrumbs">
-  <li><a href="{{ site.baseurl }}">Home</a></li>
-  <li><a href="{{ site.baseurl }}">Foo</a></li>
-  <li><a href="{{ site.baseurl }}">Bar</a></li>
-  <li><a href="{{ site.baseurl }}" class="active">Yikes</a></li>
+  <li><a href="{{ site.baseurl }}/docs/">Docs</a></li>
+ {% assign page_data = site.data.docs.by_title[page.title] %}
+  {% for doc in page_data.breadcrumbs reversed %}
+    <li><a href="{{ site.baseurl }}{{ doc.url }}">{{ doc.title }}</a></li>
+  {% endfor %}
+  <li>{{ page.title }}</li>
 </nav>
