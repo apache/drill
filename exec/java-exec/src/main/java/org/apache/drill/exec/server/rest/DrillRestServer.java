@@ -56,6 +56,7 @@ public class DrillRestServer extends ResourceConfig {
 
     register(JsonParseExceptionMapper.class);
     register(JsonMappingExceptionMapper.class);
+    register(GenericExceptionMapper.class);
 
     JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
     provider.setMapper(workManager.getContext().getConfig().getMapper());
