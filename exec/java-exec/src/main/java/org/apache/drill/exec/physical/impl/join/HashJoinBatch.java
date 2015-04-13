@@ -452,8 +452,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         MajorType inputType = vv.getField().getType();
         MajorType outputType;
 
-        // If right or full outer join then the output type should be optional
-        if ((joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL) && inputType.getMode() == DataMode.REQUIRED) {
+        // If right or full outer join then the output type should be optional. However, map types are
+        // not nullable so we must exclude them from the check below (see DRILL-2771, DRILL-2197).
+        if ((joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL) && inputType.getMode() == DataMode.REQUIRED
+            && inputType.getMinorType() != TypeProtos.MinorType.MAP) {
           outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
         } else {
           outputType = inputType;

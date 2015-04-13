@@ -62,4 +62,17 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .baselineValues("doob")
         .go();
   }
+
+  @Test  // DRILL-2771, similar problem as DRILL-2197 except problem reproduces with right outer join instead of left
+  public void testRightJoinWithMap() throws Exception {
+    final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from " +
+        "cp.`join/complex_1.json` b right outer join cp.`join/complex_1.json` a on a.id = b.id order by a.id";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .jsonBaselineFile("join/DRILL-2197-result-1.json")
+        .build()
+        .run();
+  }
 }
