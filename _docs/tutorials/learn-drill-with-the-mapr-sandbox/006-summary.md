@@ -1,6 +1,6 @@
 ---
 title: "Summary"
-parent: "Apache Drill Tutorial"
+parent: "Learn Drill with the MapR Sandbox"
 ---
 This tutorial introduced Apache Drill and its ability to run ANSI SQL queries
 against various data sources, including Hive tables, MapR-DB/HBase tables, and

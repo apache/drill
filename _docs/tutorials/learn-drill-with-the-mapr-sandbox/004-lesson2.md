@@ -1,6 +1,6 @@
 ---
 title: "Lession 2: Run Queries with ANSI SQL"
-parent: "Apache Drill Tutorial"
+parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal
 

@@ -135,17 +135,22 @@
             "title": "Aggregate and Aggregate Statistical", 
             "url": "/docs/aggregate-and-aggregate-statistical/"
         }, 
-        "Analyzing Yelp JSON Data with Apache Drill": {
-            "breadcrumbs": [], 
+        "Analyzing the Yelp Academic Dataset": {
+            "breadcrumbs": [
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
+                }
+            ], 
             "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
-            "parent": "", 
-            "previous_title": "Summary", 
-            "previous_url": "/docs/summary/", 
-            "relative_path": "_docs/003-yelp.md", 
-            "title": "Analyzing Yelp JSON Data with Apache Drill", 
-            "url": "/docs/analyzing-yelp-json-data-with-apache-drill/"
+            "next_title": "Learn Drill with the MapR Sandbox", 
+            "next_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+            "parent": "Tutorials", 
+            "previous_title": "Tutorials", 
+            "previous_url": "/docs/tutorials/", 
+            "relative_path": "_docs/tutorials/010-yelp.md", 
+            "title": "Analyzing the Yelp Academic Dataset", 
+            "url": "/docs/analyzing-the-yelp-academic-dataset/"
         }, 
         "Apache Drill 0.4.0 Release Notes": {
             "breadcrumbs": [
@@ -291,164 +296,6 @@
             "title": "Apache Drill M1 Release Notes (Apache Drill Alpha)", 
             "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
         }, 
-        "Apache Drill Tutorial": {
-            "breadcrumbs": [], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Installing the Apache Drill Sandbox", 
-                                    "url": "/docs/installing-the-apache-drill-sandbox/"
-                                }, 
-                                {
-                                    "title": "Apache Drill Tutorial", 
-                                    "url": "/docs/apache-drill-tutorial/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-                            "next_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/", 
-                            "parent": "Installing the Apache Drill Sandbox", 
-                            "previous_title": "Installing the Apache Drill Sandbox", 
-                            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
-                            "relative_path": "_docs/tutorial/install-sandbox/001-install-mapr-vm.md", 
-                            "title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-                            "url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Installing the Apache Drill Sandbox", 
-                                    "url": "/docs/installing-the-apache-drill-sandbox/"
-                                }, 
-                                {
-                                    "title": "Apache Drill Tutorial", 
-                                    "url": "/docs/apache-drill-tutorial/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Getting to Know the Drill Sandbox", 
-                            "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
-                            "parent": "Installing the Apache Drill Sandbox", 
-                            "previous_title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-                            "previous_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/", 
-                            "relative_path": "_docs/tutorial/install-sandbox/002-install-mapr-vb.md", 
-                            "title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-                            "url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/"
-                        }
-                    ], 
-                    "next_title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-                    "next_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Apache Drill Tutorial", 
-                    "previous_url": "/docs/apache-drill-tutorial/", 
-                    "relative_path": "_docs/tutorial/001-install-sandbox.md", 
-                    "title": "Installing the Apache Drill Sandbox", 
-                    "url": "/docs/installing-the-apache-drill-sandbox/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lession 1: Learn about the Data Set", 
-                    "next_url": "/docs/lession-1-learn-about-the-data-set/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-                    "previous_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/", 
-                    "relative_path": "_docs/tutorial/002-get2kno-sb.md", 
-                    "title": "Getting to Know the Drill Sandbox", 
-                    "url": "/docs/getting-to-know-the-drill-sandbox/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lession 2: Run Queries with ANSI SQL", 
-                    "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Getting to Know the Drill Sandbox", 
-                    "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
-                    "relative_path": "_docs/tutorial/003-lesson1.md", 
-                    "title": "Lession 1: Learn about the Data Set", 
-                    "url": "/docs/lession-1-learn-about-the-data-set/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lession 3: Run Queries on Complex Data Types", 
-                    "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Lession 1: Learn about the Data Set", 
-                    "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
-                    "relative_path": "_docs/tutorial/004-lesson2.md", 
-                    "title": "Lession 2: Run Queries with ANSI SQL", 
-                    "url": "/docs/lession-2-run-queries-with-ansi-sql/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Summary", 
-                    "next_url": "/docs/summary/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Lession 2: Run Queries with ANSI SQL", 
-                    "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-                    "relative_path": "_docs/tutorial/005-lesson3.md", 
-                    "title": "Lession 3: Run Queries on Complex Data Types", 
-                    "url": "/docs/lession-3-run-queries-on-complex-data-types/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Analyzing Yelp JSON Data with Apache Drill", 
-                    "next_url": "/docs/analyzing-yelp-json-data-with-apache-drill/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Lession 3: Run Queries on Complex Data Types", 
-                    "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-                    "relative_path": "_docs/tutorial/006-summary.md", 
-                    "title": "Summary", 
-                    "url": "/docs/summary/"
-                }
-            ], 
-            "next_title": "Installing the Apache Drill Sandbox", 
-            "next_url": "/docs/installing-the-apache-drill-sandbox/", 
-            "parent": "", 
-            "previous_title": "Performance", 
-            "previous_url": "/docs/performance/", 
-            "relative_path": "_docs/002-tutorial.md", 
-            "title": "Apache Drill Tutorial", 
-            "url": "/docs/apache-drill-tutorial/"
-        }, 
         "Apache Drill in 10 Minutes": {
             "breadcrumbs": [
                 {
@@ -507,8 +354,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill Tutorial", 
-                    "next_url": "/docs/apache-drill-tutorial/", 
+                    "next_title": "Tutorials", 
+                    "next_url": "/docs/tutorials/", 
                     "parent": "Architectural Highlights", 
                     "previous_title": "Flexibility", 
                     "previous_url": "/docs/flexibility/", 
@@ -587,8 +434,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Apache Drill Tutorial", 
-                            "next_url": "/docs/apache-drill-tutorial/", 
+                            "next_title": "Tutorials", 
+                            "next_url": "/docs/tutorials/", 
                             "parent": "Architectural Highlights", 
                             "previous_title": "Flexibility", 
                             "previous_url": "/docs/flexibility/", 
@@ -2250,17 +2097,21 @@
         "Getting to Know the Drill Sandbox": {
             "breadcrumbs": [
                 {
-                    "title": "Apache Drill Tutorial", 
-                    "url": "/docs/apache-drill-tutorial/"
+                    "title": "Learn Drill with the MapR Sandbox", 
+                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                }, 
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
                 }
             ], 
             "children": [], 
             "next_title": "Lession 1: Learn about the Data Set", 
             "next_url": "/docs/lession-1-learn-about-the-data-set/", 
-            "parent": "Apache Drill Tutorial", 
-            "previous_title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-            "previous_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/", 
-            "relative_path": "_docs/tutorial/002-get2kno-sb.md", 
+            "parent": "Learn Drill with the MapR Sandbox", 
+            "previous_title": "Installing the Apache Drill Sandbox", 
+            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/002-get2kno-sb.md", 
             "title": "Getting to Know the Drill Sandbox", 
             "url": "/docs/getting-to-know-the-drill-sandbox/"
         }, 
@@ -2500,8 +2351,8 @@
             "next_title": "Apache Drill in 10 Minutes", 
             "next_url": "/docs/apache-drill-in-10-minutes/", 
             "parent": "", 
-            "previous_title": "Analyzing Yelp JSON Data with Apache Drill", 
-            "previous_url": "/docs/analyzing-yelp-json-data-with-apache-drill/", 
+            "previous_title": "Summary", 
+            "previous_url": "/docs/summary/", 
             "relative_path": "_docs/004-install.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -2670,60 +2521,21 @@
         "Installing the Apache Drill Sandbox": {
             "breadcrumbs": [
                 {
-                    "title": "Apache Drill Tutorial", 
-                    "url": "/docs/apache-drill-tutorial/"
-                }
-            ], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Installing the Apache Drill Sandbox", 
-                            "url": "/docs/installing-the-apache-drill-sandbox/"
-                        }, 
-                        {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-                    "next_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/", 
-                    "parent": "Installing the Apache Drill Sandbox", 
-                    "previous_title": "Installing the Apache Drill Sandbox", 
-                    "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
-                    "relative_path": "_docs/tutorial/install-sandbox/001-install-mapr-vm.md", 
-                    "title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-                    "url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/"
+                    "title": "Learn Drill with the MapR Sandbox", 
+                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                 }, 
                 {
-                    "breadcrumbs": [
-                        {
-                            "title": "Installing the Apache Drill Sandbox", 
-                            "url": "/docs/installing-the-apache-drill-sandbox/"
-                        }, 
-                        {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Getting to Know the Drill Sandbox", 
-                    "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
-                    "parent": "Installing the Apache Drill Sandbox", 
-                    "previous_title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-                    "previous_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/", 
-                    "relative_path": "_docs/tutorial/install-sandbox/002-install-mapr-vb.md", 
-                    "title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-                    "url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/"
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
                 }
             ], 
-            "next_title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-            "next_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/", 
-            "parent": "Apache Drill Tutorial", 
-            "previous_title": "Apache Drill Tutorial", 
-            "previous_url": "/docs/apache-drill-tutorial/", 
-            "relative_path": "_docs/tutorial/001-install-sandbox.md", 
+            "children": [], 
+            "next_title": "Getting to Know the Drill Sandbox", 
+            "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+            "parent": "Learn Drill with the MapR Sandbox", 
+            "previous_title": "Learn Drill with the MapR Sandbox", 
+            "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
             "title": "Installing the Apache Drill Sandbox", 
             "url": "/docs/installing-the-apache-drill-sandbox/"
         }, 
@@ -2769,48 +2581,6 @@
             "title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
             "url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/"
         }, 
-        "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion": {
-            "breadcrumbs": [
-                {
-                    "title": "Installing the Apache Drill Sandbox", 
-                    "url": "/docs/installing-the-apache-drill-sandbox/"
-                }, 
-                {
-                    "title": "Apache Drill Tutorial", 
-                    "url": "/docs/apache-drill-tutorial/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-            "next_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/", 
-            "parent": "Installing the Apache Drill Sandbox", 
-            "previous_title": "Installing the Apache Drill Sandbox", 
-            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
-            "relative_path": "_docs/tutorial/install-sandbox/001-install-mapr-vm.md", 
-            "title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-            "url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/"
-        }, 
-        "Installing the MapR Sandbox with Apache Drill on VirtualBox": {
-            "breadcrumbs": [
-                {
-                    "title": "Installing the Apache Drill Sandbox", 
-                    "url": "/docs/installing-the-apache-drill-sandbox/"
-                }, 
-                {
-                    "title": "Apache Drill Tutorial", 
-                    "url": "/docs/apache-drill-tutorial/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Getting to Know the Drill Sandbox", 
-            "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
-            "parent": "Installing the Apache Drill Sandbox", 
-            "previous_title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-            "previous_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/", 
-            "relative_path": "_docs/tutorial/install-sandbox/002-install-mapr-vb.md", 
-            "title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-            "url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/"
-        }, 
         "JSON Data Model": {
             "breadcrumbs": [
                 {
@@ -2849,54 +2619,210 @@
             "title": "KVGEN", 
             "url": "/docs/kvgen/"
         }, 
+        "Learn Drill with the MapR Sandbox": {
+            "breadcrumbs": [
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Learn Drill with the MapR Sandbox", 
+                            "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                        }, 
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Getting to Know the Drill Sandbox", 
+                    "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                    "parent": "Learn Drill with the MapR Sandbox", 
+                    "previous_title": "Learn Drill with the MapR Sandbox", 
+                    "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                    "title": "Installing the Apache Drill Sandbox", 
+                    "url": "/docs/installing-the-apache-drill-sandbox/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Learn Drill with the MapR Sandbox", 
+                            "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                        }, 
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Lession 1: Learn about the Data Set", 
+                    "next_url": "/docs/lession-1-learn-about-the-data-set/", 
+                    "parent": "Learn Drill with the MapR Sandbox", 
+                    "previous_title": "Installing the Apache Drill Sandbox", 
+                    "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/002-get2kno-sb.md", 
+                    "title": "Getting to Know the Drill Sandbox", 
+                    "url": "/docs/getting-to-know-the-drill-sandbox/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Learn Drill with the MapR Sandbox", 
+                            "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                        }, 
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Lession 2: Run Queries with ANSI SQL", 
+                    "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                    "parent": "Learn Drill with the MapR Sandbox", 
+                    "previous_title": "Getting to Know the Drill Sandbox", 
+                    "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/003-lesson1.md", 
+                    "title": "Lession 1: Learn about the Data Set", 
+                    "url": "/docs/lession-1-learn-about-the-data-set/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Learn Drill with the MapR Sandbox", 
+                            "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                        }, 
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Lession 3: Run Queries on Complex Data Types", 
+                    "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                    "parent": "Learn Drill with the MapR Sandbox", 
+                    "previous_title": "Lession 1: Learn about the Data Set", 
+                    "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/004-lesson2.md", 
+                    "title": "Lession 2: Run Queries with ANSI SQL", 
+                    "url": "/docs/lession-2-run-queries-with-ansi-sql/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Learn Drill with the MapR Sandbox", 
+                            "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                        }, 
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Summary", 
+                    "next_url": "/docs/summary/", 
+                    "parent": "Learn Drill with the MapR Sandbox", 
+                    "previous_title": "Lession 2: Run Queries with ANSI SQL", 
+                    "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/005-lesson3.md", 
+                    "title": "Lession 3: Run Queries on Complex Data Types", 
+                    "url": "/docs/lession-3-run-queries-on-complex-data-types/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Learn Drill with the MapR Sandbox", 
+                            "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                        }, 
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Learn Drill with the MapR Sandbox", 
+                    "previous_title": "Lession 3: Run Queries on Complex Data Types", 
+                    "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/006-summary.md", 
+                    "title": "Summary", 
+                    "url": "/docs/summary/"
+                }
+            ], 
+            "next_title": "Installing the Apache Drill Sandbox", 
+            "next_url": "/docs/installing-the-apache-drill-sandbox/", 
+            "parent": "Tutorials", 
+            "previous_title": "Analyzing the Yelp Academic Dataset", 
+            "previous_url": "/docs/analyzing-the-yelp-academic-dataset/", 
+            "relative_path": "_docs/tutorials/020-learn-drill-with-the-mapr-sandbox.md", 
+            "title": "Learn Drill with the MapR Sandbox", 
+            "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+        }, 
         "Lession 1: Learn about the Data Set": {
             "breadcrumbs": [
                 {
-                    "title": "Apache Drill Tutorial", 
-                    "url": "/docs/apache-drill-tutorial/"
+                    "title": "Learn Drill with the MapR Sandbox", 
+                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                }, 
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
                 }
             ], 
             "children": [], 
             "next_title": "Lession 2: Run Queries with ANSI SQL", 
             "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-            "parent": "Apache Drill Tutorial", 
+            "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Getting to Know the Drill Sandbox", 
             "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
-            "relative_path": "_docs/tutorial/003-lesson1.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/003-lesson1.md", 
             "title": "Lession 1: Learn about the Data Set", 
             "url": "/docs/lession-1-learn-about-the-data-set/"
         }, 
         "Lession 2: Run Queries with ANSI SQL": {
             "breadcrumbs": [
                 {
-                    "title": "Apache Drill Tutorial", 
-                    "url": "/docs/apache-drill-tutorial/"
+                    "title": "Learn Drill with the MapR Sandbox", 
+                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                }, 
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
                 }
             ], 
             "children": [], 
             "next_title": "Lession 3: Run Queries on Complex Data Types", 
             "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-            "parent": "Apache Drill Tutorial", 
+            "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Lession 1: Learn about the Data Set", 
             "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
-            "relative_path": "_docs/tutorial/004-lesson2.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/004-lesson2.md", 
             "title": "Lession 2: Run Queries with ANSI SQL", 
             "url": "/docs/lession-2-run-queries-with-ansi-sql/"
         }, 
         "Lession 3: Run Queries on Complex Data Types": {
             "breadcrumbs": [
                 {
-                    "title": "Apache Drill Tutorial", 
-                    "url": "/docs/apache-drill-tutorial/"
+                    "title": "Learn Drill with the MapR Sandbox", 
+                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                }, 
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
                 }
             ], 
             "children": [], 
             "next_title": "Summary", 
             "next_url": "/docs/summary/", 
-            "parent": "Apache Drill Tutorial", 
+            "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Lession 2: Run Queries with ANSI SQL", 
             "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-            "relative_path": "_docs/tutorial/005-lesson3.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/005-lesson3.md", 
             "title": "Lession 3: Run Queries on Complex Data Types", 
             "url": "/docs/lession-3-run-queries-on-complex-data-types/"
         }, 
@@ -3756,8 +3682,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Apache Drill Tutorial", 
-            "next_url": "/docs/apache-drill-tutorial/", 
+            "next_title": "Tutorials", 
+            "next_url": "/docs/tutorials/", 
             "parent": "Architectural Highlights", 
             "previous_title": "Flexibility", 
             "previous_url": "/docs/flexibility/", 
@@ -6410,17 +6336,21 @@
         "Summary": {
             "breadcrumbs": [
                 {
-                    "title": "Apache Drill Tutorial", 
-                    "url": "/docs/apache-drill-tutorial/"
+                    "title": "Learn Drill with the MapR Sandbox", 
+                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                }, 
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
                 }
             ], 
             "children": [], 
-            "next_title": "Analyzing Yelp JSON Data with Apache Drill", 
-            "next_url": "/docs/analyzing-yelp-json-data-with-apache-drill/", 
-            "parent": "Apache Drill Tutorial", 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
+            "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-            "relative_path": "_docs/tutorial/006-summary.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/006-summary.md", 
             "title": "Summary", 
             "url": "/docs/summary/"
         }, 
@@ -6465,6 +6395,180 @@
             "relative_path": "_docs/interfaces/odbc-linux/007-odbc-connections-test.md", 
             "title": "Testing the ODBC Connection on Linux and Mac OS X", 
             "url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/"
+        }, 
+        "Tutorials": {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Learn Drill with the MapR Sandbox", 
+                    "next_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Tutorials", 
+                    "previous_url": "/docs/tutorials/", 
+                    "relative_path": "_docs/tutorials/010-yelp.md", 
+                    "title": "Analyzing the Yelp Academic Dataset", 
+                    "url": "/docs/analyzing-the-yelp-academic-dataset/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Getting to Know the Drill Sandbox", 
+                            "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Learn Drill with the MapR Sandbox", 
+                            "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                            "title": "Installing the Apache Drill Sandbox", 
+                            "url": "/docs/installing-the-apache-drill-sandbox/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Lession 1: Learn about the Data Set", 
+                            "next_url": "/docs/lession-1-learn-about-the-data-set/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Installing the Apache Drill Sandbox", 
+                            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/002-get2kno-sb.md", 
+                            "title": "Getting to Know the Drill Sandbox", 
+                            "url": "/docs/getting-to-know-the-drill-sandbox/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Lession 2: Run Queries with ANSI SQL", 
+                            "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Getting to Know the Drill Sandbox", 
+                            "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/003-lesson1.md", 
+                            "title": "Lession 1: Learn about the Data Set", 
+                            "url": "/docs/lession-1-learn-about-the-data-set/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Lession 3: Run Queries on Complex Data Types", 
+                            "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Lession 1: Learn about the Data Set", 
+                            "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/004-lesson2.md", 
+                            "title": "Lession 2: Run Queries with ANSI SQL", 
+                            "url": "/docs/lession-2-run-queries-with-ansi-sql/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Summary", 
+                            "next_url": "/docs/summary/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Lession 2: Run Queries with ANSI SQL", 
+                            "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/005-lesson3.md", 
+                            "title": "Lession 3: Run Queries on Complex Data Types", 
+                            "url": "/docs/lession-3-run-queries-on-complex-data-types/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Install Drill", 
+                            "next_url": "/docs/install-drill/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Lession 3: Run Queries on Complex Data Types", 
+                            "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/006-summary.md", 
+                            "title": "Summary", 
+                            "url": "/docs/summary/"
+                        }
+                    ], 
+                    "next_title": "Installing the Apache Drill Sandbox", 
+                    "next_url": "/docs/installing-the-apache-drill-sandbox/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing the Yelp Academic Dataset", 
+                    "previous_url": "/docs/analyzing-the-yelp-academic-dataset/", 
+                    "relative_path": "_docs/tutorials/020-learn-drill-with-the-mapr-sandbox.md", 
+                    "title": "Learn Drill with the MapR Sandbox", 
+                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                }
+            ], 
+            "next_title": "Analyzing the Yelp Academic Dataset", 
+            "next_url": "/docs/analyzing-the-yelp-academic-dataset/", 
+            "parent": "", 
+            "previous_title": "Performance", 
+            "previous_url": "/docs/performance/", 
+            "relative_path": "_docs/002-tutorials.md", 
+            "title": "Tutorials", 
+            "url": "/docs/tutorials/"
         }, 
         "USE Command": {
             "breadcrumbs": [
@@ -7007,8 +7111,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Apache Drill Tutorial", 
-                            "next_url": "/docs/apache-drill-tutorial/", 
+                            "next_title": "Tutorials", 
+                            "next_url": "/docs/tutorials/", 
                             "parent": "Architectural Highlights", 
                             "previous_title": "Flexibility", 
                             "previous_url": "/docs/flexibility/", 
@@ -7042,169 +7146,173 @@
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Learn Drill with the MapR Sandbox", 
+                    "next_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Tutorials", 
+                    "previous_url": "/docs/tutorials/", 
+                    "relative_path": "_docs/tutorials/010-yelp.md", 
+                    "title": "Analyzing the Yelp Academic Dataset", 
+                    "url": "/docs/analyzing-the-yelp-academic-dataset/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
                         }
                     ], 
                     "children": [
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Installing the Apache Drill Sandbox", 
-                                    "url": "/docs/installing-the-apache-drill-sandbox/"
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                                 }, 
                                 {
-                                    "title": "Apache Drill Tutorial", 
-                                    "url": "/docs/apache-drill-tutorial/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-                            "next_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/", 
-                            "parent": "Installing the Apache Drill Sandbox", 
-                            "previous_title": "Installing the Apache Drill Sandbox", 
-                            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
-                            "relative_path": "_docs/tutorial/install-sandbox/001-install-mapr-vm.md", 
-                            "title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-                            "url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Installing the Apache Drill Sandbox", 
-                                    "url": "/docs/installing-the-apache-drill-sandbox/"
-                                }, 
-                                {
-                                    "title": "Apache Drill Tutorial", 
-                                    "url": "/docs/apache-drill-tutorial/"
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
                                 }
                             ], 
                             "children": [], 
                             "next_title": "Getting to Know the Drill Sandbox", 
                             "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
-                            "parent": "Installing the Apache Drill Sandbox", 
-                            "previous_title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-                            "previous_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/", 
-                            "relative_path": "_docs/tutorial/install-sandbox/002-install-mapr-vb.md", 
-                            "title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-                            "url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/"
-                        }
-                    ], 
-                    "next_title": "Installing the MapR Sandbox with Apache Drill on VMware Player/VMware Fusion", 
-                    "next_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-vmware-player-vmware-fusion/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Apache Drill Tutorial", 
-                    "previous_url": "/docs/apache-drill-tutorial/", 
-                    "relative_path": "_docs/tutorial/001-install-sandbox.md", 
-                    "title": "Installing the Apache Drill Sandbox", 
-                    "url": "/docs/installing-the-apache-drill-sandbox/"
-                }, 
-                {
-                    "breadcrumbs": [
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Learn Drill with the MapR Sandbox", 
+                            "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                            "title": "Installing the Apache Drill Sandbox", 
+                            "url": "/docs/installing-the-apache-drill-sandbox/"
+                        }, 
                         {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lession 1: Learn about the Data Set", 
-                    "next_url": "/docs/lession-1-learn-about-the-data-set/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Installing the MapR Sandbox with Apache Drill on VirtualBox", 
-                    "previous_url": "/docs/installing-the-mapr-sandbox-with-apache-drill-on-virtualbox/", 
-                    "relative_path": "_docs/tutorial/002-get2kno-sb.md", 
-                    "title": "Getting to Know the Drill Sandbox", 
-                    "url": "/docs/getting-to-know-the-drill-sandbox/"
-                }, 
-                {
-                    "breadcrumbs": [
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Lession 1: Learn about the Data Set", 
+                            "next_url": "/docs/lession-1-learn-about-the-data-set/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Installing the Apache Drill Sandbox", 
+                            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/002-get2kno-sb.md", 
+                            "title": "Getting to Know the Drill Sandbox", 
+                            "url": "/docs/getting-to-know-the-drill-sandbox/"
+                        }, 
                         {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lession 2: Run Queries with ANSI SQL", 
-                    "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Getting to Know the Drill Sandbox", 
-                    "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
-                    "relative_path": "_docs/tutorial/003-lesson1.md", 
-                    "title": "Lession 1: Learn about the Data Set", 
-                    "url": "/docs/lession-1-learn-about-the-data-set/"
-                }, 
-                {
-                    "breadcrumbs": [
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Lession 2: Run Queries with ANSI SQL", 
+                            "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Getting to Know the Drill Sandbox", 
+                            "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/003-lesson1.md", 
+                            "title": "Lession 1: Learn about the Data Set", 
+                            "url": "/docs/lession-1-learn-about-the-data-set/"
+                        }, 
                         {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lession 3: Run Queries on Complex Data Types", 
-                    "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Lession 1: Learn about the Data Set", 
-                    "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
-                    "relative_path": "_docs/tutorial/004-lesson2.md", 
-                    "title": "Lession 2: Run Queries with ANSI SQL", 
-                    "url": "/docs/lession-2-run-queries-with-ansi-sql/"
-                }, 
-                {
-                    "breadcrumbs": [
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Lession 3: Run Queries on Complex Data Types", 
+                            "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Lession 1: Learn about the Data Set", 
+                            "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/004-lesson2.md", 
+                            "title": "Lession 2: Run Queries with ANSI SQL", 
+                            "url": "/docs/lession-2-run-queries-with-ansi-sql/"
+                        }, 
                         {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Summary", 
-                    "next_url": "/docs/summary/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Lession 2: Run Queries with ANSI SQL", 
-                    "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-                    "relative_path": "_docs/tutorial/005-lesson3.md", 
-                    "title": "Lession 3: Run Queries on Complex Data Types", 
-                    "url": "/docs/lession-3-run-queries-on-complex-data-types/"
-                }, 
-                {
-                    "breadcrumbs": [
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Summary", 
+                            "next_url": "/docs/summary/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Lession 2: Run Queries with ANSI SQL", 
+                            "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/005-lesson3.md", 
+                            "title": "Lession 3: Run Queries on Complex Data Types", 
+                            "url": "/docs/lession-3-run-queries-on-complex-data-types/"
+                        }, 
                         {
-                            "title": "Apache Drill Tutorial", 
-                            "url": "/docs/apache-drill-tutorial/"
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Install Drill", 
+                            "next_url": "/docs/install-drill/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Lession 3: Run Queries on Complex Data Types", 
+                            "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/006-summary.md", 
+                            "title": "Summary", 
+                            "url": "/docs/summary/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Analyzing Yelp JSON Data with Apache Drill", 
-                    "next_url": "/docs/analyzing-yelp-json-data-with-apache-drill/", 
-                    "parent": "Apache Drill Tutorial", 
-                    "previous_title": "Lession 3: Run Queries on Complex Data Types", 
-                    "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-                    "relative_path": "_docs/tutorial/006-summary.md", 
-                    "title": "Summary", 
-                    "url": "/docs/summary/"
+                    "next_title": "Installing the Apache Drill Sandbox", 
+                    "next_url": "/docs/installing-the-apache-drill-sandbox/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing the Yelp Academic Dataset", 
+                    "previous_url": "/docs/analyzing-the-yelp-academic-dataset/", 
+                    "relative_path": "_docs/tutorials/020-learn-drill-with-the-mapr-sandbox.md", 
+                    "title": "Learn Drill with the MapR Sandbox", 
+                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                 }
             ], 
-            "next_title": "Installing the Apache Drill Sandbox", 
-            "next_url": "/docs/installing-the-apache-drill-sandbox/", 
+            "next_title": "Analyzing the Yelp Academic Dataset", 
+            "next_url": "/docs/analyzing-the-yelp-academic-dataset/", 
             "parent": "", 
             "previous_title": "Performance", 
             "previous_url": "/docs/performance/", 
-            "relative_path": "_docs/002-tutorial.md", 
-            "title": "Apache Drill Tutorial", 
-            "url": "/docs/apache-drill-tutorial/"
-        }, 
-        {
-            "breadcrumbs": [], 
-            "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
-            "parent": "", 
-            "previous_title": "Summary", 
-            "previous_url": "/docs/summary/", 
-            "relative_path": "_docs/003-yelp.md", 
-            "title": "Analyzing Yelp JSON Data with Apache Drill", 
-            "url": "/docs/analyzing-yelp-json-data-with-apache-drill/"
+            "relative_path": "_docs/002-tutorials.md", 
+            "title": "Tutorials", 
+            "url": "/docs/tutorials/"
         }, 
         {
             "breadcrumbs": [], 
@@ -7345,8 +7453,8 @@
             "next_title": "Apache Drill in 10 Minutes", 
             "next_url": "/docs/apache-drill-in-10-minutes/", 
             "parent": "", 
-            "previous_title": "Analyzing Yelp JSON Data with Apache Drill", 
-            "previous_url": "/docs/analyzing-yelp-json-data-with-apache-drill/", 
+            "previous_title": "Summary", 
+            "previous_url": "/docs/summary/", 
             "relative_path": "_docs/004-install.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"

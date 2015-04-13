@@ -1,5 +1,6 @@
 ---
-title: "Analyzing Yelp JSON Data with Apache Drill"
+title: "Analyzing the Yelp Academic Dataset"
+parent: "Tutorials"
 ---
 [Apache Drill](https://www.mapr.com/products/apache-drill) is one of the
 fastest growing open source projects, with the community making rapid progress

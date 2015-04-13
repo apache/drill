@@ -1,6 +1,6 @@
 ---
 title: "Lession 1: Learn about the Data Set"
-parent: "Apache Drill Tutorial"
+parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal
 

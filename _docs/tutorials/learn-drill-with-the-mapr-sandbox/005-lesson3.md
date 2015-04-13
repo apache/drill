@@ -1,6 +1,6 @@
 ---
 title: "Lession 3: Run Queries on Complex Data Types"
-parent: "Apache Drill Tutorial"
+parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal
 
