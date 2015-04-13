@@ -24,7 +24,9 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
@@ -165,9 +167,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       this.props = upBuilder.build();
     }
 
-    Collection<DrillbitEndpoint> endpoints = clusterCoordinator.getAvailableEndpoints();
+    ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
     checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
-    // just use the first endpoint for now
+    // shuffle the collection then get the first endpoint
+    Collections.shuffle(endpoints);
     DrillbitEndpoint endpoint = endpoints.iterator().next();
 
     eventLoopGroup = createEventLoop(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-");
@@ -190,11 +193,12 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       retry--;
       try {
         Thread.sleep(this.reconnectDelay);
-        Collection<DrillbitEndpoint> endpoints = clusterCoordinator.getAvailableEndpoints();
+        ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
         if (endpoints.isEmpty()) {
           continue;
         }
         client.close();
+        Collections.shuffle(endpoints);
         connect(endpoints.iterator().next());
         return true;
       } catch (Exception e) {
