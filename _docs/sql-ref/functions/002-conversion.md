@@ -10,7 +10,7 @@ Drill supports the following functions for casting and converting data types:
 
 ## CAST
 
-The CAST function converts an entity having a single data value, such as a column name, from one type to another.
+The CAST function converts an entity, such as an expression that evaluates to a single value, from one type to another.
 
 ### Syntax
 
@@ -18,7 +18,7 @@ The CAST function converts an entity having a single data value, such as a colum
 
 *expression*
 
-An entity that evaluates to one or more values, such as a column name or literal
+A combination of one or more values, operators, and SQL functions that evaluate to a value
 
 *data type*
 
@@ -40,7 +40,7 @@ Refer to the following tables for information about the data types to use for ca
 
 ### Examples
 
-The following examples show how to cast a string to a number, a number to a string, and one numerical type to another.
+The following examples show how to cast a string to a number, a number to a string, and one type of number to another.
 
 #### Casting a character string to a number
 You cannot cast a character string that includes a decimal point to an INT or BIGINT. For example, if you have "1200.50" in a JSON file, attempting to select and cast the string to an INT fails. As a workaround, cast to a FLOAT or DECIMAL type, and then to an INT. 
@@ -55,15 +55,7 @@ The following example shows how to cast a character to a DECIMAL having two deci
     +------------+
 
 #### Casting a number to a character string
-The first example shows that Drill uses a default limit of 1 character if you omit the VARCHAR limit: The result is truncated to 1 character.  The second example casts the same number to a VARCHAR having a limit of 3 characters: The result is a 3-character string, 456. The third example shows that you can use CHAR as an alias for VARCHAR. You can also use CHARACTER or CHARACTER VARYING.
-
-    SELECT CAST(456 as VARCHAR) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 4          |
-    +------------+
-    1 row selected (0.063 seconds)
+The first example shows Drill casting a number to a VARCHAR having a length of 3 bytes: The result is a 3-character string, 456. Drill supports the CHAR and CHARACTER VARYING alias.
 
     SELECT CAST(456 as VARCHAR(3)) FROM sys.version;
     +------------+
@@ -81,7 +73,7 @@ The first example shows that Drill uses a default limit of 1 character if you om
     +------------+
     1 row selected (0.093 seconds)
 
-#### Casting from one numerical type to another
+#### Casting from one type of number to another
 
 Cast an integer to a decimal.
 
@@ -101,19 +93,29 @@ To cast INTERVAL data use the following syntax:
     CAST (column_name AS INTERVAL DAY)
     CAST (column_name AS INTERVAL YEAR)
 
-For example, a JSON file contains the following objects:
+For example, a JSON file named intervals.json contains the following objects:
 
     { "INTERVALYEAR_col":"P1Y", "INTERVALDAY_col":"P1D", "INTERVAL_col":"P1Y1M1DT1H1M" }
     { "INTERVALYEAR_col":"P2Y", "INTERVALDAY_col":"P2D", "INTERVAL_col":"P2Y2M2DT2H2M" }
     { "INTERVALYEAR_col":"P3Y", "INTERVALDAY_col":"P3D", "INTERVAL_col":"P3Y3M3DT3H3M" }
 
-The following CTAS statement casts text from a JSON file to INTERVAL data types in a Parquet table:
+1. Set the storage format to Parquet.
+
+        ALTER SESSION SET `store.format` = 'parquet';
+
+        +------------+------------+
+        |     ok     |  summary   |
+        +------------+------------+
+        | true       | store.format updated. |
+        +------------+------------+
+        1 row selected (0.037 seconds)
+
+Use a CTAS statement to cast text from a JSON file to year and day intervals and to write the data to a Parquet table:
 
     CREATE TABLE dfs.tmp.parquet_intervals AS 
-    (SELECT cast (INTERVAL_col as interval),
-           cast( INTERVALYEAR_col as interval year) INTERVALYEAR_col, 
-           cast( INTERVALDAY_col as interval day) INTERVALDAY_col 
-    FROM `/user/root/intervals.json`);
+    (SELECT CAST( INTERVALYEAR_col as interval year) INTERVALYEAR_col, 
+            CAST( INTERVALDAY_col as interval day) INTERVALDAY_col 
+    FROM dfs.`/Users/drill/intervals.json`);
 
 <!-- Text and include output -->
 
@@ -124,43 +126,15 @@ data to and from another data type.
 
 ## Syntax  
 
-CONVERT_TO (column, type)
+    CONVERT_TO (column, type)
 
-CONVERT_FROM(column, type)
+    CONVERT_FROM(column, type)
 
 *column* is the name of a column Drill reads.
 
-*type* is one of the data types listed in the CONVERT_TO/FROM Data Types table.
+*type* is one of the data types listed in the [CONVERT_TO/FROM Data Types](/docs/data-types#convert_to-and-convert_from-data-types) table.
 
 
-The following table provides the data types that you use with the CONVERT_TO
-and CONVERT_FROM functions:
-
-### CONVERT_TO/FROM Data Types
-
-**Type**| **Input Type**| **Output Type**  
----|---|---  
-BOOLEAN_BYTE| bytes(1)| boolean  
-TINYINT_BE| bytes(1)| tinyint  
-TINYINT| bytes(1)| tinyint  
-SMALLINT_BE| bytes(2)| smallint  
-SMALLINT| bytes(2)| smallint  
-INT_BE| bytes(4)| int  
-INT| bytes(4)| int  
-BIGINT_BE| bytes(8)| bigint  
-BIGINT| bytes(8)| bigint  
-FLOAT| bytes(4)| float (float4)  
-DOUBLE| bytes(8)| double (float8)  
-INT_HADOOPV| bytes(1-9)| int  
-BIGINT_HADOOPV| bytes(1-9)| bigint  
-DATE_EPOCH_BE| bytes(8)| date  
-DATE_EPOCH| bytes(8)| date  
-TIME_EPOCH_BE| bytes(8)| time  
-TIME_EPOCH| bytes(8)| time  
-UTF8| bytes| varchar  
-UTF16| bytes| var16char  
-UINT8| bytes(8)| uint8  
-  
 ### Usage Notes
 
 You can use the CONVERT_TO and CONVERT_FROM functions to encode and decode data that is binary or complex. For example, HBase stores
@@ -169,7 +143,7 @@ data as encoded VARBINARY data. To read HBase data in Drill, convert every colum
 Do not use the CAST function for converting binary data types to other types. Although CAST works for converting VARBINARY to VARCHAR, CAST does not work in some other binary conversion cases. CONVERT functions work for binary conversions and are also more efficient to use than CAST.
 
 ## Usage Notes
-Use the CONVERT_TO function to change the data type to binary when sending data back to a binary data source, such as HBase, MapR, and Parquet, from a Drill query. CONVERT_TO also converts an SQL data type to complex types, including Hbase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including Hbase arrays, JSON and Parquet arrays and maps to an SQL data type. 
+Use the CONVERT_TO function to change the data type to binary when sending data back to a binary data source, such as HBase, MapR, and Parquet, from a Drill query. CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
 
 ### Examples
 
@@ -189,7 +163,7 @@ This example shows how to use the CONVERT_FROM function to convert complex HBase
     +------------+------------+------------+
     4 rows selected (1.335 seconds)
 
-You use the CONVERT_FROM function to decode the binary data to render it readable:
+You use the CONVERT_FROM function to decode the binary data to render it readable, selecting a data type to use from the [list of supported types](/docs/data-type-conversion/#convert_to-and-convert_from-data-types). JSON supports strings. To convert binary to strings, use the UTF8 type.:
 
     SELECT CONVERT_FROM(row_key, 'UTF8') AS studentid, 
            CONVERT_FROM(students.account.name, 'UTF8') AS name, 
@@ -206,6 +180,36 @@ You use the CONVERT_FROM function to decode the binary data to render it readabl
     | student4   | Mary       | CA         | 56 Southern Pkwy | 12345      |
     +------------+------------+------------+------------+------------+
     4 rows selected (0.504 seconds)
+
+This example converts from VARCHAR to a JSON map:
+
+    SELECT CONVERT_FROM('{x:100, y:215.6}' ,'JSON') AS MYCOL FROM sys.version;
+    +------------+
+    |   MYCOL    |
+    +------------+
+    | {"x":100,"y":215.6} |
+    +------------+
+    1 row selected (0.073 seconds)
+
+This example uses a list of BIGINT as input and returns a repeated list of vectors:
+
+    SELECT CONVERT_FROM('[ [1, 2], [3, 4], [5]]' ,'JSON') AS MYCOL1 FROM sys.version;
+    +------------+
+    |   mycol1   |
+    +------------+
+    | [[1,2],[3,4],[5]] |
+    +------------+
+    1 row selected (0.054 seconds)
+
+This example uses a map as input to return a repeated list vector (JSON).
+
+    SELECT CONVERT_FROM('[{a : 100, b: 200}, {a:300, b: 400}]' ,'JSON') AS MYCOL1  FROM sys.version;
+    +------------+
+    |   MYCOL1   |
+    +------------+
+    | [{"a":100,"b":200},{"a":300,"b":400}] |
+    +------------+
+    1 row selected (0.074 seconds)
 
 #### Set up a storage plugin for working with HBase files
 
@@ -244,13 +248,14 @@ This example assumes you are working in the Drill Sandbox. The `maprdb` storage 
           }
         }
 
-#### Convert the binary HBase students table to JSON data.
+#### Convert the binary HBase students table to JSON data
+First, you set the storage format to JSON. Next, you use the CREATE TABLE AS SELECT (CTAS) statement to convert from a selected file of a different format, HBase in this example, to the storage format. You then convert the JSON file to Parquet using a similar procedure. Set the storage format to Parquet, and use a CTAS statement to convert to Parquet from JSON. In each case, you [select UTF8](/docs/data-type-conversion/#convert_to-and-convert_from-data-types) as the file format because the data you are converting from and then to consists of strings.
 
 1. Start Drill on the Drill Sandbox and set the default storage format from Parquet to JSON.
 
         ALTER SESSION SET `store.format`='json';
 
-2. Use CONVERT_FROM queries to convert the VARBINARY data in the HBase students table to JSON, and store the JSON data in a file. 
+2. Use CONVERT_FROM queries to convert the binary data in the HBase students table to JSON, and store the JSON data in a file. You select a data type to use from the supported. JSON supports strings. To convert binary to strings, use the UTF8 type.
 
         CREATE TABLE tmp.`to_json` AS SELECT 
             CONVERT_FROM(row_key, 'UTF8') AS `studentid`, 
@@ -274,7 +279,7 @@ This example assumes you are working in the Drill Sandbox. The `maprdb` storage 
 
         0_0_0.json
 
-5. Take a look at the output om `to_json`:
+5. Take a look at the output of `to_json`:
 
         {
           "studentid" : "student1",
@@ -361,46 +366,17 @@ This example assumes you are working in the Drill Sandbox. The `maprdb` storage 
         4 rows selected (0.182 seconds)
 
 ## Other Data Type Conversions
-In addition to the CAST, CONVERT_TO, and CONVERT_FROM functions, Drill supports data type conversion functions to perform the following conversions:
+Drill supports the format for date and time literals shown in the following examples:
+
+* 2008-12-15
+
+* 22:55:55.123...
+
+If you have dates and times in other formats, use a data type conversion functions to perform the following conversions:
 
 * A timestamp, integer, decimal, or double to a character string.
 * A character string to a date
 * A character string to a number
-
-## Time Zone Limitation
-Currently Drill does not support conversion of a date, time, or timestamp from one time zone to another. The workaround is to configure Drill to use [UTC](http://www.timeanddate.com/time/aboututc.html)-based time, convert your data to UTC timestamps, and perform date/time operation in UTC.  
-
-1. Take a look at the Drill time zone configuration by running the TIMEOFDAY function. This function returns the local date and time with time zone information.
-
-        SELECT TIMEOFDAY() FROM sys.version;
-
-        +------------+
-        |   EXPR$0   |
-        +------------+
-        | 2015-04-02 15:01:31.114 America/Los_Angeles |
-        +------------+
-        1 row selected (1.199 seconds)
-
-2. Configure the default time zone format in the drill-override.conf. For example:
-
-        drill.exec: {
-          cluster-id: “xyz",
-          zk.connect: “abc:5181",
-          user.timezone: "UTC"
-        }
-
-3. Restart sqlline.
-
-4. Confirm that Drill is now set to UTC:
-
-        SELECT TIMEOFDAY() FROM sys.version;
-
-        +------------+
-        |   EXPR$0   |
-        +------------+
-        | 2015-04-02 17:05:02.424 UTC |
-        +------------+
-        1 row selected (1.191 seconds)
 
 The following table lists data type formatting functions that you can
 use in your Drill queries as described in this section:
@@ -416,21 +392,8 @@ TO_NUMBER(text, format)| numeric
 TO_TIMESTAMP(text, format)| timestamp
 TO_TIMESTAMP(double precision)| timestamp
 
-Use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it. Also, use the ‘z’ option to identify the time zone in a timestamp using the TO_CHAR function. For example:
-
-    SELECT TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') AS Original, 
-           TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS TimeZone 
-           FROM sys.version;
-
-    +------------+------------+
-    |  Original  |  TimeZone  |
-    +------------+------------+
-    | 2015-03-30 20:49:00.0 | UTC        |
-    +------------+------------+
-    1 row selected (0.299 seconds)
-
 ### Format Specifiers for Numerical Conversions
-Use the following format specifiers for numerical conversions:
+Use the following format specifiers for converting numbers:
 <table >
      <tr >
           <th align=left>Symbol
@@ -641,7 +604,7 @@ For more information about specifying a format, refer to one of the following fo
 
 ## TO_CHAR
 
-TO_CHAR converts a date, time, timestamp, or numerical expression to a character string.
+TO_CHAR converts a number, date, time, or timestamp expression to a character string.
 
 ### Syntax
 
@@ -651,6 +614,9 @@ TO_CHAR converts a date, time, timestamp, or numerical expression to a character
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. 
 
+### Usage Notes
+
+You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it, as shown in the TO_TIMESTAMP description.
 
 ### Examples
 
@@ -914,6 +880,49 @@ Convert a UTC date to a timestamp offset from the UTC time zone code.
     +------------+------------+
     1 row selected (0.129 seconds)
 
+## Time Zone Limitation
+Currently Drill does not support conversion of a date, time, or timestamp from one time zone to another. The workaround is to configure Drill to use [UTC](http://www.timeanddate.com/time/aboututc.html)-based time, convert your data to UTC timestamps, and perform date/time operation in UTC.  
+
+1. Take a look at the Drill time zone configuration by running the TIMEOFDAY function. This function returns the local date and time with time zone information.
+
+        SELECT TIMEOFDAY() FROM sys.version;
+
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 2015-04-02 15:01:31.114 America/Los_Angeles |
+        +------------+
+        1 row selected (1.199 seconds)
+
+2. Configure the default time zone format in <drill installation directory>/conf/drill-env.sh by adding `-Duser.timezone=UTC` to DRILL_JAVA_OPTS. For example:
+
+        export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea -Duser.timezone=UTC"
+
+3. Restart sqlline.
+
+4. Confirm that Drill is now set to UTC:
+
+        SELECT TIMEOFDAY() FROM sys.version;
+
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 2015-04-02 17:05:02.424 UTC |
+        +------------+
+        1 row selected (1.191 seconds)
+
+You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it. Also, use the ‘z’ option to identify the time zone in a timestamp using the TO_CHAR function. For example:
+
+    SELECT TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') AS Original, 
+           TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS TimeZone 
+           FROM sys.version;
+
+    +------------+------------+
+    |  Original  |  TimeZone  |
+    +------------+------------+
+    | 2015-03-30 20:49:00.0 | UTC        |
+    +------------+------------+
+    1 row selected (0.299 seconds)
 
 <!-- DRILL-448 Support timestamp with time zone -->
 

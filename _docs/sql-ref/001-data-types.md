@@ -2,11 +2,95 @@
 title: "Data Types"
 parent: "SQL Reference"
 ---
-Depending on the data format, you might need to cast or convert data types when Drill reads/writes data.
 
-After Drill reads schema-less data into SQL tables, you need to cast data types explicitly to query the data. In some cases, Drill converts schema-less data to typed data implicitly. In this case, you do not need to cast. The file format of the data and the nature of your query determines the requirement for casting or converting. 
+## Supported Data Types
 
-Differences in casting depend on the data source. The following list describes how Drill treats data types from various data sources:
+Drill supports the following SQL data types:
+
+* BIGINT  
+  8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807.
+
+* BINARY
+  Variable-length byte string
+
+* BOOLEAN  
+  True or false  
+
+* DATE  
+  Years, months, and days in YYYY-MM-DD format since 4713 BC.
+
+* DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)  
+  38-digit precision number, precision is p, and scale is s. Example: DECIMAL(6,2) has 4 digits before the decimal point and 2 digits after the decimal point. 
+
+* FLOAT  
+  4-byte floating point number
+
+* DOUBLE, DOUBLE PRECISION**  
+  8-byte floating point number, precision-scalable 
+
+* INTEGER or INT  
+  4-byte signed integer in the range -2,147,483,648 to 2,147,483,647
+
+* INTERVALDAY  
+  A simple version of the interval type expressing a period of time in days, hours, minutes, and seconds only
+
+* INTERVALYEAR  
+  A simple version of interval representing a period of time in years and months only
+
+* SMALLINT*  
+  2-byte signed integer in the range -32,768 to 32,767
+
+* TIME  
+  24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss 
+
+* TIMESTAMP  
+  JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS
+
+* CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR  
+  UTF8-encoded variable-length string. For example, CHAR(30) casts data to a 30-character string maximum. The default limit is 1 character. The maximum character limit is 255.
+
+\* Not currently supported.  
+\*\* You specify a DECIMAL using a precision and scale. The precision (p) is the total number of digits required to represent the number. The scale (s) is the number of decimal digits to the right of the decimal point. Subtract s from p to determine the maximum number of digits to the left of the decimal point. Scale is a value from 0 through p. Scale is specified only if precision is specified. The default scale is 0.  
+
+## CONVERT_TO and CONVERT_FROM Data Types
+
+The following table lists the data types for use with the CONVERT_TO
+and CONVERT_FROM functions:
+
+**Type**| **Input Type**| **Output Type**  
+---|---|---  
+BOOLEAN_BYTE| bytes(1)| boolean  
+TINYINT_BE| bytes(1)| tinyint  
+TINYINT| bytes(1)| tinyint  
+SMALLINT_BE| bytes(2)| smallint  
+SMALLINT| bytes(2)| smallint  
+INT_BE| bytes(4)| int  
+INT| bytes(4)| int  
+BIGINT_BE| bytes(8)| bigint  
+BIGINT| bytes(8)| bigint  
+FLOAT| bytes(4)| float (float4)  
+DOUBLE| bytes(8)| double (float8)  
+INT_HADOOPV| bytes(1-9)| int  
+BIGINT_HADOOPV| bytes(1-9)| bigint  
+DATE_EPOCH_BE| bytes(8)| date  
+DATE_EPOCH| bytes(8)| date  
+TIME_EPOCH_BE| bytes(8)| time  
+TIME_EPOCH| bytes(8)| time  
+UTF8| bytes| varchar  
+UTF16| bytes| var16char  
+UINT8| bytes(8)| uint8  
+JSON | bytes | varchar
+
+## Using Drill Data Types
+
+If you understand how to use Drill data types, you have captured the essence of Drill. In Drill, you use data types in the following ways:
+
+* To cast or convert data to the required type for moving data from one data source to another
+* To cast or convert data to the required type for Drill analysis
+
+In Drill, you do not use data types as you do in database software to define the type of a column during table creation. 
+
+In some cases, Drill converts schema-less data to correctly-typed data implicitly. In this case, you do not need to cast the data. The file format of the data and the nature of your query determines the requirement for casting or converting. Differences in casting depend on the data source. The following list describes how Drill treats data types from various data sources:
 
 * HBase  
   Does not implicitly cast input to SQL types. Convert data to appropriate types as shown in ["Querying HBase."](/docs/querying-hbase/)
@@ -21,16 +105,13 @@ Differences in casting depend on the data source. The following list describes h
 * Text: CSV, TSV, and other text  
   Implicitly casts all textual data to VARCHAR.
 
-## Implicit Casting
+## Precedence of Data Types
 
+Drill reads from and writes to data sources having a wide variety of types, more types than those Drill [previously listed](/docs/data-type-conversion#supported-data-types). Drill uses data types at the RPC level that are not supported for query input, often implicitly casting data.
 
-Generally, Drill performs implicit casting based on the order of precedence shown in the implicit casting preference table. Drill usually implicitly casts a type from a lower precedence to a type having higher precedence. For instance, NULL can be promoted to any other type; SMALLINT can be promoted into INT. INT is not promoted to SMALLINT due to possible precision loss. Drill might deviate from these precedence rules for performance reasons.
+The following list includes data types Drill uses in descending order of precedence. As shown in the table, you can cast a NULL value, which has the lowest precedence, to any other type; you can cast a SMALLINT value to INT. You cannot cast an INT value to SMALLINT due to possible precision loss. Drill might deviate from these precedence rules for performance reasons. Under certain circumstances, such as queries involving SUBSTR and CONCAT functions, Drill reverses the order of precedence and allows a cast to VARCHAR from a type of higher precedence than VARCHAR, such as BIGINT.
 
-Under certain circumstances, such as queries involving substr and concat functions, Drill reverses the order of precedence and allows a cast to VARCHAR from a type of higher precedence than VARCHAR, such as BIGINT. 
-
-The following table lists data types top to bottom, in descending order of precedence. Drill implicitly casts to more data types than are currently supported for explicit casting.
-
-### Implicit Casting Precedence
+### Casting Precedence
 
 <table>
   <tr>
@@ -41,79 +122,80 @@ The following table lists data types top to bottom, in descending order of prece
   </tr>
   <tr>
     <td>1</td>
-    <td>INTERVAL</td>
+    <td>INTERVALYEAR (highest)</td>
     <td>13</td>
-    <td>UINT4</td>
-  </tr>
-  <tr>
-    <td>2</td>
-    <td>INTERVALYEAR</td>
-    <td>14</td>
     <td>INT</td>
   </tr>
   <tr>
-    <td>3</td>
+    <td>2</td>
     <td>INTERVLADAY</td>
-    <td>15</td>
+    <td>14</td>
     <td>UINT2</td>
   </tr>
   <tr>
-    <td>4</td>
-    <td>TIMESTAMPTZ</td>
-    <td>16</td>
+    <td>3</td>
+    <td>TIMESTAMPTZ*</td>
+    <td>15</td>
     <td>SMALLINT</td>
   </tr>
   <tr>
-    <td>5</td>
-    <td>TIMETZ</td>
-    <td>17</td>
+    <td>4</td>
+    <td>TIMETZ*</td>
+    <td>16</td>
     <td>UINT1</td>
   </tr>
   <tr>
-    <td>6</td>
+    <td>5</td>
     <td>TIMESTAMP</td>
-    <td>18</td>
+    <td>17</td>
     <td>VAR16CHAR</td>
   </tr>
   <tr>
-    <td>7</td>
+    <td>6</td>
     <td>DATE</td>
-    <td>19</td>
+    <td>18</td>
     <td>FIXED16CHAR</td>
   </tr>
   <tr>
-    <td>8</td>
+    <td>7</td>
     <td>TIME</td>
-    <td>20</td>
+    <td>19</td>
     <td>VARCHAR</td>
   </tr>
   <tr>
-    <td>9</td>
+    <td>8</td>
     <td>DOUBLE</td>
-    <td>21</td>
+    <td>20</td>
     <td>CHAR</td>
   </tr>
   <tr>
-    <td>10</td>
+    <td>9</td>
     <td>DECIMAL</td>
+    <td>21</td>
+    <td>VARBINARY**</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td>UINT8</td>
     <td>22</td>
-    <td>VARBINARY*</td>
+    <td>FIXEDBINARY**</td>
   </tr>
   <tr>
     <td>11</td>
-    <td>UINT8</td>
+    <td>BIGINT</td>
     <td>23</td>
-    <td>FIXEDBINARY*</td>
+    <td>NULL (lowest)</td>
   </tr>
   <tr>
     <td>12</td>
-    <td>BIGINT</td>
-    <td>24</td>
-    <td>NULL</td>
+    <td>UINT4</td>
+    <td></td>
+    <td></td>
   </tr>
 </table>
 
-\* The Drill Parquet reader supports these types.
+\* Currently not supported.
+\*\* The Drill Parquet reader supports these types.
 
 ## Explicit Casting
 
@@ -133,54 +215,6 @@ In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as pr
   Converts a string to TIMESTAMP.
 
 If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause.
-
-## Supported Data Types for Casting
-You use the following data types in queries that involve casting/converting data types:
-
-* BIGINT  
-  8-byte signed integer. the range is -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807.
-
-* BOOLEAN  
-  True or false  
-
-* DATE  
-  Years, months, and days in YYYY-MM-DD format
-
-* DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s) 
-  38-digit precision number, precision is p, and scale is s. Example: DECIMAL(6,2) has 4 digits before the decimal point and 2 digits after the decimal point. 
-
-* FLOAT  
-  4-byte single precision floating point number
-
-* DOUBLE, DOUBLE PRECISION  
-  8-byte double precision floating point number. 
-
-* INTEGER or INT  
-  4-byte signed integer. The range is -2,147,483,648 to 2,147,483,647.
-
-* INTERVAL  
-  Integer fields representing a period of time in years, months, days hours, minutes, seconds and optional milliseconds using ISO 8601 format.
-
-* INTERVALDAY  
-  A simple version of the interval type expressing a period of time in days, hours, minutes, and seconds only.
-
-* INTERVALYEAR  
-  A simple version of interval representing a period of time in years and months only.
-
-* SMALLINT  
-  2-byte signed integer. The range is -32,768 to 32,767. Supported in Drill 0.9 and later. See DRILL-2135.
-
-* TIME  
-  Hours, minutes, seconds in the form HH:mm:ss, 24-hour based
-
-* TIMESTAMP  
-  JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds: yyyy-MM-dd HH:mm:ss.SSS
-
-* CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR  
-  Character string optionally declared with a length that indicates the maximum number of characters to use. For example, CHAR(30) casts data to a 30-character string maximum. The default limit is 1 character. The maximum character limit is 255.
-
-You specify a DECIMAL using a precision and scale. The precision (p) is the total number of digits required to represent the number.
-. The scale (s) is the number of decimal digits to the right of the decimal point. Subtract s from p to determine the maximum number of digits to the left of the decimal point. Scale is a value from 0 through p. Scale is specified only if precision is specified. The default scale is 0.
 
 For more information about and examples of casting, see [CAST]().
 
@@ -216,7 +250,7 @@ The following tables show data types that Drill can cast to/from other data type
     <td>VARBINARY</td>
   </tr>
   <tr>
-    <td>SMALLINT</td>
+    <td>SMALLINT*</td>
     <td></td>
     <td>yes</td>
     <td>yes</td>
@@ -300,7 +334,7 @@ The following tables show data types that Drill can cast to/from other data type
     <td>yes</td>
   </tr>
   <tr>
-    <td>FIXEDBINARY*</td>
+    <td>FIXEDBINARY**</td>
     <td>yes</td>
     <td>yes</td>
     <td>yes</td>
@@ -312,7 +346,7 @@ The following tables show data types that Drill can cast to/from other data type
     <td>yes</td>
   </tr>
   <tr>
-    <td>VARCHAR**</td>
+    <td>VARCHAR***</td>
     <td>yes</td>
     <td>yes</td>
     <td>yes</td>
@@ -324,7 +358,7 @@ The following tables show data types that Drill can cast to/from other data type
     <td>yes</td>
   </tr>
   <tr>
-    <td>VARBINARY*</td>
+    <td>VARBINARY**</td>
     <td>yes</td>
     <td>yes</td>
     <td>yes</td>
@@ -337,9 +371,11 @@ The following tables show data types that Drill can cast to/from other data type
   </tr>
 </table>
 
-\* For use with CONVERT_TO/FROM to cast binary data coming to/from sources such as MapR-DB/HBase.
+\* Not supported in this release.   
 
-\*\* You cannot convert a character string having a decimal point to an INT or BIGINT.
+\*\* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
+
+\*\*\* You cannot convert a character string having a decimal point to an INT or BIGINT.   
 
 #### Date and Time Data Types
 
@@ -360,7 +396,6 @@ The following tables show data types that Drill can cast to/from other data type
     <td>TIME</td>
     <td>TIMESTAMP</td>
     <td>TIMESTAMPTZ</td>
-    <td>INTERVAL</td>
     <td>INTERVALYEAR</td>
     <td>INTERVALDAY</td>
   </tr>
@@ -375,7 +410,7 @@ The following tables show data types that Drill can cast to/from other data type
     <td>Yes</td>
   </tr>
   <tr>
-    <td>FIXEDBINARY</td>
+    <td>FIXEDBINARY*</td>
     <td>No</td>
     <td>No</td>
     <td>No</td>
@@ -395,7 +430,7 @@ The following tables show data types that Drill can cast to/from other data type
     <td>Yes</td>
   </tr>
   <tr>
-    <td>VARBINARY</td>
+    <td>VARBINARY*</td>
     <td>No</td>
     <td>No</td>
     <td>Yes</td>
@@ -435,7 +470,7 @@ The following tables show data types that Drill can cast to/from other data type
     <td>No</td>
   </tr>
   <tr>
-    <td>TIMESTAMPTZ</td>
+    <td>TIMESTAMPTZ**</td>
     <td>Yes</td>
     <td>Yes</td>
     <td>Yes</td>
@@ -443,16 +478,6 @@ The following tables show data types that Drill can cast to/from other data type
     <td>No</td>
     <td>No</td>
     <td>No</td>
-  </tr>
-  <tr>
-    <td>INTERVAL</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>Yes</td>
-    <td>Yes</td>
   </tr>
   <tr>
     <td>INTERVALYEAR</td>
@@ -475,4 +500,9 @@ The following tables show data types that Drill can cast to/from other data type
     <td>No</td>
   </tr>
 </table>
+
+\* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
+
+\*\* Not supported in this release.   
+
 

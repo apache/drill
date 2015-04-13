@@ -158,7 +158,7 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
 
 Examples in this section use the `input2.json` file. Download the `input2.json` file from the [Drill source code](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources/jsoninput) page. 
 
-You need to use a FROM clause in Drill queries. This document often uses the sys.version table in the FROM clause of the query for example purposes.
+You need to use a FROM clause in Drill queries. In addition to using `input2.json`, examples in this documentation often use `FROM sys.version` in the query for example purposes.
 
 #### ABS Example
 Get the absolute value of the integer key in `input2.json`. The following snippet of input2.json shows the relevant integer content:

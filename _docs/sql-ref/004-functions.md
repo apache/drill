@@ -12,4 +12,4 @@ You can use the following types of functions in your Drill queries:
   * [Nested Data](/docs/nested-data-functions/)
   * [Functions for Handling Nulls](/docs/functions-for-handling-nulls)
 
-
+You need to use a FROM clause in Drill queries. Examples in this documentation often use `FROM sys.version` in the query for example purposes.

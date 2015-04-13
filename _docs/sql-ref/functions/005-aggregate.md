@@ -17,7 +17,7 @@ MAX(expression)| any array, numeric, string, or date/time type| same as argument
 MIN(expression)| any array, numeric, string, or date/time type| same as argument type
 SUM(expression)| smallint, int, bigint, real, double precision, numeric, or interval| bigint for smallint or int arguments, numeric for bigint arguments, double precision for floating-point arguments, otherwise the same as the argument data type
 
-MIN, MAX, COUNT, AVG, SUM accept ALL and DISTINCT keywords. The default is ALL.
+MIN, MAX, COUNT, AVG, and SUM accept ALL and DISTINCT keywords. The default is ALL.
 
 ### Examples
 

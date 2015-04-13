@@ -62,6 +62,17 @@ This section describes how to construct literals.
 ### Boolean
 Boolean values are true or false and are case-insensitive. Do not enclose the values in quotation marks.
 
+### Date and Time
+Format dates using dashes (-) to separate year, month, and day. Format time using colons (:) to separate hours, minutes and seconds. Format timestamps using a date and a time. These literals are shown in the following examples:
+
+* Date: 2008-12-15
+
+* Time: 22:55:55.123...
+
+* Timestamp: 2008-12-15 22:55:55.12345
+
+If you have dates and times in other formats, use a [data type conversion function](/data-type-conversion/#other-data-type-conversions) in your queries.
+
 ### Identifier
 An identifier is a letter followed by any sequence of letters, digits, or the underscore. For example, names of tables, columns, and aliases are identifiers. Maximum length is 1024 characters. Enclose the following identifiers in back ticks:
 

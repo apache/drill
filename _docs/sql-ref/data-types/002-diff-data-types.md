@@ -6,7 +6,7 @@ parent: "Data Types"
 To query HBase data in Drill, convert every column of an HBase table to/from byte arrays from/to an SQL data type using CONVERT_TO or CONVERT_FROM. For examples of how to use these functions, see "Convert and Cast Functions".
 
 ## Handling Textual Data
-In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as previously mentioned. In addition to using the CAST function, you can also use to_char, to_date, to_number, and to_timestamp. If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause.
+In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as previously mentioned. In addition to using the CAST function, you can also use TO_CHAR, TO_DATE, TO_NUMBER, and TO_TIMESTAMP. If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause.
 
 ## Handling JSON and Parquet Data
 Complex and nested data structures in JSON and Parquet files are of map and array types.
