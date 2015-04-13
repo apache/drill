@@ -582,8 +582,8 @@
                     "previous_title": "Configuration Options", 
                     "previous_url": "/docs/configuration-options/", 
                     "relative_path": "_docs/manage/conf/001-mem-alloc.md", 
-                    "title": "Overview", 
-                    "url": "/docs/overview/"
+                    "title": "Configuration Options Overview", 
+                    "url": "/docs/configuration-options-overview/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -600,8 +600,8 @@
                     "next_title": "Planning and Execution Options", 
                     "next_url": "/docs/planning-and-execution-options/", 
                     "parent": "Configuration Options", 
-                    "previous_title": "Overview", 
-                    "previous_url": "/docs/overview/", 
+                    "previous_title": "Configuration Options Overview", 
+                    "previous_url": "/docs/configuration-options-overview/", 
                     "relative_path": "_docs/manage/conf/002-startup-opt.md", 
                     "title": "Start-Up Options", 
                     "url": "/docs/start-up-options/"
@@ -649,14 +649,35 @@
                     "url": "/docs/persistent-configuration-storage/"
                 }
             ], 
-            "next_title": "Overview", 
-            "next_url": "/docs/overview/", 
+            "next_title": "Configuration Options Overview", 
+            "next_url": "/docs/configuration-options-overview/", 
             "parent": "Manage Drill", 
             "previous_title": "Manage Drill", 
             "previous_url": "/docs/manage-drill/", 
             "relative_path": "_docs/manage/001-conf.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
+        }, 
+        "Configuration Options Overview": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuration Options", 
+                    "url": "/docs/configuration-options/"
+                }, 
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Start-Up Options", 
+            "next_url": "/docs/start-up-options/", 
+            "parent": "Configuration Options", 
+            "previous_title": "Configuration Options", 
+            "previous_url": "/docs/configuration-options/", 
+            "relative_path": "_docs/manage/conf/001-mem-alloc.md", 
+            "title": "Configuration Options Overview", 
+            "url": "/docs/configuration-options-overview/"
         }, 
         "Configuring ODBC Connections for Linux and Mac OS X": {
             "breadcrumbs": [
@@ -2918,8 +2939,8 @@
                             "previous_title": "Configuration Options", 
                             "previous_url": "/docs/configuration-options/", 
                             "relative_path": "_docs/manage/conf/001-mem-alloc.md", 
-                            "title": "Overview", 
-                            "url": "/docs/overview/"
+                            "title": "Configuration Options Overview", 
+                            "url": "/docs/configuration-options-overview/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -2936,8 +2957,8 @@
                             "next_title": "Planning and Execution Options", 
                             "next_url": "/docs/planning-and-execution-options/", 
                             "parent": "Configuration Options", 
-                            "previous_title": "Overview", 
-                            "previous_url": "/docs/overview/", 
+                            "previous_title": "Configuration Options Overview", 
+                            "previous_url": "/docs/configuration-options-overview/", 
                             "relative_path": "_docs/manage/conf/002-startup-opt.md", 
                             "title": "Start-Up Options", 
                             "url": "/docs/start-up-options/"
@@ -2985,8 +3006,8 @@
                             "url": "/docs/persistent-configuration-storage/"
                         }
                     ], 
-                    "next_title": "Overview", 
-                    "next_url": "/docs/overview/", 
+                    "next_title": "Configuration Options Overview", 
+                    "next_url": "/docs/configuration-options-overview/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -3597,27 +3618,6 @@
             "relative_path": "_docs/sql-ref/003-operators.md", 
             "title": "Operators", 
             "url": "/docs/operators/"
-        }, 
-        "Overview": {
-            "breadcrumbs": [
-                {
-                    "title": "Configuration Options", 
-                    "url": "/docs/configuration-options/"
-                }, 
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Start-Up Options", 
-            "next_url": "/docs/start-up-options/", 
-            "parent": "Configuration Options", 
-            "previous_title": "Configuration Options", 
-            "previous_url": "/docs/configuration-options/", 
-            "relative_path": "_docs/manage/conf/001-mem-alloc.md", 
-            "title": "Overview", 
-            "url": "/docs/overview/"
         }, 
         "Parquet Format": {
             "breadcrumbs": [
@@ -6069,8 +6069,8 @@
             "next_title": "Planning and Execution Options", 
             "next_url": "/docs/planning-and-execution-options/", 
             "parent": "Configuration Options", 
-            "previous_title": "Overview", 
-            "previous_url": "/docs/overview/", 
+            "previous_title": "Configuration Options Overview", 
+            "previous_url": "/docs/configuration-options-overview/", 
             "relative_path": "_docs/manage/conf/002-startup-opt.md", 
             "title": "Start-Up Options", 
             "url": "/docs/start-up-options/"
@@ -9212,8 +9212,8 @@
                             "previous_title": "Configuration Options", 
                             "previous_url": "/docs/configuration-options/", 
                             "relative_path": "_docs/manage/conf/001-mem-alloc.md", 
-                            "title": "Overview", 
-                            "url": "/docs/overview/"
+                            "title": "Configuration Options Overview", 
+                            "url": "/docs/configuration-options-overview/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -9230,8 +9230,8 @@
                             "next_title": "Planning and Execution Options", 
                             "next_url": "/docs/planning-and-execution-options/", 
                             "parent": "Configuration Options", 
-                            "previous_title": "Overview", 
-                            "previous_url": "/docs/overview/", 
+                            "previous_title": "Configuration Options Overview", 
+                            "previous_url": "/docs/configuration-options-overview/", 
                             "relative_path": "_docs/manage/conf/002-startup-opt.md", 
                             "title": "Start-Up Options", 
                             "url": "/docs/start-up-options/"
@@ -9279,8 +9279,8 @@
                             "url": "/docs/persistent-configuration-storage/"
                         }
                     ], 
-                    "next_title": "Overview", 
-                    "next_url": "/docs/overview/", 
+                    "next_title": "Configuration Options Overview", 
+                    "next_url": "/docs/configuration-options-overview/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
