@@ -22,7 +22,7 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.BaseTestQuery;
 import org.junit.Test;
 
-public class TestJoinComplex extends BaseTestQuery {
+public class TestHashJoinAdvanced extends BaseTestQuery {
 
 
   @Test //DRILL-2197 Left Self Join with complex type in projection
@@ -49,4 +49,17 @@ public class TestJoinComplex extends BaseTestQuery {
       .run();
   }
 
+  @Test
+  public void testFOJWithRequiredTypes() throws Exception {
+    String query = "select t1.varchar_col from " +
+        "cp.`parquet/drill-2707_required_types.parquet` t1 full outer join cp.`parquet/alltypes.json` t2 " +
+        "on t1.int_col = t2.INT_col order by t1.varchar_col limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("varchar_col")
+        .baselineValues("doob")
+        .go();
+  }
 }
