@@ -146,8 +146,8 @@
             "next_title": "Learn Drill with the MapR Sandbox", 
             "next_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
             "parent": "Tutorials", 
-            "previous_title": "Tutorials", 
-            "previous_url": "/docs/tutorials/", 
+            "previous_title": "Drill in 10 Minutes", 
+            "previous_url": "/docs/drill-in-10-minutes/", 
             "relative_path": "_docs/tutorials/010-yelp.md", 
             "title": "Analyzing the Yelp Academic Dataset", 
             "url": "/docs/analyzing-the-yelp-academic-dataset/"
@@ -295,23 +295,6 @@
             "relative_path": "_docs/rn/003-alpha-rn.md", 
             "title": "Apache Drill M1 Release Notes (Apache Drill Alpha)", 
             "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
-        }, 
-        "Apache Drill in 10 Minutes": {
-            "breadcrumbs": [
-                {
-                    "title": "Install Drill", 
-                    "url": "/docs/install-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Deploying Apache Drill in a Clustered Environment", 
-            "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
-            "parent": "Install Drill", 
-            "previous_title": "Install Drill", 
-            "previous_url": "/docs/install-drill/", 
-            "relative_path": "_docs/install/001-drill-in-10.md", 
-            "title": "Apache Drill in 10 Minutes", 
-            "url": "/docs/apache-drill-in-10-minutes/"
         }, 
         "Architectural Highlights": {
             "breadcrumbs": [
@@ -1213,8 +1196,8 @@
             "next_title": "Installing Drill in Embedded Mode", 
             "next_url": "/docs/installing-drill-in-embedded-mode/", 
             "parent": "Install Drill", 
-            "previous_title": "Apache Drill in 10 Minutes", 
-            "previous_url": "/docs/apache-drill-in-10-minutes/", 
+            "previous_title": "Install Drill", 
+            "previous_url": "/docs/install-drill/", 
             "relative_path": "_docs/install/002-deploy.md", 
             "title": "Deploying Apache Drill in a Clustered Environment", 
             "url": "/docs/deploying-apache-drill-in-a-clustered-environment/"
@@ -1870,6 +1853,23 @@
             "title": "Drill Plan Syntax", 
             "url": "/docs/drill-plan-syntax/"
         }, 
+        "Drill in 10 Minutes": {
+            "breadcrumbs": [
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Analyzing the Yelp Academic Dataset", 
+            "next_url": "/docs/analyzing-the-yelp-academic-dataset/", 
+            "parent": "Tutorials", 
+            "previous_title": "Tutorials", 
+            "previous_url": "/docs/tutorials/", 
+            "relative_path": "_docs/tutorials/005-drill-in-10-minutes.md", 
+            "title": "Drill in 10 Minutes", 
+            "url": "/docs/drill-in-10-minutes/"
+        }, 
         "Driver Configuration Options": {
             "breadcrumbs": [
                 {
@@ -2223,28 +2223,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Deploying Apache Drill in a Clustered Environment", 
-                    "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
-                    "parent": "Install Drill", 
-                    "previous_title": "Install Drill", 
-                    "previous_url": "/docs/install-drill/", 
-                    "relative_path": "_docs/install/001-drill-in-10.md", 
-                    "title": "Apache Drill in 10 Minutes", 
-                    "url": "/docs/apache-drill-in-10-minutes/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Install Drill", 
-                            "url": "/docs/install-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Installing Drill in Embedded Mode", 
                     "next_url": "/docs/installing-drill-in-embedded-mode/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Apache Drill in 10 Minutes", 
-                    "previous_url": "/docs/apache-drill-in-10-minutes/", 
+                    "previous_title": "Install Drill", 
+                    "previous_url": "/docs/install-drill/", 
                     "relative_path": "_docs/install/002-deploy.md", 
                     "title": "Deploying Apache Drill in a Clustered Environment", 
                     "url": "/docs/deploying-apache-drill-in-a-clustered-environment/"
@@ -2348,8 +2331,8 @@
                     "url": "/docs/installing-drill-in-distributed-mode/"
                 }
             ], 
-            "next_title": "Apache Drill in 10 Minutes", 
-            "next_url": "/docs/apache-drill-in-10-minutes/", 
+            "next_title": "Deploying Apache Drill in a Clustered Environment", 
+            "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
             "parent": "", 
             "previous_title": "Summary", 
             "previous_url": "/docs/summary/", 
@@ -6407,11 +6390,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Learn Drill with the MapR Sandbox", 
-                    "next_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                    "next_title": "Analyzing the Yelp Academic Dataset", 
+                    "next_url": "/docs/analyzing-the-yelp-academic-dataset/", 
                     "parent": "Tutorials", 
                     "previous_title": "Tutorials", 
                     "previous_url": "/docs/tutorials/", 
+                    "relative_path": "_docs/tutorials/005-drill-in-10-minutes.md", 
+                    "title": "Drill in 10 Minutes", 
+                    "url": "/docs/drill-in-10-minutes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Learn Drill with the MapR Sandbox", 
+                    "next_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Drill in 10 Minutes", 
+                    "previous_url": "/docs/drill-in-10-minutes/", 
                     "relative_path": "_docs/tutorials/010-yelp.md", 
                     "title": "Analyzing the Yelp Academic Dataset", 
                     "url": "/docs/analyzing-the-yelp-academic-dataset/"
@@ -6561,8 +6561,8 @@
                     "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                 }
             ], 
-            "next_title": "Analyzing the Yelp Academic Dataset", 
-            "next_url": "/docs/analyzing-the-yelp-academic-dataset/", 
+            "next_title": "Drill in 10 Minutes", 
+            "next_url": "/docs/drill-in-10-minutes/", 
             "parent": "", 
             "previous_title": "Performance", 
             "previous_url": "/docs/performance/", 
@@ -7151,11 +7151,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Learn Drill with the MapR Sandbox", 
-                    "next_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                    "next_title": "Analyzing the Yelp Academic Dataset", 
+                    "next_url": "/docs/analyzing-the-yelp-academic-dataset/", 
                     "parent": "Tutorials", 
                     "previous_title": "Tutorials", 
                     "previous_url": "/docs/tutorials/", 
+                    "relative_path": "_docs/tutorials/005-drill-in-10-minutes.md", 
+                    "title": "Drill in 10 Minutes", 
+                    "url": "/docs/drill-in-10-minutes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Learn Drill with the MapR Sandbox", 
+                    "next_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Drill in 10 Minutes", 
+                    "previous_url": "/docs/drill-in-10-minutes/", 
                     "relative_path": "_docs/tutorials/010-yelp.md", 
                     "title": "Analyzing the Yelp Academic Dataset", 
                     "url": "/docs/analyzing-the-yelp-academic-dataset/"
@@ -7305,8 +7322,8 @@
                     "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                 }
             ], 
-            "next_title": "Analyzing the Yelp Academic Dataset", 
-            "next_url": "/docs/analyzing-the-yelp-academic-dataset/", 
+            "next_title": "Drill in 10 Minutes", 
+            "next_url": "/docs/drill-in-10-minutes/", 
             "parent": "", 
             "previous_title": "Performance", 
             "previous_url": "/docs/performance/", 
@@ -7325,28 +7342,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Deploying Apache Drill in a Clustered Environment", 
-                    "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
-                    "parent": "Install Drill", 
-                    "previous_title": "Install Drill", 
-                    "previous_url": "/docs/install-drill/", 
-                    "relative_path": "_docs/install/001-drill-in-10.md", 
-                    "title": "Apache Drill in 10 Minutes", 
-                    "url": "/docs/apache-drill-in-10-minutes/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Install Drill", 
-                            "url": "/docs/install-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Installing Drill in Embedded Mode", 
                     "next_url": "/docs/installing-drill-in-embedded-mode/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Apache Drill in 10 Minutes", 
-                    "previous_url": "/docs/apache-drill-in-10-minutes/", 
+                    "previous_title": "Install Drill", 
+                    "previous_url": "/docs/install-drill/", 
                     "relative_path": "_docs/install/002-deploy.md", 
                     "title": "Deploying Apache Drill in a Clustered Environment", 
                     "url": "/docs/deploying-apache-drill-in-a-clustered-environment/"
@@ -7450,8 +7450,8 @@
                     "url": "/docs/installing-drill-in-distributed-mode/"
                 }
             ], 
-            "next_title": "Apache Drill in 10 Minutes", 
-            "next_url": "/docs/apache-drill-in-10-minutes/", 
+            "next_title": "Deploying Apache Drill in a Clustered Environment", 
+            "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
             "parent": "", 
             "previous_title": "Summary", 
             "previous_url": "/docs/summary/", 

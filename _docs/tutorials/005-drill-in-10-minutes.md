@@ -1,6 +1,7 @@
 ---
-title: "Apache Drill in 10 Minutes"
-parent: "Install Drill"
+title: "Drill in 10 Minutes"
+parent: "Tutorials"
+description: Get started with Drill in 10 minutes or less.
 ---
 * Objective
 * A Few Bits About Apache Drill
