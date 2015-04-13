@@ -2,7 +2,6 @@
 title: "How to Run the Drill Demo"
 parent: "Archived Pages"
 ---
-# How To Run the Drill Demo
 This section describes how to get started by running the Drill demo.
 
 ## Pre-requisites

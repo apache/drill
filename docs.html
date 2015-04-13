@@ -1,39 +1,30 @@
 ---
-layout: page
-title: Documentation
+layout: default
+title: Apache Drill Documentation
 ---
-{% comment %}
-Notes:
-* Other doc attributes: relative_path, url
-* Directories don't matter at all. You don't have to use them.
-* File names don't matter either, except the alphabetical order between them.
-{% endcomment %}
-<ul>
-{% for doc0 in site.docs %}
-  {% if doc0.parent == null %}
-    {% if doc0.nocontent %}<li>{{ doc0.title }}</li>{% else %}<li><a href="{{ site.baseurl }}/docs/{{ doc0.title | slugify }}/">{{ doc0.title }}</a></li>{% endif %}
-    {% assign doc0_has_children = false %}
-    {% for doc1 in site.docs %}{% if doc1.parent == doc0.title %}{% assign doc0_has_children = true %}{% endif %}{% endfor %}
-    {% if doc0_has_children %}
-      <ul>
-      {% for doc1 in site.docs %}
-        {% if doc1.parent == doc0.title %}
-          {% if doc1.nocontent %}<li>{{ doc1.title }}</li>{% else %}<li><a href="{{ site.baseurl }}/docs/{{ doc1.title | slugify }}/">{{ doc1.title }}</a></li>{% endif %}
-          {% assign doc1_has_children = false %}
-          {% for doc2 in site.docs %}{% if doc2.parent == doc1.title %}{% assign doc1_has_children = true %}{% endif %}{% endfor %}
-          {% if doc1_has_children %}
-            <ul>
-            {% for doc2 in site.docs %}
-              {% if doc2.parent == doc1.title %}
-                <li><a href="{{ site.baseurl }}/docs/{{ doc2.title | slugify }}/">{{ doc2.title }}</a></li>
-              {% endif %}
-            {% endfor %}
-            </ul>
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-      </ul>
-    {% endif %}
-  {% endif %}
-{% endfor %}
-</ul>
+<div style="margin-top:75px"></div>
+
+{% include doc_toc_categories.html %}
+    
+<div class="int_title">
+<h1>{{ page.title }}</h1>
+  {% if page.description %}<p>{{ page.description }}</p>{% endif %}
+</div>
+
+<div class="int_text" align="left">
+
+<link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
+
+{% include doc_toc.html %}
+
+<div class="main-content">
+  <div class="int_text" align="left">
+    <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/docs.html" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
+    Welcome to the Apache Drill Documentation. If you're new to Drill, try out one of these resources:
+    <ul>
+      <li><a href="{{ site.base_url }}/docs/analyzing-yelp-json-data-with-apache-drill/">Analyzing Yelp JSON Data with Apache Drill</a></li>
+    </ul>
+  </div>
+</div>
+
+</div>
