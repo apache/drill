@@ -7,22 +7,22 @@ You can use the following string functions in Drill queries:
 
 Function| Return Type  
 --------|---  
-[BYTE_SUBSTR(string, start [, length])](/docs/string-manipulation#byte_substr)|byte array or text
-[CHAR_LENGTH(string) or character_length(string)](/docs/string-manipulation#char_length)| int  
-[CONCAT(str "any" [, str "any" [, ...] ])](/docs/string-manipulation#concat)| text
-[INITCAP(string)](/docs/string-manipulation#initcap)| text
-[LENGTH(string [, encoding name ])](/docs/string-manipulation#length)| int
-[LOWER(string)](/docs/string-manipulation#lower)| text
-[LPAD(string, length [, fill])](/docs/string-manipulation#lpad)| text
-[LTRIM(string [, characters])](/docs/string-manipulation#ltrim)| text
-[POSITION(substring in string)](/docs/string-manipulation#position)| int
-[REGEXP_REPLACE(string, pattern, replacement](/docs/string-manipulation#regexp_replace)|text
-[RPAD(string, length [, fill ])](/docs/string-manipulation#rpad)| text
-[RTRIM(string [, characters])](/docs/string-manipulation#rtrim)| text
-[STRPOS(string, substring)](/docs/string-manipulation#strpos)| int
-[SUBSTR(string, from [, count])](/docs/string-manipulation#substr)| text
-[TRIM([position_option] [characters] from string)](/docs/string-manipulation#trim)| text
-[UPPER(string)](/docs/string-manipulation#upper)| text
+[BYTE_SUBSTR](/docs/string-manipulation#byte_substr)|byte array or text
+[CHAR_LENGTH](/docs/string-manipulation#char_length)| int  
+[CONCAT](/docs/string-manipulation#concat)| text
+[INITCAP](/docs/string-manipulation#initcap)| text
+[LENGTH](/docs/string-manipulation#length)| int
+[LOWER](/docs/string-manipulation#lower)| text
+[LPAD](/docs/string-manipulation#lpad)| text
+[LTRIM](/docs/string-manipulation#ltrim)| text
+[POSITION](/docs/string-manipulation#position)| int
+[REGEXP_REPLACE](/docs/string-manipulation#regexp_replace)|text
+[RPAD](/docs/string-manipulation#rpad)| text
+[RTRIM](/docs/string-manipulation#rtrim)| text
+[STRPOS](/docs/string-manipulation#strpos)| int
+[SUBSTR](/docs/string-manipulation#substr)| text
+[TRIM](/docs/string-manipulation#trim)| text
+[UPPER](/docs/string-manipulation#upper)| text
 
 ## BYTE_SUBSTR
 Returns in binary format a substring of a string.
@@ -65,7 +65,10 @@ Returns the number of characters in a string.
 
 ### Syntax
 
-    ( CHAR_LENGTH | CHARACTER_LENGTH ) (string);
+    CHAR_LENGTH(string);
+
+### Usage Notes
+You can use the alias CHARACTER_LENGTH.
 
 ### Example
 
@@ -183,13 +186,13 @@ Pads the string to the length specified by prepending the fill or a space. Trunc
     1 row selected (0.112 seconds)
 
 ## LTRIM
-Removes the longest string having only characters specified in the second argument string from the beginning of the string.
+Removes any characters from the beginning of string1 that match the characters in string2. 
 
 ### Syntax
 
-    LTRIM(string, string);
+    LTRIM(string1, string2);
 
-### Example
+### Examples
 
     SELECT LTRIM('Apache Drill', 'Apache ') FROM sys.version;
 
@@ -199,6 +202,15 @@ Removes the longest string having only characters specified in the second argume
     | Drill      |
     +------------+
     1 row selected (0.131 seconds)
+
+    SELECT LTRIM('A powerful tool Apache Drill', 'Apache ') FROM sys.version;
+
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | owerful tool Apache Drill |
+    +------------+
+    1 row selected (0.07 seconds)
 
 ## POSITION
 Returns the location of a substring.
@@ -220,7 +232,7 @@ Returns the location of a substring.
 
 ## REGEXP_REPLACE
 
-Substitutes new text for substrings that match POSIX regular expression patterns.
+Substitutes new text for substrings that match [POSIX regular expression patterns](http://www.regular-expressions.info/posix.html).
 
 ### Syntax
 
@@ -234,39 +246,29 @@ Substitutes new text for substrings that match POSIX regular expression patterns
 
 ### Examples
 
-Flatten and replace a's with b's in this JSON data.
+Replace a's with b's in this string.
 
-    {"id":1,"strs":["abc","acd"]}
-    {"id":2,"strs":["ade","aef"]}
+    SELECT REGEXP_REPLACE('abc, acd, ade, aef', 'a', 'b') FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | bbc, bcd, bde, bef |
+    +------------+
 
-    SELECT id, REGEXP_REPLACE(FLATTEN(strs), 'a','b') FROM tmp.`regex-flatten.json`;
 
-    +------------+------------+
-    |     id     |   EXPR$1   |
-    +------------+------------+
-    | 1          | bbc        |
-    | 1          | bcd        |
-    | 2          | bde        |
-    | 2          | bef        |
-    +------------+------------+
-    4 rows selected (0.186 seconds)
+Use the regular expression *a* followed by a period (.) in the same query to replace all a's and the subsequent character.
 
-Use the regular expression a. in the same query to replace all a's and the subsequent character.
+    SELECT REGEXP_REPLACE('abc, acd, ade, aef', 'a.','b') FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | bc, bd, be, bf |
+    +------------+
+    1 row selected (0.099 seconds)
 
-    SELECT ID, REGEXP_REPLACE(FLATTEN(strs), 'a.','b') FROM tmp.`regex-flatten.json`;
-
-    +------------+------------+
-    |     id     |   EXPR$1   |
-    +------------+------------+
-    | 1          | bc         |
-    | 1          | bd         |
-    | 2          | be         |
-    | 2          | bf         |
-    +------------+------------+
-    4 rows selected (0.132 seconds)
 
 ## RPAD
-Pads the string to the length specified by appending the fill or a space. Truncates the string if longer than the specified length.
+Pads the string to the length specified. Appends the text you specify after the fill keyword using spaces for the fill if you provide no text or insufficient text to achieve the length.  Truncates the string if longer than the specified length.
 
 ### Syntax
 
@@ -283,13 +285,13 @@ Pads the string to the length specified by appending the fill or a space. Trunca
     1 row selected (0.15 seconds)
 
 ## RTRIM
-Removes the longest string having only characters specified in the second argument string from the end of the string.
+Removes any characters from the end of string1 that match the characters in string2.  
 
 ### Syntax
 
-    RTRIM(string, string);
+    RTRIM(string1, string2);
 
-### Example
+### Examples
 
     SELECT RTRIM('Apache Drill', 'Drill ') FROM sys.version;
 
@@ -299,6 +301,14 @@ Removes the longest string having only characters specified in the second argume
     | Apache     |
     +------------+
     1 row selected (0.135 seconds)
+
+    SELECT RTRIM('1.0 Apache Tomcat 1.0', 'Drill 1.0') from sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 1.0 Apache Tomcat |
+    +------------+
+    1 row selected (0.088 seconds)
 
 ## STRPOS
 Returns the location of the substring in a string.
@@ -323,7 +333,10 @@ Extracts characters from position 1 - x of the string an optional y times.
 
 ### Syntax
 
-(SUBSTR | SUBSTRING)(string, x, y)
+SUBSTR(string, x, y)
+
+### Usage Notes
+You can use the alias SUBSTRING for this function.
 
 
 ### Example
@@ -347,11 +360,11 @@ Extracts characters from position 1 - x of the string an optional y times.
     1 row selected (0.129 seconds)
 
 ## TRIM
-Removes the longest string having only the characters from the beginning, end, or both ends of the string.
+Removes any characters from the beginning, end, or both sides of string2 that match the characters in string1.  
 
 ### Syntax
 
-    TRIM ([leading | trailing | both] [characters] from string)
+    TRIM ([leading | trailing | both] [string1] from string2)
 
 ### Example
 
@@ -362,6 +375,22 @@ Removes the longest string having only the characters from the beginning, end, o
     | Dri        |
     +------------+
     1 row selected (0.172 seconds)
+
+    SELECT TRIM(both 'l' from 'long live Drill') FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | ong live Dri |
+    +------------+
+    1 row selected (0.087 seconds)
+
+    SELECT TRIM(leading 'l' from 'long live Drill') FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | ong live Drill |
+    +------------+
+    1 row selected (0.077 seconds)
 
 ## UPPER
 Converts characters in the string to uppercase.

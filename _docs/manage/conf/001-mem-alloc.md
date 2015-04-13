@@ -1,5 +1,5 @@
 ---
-title: "Overview"
+title: "Configuration Options Overview"
 parent: "Configuration Options"
 ---
 The sys.options table in Drill contains information about boot and system options listed in the following tables. To tune performance, you adjust some of the options to suit your application. Configure the options using the ALTER SESSION or ALTER SYSTEM command.
@@ -64,7 +64,7 @@ The sys.options table in Drill contains information about boot and system option
   </tr>
   <tr>
     <td>drill.exec.sys.store.provider.class</td>
-    <td>"org.apache.drill.exec.store.sys.zk.ZkPStoreProvider"</td>
+    <td>ZooKeeper: "org.apache.drill.exec.store.sys.zk.ZkPStoreProvider"</td>
     <td>The Pstore (Persistent Configuration Storage) provider to use. The Pstore holds configuration and profile data.</td>
   </tr>
   <tr>
@@ -358,7 +358,7 @@ The sys.options table in Drill contains information about boot and system option
     <td>Output format for data written to tables with the CREATE TABLE AS (CTAS) command. Allowed values are parquet, json, or text. Allowed values: 0, -1, 1000000</td>
   </tr>
   <tr>
-    <td>store.json.all_text_mode</td>
+    <td><a href="/docs/json-data-model#handling-type-differences">store.json.all_text_mode</a></td>
     <td>FALSE</td>
     <td>Drill reads all data from the JSON files as VARCHAR. Prevents schema change errors.</td>
   </tr>
@@ -368,7 +368,7 @@ The sys.options table in Drill contains information about boot and system option
     <td>Similar to store.json.all_text_mode for MongoDB.</td>
   </tr>
   <tr>
-    <td>store.parquet.block-size</td>
+    <td><a href="/docs/parquet-format#configuring-the-size-of-parquet-files">store.parquet.block-size</a></td>
     <td>536870912</td>
     <td>Sets the size of a Parquet row group to the number of bytes less than or equal to the block size of MFS, HDFS, or the file system.</td>
   </tr>

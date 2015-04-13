@@ -3,44 +3,26 @@ title: "Date/Time Functions and Arithmetic"
 parent: "SQL Functions"
 ---
 
-In addition to the TO_DATE, TO_TIME, and TO_TIMESTAMP functions, Drill supports a number of other date/time functions and arithmetic operators for use with dates, times, and intervals. The following table lists date/time functions described in this section:
+In addition to the TO_DATE, TO_TIME, and TO_TIMESTAMP functions, Drill supports a number of other date/time functions and arithmetic operators for use with dates, times, and intervals. Drill supports time functions based on the Gregorian calendar and in the range 1971 to 2037.
+
+This section defines the following date/time functions:
 
 **Function**| **Return Type**  
 ---|---  
 [AGE(TIMESTAMP)](/docs/date-time-functions-and-arithmetic#age)| INTERVAL
-[CURRENT_DATE](/docs/date-time-functions-and-arithmetic#current_date)| DATE  
-[CURRENT_TIME](/docs/date-time-functions-and-arithmetic#current_time)| TIME   
-[CURRENT_TIMESTAMP](/docs/date-time-functions-and-arithmetic#current_timestamp)| TIMESTAMP 
-[DATE_ADD(DATE,INTERVAL expr type)](/docs/date-time-functions-and-arithmetic#date_add)| date/datetime  
-[DATE_PART(text, time_expression)](/docs/date-time-functions-and-arithmetic#date_part)| double precision  
-[DATE_SUB(DATE,INTERVAL expr type)](/docs/date-time-functions-and-arithmetic#date_sub)| date/datetime  
-[EXTRACT(field from time_expression)](/docs/date-time-functions-and-arithmetic#extract)| double precision   
-[LOCALTIME](/docs/date-time-functions-and-arithmetic#localtime)| TIME  
-[LOCALTIMESTAMP](/docs/date-time-functions-and-arithmetic#localtimestamp)| TIMESTAMP  
-[NOW()](/docs/date-time-functions-and-arithmetic#now)| TIMESTAMP  
-[TIMEOFDAY()](/docs/date-time-functions-and-arithmetic#timeofday)| text  
+[EXTRACT(field from time_expression)](/docs/date-time-functions-and-arithmetic#extract)| double precision
+[CURRENT_DATE](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| DATE  
+[CURRENT_TIME](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME   
+[CURRENT_TIMESTAMP](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP 
+[DATE_ADD](/docs/date-time-functions-and-arithmetic#date_add)| date/datetime  
+[DATE_PART](/docs/date-time-functions-and-arithmetic#date_part)| double precision  
+[DATE_SUB](/docs/date-time-functions-and-arithmetic#date_sub)| date/datetime     
+[LOCALTIME](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME  
+[LOCALTIMESTAMP](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
+[NOW](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
+[TIMEOFDAY](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| text  
 
-## Date/Time Functions and Utilities
-
-The following functions perform date/time-related operations:
-
-* AGE
-* EXTRACT
-* DATE_ADD
-* DATE_PART
-* DATE_SUB
-
-Drill supports the following utilities:
-
-* CURRENT_DATE
-* CURRENT_TIME
-* CURRENT_TIMESTAMP
-* LOCALTIME
-* LOCALTIMESTAMP
-* NOW
-* TIMEOFDAY
-
-### AGE
+## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
 
 #### Syntax
@@ -76,92 +58,96 @@ Find the interval between 11:10:10 PM on January 1, 2001 and 10:10:10 PM on Janu
 
 For information about how to read the interval data, see the [Interval section](/docs/date-time-and-timestamp#interval).
 
-### EXTRACT
-
-Returns a component of a timestamp, time, date, or interval.
+### DATE_ADD
+Returns the sum of a date/time and a number of days/hours, or of a date/time and date/time interval.
 
 #### Syntax
 
-    EXTRACT (expression);
+    DATE_ADD(date literal_date, integer);
 
-*expression* is:
+    DATE_ADD(keyword literal, interval expr); 
 
-    component FROM (timestamp | time | date | interval)
+*date* is the keyword date.  
+*literal_date* is a date in yyyy-mm-dd format enclosed in single quotation marks.  
+*integer* is a number of days to add to the date/time.  
 
-*component* is a year, month, day, hour, minute, or second value.
+
+*keyword* is the word date, time, or timestamp.  
+*literal* is a date, time, or timestamp literal.  
+*interval* is a keyword  
+*expr* is an interval expression.  
 
 #### Examples
 
-On the third day of the month, run the following function:
+Add two days to today's date May 15, 2015.
 
-    SELECT EXTRACT(day FROM NOW()), EXTRACT(day FROM CURRENT_DATE) FROM sys.version;
-
-    +------------+------------+
-    |   EXPR$0   |   EXPR$1   |
-    +------------+------------+
-    | 3          | 3          |
-    +------------+------------+
-    1 row selected (0.208 seconds)
-
-At 8:00 am, extract the hour from the value of CURRENT_DATE.
-
-    SELECT EXTRACT(hour FROM CURRENT_DATE) FROM sys.version;
-
+    SELECT DATE_ADD(date '2015-05-15', 2) from sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
-    | 8          |
+    | 2015-05-17 |
     +------------+
+    1 row selected (0.07 seconds)
 
-What is the hour component of this time: 17:12:28.5?
+Add two months to April 15, 2015.
 
-    SELECT EXTRACT(hour FROM TIME '17:12:28.5') from sys.version;
-
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 17         |
-    +------------+
-    1 row selected (0.056 seconds)
-
-What is the second component of this timestamp: 2001-02-16 20:38:40
-
-    SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') from sys.version;
-
+    SELECT DATE_ADD(date '2015-04-15', interval '2' month) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
-    | 40.0       |
+    | 2015-06-15 00:00:00.0 |
     +------------+
-    1 row selected (0.062 seconds)
+    1 row selected (0.073 seconds)
 
-### DATE_ADD
-Returns the sum of a date and an interval.
+Add 10 hours to the timestamp 2015-04-15 22:55:55.
 
-#### Syntax
-
-    DATE_ADD(date, interval);
-
-#### Example
-
-    SELECT CAST(DATE_ADD(datetype(2008, 2, 27), intervaltype(0, 1, 0, 0, 0, 0, 0)) as VARCHAR(100)) FROM sys.version;
+    SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', interval '10' hour) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
-    | 2008-03-27 00:00:00.000 |
+    | 2015-04-16 08:55:55.0 |
     +------------+
-    1 row selected (0.247 seconds)
+    1 row selected (0.068 seconds)
+
+Add 10 hours to the time 22 hours, 55 minutes, 55 seconds.
+
+    SELECT DATE_ADD(time '22:55:55', interval '10' hour) FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 08:55:55   |
+    +------------+
+    1 row selected (0.085 seconds)
+
+Add 1 year and 1 month to the timestamp 2015-04-15 22:55:55.
+
+    SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', interval '1-2' year to month) FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2016-06-15 22:55:55.0 |
+    +------------+
+    1 row selected (0.065 seconds)
+
+Add 1 day 2 and 1/2 hours and 45.100 seconds to the time 22:55:55.
+
+    SELECT DATE_ADD(time '22:55:55', interval '1 2:30:45.100' day to second) FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 01:26:40.100 |
+    +------------+
+    1 row selected (0.07 seconds)
 
 ### DATE_PART
 Returns a field of a date, time, timestamp, or interval.
 
 #### Syntax 
 
-    date_part(component, expression);
+    date_part(keyword, expression);
 
-*component* is year, month, day, hour, minute, second, enclosed in single quotation marks.
-
-*expression* is date, time, timestamp, or interval enclosed in single quotation marks.
+*keyword* is year, month, day, hour, minute, or second enclosed in single quotation marks.  
+*expression* is date, time, timestamp, or interval literal enclosed in single quotation marks.
 
 #### Usage Notes
 Use Unix Epoch timestamp in milliseconds as the expression to get the field of a timestamp.
@@ -205,24 +191,89 @@ Return the day part of the one year, 2 months, 10 days interval.
     1 row selected (0.069 seconds)
 
 ### DATE_SUB
-Returns the sum of a date and an interval.
+Returns the difference between a date/time and a number of days/hours, or between a date/time and date/time interval.
 
 #### Syntax
 
-    DATE_SUB(date, interval);
+    DATE_SUB(date literal_date, integer);
 
-#### Example
+    DATE_SUB(keyword literal, interval expr); 
 
-    SELECT CAST(DATE_SUB(datetype(2008, 2, 27), intervaltype(0, 1, 0, 0, 0, 0, 0)) as VARCHAR(100)) FROM sys.version;
+*date* is the keyword date.  
+*literal_date* is a date in yyyy-mm-dd format enclosed in single quotation marks.  
+*integer* is a number of days to subtract from the date/time.  
+
+
+*keyword* is the word date, time, or timestamp.  
+*literal* is a date, time, or timestamp literal.  
+*interval* is a keyword.  
+*expr* is an interval expression.
+
+#### Examples
+
+Subtract two days to today's date May 15, 2015.
+
+    SELECT DATE_SUB(date '2015-05-15', 2) from sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
-    | 2008-01-27 |
+    | 2015-05-13 |
     +------------+
-    1 row selected (0.199 seconds)
+    1 row selected (0.088 seconds)
 
-### Date/Time Utilities
-The utilities are:
+Subtact two months from April 15, 2015.
+
+    SELECT DATE_SUB(date '2015-04-15', interval '2' month) FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2015-02-15 |
+    +------------+
+    1 row selected (0.088 seconds)
+
+Subtract 10 hours from the timestamp 2015-04-15 22:55:55.
+
+    SELECT DATE_SUB(timestamp '2015-04-15 22:55:55', interval '10' hour) FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2015-04-15 12:55:55.0 |
+    +------------+
+    1 row selected (0.068 seconds)
+
+Subtract 10 hours from the time 22 hours, 55 minutes, 55 seconds.
+
+    SELECT DATE_SUB(time '22:55:55', interval '10' hour) FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 12:55:55   |
+    +------------+
+    1 row selected (0.079 seconds)
+
+Subtract 1 year and 1 month from the timestamp 2015-04-15 22:55:55.
+
+    SELECT DATE_SUB(timestamp '2015-04-15 22:55:55', interval '1-2' year to month) FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 2014-02-15 22:55:55.0 |
+    +------------+
+    1 row selected (0.073 seconds)
+
+Subtract 1 day, 2 and 1/2 hours, and 45.100 seconds from the time 22:55:55.
+
+    SELECT DATE_ADD(time '22:55:55', interval '1 2:30:45.100' day to second) FROM sys.version;
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 01:26:40.100 |
+    +------------+
+    1 row selected (0.073 seconds)
+
+### CURRENT_*x*, LOCAL*x*, NOW, and TIMEOFDAY
+
+The following examples show how to use these functions:
 
 * CURRENT_DATE
 * CURRENT_TIME
@@ -231,8 +282,6 @@ The utilities are:
 * LOCALTIMESTAMP
 * NOW
 * TIMEOFDAY
-
-The following examples show how to use the utilities:
 
     SELECT CURRENT_DATE FROM sys.version;
     +--------------+
@@ -304,8 +353,71 @@ If you did not set up Drill for UTC time, TIMEOFDAY returns the local date and t
     +------------+
     1 row selected (1.199 seconds)
 
+### EXTRACT
 
-### Date, Time, and Interval Arithmetic Functions
+Returns a component of a timestamp, time, date, or interval.
+
+#### Syntax
+
+    EXTRACT (extract_expression);
+
+*extract_expression* is:
+
+    component FROM (timestamp | time | date | interval)
+
+*component* is supported time unit.
+
+#### Usage Notes
+
+The extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND.
+
+#### Examples
+
+On the third day of the month, run the following function:
+
+    SELECT EXTRACT(day FROM NOW()), EXTRACT(day FROM CURRENT_DATE) FROM sys.version;
+
+    +------------+------------+
+    |   EXPR$0   |   EXPR$1   |
+    +------------+------------+
+    | 3          | 3          |
+    +------------+------------+
+    1 row selected (0.208 seconds)
+
+At 8:00 am, extract the hour from the value of CURRENT_DATE.
+
+    SELECT EXTRACT(hour FROM CURRENT_DATE) FROM sys.version;
+
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 8          |
+    +------------+
+
+What is the hour component of this time: 17:12:28.5?
+
+    SELECT EXTRACT(hour FROM TIME '17:12:28.5') from sys.version;
+
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 17         |
+    +------------+
+    1 row selected (0.056 seconds)
+
+What is the seconds component of this timestamp: 2001-02-16 20:38:40
+
+    SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') from sys.version;
+
+    +------------+
+    |   EXPR$0   |
+    +------------+
+    | 40.0       |
+    +------------+
+    1 row selected (0.062 seconds)
+
+
+## Date, Time, and Interval Arithmetic Functions
 <!-- date +/- integer
 date + interval  -->
 

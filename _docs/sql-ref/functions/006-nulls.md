@@ -3,7 +3,7 @@ title: "Functions for Handling Nulls"
 parent: "SQL Functions"
 ---
 
-Drill supports the following SQL functions:
+Drill supports the following functions for handling nulls:
 
 * COALESCE
 * NULLIF
