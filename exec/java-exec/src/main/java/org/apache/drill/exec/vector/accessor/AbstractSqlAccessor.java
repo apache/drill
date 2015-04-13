@@ -99,7 +99,8 @@ abstract class AbstractSqlAccessor implements SqlAccessor {
 
   @Override
   public String getString(int index) throws InvalidAccessException{
-    return getObject(index).toString();
+    Object obj = getObject(index);
+    return obj == null ? null : obj.toString();
   }
 
   @Override
