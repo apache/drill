@@ -62,14 +62,14 @@ public class VarLengthColumnReaders {
       if (index >= decimal28Vector.getValueCapacity()) {
         return false;
       }
-      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
+      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
       return true;
     }
 
     @Override
     public int capacity() {
-      return decimal28Vector.getData().capacity();
+      return decimal28Vector.getBuffer().capacity();
     }
   }
 
@@ -91,7 +91,7 @@ public class VarLengthColumnReaders {
       if (index >= nullableDecimal28Vector.getValueCapacity()) {
         return false;
       }
-      DecimalUtility.getSparseFromBigDecimal(intermediate, nullableDecimal28Vector.getData(), index * width, schemaElement.getScale(),
+      DecimalUtility.getSparseFromBigDecimal(intermediate, nullableDecimal28Vector.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
       nullableDecimal28Vector.getMutator().setIndexDefined(index);
       return true;
@@ -99,7 +99,7 @@ public class VarLengthColumnReaders {
 
     @Override
     public int capacity() {
-      return nullableDecimal28Vector.getData().capacity();
+      return nullableDecimal28Vector.getBuffer().capacity();
     }
   }
 
@@ -121,14 +121,14 @@ public class VarLengthColumnReaders {
       if (index >= decimal28Vector.getValueCapacity()) {
         return false;
       }
-      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
+      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
       return true;
     }
 
     @Override
     public int capacity() {
-      return decimal28Vector.getData().capacity();
+      return decimal28Vector.getBuffer().capacity();
     }
   }
 
@@ -150,7 +150,7 @@ public class VarLengthColumnReaders {
       if (index >= nullableDecimal38Vector.getValueCapacity()) {
         return false;
       }
-      DecimalUtility.getSparseFromBigDecimal(intermediate, nullableDecimal38Vector.getData(), index * width, schemaElement.getScale(),
+      DecimalUtility.getSparseFromBigDecimal(intermediate, nullableDecimal38Vector.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
       nullableDecimal38Vector.getMutator().setIndexDefined(index);
       return true;
@@ -158,7 +158,7 @@ public class VarLengthColumnReaders {
 
     @Override
     public int capacity() {
-      return nullableDecimal38Vector.getData().capacity();
+      return nullableDecimal38Vector.getBuffer().capacity();
     }
   }
 
@@ -203,7 +203,7 @@ public class VarLengthColumnReaders {
 
     @Override
     public int capacity() {
-      return varCharVector.getData().capacity();
+      return varCharVector.getBuffer().capacity();
     }
   }
 
@@ -241,7 +241,7 @@ public class VarLengthColumnReaders {
 
     @Override
     public int capacity() {
-      return vector.getData().capacity();
+      return vector.getBuffer().capacity();
     }
   }
 
@@ -286,7 +286,7 @@ public class VarLengthColumnReaders {
 
     @Override
     public int capacity() {
-      return varBinaryVector.getData().capacity();
+      return varBinaryVector.getBuffer().capacity();
     }
   }
 
@@ -332,7 +332,7 @@ public class VarLengthColumnReaders {
 
     @Override
     public int capacity() {
-      return nullableVarBinaryVector.getData().capacity();
+      return nullableVarBinaryVector.getBuffer().capacity();
     }
 
   }

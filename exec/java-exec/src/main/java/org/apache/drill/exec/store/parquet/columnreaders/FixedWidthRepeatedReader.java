@@ -65,7 +65,7 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
     bytesReadInCurrentPass = 0;
     valuesReadInCurrentPass = 0;
     pageReader.valuesReadyToRead = 0;
-    dataReader.vectorData = castedRepeatedVector.getMutator().getDataVector().getData();
+    dataReader.vectorData = castedRepeatedVector.getMutator().getDataVector().getBuffer();
     dataReader.valuesReadInCurrentPass = 0;
     repeatedGroupsReadInCurrentPass = 0;
   }
@@ -223,7 +223,7 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
 
   @Override
   public int capacity() {
-    return castedRepeatedVector.getMutator().getDataVector().getData().capacity();
+    return castedRepeatedVector.getMutator().getDataVector().getBuffer().capacity();
   }
 
   @Override

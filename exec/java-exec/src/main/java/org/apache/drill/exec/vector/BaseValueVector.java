@@ -53,8 +53,15 @@ public abstract class BaseValueVector<V extends BaseValueVector<V, A, M>, A exte
     return getField().clone(ref);
   }
 
+  @Override
+  public SerializedField getMetadata() {
+    return getMetadataBuilder().build();
+  }
+
   protected SerializedField.Builder getMetadataBuilder() {
-    return getField().getAsBuilder();
+    return getField().getAsBuilder()
+        .setValueCount(getAccessor().getValueCount())
+        .setBufferLength(getBufferSize());
   }
 
   public abstract static class BaseAccessor implements ValueVector.Accessor {

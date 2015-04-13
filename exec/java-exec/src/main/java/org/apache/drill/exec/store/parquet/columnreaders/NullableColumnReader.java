@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -57,7 +56,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
     readLength = 0;
     readLengthInBits = 0;
     recordsReadInThisIteration = 0;
-    vectorData = castedBaseVector.getData();
+    vectorData = castedBaseVector.getBuffer();
 
       // values need to be spaced out where nulls appear in the column
       // leaving blank space for nulls allows for random access to values
@@ -115,9 +114,9 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         }
         valuesReadInCurrentPass += nullsFound;
 
-        int writerIndex = ((BaseDataValueVector) valueVec).getData().writerIndex();
+        int writerIndex = ((BaseDataValueVector) valueVec).getBuffer().writerIndex();
         if ( dataTypeLengthInBits > 8  || (dataTypeLengthInBits < 8 && totalValuesRead + runLength % 8 == 0)){
-          castedBaseVector.getData().setIndex(0, writerIndex + (int) Math.ceil( nullsFound * dataTypeLengthInBits / 8.0));
+          castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) Math.ceil( nullsFound * dataTypeLengthInBits / 8.0));
         }
         else if (dataTypeLengthInBits < 8){
           rightBitShift += dataTypeLengthInBits * nullsFound;

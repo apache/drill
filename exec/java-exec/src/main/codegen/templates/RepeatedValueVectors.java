@@ -19,6 +19,7 @@
 import java.lang.Override;
 
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.mortbay.jetty.servlet.Holder;
@@ -76,14 +77,6 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     return Math.min(values.getValueCapacity(), offsets.getValueCapacity() - 1);
   }
 
-  public int getCurrentValueCount() {
-    return values.getCurrentValueCount();
-  }
-
-  public void setCurrentValueCount(int count) {
-    values.setCurrentValueCount(offsets.getAccessor().get(count));
-  }
-  
   public int getBufferSize(){
     if(accessor.getGroupCount() == 0){
       return 0;
@@ -91,8 +84,8 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     return offsets.getBufferSize() + values.getBufferSize();
   }
 
-  public DrillBuf getData(){
-      return values.getData();
+  public DrillBuf getBuffer(){
+      return values.getBuffer();
   }
   
   public TransferPair getTransferPair(){
@@ -314,7 +307,7 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
   // variable length vectors, as they should ahve consistent interface as much as possible, if they need to diverge
   // in the future, the interface shold be declared in the respective value vector superclasses for fixed and variable
   // and we should refer to each in the generation template
-  public final class Accessor implements RepeatedFixedWidthVector.RepeatedAccessor{
+  public final class Accessor extends BaseValueVector.BaseAccessor implements RepeatedFixedWidthVector.RepeatedAccessor{
 
     /**
      * Get the elements at the given index.
@@ -405,7 +398,7 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     }
   }
   
-  public final class Mutator implements RepeatedMutator {
+  public final class Mutator extends BaseValueVector.BaseMutator implements RepeatedMutator {
 
     
     private Mutator(){

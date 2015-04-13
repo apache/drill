@@ -42,6 +42,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
 
+  private int valueCount;
   private int allocationValueCount = INITIAL_VALUE_ALLOCATION;
   private int allocationMonitor = 0;
 
@@ -55,11 +56,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public SerializedField getMetadata() {
-    return field.getAsBuilder() //
-        .setValueCount(valueCount) //
-        .setBufferLength( (int) Math.ceil(valueCount / 8.0)) //
-        .build();
+  public int getBufferSize() {
+    return getSizeFromCount(valueCount);
   }
 
   private int getSizeFromCount(int valueCount) {

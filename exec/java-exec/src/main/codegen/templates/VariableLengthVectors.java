@@ -82,7 +82,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   public int getBufferSize(){
-    if(valueCount == 0) return 0;
+    if (getAccessor().getValueCount() == 0) return 0;
     return offsetVector.getBufferSize() + data.writerIndex();
   }
   
@@ -99,7 +99,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   public int getCurrentSizeInBytes() {
-    return offsetVector.getAccessor().get(currentValueCount);
+    return offsetVector.getAccessor().get(getAccessor().getValueCount());
   }
   
   /**
@@ -107,21 +107,21 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
    * @return
    */
   public int getVarByteLength(){
+    final int valueCount = getAccessor().getValueCount();
     if(valueCount == 0) return 0;
-    return offsetVector.getAccessor().get(valueCount); 
+    return offsetVector.getAccessor().get(valueCount);
   }
   
   @Override
   public SerializedField getMetadata() {
     return getMetadataBuilder() //
-             .setValueCount(valueCount) //
+             .setValueCount(getAccessor().getValueCount()) //
              .setVarByteLength(getVarByteLength()) //
              .setBufferLength(getBufferSize()) //
              .build();
   }
 
   public int load(int dataBytes, int valueCount, DrillBuf buf){
-    this.valueCount = valueCount;
     if(valueCount == 0){
       allocateNew(0,0);
       return 0;
@@ -159,10 +159,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return buffers;
   }
   
-  public long getOffsetAddr(){
-    return offsetVector.getDataAddr();
-  }
-  
   public TransferPair getTransferPair(){
     return new TransferImpl(getField());
   }
@@ -179,7 +175,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     this.offsetVector.transferTo(target.offsetVector);
     target.data = data;
     target.data.retain();
-    target.valueCount = valueCount;
     clear();
   }
 
@@ -386,7 +381,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     
     
     public int getValueCount() {
-      return valueCount;
+      return Math.max(offsetVector.getAccessor().getValueCount()-1, 0);
     }
 
     public boolean isNull(int index){
@@ -542,7 +537,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     
     public void setValueCount(int valueCount) {
       int currentByteCapacity = getByteCapacity();
-      ${minor.class}Vector.this.valueCount = valueCount;
       int idx = offsetVector.getAccessor().get(valueCount);
       data.writerIndex(idx);
       if (valueCount > 0 && currentByteCapacity > idx * 2) {

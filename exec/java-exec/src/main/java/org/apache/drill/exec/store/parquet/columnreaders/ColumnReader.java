@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import parquet.column.ColumnDescriptor;
@@ -181,7 +180,7 @@ public abstract class ColumnReader<V extends ValueVector> {
     readLengthInBits = 0;
     recordsReadInThisIteration = 0;
     bytesReadInCurrentPass = 0;
-    vectorData = ((BaseDataValueVector) valueVec).getData();
+    vectorData = ((BaseDataValueVector) valueVec).getBuffer();
   }
 
   public int capacity() {
