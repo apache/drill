@@ -19688,7 +19688,7 @@ public final class UserBitShared {
       "ype\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*" +
       "k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITIN",
       "G_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020" +
-      "\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005*\264\005\n\020CoreOpe" +
+      "\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005*\312\005\n\020CoreOpe" +
       "ratorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAS" +
       "T_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE" +
       "\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HAS" +
@@ -19706,8 +19706,8 @@ public final class UserBitShared {
       "\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB" +
       "_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER" +
       "_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDO" +
-      "W\020\"B.\n\033org.apache.drill.exec.protoB\rUser",
-      "BitSharedH\001"
+      "W\020\"\022\024\n\020NESTED_LOOP_JOIN\020#B.\n\033org.apache.",
+      "drill.exec.protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
