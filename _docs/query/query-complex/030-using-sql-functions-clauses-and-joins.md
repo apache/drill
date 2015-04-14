@@ -1,5 +1,5 @@
 ---
-title: "Query 2: Using Standard SQL Functions, Clauses, and Joins"
+title: "Using SQL Functions, Clauses, and Joins"
 parent: "Querying Complex Data"
 ---
 You can use standard SQL clauses, such as WHERE and ORDER BY, to elaborate on

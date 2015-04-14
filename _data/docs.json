@@ -34,7 +34,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "SQL Commands Summary", 
             "previous_url": "/docs/sql-commands-summary/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/001-alter-session.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/010-alter-session-command.md", 
             "title": "ALTER SESSION Command", 
             "url": "/docs/alter-session-command/"
         }, 
@@ -55,7 +55,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "ALTER SESSION Command", 
             "previous_url": "/docs/alter-session-command/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/002-alter-system.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/020-alter-system.md", 
             "title": "ALTER SYSTEM Command", 
             "url": "/docs/alter-system-command/"
         }, 
@@ -131,7 +131,7 @@
             "parent": "SQL Functions", 
             "previous_title": "String Manipulation", 
             "previous_url": "/docs/string-manipulation/", 
-            "relative_path": "_docs/sql-ref/functions/005-aggregate.md", 
+            "relative_path": "_docs/sql-ref/functions/050-aggregate-and-aggregate-statistical.md", 
             "title": "Aggregate and Aggregate Statistical", 
             "url": "/docs/aggregate-and-aggregate-statistical/"
         }, 
@@ -544,7 +544,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "ALTER SYSTEM Command", 
             "previous_url": "/docs/alter-system-command/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/003-create-table-as.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/030-create-table-as-command.md", 
             "title": "CREATE TABLE AS (CTAS) command", 
             "url": "/docs/create-table-as-ctas-command/"
         }, 
@@ -565,7 +565,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "CREATE TABLE AS (CTAS) command", 
             "previous_url": "/docs/create-table-as-ctas-command/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/004-create-view.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/050-create-view-command.md", 
             "title": "CREATE VIEW command", 
             "url": "/docs/create-view-command/"
         }, 
@@ -1108,7 +1108,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "CREATE VIEW command", 
             "previous_url": "/docs/create-view-command/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/005-describe.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/060-describe-command.md", 
             "title": "DESCRIBE Command", 
             "url": "/docs/describe-command/"
         }, 
@@ -1210,7 +1210,7 @@
             "parent": "SQL Functions", 
             "previous_title": "Math and Trig", 
             "previous_url": "/docs/math-and-trig/", 
-            "relative_path": "_docs/sql-ref/functions/002-conversion.md", 
+            "relative_path": "_docs/sql-ref/functions/020-data-type-conversion.md", 
             "title": "Data Type Conversion", 
             "url": "/docs/data-type-conversion/"
         }, 
@@ -1239,7 +1239,7 @@
                     "parent": "Data Types", 
                     "previous_title": "Data Types", 
                     "previous_url": "/docs/data-types/", 
-                    "relative_path": "_docs/sql-ref/data-types/001-date.md", 
+                    "relative_path": "_docs/sql-ref/data-types/010-date-time-and-timestamp.md", 
                     "title": "Date, Time, and Timestamp", 
                     "url": "/docs/date-time-and-timestamp/"
                 }, 
@@ -1260,7 +1260,7 @@
                     "parent": "Data Types", 
                     "previous_title": "Date, Time, and Timestamp", 
                     "previous_url": "/docs/date-time-and-timestamp/", 
-                    "relative_path": "_docs/sql-ref/data-types/002-diff-data-types.md", 
+                    "relative_path": "_docs/sql-ref/data-types/020-handling-different-data-types.md", 
                     "title": "Handling Different Data Types", 
                     "url": "/docs/handling-different-data-types/"
                 }
@@ -1268,9 +1268,9 @@
             "next_title": "Date, Time, and Timestamp", 
             "next_url": "/docs/date-time-and-timestamp/", 
             "parent": "SQL Reference", 
-            "previous_title": "SQL Reference", 
-            "previous_url": "/docs/sql-reference/", 
-            "relative_path": "_docs/sql-ref/001-data-types.md", 
+            "previous_title": "SQL Reference Introduction", 
+            "previous_url": "/docs/sql-reference-introduction/", 
+            "relative_path": "_docs/sql-ref/020-data-types.md", 
             "title": "Data Types", 
             "url": "/docs/data-types/"
         }, 
@@ -1291,7 +1291,7 @@
             "parent": "Data Types", 
             "previous_title": "Data Types", 
             "previous_url": "/docs/data-types/", 
-            "relative_path": "_docs/sql-ref/data-types/001-date.md", 
+            "relative_path": "_docs/sql-ref/data-types/010-date-time-and-timestamp.md", 
             "title": "Date, Time, and Timestamp", 
             "url": "/docs/date-time-and-timestamp/"
         }, 
@@ -1312,7 +1312,7 @@
             "parent": "SQL Functions", 
             "previous_title": "Data Type Conversion", 
             "previous_url": "/docs/data-type-conversion/", 
-            "relative_path": "_docs/sql-ref/functions/003-date-time-fcns.md", 
+            "relative_path": "_docs/sql-ref/functions/030-date-time-functions-and-arithmetic.md", 
             "title": "Date/Time Functions and Arithmetic", 
             "url": "/docs/date-time-functions-and-arithmetic/"
         }, 
@@ -2056,7 +2056,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "DESCRIBE Command", 
             "previous_url": "/docs/describe-command/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/007-explain.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/070-explain-commands.md", 
             "title": "EXPLAIN commands", 
             "url": "/docs/explain-commands/"
         }, 
@@ -2094,7 +2094,7 @@
             "parent": "Nested Data Functions", 
             "previous_title": "Nested Data Functions", 
             "previous_url": "/docs/nested-data-functions/", 
-            "relative_path": "_docs/sql-ref/nested/001-flatten.md", 
+            "relative_path": "_docs/sql-ref/nested/010-flatten.md", 
             "title": "FLATTEN", 
             "url": "/docs/flatten/"
         }, 
@@ -2157,7 +2157,7 @@
             "parent": "SQL Functions", 
             "previous_title": "Aggregate and Aggregate Statistical", 
             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
-            "relative_path": "_docs/sql-ref/functions/006-nulls.md", 
+            "relative_path": "_docs/sql-ref/functions/060-functions-for-handling-nulls.md", 
             "title": "Functions for Handling Nulls", 
             "url": "/docs/functions-for-handling-nulls/"
         }, 
@@ -2267,7 +2267,7 @@
             "parent": "Data Types", 
             "previous_title": "Date, Time, and Timestamp", 
             "previous_url": "/docs/date-time-and-timestamp/", 
-            "relative_path": "_docs/sql-ref/data-types/002-diff-data-types.md", 
+            "relative_path": "_docs/sql-ref/data-types/020-handling-different-data-types.md", 
             "title": "Handling Different Data Types", 
             "url": "/docs/handling-different-data-types/"
         }, 
@@ -2784,7 +2784,7 @@
             "parent": "Nested Data Functions", 
             "previous_title": "FLATTEN", 
             "previous_url": "/docs/flatten/", 
-            "relative_path": "_docs/sql-ref/nested/002-kvgen.md", 
+            "relative_path": "_docs/sql-ref/nested/020-kvgen.md", 
             "title": "KVGEN", 
             "url": "/docs/kvgen/"
         }, 
@@ -3071,7 +3071,7 @@
             "parent": "SQL Reference", 
             "previous_title": "Handling Different Data Types", 
             "previous_url": "/docs/handling-different-data-types/", 
-            "relative_path": "_docs/sql-ref/002-lexical-structure.md", 
+            "relative_path": "_docs/sql-ref/030-lexical-structure.md", 
             "title": "Lexical Structure", 
             "url": "/docs/lexical-structure/"
         }, 
@@ -3292,7 +3292,7 @@
             "parent": "SQL Functions", 
             "previous_title": "SQL Functions", 
             "previous_url": "/docs/sql-functions/", 
-            "relative_path": "_docs/sql-ref/functions/001-math.md", 
+            "relative_path": "_docs/sql-ref/functions/010-math-and-trig.md", 
             "title": "Math and Trig", 
             "url": "/docs/math-and-trig/"
         }, 
@@ -3355,7 +3355,7 @@
                     "parent": "Nested Data Functions", 
                     "previous_title": "Nested Data Functions", 
                     "previous_url": "/docs/nested-data-functions/", 
-                    "relative_path": "_docs/sql-ref/nested/001-flatten.md", 
+                    "relative_path": "_docs/sql-ref/nested/010-flatten.md", 
                     "title": "FLATTEN", 
                     "url": "/docs/flatten/"
                 }, 
@@ -3376,7 +3376,7 @@
                     "parent": "Nested Data Functions", 
                     "previous_title": "FLATTEN", 
                     "previous_url": "/docs/flatten/", 
-                    "relative_path": "_docs/sql-ref/nested/002-kvgen.md", 
+                    "relative_path": "_docs/sql-ref/nested/020-kvgen.md", 
                     "title": "KVGEN", 
                     "url": "/docs/kvgen/"
                 }, 
@@ -3397,7 +3397,7 @@
                     "parent": "Nested Data Functions", 
                     "previous_title": "KVGEN", 
                     "previous_url": "/docs/kvgen/", 
-                    "relative_path": "_docs/sql-ref/nested/003-repeated-cnt.md", 
+                    "relative_path": "_docs/sql-ref/nested/030-repeated-count.md", 
                     "title": "REPEATED_COUNT", 
                     "url": "/docs/repeated-count/"
                 }, 
@@ -3418,7 +3418,7 @@
                     "parent": "Nested Data Functions", 
                     "previous_title": "REPEATED_COUNT", 
                     "previous_url": "/docs/repeated-count/", 
-                    "relative_path": "_docs/sql-ref/nested/004-repeated-contains.md", 
+                    "relative_path": "_docs/sql-ref/nested/040-repeated-contains.md", 
                     "title": "REPEATED_CONTAINS", 
                     "url": "/docs/repeated-contains/"
                 }
@@ -3428,7 +3428,7 @@
             "parent": "SQL Reference", 
             "previous_title": "Functions for Handling Nulls", 
             "previous_url": "/docs/functions-for-handling-nulls/", 
-            "relative_path": "_docs/sql-ref/005-nest-functions.md", 
+            "relative_path": "_docs/sql-ref/060-nested-data-functions.md", 
             "title": "Nested Data Functions", 
             "url": "/docs/nested-data-functions/"
         }, 
@@ -3797,7 +3797,7 @@
             "parent": "SQL Reference", 
             "previous_title": "Lexical Structure", 
             "previous_url": "/docs/lexical-structure/", 
-            "relative_path": "_docs/sql-ref/003-operators.md", 
+            "relative_path": "_docs/sql-ref/040-operators.md", 
             "title": "Operators", 
             "url": "/docs/operators/"
         }, 
@@ -3957,90 +3957,6 @@
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
         }, 
-        "Query 1: Selecting Flat Data": {
-            "breadcrumbs": [
-                {
-                    "title": "Querying Complex Data", 
-                    "url": "/docs/querying-complex-data/"
-                }, 
-                {
-                    "title": "Query Data", 
-                    "url": "/docs/query-data/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-            "next_url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/", 
-            "parent": "Querying Complex Data", 
-            "previous_title": "Sample Data: Donuts", 
-            "previous_url": "/docs/sample-data-donuts/", 
-            "relative_path": "_docs/query/query-complex/002-query1-select.md", 
-            "title": "Query 1: Selecting Flat Data", 
-            "url": "/docs/query-1-selecting-flat-data/"
-        }, 
-        "Query 2: Using Standard SQL Functions, Clauses, and Joins": {
-            "breadcrumbs": [
-                {
-                    "title": "Querying Complex Data", 
-                    "url": "/docs/querying-complex-data/"
-                }, 
-                {
-                    "title": "Query Data", 
-                    "url": "/docs/query-data/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Query 3: Selecting Nested Data for a Column", 
-            "next_url": "/docs/query-3-selecting-nested-data-for-a-column/", 
-            "parent": "Querying Complex Data", 
-            "previous_title": "Query 1: Selecting Flat Data", 
-            "previous_url": "/docs/query-1-selecting-flat-data/", 
-            "relative_path": "_docs/query/query-complex/003-query2-use-sql.md", 
-            "title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-            "url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/"
-        }, 
-        "Query 3: Selecting Nested Data for a Column": {
-            "breadcrumbs": [
-                {
-                    "title": "Querying Complex Data", 
-                    "url": "/docs/querying-complex-data/"
-                }, 
-                {
-                    "title": "Query Data", 
-                    "url": "/docs/query-data/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-            "next_url": "/docs/query-4-selecting-multiple-columns-within-nested-data/", 
-            "parent": "Querying Complex Data", 
-            "previous_title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-            "previous_url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/", 
-            "relative_path": "_docs/query/query-complex/004-query3-sel-nest.md", 
-            "title": "Query 3: Selecting Nested Data for a Column", 
-            "url": "/docs/query-3-selecting-nested-data-for-a-column/"
-        }, 
-        "Query 4: Selecting Multiple Columns Within Nested Data": {
-            "breadcrumbs": [
-                {
-                    "title": "Querying Complex Data", 
-                    "url": "/docs/querying-complex-data/"
-                }, 
-                {
-                    "title": "Query Data", 
-                    "url": "/docs/query-data/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Querying Hive", 
-            "next_url": "/docs/querying-hive/", 
-            "parent": "Querying Complex Data", 
-            "previous_title": "Query 3: Selecting Nested Data for a Column", 
-            "previous_url": "/docs/query-3-selecting-nested-data-for-a-column/", 
-            "relative_path": "_docs/query/query-complex/005-query4-sel-multiple.md", 
-            "title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-            "url": "/docs/query-4-selecting-multiple-columns-within-nested-data/"
-        }, 
         "Query Basics Tutorial": {
             "breadcrumbs": [
                 {
@@ -4132,6 +4048,23 @@
                             "url": "/docs/query-data/"
                         }
                     ], 
+                    "children": [], 
+                    "next_title": "Querying a File System", 
+                    "next_url": "/docs/querying-a-file-system/", 
+                    "parent": "Query Data", 
+                    "previous_title": "Query Data", 
+                    "previous_url": "/docs/query-data/", 
+                    "relative_path": "_docs/query/010-query-data-introduction.md", 
+                    "title": "Query Data Introduction", 
+                    "url": "/docs/query-data-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
                     "children": [
                         {
                             "breadcrumbs": [
@@ -4150,7 +4083,7 @@
                             "parent": "Querying a File System", 
                             "previous_title": "Querying a File System", 
                             "previous_url": "/docs/querying-a-file-system/", 
-                            "relative_path": "_docs/query/query-fs/001-query-json.md", 
+                            "relative_path": "_docs/query/query-fs/010-querying-json-files.md", 
                             "title": "Querying JSON Files", 
                             "url": "/docs/querying-json-files/"
                         }, 
@@ -4171,7 +4104,7 @@
                             "parent": "Querying a File System", 
                             "previous_title": "Querying JSON Files", 
                             "previous_url": "/docs/querying-json-files/", 
-                            "relative_path": "_docs/query/query-fs/002-query-parquet.md", 
+                            "relative_path": "_docs/query/query-fs/020-querying-parquet-files.md", 
                             "title": "Querying Parquet Files", 
                             "url": "/docs/querying-parquet-files/"
                         }, 
@@ -4192,7 +4125,7 @@
                             "parent": "Querying a File System", 
                             "previous_title": "Querying Parquet Files", 
                             "previous_url": "/docs/querying-parquet-files/", 
-                            "relative_path": "_docs/query/query-fs/003-query-text.md", 
+                            "relative_path": "_docs/query/query-fs/030-querying-plain-text-files.md", 
                             "title": "Querying Plain Text Files", 
                             "url": "/docs/querying-plain-text-files/"
                         }, 
@@ -4213,7 +4146,7 @@
                             "parent": "Querying a File System", 
                             "previous_title": "Querying Plain Text Files", 
                             "previous_url": "/docs/querying-plain-text-files/", 
-                            "relative_path": "_docs/query/query-fs/004-query-dir.md", 
+                            "relative_path": "_docs/query/query-fs/040-querying-directories.md", 
                             "title": "Querying Directories", 
                             "url": "/docs/querying-directories/"
                         }
@@ -4221,9 +4154,9 @@
                     "next_title": "Querying JSON Files", 
                     "next_url": "/docs/querying-json-files/", 
                     "parent": "Query Data", 
-                    "previous_title": "Query Data", 
-                    "previous_url": "/docs/query-data/", 
-                    "relative_path": "_docs/query/002-query-fs.md", 
+                    "previous_title": "Query Data Introduction", 
+                    "previous_url": "/docs/query-data-introduction/", 
+                    "relative_path": "_docs/query/020-querying-a-file-system.md", 
                     "title": "Querying a File System", 
                     "url": "/docs/querying-a-file-system/"
                 }, 
@@ -4240,7 +4173,7 @@
                     "parent": "Query Data", 
                     "previous_title": "Querying Directories", 
                     "previous_url": "/docs/querying-directories/", 
-                    "relative_path": "_docs/query/003-query-hbase.md", 
+                    "relative_path": "_docs/query/030-querying-hbase.md", 
                     "title": "Querying HBase", 
                     "url": "/docs/querying-hbase/"
                 }, 
@@ -4264,12 +4197,12 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query 1: Selecting Flat Data", 
-                            "next_url": "/docs/query-1-selecting-flat-data/", 
+                            "next_title": "Selecting Flat Data", 
+                            "next_url": "/docs/selecting-flat-data/", 
                             "parent": "Querying Complex Data", 
                             "previous_title": "Querying Complex Data", 
                             "previous_url": "/docs/querying-complex-data/", 
-                            "relative_path": "_docs/query/query-complex/001-sample-donuts.md", 
+                            "relative_path": "_docs/query/query-complex/010-sample--data-donuts.md", 
                             "title": "Sample Data: Donuts", 
                             "url": "/docs/sample-data-donuts/"
                         }, 
@@ -4285,14 +4218,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                            "next_url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/", 
+                            "next_title": "Using SQL Functions, Clauses, and Joins", 
+                            "next_url": "/docs/using-sql-functions-clauses-and-joins/", 
                             "parent": "Querying Complex Data", 
                             "previous_title": "Sample Data: Donuts", 
                             "previous_url": "/docs/sample-data-donuts/", 
-                            "relative_path": "_docs/query/query-complex/002-query1-select.md", 
-                            "title": "Query 1: Selecting Flat Data", 
-                            "url": "/docs/query-1-selecting-flat-data/"
+                            "relative_path": "_docs/query/query-complex/020-selecting-flat-data.md", 
+                            "title": "Selecting Flat Data", 
+                            "url": "/docs/selecting-flat-data/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -4306,14 +4239,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query 3: Selecting Nested Data for a Column", 
-                            "next_url": "/docs/query-3-selecting-nested-data-for-a-column/", 
+                            "next_title": "Selecting Nested Data for a Column", 
+                            "next_url": "/docs/selecting-nested-data-for-a-column/", 
                             "parent": "Querying Complex Data", 
-                            "previous_title": "Query 1: Selecting Flat Data", 
-                            "previous_url": "/docs/query-1-selecting-flat-data/", 
-                            "relative_path": "_docs/query/query-complex/003-query2-use-sql.md", 
-                            "title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                            "url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/"
+                            "previous_title": "Selecting Flat Data", 
+                            "previous_url": "/docs/selecting-flat-data/", 
+                            "relative_path": "_docs/query/query-complex/030-using-sql-functions-clauses-and-joins.md", 
+                            "title": "Using SQL Functions, Clauses, and Joins", 
+                            "url": "/docs/using-sql-functions-clauses-and-joins/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -4327,14 +4260,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-                            "next_url": "/docs/query-4-selecting-multiple-columns-within-nested-data/", 
+                            "next_title": "Selecting Multiple Columns Within Nested Data", 
+                            "next_url": "/docs/selecting-multiple-columns-within-nested-data/", 
                             "parent": "Querying Complex Data", 
-                            "previous_title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                            "previous_url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/", 
-                            "relative_path": "_docs/query/query-complex/004-query3-sel-nest.md", 
-                            "title": "Query 3: Selecting Nested Data for a Column", 
-                            "url": "/docs/query-3-selecting-nested-data-for-a-column/"
+                            "previous_title": "Using SQL Functions, Clauses, and Joins", 
+                            "previous_url": "/docs/using-sql-functions-clauses-and-joins/", 
+                            "relative_path": "_docs/query/query-complex/040-selecting-nested-data.md", 
+                            "title": "Selecting Nested Data for a Column", 
+                            "url": "/docs/selecting-nested-data-for-a-column/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -4351,11 +4284,11 @@
                             "next_title": "Querying Hive", 
                             "next_url": "/docs/querying-hive/", 
                             "parent": "Querying Complex Data", 
-                            "previous_title": "Query 3: Selecting Nested Data for a Column", 
-                            "previous_url": "/docs/query-3-selecting-nested-data-for-a-column/", 
-                            "relative_path": "_docs/query/query-complex/005-query4-sel-multiple.md", 
-                            "title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-                            "url": "/docs/query-4-selecting-multiple-columns-within-nested-data/"
+                            "previous_title": "Selecting Nested Data for a Column", 
+                            "previous_url": "/docs/selecting-nested-data-for-a-column/", 
+                            "relative_path": "_docs/query/query-complex/050-selecting-multiple-columns-within-nested-data.md", 
+                            "title": "Selecting Multiple Columns Within Nested Data", 
+                            "url": "/docs/selecting-multiple-columns-within-nested-data/"
                         }
                     ], 
                     "next_title": "Sample Data: Donuts", 
@@ -4363,7 +4296,7 @@
                     "parent": "Query Data", 
                     "previous_title": "Querying HBase", 
                     "previous_url": "/docs/querying-hbase/", 
-                    "relative_path": "_docs/query/004-query-complex.md", 
+                    "relative_path": "_docs/query/040-querying-complex-data.md", 
                     "title": "Querying Complex Data", 
                     "url": "/docs/querying-complex-data/"
                 }, 
@@ -4378,9 +4311,9 @@
                     "next_title": "Querying the INFORMATION SCHEMA", 
                     "next_url": "/docs/querying-the-information-schema/", 
                     "parent": "Query Data", 
-                    "previous_title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-                    "previous_url": "/docs/query-4-selecting-multiple-columns-within-nested-data/", 
-                    "relative_path": "_docs/query/005-query-hive.md", 
+                    "previous_title": "Selecting Multiple Columns Within Nested Data", 
+                    "previous_url": "/docs/selecting-multiple-columns-within-nested-data/", 
+                    "relative_path": "_docs/query/050-querying-hive.md", 
                     "title": "Querying Hive", 
                     "url": "/docs/querying-hive/"
                 }, 
@@ -4397,7 +4330,7 @@
                     "parent": "Query Data", 
                     "previous_title": "Querying Hive", 
                     "previous_url": "/docs/querying-hive/", 
-                    "relative_path": "_docs/query/006-query-info-skema.md", 
+                    "relative_path": "_docs/query/060-querying-the-information-schema.md", 
                     "title": "Querying the INFORMATION SCHEMA", 
                     "url": "/docs/querying-the-information-schema/"
                 }, 
@@ -4414,19 +4347,36 @@
                     "parent": "Query Data", 
                     "previous_title": "Querying the INFORMATION SCHEMA", 
                     "previous_url": "/docs/querying-the-information-schema/", 
-                    "relative_path": "_docs/query/007-query-sys-tbl.md", 
+                    "relative_path": "_docs/query/070-query-sys-tbl.md", 
                     "title": "Querying System Tables", 
                     "url": "/docs/querying-system-tables/"
                 }
             ], 
-            "next_title": "Querying a File System", 
-            "next_url": "/docs/querying-a-file-system/", 
+            "next_title": "Query Data Introduction", 
+            "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
             "previous_title": "Using MicroStrategy Analytics with Drill", 
             "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
             "relative_path": "_docs/070-query.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
+        }, 
+        "Query Data Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Querying a File System", 
+            "next_url": "/docs/querying-a-file-system/", 
+            "parent": "Query Data", 
+            "previous_title": "Query Data", 
+            "previous_url": "/docs/query-data/", 
+            "relative_path": "_docs/query/010-query-data-introduction.md", 
+            "title": "Query Data Introduction", 
+            "url": "/docs/query-data-introduction/"
         }, 
         "Query Stages": {
             "breadcrumbs": [
@@ -4469,12 +4419,12 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query 1: Selecting Flat Data", 
-                    "next_url": "/docs/query-1-selecting-flat-data/", 
+                    "next_title": "Selecting Flat Data", 
+                    "next_url": "/docs/selecting-flat-data/", 
                     "parent": "Querying Complex Data", 
                     "previous_title": "Querying Complex Data", 
                     "previous_url": "/docs/querying-complex-data/", 
-                    "relative_path": "_docs/query/query-complex/001-sample-donuts.md", 
+                    "relative_path": "_docs/query/query-complex/010-sample--data-donuts.md", 
                     "title": "Sample Data: Donuts", 
                     "url": "/docs/sample-data-donuts/"
                 }, 
@@ -4490,14 +4440,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                    "next_url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/", 
+                    "next_title": "Using SQL Functions, Clauses, and Joins", 
+                    "next_url": "/docs/using-sql-functions-clauses-and-joins/", 
                     "parent": "Querying Complex Data", 
                     "previous_title": "Sample Data: Donuts", 
                     "previous_url": "/docs/sample-data-donuts/", 
-                    "relative_path": "_docs/query/query-complex/002-query1-select.md", 
-                    "title": "Query 1: Selecting Flat Data", 
-                    "url": "/docs/query-1-selecting-flat-data/"
+                    "relative_path": "_docs/query/query-complex/020-selecting-flat-data.md", 
+                    "title": "Selecting Flat Data", 
+                    "url": "/docs/selecting-flat-data/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -4511,14 +4461,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query 3: Selecting Nested Data for a Column", 
-                    "next_url": "/docs/query-3-selecting-nested-data-for-a-column/", 
+                    "next_title": "Selecting Nested Data for a Column", 
+                    "next_url": "/docs/selecting-nested-data-for-a-column/", 
                     "parent": "Querying Complex Data", 
-                    "previous_title": "Query 1: Selecting Flat Data", 
-                    "previous_url": "/docs/query-1-selecting-flat-data/", 
-                    "relative_path": "_docs/query/query-complex/003-query2-use-sql.md", 
-                    "title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                    "url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/"
+                    "previous_title": "Selecting Flat Data", 
+                    "previous_url": "/docs/selecting-flat-data/", 
+                    "relative_path": "_docs/query/query-complex/030-using-sql-functions-clauses-and-joins.md", 
+                    "title": "Using SQL Functions, Clauses, and Joins", 
+                    "url": "/docs/using-sql-functions-clauses-and-joins/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -4532,14 +4482,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-                    "next_url": "/docs/query-4-selecting-multiple-columns-within-nested-data/", 
+                    "next_title": "Selecting Multiple Columns Within Nested Data", 
+                    "next_url": "/docs/selecting-multiple-columns-within-nested-data/", 
                     "parent": "Querying Complex Data", 
-                    "previous_title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                    "previous_url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/", 
-                    "relative_path": "_docs/query/query-complex/004-query3-sel-nest.md", 
-                    "title": "Query 3: Selecting Nested Data for a Column", 
-                    "url": "/docs/query-3-selecting-nested-data-for-a-column/"
+                    "previous_title": "Using SQL Functions, Clauses, and Joins", 
+                    "previous_url": "/docs/using-sql-functions-clauses-and-joins/", 
+                    "relative_path": "_docs/query/query-complex/040-selecting-nested-data.md", 
+                    "title": "Selecting Nested Data for a Column", 
+                    "url": "/docs/selecting-nested-data-for-a-column/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -4556,11 +4506,11 @@
                     "next_title": "Querying Hive", 
                     "next_url": "/docs/querying-hive/", 
                     "parent": "Querying Complex Data", 
-                    "previous_title": "Query 3: Selecting Nested Data for a Column", 
-                    "previous_url": "/docs/query-3-selecting-nested-data-for-a-column/", 
-                    "relative_path": "_docs/query/query-complex/005-query4-sel-multiple.md", 
-                    "title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-                    "url": "/docs/query-4-selecting-multiple-columns-within-nested-data/"
+                    "previous_title": "Selecting Nested Data for a Column", 
+                    "previous_url": "/docs/selecting-nested-data-for-a-column/", 
+                    "relative_path": "_docs/query/query-complex/050-selecting-multiple-columns-within-nested-data.md", 
+                    "title": "Selecting Multiple Columns Within Nested Data", 
+                    "url": "/docs/selecting-multiple-columns-within-nested-data/"
                 }
             ], 
             "next_title": "Sample Data: Donuts", 
@@ -4568,7 +4518,7 @@
             "parent": "Query Data", 
             "previous_title": "Querying HBase", 
             "previous_url": "/docs/querying-hbase/", 
-            "relative_path": "_docs/query/004-query-complex.md", 
+            "relative_path": "_docs/query/040-querying-complex-data.md", 
             "title": "Querying Complex Data", 
             "url": "/docs/querying-complex-data/"
         }, 
@@ -4589,7 +4539,7 @@
             "parent": "Querying a File System", 
             "previous_title": "Querying Plain Text Files", 
             "previous_url": "/docs/querying-plain-text-files/", 
-            "relative_path": "_docs/query/query-fs/004-query-dir.md", 
+            "relative_path": "_docs/query/query-fs/040-querying-directories.md", 
             "title": "Querying Directories", 
             "url": "/docs/querying-directories/"
         }, 
@@ -4606,7 +4556,7 @@
             "parent": "Query Data", 
             "previous_title": "Querying Directories", 
             "previous_url": "/docs/querying-directories/", 
-            "relative_path": "_docs/query/003-query-hbase.md", 
+            "relative_path": "_docs/query/030-querying-hbase.md", 
             "title": "Querying HBase", 
             "url": "/docs/querying-hbase/"
         }, 
@@ -4621,9 +4571,9 @@
             "next_title": "Querying the INFORMATION SCHEMA", 
             "next_url": "/docs/querying-the-information-schema/", 
             "parent": "Query Data", 
-            "previous_title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-            "previous_url": "/docs/query-4-selecting-multiple-columns-within-nested-data/", 
-            "relative_path": "_docs/query/005-query-hive.md", 
+            "previous_title": "Selecting Multiple Columns Within Nested Data", 
+            "previous_url": "/docs/selecting-multiple-columns-within-nested-data/", 
+            "relative_path": "_docs/query/050-querying-hive.md", 
             "title": "Querying Hive", 
             "url": "/docs/querying-hive/"
         }, 
@@ -4644,7 +4594,7 @@
             "parent": "Querying a File System", 
             "previous_title": "Querying a File System", 
             "previous_url": "/docs/querying-a-file-system/", 
-            "relative_path": "_docs/query/query-fs/001-query-json.md", 
+            "relative_path": "_docs/query/query-fs/010-querying-json-files.md", 
             "title": "Querying JSON Files", 
             "url": "/docs/querying-json-files/"
         }, 
@@ -4665,7 +4615,7 @@
             "parent": "Querying a File System", 
             "previous_title": "Querying JSON Files", 
             "previous_url": "/docs/querying-json-files/", 
-            "relative_path": "_docs/query/query-fs/002-query-parquet.md", 
+            "relative_path": "_docs/query/query-fs/020-querying-parquet-files.md", 
             "title": "Querying Parquet Files", 
             "url": "/docs/querying-parquet-files/"
         }, 
@@ -4686,7 +4636,7 @@
             "parent": "Querying a File System", 
             "previous_title": "Querying Parquet Files", 
             "previous_url": "/docs/querying-parquet-files/", 
-            "relative_path": "_docs/query/query-fs/003-query-text.md", 
+            "relative_path": "_docs/query/query-fs/030-querying-plain-text-files.md", 
             "title": "Querying Plain Text Files", 
             "url": "/docs/querying-plain-text-files/"
         }, 
@@ -4703,7 +4653,7 @@
             "parent": "Query Data", 
             "previous_title": "Querying the INFORMATION SCHEMA", 
             "previous_url": "/docs/querying-the-information-schema/", 
-            "relative_path": "_docs/query/007-query-sys-tbl.md", 
+            "relative_path": "_docs/query/070-query-sys-tbl.md", 
             "title": "Querying System Tables", 
             "url": "/docs/querying-system-tables/"
         }, 
@@ -4732,7 +4682,7 @@
                     "parent": "Querying a File System", 
                     "previous_title": "Querying a File System", 
                     "previous_url": "/docs/querying-a-file-system/", 
-                    "relative_path": "_docs/query/query-fs/001-query-json.md", 
+                    "relative_path": "_docs/query/query-fs/010-querying-json-files.md", 
                     "title": "Querying JSON Files", 
                     "url": "/docs/querying-json-files/"
                 }, 
@@ -4753,7 +4703,7 @@
                     "parent": "Querying a File System", 
                     "previous_title": "Querying JSON Files", 
                     "previous_url": "/docs/querying-json-files/", 
-                    "relative_path": "_docs/query/query-fs/002-query-parquet.md", 
+                    "relative_path": "_docs/query/query-fs/020-querying-parquet-files.md", 
                     "title": "Querying Parquet Files", 
                     "url": "/docs/querying-parquet-files/"
                 }, 
@@ -4774,7 +4724,7 @@
                     "parent": "Querying a File System", 
                     "previous_title": "Querying Parquet Files", 
                     "previous_url": "/docs/querying-parquet-files/", 
-                    "relative_path": "_docs/query/query-fs/003-query-text.md", 
+                    "relative_path": "_docs/query/query-fs/030-querying-plain-text-files.md", 
                     "title": "Querying Plain Text Files", 
                     "url": "/docs/querying-plain-text-files/"
                 }, 
@@ -4795,7 +4745,7 @@
                     "parent": "Querying a File System", 
                     "previous_title": "Querying Plain Text Files", 
                     "previous_url": "/docs/querying-plain-text-files/", 
-                    "relative_path": "_docs/query/query-fs/004-query-dir.md", 
+                    "relative_path": "_docs/query/query-fs/040-querying-directories.md", 
                     "title": "Querying Directories", 
                     "url": "/docs/querying-directories/"
                 }
@@ -4803,9 +4753,9 @@
             "next_title": "Querying JSON Files", 
             "next_url": "/docs/querying-json-files/", 
             "parent": "Query Data", 
-            "previous_title": "Query Data", 
-            "previous_url": "/docs/query-data/", 
-            "relative_path": "_docs/query/002-query-fs.md", 
+            "previous_title": "Query Data Introduction", 
+            "previous_url": "/docs/query-data-introduction/", 
+            "relative_path": "_docs/query/020-querying-a-file-system.md", 
             "title": "Querying a File System", 
             "url": "/docs/querying-a-file-system/"
         }, 
@@ -4822,7 +4772,7 @@
             "parent": "Query Data", 
             "previous_title": "Querying Hive", 
             "previous_url": "/docs/querying-hive/", 
-            "relative_path": "_docs/query/006-query-info-skema.md", 
+            "relative_path": "_docs/query/060-querying-the-information-schema.md", 
             "title": "Querying the INFORMATION SCHEMA", 
             "url": "/docs/querying-the-information-schema/"
         }, 
@@ -4843,7 +4793,7 @@
             "parent": "Nested Data Functions", 
             "previous_title": "REPEATED_COUNT", 
             "previous_url": "/docs/repeated-count/", 
-            "relative_path": "_docs/sql-ref/nested/004-repeated-contains.md", 
+            "relative_path": "_docs/sql-ref/nested/040-repeated-contains.md", 
             "title": "REPEATED_CONTAINS", 
             "url": "/docs/repeated-contains/"
         }, 
@@ -4864,7 +4814,7 @@
             "parent": "Nested Data Functions", 
             "previous_title": "KVGEN", 
             "previous_url": "/docs/kvgen/", 
-            "relative_path": "_docs/sql-ref/nested/003-repeated-cnt.md", 
+            "relative_path": "_docs/sql-ref/nested/030-repeated-count.md", 
             "title": "REPEATED_COUNT", 
             "url": "/docs/repeated-count/"
         }, 
@@ -5017,7 +4967,7 @@
             "parent": "SQL Reference", 
             "previous_title": "USE Command", 
             "previous_url": "/docs/use-command/", 
-            "relative_path": "_docs/sql-ref/007-reserved-wds.md", 
+            "relative_path": "_docs/sql-ref/080-reserved-keywords.md", 
             "title": "Reserved Keywords", 
             "url": "/docs/reserved-keywords/"
         }, 
@@ -5038,7 +4988,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "EXPLAIN commands", 
             "previous_url": "/docs/explain-commands/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/008-select.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/080-select.md", 
             "title": "SELECT Statements", 
             "url": "/docs/select-statements/"
         }, 
@@ -5059,7 +5009,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "SELECT Statements", 
             "previous_url": "/docs/select-statements/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/009-show-db-skema.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/090-show-databases-and-show-schemas.md", 
             "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
             "url": "/docs/show-databases-and-show-schemas-command/"
         }, 
@@ -5080,7 +5030,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/010-show-files.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/100-show-files.md", 
             "title": "SHOW FILES Command", 
             "url": "/docs/show-files-command/"
         }, 
@@ -5101,7 +5051,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "SHOW FILES Command", 
             "previous_url": "/docs/show-files-command/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/011-show-tables.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/110-show-tables-command.md", 
             "title": "SHOW TABLES Command", 
             "url": "/docs/show-tables-command/"
         }, 
@@ -5130,7 +5080,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "SQL Commands Summary", 
                     "previous_url": "/docs/sql-commands-summary/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/001-alter-session.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/010-alter-session-command.md", 
                     "title": "ALTER SESSION Command", 
                     "url": "/docs/alter-session-command/"
                 }, 
@@ -5151,7 +5101,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "ALTER SESSION Command", 
                     "previous_url": "/docs/alter-session-command/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/002-alter-system.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/020-alter-system.md", 
                     "title": "ALTER SYSTEM Command", 
                     "url": "/docs/alter-system-command/"
                 }, 
@@ -5172,7 +5122,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "ALTER SYSTEM Command", 
                     "previous_url": "/docs/alter-system-command/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/003-create-table-as.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/030-create-table-as-command.md", 
                     "title": "CREATE TABLE AS (CTAS) command", 
                     "url": "/docs/create-table-as-ctas-command/"
                 }, 
@@ -5193,7 +5143,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "CREATE TABLE AS (CTAS) command", 
                     "previous_url": "/docs/create-table-as-ctas-command/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/004-create-view.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/050-create-view-command.md", 
                     "title": "CREATE VIEW command", 
                     "url": "/docs/create-view-command/"
                 }, 
@@ -5214,7 +5164,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "CREATE VIEW command", 
                     "previous_url": "/docs/create-view-command/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/005-describe.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/060-describe-command.md", 
                     "title": "DESCRIBE Command", 
                     "url": "/docs/describe-command/"
                 }, 
@@ -5235,7 +5185,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "DESCRIBE Command", 
                     "previous_url": "/docs/describe-command/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/007-explain.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/070-explain-commands.md", 
                     "title": "EXPLAIN commands", 
                     "url": "/docs/explain-commands/"
                 }, 
@@ -5256,7 +5206,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "EXPLAIN commands", 
                     "previous_url": "/docs/explain-commands/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/008-select.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/080-select.md", 
                     "title": "SELECT Statements", 
                     "url": "/docs/select-statements/"
                 }, 
@@ -5277,7 +5227,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "SELECT Statements", 
                     "previous_url": "/docs/select-statements/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/009-show-db-skema.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/090-show-databases-and-show-schemas.md", 
                     "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                     "url": "/docs/show-databases-and-show-schemas-command/"
                 }, 
@@ -5298,7 +5248,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                     "previous_url": "/docs/show-databases-and-show-schemas-command/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/010-show-files.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/100-show-files.md", 
                     "title": "SHOW FILES Command", 
                     "url": "/docs/show-files-command/"
                 }, 
@@ -5319,7 +5269,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "SHOW FILES Command", 
                     "previous_url": "/docs/show-files-command/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/011-show-tables.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/110-show-tables-command.md", 
                     "title": "SHOW TABLES Command", 
                     "url": "/docs/show-tables-command/"
                 }, 
@@ -5340,7 +5290,7 @@
                     "parent": "SQL Commands Summary", 
                     "previous_title": "SHOW TABLES Command", 
                     "previous_url": "/docs/show-tables-command/", 
-                    "relative_path": "_docs/sql-ref/cmd-summary/012-use.md", 
+                    "relative_path": "_docs/sql-ref/cmd-summary/120-use-command.md", 
                     "title": "USE Command", 
                     "url": "/docs/use-command/"
                 }
@@ -5350,7 +5300,7 @@
             "parent": "SQL Reference", 
             "previous_title": "REPEATED_CONTAINS", 
             "previous_url": "/docs/repeated-contains/", 
-            "relative_path": "_docs/sql-ref/006-cmd-summary.md", 
+            "relative_path": "_docs/sql-ref/070-sql-commands-summary.md", 
             "title": "SQL Commands Summary", 
             "url": "/docs/sql-commands-summary/"
         }, 
@@ -5367,7 +5317,7 @@
             "parent": "SQL Reference", 
             "previous_title": "Reserved Keywords", 
             "previous_url": "/docs/reserved-keywords/", 
-            "relative_path": "_docs/sql-ref/008-sql-extensions.md", 
+            "relative_path": "_docs/sql-ref/090-sql-extensions.md", 
             "title": "SQL Extensions", 
             "url": "/docs/sql-extensions/"
         }, 
@@ -5396,7 +5346,7 @@
                     "parent": "SQL Functions", 
                     "previous_title": "SQL Functions", 
                     "previous_url": "/docs/sql-functions/", 
-                    "relative_path": "_docs/sql-ref/functions/001-math.md", 
+                    "relative_path": "_docs/sql-ref/functions/010-math-and-trig.md", 
                     "title": "Math and Trig", 
                     "url": "/docs/math-and-trig/"
                 }, 
@@ -5417,7 +5367,7 @@
                     "parent": "SQL Functions", 
                     "previous_title": "Math and Trig", 
                     "previous_url": "/docs/math-and-trig/", 
-                    "relative_path": "_docs/sql-ref/functions/002-conversion.md", 
+                    "relative_path": "_docs/sql-ref/functions/020-data-type-conversion.md", 
                     "title": "Data Type Conversion", 
                     "url": "/docs/data-type-conversion/"
                 }, 
@@ -5438,7 +5388,7 @@
                     "parent": "SQL Functions", 
                     "previous_title": "Data Type Conversion", 
                     "previous_url": "/docs/data-type-conversion/", 
-                    "relative_path": "_docs/sql-ref/functions/003-date-time-fcns.md", 
+                    "relative_path": "_docs/sql-ref/functions/030-date-time-functions-and-arithmetic.md", 
                     "title": "Date/Time Functions and Arithmetic", 
                     "url": "/docs/date-time-functions-and-arithmetic/"
                 }, 
@@ -5459,7 +5409,7 @@
                     "parent": "SQL Functions", 
                     "previous_title": "Date/Time Functions and Arithmetic", 
                     "previous_url": "/docs/date-time-functions-and-arithmetic/", 
-                    "relative_path": "_docs/sql-ref/functions/004-string.md", 
+                    "relative_path": "_docs/sql-ref/functions/040-string-manipulation.md", 
                     "title": "String Manipulation", 
                     "url": "/docs/string-manipulation/"
                 }, 
@@ -5480,7 +5430,7 @@
                     "parent": "SQL Functions", 
                     "previous_title": "String Manipulation", 
                     "previous_url": "/docs/string-manipulation/", 
-                    "relative_path": "_docs/sql-ref/functions/005-aggregate.md", 
+                    "relative_path": "_docs/sql-ref/functions/050-aggregate-and-aggregate-statistical.md", 
                     "title": "Aggregate and Aggregate Statistical", 
                     "url": "/docs/aggregate-and-aggregate-statistical/"
                 }, 
@@ -5501,7 +5451,7 @@
                     "parent": "SQL Functions", 
                     "previous_title": "Aggregate and Aggregate Statistical", 
                     "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
-                    "relative_path": "_docs/sql-ref/functions/006-nulls.md", 
+                    "relative_path": "_docs/sql-ref/functions/060-functions-for-handling-nulls.md", 
                     "title": "Functions for Handling Nulls", 
                     "url": "/docs/functions-for-handling-nulls/"
                 }
@@ -5511,13 +5461,30 @@
             "parent": "SQL Reference", 
             "previous_title": "Operators", 
             "previous_url": "/docs/operators/", 
-            "relative_path": "_docs/sql-ref/004-functions.md", 
+            "relative_path": "_docs/sql-ref/050-sql-functions.md", 
             "title": "SQL Functions", 
             "url": "/docs/sql-functions/"
         }, 
         "SQL Reference": {
             "breadcrumbs": [], 
             "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Data Types", 
+                    "next_url": "/docs/data-types/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "SQL Reference", 
+                    "previous_url": "/docs/sql-reference/", 
+                    "relative_path": "_docs/sql-ref/010-sql-reference-introduction.md", 
+                    "title": "SQL Reference Introduction", 
+                    "url": "/docs/sql-reference-introduction/"
+                }, 
                 {
                     "breadcrumbs": [
                         {
@@ -5543,7 +5510,7 @@
                             "parent": "Data Types", 
                             "previous_title": "Data Types", 
                             "previous_url": "/docs/data-types/", 
-                            "relative_path": "_docs/sql-ref/data-types/001-date.md", 
+                            "relative_path": "_docs/sql-ref/data-types/010-date-time-and-timestamp.md", 
                             "title": "Date, Time, and Timestamp", 
                             "url": "/docs/date-time-and-timestamp/"
                         }, 
@@ -5564,7 +5531,7 @@
                             "parent": "Data Types", 
                             "previous_title": "Date, Time, and Timestamp", 
                             "previous_url": "/docs/date-time-and-timestamp/", 
-                            "relative_path": "_docs/sql-ref/data-types/002-diff-data-types.md", 
+                            "relative_path": "_docs/sql-ref/data-types/020-handling-different-data-types.md", 
                             "title": "Handling Different Data Types", 
                             "url": "/docs/handling-different-data-types/"
                         }
@@ -5572,9 +5539,9 @@
                     "next_title": "Date, Time, and Timestamp", 
                     "next_url": "/docs/date-time-and-timestamp/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "SQL Reference", 
-                    "previous_url": "/docs/sql-reference/", 
-                    "relative_path": "_docs/sql-ref/001-data-types.md", 
+                    "previous_title": "SQL Reference Introduction", 
+                    "previous_url": "/docs/sql-reference-introduction/", 
+                    "relative_path": "_docs/sql-ref/020-data-types.md", 
                     "title": "Data Types", 
                     "url": "/docs/data-types/"
                 }, 
@@ -5591,7 +5558,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Handling Different Data Types", 
                     "previous_url": "/docs/handling-different-data-types/", 
-                    "relative_path": "_docs/sql-ref/002-lexical-structure.md", 
+                    "relative_path": "_docs/sql-ref/030-lexical-structure.md", 
                     "title": "Lexical Structure", 
                     "url": "/docs/lexical-structure/"
                 }, 
@@ -5608,7 +5575,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Lexical Structure", 
                     "previous_url": "/docs/lexical-structure/", 
-                    "relative_path": "_docs/sql-ref/003-operators.md", 
+                    "relative_path": "_docs/sql-ref/040-operators.md", 
                     "title": "Operators", 
                     "url": "/docs/operators/"
                 }, 
@@ -5637,7 +5604,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "SQL Functions", 
                             "previous_url": "/docs/sql-functions/", 
-                            "relative_path": "_docs/sql-ref/functions/001-math.md", 
+                            "relative_path": "_docs/sql-ref/functions/010-math-and-trig.md", 
                             "title": "Math and Trig", 
                             "url": "/docs/math-and-trig/"
                         }, 
@@ -5658,7 +5625,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "Math and Trig", 
                             "previous_url": "/docs/math-and-trig/", 
-                            "relative_path": "_docs/sql-ref/functions/002-conversion.md", 
+                            "relative_path": "_docs/sql-ref/functions/020-data-type-conversion.md", 
                             "title": "Data Type Conversion", 
                             "url": "/docs/data-type-conversion/"
                         }, 
@@ -5679,7 +5646,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "Data Type Conversion", 
                             "previous_url": "/docs/data-type-conversion/", 
-                            "relative_path": "_docs/sql-ref/functions/003-date-time-fcns.md", 
+                            "relative_path": "_docs/sql-ref/functions/030-date-time-functions-and-arithmetic.md", 
                             "title": "Date/Time Functions and Arithmetic", 
                             "url": "/docs/date-time-functions-and-arithmetic/"
                         }, 
@@ -5700,7 +5667,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "Date/Time Functions and Arithmetic", 
                             "previous_url": "/docs/date-time-functions-and-arithmetic/", 
-                            "relative_path": "_docs/sql-ref/functions/004-string.md", 
+                            "relative_path": "_docs/sql-ref/functions/040-string-manipulation.md", 
                             "title": "String Manipulation", 
                             "url": "/docs/string-manipulation/"
                         }, 
@@ -5721,7 +5688,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "String Manipulation", 
                             "previous_url": "/docs/string-manipulation/", 
-                            "relative_path": "_docs/sql-ref/functions/005-aggregate.md", 
+                            "relative_path": "_docs/sql-ref/functions/050-aggregate-and-aggregate-statistical.md", 
                             "title": "Aggregate and Aggregate Statistical", 
                             "url": "/docs/aggregate-and-aggregate-statistical/"
                         }, 
@@ -5742,7 +5709,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "Aggregate and Aggregate Statistical", 
                             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
-                            "relative_path": "_docs/sql-ref/functions/006-nulls.md", 
+                            "relative_path": "_docs/sql-ref/functions/060-functions-for-handling-nulls.md", 
                             "title": "Functions for Handling Nulls", 
                             "url": "/docs/functions-for-handling-nulls/"
                         }
@@ -5752,7 +5719,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Operators", 
                     "previous_url": "/docs/operators/", 
-                    "relative_path": "_docs/sql-ref/004-functions.md", 
+                    "relative_path": "_docs/sql-ref/050-sql-functions.md", 
                     "title": "SQL Functions", 
                     "url": "/docs/sql-functions/"
                 }, 
@@ -5781,7 +5748,7 @@
                             "parent": "Nested Data Functions", 
                             "previous_title": "Nested Data Functions", 
                             "previous_url": "/docs/nested-data-functions/", 
-                            "relative_path": "_docs/sql-ref/nested/001-flatten.md", 
+                            "relative_path": "_docs/sql-ref/nested/010-flatten.md", 
                             "title": "FLATTEN", 
                             "url": "/docs/flatten/"
                         }, 
@@ -5802,7 +5769,7 @@
                             "parent": "Nested Data Functions", 
                             "previous_title": "FLATTEN", 
                             "previous_url": "/docs/flatten/", 
-                            "relative_path": "_docs/sql-ref/nested/002-kvgen.md", 
+                            "relative_path": "_docs/sql-ref/nested/020-kvgen.md", 
                             "title": "KVGEN", 
                             "url": "/docs/kvgen/"
                         }, 
@@ -5823,7 +5790,7 @@
                             "parent": "Nested Data Functions", 
                             "previous_title": "KVGEN", 
                             "previous_url": "/docs/kvgen/", 
-                            "relative_path": "_docs/sql-ref/nested/003-repeated-cnt.md", 
+                            "relative_path": "_docs/sql-ref/nested/030-repeated-count.md", 
                             "title": "REPEATED_COUNT", 
                             "url": "/docs/repeated-count/"
                         }, 
@@ -5844,7 +5811,7 @@
                             "parent": "Nested Data Functions", 
                             "previous_title": "REPEATED_COUNT", 
                             "previous_url": "/docs/repeated-count/", 
-                            "relative_path": "_docs/sql-ref/nested/004-repeated-contains.md", 
+                            "relative_path": "_docs/sql-ref/nested/040-repeated-contains.md", 
                             "title": "REPEATED_CONTAINS", 
                             "url": "/docs/repeated-contains/"
                         }
@@ -5854,7 +5821,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Functions for Handling Nulls", 
                     "previous_url": "/docs/functions-for-handling-nulls/", 
-                    "relative_path": "_docs/sql-ref/005-nest-functions.md", 
+                    "relative_path": "_docs/sql-ref/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
                 }, 
@@ -5883,7 +5850,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SQL Commands Summary", 
                             "previous_url": "/docs/sql-commands-summary/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/001-alter-session.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/010-alter-session-command.md", 
                             "title": "ALTER SESSION Command", 
                             "url": "/docs/alter-session-command/"
                         }, 
@@ -5904,7 +5871,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "ALTER SESSION Command", 
                             "previous_url": "/docs/alter-session-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/002-alter-system.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/020-alter-system.md", 
                             "title": "ALTER SYSTEM Command", 
                             "url": "/docs/alter-system-command/"
                         }, 
@@ -5925,7 +5892,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "ALTER SYSTEM Command", 
                             "previous_url": "/docs/alter-system-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/003-create-table-as.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/030-create-table-as-command.md", 
                             "title": "CREATE TABLE AS (CTAS) command", 
                             "url": "/docs/create-table-as-ctas-command/"
                         }, 
@@ -5946,7 +5913,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "CREATE TABLE AS (CTAS) command", 
                             "previous_url": "/docs/create-table-as-ctas-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/004-create-view.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/050-create-view-command.md", 
                             "title": "CREATE VIEW command", 
                             "url": "/docs/create-view-command/"
                         }, 
@@ -5967,7 +5934,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "CREATE VIEW command", 
                             "previous_url": "/docs/create-view-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/005-describe.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/060-describe-command.md", 
                             "title": "DESCRIBE Command", 
                             "url": "/docs/describe-command/"
                         }, 
@@ -5988,7 +5955,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "DESCRIBE Command", 
                             "previous_url": "/docs/describe-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/007-explain.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/070-explain-commands.md", 
                             "title": "EXPLAIN commands", 
                             "url": "/docs/explain-commands/"
                         }, 
@@ -6009,7 +5976,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "EXPLAIN commands", 
                             "previous_url": "/docs/explain-commands/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/008-select.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/080-select.md", 
                             "title": "SELECT Statements", 
                             "url": "/docs/select-statements/"
                         }, 
@@ -6030,7 +5997,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SELECT Statements", 
                             "previous_url": "/docs/select-statements/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/009-show-db-skema.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/090-show-databases-and-show-schemas.md", 
                             "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "url": "/docs/show-databases-and-show-schemas-command/"
                         }, 
@@ -6051,7 +6018,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/010-show-files.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/100-show-files.md", 
                             "title": "SHOW FILES Command", 
                             "url": "/docs/show-files-command/"
                         }, 
@@ -6072,7 +6039,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SHOW FILES Command", 
                             "previous_url": "/docs/show-files-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/011-show-tables.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/110-show-tables-command.md", 
                             "title": "SHOW TABLES Command", 
                             "url": "/docs/show-tables-command/"
                         }, 
@@ -6093,7 +6060,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SHOW TABLES Command", 
                             "previous_url": "/docs/show-tables-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/012-use.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/120-use-command.md", 
                             "title": "USE Command", 
                             "url": "/docs/use-command/"
                         }
@@ -6103,7 +6070,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "REPEATED_CONTAINS", 
                     "previous_url": "/docs/repeated-contains/", 
-                    "relative_path": "_docs/sql-ref/006-cmd-summary.md", 
+                    "relative_path": "_docs/sql-ref/070-sql-commands-summary.md", 
                     "title": "SQL Commands Summary", 
                     "url": "/docs/sql-commands-summary/"
                 }, 
@@ -6120,7 +6087,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "USE Command", 
                     "previous_url": "/docs/use-command/", 
-                    "relative_path": "_docs/sql-ref/007-reserved-wds.md", 
+                    "relative_path": "_docs/sql-ref/080-reserved-keywords.md", 
                     "title": "Reserved Keywords", 
                     "url": "/docs/reserved-keywords/"
                 }, 
@@ -6137,19 +6104,36 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Reserved Keywords", 
                     "previous_url": "/docs/reserved-keywords/", 
-                    "relative_path": "_docs/sql-ref/008-sql-extensions.md", 
+                    "relative_path": "_docs/sql-ref/090-sql-extensions.md", 
                     "title": "SQL Extensions", 
                     "url": "/docs/sql-extensions/"
                 }
             ], 
-            "next_title": "Data Types", 
-            "next_url": "/docs/data-types/", 
+            "next_title": "SQL Reference Introduction", 
+            "next_url": "/docs/sql-reference-introduction/", 
             "parent": "", 
             "previous_title": "Querying System Tables", 
             "previous_url": "/docs/querying-system-tables/", 
             "relative_path": "_docs/080-sql-ref.md", 
             "title": "SQL Reference", 
             "url": "/docs/sql-reference/"
+        }, 
+        "SQL Reference Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Data Types", 
+            "next_url": "/docs/data-types/", 
+            "parent": "SQL Reference", 
+            "previous_title": "SQL Reference", 
+            "previous_url": "/docs/sql-reference/", 
+            "relative_path": "_docs/sql-ref/010-sql-reference-introduction.md", 
+            "title": "SQL Reference Introduction", 
+            "url": "/docs/sql-reference-introduction/"
         }, 
         "Sample Data: Donuts": {
             "breadcrumbs": [
@@ -6163,12 +6147,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Query 1: Selecting Flat Data", 
-            "next_url": "/docs/query-1-selecting-flat-data/", 
+            "next_title": "Selecting Flat Data", 
+            "next_url": "/docs/selecting-flat-data/", 
             "parent": "Querying Complex Data", 
             "previous_title": "Querying Complex Data", 
             "previous_url": "/docs/querying-complex-data/", 
-            "relative_path": "_docs/query/query-complex/001-sample-donuts.md", 
+            "relative_path": "_docs/query/query-complex/010-sample--data-donuts.md", 
             "title": "Sample Data: Donuts", 
             "url": "/docs/sample-data-donuts/"
         }, 
@@ -6235,6 +6219,69 @@
             "relative_path": "_docs/140-sample-ds.md", 
             "title": "Sample Datasets", 
             "url": "/docs/sample-datasets/"
+        }, 
+        "Selecting Flat Data": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Complex Data", 
+                    "url": "/docs/querying-complex-data/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using SQL Functions, Clauses, and Joins", 
+            "next_url": "/docs/using-sql-functions-clauses-and-joins/", 
+            "parent": "Querying Complex Data", 
+            "previous_title": "Sample Data: Donuts", 
+            "previous_url": "/docs/sample-data-donuts/", 
+            "relative_path": "_docs/query/query-complex/020-selecting-flat-data.md", 
+            "title": "Selecting Flat Data", 
+            "url": "/docs/selecting-flat-data/"
+        }, 
+        "Selecting Multiple Columns Within Nested Data": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Complex Data", 
+                    "url": "/docs/querying-complex-data/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Querying Hive", 
+            "next_url": "/docs/querying-hive/", 
+            "parent": "Querying Complex Data", 
+            "previous_title": "Selecting Nested Data for a Column", 
+            "previous_url": "/docs/selecting-nested-data-for-a-column/", 
+            "relative_path": "_docs/query/query-complex/050-selecting-multiple-columns-within-nested-data.md", 
+            "title": "Selecting Multiple Columns Within Nested Data", 
+            "url": "/docs/selecting-multiple-columns-within-nested-data/"
+        }, 
+        "Selecting Nested Data for a Column": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Complex Data", 
+                    "url": "/docs/querying-complex-data/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Selecting Multiple Columns Within Nested Data", 
+            "next_url": "/docs/selecting-multiple-columns-within-nested-data/", 
+            "parent": "Querying Complex Data", 
+            "previous_title": "Using SQL Functions, Clauses, and Joins", 
+            "previous_url": "/docs/using-sql-functions-clauses-and-joins/", 
+            "relative_path": "_docs/query/query-complex/040-selecting-nested-data.md", 
+            "title": "Selecting Nested Data for a Column", 
+            "url": "/docs/selecting-nested-data-for-a-column/"
         }, 
         "Start-Up Options": {
             "breadcrumbs": [
@@ -6431,7 +6478,7 @@
             "parent": "SQL Functions", 
             "previous_title": "Date/Time Functions and Arithmetic", 
             "previous_url": "/docs/date-time-functions-and-arithmetic/", 
-            "relative_path": "_docs/sql-ref/functions/004-string.md", 
+            "relative_path": "_docs/sql-ref/functions/040-string-manipulation.md", 
             "title": "String Manipulation", 
             "url": "/docs/string-manipulation/"
         }, 
@@ -6821,7 +6868,7 @@
             "parent": "SQL Commands Summary", 
             "previous_title": "SHOW TABLES Command", 
             "previous_url": "/docs/show-tables-command/", 
-            "relative_path": "_docs/sql-ref/cmd-summary/012-use.md", 
+            "relative_path": "_docs/sql-ref/cmd-summary/120-use-command.md", 
             "title": "USE Command", 
             "url": "/docs/use-command/"
         }, 
@@ -7205,6 +7252,27 @@
             "relative_path": "_docs/interfaces/040-using-odbc-on-windows.md", 
             "title": "Using ODBC on Windows", 
             "url": "/docs/using-odbc-on-windows/"
+        }, 
+        "Using SQL Functions, Clauses, and Joins": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying Complex Data", 
+                    "url": "/docs/querying-complex-data/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Selecting Nested Data for a Column", 
+            "next_url": "/docs/selecting-nested-data-for-a-column/", 
+            "parent": "Querying Complex Data", 
+            "previous_title": "Selecting Flat Data", 
+            "previous_url": "/docs/selecting-flat-data/", 
+            "relative_path": "_docs/query/query-complex/030-using-sql-functions-clauses-and-joins.md", 
+            "title": "Using SQL Functions, Clauses, and Joins", 
+            "url": "/docs/using-sql-functions-clauses-and-joins/"
         }, 
         "Using a Connection String": {
             "breadcrumbs": [
@@ -8476,6 +8544,23 @@
                             "url": "/docs/query-data/"
                         }
                     ], 
+                    "children": [], 
+                    "next_title": "Querying a File System", 
+                    "next_url": "/docs/querying-a-file-system/", 
+                    "parent": "Query Data", 
+                    "previous_title": "Query Data", 
+                    "previous_url": "/docs/query-data/", 
+                    "relative_path": "_docs/query/010-query-data-introduction.md", 
+                    "title": "Query Data Introduction", 
+                    "url": "/docs/query-data-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
                     "children": [
                         {
                             "breadcrumbs": [
@@ -8494,7 +8579,7 @@
                             "parent": "Querying a File System", 
                             "previous_title": "Querying a File System", 
                             "previous_url": "/docs/querying-a-file-system/", 
-                            "relative_path": "_docs/query/query-fs/001-query-json.md", 
+                            "relative_path": "_docs/query/query-fs/010-querying-json-files.md", 
                             "title": "Querying JSON Files", 
                             "url": "/docs/querying-json-files/"
                         }, 
@@ -8515,7 +8600,7 @@
                             "parent": "Querying a File System", 
                             "previous_title": "Querying JSON Files", 
                             "previous_url": "/docs/querying-json-files/", 
-                            "relative_path": "_docs/query/query-fs/002-query-parquet.md", 
+                            "relative_path": "_docs/query/query-fs/020-querying-parquet-files.md", 
                             "title": "Querying Parquet Files", 
                             "url": "/docs/querying-parquet-files/"
                         }, 
@@ -8536,7 +8621,7 @@
                             "parent": "Querying a File System", 
                             "previous_title": "Querying Parquet Files", 
                             "previous_url": "/docs/querying-parquet-files/", 
-                            "relative_path": "_docs/query/query-fs/003-query-text.md", 
+                            "relative_path": "_docs/query/query-fs/030-querying-plain-text-files.md", 
                             "title": "Querying Plain Text Files", 
                             "url": "/docs/querying-plain-text-files/"
                         }, 
@@ -8557,7 +8642,7 @@
                             "parent": "Querying a File System", 
                             "previous_title": "Querying Plain Text Files", 
                             "previous_url": "/docs/querying-plain-text-files/", 
-                            "relative_path": "_docs/query/query-fs/004-query-dir.md", 
+                            "relative_path": "_docs/query/query-fs/040-querying-directories.md", 
                             "title": "Querying Directories", 
                             "url": "/docs/querying-directories/"
                         }
@@ -8565,9 +8650,9 @@
                     "next_title": "Querying JSON Files", 
                     "next_url": "/docs/querying-json-files/", 
                     "parent": "Query Data", 
-                    "previous_title": "Query Data", 
-                    "previous_url": "/docs/query-data/", 
-                    "relative_path": "_docs/query/002-query-fs.md", 
+                    "previous_title": "Query Data Introduction", 
+                    "previous_url": "/docs/query-data-introduction/", 
+                    "relative_path": "_docs/query/020-querying-a-file-system.md", 
                     "title": "Querying a File System", 
                     "url": "/docs/querying-a-file-system/"
                 }, 
@@ -8584,7 +8669,7 @@
                     "parent": "Query Data", 
                     "previous_title": "Querying Directories", 
                     "previous_url": "/docs/querying-directories/", 
-                    "relative_path": "_docs/query/003-query-hbase.md", 
+                    "relative_path": "_docs/query/030-querying-hbase.md", 
                     "title": "Querying HBase", 
                     "url": "/docs/querying-hbase/"
                 }, 
@@ -8608,12 +8693,12 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query 1: Selecting Flat Data", 
-                            "next_url": "/docs/query-1-selecting-flat-data/", 
+                            "next_title": "Selecting Flat Data", 
+                            "next_url": "/docs/selecting-flat-data/", 
                             "parent": "Querying Complex Data", 
                             "previous_title": "Querying Complex Data", 
                             "previous_url": "/docs/querying-complex-data/", 
-                            "relative_path": "_docs/query/query-complex/001-sample-donuts.md", 
+                            "relative_path": "_docs/query/query-complex/010-sample--data-donuts.md", 
                             "title": "Sample Data: Donuts", 
                             "url": "/docs/sample-data-donuts/"
                         }, 
@@ -8629,14 +8714,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                            "next_url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/", 
+                            "next_title": "Using SQL Functions, Clauses, and Joins", 
+                            "next_url": "/docs/using-sql-functions-clauses-and-joins/", 
                             "parent": "Querying Complex Data", 
                             "previous_title": "Sample Data: Donuts", 
                             "previous_url": "/docs/sample-data-donuts/", 
-                            "relative_path": "_docs/query/query-complex/002-query1-select.md", 
-                            "title": "Query 1: Selecting Flat Data", 
-                            "url": "/docs/query-1-selecting-flat-data/"
+                            "relative_path": "_docs/query/query-complex/020-selecting-flat-data.md", 
+                            "title": "Selecting Flat Data", 
+                            "url": "/docs/selecting-flat-data/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8650,14 +8735,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query 3: Selecting Nested Data for a Column", 
-                            "next_url": "/docs/query-3-selecting-nested-data-for-a-column/", 
+                            "next_title": "Selecting Nested Data for a Column", 
+                            "next_url": "/docs/selecting-nested-data-for-a-column/", 
                             "parent": "Querying Complex Data", 
-                            "previous_title": "Query 1: Selecting Flat Data", 
-                            "previous_url": "/docs/query-1-selecting-flat-data/", 
-                            "relative_path": "_docs/query/query-complex/003-query2-use-sql.md", 
-                            "title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                            "url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/"
+                            "previous_title": "Selecting Flat Data", 
+                            "previous_url": "/docs/selecting-flat-data/", 
+                            "relative_path": "_docs/query/query-complex/030-using-sql-functions-clauses-and-joins.md", 
+                            "title": "Using SQL Functions, Clauses, and Joins", 
+                            "url": "/docs/using-sql-functions-clauses-and-joins/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8671,14 +8756,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-                            "next_url": "/docs/query-4-selecting-multiple-columns-within-nested-data/", 
+                            "next_title": "Selecting Multiple Columns Within Nested Data", 
+                            "next_url": "/docs/selecting-multiple-columns-within-nested-data/", 
                             "parent": "Querying Complex Data", 
-                            "previous_title": "Query 2: Using Standard SQL Functions, Clauses, and Joins", 
-                            "previous_url": "/docs/query-2-using-standard-sql-functions-clauses-and-joins/", 
-                            "relative_path": "_docs/query/query-complex/004-query3-sel-nest.md", 
-                            "title": "Query 3: Selecting Nested Data for a Column", 
-                            "url": "/docs/query-3-selecting-nested-data-for-a-column/"
+                            "previous_title": "Using SQL Functions, Clauses, and Joins", 
+                            "previous_url": "/docs/using-sql-functions-clauses-and-joins/", 
+                            "relative_path": "_docs/query/query-complex/040-selecting-nested-data.md", 
+                            "title": "Selecting Nested Data for a Column", 
+                            "url": "/docs/selecting-nested-data-for-a-column/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8695,11 +8780,11 @@
                             "next_title": "Querying Hive", 
                             "next_url": "/docs/querying-hive/", 
                             "parent": "Querying Complex Data", 
-                            "previous_title": "Query 3: Selecting Nested Data for a Column", 
-                            "previous_url": "/docs/query-3-selecting-nested-data-for-a-column/", 
-                            "relative_path": "_docs/query/query-complex/005-query4-sel-multiple.md", 
-                            "title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-                            "url": "/docs/query-4-selecting-multiple-columns-within-nested-data/"
+                            "previous_title": "Selecting Nested Data for a Column", 
+                            "previous_url": "/docs/selecting-nested-data-for-a-column/", 
+                            "relative_path": "_docs/query/query-complex/050-selecting-multiple-columns-within-nested-data.md", 
+                            "title": "Selecting Multiple Columns Within Nested Data", 
+                            "url": "/docs/selecting-multiple-columns-within-nested-data/"
                         }
                     ], 
                     "next_title": "Sample Data: Donuts", 
@@ -8707,7 +8792,7 @@
                     "parent": "Query Data", 
                     "previous_title": "Querying HBase", 
                     "previous_url": "/docs/querying-hbase/", 
-                    "relative_path": "_docs/query/004-query-complex.md", 
+                    "relative_path": "_docs/query/040-querying-complex-data.md", 
                     "title": "Querying Complex Data", 
                     "url": "/docs/querying-complex-data/"
                 }, 
@@ -8722,9 +8807,9 @@
                     "next_title": "Querying the INFORMATION SCHEMA", 
                     "next_url": "/docs/querying-the-information-schema/", 
                     "parent": "Query Data", 
-                    "previous_title": "Query 4: Selecting Multiple Columns Within Nested Data", 
-                    "previous_url": "/docs/query-4-selecting-multiple-columns-within-nested-data/", 
-                    "relative_path": "_docs/query/005-query-hive.md", 
+                    "previous_title": "Selecting Multiple Columns Within Nested Data", 
+                    "previous_url": "/docs/selecting-multiple-columns-within-nested-data/", 
+                    "relative_path": "_docs/query/050-querying-hive.md", 
                     "title": "Querying Hive", 
                     "url": "/docs/querying-hive/"
                 }, 
@@ -8741,7 +8826,7 @@
                     "parent": "Query Data", 
                     "previous_title": "Querying Hive", 
                     "previous_url": "/docs/querying-hive/", 
-                    "relative_path": "_docs/query/006-query-info-skema.md", 
+                    "relative_path": "_docs/query/060-querying-the-information-schema.md", 
                     "title": "Querying the INFORMATION SCHEMA", 
                     "url": "/docs/querying-the-information-schema/"
                 }, 
@@ -8758,13 +8843,13 @@
                     "parent": "Query Data", 
                     "previous_title": "Querying the INFORMATION SCHEMA", 
                     "previous_url": "/docs/querying-the-information-schema/", 
-                    "relative_path": "_docs/query/007-query-sys-tbl.md", 
+                    "relative_path": "_docs/query/070-query-sys-tbl.md", 
                     "title": "Querying System Tables", 
                     "url": "/docs/querying-system-tables/"
                 }
             ], 
-            "next_title": "Querying a File System", 
-            "next_url": "/docs/querying-a-file-system/", 
+            "next_title": "Query Data Introduction", 
+            "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
             "previous_title": "Using MicroStrategy Analytics with Drill", 
             "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
@@ -8775,6 +8860,23 @@
         {
             "breadcrumbs": [], 
             "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Data Types", 
+                    "next_url": "/docs/data-types/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "SQL Reference", 
+                    "previous_url": "/docs/sql-reference/", 
+                    "relative_path": "_docs/sql-ref/010-sql-reference-introduction.md", 
+                    "title": "SQL Reference Introduction", 
+                    "url": "/docs/sql-reference-introduction/"
+                }, 
                 {
                     "breadcrumbs": [
                         {
@@ -8800,7 +8902,7 @@
                             "parent": "Data Types", 
                             "previous_title": "Data Types", 
                             "previous_url": "/docs/data-types/", 
-                            "relative_path": "_docs/sql-ref/data-types/001-date.md", 
+                            "relative_path": "_docs/sql-ref/data-types/010-date-time-and-timestamp.md", 
                             "title": "Date, Time, and Timestamp", 
                             "url": "/docs/date-time-and-timestamp/"
                         }, 
@@ -8821,7 +8923,7 @@
                             "parent": "Data Types", 
                             "previous_title": "Date, Time, and Timestamp", 
                             "previous_url": "/docs/date-time-and-timestamp/", 
-                            "relative_path": "_docs/sql-ref/data-types/002-diff-data-types.md", 
+                            "relative_path": "_docs/sql-ref/data-types/020-handling-different-data-types.md", 
                             "title": "Handling Different Data Types", 
                             "url": "/docs/handling-different-data-types/"
                         }
@@ -8829,9 +8931,9 @@
                     "next_title": "Date, Time, and Timestamp", 
                     "next_url": "/docs/date-time-and-timestamp/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "SQL Reference", 
-                    "previous_url": "/docs/sql-reference/", 
-                    "relative_path": "_docs/sql-ref/001-data-types.md", 
+                    "previous_title": "SQL Reference Introduction", 
+                    "previous_url": "/docs/sql-reference-introduction/", 
+                    "relative_path": "_docs/sql-ref/020-data-types.md", 
                     "title": "Data Types", 
                     "url": "/docs/data-types/"
                 }, 
@@ -8848,7 +8950,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Handling Different Data Types", 
                     "previous_url": "/docs/handling-different-data-types/", 
-                    "relative_path": "_docs/sql-ref/002-lexical-structure.md", 
+                    "relative_path": "_docs/sql-ref/030-lexical-structure.md", 
                     "title": "Lexical Structure", 
                     "url": "/docs/lexical-structure/"
                 }, 
@@ -8865,7 +8967,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Lexical Structure", 
                     "previous_url": "/docs/lexical-structure/", 
-                    "relative_path": "_docs/sql-ref/003-operators.md", 
+                    "relative_path": "_docs/sql-ref/040-operators.md", 
                     "title": "Operators", 
                     "url": "/docs/operators/"
                 }, 
@@ -8894,7 +8996,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "SQL Functions", 
                             "previous_url": "/docs/sql-functions/", 
-                            "relative_path": "_docs/sql-ref/functions/001-math.md", 
+                            "relative_path": "_docs/sql-ref/functions/010-math-and-trig.md", 
                             "title": "Math and Trig", 
                             "url": "/docs/math-and-trig/"
                         }, 
@@ -8915,7 +9017,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "Math and Trig", 
                             "previous_url": "/docs/math-and-trig/", 
-                            "relative_path": "_docs/sql-ref/functions/002-conversion.md", 
+                            "relative_path": "_docs/sql-ref/functions/020-data-type-conversion.md", 
                             "title": "Data Type Conversion", 
                             "url": "/docs/data-type-conversion/"
                         }, 
@@ -8936,7 +9038,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "Data Type Conversion", 
                             "previous_url": "/docs/data-type-conversion/", 
-                            "relative_path": "_docs/sql-ref/functions/003-date-time-fcns.md", 
+                            "relative_path": "_docs/sql-ref/functions/030-date-time-functions-and-arithmetic.md", 
                             "title": "Date/Time Functions and Arithmetic", 
                             "url": "/docs/date-time-functions-and-arithmetic/"
                         }, 
@@ -8957,7 +9059,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "Date/Time Functions and Arithmetic", 
                             "previous_url": "/docs/date-time-functions-and-arithmetic/", 
-                            "relative_path": "_docs/sql-ref/functions/004-string.md", 
+                            "relative_path": "_docs/sql-ref/functions/040-string-manipulation.md", 
                             "title": "String Manipulation", 
                             "url": "/docs/string-manipulation/"
                         }, 
@@ -8978,7 +9080,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "String Manipulation", 
                             "previous_url": "/docs/string-manipulation/", 
-                            "relative_path": "_docs/sql-ref/functions/005-aggregate.md", 
+                            "relative_path": "_docs/sql-ref/functions/050-aggregate-and-aggregate-statistical.md", 
                             "title": "Aggregate and Aggregate Statistical", 
                             "url": "/docs/aggregate-and-aggregate-statistical/"
                         }, 
@@ -8999,7 +9101,7 @@
                             "parent": "SQL Functions", 
                             "previous_title": "Aggregate and Aggregate Statistical", 
                             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
-                            "relative_path": "_docs/sql-ref/functions/006-nulls.md", 
+                            "relative_path": "_docs/sql-ref/functions/060-functions-for-handling-nulls.md", 
                             "title": "Functions for Handling Nulls", 
                             "url": "/docs/functions-for-handling-nulls/"
                         }
@@ -9009,7 +9111,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Operators", 
                     "previous_url": "/docs/operators/", 
-                    "relative_path": "_docs/sql-ref/004-functions.md", 
+                    "relative_path": "_docs/sql-ref/050-sql-functions.md", 
                     "title": "SQL Functions", 
                     "url": "/docs/sql-functions/"
                 }, 
@@ -9038,7 +9140,7 @@
                             "parent": "Nested Data Functions", 
                             "previous_title": "Nested Data Functions", 
                             "previous_url": "/docs/nested-data-functions/", 
-                            "relative_path": "_docs/sql-ref/nested/001-flatten.md", 
+                            "relative_path": "_docs/sql-ref/nested/010-flatten.md", 
                             "title": "FLATTEN", 
                             "url": "/docs/flatten/"
                         }, 
@@ -9059,7 +9161,7 @@
                             "parent": "Nested Data Functions", 
                             "previous_title": "FLATTEN", 
                             "previous_url": "/docs/flatten/", 
-                            "relative_path": "_docs/sql-ref/nested/002-kvgen.md", 
+                            "relative_path": "_docs/sql-ref/nested/020-kvgen.md", 
                             "title": "KVGEN", 
                             "url": "/docs/kvgen/"
                         }, 
@@ -9080,7 +9182,7 @@
                             "parent": "Nested Data Functions", 
                             "previous_title": "KVGEN", 
                             "previous_url": "/docs/kvgen/", 
-                            "relative_path": "_docs/sql-ref/nested/003-repeated-cnt.md", 
+                            "relative_path": "_docs/sql-ref/nested/030-repeated-count.md", 
                             "title": "REPEATED_COUNT", 
                             "url": "/docs/repeated-count/"
                         }, 
@@ -9101,7 +9203,7 @@
                             "parent": "Nested Data Functions", 
                             "previous_title": "REPEATED_COUNT", 
                             "previous_url": "/docs/repeated-count/", 
-                            "relative_path": "_docs/sql-ref/nested/004-repeated-contains.md", 
+                            "relative_path": "_docs/sql-ref/nested/040-repeated-contains.md", 
                             "title": "REPEATED_CONTAINS", 
                             "url": "/docs/repeated-contains/"
                         }
@@ -9111,7 +9213,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Functions for Handling Nulls", 
                     "previous_url": "/docs/functions-for-handling-nulls/", 
-                    "relative_path": "_docs/sql-ref/005-nest-functions.md", 
+                    "relative_path": "_docs/sql-ref/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
                 }, 
@@ -9140,7 +9242,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SQL Commands Summary", 
                             "previous_url": "/docs/sql-commands-summary/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/001-alter-session.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/010-alter-session-command.md", 
                             "title": "ALTER SESSION Command", 
                             "url": "/docs/alter-session-command/"
                         }, 
@@ -9161,7 +9263,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "ALTER SESSION Command", 
                             "previous_url": "/docs/alter-session-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/002-alter-system.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/020-alter-system.md", 
                             "title": "ALTER SYSTEM Command", 
                             "url": "/docs/alter-system-command/"
                         }, 
@@ -9182,7 +9284,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "ALTER SYSTEM Command", 
                             "previous_url": "/docs/alter-system-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/003-create-table-as.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/030-create-table-as-command.md", 
                             "title": "CREATE TABLE AS (CTAS) command", 
                             "url": "/docs/create-table-as-ctas-command/"
                         }, 
@@ -9203,7 +9305,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "CREATE TABLE AS (CTAS) command", 
                             "previous_url": "/docs/create-table-as-ctas-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/004-create-view.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/050-create-view-command.md", 
                             "title": "CREATE VIEW command", 
                             "url": "/docs/create-view-command/"
                         }, 
@@ -9224,7 +9326,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "CREATE VIEW command", 
                             "previous_url": "/docs/create-view-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/005-describe.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/060-describe-command.md", 
                             "title": "DESCRIBE Command", 
                             "url": "/docs/describe-command/"
                         }, 
@@ -9245,7 +9347,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "DESCRIBE Command", 
                             "previous_url": "/docs/describe-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/007-explain.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/070-explain-commands.md", 
                             "title": "EXPLAIN commands", 
                             "url": "/docs/explain-commands/"
                         }, 
@@ -9266,7 +9368,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "EXPLAIN commands", 
                             "previous_url": "/docs/explain-commands/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/008-select.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/080-select.md", 
                             "title": "SELECT Statements", 
                             "url": "/docs/select-statements/"
                         }, 
@@ -9287,7 +9389,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SELECT Statements", 
                             "previous_url": "/docs/select-statements/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/009-show-db-skema.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/090-show-databases-and-show-schemas.md", 
                             "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "url": "/docs/show-databases-and-show-schemas-command/"
                         }, 
@@ -9308,7 +9410,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/010-show-files.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/100-show-files.md", 
                             "title": "SHOW FILES Command", 
                             "url": "/docs/show-files-command/"
                         }, 
@@ -9329,7 +9431,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SHOW FILES Command", 
                             "previous_url": "/docs/show-files-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/011-show-tables.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/110-show-tables-command.md", 
                             "title": "SHOW TABLES Command", 
                             "url": "/docs/show-tables-command/"
                         }, 
@@ -9350,7 +9452,7 @@
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SHOW TABLES Command", 
                             "previous_url": "/docs/show-tables-command/", 
-                            "relative_path": "_docs/sql-ref/cmd-summary/012-use.md", 
+                            "relative_path": "_docs/sql-ref/cmd-summary/120-use-command.md", 
                             "title": "USE Command", 
                             "url": "/docs/use-command/"
                         }
@@ -9360,7 +9462,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "REPEATED_CONTAINS", 
                     "previous_url": "/docs/repeated-contains/", 
-                    "relative_path": "_docs/sql-ref/006-cmd-summary.md", 
+                    "relative_path": "_docs/sql-ref/070-sql-commands-summary.md", 
                     "title": "SQL Commands Summary", 
                     "url": "/docs/sql-commands-summary/"
                 }, 
@@ -9377,7 +9479,7 @@
                     "parent": "SQL Reference", 
                     "previous_title": "USE Command", 
                     "previous_url": "/docs/use-command/", 
-                    "relative_path": "_docs/sql-ref/007-reserved-wds.md", 
+                    "relative_path": "_docs/sql-ref/080-reserved-keywords.md", 
                     "title": "Reserved Keywords", 
                     "url": "/docs/reserved-keywords/"
                 }, 
@@ -9394,13 +9496,13 @@
                     "parent": "SQL Reference", 
                     "previous_title": "Reserved Keywords", 
                     "previous_url": "/docs/reserved-keywords/", 
-                    "relative_path": "_docs/sql-ref/008-sql-extensions.md", 
+                    "relative_path": "_docs/sql-ref/090-sql-extensions.md", 
                     "title": "SQL Extensions", 
                     "url": "/docs/sql-extensions/"
                 }
             ], 
-            "next_title": "Data Types", 
-            "next_url": "/docs/data-types/", 
+            "next_title": "SQL Reference Introduction", 
+            "next_url": "/docs/sql-reference-introduction/", 
             "parent": "", 
             "previous_title": "Querying System Tables", 
             "previous_url": "/docs/querying-system-tables/", 

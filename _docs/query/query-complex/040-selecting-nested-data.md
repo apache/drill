@@ -1,5 +1,5 @@
 ---
-title: "Query 3: Selecting Nested Data for a Column"
+title: "Selecting Nested Data for a Column"
 parent: "Querying Complex Data"
 ---
 The following queries show how to access the nested data inside the parts of
