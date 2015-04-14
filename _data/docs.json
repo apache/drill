@@ -299,8 +299,8 @@
         "Architectural Highlights": {
             "breadcrumbs": [
                 {
-                    "title": "Architectural Overview", 
-                    "url": "/docs/architectural-overview/"
+                    "title": "Architecture", 
+                    "url": "/docs/architecture/"
                 }
             ], 
             "children": [
@@ -311,8 +311,8 @@
                             "url": "/docs/architectural-highlights/"
                         }, 
                         {
-                            "title": "Architectural Overview", 
-                            "url": "/docs/architectural-overview/"
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
                         }
                     ], 
                     "children": [], 
@@ -321,7 +321,7 @@
                     "parent": "Architectural Highlights", 
                     "previous_title": "Architectural Highlights", 
                     "previous_url": "/docs/architectural-highlights/", 
-                    "relative_path": "_docs/architectural-overview/architectural-highlights/010-flexibility.md", 
+                    "relative_path": "_docs/architecture/architectural-highlights/010-flexibility.md", 
                     "title": "Flexibility", 
                     "url": "/docs/flexibility/"
                 }, 
@@ -332,8 +332,8 @@
                             "url": "/docs/architectural-highlights/"
                         }, 
                         {
-                            "title": "Architectural Overview", 
-                            "url": "/docs/architectural-overview/"
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
                         }
                     ], 
                     "children": [], 
@@ -342,62 +342,62 @@
                     "parent": "Architectural Highlights", 
                     "previous_title": "Flexibility", 
                     "previous_url": "/docs/flexibility/", 
-                    "relative_path": "_docs/architectural-overview/architectural-highlights/020-performance.md", 
+                    "relative_path": "_docs/architecture/architectural-highlights/020-performance.md", 
                     "title": "Performance", 
                     "url": "/docs/performance/"
                 }
             ], 
             "next_title": "Flexibility", 
             "next_url": "/docs/flexibility/", 
-            "parent": "Architectural Overview", 
+            "parent": "Architecture", 
             "previous_title": "Core Modules", 
             "previous_url": "/docs/core-modules/", 
-            "relative_path": "_docs/architectural-overview/030-architectural-highlights.md", 
+            "relative_path": "_docs/architecture/030-architectural-highlights.md", 
             "title": "Architectural Highlights", 
             "url": "/docs/architectural-highlights/"
         }, 
-        "Architectural Overview": {
+        "Architecture": {
             "breadcrumbs": [], 
             "children": [
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Architectural Overview", 
-                            "url": "/docs/architectural-overview/"
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "Core Modules", 
                     "next_url": "/docs/core-modules/", 
-                    "parent": "Architectural Overview", 
-                    "previous_title": "Architectural Overview", 
-                    "previous_url": "/docs/architectural-overview/", 
-                    "relative_path": "_docs/architectural-overview/010-architecture-introduction.md", 
+                    "parent": "Architecture", 
+                    "previous_title": "Architecture", 
+                    "previous_url": "/docs/architecture/", 
+                    "relative_path": "_docs/architecture/010-architecture-introduction.md", 
                     "title": "Architecture Introduction", 
                     "url": "/docs/architecture-introduction/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Architectural Overview", 
-                            "url": "/docs/architectural-overview/"
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "Architectural Highlights", 
                     "next_url": "/docs/architectural-highlights/", 
-                    "parent": "Architectural Overview", 
+                    "parent": "Architecture", 
                     "previous_title": "Architecture Introduction", 
                     "previous_url": "/docs/architecture-introduction/", 
-                    "relative_path": "_docs/architectural-overview/020-core-modules.md", 
+                    "relative_path": "_docs/architecture/020-core-modules.md", 
                     "title": "Core Modules", 
                     "url": "/docs/core-modules/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Architectural Overview", 
-                            "url": "/docs/architectural-overview/"
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
                         }
                     ], 
                     "children": [
@@ -408,8 +408,8 @@
                                     "url": "/docs/architectural-highlights/"
                                 }, 
                                 {
-                                    "title": "Architectural Overview", 
-                                    "url": "/docs/architectural-overview/"
+                                    "title": "Architecture", 
+                                    "url": "/docs/architecture/"
                                 }
                             ], 
                             "children": [], 
@@ -418,7 +418,7 @@
                             "parent": "Architectural Highlights", 
                             "previous_title": "Architectural Highlights", 
                             "previous_url": "/docs/architectural-highlights/", 
-                            "relative_path": "_docs/architectural-overview/architectural-highlights/010-flexibility.md", 
+                            "relative_path": "_docs/architecture/architectural-highlights/010-flexibility.md", 
                             "title": "Flexibility", 
                             "url": "/docs/flexibility/"
                         }, 
@@ -429,8 +429,8 @@
                                     "url": "/docs/architectural-highlights/"
                                 }, 
                                 {
-                                    "title": "Architectural Overview", 
-                                    "url": "/docs/architectural-overview/"
+                                    "title": "Architecture", 
+                                    "url": "/docs/architecture/"
                                 }
                             ], 
                             "children": [], 
@@ -439,17 +439,17 @@
                             "parent": "Architectural Highlights", 
                             "previous_title": "Flexibility", 
                             "previous_url": "/docs/flexibility/", 
-                            "relative_path": "_docs/architectural-overview/architectural-highlights/020-performance.md", 
+                            "relative_path": "_docs/architecture/architectural-highlights/020-performance.md", 
                             "title": "Performance", 
                             "url": "/docs/performance/"
                         }
                     ], 
                     "next_title": "Flexibility", 
                     "next_url": "/docs/flexibility/", 
-                    "parent": "Architectural Overview", 
+                    "parent": "Architecture", 
                     "previous_title": "Core Modules", 
                     "previous_url": "/docs/core-modules/", 
-                    "relative_path": "_docs/architectural-overview/030-architectural-highlights.md", 
+                    "relative_path": "_docs/architecture/030-architectural-highlights.md", 
                     "title": "Architectural Highlights", 
                     "url": "/docs/architectural-highlights/"
                 }
@@ -457,26 +457,26 @@
             "next_title": "Architecture Introduction", 
             "next_url": "/docs/architecture-introduction/", 
             "parent": "", 
-            "previous_title": "", 
-            "previous_url": "", 
-            "relative_path": "_docs/001-architectural-overview.md", 
-            "title": "Architectural Overview", 
-            "url": "/docs/architectural-overview/"
+            "previous_title": "Why Drill", 
+            "previous_url": "/docs/why-drill/", 
+            "relative_path": "_docs/020-architecture.md", 
+            "title": "Architecture", 
+            "url": "/docs/architecture/"
         }, 
         "Architecture Introduction": {
             "breadcrumbs": [
                 {
-                    "title": "Architectural Overview", 
-                    "url": "/docs/architectural-overview/"
+                    "title": "Architecture", 
+                    "url": "/docs/architecture/"
                 }
             ], 
             "children": [], 
             "next_title": "Core Modules", 
             "next_url": "/docs/core-modules/", 
-            "parent": "Architectural Overview", 
-            "previous_title": "Architectural Overview", 
-            "previous_url": "/docs/architectural-overview/", 
-            "relative_path": "_docs/architectural-overview/010-architecture-introduction.md", 
+            "parent": "Architecture", 
+            "previous_title": "Architecture", 
+            "previous_url": "/docs/architecture/", 
+            "relative_path": "_docs/architecture/010-architecture-introduction.md", 
             "title": "Architecture Introduction", 
             "url": "/docs/architecture-introduction/"
         }, 
@@ -523,7 +523,7 @@
             "parent": "", 
             "previous_title": "Wikipedia Edit History", 
             "previous_url": "/docs/wikipedia-edit-history/", 
-            "relative_path": "_docs/015-archived-pages.md", 
+            "relative_path": "_docs/150-archived-pages.md", 
             "title": "Archived Pages", 
             "url": "/docs/archived-pages/"
         }, 
@@ -917,7 +917,7 @@
             "parent": "", 
             "previous_title": "Installing Drill in Distributed Mode", 
             "previous_url": "/docs/installing-drill-in-distributed-mode/", 
-            "relative_path": "_docs/005-connect.md", 
+            "relative_path": "_docs/050-connect.md", 
             "title": "Connect to a Data Source", 
             "url": "/docs/connect-to-a-data-source/"
         }, 
@@ -984,17 +984,17 @@
         "Core Modules": {
             "breadcrumbs": [
                 {
-                    "title": "Architectural Overview", 
-                    "url": "/docs/architectural-overview/"
+                    "title": "Architecture", 
+                    "url": "/docs/architecture/"
                 }
             ], 
             "children": [], 
             "next_title": "Architectural Highlights", 
             "next_url": "/docs/architectural-highlights/", 
-            "parent": "Architectural Overview", 
+            "parent": "Architecture", 
             "previous_title": "Architecture Introduction", 
             "previous_url": "/docs/architecture-introduction/", 
-            "relative_path": "_docs/architectural-overview/020-core-modules.md", 
+            "relative_path": "_docs/architecture/020-core-modules.md", 
             "title": "Core Modules", 
             "url": "/docs/core-modules/"
         }, 
@@ -1113,7 +1113,7 @@
             "parent": "", 
             "previous_title": "SQL Extensions", 
             "previous_url": "/docs/sql-extensions/", 
-            "relative_path": "_docs/009-datasources.md", 
+            "relative_path": "_docs/090-datasources.md", 
             "title": "Data Sources and File Formats", 
             "url": "/docs/data-sources-and-file-formats/"
         }, 
@@ -1491,7 +1491,7 @@
             "parent": "", 
             "previous_title": "JSON Data Model", 
             "previous_url": "/docs/json-data-model/", 
-            "relative_path": "_docs/010-dev-custom-func.md", 
+            "relative_path": "_docs/100-dev-custom-func.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
         }, 
@@ -1824,7 +1824,7 @@
             "parent": "", 
             "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
             "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
-            "relative_path": "_docs/012-develop.md", 
+            "relative_path": "_docs/120-develop.md", 
             "title": "Developer Information", 
             "url": "/docs/developer-information/"
         }, 
@@ -1865,6 +1865,23 @@
             "relative_path": "_docs/connect/007-default-frmt.md", 
             "title": "Drill Default Input Format", 
             "url": "/docs/drill-default-input-format/"
+        }, 
+        "Drill Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Getting Started", 
+                    "url": "/docs/getting-started/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Why Drill", 
+            "next_url": "/docs/why-drill/", 
+            "parent": "Getting Started", 
+            "previous_title": "Getting Started", 
+            "previous_url": "/docs/getting-started/", 
+            "relative_path": "_docs/getting-started/010-drill-introduction.md", 
+            "title": "Drill Introduction", 
+            "url": "/docs/drill-introduction/"
         }, 
         "Drill Patch Review Tool": {
             "breadcrumbs": [
@@ -2033,8 +2050,8 @@
                     "url": "/docs/architectural-highlights/"
                 }, 
                 {
-                    "title": "Architectural Overview", 
-                    "url": "/docs/architectural-overview/"
+                    "title": "Architecture", 
+                    "url": "/docs/architecture/"
                 }
             ], 
             "children": [], 
@@ -2043,7 +2060,7 @@
             "parent": "Architectural Highlights", 
             "previous_title": "Architectural Highlights", 
             "previous_url": "/docs/architectural-highlights/", 
-            "relative_path": "_docs/architectural-overview/architectural-highlights/010-flexibility.md", 
+            "relative_path": "_docs/architecture/architectural-highlights/010-flexibility.md", 
             "title": "Flexibility", 
             "url": "/docs/flexibility/"
         }, 
@@ -2067,6 +2084,53 @@
             "relative_path": "_docs/sql-ref/functions/006-nulls.md", 
             "title": "Functions for Handling Nulls", 
             "url": "/docs/functions-for-handling-nulls/"
+        }, 
+        "Getting Started": {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Getting Started", 
+                            "url": "/docs/getting-started/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Why Drill", 
+                    "next_url": "/docs/why-drill/", 
+                    "parent": "Getting Started", 
+                    "previous_title": "Getting Started", 
+                    "previous_url": "/docs/getting-started/", 
+                    "relative_path": "_docs/getting-started/010-drill-introduction.md", 
+                    "title": "Drill Introduction", 
+                    "url": "/docs/drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Getting Started", 
+                            "url": "/docs/getting-started/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Architecture", 
+                    "next_url": "/docs/architecture/", 
+                    "parent": "Getting Started", 
+                    "previous_title": "Drill Introduction", 
+                    "previous_url": "/docs/drill-introduction/", 
+                    "relative_path": "_docs/getting-started/020-why-drill.md", 
+                    "title": "Why Drill", 
+                    "url": "/docs/why-drill/"
+                }
+            ], 
+            "next_title": "Drill Introduction", 
+            "next_url": "/docs/drill-introduction/", 
+            "parent": "", 
+            "previous_title": "", 
+            "previous_url": "", 
+            "relative_path": "_docs/010-getting-started.md", 
+            "title": "Getting Started", 
+            "url": "/docs/getting-started/"
         }, 
         "Getting Started Tutorial": {
             "breadcrumbs": [
@@ -2391,7 +2455,7 @@
             "parent": "", 
             "previous_title": "Summary", 
             "previous_url": "/docs/summary/", 
-            "relative_path": "_docs/004-install.md", 
+            "relative_path": "_docs/040-install.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
         }, 
@@ -3123,7 +3187,7 @@
             "parent": "", 
             "previous_title": "Custom Function Interfaces", 
             "previous_url": "/docs/custom-function-interfaces/", 
-            "relative_path": "_docs/011-manage.md", 
+            "relative_path": "_docs/110-manage.md", 
             "title": "Manage Drill", 
             "url": "/docs/manage-drill/"
         }, 
@@ -3632,7 +3696,7 @@
             "parent": "", 
             "previous_title": "MapR-DB Format", 
             "previous_url": "/docs/mapr-db-format/", 
-            "relative_path": "_docs/006-interfaces.md", 
+            "relative_path": "_docs/060-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
         }, 
@@ -3694,8 +3758,8 @@
                     "url": "/docs/architectural-highlights/"
                 }, 
                 {
-                    "title": "Architectural Overview", 
-                    "url": "/docs/architectural-overview/"
+                    "title": "Architecture", 
+                    "url": "/docs/architecture/"
                 }
             ], 
             "children": [], 
@@ -3704,7 +3768,7 @@
             "parent": "Architectural Highlights", 
             "previous_title": "Flexibility", 
             "previous_url": "/docs/flexibility/", 
-            "relative_path": "_docs/architectural-overview/architectural-highlights/020-performance.md", 
+            "relative_path": "_docs/architecture/architectural-highlights/020-performance.md", 
             "title": "Performance", 
             "url": "/docs/performance/"
         }, 
@@ -3793,7 +3857,7 @@
             "parent": "", 
             "previous_title": "What is Apache Drill", 
             "previous_url": "/docs/what-is-apache-drill/", 
-            "relative_path": "_docs/016-progress.md", 
+            "relative_path": "_docs/160-progress.md", 
             "title": "Progress Reports", 
             "url": "/docs/progress-reports/"
         }, 
@@ -3805,7 +3869,7 @@
             "parent": "", 
             "previous_title": "2014 Q1 Drill Report", 
             "previous_url": "/docs/2014-q1-drill-report/", 
-            "relative_path": "_docs/017-bylaws.md", 
+            "relative_path": "_docs/170-bylaws.md", 
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
         }, 
@@ -4276,7 +4340,7 @@
             "parent": "", 
             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-            "relative_path": "_docs/007-query.md", 
+            "relative_path": "_docs/070-query.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
         }, 
@@ -4852,7 +4916,7 @@
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
-            "relative_path": "_docs/013-rn.md", 
+            "relative_path": "_docs/130-rn.md", 
             "title": "Release Notes", 
             "url": "/docs/release-notes/"
         }, 
@@ -5999,7 +6063,7 @@
             "parent": "", 
             "previous_title": "Querying System Tables", 
             "previous_url": "/docs/querying-system-tables/", 
-            "relative_path": "_docs/008-sql-ref.md", 
+            "relative_path": "_docs/080-sql-ref.md", 
             "title": "SQL Reference", 
             "url": "/docs/sql-reference/"
         }, 
@@ -6084,7 +6148,7 @@
             "parent": "", 
             "previous_title": "Apache Drill 0.8.0 Release Notes", 
             "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
-            "relative_path": "_docs/014-sample-ds.md", 
+            "relative_path": "_docs/140-sample-ds.md", 
             "title": "Sample Datasets", 
             "url": "/docs/sample-datasets/"
         }, 
@@ -6600,7 +6664,7 @@
             "parent": "", 
             "previous_title": "Performance", 
             "previous_url": "/docs/performance/", 
-            "relative_path": "_docs/002-tutorials.md", 
+            "relative_path": "_docs/030-tutorials.md", 
             "title": "Tutorials", 
             "url": "/docs/tutorials/"
         }, 
@@ -7044,6 +7108,23 @@
             "title": "What is Apache Drill", 
             "url": "/docs/what-is-apache-drill/"
         }, 
+        "Why Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Getting Started", 
+                    "url": "/docs/getting-started/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Architecture", 
+            "next_url": "/docs/architecture/", 
+            "parent": "Getting Started", 
+            "previous_title": "Drill Introduction", 
+            "previous_url": "/docs/drill-introduction/", 
+            "relative_path": "_docs/getting-started/020-why-drill.md", 
+            "title": "Why Drill", 
+            "url": "/docs/why-drill/"
+        }, 
         "Wikipedia Edit History": {
             "breadcrumbs": [
                 {
@@ -7090,42 +7171,89 @@
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Architectural Overview", 
-                            "url": "/docs/architectural-overview/"
+                            "title": "Getting Started", 
+                            "url": "/docs/getting-started/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Why Drill", 
+                    "next_url": "/docs/why-drill/", 
+                    "parent": "Getting Started", 
+                    "previous_title": "Getting Started", 
+                    "previous_url": "/docs/getting-started/", 
+                    "relative_path": "_docs/getting-started/010-drill-introduction.md", 
+                    "title": "Drill Introduction", 
+                    "url": "/docs/drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Getting Started", 
+                            "url": "/docs/getting-started/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Architecture", 
+                    "next_url": "/docs/architecture/", 
+                    "parent": "Getting Started", 
+                    "previous_title": "Drill Introduction", 
+                    "previous_url": "/docs/drill-introduction/", 
+                    "relative_path": "_docs/getting-started/020-why-drill.md", 
+                    "title": "Why Drill", 
+                    "url": "/docs/why-drill/"
+                }
+            ], 
+            "next_title": "Drill Introduction", 
+            "next_url": "/docs/drill-introduction/", 
+            "parent": "", 
+            "previous_title": "", 
+            "previous_url": "", 
+            "relative_path": "_docs/010-getting-started.md", 
+            "title": "Getting Started", 
+            "url": "/docs/getting-started/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "Core Modules", 
                     "next_url": "/docs/core-modules/", 
-                    "parent": "Architectural Overview", 
-                    "previous_title": "Architectural Overview", 
-                    "previous_url": "/docs/architectural-overview/", 
-                    "relative_path": "_docs/architectural-overview/010-architecture-introduction.md", 
+                    "parent": "Architecture", 
+                    "previous_title": "Architecture", 
+                    "previous_url": "/docs/architecture/", 
+                    "relative_path": "_docs/architecture/010-architecture-introduction.md", 
                     "title": "Architecture Introduction", 
                     "url": "/docs/architecture-introduction/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Architectural Overview", 
-                            "url": "/docs/architectural-overview/"
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "Architectural Highlights", 
                     "next_url": "/docs/architectural-highlights/", 
-                    "parent": "Architectural Overview", 
+                    "parent": "Architecture", 
                     "previous_title": "Architecture Introduction", 
                     "previous_url": "/docs/architecture-introduction/", 
-                    "relative_path": "_docs/architectural-overview/020-core-modules.md", 
+                    "relative_path": "_docs/architecture/020-core-modules.md", 
                     "title": "Core Modules", 
                     "url": "/docs/core-modules/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Architectural Overview", 
-                            "url": "/docs/architectural-overview/"
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
                         }
                     ], 
                     "children": [
@@ -7136,8 +7264,8 @@
                                     "url": "/docs/architectural-highlights/"
                                 }, 
                                 {
-                                    "title": "Architectural Overview", 
-                                    "url": "/docs/architectural-overview/"
+                                    "title": "Architecture", 
+                                    "url": "/docs/architecture/"
                                 }
                             ], 
                             "children": [], 
@@ -7146,7 +7274,7 @@
                             "parent": "Architectural Highlights", 
                             "previous_title": "Architectural Highlights", 
                             "previous_url": "/docs/architectural-highlights/", 
-                            "relative_path": "_docs/architectural-overview/architectural-highlights/010-flexibility.md", 
+                            "relative_path": "_docs/architecture/architectural-highlights/010-flexibility.md", 
                             "title": "Flexibility", 
                             "url": "/docs/flexibility/"
                         }, 
@@ -7157,8 +7285,8 @@
                                     "url": "/docs/architectural-highlights/"
                                 }, 
                                 {
-                                    "title": "Architectural Overview", 
-                                    "url": "/docs/architectural-overview/"
+                                    "title": "Architecture", 
+                                    "url": "/docs/architecture/"
                                 }
                             ], 
                             "children": [], 
@@ -7167,17 +7295,17 @@
                             "parent": "Architectural Highlights", 
                             "previous_title": "Flexibility", 
                             "previous_url": "/docs/flexibility/", 
-                            "relative_path": "_docs/architectural-overview/architectural-highlights/020-performance.md", 
+                            "relative_path": "_docs/architecture/architectural-highlights/020-performance.md", 
                             "title": "Performance", 
                             "url": "/docs/performance/"
                         }
                     ], 
                     "next_title": "Flexibility", 
                     "next_url": "/docs/flexibility/", 
-                    "parent": "Architectural Overview", 
+                    "parent": "Architecture", 
                     "previous_title": "Core Modules", 
                     "previous_url": "/docs/core-modules/", 
-                    "relative_path": "_docs/architectural-overview/030-architectural-highlights.md", 
+                    "relative_path": "_docs/architecture/030-architectural-highlights.md", 
                     "title": "Architectural Highlights", 
                     "url": "/docs/architectural-highlights/"
                 }
@@ -7185,11 +7313,11 @@
             "next_title": "Architecture Introduction", 
             "next_url": "/docs/architecture-introduction/", 
             "parent": "", 
-            "previous_title": "", 
-            "previous_url": "", 
-            "relative_path": "_docs/001-architectural-overview.md", 
-            "title": "Architectural Overview", 
-            "url": "/docs/architectural-overview/"
+            "previous_title": "Why Drill", 
+            "previous_url": "/docs/why-drill/", 
+            "relative_path": "_docs/020-architecture.md", 
+            "title": "Architecture", 
+            "url": "/docs/architecture/"
         }, 
         {
             "breadcrumbs": [], 
@@ -7378,7 +7506,7 @@
             "parent": "", 
             "previous_title": "Performance", 
             "previous_url": "/docs/performance/", 
-            "relative_path": "_docs/002-tutorials.md", 
+            "relative_path": "_docs/030-tutorials.md", 
             "title": "Tutorials", 
             "url": "/docs/tutorials/"
         }, 
@@ -7506,7 +7634,7 @@
             "parent": "", 
             "previous_title": "Summary", 
             "previous_url": "/docs/summary/", 
-            "relative_path": "_docs/004-install.md", 
+            "relative_path": "_docs/040-install.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
         }, 
@@ -7693,7 +7821,7 @@
             "parent": "", 
             "previous_title": "Installing Drill in Distributed Mode", 
             "previous_url": "/docs/installing-drill-in-distributed-mode/", 
-            "relative_path": "_docs/005-connect.md", 
+            "relative_path": "_docs/050-connect.md", 
             "title": "Connect to a Data Source", 
             "url": "/docs/connect-to-a-data-source/"
         }, 
@@ -8028,7 +8156,7 @@
             "parent": "", 
             "previous_title": "MapR-DB Format", 
             "previous_url": "/docs/mapr-db-format/", 
-            "relative_path": "_docs/006-interfaces.md", 
+            "relative_path": "_docs/060-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
         }, 
@@ -8415,7 +8543,7 @@
             "parent": "", 
             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-            "relative_path": "_docs/007-query.md", 
+            "relative_path": "_docs/070-query.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
         }, 
@@ -9051,7 +9179,7 @@
             "parent": "", 
             "previous_title": "Querying System Tables", 
             "previous_url": "/docs/querying-system-tables/", 
-            "relative_path": "_docs/008-sql-ref.md", 
+            "relative_path": "_docs/080-sql-ref.md", 
             "title": "SQL Reference", 
             "url": "/docs/sql-reference/"
         }, 
@@ -9132,7 +9260,7 @@
             "parent": "", 
             "previous_title": "SQL Extensions", 
             "previous_url": "/docs/sql-extensions/", 
-            "relative_path": "_docs/009-datasources.md", 
+            "relative_path": "_docs/090-datasources.md", 
             "title": "Data Sources and File Formats", 
             "url": "/docs/data-sources-and-file-formats/"
         }, 
@@ -9230,7 +9358,7 @@
             "parent": "", 
             "previous_title": "JSON Data Model", 
             "previous_url": "/docs/json-data-model/", 
-            "relative_path": "_docs/010-dev-custom-func.md", 
+            "relative_path": "_docs/100-dev-custom-func.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
         }, 
@@ -9413,7 +9541,7 @@
             "parent": "", 
             "previous_title": "Custom Function Interfaces", 
             "previous_url": "/docs/custom-function-interfaces/", 
-            "relative_path": "_docs/011-manage.md", 
+            "relative_path": "_docs/110-manage.md", 
             "title": "Manage Drill", 
             "url": "/docs/manage-drill/"
         }, 
@@ -9669,7 +9797,7 @@
             "parent": "", 
             "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
             "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
-            "relative_path": "_docs/012-develop.md", 
+            "relative_path": "_docs/120-develop.md", 
             "title": "Developer Information", 
             "url": "/docs/developer-information/"
         }, 
@@ -9784,7 +9912,7 @@
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
-            "relative_path": "_docs/013-rn.md", 
+            "relative_path": "_docs/130-rn.md", 
             "title": "Release Notes", 
             "url": "/docs/release-notes/"
         }, 
@@ -9848,7 +9976,7 @@
             "parent": "", 
             "previous_title": "Apache Drill 0.8.0 Release Notes", 
             "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
-            "relative_path": "_docs/014-sample-ds.md", 
+            "relative_path": "_docs/140-sample-ds.md", 
             "title": "Sample Datasets", 
             "url": "/docs/sample-datasets/"
         }, 
@@ -9895,7 +10023,7 @@
             "parent": "", 
             "previous_title": "Wikipedia Edit History", 
             "previous_url": "/docs/wikipedia-edit-history/", 
-            "relative_path": "_docs/015-archived-pages.md", 
+            "relative_path": "_docs/150-archived-pages.md", 
             "title": "Archived Pages", 
             "url": "/docs/archived-pages/"
         }, 
@@ -9925,7 +10053,7 @@
             "parent": "", 
             "previous_title": "What is Apache Drill", 
             "previous_url": "/docs/what-is-apache-drill/", 
-            "relative_path": "_docs/016-progress.md", 
+            "relative_path": "_docs/160-progress.md", 
             "title": "Progress Reports", 
             "url": "/docs/progress-reports/"
         }, 
@@ -9937,7 +10065,7 @@
             "parent": "", 
             "previous_title": "2014 Q1 Drill Report", 
             "previous_url": "/docs/2014-q1-drill-report/", 
-            "relative_path": "_docs/017-bylaws.md", 
+            "relative_path": "_docs/170-bylaws.md", 
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
         }
