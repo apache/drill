@@ -734,31 +734,48 @@
             "title": "Configuring ODBC Connections for Linux and Mac OS X", 
             "url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/"
         }, 
-        "Connect to a Data Source": {
+        "Connect a Data Source": {
             "breadcrumbs": [], 
             "children": [
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Storage Plugin Registration", 
+                    "next_url": "/docs/storage-plugin-registration/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Connect a Data Source", 
+                    "previous_url": "/docs/connect-a-data-source/", 
+                    "relative_path": "_docs/connect/010-connect-a-data-source-introduction.md", 
+                    "title": "Connect a Data Source Introduction", 
+                    "url": "/docs/connect-a-data-source-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "Storage Plugin Configuration", 
                     "next_url": "/docs/storage-plugin-configuration/", 
-                    "parent": "Connect to a Data Source", 
-                    "previous_title": "Connect to a Data Source", 
-                    "previous_url": "/docs/connect-to-a-data-source/", 
-                    "relative_path": "_docs/connect/001-plugin-reg.md", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Connect a Data Source Introduction", 
+                    "previous_url": "/docs/connect-a-data-source-introduction/", 
+                    "relative_path": "_docs/connect/020-plugin-reg.md", 
                     "title": "Storage Plugin Registration", 
                     "url": "/docs/storage-plugin-registration/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [
@@ -769,8 +786,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -779,7 +796,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
-                            "relative_path": "_docs/connect/003-workspaces.md", 
+                            "relative_path": "_docs/connect/040-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
                         }, 
@@ -790,8 +807,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -800,7 +817,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Workspaces", 
                             "previous_url": "/docs/workspaces/", 
-                            "relative_path": "_docs/connect/004-reg-fs.md", 
+                            "relative_path": "_docs/connect/050-reg-fs.md", 
                             "title": "File System Storage Plugin", 
                             "url": "/docs/file-system-storage-plugin/"
                         }, 
@@ -811,8 +828,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -821,7 +838,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "File System Storage Plugin", 
                             "previous_url": "/docs/file-system-storage-plugin/", 
-                            "relative_path": "_docs/connect/005-reg-hbase.md", 
+                            "relative_path": "_docs/connect/060-reg-hbase.md", 
                             "title": "HBase Storage Plugin", 
                             "url": "/docs/hbase-storage-plugin/"
                         }, 
@@ -832,8 +849,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -842,7 +859,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "HBase Storage Plugin", 
                             "previous_url": "/docs/hbase-storage-plugin/", 
-                            "relative_path": "_docs/connect/006-reg-hive.md", 
+                            "relative_path": "_docs/connect/070-reg-hive.md", 
                             "title": "Hive Storage Plugin", 
                             "url": "/docs/hive-storage-plugin/"
                         }, 
@@ -853,8 +870,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -863,63 +880,80 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Hive Storage Plugin", 
                             "previous_url": "/docs/hive-storage-plugin/", 
-                            "relative_path": "_docs/connect/007-default-frmt.md", 
+                            "relative_path": "_docs/connect/080-default-frmt.md", 
                             "title": "Drill Default Input Format", 
                             "url": "/docs/drill-default-input-format/"
                         }
                     ], 
                     "next_title": "Workspaces", 
                     "next_url": "/docs/workspaces/", 
-                    "parent": "Connect to a Data Source", 
+                    "parent": "Connect a Data Source", 
                     "previous_title": "Storage Plugin Registration", 
                     "previous_url": "/docs/storage-plugin-registration/", 
-                    "relative_path": "_docs/connect/002-plugin-conf.md", 
+                    "relative_path": "_docs/connect/030-plugin-conf.md", 
                     "title": "Storage Plugin Configuration", 
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "MapR-DB Format", 
                     "next_url": "/docs/mapr-db-format/", 
-                    "parent": "Connect to a Data Source", 
+                    "parent": "Connect a Data Source", 
                     "previous_title": "Drill Default Input Format", 
                     "previous_url": "/docs/drill-default-input-format/", 
-                    "relative_path": "_docs/connect/008-mongo-plugin.md", 
+                    "relative_path": "_docs/connect/090-mongo-plugin.md", 
                     "title": "MongoDB Plugin for Apache Drill", 
                     "url": "/docs/mongodb-plugin-for-apache-drill/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "ODBC/JDBC Interfaces", 
                     "next_url": "/docs/odbc-jdbc-interfaces/", 
-                    "parent": "Connect to a Data Source", 
+                    "parent": "Connect a Data Source", 
                     "previous_title": "MongoDB Plugin for Apache Drill", 
                     "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                    "relative_path": "_docs/connect/009-mapr-db-plugin.md", 
+                    "relative_path": "_docs/connect/100-mapr-db-plugin.md", 
                     "title": "MapR-DB Format", 
                     "url": "/docs/mapr-db-format/"
                 }
             ], 
+            "next_title": "Connect a Data Source Introduction", 
+            "next_url": "/docs/connect-a-data-source-introduction/", 
+            "parent": "", 
+            "previous_title": "Installing Drill in Distributed Mode", 
+            "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+            "relative_path": "_docs/050-connect.md", 
+            "title": "Connect a Data Source", 
+            "url": "/docs/connect-a-data-source/"
+        }, 
+        "Connect a Data Source Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
             "next_title": "Storage Plugin Registration", 
             "next_url": "/docs/storage-plugin-registration/", 
-            "parent": "", 
-            "previous_title": "Installing Drill on Windows", 
-            "previous_url": "/docs/installing-drill-on-windows/", 
-            "relative_path": "_docs/050-connect.md", 
-            "title": "Connect to a Data Source", 
-            "url": "/docs/connect-to-a-data-source/"
+            "parent": "Connect a Data Source", 
+            "previous_title": "Connect a Data Source", 
+            "previous_url": "/docs/connect-a-data-source/", 
+            "relative_path": "_docs/connect/010-connect-a-data-source-introduction.md", 
+            "title": "Connect a Data Source Introduction", 
+            "url": "/docs/connect-a-data-source-introduction/"
         }, 
         "Contribute to Drill": {
             "breadcrumbs": [
@@ -1852,8 +1886,8 @@
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
@@ -1862,7 +1896,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "Hive Storage Plugin", 
             "previous_url": "/docs/hive-storage-plugin/", 
-            "relative_path": "_docs/connect/007-default-frmt.md", 
+            "relative_path": "_docs/connect/080-default-frmt.md", 
             "title": "Drill Default Input Format", 
             "url": "/docs/drill-default-input-format/"
         }, 
@@ -2029,8 +2063,8 @@
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
@@ -2039,7 +2073,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "Workspaces", 
             "previous_url": "/docs/workspaces/", 
-            "relative_path": "_docs/connect/004-reg-fs.md", 
+            "relative_path": "_docs/connect/050-reg-fs.md", 
             "title": "File System Storage Plugin", 
             "url": "/docs/file-system-storage-plugin/"
         }, 
@@ -2160,8 +2194,8 @@
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
@@ -2170,7 +2204,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "File System Storage Plugin", 
             "previous_url": "/docs/file-system-storage-plugin/", 
-            "relative_path": "_docs/connect/005-reg-hbase.md", 
+            "relative_path": "_docs/connect/060-reg-hbase.md", 
             "title": "HBase Storage Plugin", 
             "url": "/docs/hbase-storage-plugin/"
         }, 
@@ -2202,8 +2236,8 @@
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
@@ -2212,7 +2246,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "HBase Storage Plugin", 
             "previous_url": "/docs/hbase-storage-plugin/", 
-            "relative_path": "_docs/connect/006-reg-hive.md", 
+            "relative_path": "_docs/connect/070-reg-hive.md", 
             "title": "Hive Storage Plugin", 
             "url": "/docs/hive-storage-plugin/"
         }, 
@@ -2261,28 +2295,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill Introduction", 
-                    "next_url": "/docs/install-drill-introduction/", 
-                    "parent": "Install Drill", 
-                    "previous_title": "Install Drill", 
-                    "previous_url": "/docs/install-drill/", 
-                    "relative_path": "_docs/install/004-installing-drill-in-distributed-mode.md", 
-                    "title": "Installing Drill in Distributed Mode", 
-                    "url": "/docs/installing-drill-in-distributed-mode/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Install Drill", 
-                            "url": "/docs/install-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Deploying Apache Drill in a Clustered Environment", 
                     "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Installing Drill in Distributed Mode", 
-                    "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+                    "previous_title": "Install Drill", 
+                    "previous_url": "/docs/install-drill/", 
                     "relative_path": "_docs/install/010-install-drill-introduction.md", 
                     "title": "Install Drill Introduction", 
                     "url": "/docs/install-drill-introduction/"
@@ -2366,8 +2383,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Connect to a Data Source", 
-                            "next_url": "/docs/connect-to-a-data-source/", 
+                            "next_title": "Installing Drill in Distributed Mode", 
+                            "next_url": "/docs/installing-drill-in-distributed-mode/", 
                             "parent": "Installing Drill in Embedded Mode", 
                             "previous_title": "Installing Drill on Mac OS X", 
                             "previous_url": "/docs/installing-drill-on-mac-os-x/", 
@@ -2384,10 +2401,27 @@
                     "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
                     "title": "Installing Drill in Embedded Mode", 
                     "url": "/docs/installing-drill-in-embedded-mode/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Installing Drill on Windows", 
+                    "previous_url": "/docs/installing-drill-on-windows/", 
+                    "relative_path": "_docs/install/040-installing-drill-in-distributed-mode.md", 
+                    "title": "Installing Drill in Distributed Mode", 
+                    "url": "/docs/installing-drill-in-distributed-mode/"
                 }
             ], 
-            "next_title": "Installing Drill in Distributed Mode", 
-            "next_url": "/docs/installing-drill-in-distributed-mode/", 
+            "next_title": "Install Drill Introduction", 
+            "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
             "previous_title": "Lesson 3: Create a Storage Plugin", 
             "previous_url": "/docs/lesson-3-create-a-storage-plugin/", 
@@ -2406,8 +2440,8 @@
             "next_title": "Deploying Apache Drill in a Clustered Environment", 
             "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
             "parent": "Install Drill", 
-            "previous_title": "Installing Drill in Distributed Mode", 
-            "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+            "previous_title": "Install Drill", 
+            "previous_url": "/docs/install-drill/", 
             "relative_path": "_docs/install/010-install-drill-introduction.md", 
             "title": "Install Drill Introduction", 
             "url": "/docs/install-drill-introduction/"
@@ -2420,12 +2454,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Install Drill Introduction", 
-            "next_url": "/docs/install-drill-introduction/", 
+            "next_title": "Connect a Data Source", 
+            "next_url": "/docs/connect-a-data-source/", 
             "parent": "Install Drill", 
-            "previous_title": "Install Drill", 
-            "previous_url": "/docs/install-drill/", 
-            "relative_path": "_docs/install/004-installing-drill-in-distributed-mode.md", 
+            "previous_title": "Installing Drill on Windows", 
+            "previous_url": "/docs/installing-drill-on-windows/", 
+            "relative_path": "_docs/install/040-installing-drill-in-distributed-mode.md", 
             "title": "Installing Drill in Distributed Mode", 
             "url": "/docs/installing-drill-in-distributed-mode/"
         }, 
@@ -2491,8 +2525,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Connect to a Data Source", 
-                    "next_url": "/docs/connect-to-a-data-source/", 
+                    "next_title": "Installing Drill in Distributed Mode", 
+                    "next_url": "/docs/installing-drill-in-distributed-mode/", 
                     "parent": "Installing Drill in Embedded Mode", 
                     "previous_title": "Installing Drill on Mac OS X", 
                     "previous_url": "/docs/installing-drill-on-mac-os-x/", 
@@ -2564,8 +2598,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Connect to a Data Source", 
-            "next_url": "/docs/connect-to-a-data-source/", 
+            "next_title": "Installing Drill in Distributed Mode", 
+            "next_url": "/docs/installing-drill-in-distributed-mode/", 
             "parent": "Installing Drill in Embedded Mode", 
             "previous_title": "Installing Drill on Mac OS X", 
             "previous_url": "/docs/installing-drill-on-mac-os-x/", 
@@ -3147,17 +3181,17 @@
         "MapR-DB Format": {
             "breadcrumbs": [
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
             "next_title": "ODBC/JDBC Interfaces", 
             "next_url": "/docs/odbc-jdbc-interfaces/", 
-            "parent": "Connect to a Data Source", 
+            "parent": "Connect a Data Source", 
             "previous_title": "MongoDB Plugin for Apache Drill", 
             "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-            "relative_path": "_docs/connect/009-mapr-db-plugin.md", 
+            "relative_path": "_docs/connect/100-mapr-db-plugin.md", 
             "title": "MapR-DB Format", 
             "url": "/docs/mapr-db-format/"
         }, 
@@ -3185,17 +3219,17 @@
         "MongoDB Plugin for Apache Drill": {
             "breadcrumbs": [
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
             "next_title": "MapR-DB Format", 
             "next_url": "/docs/mapr-db-format/", 
-            "parent": "Connect to a Data Source", 
+            "parent": "Connect a Data Source", 
             "previous_title": "Drill Default Input Format", 
             "previous_url": "/docs/drill-default-input-format/", 
-            "relative_path": "_docs/connect/008-mongo-plugin.md", 
+            "relative_path": "_docs/connect/090-mongo-plugin.md", 
             "title": "MongoDB Plugin for Apache Drill", 
             "url": "/docs/mongodb-plugin-for-apache-drill/"
         }, 
@@ -6209,8 +6243,8 @@
         "Storage Plugin Configuration": {
             "breadcrumbs": [
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [
@@ -6221,8 +6255,8 @@
                             "url": "/docs/storage-plugin-configuration/"
                         }, 
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
@@ -6231,7 +6265,7 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Storage Plugin Configuration", 
                     "previous_url": "/docs/storage-plugin-configuration/", 
-                    "relative_path": "_docs/connect/003-workspaces.md", 
+                    "relative_path": "_docs/connect/040-workspaces.md", 
                     "title": "Workspaces", 
                     "url": "/docs/workspaces/"
                 }, 
@@ -6242,8 +6276,8 @@
                             "url": "/docs/storage-plugin-configuration/"
                         }, 
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
@@ -6252,7 +6286,7 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Workspaces", 
                     "previous_url": "/docs/workspaces/", 
-                    "relative_path": "_docs/connect/004-reg-fs.md", 
+                    "relative_path": "_docs/connect/050-reg-fs.md", 
                     "title": "File System Storage Plugin", 
                     "url": "/docs/file-system-storage-plugin/"
                 }, 
@@ -6263,8 +6297,8 @@
                             "url": "/docs/storage-plugin-configuration/"
                         }, 
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
@@ -6273,7 +6307,7 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "File System Storage Plugin", 
                     "previous_url": "/docs/file-system-storage-plugin/", 
-                    "relative_path": "_docs/connect/005-reg-hbase.md", 
+                    "relative_path": "_docs/connect/060-reg-hbase.md", 
                     "title": "HBase Storage Plugin", 
                     "url": "/docs/hbase-storage-plugin/"
                 }, 
@@ -6284,8 +6318,8 @@
                             "url": "/docs/storage-plugin-configuration/"
                         }, 
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
@@ -6294,7 +6328,7 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "HBase Storage Plugin", 
                     "previous_url": "/docs/hbase-storage-plugin/", 
-                    "relative_path": "_docs/connect/006-reg-hive.md", 
+                    "relative_path": "_docs/connect/070-reg-hive.md", 
                     "title": "Hive Storage Plugin", 
                     "url": "/docs/hive-storage-plugin/"
                 }, 
@@ -6305,8 +6339,8 @@
                             "url": "/docs/storage-plugin-configuration/"
                         }, 
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
@@ -6315,34 +6349,34 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Hive Storage Plugin", 
                     "previous_url": "/docs/hive-storage-plugin/", 
-                    "relative_path": "_docs/connect/007-default-frmt.md", 
+                    "relative_path": "_docs/connect/080-default-frmt.md", 
                     "title": "Drill Default Input Format", 
                     "url": "/docs/drill-default-input-format/"
                 }
             ], 
             "next_title": "Workspaces", 
             "next_url": "/docs/workspaces/", 
-            "parent": "Connect to a Data Source", 
+            "parent": "Connect a Data Source", 
             "previous_title": "Storage Plugin Registration", 
             "previous_url": "/docs/storage-plugin-registration/", 
-            "relative_path": "_docs/connect/002-plugin-conf.md", 
+            "relative_path": "_docs/connect/030-plugin-conf.md", 
             "title": "Storage Plugin Configuration", 
             "url": "/docs/storage-plugin-configuration/"
         }, 
         "Storage Plugin Registration": {
             "breadcrumbs": [
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
             "next_title": "Storage Plugin Configuration", 
             "next_url": "/docs/storage-plugin-configuration/", 
-            "parent": "Connect to a Data Source", 
-            "previous_title": "Connect to a Data Source", 
-            "previous_url": "/docs/connect-to-a-data-source/", 
-            "relative_path": "_docs/connect/001-plugin-reg.md", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "Connect a Data Source Introduction", 
+            "previous_url": "/docs/connect-a-data-source-introduction/", 
+            "relative_path": "_docs/connect/020-plugin-reg.md", 
             "title": "Storage Plugin Registration", 
             "url": "/docs/storage-plugin-registration/"
         }, 
@@ -7217,8 +7251,8 @@
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
                 {
-                    "title": "Connect to a Data Source", 
-                    "url": "/docs/connect-to-a-data-source/"
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
@@ -7227,7 +7261,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "Storage Plugin Configuration", 
             "previous_url": "/docs/storage-plugin-configuration/", 
-            "relative_path": "_docs/connect/003-workspaces.md", 
+            "relative_path": "_docs/connect/040-workspaces.md", 
             "title": "Workspaces", 
             "url": "/docs/workspaces/"
         }
@@ -7687,28 +7721,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill Introduction", 
-                    "next_url": "/docs/install-drill-introduction/", 
-                    "parent": "Install Drill", 
-                    "previous_title": "Install Drill", 
-                    "previous_url": "/docs/install-drill/", 
-                    "relative_path": "_docs/install/004-installing-drill-in-distributed-mode.md", 
-                    "title": "Installing Drill in Distributed Mode", 
-                    "url": "/docs/installing-drill-in-distributed-mode/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Install Drill", 
-                            "url": "/docs/install-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Deploying Apache Drill in a Clustered Environment", 
                     "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Installing Drill in Distributed Mode", 
-                    "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+                    "previous_title": "Install Drill", 
+                    "previous_url": "/docs/install-drill/", 
                     "relative_path": "_docs/install/010-install-drill-introduction.md", 
                     "title": "Install Drill Introduction", 
                     "url": "/docs/install-drill-introduction/"
@@ -7792,8 +7809,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Connect to a Data Source", 
-                            "next_url": "/docs/connect-to-a-data-source/", 
+                            "next_title": "Installing Drill in Distributed Mode", 
+                            "next_url": "/docs/installing-drill-in-distributed-mode/", 
                             "parent": "Installing Drill in Embedded Mode", 
                             "previous_title": "Installing Drill on Mac OS X", 
                             "previous_url": "/docs/installing-drill-on-mac-os-x/", 
@@ -7810,10 +7827,27 @@
                     "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
                     "title": "Installing Drill in Embedded Mode", 
                     "url": "/docs/installing-drill-in-embedded-mode/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Installing Drill on Windows", 
+                    "previous_url": "/docs/installing-drill-on-windows/", 
+                    "relative_path": "_docs/install/040-installing-drill-in-distributed-mode.md", 
+                    "title": "Installing Drill in Distributed Mode", 
+                    "url": "/docs/installing-drill-in-distributed-mode/"
                 }
             ], 
-            "next_title": "Installing Drill in Distributed Mode", 
-            "next_url": "/docs/installing-drill-in-distributed-mode/", 
+            "next_title": "Install Drill Introduction", 
+            "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
             "previous_title": "Lesson 3: Create a Storage Plugin", 
             "previous_url": "/docs/lesson-3-create-a-storage-plugin/", 
@@ -7827,25 +7861,42 @@
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Storage Plugin Registration", 
+                    "next_url": "/docs/storage-plugin-registration/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Connect a Data Source", 
+                    "previous_url": "/docs/connect-a-data-source/", 
+                    "relative_path": "_docs/connect/010-connect-a-data-source-introduction.md", 
+                    "title": "Connect a Data Source Introduction", 
+                    "url": "/docs/connect-a-data-source-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "Storage Plugin Configuration", 
                     "next_url": "/docs/storage-plugin-configuration/", 
-                    "parent": "Connect to a Data Source", 
-                    "previous_title": "Connect to a Data Source", 
-                    "previous_url": "/docs/connect-to-a-data-source/", 
-                    "relative_path": "_docs/connect/001-plugin-reg.md", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Connect a Data Source Introduction", 
+                    "previous_url": "/docs/connect-a-data-source-introduction/", 
+                    "relative_path": "_docs/connect/020-plugin-reg.md", 
                     "title": "Storage Plugin Registration", 
                     "url": "/docs/storage-plugin-registration/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [
@@ -7856,8 +7907,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -7866,7 +7917,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
-                            "relative_path": "_docs/connect/003-workspaces.md", 
+                            "relative_path": "_docs/connect/040-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
                         }, 
@@ -7877,8 +7928,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -7887,7 +7938,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Workspaces", 
                             "previous_url": "/docs/workspaces/", 
-                            "relative_path": "_docs/connect/004-reg-fs.md", 
+                            "relative_path": "_docs/connect/050-reg-fs.md", 
                             "title": "File System Storage Plugin", 
                             "url": "/docs/file-system-storage-plugin/"
                         }, 
@@ -7898,8 +7949,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -7908,7 +7959,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "File System Storage Plugin", 
                             "previous_url": "/docs/file-system-storage-plugin/", 
-                            "relative_path": "_docs/connect/005-reg-hbase.md", 
+                            "relative_path": "_docs/connect/060-reg-hbase.md", 
                             "title": "HBase Storage Plugin", 
                             "url": "/docs/hbase-storage-plugin/"
                         }, 
@@ -7919,8 +7970,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -7929,7 +7980,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "HBase Storage Plugin", 
                             "previous_url": "/docs/hbase-storage-plugin/", 
-                            "relative_path": "_docs/connect/006-reg-hive.md", 
+                            "relative_path": "_docs/connect/070-reg-hive.md", 
                             "title": "Hive Storage Plugin", 
                             "url": "/docs/hive-storage-plugin/"
                         }, 
@@ -7940,8 +7991,8 @@
                                     "url": "/docs/storage-plugin-configuration/"
                                 }, 
                                 {
-                                    "title": "Connect to a Data Source", 
-                                    "url": "/docs/connect-to-a-data-source/"
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
                                 }
                             ], 
                             "children": [], 
@@ -7950,63 +8001,63 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Hive Storage Plugin", 
                             "previous_url": "/docs/hive-storage-plugin/", 
-                            "relative_path": "_docs/connect/007-default-frmt.md", 
+                            "relative_path": "_docs/connect/080-default-frmt.md", 
                             "title": "Drill Default Input Format", 
                             "url": "/docs/drill-default-input-format/"
                         }
                     ], 
                     "next_title": "Workspaces", 
                     "next_url": "/docs/workspaces/", 
-                    "parent": "Connect to a Data Source", 
+                    "parent": "Connect a Data Source", 
                     "previous_title": "Storage Plugin Registration", 
                     "previous_url": "/docs/storage-plugin-registration/", 
-                    "relative_path": "_docs/connect/002-plugin-conf.md", 
+                    "relative_path": "_docs/connect/030-plugin-conf.md", 
                     "title": "Storage Plugin Configuration", 
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "MapR-DB Format", 
                     "next_url": "/docs/mapr-db-format/", 
-                    "parent": "Connect to a Data Source", 
+                    "parent": "Connect a Data Source", 
                     "previous_title": "Drill Default Input Format", 
                     "previous_url": "/docs/drill-default-input-format/", 
-                    "relative_path": "_docs/connect/008-mongo-plugin.md", 
+                    "relative_path": "_docs/connect/090-mongo-plugin.md", 
                     "title": "MongoDB Plugin for Apache Drill", 
                     "url": "/docs/mongodb-plugin-for-apache-drill/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Connect to a Data Source", 
-                            "url": "/docs/connect-to-a-data-source/"
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
                         }
                     ], 
                     "children": [], 
                     "next_title": "ODBC/JDBC Interfaces", 
                     "next_url": "/docs/odbc-jdbc-interfaces/", 
-                    "parent": "Connect to a Data Source", 
+                    "parent": "Connect a Data Source", 
                     "previous_title": "MongoDB Plugin for Apache Drill", 
                     "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                    "relative_path": "_docs/connect/009-mapr-db-plugin.md", 
+                    "relative_path": "_docs/connect/100-mapr-db-plugin.md", 
                     "title": "MapR-DB Format", 
                     "url": "/docs/mapr-db-format/"
                 }
             ], 
-            "next_title": "Storage Plugin Registration", 
-            "next_url": "/docs/storage-plugin-registration/", 
+            "next_title": "Connect a Data Source Introduction", 
+            "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Installing Drill on Windows", 
-            "previous_url": "/docs/installing-drill-on-windows/", 
+            "previous_title": "Installing Drill in Distributed Mode", 
+            "previous_url": "/docs/installing-drill-in-distributed-mode/", 
             "relative_path": "_docs/050-connect.md", 
-            "title": "Connect to a Data Source", 
-            "url": "/docs/connect-to-a-data-source/"
+            "title": "Connect a Data Source", 
+            "url": "/docs/connect-a-data-source/"
         }, 
         {
             "breadcrumbs": [], 

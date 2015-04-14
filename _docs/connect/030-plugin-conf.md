@@ -1,6 +1,6 @@
 ---
 title: "Storage Plugin Configuration"
-parent: "Connect to a Data Source"
+parent: "Connect a Data Source"
 ---
 When you add or update storage plugin instances on one Drill node in a Drill
 cluster, Drill broadcasts the information to all of the other Drill nodes 

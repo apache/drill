@@ -1,6 +1,6 @@
 ---
 title: "MapR-DB Format"
-parent: "Connect to a Data Source"
+parent: "Connect a Data Source"
 ---
 Drill includes a `maprdb` format plugin for accessing data stored in MapR-DB. The Drill Sandbox also includes the following `maprdb` format plugin on a MapR node:
 

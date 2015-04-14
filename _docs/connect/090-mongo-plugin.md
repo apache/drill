@@ -1,6 +1,6 @@
 ---
 title: "MongoDB Plugin for Apache Drill"
-parent: "Connect to a Data Source"
+parent: "Connect a Data Source"
 ---
 ## Overview
 
