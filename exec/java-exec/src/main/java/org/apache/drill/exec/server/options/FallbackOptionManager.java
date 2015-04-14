@@ -70,6 +70,10 @@ public abstract class FallbackOptionManager extends BaseOptionManager {
     }
   }
 
+  @Override
+  public OptionValue getDefault(final String name) {
+    return fallback.getDefault(name);
+  }
 
   @Override
   public OptionAdmin getAdmin() {

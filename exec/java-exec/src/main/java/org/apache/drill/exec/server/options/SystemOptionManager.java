@@ -163,6 +163,16 @@ public class SystemOptionManager extends BaseOptionManager {
   }
 
   @Override
+  public OptionValue getDefault(final String name) {
+    final OptionValidator validator = knownOptions.get(name);
+    if(validator == null) {
+      return null;
+    } else {
+      return validator.getDefault();
+    }
+  }
+
+  @Override
   public void setOption(final OptionValue value) {
     assert value.type == OptionType.SYSTEM;
     admin.validate(value);

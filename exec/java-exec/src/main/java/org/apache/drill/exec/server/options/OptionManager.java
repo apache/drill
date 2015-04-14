@@ -26,6 +26,7 @@ public interface OptionManager extends Iterable<OptionValue> {
   public OptionAdmin getAdmin();
   public OptionManager getSystemManager();
   public OptionList getOptionList();
+  public OptionValue getDefault(final String name);
 
   public boolean getOption(TypeValidators.BooleanValidator validator);
   public double getOption(TypeValidators.DoubleValidator validator);
