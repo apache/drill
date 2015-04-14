@@ -1,6 +1,6 @@
 ---
 title: "Lesson 2: Query Plain Text"
-parent: "Getting Started Tutorial"
+parent: "Query Basics Tutorial"
 ---
 The lesson shows you how to query a plain text file. Drill handles plain text
 files and directories like standard SQL tables and can infer knowledge about

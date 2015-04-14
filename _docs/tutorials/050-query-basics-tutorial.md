@@ -1,6 +1,6 @@
 ---
-title: "Getting Started Tutorial"
-parent: "Query Data"
+title: "Query Basics Tutorial"
+parent: "Tutorials"
 ---
 ## Goal
 
