@@ -9,7 +9,7 @@ If you've never used Drill, visit these links to get a jump start:
 * [Query Files]()
 * [Query HBase]()
 * [SQL Support]()
-* [Drill Tutorials]()
+* [Drill Tutorials]({{ site.baseurl }}/docs/tutorials-introduction)
 
 ## Videos
 
