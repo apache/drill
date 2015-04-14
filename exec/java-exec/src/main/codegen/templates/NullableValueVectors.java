@@ -476,8 +476,8 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
     <#if type.major == "VarLen">
     private void fillEmpties(int index){
-      for (int i = lastSet + 1; i < index; i++) {
-        values.getMutator().setSafe(i, new byte[]{});
+      for (int i = lastSet; i < index; i++) {
+        values.getMutator().setSafe(i+1, new byte[]{});
       }
       if (index > bits.getValueCapacity()) {
         bits.reAlloc();
