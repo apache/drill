@@ -23,7 +23,6 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import com.google.common.io.Files;
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaFactory;
 import net.hydromatic.avatica.Helper;
@@ -31,18 +30,13 @@ import net.hydromatic.avatica.Meta;
 import net.hydromatic.avatica.UnregisteredDriver;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.util.TestUtilities;
 
 // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
@@ -53,8 +47,9 @@ import org.apache.drill.exec.util.TestUtilities;
  * Abstract to allow newer versions of JDBC to add methods.
  * </p>
  */
-public abstract class DrillConnectionImpl extends AvaticaConnection implements DrillConnection {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
+public abstract class DrillConnectionImpl extends AvaticaConnection
+                                          implements DrillConnection {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
 
   final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
   final DrillConnectionConfig config;
@@ -63,18 +58,6 @@ public abstract class DrillConnectionImpl extends AvaticaConnection implements D
   private final BufferAllocator allocator;
   private Drillbit bit;
   private RemoteServiceSet serviceSet;
-
-  /**
-   * Throws AlreadyClosedSqlException if this Connection is closed.
-   *
-   * @throws AlreadyClosedSqlException if Connection is closed
-   * @throws SQLException if error in calling {@link #isClosed()}
-   */
-  private void checkNotClosed() throws SQLException {
-    if ( isClosed() ) {
-      throw new AlreadyClosedSqlException( "Connection is already closed." );
-    }
-  }
 
   protected DrillConnectionImpl(Driver driver, AvaticaFactory factory, String url, Properties info) throws SQLException {
     super(driver, factory, url, info);
@@ -127,6 +110,18 @@ public abstract class DrillConnectionImpl extends AvaticaConnection implements D
       }
     } catch (RpcException e) {
       throw new SQLException("Failure while attempting to connect to Drill: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Throws AlreadyClosedSqlException if this Connection is closed.
+   *
+   * @throws AlreadyClosedSqlException if Connection is closed
+   * @throws SQLException if error in calling {@link #isClosed()}
+   */
+  private void checkNotClosed() throws SQLException {
+    if ( isClosed() ) {
+      throw new AlreadyClosedSqlException( "Connection is already closed." );
     }
   }
 

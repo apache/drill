@@ -24,18 +24,27 @@ import java.sql.SQLException;
 import org.apache.drill.exec.client.DrillClient;
 
 
-public interface DrillConnection extends Connection{
+/**
+ * Drill-specific {@link Connection}.
+ * @see #unwrap
+ */
+public interface DrillConnection extends Connection {
 
-  // in java.sql.Connection from JDK 1.7, but declare here to allow other JDKs
+  // In java.sql.Connection from JDK 1.7, but declared here to allow other JDKs.
   void setSchema(String schema) throws SQLException;
 
-  // in java.sql.Connection from JDK 1.7, but declare here to allow other JDKs
+  // In java.sql.Connection from JDK 1.7, but declared here to allow other JDKs.
   String getSchema() throws SQLException;
+
+
+  //////////////////////////////////////////////////////////////////////
+  // Drill extensions.
 
   /** Returns a view onto this connection's configuration properties. Code
    * within Optiq should use this view rather than calling
    * {@link java.util.Properties#getProperty(String)}. */
   DrillConnectionConfig config();
 
-  public DrillClient getClient();
+  DrillClient getClient();
+
 }

@@ -168,7 +168,7 @@ public class MetaImpl implements Meta {
   }
 
   /**
-   * Implements @link DatabaseMetaData#getColumns()}.
+   * Implements {@link DatabaseMetaData#getColumns()}.
    */
   public ResultSet getColumns(String catalog, Pat schemaPattern,
                               Pat tableNamePattern, Pat columnNamePattern) {
