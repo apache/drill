@@ -2,6 +2,12 @@
 title: "Flexibility"
 parent: "Architectural Highlights"
 ---
+The Drill architecture brings the SQL Ecosystem and *Performance* of
+the relational systems to Hadoop scale data *without* compromising 
+the *flexibility* of Hadoop/NoSQL systems. There are several core
+architectural elements in Apache Drill that make it a highly flexible and
+efficient query engine.
+
 The following features contribute to Drill's flexible architecture:
 
 **_Dynamic schema discovery_**

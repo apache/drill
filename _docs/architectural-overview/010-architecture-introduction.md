@@ -1,5 +1,6 @@
 ---
-title: "Architectural Overview"
+title: "Architecture Introduction"
+parent: "Architectural Overview"
 ---
 Apache Drill is a low latency distributed query engine for large-scale
 datasets, including structured and semi-structured/nested data. Inspired by
