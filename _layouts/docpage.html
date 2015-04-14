@@ -3,7 +3,7 @@ layout: default
 title: Documentation
 ---
 {% include breadcrumbs.html %}
-{% include doc_toc_categories.html %}
+{% include doctoccategories.html %}
     
 <div class="int_title">
 <h1>{{ page.title }}</h1>
@@ -13,15 +13,30 @@ title: Documentation
 
 <link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
 
-{% include doc_toc.html %}
+{% include doctoc.html %}
 
 <div class="main-content">
   <div class="int_text" align="left">
     <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/{{ page.relative_path }}" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
-    {{ content }}
+    {% if page_data.children.size == 0 %}
+      {{ content }}
+    {% else %}
+      <ul>
+      {% for doc0 in page_data.children %}
+        <li><a href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
+        {% if doc0.children.size > 0 %}
+          <ul>
+          {% for doc1 in doc0.children %}
+            <li><a href="{{ site.baseurl }}{{ doc1.url }}">{{ doc1.title }}</a></li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+      {% endfor %}
+      </ul>
+    {% endif %}
   </div>
 </div>
 
-{% include doc_nav.html %}
+{% include docnav.html %}
 
 </div>

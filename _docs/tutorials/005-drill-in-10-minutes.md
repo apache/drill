@@ -3,19 +3,6 @@ title: "Drill in 10 Minutes"
 parent: "Tutorials"
 description: Get started with Drill in 10 minutes or less.
 ---
-* Objective
-* A Few Bits About Apache Drill
-* Process Overview
-* Install Drill
-  * Installing Drill on Linux
-  * Installing Drill on Mac OS X
-  * Installing Drill on Windows 
-* Start Drill 
-* Query Sample Data 
-* Summary 
-* Next Steps
-* More Information
-
 ## Objective
 
 Use Apache Drill to query sample data in 10 minutes. For simplicity, you’ll

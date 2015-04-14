@@ -46,8 +46,8 @@ def create_breadcrumbs(docs_in_order, docs_by_title):
             parent_title = parent.get('parent')
 
 if __name__ == '__main__':
-    input_path = '../_site/data/index.html'
-    output_path = '../_data/docs.json'
+    input_path = '_site/data/index.html'
+    output_path = '_data/docs.json'
 
     with open(input_path) as input_file:
         docs = json.load(input_file)
