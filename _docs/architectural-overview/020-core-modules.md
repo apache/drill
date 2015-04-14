@@ -1,5 +1,5 @@
 ---
-title: "Core Modules within a Drillbit"
+title: "Core Modules"
 parent: "Architectural Overview"
 ---
 The following image represents components within each Drillbit:

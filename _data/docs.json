@@ -321,7 +321,7 @@
                     "parent": "Architectural Highlights", 
                     "previous_title": "Architectural Highlights", 
                     "previous_url": "/docs/architectural-highlights/", 
-                    "relative_path": "_docs/arch/arch-hilite/001-flexibility.md", 
+                    "relative_path": "_docs/architectural-overview/architectural-highlights/010-flexibility.md", 
                     "title": "Flexibility", 
                     "url": "/docs/flexibility/"
                 }, 
@@ -342,7 +342,7 @@
                     "parent": "Architectural Highlights", 
                     "previous_title": "Flexibility", 
                     "previous_url": "/docs/flexibility/", 
-                    "relative_path": "_docs/arch/arch-hilite/002-performance.md", 
+                    "relative_path": "_docs/architectural-overview/architectural-highlights/020-performance.md", 
                     "title": "Performance", 
                     "url": "/docs/performance/"
                 }
@@ -350,9 +350,9 @@
             "next_title": "Flexibility", 
             "next_url": "/docs/flexibility/", 
             "parent": "Architectural Overview", 
-            "previous_title": "Core Modules within a Drillbit", 
-            "previous_url": "/docs/core-modules-within-a-drillbit/", 
-            "relative_path": "_docs/arch/002-arch-hilite.md", 
+            "previous_title": "Core Modules", 
+            "previous_url": "/docs/core-modules/", 
+            "relative_path": "_docs/architectural-overview/030-architectural-highlights.md", 
             "title": "Architectural Highlights", 
             "url": "/docs/architectural-highlights/"
         }, 
@@ -367,14 +367,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Architectural Highlights", 
-                    "next_url": "/docs/architectural-highlights/", 
+                    "next_title": "Core Modules", 
+                    "next_url": "/docs/core-modules/", 
                     "parent": "Architectural Overview", 
                     "previous_title": "Architectural Overview", 
                     "previous_url": "/docs/architectural-overview/", 
-                    "relative_path": "_docs/arch/001-core-mod.md", 
-                    "title": "Core Modules within a Drillbit", 
-                    "url": "/docs/core-modules-within-a-drillbit/"
+                    "relative_path": "_docs/architectural-overview/010-architecture-introduction.md", 
+                    "title": "Architecture Introduction", 
+                    "url": "/docs/architecture-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Architectural Overview", 
+                            "url": "/docs/architectural-overview/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Architectural Highlights", 
+                    "next_url": "/docs/architectural-highlights/", 
+                    "parent": "Architectural Overview", 
+                    "previous_title": "Architecture Introduction", 
+                    "previous_url": "/docs/architecture-introduction/", 
+                    "relative_path": "_docs/architectural-overview/020-core-modules.md", 
+                    "title": "Core Modules", 
+                    "url": "/docs/core-modules/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -401,7 +418,7 @@
                             "parent": "Architectural Highlights", 
                             "previous_title": "Architectural Highlights", 
                             "previous_url": "/docs/architectural-highlights/", 
-                            "relative_path": "_docs/arch/arch-hilite/001-flexibility.md", 
+                            "relative_path": "_docs/architectural-overview/architectural-highlights/010-flexibility.md", 
                             "title": "Flexibility", 
                             "url": "/docs/flexibility/"
                         }, 
@@ -422,7 +439,7 @@
                             "parent": "Architectural Highlights", 
                             "previous_title": "Flexibility", 
                             "previous_url": "/docs/flexibility/", 
-                            "relative_path": "_docs/arch/arch-hilite/002-performance.md", 
+                            "relative_path": "_docs/architectural-overview/architectural-highlights/020-performance.md", 
                             "title": "Performance", 
                             "url": "/docs/performance/"
                         }
@@ -430,21 +447,38 @@
                     "next_title": "Flexibility", 
                     "next_url": "/docs/flexibility/", 
                     "parent": "Architectural Overview", 
-                    "previous_title": "Core Modules within a Drillbit", 
-                    "previous_url": "/docs/core-modules-within-a-drillbit/", 
-                    "relative_path": "_docs/arch/002-arch-hilite.md", 
+                    "previous_title": "Core Modules", 
+                    "previous_url": "/docs/core-modules/", 
+                    "relative_path": "_docs/architectural-overview/030-architectural-highlights.md", 
                     "title": "Architectural Highlights", 
                     "url": "/docs/architectural-highlights/"
                 }
             ], 
-            "next_title": "Core Modules within a Drillbit", 
-            "next_url": "/docs/core-modules-within-a-drillbit/", 
+            "next_title": "Architecture Introduction", 
+            "next_url": "/docs/architecture-introduction/", 
             "parent": "", 
             "previous_title": "", 
             "previous_url": "", 
-            "relative_path": "_docs/001-arch.md", 
+            "relative_path": "_docs/001-architectural-overview.md", 
             "title": "Architectural Overview", 
             "url": "/docs/architectural-overview/"
+        }, 
+        "Architecture Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Architectural Overview", 
+                    "url": "/docs/architectural-overview/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Core Modules", 
+            "next_url": "/docs/core-modules/", 
+            "parent": "Architectural Overview", 
+            "previous_title": "Architectural Overview", 
+            "previous_url": "/docs/architectural-overview/", 
+            "relative_path": "_docs/architectural-overview/010-architecture-introduction.md", 
+            "title": "Architecture Introduction", 
+            "url": "/docs/architecture-introduction/"
         }, 
         "Archived Pages": {
             "breadcrumbs": [], 
@@ -947,7 +981,7 @@
             "title": "Contribute to Drill", 
             "url": "/docs/contribute-to-drill/"
         }, 
-        "Core Modules within a Drillbit": {
+        "Core Modules": {
             "breadcrumbs": [
                 {
                     "title": "Architectural Overview", 
@@ -958,11 +992,11 @@
             "next_title": "Architectural Highlights", 
             "next_url": "/docs/architectural-highlights/", 
             "parent": "Architectural Overview", 
-            "previous_title": "Architectural Overview", 
-            "previous_url": "/docs/architectural-overview/", 
-            "relative_path": "_docs/arch/001-core-mod.md", 
-            "title": "Core Modules within a Drillbit", 
-            "url": "/docs/core-modules-within-a-drillbit/"
+            "previous_title": "Architecture Introduction", 
+            "previous_url": "/docs/architecture-introduction/", 
+            "relative_path": "_docs/architectural-overview/020-core-modules.md", 
+            "title": "Core Modules", 
+            "url": "/docs/core-modules/"
         }, 
         "Custom Function Interfaces": {
             "breadcrumbs": [
@@ -2009,7 +2043,7 @@
             "parent": "Architectural Highlights", 
             "previous_title": "Architectural Highlights", 
             "previous_url": "/docs/architectural-highlights/", 
-            "relative_path": "_docs/arch/arch-hilite/001-flexibility.md", 
+            "relative_path": "_docs/architectural-overview/architectural-highlights/010-flexibility.md", 
             "title": "Flexibility", 
             "url": "/docs/flexibility/"
         }, 
@@ -3670,7 +3704,7 @@
             "parent": "Architectural Highlights", 
             "previous_title": "Flexibility", 
             "previous_url": "/docs/flexibility/", 
-            "relative_path": "_docs/arch/arch-hilite/002-performance.md", 
+            "relative_path": "_docs/architectural-overview/architectural-highlights/020-performance.md", 
             "title": "Performance", 
             "url": "/docs/performance/"
         }, 
@@ -7061,14 +7095,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Architectural Highlights", 
-                    "next_url": "/docs/architectural-highlights/", 
+                    "next_title": "Core Modules", 
+                    "next_url": "/docs/core-modules/", 
                     "parent": "Architectural Overview", 
                     "previous_title": "Architectural Overview", 
                     "previous_url": "/docs/architectural-overview/", 
-                    "relative_path": "_docs/arch/001-core-mod.md", 
-                    "title": "Core Modules within a Drillbit", 
-                    "url": "/docs/core-modules-within-a-drillbit/"
+                    "relative_path": "_docs/architectural-overview/010-architecture-introduction.md", 
+                    "title": "Architecture Introduction", 
+                    "url": "/docs/architecture-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Architectural Overview", 
+                            "url": "/docs/architectural-overview/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Architectural Highlights", 
+                    "next_url": "/docs/architectural-highlights/", 
+                    "parent": "Architectural Overview", 
+                    "previous_title": "Architecture Introduction", 
+                    "previous_url": "/docs/architecture-introduction/", 
+                    "relative_path": "_docs/architectural-overview/020-core-modules.md", 
+                    "title": "Core Modules", 
+                    "url": "/docs/core-modules/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7095,7 +7146,7 @@
                             "parent": "Architectural Highlights", 
                             "previous_title": "Architectural Highlights", 
                             "previous_url": "/docs/architectural-highlights/", 
-                            "relative_path": "_docs/arch/arch-hilite/001-flexibility.md", 
+                            "relative_path": "_docs/architectural-overview/architectural-highlights/010-flexibility.md", 
                             "title": "Flexibility", 
                             "url": "/docs/flexibility/"
                         }, 
@@ -7116,7 +7167,7 @@
                             "parent": "Architectural Highlights", 
                             "previous_title": "Flexibility", 
                             "previous_url": "/docs/flexibility/", 
-                            "relative_path": "_docs/arch/arch-hilite/002-performance.md", 
+                            "relative_path": "_docs/architectural-overview/architectural-highlights/020-performance.md", 
                             "title": "Performance", 
                             "url": "/docs/performance/"
                         }
@@ -7124,19 +7175,19 @@
                     "next_title": "Flexibility", 
                     "next_url": "/docs/flexibility/", 
                     "parent": "Architectural Overview", 
-                    "previous_title": "Core Modules within a Drillbit", 
-                    "previous_url": "/docs/core-modules-within-a-drillbit/", 
-                    "relative_path": "_docs/arch/002-arch-hilite.md", 
+                    "previous_title": "Core Modules", 
+                    "previous_url": "/docs/core-modules/", 
+                    "relative_path": "_docs/architectural-overview/030-architectural-highlights.md", 
                     "title": "Architectural Highlights", 
                     "url": "/docs/architectural-highlights/"
                 }
             ], 
-            "next_title": "Core Modules within a Drillbit", 
-            "next_url": "/docs/core-modules-within-a-drillbit/", 
+            "next_title": "Architecture Introduction", 
+            "next_url": "/docs/architecture-introduction/", 
             "parent": "", 
             "previous_title": "", 
             "previous_url": "", 
-            "relative_path": "_docs/001-arch.md", 
+            "relative_path": "_docs/001-architectural-overview.md", 
             "title": "Architectural Overview", 
             "url": "/docs/architectural-overview/"
         }, 
