@@ -34,7 +34,15 @@ bin=`cd "$bin">/dev/null; pwd`
 
 . "$bin"/drill-config.sh
 
+# Override SQLLine's default initial transaction isolation level.  (SQLLine
+# sets an initial level instead of leaving it at whatever the Driver's default
+# is.) 
+# Put our property specification before previous value of DRILL_SHELL_JAVA_OPTS
+# so that it can still be overridden via DRILL_SHELL_JAVA_OPTS.
+DRILL_SHELL_JAVA_OPTS="-Dsqlline.isolation=TRANSACTION_NONE $DRILL_SHELL_JAVA_OPTS"
+
 DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/sqlline.log"
+
 
 if [ -n "$QUERY" ] ; then
   echo $QUERY | exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver  --maxWidth=10000 "${ARGS[@]}"
