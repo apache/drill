@@ -89,7 +89,7 @@ class FixedByteAlignedReader extends ColumnReader {
       // now we need to write the lengths of each value
       int byteLength = dataTypeLengthInBits / 8;
       for (int i = 0; i < recordsToReadInThisPass; i++) {
-        castedVector.getMutator().setValueLengthSafe(i, byteLength);
+        castedVector.getMutator().setValueLengthSafe(valuesReadInCurrentPass + i, byteLength);
       }
     }
 

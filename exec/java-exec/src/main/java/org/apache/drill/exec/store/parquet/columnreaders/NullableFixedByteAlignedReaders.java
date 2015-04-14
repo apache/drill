@@ -27,7 +27,6 @@ import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.IntervalVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableDateVector;
 import org.apache.drill.exec.vector.NullableDecimal18Vector;
@@ -40,6 +39,7 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableIntervalVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableTimeVector;
+import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTimeUtils;
 
@@ -65,6 +65,45 @@ public class NullableFixedByteAlignedReaders {
 
       // fill in data.
       vectorData.writeBytes(bytebuf, (int) readStartInBytes, (int) readLength);
+    }
+  }
+
+  /**
+   * Class for reading the fixed length byte array type in parquet. Currently Drill does not have
+   * a fixed length binary type, so this is read into a varbinary with the same size recorded for
+   * each value.
+   */
+  static class NullableFixedBinaryReader extends NullableFixedByteAlignedReader {
+
+    NullableVarBinaryVector castedVector;
+
+    NullableFixedBinaryReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarBinaryVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      castedVector = v;
+    }
+
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      this.bytebuf = pageReader.pageData;
+
+      if (usingDictionary) {
+        NullableVarBinaryVector.Mutator mutator =  castedVector.getMutator();
+        Binary currDictValToWrite;
+        for (int i = 0; i < recordsReadInThisIteration; i++){
+          currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+          mutator.setSafe(valuesReadInCurrentPass + i, currDictValToWrite.toByteBuffer(), 0,
+              currDictValToWrite.length());
+        }
+      } else {
+        super.readField(recordsToReadInThisPass);
+        // TODO - replace this with fixed binary type in drill
+        // for now we need to write the lengths of each value
+        int byteLength = dataTypeLengthInBits / 8;
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
+          castedVector.getMutator().setValueLengthSafe(valuesReadInCurrentPass + i, byteLength);
+        }
+      }
     }
   }
 

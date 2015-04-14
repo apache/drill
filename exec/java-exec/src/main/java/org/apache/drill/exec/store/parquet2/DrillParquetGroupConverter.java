@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -44,10 +43,10 @@ import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -66,7 +65,6 @@ import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
 import org.apache.drill.exec.vector.complex.writer.TimeWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
-import org.apache.drill.exec.work.ExecErrorConstants;
 import org.joda.time.DateTimeUtils;
 
 import parquet.io.api.Binary;
@@ -206,6 +204,13 @@ public class DrillParquetGroupConverter extends GroupConverter {
           }
         }
       }
+      case INT96: {
+        if (type.getOriginalType() == null) {
+          VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
+          return new DrillFixedBinaryToVarbinaryConverter(writer, ParquetRecordReader.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
+        }
+
+      }
       case FLOAT: {
         Float4Writer writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).float4() : mapWriter.float4(name);
         return new DrillFloat4Converter(writer);
@@ -261,9 +266,9 @@ public class DrillParquetGroupConverter extends GroupConverter {
               : mapWriter.interval(name);
           return new DrillFixedLengthByteArrayToInterval(writer);
 
-        }
-        else {
-          throw new UnsupportedOperationException("Unsupported type " + type.getOriginalType());
+        } else {
+          VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
+          return new DrillFixedBinaryToVarbinaryConverter(writer, type.getTypeLength(), mutator.getManagedBuffer());
         }
       default:
         throw new UnsupportedOperationException("Unsupported type: " + type.getPrimitiveTypeName());
@@ -538,6 +543,27 @@ public class DrillParquetGroupConverter extends GroupConverter {
       holder.months = ParquetReaderUtility.getIntFromLEBytes(input, 0);
       holder.days = ParquetReaderUtility.getIntFromLEBytes(input, 4);
       holder.milliseconds = ParquetReaderUtility.getIntFromLEBytes(input, 8);
+      writer.write(holder);
+    }
+  }
+  /**
+   * Parquet currently supports a fixed binary type, which is not implemented in Drill. For now this
+   * data will be read in a s varbinary and the same length will be recorded for each value.
+   */
+  public static class DrillFixedBinaryToVarbinaryConverter extends PrimitiveConverter {
+    private VarBinaryWriter writer;
+    private VarBinaryHolder holder = new VarBinaryHolder();
+
+    public DrillFixedBinaryToVarbinaryConverter(VarBinaryWriter writer, int length, DrillBuf buf) {
+      this.writer = writer;
+      holder.buffer = buf = buf.reallocIfNeeded(length);
+      holder.start = 0;
+      holder.end = length;
+    }
+
+    @Override
+    public void addBinary(Binary value) {
+      holder.buffer.setBytes(0, value.toByteBuffer());
       writer.write(holder);
     }
   }

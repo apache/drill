@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.Decimal18Vector;
@@ -24,12 +25,15 @@ import org.apache.drill.exec.vector.Decimal9Vector;
 import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.TimeStampVector;
 import org.apache.drill.exec.vector.TimeVector;
 
+import org.apache.drill.exec.vector.VarBinaryVector;
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
+import parquet.io.api.Binary;
 
 public class ParquetFixedWidthDictionaryReaders {
 
@@ -55,6 +59,45 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++){
           castedVector.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
         }
+      }
+    }
+  }
+
+  static class DictionaryFixedBinaryReader extends FixedByteAlignedReader {
+
+    VarBinaryVector castedVector;
+
+    DictionaryFixedBinaryReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                        ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarBinaryVector v,
+                        SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      castedVector = v;
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+
+      recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+          - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+
+      if (usingDictionary) {
+        VarBinaryVector.Mutator mutator =  castedVector.getMutator();
+        Binary currDictValToWrite = null;
+        for (int i = 0; i < recordsReadInThisIteration; i++){
+          currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+          mutator.setSafe(i, currDictValToWrite.toByteBuffer(), 0,
+              currDictValToWrite.length());
+        }
+      } else {
+        super.readField(recordsToReadInThisPass);
+      }
+
+      // TODO - replace this with fixed binary type in drill
+      // now we need to write the lengths of each value
+      int byteLength = dataTypeLengthInBits / 8;
+      for (int i = 0; i < recordsToReadInThisPass; i++) {
+        castedVector.getMutator().setValueLengthSafe(i, byteLength);
       }
     }
   }

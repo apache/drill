@@ -38,15 +38,19 @@ import parquet.bytes.BytesInput;
 import parquet.column.ColumnDescriptor;
 import parquet.column.page.DataPage;
 import parquet.column.page.DataPageV1;
+import parquet.column.page.DataPageV2;
 import parquet.column.page.DictionaryPage;
 import parquet.column.page.PageReadStore;
 import parquet.column.page.PageReader;
+import parquet.format.DataPageHeaderV2;
 import parquet.format.PageHeader;
 import parquet.format.Util;
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactory.BytesDecompressor;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.util.CompatibilityUtil;
+
+import static parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
 
 
 public class ColumnChunkIncReadStore implements PageReadStore {
@@ -141,6 +145,8 @@ public class ColumnChunkIncReadStore implements PageReadStore {
         }
         while(valueReadSoFar < metaData.getValueCount()) {
           pageHeader = Util.readPageHeader(in);
+          int uncompressedPageSize = pageHeader.getUncompressed_page_size();
+          int compressedPageSize = pageHeader.getCompressed_page_size();
           switch (pageHeader.type) {
             case DICTIONARY_PAGE:
               if (dictionaryPage == null) {
@@ -166,11 +172,42 @@ public class ColumnChunkIncReadStore implements PageReadStore {
                       decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
                       pageHeader.data_page_header.num_values,
                       pageHeader.uncompressed_page_size,
-                      ParquetMetadataConverter.fromParquetStatistics(pageHeader.data_page_header.statistics, columnDescriptor.getType()),
+                      fromParquetStatistics(pageHeader.data_page_header.statistics, columnDescriptor.getType()),
                       parquetMetadataConverter.getEncoding(pageHeader.data_page_header.repetition_level_encoding),
                       parquetMetadataConverter.getEncoding(pageHeader.data_page_header.definition_level_encoding),
                       parquetMetadataConverter.getEncoding(pageHeader.data_page_header.encoding)
               );
+            // TODO - finish testing this with more files
+            case DATA_PAGE_V2:
+              valueReadSoFar += pageHeader.data_page_header_v2.getNum_values();
+              buf = allocator.buffer(pageHeader.compressed_page_size);
+              lastPage = buf;
+              buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
+              while (buffer.remaining() > 0) {
+                CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
+              }
+              DataPageHeaderV2 dataHeaderV2 = pageHeader.getData_page_header_v2();
+              int dataSize = compressedPageSize - dataHeaderV2.getRepetition_levels_byte_length() - dataHeaderV2.getDefinition_levels_byte_length();
+              BytesInput decompressedPageData =
+                  decompressor.decompress(
+                      BytesInput.from(buffer, 0, pageHeader.compressed_page_size),
+                      pageHeader.uncompressed_page_size);
+              return new DataPageV2(
+                      dataHeaderV2.getNum_rows(),
+                      dataHeaderV2.getNum_nulls(),
+                      dataHeaderV2.getNum_values(),
+                      BytesInput.from(decompressedPageData.toByteBuffer(), 0, dataHeaderV2.getRepetition_levels_byte_length()),
+                      BytesInput.from(decompressedPageData.toByteBuffer(),
+                          dataHeaderV2.getRepetition_levels_byte_length(),
+                          dataHeaderV2.getDefinition_levels_byte_length()),
+                      parquetMetadataConverter.getEncoding(dataHeaderV2.getEncoding()),
+                      BytesInput.from(decompressedPageData.toByteBuffer(),
+                          dataHeaderV2.getRepetition_levels_byte_length() + dataHeaderV2.getDefinition_levels_byte_length(),
+                          dataSize),
+                      uncompressedPageSize,
+                      fromParquetStatistics(dataHeaderV2.getStatistics(), columnDescriptor.getType()),
+                      dataHeaderV2.isIs_compressed()
+                  );
             default:
               in.skip(pageHeader.compressed_page_size);
               break;
