@@ -22,8 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillUserException;
-import org.apache.drill.common.exceptions.ErrorHelper;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -43,7 +42,7 @@ public class PrintingResultsListener implements UserResultsListener {
   Format format;
   int    columnWidth;
   BufferAllocator allocator;
-  volatile DrillUserException exception;
+  volatile UserException exception;
   QueryId queryId;
 
   public PrintingResultsListener(DrillConfig config, Format format, int columnWidth) {
@@ -54,7 +53,7 @@ public class PrintingResultsListener implements UserResultsListener {
   }
 
   @Override
-  public void submissionFailed(DrillUserException ex) {
+  public void submissionFailed(UserException ex) {
     exception = ex;
     System.out.println("Exception (no rows returned): " + ex );
     latch.countDown();
@@ -77,7 +76,7 @@ public class PrintingResultsListener implements UserResultsListener {
       try {
         loader.load(header.getDef(), data);
       } catch (SchemaChangeException e) {
-        submissionFailed(ErrorHelper.wrap(e));
+        submissionFailed(UserException.systemError(e).build());
       }
 
       switch(format) {

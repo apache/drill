@@ -23,11 +23,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Test various use cases around creating user exceptions
+ * Test various use cases when creating user exceptions
  */
-public class TestDrillUserException {
+public class TestUserException {
 
-  private Exception wrap(DrillUserException uex, int numWraps) {
+  private Exception wrap(UserException uex, int numWraps) {
     Exception ex = uex;
     for (int i = 0; i < numWraps; i++) {
       ex = new Exception("wrap #" + (i+1), ex);
@@ -39,19 +39,21 @@ public class TestDrillUserException {
   // make sure system exceptions are created properly
   @Test
   public void testBuildSystemException() {
-    try {
-      throw new DrillUserException.Builder(new RuntimeException("this is an exception")).build();
-    } catch (DrillUserException ex) {
-      DrillPBError error = ex.getOrCreatePBError(true);
-      Assert.assertEquals(ErrorType.SYSTEM, error.getErrorType());
-    }
+    String message = "This is an exception";
+    UserException uex = UserException.systemError(new RuntimeException(message)).build();
+
+    Assert.assertEquals(message, uex.getOriginalMessage());
+
+    DrillPBError error = uex.getOrCreatePBError(true);
+
+    Assert.assertEquals(ErrorType.SYSTEM, error.getErrorType());
   }
 
   @Test
   public void testBuildUserExceptionWithMessage() {
     String message = "Test message";
 
-    DrillUserException uex = new DrillUserException.Builder(ErrorType.DATA_WRITE, message).build();
+    UserException uex = UserException.dataWriteError().message(message).build();
     DrillPBError error = uex.getOrCreatePBError(false);
 
     Assert.assertEquals(ErrorType.DATA_WRITE, error.getErrorType());
@@ -62,7 +64,7 @@ public class TestDrillUserException {
   public void testBuildUserExceptionWithCause() {
     String message = "Test message";
 
-    DrillUserException uex = new DrillUserException.Builder(ErrorType.DATA_WRITE, new RuntimeException(message)).build();
+    UserException uex = UserException.dataWriteError(new RuntimeException(message)).build();
     DrillPBError error = uex.getOrCreatePBError(false);
 
     // cause message should be used
@@ -75,7 +77,7 @@ public class TestDrillUserException {
     String messageA = "Test message A";
     String messageB = "Test message B";
 
-    DrillUserException uex = new DrillUserException.Builder(ErrorType.DATA_WRITE, new RuntimeException(messageA), messageB).build();
+    UserException uex = UserException.dataWriteError(new RuntimeException(messageA)).message(messageB).build();
     DrillPBError error = uex.getOrCreatePBError(false);
 
     // passed message should override the cause message
@@ -89,22 +91,22 @@ public class TestDrillUserException {
     String messageA = "Test message A";
     String messageB = "Test message B";
 
-    DrillUserException original = new DrillUserException.Builder(ErrorType.CONNECTION, messageA).build();
-    DrillUserException uex = new DrillUserException.Builder(ErrorType.DATA_WRITE, wrap(original, 5), messageB).build();
+    UserException original = UserException.connectionError().message(messageA).build();
+    UserException uex = UserException.dataWriteError(wrap(original, 5)).message(messageB).build();
 
     //builder should return the unwrapped original user exception and not build a new one
     Assert.assertEquals(original, uex);
 
     DrillPBError error = uex.getOrCreatePBError(false);
     Assert.assertEquals(messageA, uex.getOriginalMessage());
-    Assert.assertTrue(error.getMessage().contains(messageB)); // messageA should be part of the context
+    Assert.assertFalse(error.getMessage().contains(messageB)); // messageB should not be part of the context
   }
 
   @Test
   public void testBuildUserExceptionWithFormattedMessage() {
     String format = "This is test #%d";
 
-    DrillUserException uex = new DrillUserException.Builder(ErrorType.CONNECTION, format, 5).build();
+    UserException uex = UserException.connectionError().message(format, 5).build();
     DrillPBError error = uex.getOrCreatePBError(false);
 
     Assert.assertEquals(ErrorType.CONNECTION, error.getErrorType());
@@ -114,17 +116,10 @@ public class TestDrillUserException {
   // make sure wrapped user exceptions are retrieved properly when calling ErrorHelper.wrap()
   @Test
   public void testWrapUserException() {
-    DrillUserException uex = new DrillUserException.Builder(ErrorType.DATA_READ, "this is a data read exception").build();
+    UserException uex = UserException.dataReadError().message("this is a data read exception").build();
 
     Exception wrapped = wrap(uex, 3);
-    Assert.assertEquals(uex, ErrorHelper.wrap(wrapped));
+    Assert.assertEquals(uex, UserException.systemError(wrapped).build());
   }
 
-  @Test
-  public void testEdgeCases() {
-    new DrillUserException.Builder(null).build();
-    new DrillUserException.Builder(ErrorType.DATA_WRITE, null).build().getOrCreatePBError(true);
-    new DrillUserException.Builder(ErrorType.DATA_WRITE, null).build().getOrCreatePBError(true);
-    new DrillUserException.Builder(ErrorType.DATA_WRITE, new RuntimeException(), null).build().getOrCreatePBError(true);
-  }
 }

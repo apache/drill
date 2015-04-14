@@ -24,11 +24,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Holds context information about a DrillUserException. We can add structured context information that will be used
- * to generate the error message displayed to the client. We can also specify which context information should only
- * be displayed in verbose mode
+ * Holds context information about a DrillUserException. We can add structured context information that will added
+ * to the error message displayed to the client.
  */
-public class UserExceptionContext {
+class UserExceptionContext {
 
   private final String errorId;
   private final List<String> contextList;
@@ -40,73 +39,86 @@ public class UserExceptionContext {
     contextList = new ArrayList<>();
   }
 
-  UserExceptionContext(UserExceptionContext context) {
-    this.errorId = context.errorId;
-    this.contextList = context.contextList;
-    this.endpoint = context.endpoint;
-  }
   /**
-   * adds a context line to the bottom of the context list
-   * @param context context line
+   * adds a string to the bottom of the context list
+   * @param context context string
    */
-  public UserExceptionContext add(String context) {
+  void add(String context) {
     contextList.add(context);
-    return this;
-  }
-
-  public UserExceptionContext add(CoordinationProtos.DrillbitEndpoint endpoint) {
-    //TODO should we allos the endpoint to change once set ?
-    this.endpoint = endpoint;
-    return this;
   }
 
   /**
-   * adds an int to the bottom of the context list
-   * @param context context prefix string
-   * @param value int value
+   * add DrillbitEndpoint identity to the context.
+   * <p>if the context already has a drillbitEndpoint identity, the new identity will be ignored
+   *
+   * @param endpoint drillbit endpoint identity
    */
-  public UserExceptionContext add(String context, long value) {
-    add(context + ": " + value);
-    return this;
+  void add(CoordinationProtos.DrillbitEndpoint endpoint) {
+    if (this.endpoint == null) {
+      this.endpoint = endpoint;
+    }
+  }
+
+  /**
+   * adds a sring value to the bottom of the context list
+   * @param context context name
+   * @param value context value
+   */
+  void add(String context, String value) {
+    add(context + " " + value);
+  }
+
+  /**
+   * adds a long value to the bottom of the context list
+   * @param context context name
+   * @param value context value
+   */
+  void add(String context, long value) {
+    add(context + " " + value);
   }
 
   /**
    * adds a double to the bottom of the context list
-   * @param context context prefix string
-   * @param value double value
+   * @param context context name
+   * @param value context value
    */
-  public UserExceptionContext add(String context, double value) {
-    add(context + ": " + value);
-    return this;
+  void add(String context, double value) {
+    add(context + " " + value);
   }
 
   /**
-   * adds a context line at the top of the context list
-   * @param context context line
+   * pushes a string to the top of the context list
+   * @param context context string
    */
-  public UserExceptionContext push(String context) {
+  void push(String context) {
     contextList.add(0, context);
-    return this;
   }
 
   /**
-   * adds an int at the top of the context list
-   * @param context context prefix string
-   * @param value int value
+   * pushes a string value to the top of the context list
+   * @param context context name
+   * @param value context value
    */
-  public UserExceptionContext push(String context, long value) {
-    push(context + ": " + value);
-    return this;
+  void push(String context, String value) {
+    push(context + " " + value);
+  }
+
+  /**
+   * pushes a long value to the top of the context list
+   * @param context context name
+   * @param value context value
+   */
+  void push(String context, long value) {
+    push(context + " " + value);
   }
 
   /**
    * adds a double at the top of the context list
-   * @param context context prefix string
-   * @param value double value
+   * @param context context name
+   * @param value context value
    */
-  public UserExceptionContext push(String context, double value) {
-    push(context + ": " + value);
-    return this;
+  void push(String context, double value) {
+    push(context + " " + value);
   }
 
   String getErrorId() {
@@ -128,20 +140,16 @@ public class UserExceptionContext {
       sb.append(context).append("\n");
     }
 
-    if (errorId != null || endpoint != null) {
-      // add identification infos
-      sb.append("\n[");
-      if (errorId != null) {
-        sb.append(errorId).append(" ");
-      }
-      if(endpoint != null) {
-        sb.append("on ")
-          .append(endpoint.getAddress())
-          .append(":")
-          .append(endpoint.getUserPort());
-      }
-      sb.append("]\n");
+    // add identification infos
+    sb.append("\n[");
+    sb.append(errorId).append(" ");
+    if(endpoint != null) {
+      sb.append("on ")
+        .append(endpoint.getAddress())
+        .append(":")
+        .append(endpoint.getUserPort());
     }
+    sb.append("]");
 
     return sb.toString();
   }

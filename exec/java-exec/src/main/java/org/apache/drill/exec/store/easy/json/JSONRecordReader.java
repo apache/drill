@@ -21,7 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.DrillUserException;
+import com.google.common.collect.ImmutableList;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
@@ -148,7 +148,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     }
   }
 
-  protected void handleAndRaise(final String suffix, final Exception e) throws DrillUserException {
+  protected void handleAndRaise(String suffix, Exception e) throws UserException {
 
     String message = e.getMessage();
     int columnNr = -1;
@@ -159,16 +159,12 @@ public class JSONRecordReader extends AbstractRecordReader {
       columnNr = ex.getLocation().getColumnNr();
     }
 
-    final DrillUserException.Builder builder = new DrillUserException.Builder(ErrorType.DATA_READ, e, "%s - %s", suffix, message);
-
-    // add context information
-    builder.add("Filename: " + hadoopPath.toUri().getPath());
-    builder.add("Record", recordCount + 1);
-    if (columnNr != -1) {
-      builder.add("Column", columnNr);
-    }
-
-    throw builder.build();
+    throw UserException.dataReadError(e)
+      .message("%s - %s", suffix, message)
+      .addContext("Filename", hadoopPath.toUri().getPath())
+      .addContext("Record", recordCount + 1)
+      .addContext("Column", columnNr)
+      .build();
   }
 
 

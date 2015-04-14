@@ -1953,84 +1953,196 @@ public final class UserBitShared {
         implements com.google.protobuf.ProtocolMessageEnum {
       /**
        * <code>CONNECTION = 0;</code>
+       *
+       * <pre>
+       * equivalent to SQLClientInfoException
+       * - handshake version error
+       * - invalid schema
+       * </pre>
        */
       CONNECTION(0, 0),
       /**
        * <code>DATA_READ = 1;</code>
+       *
+       * <pre>
+       * equivalent to SQLRecoverableException
+       * - corrupt files: can't be read. FS read error
+       * - parsing error due to incomplete or incorrectly written records
+       * </pre>
        */
       DATA_READ(1, 1),
       /**
        * <code>DATA_WRITE = 2;</code>
+       *
+       * <pre>
+       * equivalent to SQLDataException
+       * - data type unsupported by format
+       * </pre>
        */
       DATA_WRITE(2, 2),
       /**
        * <code>FUNCTION = 3;</code>
+       *
+       * <pre>
+       * equivalent to SQLDataException
+       * - Casting errors
+       * - function not found for incoming types after implicit casting
+       * - Flatten misuse
+       * </pre>
        */
       FUNCTION(3, 3),
       /**
        * <code>PARSE = 4;</code>
+       *
+       * <pre>
+       * equivalent to SQLSyntaxErrorException
+       * - typos
+       * - missing table
+       * - SQL keyword misuse
+       * - function names/resolution
+       * </pre>
        */
       PARSE(4, 4),
       /**
        * <code>PERMISSION = 5;</code>
+       *
+       * <pre>
+       * equivalent to SQLInvalidAuthorizationSpecException
+       * </pre>
        */
       PERMISSION(5, 5),
       /**
        * <code>PLAN = 6;</code>
+       *
+       * <pre>
+       * equivalent to SQLNonTransientException
+       * </pre>
        */
       PLAN(6, 6),
       /**
        * <code>RESOURCE = 7;</code>
+       *
+       * <pre>
+       * equivalent to SQLRecoverableException or SQLTransientException
+       * - Recoverable: memory, disk
+       * - Transient: network
+       * </pre>
        */
       RESOURCE(7, 7),
       /**
        * <code>SYSTEM = 8;</code>
+       *
+       * <pre>
+       * equivalent to SQLNonTransientException.
+       * </pre>
        */
       SYSTEM(8, 8),
       /**
        * <code>UNSUPPORTED_OPERATION = 9;</code>
+       *
+       * <pre>
+       * equivalent to SQLFeatureNotSupportedException
+       * - type change
+       * - schema change
+       * </pre>
        */
       UNSUPPORTED_OPERATION(9, 9),
       ;
 
       /**
        * <code>CONNECTION = 0;</code>
+       *
+       * <pre>
+       * equivalent to SQLClientInfoException
+       * - handshake version error
+       * - invalid schema
+       * </pre>
        */
       public static final int CONNECTION_VALUE = 0;
       /**
        * <code>DATA_READ = 1;</code>
+       *
+       * <pre>
+       * equivalent to SQLRecoverableException
+       * - corrupt files: can't be read. FS read error
+       * - parsing error due to incomplete or incorrectly written records
+       * </pre>
        */
       public static final int DATA_READ_VALUE = 1;
       /**
        * <code>DATA_WRITE = 2;</code>
+       *
+       * <pre>
+       * equivalent to SQLDataException
+       * - data type unsupported by format
+       * </pre>
        */
       public static final int DATA_WRITE_VALUE = 2;
       /**
        * <code>FUNCTION = 3;</code>
+       *
+       * <pre>
+       * equivalent to SQLDataException
+       * - Casting errors
+       * - function not found for incoming types after implicit casting
+       * - Flatten misuse
+       * </pre>
        */
       public static final int FUNCTION_VALUE = 3;
       /**
        * <code>PARSE = 4;</code>
+       *
+       * <pre>
+       * equivalent to SQLSyntaxErrorException
+       * - typos
+       * - missing table
+       * - SQL keyword misuse
+       * - function names/resolution
+       * </pre>
        */
       public static final int PARSE_VALUE = 4;
       /**
        * <code>PERMISSION = 5;</code>
+       *
+       * <pre>
+       * equivalent to SQLInvalidAuthorizationSpecException
+       * </pre>
        */
       public static final int PERMISSION_VALUE = 5;
       /**
        * <code>PLAN = 6;</code>
+       *
+       * <pre>
+       * equivalent to SQLNonTransientException
+       * </pre>
        */
       public static final int PLAN_VALUE = 6;
       /**
        * <code>RESOURCE = 7;</code>
+       *
+       * <pre>
+       * equivalent to SQLRecoverableException or SQLTransientException
+       * - Recoverable: memory, disk
+       * - Transient: network
+       * </pre>
        */
       public static final int RESOURCE_VALUE = 7;
       /**
        * <code>SYSTEM = 8;</code>
+       *
+       * <pre>
+       * equivalent to SQLNonTransientException.
+       * </pre>
        */
       public static final int SYSTEM_VALUE = 8;
       /**
        * <code>UNSUPPORTED_OPERATION = 9;</code>
+       *
+       * <pre>
+       * equivalent to SQLFeatureNotSupportedException
+       * - type change
+       * - schema change
+       * </pre>
        */
       public static final int UNSUPPORTED_OPERATION_VALUE = 9;
 

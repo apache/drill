@@ -17,7 +17,7 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
@@ -227,7 +227,7 @@ public class TestUnionAll extends BaseTestQuery{
       String query = "(select * from dfs_test.tmp.`nation_view_testunionall`) " +
                      "union all (select * from cp.`tpch/region.parquet`)";
       test(query);
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
       throw ex;
     } finally {
@@ -356,7 +356,7 @@ public class TestUnionAll extends BaseTestQuery{
         .build().run();
   }
 
-  @Test(expected = DrillUserException.class) // see DRILL-2590
+  @Test(expected = UserException.class) // see DRILL-2590
   public void testUnionAllImplicitCastingFailure() throws Exception {
     String rootInt = FileUtils.getResourceAsFile("/store/json/intData.json").toURI().toString();
     String rootBoolean = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();

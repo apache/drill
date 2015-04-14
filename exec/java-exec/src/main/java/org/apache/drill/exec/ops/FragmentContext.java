@@ -29,8 +29,7 @@ import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
 import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillUserException;
-import org.apache.drill.common.exceptions.ErrorHelper;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -148,8 +147,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   public void fail(Throwable cause) {
     final FragmentHandle fragmentHandle = fragment.getHandle();
 
-    DrillUserException dse = ErrorHelper.wrap(cause);
-    dse.getContext().add(getIdentity());
+    UserException dse = UserException.systemError(cause).addIdentity(getIdentity()).build();
 
     // log the error id
     logger.error("Fragment Context received failure -- Fragment: {}:{}",

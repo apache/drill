@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -90,7 +90,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
     private CountDownLatch latch = new CountDownLatch(1);
 
     @Override
-    public void submissionFailed(DrillUserException ex) {
+    public void submissionFailed(UserException ex) {
       logger.error("submission failed", ex);
       latch.countDown();
     }

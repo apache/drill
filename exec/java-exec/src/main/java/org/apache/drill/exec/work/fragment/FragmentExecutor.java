@@ -21,8 +21,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.DeferredException;
-import org.apache.drill.common.exceptions.DrillUserException;
-import org.apache.drill.common.exceptions.ErrorHelper;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -229,9 +228,7 @@ public class FragmentExecutor implements Runnable {
   private void internalFail(final Throwable excep) {
     state.set(FragmentState.FAILED_VALUE);
 
-    DrillUserException uex = ErrorHelper.wrap(excep);
-    uex.getContext().add(getContext().getIdentity());
-
+    UserException uex = UserException.systemError(excep).addIdentity(getContext().getIdentity()).build();
     listener.fail(fragmentContext.getHandle(), "Failure while running fragment.", uex);
   }
 

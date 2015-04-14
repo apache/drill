@@ -25,38 +25,9 @@ import java.util.regex.Pattern;
 /**
  * Utility class that handles error message generation from protobuf error objects.
  */
-public class ErrorHelper {
+class ErrorHelper {
 
   private final static Pattern IGNORE= Pattern.compile("^(sun|com\\.sun|java).*");
-
-  /**
-   * Wraps the exception into a SYSTEM ERROR if it's not already a DrillUserException, or if it's not wrapping a
-   * DrillUserException
-   * @param ex exception to wrap
-   * @return user exception
-   */
-  public static DrillUserException wrap(final Throwable ex) {
-    return new DrillUserException.Builder(ex).build();
-  }
-
-  /**
-   * returns the user exception context for DrillUserExceptions(s) even if they are wrapped multiple times. If no
-   * DrillUserException is found, it will create a new one.
-   * This is useful if we want to add context to user exception before re-throwing it. For all other exception the
-   * context will be discarded.
-   *
-   * @param ex exception we are trying to get the context for
-   * @return user exception context
-   */
-  public static UserExceptionContext getExceptionContextOrNew(final Throwable ex) {
-    DrillUserException uex = findWrappedUserException(ex);
-    if (uex != null) {
-      //TODO if uex is SYSTEM exception the calling code will be able to add context information to it. Do we want this ?
-      return uex.getContext();
-    }
-
-    return new UserExceptionContext();
-  }
 
   static String buildCausesMessage(final Throwable t) {
 
@@ -166,13 +137,13 @@ public class ErrorHelper {
    * @param ex exception
    * @return null if exception is null or no DrillUserException was found
    */
-  static DrillUserException findWrappedUserException(Throwable ex) {
+  static UserException findWrappedUserException(Throwable ex) {
     if (ex == null) {
       return null;
     }
 
     Throwable cause = ex;
-    while (!(cause instanceof DrillUserException)) {
+    while (!(cause instanceof UserException)) {
       if (cause.getCause() != null && cause.getCause() != cause) {
         cause = cause.getCause();
       } else {
@@ -180,7 +151,7 @@ public class ErrorHelper {
       }
     }
 
-    return (DrillUserException) cause;
+    return (UserException) cause;
   }
 
 }

@@ -23,11 +23,11 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
  * Wraps a DrillPBError object so we don't need to rebuilt it multiple times when sending it to the client. It also
  * gives access to the original exception className and message.
  */
-public class DrillRemoteException extends DrillUserException {
+public class UserRemoteException extends UserException {
 
   private final DrillPBError error;
 
-  public DrillRemoteException(DrillPBError error) {
+  public UserRemoteException(DrillPBError error) {
     super(null, "Drill Remote Exception", null);
     this.error = error;
   }

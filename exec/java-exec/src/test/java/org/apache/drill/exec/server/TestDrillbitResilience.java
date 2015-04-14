@@ -29,7 +29,7 @@ import org.apache.drill.QueryTestUtil;
 import org.apache.drill.SingleRowListener;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
@@ -312,7 +312,7 @@ public class TestDrillbitResilience extends ExecTest {
    * @param desc the expected exception site description
    */
   private static void assertInjected(
-      final DrillUserException caught, final Class<? extends Throwable> exceptionClass, final String desc) {
+      final UserException caught, final Class<? extends Throwable> exceptionClass, final String desc) {
     ExceptionWrapper cause = caught.getOrCreatePBError(false).getException();
     assertEquals(exceptionClass.getName(), cause.getExceptionClass());
     assertEquals(desc, cause.getMessage());
@@ -339,7 +339,7 @@ public class TestDrillbitResilience extends ExecTest {
     try {
       QueryTestUtil.test(drillClient, "select * from sys.drillbits");
       fail();
-    } catch(DrillUserException dre) {
+    } catch(UserException dre) {
       assertInjected(dre, ForemanException.class, desc);
     }
   }
@@ -365,7 +365,7 @@ public class TestDrillbitResilience extends ExecTest {
     try {
       QueryTestUtil.test(drillClient, "select * from sys.drillbits");
       fail();
-    } catch(DrillUserException dre) {
+    } catch(UserException dre) {
       assertInjected(dre, ForemanException.class, exceptionDesc);
     }
   }

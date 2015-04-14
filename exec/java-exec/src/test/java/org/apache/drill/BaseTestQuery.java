@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Preconditions;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
@@ -320,12 +320,12 @@ public class BaseTestQuery extends ExecTest {
   }
 
   private static class SilentListener implements UserResultsListener {
-    private volatile DrillUserException exception;
+    private volatile UserException exception;
     private AtomicInteger count = new AtomicInteger();
     private CountDownLatch latch = new CountDownLatch(1);
 
     @Override
-    public void submissionFailed(DrillUserException ex) {
+    public void submissionFailed(UserException ex) {
       exception = ex;
       System.out.println("Query failed: " + ex.getMessage());
       latch.countDown();

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.common.exceptions.DrillRemoteException;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -160,7 +160,7 @@ public class QueryManager implements FragmentStatusListener, DrillbitStatusListe
       break;
 
     case FAILED:
-      stateListener.moveToState(QueryState.FAILED, new DrillRemoteException(status.getProfile().getError()));
+      stateListener.moveToState(QueryState.FAILED, new UserRemoteException(status.getProfile().getError()));
       break;
 
     default:

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 package org.apache.drill;
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
@@ -26,27 +26,27 @@ import org.junit.Test;
 public class TestDisabledFunctionality extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
-  @Test(expected = DrillUserException.class)  // see DRILL-2054
+  @Test(expected = UserException.class)  // see DRILL-2054
   public void testBooleanORExpression() throws Exception {
         test("select (1 = 1) || (1 > 0) from cp.`tpch/nation.parquet` ");
     }
 
-  @Test(expected = DrillUserException.class)  // see DRILL-2054
+  @Test(expected = UserException.class)  // see DRILL-2054
   public void testBooleanORSelectClause() throws Exception {
     test("select true || true from cp.`tpch/nation.parquet` ");
   }
 
-  @Test(expected = DrillUserException.class)  // see DRILL-2054
+  @Test(expected = UserException.class)  // see DRILL-2054
   public void testBooleanORWhereClause() throws Exception {
     test("select * from cp.`tpch/nation.parquet` where (true || true) ");
   }
 
-  @Test(expected = DrillUserException.class)  // see DRILL-2054
+  @Test(expected = UserException.class)  // see DRILL-2054
   public void testBooleanAND() throws Exception {
     test("select true && true from cp.`tpch/nation.parquet` ");
   }
 
-  private static void throwAsUnsupportedException(DrillUserException ex) throws Exception {
+  private static void throwAsUnsupportedException(UserException ex) throws Exception {
     SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
     throw ex;
   }
@@ -58,7 +58,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
            "where n_nationkey = " +
            "(select r_regionkey from cp.`tpch/region.parquet` " +
            "where r_regionkey = 1)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -70,7 +70,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
            "where n_nationkey = " +
            "(select r_regionkey from cp.`tpch/region.parquet` " +
            "where r_regionkey = 1)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -79,7 +79,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledUnion() throws Exception {
     try {
       test("(select n_name as name from cp.`tpch/nation.parquet`) UNION (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -88,7 +88,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledUnionDistinct() throws Exception {
     try {
       test("(select n_name as name from cp.`tpch/nation.parquet`) UNION DISTINCT (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -97,7 +97,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledIntersect() throws Exception {
     try {
       test("(select n_name as name from cp.`tpch/nation.parquet`) INTERSECT (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -106,7 +106,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledIntersectALL() throws Exception {
     try {
       test("(select n_name as name from cp.`tpch/nation.parquet`) INTERSECT ALL (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -115,7 +115,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledExceptALL() throws Exception {
     try {
       test("(select n_name as name from cp.`tpch/nation.parquet`) EXCEPT ALL (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -124,7 +124,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledExcept() throws Exception {
     try {
       test("(select n_name as name from cp.`tpch/nation.parquet`) EXCEPT (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -133,7 +133,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledNaturalJoin() throws Exception {
     try {
       test("select * from cp.`tpch/nation.parquet` NATURAL JOIN cp.`tpch/region.parquet`");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -142,7 +142,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledCrossJoin() throws Exception {
     try {
       test("select * from cp.`tpch/nation.parquet` CROSS JOIN cp.`tpch/region.parquet`");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -151,7 +151,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledCastTINYINT() throws Exception {
     try {
       test("select cast(n_name as tinyint) from cp.`tpch/nation.parquet`;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -160,7 +160,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledCastSMALLINT() throws Exception {
     try {
       test("select cast(n_name as smallint) from cp.`tpch/nation.parquet`;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -169,7 +169,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledCastREAL() throws Exception {
     try {
       test("select cast(n_name as real) from cp.`tpch/nation.parquet`;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -178,7 +178,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   public void testDisabledCardinality() throws Exception {
     try {
       test("select cardinality(employee_id) from cp.`employee.json`;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -188,7 +188,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
     try {
       test("select a.*, b.user_port " +
           "from cp.`employee.json` a, sys.drillbits b;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -199,7 +199,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("select a.*, b.user_port " +
           "from cp.`employee.json` a, sys.drillbits b " +
           "where a.position_id <> b.user_port;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -210,7 +210,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("select a.last_name, b.n_name, c.r_name " +
           "from cp.`employee.json` a, cp.`tpch/nation.parquet` b, cp.`tpch/region.parquet` c " +
           "where a.position_id > b.n_nationKey and b.n_nationKey = c.r_regionkey;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -221,7 +221,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("select a.lastname, b.n_name " +
           "from cp.`employee.json` a LEFT JOIN cp.`tpch/nation.parquet` b " +
           "ON a.position_id > b.n_nationKey;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -232,7 +232,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("select a.lastname, b.n_name " +
           "from cp.`employee.json` a INNER JOIN cp.`tpch/nation.parquet` b " +
           "ON a.position_id > b.n_nationKey;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -245,7 +245,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
           "where b.n_nationkey = " +
           "(select r_regionkey from cp.`tpch/region.parquet` " +
           "where r_regionkey = 1)");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -256,7 +256,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("select a.lastname " +
           "from cp.`employee.json` a " +
           "where exists (select n_name from cp.`tpch/nation.parquet` b) AND a.position_id = 10");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -267,7 +267,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("explain plan for (select a.lastname, b.n_name " +
           "from cp.`employee.json` a INNER JOIN cp.`tpch/nation.parquet` b " +
           "ON a.position_id > b.n_nationKey);");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -278,7 +278,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("explain plan for (select a.lastname, b.n_name " +
           "from cp.`employee.json` a LEFT OUTER JOIN cp.`tpch/nation.parquet` b " +
           "ON (a.position_id > b.n_nationKey AND a.employee_id = b.n_regionkey));");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -289,7 +289,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       test("select a.lastname, b.n_name " +
           "from cp.`employee.json` a RIGHT OUTER JOIN cp.`tpch/nation.parquet` b " +
           "ON (a.position_id > b.n_nationKey AND a.employee_id = b.n_regionkey);");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }
@@ -301,7 +301,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
           "OVER (PARTITION BY position_id order by position_id) " +
           "FROM cp.`employee.json` " +
           "order by employee_id;");
-    } catch(DrillUserException ex) {
+    } catch(UserException ex) {
       throwAsUnsupportedException(ex);
     }
   }

@@ -30,7 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -118,7 +118,7 @@ public class QueryWrapper {
 
 
   private static class Listener implements UserResultsListener {
-    private volatile DrillUserException exception;
+    private volatile UserException exception;
     private final CountDownLatch latch = new CountDownLatch(1);
     private final BufferAllocator allocator;
     public final List<Map<String, String>> results = Lists.newArrayList();
@@ -129,7 +129,7 @@ public class QueryWrapper {
     }
 
     @Override
-    public void submissionFailed(DrillUserException ex) {
+    public void submissionFailed(UserException ex) {
       exception = ex;
       logger.error("Query Failed", ex);
       latch.countDown();

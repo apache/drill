@@ -31,15 +31,51 @@ message QueryId {
 
 message DrillPBError{
   enum ErrorType {
+    /* equivalent to SQLClientInfoException
+     * - handshake version error
+     * - invalid schema
+     */
     CONNECTION = 0;
+    /* equivalent to SQLRecoverableException
+     * - corrupt files: can't be read. FS read error
+     * - parsing error due to incomplete or incorrectly written records
+     */
     DATA_READ = 1;
+    /* equivalent to SQLDataException
+     * - data type unsupported by format
+     */
     DATA_WRITE = 2;
+    /* equivalent to SQLDataException
+     * - Casting errors
+     * - function not found for incoming types after implicit casting
+     * - Flatten misuse
+     */
     FUNCTION = 3;
+    /* equivalent to SQLSyntaxErrorException
+     * - typos
+     * - missing table
+     * - SQL keyword misuse
+     * - function names/resolution
+     */
     PARSE = 4;
+    /* equivalent to SQLInvalidAuthorizationSpecException
+     */
     PERMISSION = 5;
+    /* equivalent to SQLNonTransientException
+     */
     PLAN = 6;
+    /* equivalent to SQLRecoverableException or SQLTransientException
+     * - Recoverable: memory, disk
+     * - Transient: network
+     */
     RESOURCE = 7;
+    /* equivalent to SQLNonTransientException.
+     */
     SYSTEM = 8;
+    /* equivalent to SQLFeatureNotSupportedException
+     * - type change
+     * - schema change
+     */
     UNSUPPORTED_OPERATION = 9;
   }
   optional string error_id = 1; // for debug tracing purposes

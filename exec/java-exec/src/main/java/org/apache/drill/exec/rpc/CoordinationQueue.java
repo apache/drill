@@ -23,7 +23,7 @@ import io.netty.channel.ChannelFuture;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.drill.common.exceptions.DrillRemoteException;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 /**
@@ -151,7 +151,7 @@ public class CoordinationQueue {
     // logger.debug("Updating failed future.");
     try {
       RpcOutcome<?> rpc = removeFromMap(coordinationId);
-      rpc.setException(new DrillRemoteException(failure));
+      rpc.setException(new UserRemoteException(failure));
     } catch(Exception ex) {
       logger.warn("Failed to remove from map.  Not a problem since we were updating on failed future.", ex);
     }

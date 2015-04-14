@@ -17,7 +17,7 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -73,13 +73,13 @@ public class TestBugFixes extends BaseTestQuery {
   }
 
 
-  @Test (expected = DrillUserException.class)
+  @Test (expected = UserException.class)
   // Should be "Failure while parsing sql. Node [rel#26:Subset#6.LOGICAL.ANY([]).[]] could not be implemented;".
   // Drill will hit CanNotPlan, until we add code fix to transform the local LHS filter in left outer join properly.
   public void testDRILL1337_LocalLeftFilterLeftOutJoin() throws Exception {
     try {
       test("select count(*) from cp.`tpch/nation.parquet` n left outer join cp.`tpch/region.parquet` r on n.n_regionkey = r.r_regionkey and n.n_nationkey > 10;");
-    } catch (DrillUserException e) {
+    } catch (UserException e) {
       logger.info("***** Test resulted in expected failure: " + e.getMessage());
       throw e;
     }

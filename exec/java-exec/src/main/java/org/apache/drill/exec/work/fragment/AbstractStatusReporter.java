@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.work.fragment;
 
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -40,7 +40,7 @@ public abstract class AbstractStatusReporter implements StatusReporter{
     return getBuilder(context, state, null);
   }
 
-  public static FragmentStatus.Builder getBuilder(FragmentContext context, FragmentState state, DrillUserException ex){
+  public static FragmentStatus.Builder getBuilder(FragmentContext context, FragmentState state, UserException ex){
     FragmentStatus.Builder status = FragmentStatus.newBuilder();
     MinorFragmentProfile.Builder b = MinorFragmentProfile.newBuilder();
     context.getStats().addMetricsToStatus(b);
@@ -105,7 +105,7 @@ public abstract class AbstractStatusReporter implements StatusReporter{
   protected abstract void statusChange(FragmentHandle handle, FragmentStatus status);
 
   @Override
-  public final void fail(FragmentHandle handle, String message, DrillUserException excep) {
+  public final void fail(FragmentHandle handle, String message, UserException excep) {
     FragmentStatus.Builder status = getBuilder(context, FragmentState.FAILED, excep);
     fail(handle, status);
   }

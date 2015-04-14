@@ -29,7 +29,7 @@ import net.hydromatic.avatica.AvaticaPrepareResult;
 import net.hydromatic.avatica.AvaticaResultSet;
 import net.hydromatic.avatica.AvaticaStatement;
 
-import org.apache.drill.common.exceptions.DrillUserException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -160,7 +160,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
   public class ResultsListener implements UserResultsListener {
     private static final int MAX = 100;
-    private volatile DrillUserException ex;
+    private volatile UserException ex;
     volatile boolean completed = false;
     private volatile boolean autoread = true;
     private volatile ConnectionThrottle throttle;
@@ -183,7 +183,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     }
 
     @Override
-    public void submissionFailed(DrillUserException ex) {
+    public void submissionFailed(UserException ex) {
       this.ex = ex;
       completed = true;
       close();

@@ -30,8 +30,7 @@ import com.google.common.base.Preconditions;
 
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillUserException;
-import org.apache.drill.common.exceptions.ErrorHelper;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
@@ -499,7 +498,7 @@ public class Foreman implements Runnable {
    */
   private class ForemanResult implements AutoCloseable {
     private QueryState resultState = null;
-    private DrillUserException resultException = null;
+    private Exception resultException = null;
     private boolean isClosed = false;
 
     /**
@@ -532,7 +531,7 @@ public class Foreman implements Runnable {
       Preconditions.checkState(resultState == null);
 
       resultState = QueryState.FAILED;
-      addException(exception);
+      resultException = exception;
     }
 
     /**
@@ -545,8 +544,7 @@ public class Foreman implements Runnable {
       Preconditions.checkNotNull(exception);
 
       if (resultException == null) {
-        resultException = ErrorHelper.wrap(exception);
-        resultException.getContext().add(queryContext.getCurrentEndpoint());
+        resultException = exception;
       } else {
         resultException.addSuppressed(exception);
       }
@@ -615,7 +613,8 @@ public class Foreman implements Runnable {
           .setQueryState(resultState);
       if (resultException != null) {
         boolean verbose = queryContext.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-        resultBuilder.addError(resultException.getOrCreatePBError(verbose));
+        UserException uex = UserException.systemError(resultException).addIdentity(queryContext.getCurrentEndpoint()).build();
+        resultBuilder.addError(uex.getOrCreatePBError(verbose));
       }
 
       /*
