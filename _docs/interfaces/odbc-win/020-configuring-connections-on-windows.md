@@ -1,8 +1,8 @@
 ---
-title: "Step 2. Configure ODBC Connections to Drill Data Sources"
-parent: "Using the MapR ODBC Driver on Windows"
+title: "Configuring Connections on Windows"
+parent: "Using ODBC on Windows"
 ---
-Complete one of the following steps to create an ODBC connection to Drill data
+Complete one of the following steps to create an ODBC connection on Windows to Drill data
 sources:
 
   * Create a Data Source Name

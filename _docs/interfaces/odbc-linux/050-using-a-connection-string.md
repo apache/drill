@@ -1,8 +1,8 @@
 ---
-title: "Configuring ODBC Connections for Linux and Mac OS X"
-parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
+title: "Using a Connection String"
+parent: "Using ODBC on Linux and Mac OS X"
 ---
-You can use a connection string to connect to your data source. For a list of
+You can use a connection string to connect to your data source using ODBC on Linux and Mac OS X. For a list of
 all the properties that you can use in connection strings, see [Driver
 Configuration
 Options](/docs/driver-configuration-options).

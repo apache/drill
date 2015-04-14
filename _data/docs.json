@@ -96,8 +96,8 @@
         "Advanced Properties": {
             "breadcrumbs": [
                 {
-                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -105,12 +105,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Testing the ODBC Connection on Linux and Mac OS X", 
-            "next_url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/", 
-            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-            "previous_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-            "previous_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-            "relative_path": "_docs/interfaces/odbc-linux/006-odbc-adv-prop.md", 
+            "next_title": "Testing the ODBC Connection", 
+            "next_url": "/docs/testing-the-odbc-connection/", 
+            "parent": "Using ODBC on Linux and Mac OS X", 
+            "previous_title": "Using a Connection String", 
+            "previous_url": "/docs/using-a-connection-string/", 
+            "relative_path": "_docs/interfaces/odbc-linux/060-advanced-properties.md", 
             "title": "Advanced Properties", 
             "url": "/docs/advanced-properties/"
         }, 
@@ -713,11 +713,11 @@
             "title": "Configuration Options Overview", 
             "url": "/docs/configuration-options-overview/"
         }, 
-        "Configuring ODBC Connections for Linux and Mac OS X": {
+        "Configuring Connections on Linux and Mac OS X": {
             "breadcrumbs": [
                 {
-                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -725,14 +725,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Advanced Properties", 
-            "next_url": "/docs/advanced-properties/", 
-            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-            "previous_title": "Driver Configuration Options", 
-            "previous_url": "/docs/driver-configuration-options/", 
-            "relative_path": "_docs/interfaces/odbc-linux/005-odbc-connect-str.md", 
-            "title": "Configuring ODBC Connections for Linux and Mac OS X", 
-            "url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/"
+            "next_title": "Driver Configuration Options", 
+            "next_url": "/docs/driver-configuration-options/", 
+            "parent": "Using ODBC on Linux and Mac OS X", 
+            "previous_title": "Installing the Driver on Mac OS X", 
+            "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
+            "relative_path": "_docs/interfaces/odbc-linux/030-configuring-connections-on-linux-and-mac-os-x.md", 
+            "title": "Configuring Connections on Linux and Mac OS X", 
+            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
+        }, 
+        "Configuring Connections on Windows": {
+            "breadcrumbs": [
+                {
+                    "title": "Using ODBC on Windows", 
+                    "url": "/docs/using-odbc-on-windows/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Connecting to Data Sources", 
+            "next_url": "/docs/connecting-to-data-sources/", 
+            "parent": "Using ODBC on Windows", 
+            "previous_title": "Installing the Driver on Windows", 
+            "previous_url": "/docs/installing-the-driver-on-windows/", 
+            "relative_path": "_docs/interfaces/odbc-win/020-configuring-connections-on-windows.md", 
+            "title": "Configuring Connections on Windows", 
+            "url": "/docs/configuring-connections-on-windows/"
         }, 
         "Connect a Data Source": {
             "breadcrumbs": [], 
@@ -954,6 +975,27 @@
             "relative_path": "_docs/connect/010-connect-a-data-source-introduction.md", 
             "title": "Connect a Data Source Introduction", 
             "url": "/docs/connect-a-data-source-introduction/"
+        }, 
+        "Connecting to Data Sources": {
+            "breadcrumbs": [
+                {
+                    "title": "Using ODBC on Windows", 
+                    "url": "/docs/using-odbc-on-windows/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Tableau Examples", 
+            "next_url": "/docs/tableau-examples/", 
+            "parent": "Using ODBC on Windows", 
+            "previous_title": "Configuring Connections on Windows", 
+            "previous_url": "/docs/configuring-connections-on-windows/", 
+            "relative_path": "_docs/interfaces/odbc-win/030-connecting-to-data-sources.md", 
+            "title": "Connecting to Data Sources", 
+            "url": "/docs/connecting-to-data-sources/"
         }, 
         "Contribute to Drill": {
             "breadcrumbs": [
@@ -1979,8 +2021,8 @@
         "Driver Configuration Options": {
             "breadcrumbs": [
                 {
-                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -1988,12 +2030,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-            "next_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-            "previous_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-            "previous_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-            "relative_path": "_docs/interfaces/odbc-linux/004-odbc-driver-conf.md", 
+            "next_title": "Using a Connection String", 
+            "next_url": "/docs/using-a-connection-string/", 
+            "parent": "Using ODBC on Linux and Mac OS X", 
+            "previous_title": "Configuring Connections on Linux and Mac OS X", 
+            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+            "relative_path": "_docs/interfaces/odbc-linux/040-driver-configuration-options.md", 
             "title": "Driver Configuration Options", 
             "url": "/docs/driver-configuration-options/"
         }, 
@@ -2628,11 +2670,11 @@
             "title": "Installing the Apache Drill Sandbox", 
             "url": "/docs/installing-the-apache-drill-sandbox/"
         }, 
-        "Installing the MapR Drill ODBC Driver on Linux": {
+        "Installing the Driver on Linux": {
             "breadcrumbs": [
                 {
-                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -2640,20 +2682,20 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-            "next_url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/", 
-            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-            "previous_title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-            "previous_url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/", 
-            "relative_path": "_docs/interfaces/odbc-linux/001-install-odbc-linux.md", 
-            "title": "Installing the MapR Drill ODBC Driver on Linux", 
-            "url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/"
+            "next_title": "Installing the Driver on Mac OS X", 
+            "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
+            "parent": "Using ODBC on Linux and Mac OS X", 
+            "previous_title": "Using ODBC on Linux and Mac OS X", 
+            "previous_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+            "relative_path": "_docs/interfaces/odbc-linux/010-installing-the-driver-on-linux.md", 
+            "title": "Installing the Driver on Linux", 
+            "url": "/docs/installing-the-driver-on-linux/"
         }, 
-        "Installing the MapR Drill ODBC Driver on Mac OS X": {
+        "Installing the Driver on Mac OS X": {
             "breadcrumbs": [
                 {
-                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -2661,14 +2703,52 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-            "next_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-            "previous_title": "Installing the MapR Drill ODBC Driver on Linux", 
-            "previous_url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/", 
-            "relative_path": "_docs/interfaces/odbc-linux/002-install-odbc-mac.md", 
-            "title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-            "url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/"
+            "next_title": "Configuring Connections on Linux and Mac OS X", 
+            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+            "parent": "Using ODBC on Linux and Mac OS X", 
+            "previous_title": "Installing the Driver on Linux", 
+            "previous_url": "/docs/installing-the-driver-on-linux/", 
+            "relative_path": "_docs/interfaces/odbc-linux/020-installing-the-driver-on-mac-os-x.md", 
+            "title": "Installing the Driver on Mac OS X", 
+            "url": "/docs/installing-the-driver-on-mac-os-x/"
+        }, 
+        "Installing the Driver on Windows": {
+            "breadcrumbs": [
+                {
+                    "title": "Using ODBC on Windows", 
+                    "url": "/docs/using-odbc-on-windows/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Connections on Windows", 
+            "next_url": "/docs/configuring-connections-on-windows/", 
+            "parent": "Using ODBC on Windows", 
+            "previous_title": "Using ODBC on Windows", 
+            "previous_url": "/docs/using-odbc-on-windows/", 
+            "relative_path": "_docs/interfaces/odbc-win/010-installing-the-driver-on-windows.md", 
+            "title": "Installing the Driver on Windows", 
+            "url": "/docs/installing-the-driver-on-windows/"
+        }, 
+        "Interfaces Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using JDBC", 
+            "next_url": "/docs/using-jdbc/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "ODBC/JDBC Interfaces", 
+            "previous_url": "/docs/odbc-jdbc-interfaces/", 
+            "relative_path": "_docs/interfaces/010-interfaces-introduction.md", 
+            "title": "Interfaces Introduction", 
+            "url": "/docs/interfaces-introduction/"
         }, 
         "JSON Data Model": {
             "breadcrumbs": [
@@ -3363,14 +3443,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "next_url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/", 
+                    "next_title": "Using JDBC", 
+                    "next_url": "/docs/using-jdbc/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "ODBC/JDBC Interfaces", 
                     "previous_url": "/docs/odbc-jdbc-interfaces/", 
-                    "relative_path": "_docs/interfaces/001-jdbc-squirrel.md", 
-                    "title": "Using the JDBC Driver", 
-                    "url": "/docs/using-the-jdbc-driver/"
+                    "relative_path": "_docs/interfaces/010-interfaces-introduction.md", 
+                    "title": "Interfaces Introduction", 
+                    "url": "/docs/interfaces-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using ODBC on Linux and Mac OS X", 
+                    "next_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Interfaces Introduction", 
+                    "previous_url": "/docs/interfaces-introduction/", 
+                    "relative_path": "_docs/interfaces/020-using-jdbc.md", 
+                    "title": "Using JDBC", 
+                    "url": "/docs/using-jdbc/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3383,8 +3480,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3392,20 +3489,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                            "next_url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/001-install-odbc-linux.md", 
-                            "title": "Installing the MapR Drill ODBC Driver on Linux", 
-                            "url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/"
+                            "next_title": "Installing the Driver on Mac OS X", 
+                            "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Using ODBC on Linux and Mac OS X", 
+                            "previous_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/010-installing-the-driver-on-linux.md", 
+                            "title": "Installing the Driver on Linux", 
+                            "url": "/docs/installing-the-driver-on-linux/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3413,20 +3510,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "next_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Installing the MapR Drill ODBC Driver on Linux", 
-                            "previous_url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/002-install-odbc-mac.md", 
-                            "title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                            "url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/"
+                            "next_title": "Configuring Connections on Linux and Mac OS X", 
+                            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Installing the Driver on Linux", 
+                            "previous_url": "/docs/installing-the-driver-on-linux/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/020-installing-the-driver-on-mac-os-x.md", 
+                            "title": "Installing the Driver on Mac OS X", 
+                            "url": "/docs/installing-the-driver-on-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3436,18 +3533,18 @@
                             "children": [], 
                             "next_title": "Driver Configuration Options", 
                             "next_url": "/docs/driver-configuration-options/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                            "previous_url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/003-odbc-connections-linux.md", 
-                            "title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/"
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Installing the Driver on Mac OS X", 
+                            "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/030-configuring-connections-on-linux-and-mac-os-x.md", 
+                            "title": "Configuring Connections on Linux and Mac OS X", 
+                            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3455,20 +3552,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "next_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "previous_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/004-odbc-driver-conf.md", 
+                            "next_title": "Using a Connection String", 
+                            "next_url": "/docs/using-a-connection-string/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Configuring Connections on Linux and Mac OS X", 
+                            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/040-driver-configuration-options.md", 
                             "title": "Driver Configuration Options", 
                             "url": "/docs/driver-configuration-options/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3478,18 +3575,18 @@
                             "children": [], 
                             "next_title": "Advanced Properties", 
                             "next_url": "/docs/advanced-properties/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
                             "previous_title": "Driver Configuration Options", 
                             "previous_url": "/docs/driver-configuration-options/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/005-odbc-connect-str.md", 
-                            "title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/"
+                            "relative_path": "_docs/interfaces/odbc-linux/050-using-a-connection-string.md", 
+                            "title": "Using a Connection String", 
+                            "url": "/docs/using-a-connection-string/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3497,20 +3594,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Testing the ODBC Connection on Linux and Mac OS X", 
-                            "next_url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "previous_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/006-odbc-adv-prop.md", 
+                            "next_title": "Testing the ODBC Connection", 
+                            "next_url": "/docs/testing-the-odbc-connection/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Using a Connection String", 
+                            "previous_url": "/docs/using-a-connection-string/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/060-advanced-properties.md", 
                             "title": "Advanced Properties", 
                             "url": "/docs/advanced-properties/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3518,24 +3615,24 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using the MapR ODBC Driver on Windows", 
-                            "next_url": "/docs/using-the-mapr-odbc-driver-on-windows/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
+                            "next_title": "Using ODBC on Windows", 
+                            "next_url": "/docs/using-odbc-on-windows/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
                             "previous_title": "Advanced Properties", 
                             "previous_url": "/docs/advanced-properties/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/007-odbc-connections-test.md", 
-                            "title": "Testing the ODBC Connection on Linux and Mac OS X", 
-                            "url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/"
+                            "relative_path": "_docs/interfaces/odbc-linux/070-testing-the-odbc-connection.md", 
+                            "title": "Testing the ODBC Connection", 
+                            "url": "/docs/testing-the-odbc-connection/"
                         }
                     ], 
-                    "next_title": "Installing the MapR Drill ODBC Driver on Linux", 
-                    "next_url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/", 
+                    "next_title": "Installing the Driver on Linux", 
+                    "next_url": "/docs/installing-the-driver-on-linux/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using the JDBC Driver", 
-                    "previous_url": "/docs/using-the-jdbc-driver/", 
-                    "relative_path": "_docs/interfaces/002-odbc-linux.md", 
-                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                    "previous_title": "Using JDBC", 
+                    "previous_url": "/docs/using-jdbc/", 
+                    "relative_path": "_docs/interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3548,8 +3645,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3557,20 +3654,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                            "next_url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
-                            "previous_title": "Using the MapR ODBC Driver on Windows", 
-                            "previous_url": "/docs/using-the-mapr-odbc-driver-on-windows/", 
-                            "relative_path": "_docs/interfaces/odbc-win/001-install-odbc-win.md", 
-                            "title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-                            "url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/"
+                            "next_title": "Configuring Connections on Windows", 
+                            "next_url": "/docs/configuring-connections-on-windows/", 
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Using ODBC on Windows", 
+                            "previous_url": "/docs/using-odbc-on-windows/", 
+                            "relative_path": "_docs/interfaces/odbc-win/010-installing-the-driver-on-windows.md", 
+                            "title": "Installing the Driver on Windows", 
+                            "url": "/docs/installing-the-driver-on-windows/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3578,20 +3675,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                            "next_url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
-                            "previous_title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-                            "previous_url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/", 
-                            "relative_path": "_docs/interfaces/odbc-win/002-conf-odbc-win.md", 
-                            "title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                            "url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/"
+                            "next_title": "Connecting to Data Sources", 
+                            "next_url": "/docs/connecting-to-data-sources/", 
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Installing the Driver on Windows", 
+                            "previous_url": "/docs/installing-the-driver-on-windows/", 
+                            "relative_path": "_docs/interfaces/odbc-win/020-configuring-connections-on-windows.md", 
+                            "title": "Configuring Connections on Windows", 
+                            "url": "/docs/configuring-connections-on-windows/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3601,18 +3698,18 @@
                             "children": [], 
                             "next_title": "Tableau Examples", 
                             "next_url": "/docs/tableau-examples/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
-                            "previous_title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                            "previous_url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/", 
-                            "relative_path": "_docs/interfaces/odbc-win/003-connect-odbc-win.md", 
-                            "title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                            "url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/"
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Configuring Connections on Windows", 
+                            "previous_url": "/docs/configuring-connections-on-windows/", 
+                            "relative_path": "_docs/interfaces/odbc-win/030-connecting-to-data-sources.md", 
+                            "title": "Connecting to Data Sources", 
+                            "url": "/docs/connecting-to-data-sources/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3620,20 +3717,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Drill Explorer to Browse Data and Create Views", 
-                            "next_url": "/docs/using-drill-explorer-to-browse-data-and-create-views/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
-                            "previous_title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                            "previous_url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/", 
-                            "relative_path": "_docs/interfaces/odbc-win/004-tableau-examples.md", 
+                            "next_title": "Using Drill Explorer", 
+                            "next_url": "/docs/using-drill-explorer/", 
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Connecting to Data Sources", 
+                            "previous_url": "/docs/connecting-to-data-sources/", 
+                            "relative_path": "_docs/interfaces/odbc-win/040-tableau-examples.md", 
                             "title": "Tableau Examples", 
                             "url": "/docs/tableau-examples/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -3641,24 +3738,24 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using MicroStrategy Analytics with Apache Drill", 
-                            "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
+                            "next_title": "Using MicroStrategy Analytics with Drill", 
+                            "next_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                            "parent": "Using ODBC on Windows", 
                             "previous_title": "Tableau Examples", 
                             "previous_url": "/docs/tableau-examples/", 
-                            "relative_path": "_docs/interfaces/odbc-win/005-browse-view.md", 
-                            "title": "Using Drill Explorer to Browse Data and Create Views", 
-                            "url": "/docs/using-drill-explorer-to-browse-data-and-create-views/"
+                            "relative_path": "_docs/interfaces/odbc-win/050-using-drill-explorer.md", 
+                            "title": "Using Drill Explorer", 
+                            "url": "/docs/using-drill-explorer/"
                         }
                     ], 
-                    "next_title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-                    "next_url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/", 
+                    "next_title": "Installing the Driver on Windows", 
+                    "next_url": "/docs/installing-the-driver-on-windows/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Testing the ODBC Connection on Linux and Mac OS X", 
-                    "previous_url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/", 
-                    "relative_path": "_docs/interfaces/003-odbc-win.md", 
-                    "title": "Using the MapR ODBC Driver on Windows", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                    "previous_title": "Testing the ODBC Connection", 
+                    "previous_url": "/docs/testing-the-odbc-connection/", 
+                    "relative_path": "_docs/interfaces/040-using-odbc-on-windows.md", 
+                    "title": "Using ODBC on Windows", 
+                    "url": "/docs/using-odbc-on-windows/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3671,15 +3768,15 @@
                     "next_title": "Query Data", 
                     "next_url": "/docs/query-data/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Drill Explorer to Browse Data and Create Views", 
-                    "previous_url": "/docs/using-drill-explorer-to-browse-data-and-create-views/", 
-                    "relative_path": "_docs/interfaces/004-microstrategy.md", 
-                    "title": "Using MicroStrategy Analytics with Apache Drill", 
-                    "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
+                    "previous_title": "Using Drill Explorer", 
+                    "previous_url": "/docs/using-drill-explorer/", 
+                    "relative_path": "_docs/interfaces/050-using-microstrategy-analytics-with-drill.md", 
+                    "title": "Using MicroStrategy Analytics with Drill", 
+                    "url": "/docs/using-microstrategy-analytics-with-drill/"
                 }
             ], 
-            "next_title": "Using the JDBC Driver", 
-            "next_url": "/docs/using-the-jdbc-driver/", 
+            "next_title": "Interfaces Introduction", 
+            "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
             "previous_title": "MapR-DB Format", 
             "previous_url": "/docs/mapr-db-format/", 
@@ -4325,8 +4422,8 @@
             "next_title": "Querying a File System", 
             "next_url": "/docs/querying-a-file-system/", 
             "parent": "", 
-            "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
-            "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+            "previous_title": "Using MicroStrategy Analytics with Drill", 
+            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
             "relative_path": "_docs/070-query.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
@@ -6177,69 +6274,6 @@
             "title": "Starting/Stopping Drill", 
             "url": "/docs/starting-stopping-drill/"
         }, 
-        "Step 1. Install the MapR Drill ODBC Driver on Windows": {
-            "breadcrumbs": [
-                {
-                    "title": "Using the MapR ODBC Driver on Windows", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
-                }, 
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-            "next_url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/", 
-            "parent": "Using the MapR ODBC Driver on Windows", 
-            "previous_title": "Using the MapR ODBC Driver on Windows", 
-            "previous_url": "/docs/using-the-mapr-odbc-driver-on-windows/", 
-            "relative_path": "_docs/interfaces/odbc-win/001-install-odbc-win.md", 
-            "title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-            "url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/"
-        }, 
-        "Step 2. Configure ODBC Connections to Drill Data Sources": {
-            "breadcrumbs": [
-                {
-                    "title": "Using the MapR ODBC Driver on Windows", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
-                }, 
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-            "next_url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/", 
-            "parent": "Using the MapR ODBC Driver on Windows", 
-            "previous_title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-            "previous_url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/", 
-            "relative_path": "_docs/interfaces/odbc-win/002-conf-odbc-win.md", 
-            "title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-            "url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/"
-        }, 
-        "Step 3. Connect to Drill Data Sources from a BI Tool": {
-            "breadcrumbs": [
-                {
-                    "title": "Using the MapR ODBC Driver on Windows", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
-                }, 
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Tableau Examples", 
-            "next_url": "/docs/tableau-examples/", 
-            "parent": "Using the MapR ODBC Driver on Windows", 
-            "previous_title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-            "previous_url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/", 
-            "relative_path": "_docs/interfaces/odbc-win/003-connect-odbc-win.md", 
-            "title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-            "url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/"
-        }, 
         "Storage Plugin Configuration": {
             "breadcrumbs": [
                 {
@@ -6425,8 +6459,8 @@
         "Tableau Examples": {
             "breadcrumbs": [
                 {
-                    "title": "Using the MapR ODBC Driver on Windows", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                    "title": "Using ODBC on Windows", 
+                    "url": "/docs/using-odbc-on-windows/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -6434,20 +6468,20 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Drill Explorer to Browse Data and Create Views", 
-            "next_url": "/docs/using-drill-explorer-to-browse-data-and-create-views/", 
-            "parent": "Using the MapR ODBC Driver on Windows", 
-            "previous_title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-            "previous_url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/", 
-            "relative_path": "_docs/interfaces/odbc-win/004-tableau-examples.md", 
+            "next_title": "Using Drill Explorer", 
+            "next_url": "/docs/using-drill-explorer/", 
+            "parent": "Using ODBC on Windows", 
+            "previous_title": "Connecting to Data Sources", 
+            "previous_url": "/docs/connecting-to-data-sources/", 
+            "relative_path": "_docs/interfaces/odbc-win/040-tableau-examples.md", 
             "title": "Tableau Examples", 
             "url": "/docs/tableau-examples/"
         }, 
-        "Testing the ODBC Connection on Linux and Mac OS X": {
+        "Testing the ODBC Connection": {
             "breadcrumbs": [
                 {
-                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -6455,14 +6489,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using the MapR ODBC Driver on Windows", 
-            "next_url": "/docs/using-the-mapr-odbc-driver-on-windows/", 
-            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
+            "next_title": "Using ODBC on Windows", 
+            "next_url": "/docs/using-odbc-on-windows/", 
+            "parent": "Using ODBC on Linux and Mac OS X", 
             "previous_title": "Advanced Properties", 
             "previous_url": "/docs/advanced-properties/", 
-            "relative_path": "_docs/interfaces/odbc-linux/007-odbc-connections-test.md", 
-            "title": "Testing the ODBC Connection on Linux and Mac OS X", 
-            "url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/"
+            "relative_path": "_docs/interfaces/odbc-linux/070-testing-the-odbc-connection.md", 
+            "title": "Testing the ODBC Connection", 
+            "url": "/docs/testing-the-odbc-connection/"
         }, 
         "Tutorials": {
             "breadcrumbs": [], 
@@ -6829,11 +6863,11 @@
             "title": "Using Custom Functions in Queries", 
             "url": "/docs/using-custom-functions-in-queries/"
         }, 
-        "Using Drill Explorer to Browse Data and Create Views": {
+        "Using Drill Explorer": {
             "breadcrumbs": [
                 {
-                    "title": "Using the MapR ODBC Driver on Windows", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                    "title": "Using ODBC on Windows", 
+                    "url": "/docs/using-odbc-on-windows/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -6841,16 +6875,33 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using MicroStrategy Analytics with Apache Drill", 
-            "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-            "parent": "Using the MapR ODBC Driver on Windows", 
+            "next_title": "Using MicroStrategy Analytics with Drill", 
+            "next_url": "/docs/using-microstrategy-analytics-with-drill/", 
+            "parent": "Using ODBC on Windows", 
             "previous_title": "Tableau Examples", 
             "previous_url": "/docs/tableau-examples/", 
-            "relative_path": "_docs/interfaces/odbc-win/005-browse-view.md", 
-            "title": "Using Drill Explorer to Browse Data and Create Views", 
-            "url": "/docs/using-drill-explorer-to-browse-data-and-create-views/"
+            "relative_path": "_docs/interfaces/odbc-win/050-using-drill-explorer.md", 
+            "title": "Using Drill Explorer", 
+            "url": "/docs/using-drill-explorer/"
         }, 
-        "Using MicroStrategy Analytics with Apache Drill": {
+        "Using JDBC": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using ODBC on Linux and Mac OS X", 
+            "next_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Interfaces Introduction", 
+            "previous_url": "/docs/interfaces-introduction/", 
+            "relative_path": "_docs/interfaces/020-using-jdbc.md", 
+            "title": "Using JDBC", 
+            "url": "/docs/using-jdbc/"
+        }, 
+        "Using MicroStrategy Analytics with Drill": {
             "breadcrumbs": [
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -6861,30 +6912,13 @@
             "next_title": "Query Data", 
             "next_url": "/docs/query-data/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using Drill Explorer to Browse Data and Create Views", 
-            "previous_url": "/docs/using-drill-explorer-to-browse-data-and-create-views/", 
-            "relative_path": "_docs/interfaces/004-microstrategy.md", 
-            "title": "Using MicroStrategy Analytics with Apache Drill", 
-            "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
+            "previous_title": "Using Drill Explorer", 
+            "previous_url": "/docs/using-drill-explorer/", 
+            "relative_path": "_docs/interfaces/050-using-microstrategy-analytics-with-drill.md", 
+            "title": "Using MicroStrategy Analytics with Drill", 
+            "url": "/docs/using-microstrategy-analytics-with-drill/"
         }, 
-        "Using the JDBC Driver": {
-            "breadcrumbs": [
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-            "next_url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/", 
-            "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "ODBC/JDBC Interfaces", 
-            "previous_url": "/docs/odbc-jdbc-interfaces/", 
-            "relative_path": "_docs/interfaces/001-jdbc-squirrel.md", 
-            "title": "Using the JDBC Driver", 
-            "url": "/docs/using-the-jdbc-driver/"
-        }, 
-        "Using the MapR ODBC Driver on Linux and Mac OS X": {
+        "Using ODBC on Linux and Mac OS X": {
             "breadcrumbs": [
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -6895,8 +6929,8 @@
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                            "title": "Using ODBC on Linux and Mac OS X", 
+                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -6904,20 +6938,20 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                    "next_url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/", 
-                    "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "previous_title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "previous_url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/", 
-                    "relative_path": "_docs/interfaces/odbc-linux/001-install-odbc-linux.md", 
-                    "title": "Installing the MapR Drill ODBC Driver on Linux", 
-                    "url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/"
+                    "next_title": "Installing the Driver on Mac OS X", 
+                    "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
+                    "parent": "Using ODBC on Linux and Mac OS X", 
+                    "previous_title": "Using ODBC on Linux and Mac OS X", 
+                    "previous_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+                    "relative_path": "_docs/interfaces/odbc-linux/010-installing-the-driver-on-linux.md", 
+                    "title": "Installing the Driver on Linux", 
+                    "url": "/docs/installing-the-driver-on-linux/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                            "title": "Using ODBC on Linux and Mac OS X", 
+                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -6925,20 +6959,20 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                    "next_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                    "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "previous_title": "Installing the MapR Drill ODBC Driver on Linux", 
-                    "previous_url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/", 
-                    "relative_path": "_docs/interfaces/odbc-linux/002-install-odbc-mac.md", 
-                    "title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                    "url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/"
+                    "next_title": "Configuring Connections on Linux and Mac OS X", 
+                    "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                    "parent": "Using ODBC on Linux and Mac OS X", 
+                    "previous_title": "Installing the Driver on Linux", 
+                    "previous_url": "/docs/installing-the-driver-on-linux/", 
+                    "relative_path": "_docs/interfaces/odbc-linux/020-installing-the-driver-on-mac-os-x.md", 
+                    "title": "Installing the Driver on Mac OS X", 
+                    "url": "/docs/installing-the-driver-on-mac-os-x/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                            "title": "Using ODBC on Linux and Mac OS X", 
+                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -6948,18 +6982,18 @@
                     "children": [], 
                     "next_title": "Driver Configuration Options", 
                     "next_url": "/docs/driver-configuration-options/", 
-                    "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "previous_title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                    "previous_url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/", 
-                    "relative_path": "_docs/interfaces/odbc-linux/003-odbc-connections-linux.md", 
-                    "title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                    "url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/"
+                    "parent": "Using ODBC on Linux and Mac OS X", 
+                    "previous_title": "Installing the Driver on Mac OS X", 
+                    "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
+                    "relative_path": "_docs/interfaces/odbc-linux/030-configuring-connections-on-linux-and-mac-os-x.md", 
+                    "title": "Configuring Connections on Linux and Mac OS X", 
+                    "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                            "title": "Using ODBC on Linux and Mac OS X", 
+                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -6967,20 +7001,20 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                    "next_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                    "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "previous_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                    "previous_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                    "relative_path": "_docs/interfaces/odbc-linux/004-odbc-driver-conf.md", 
+                    "next_title": "Using a Connection String", 
+                    "next_url": "/docs/using-a-connection-string/", 
+                    "parent": "Using ODBC on Linux and Mac OS X", 
+                    "previous_title": "Configuring Connections on Linux and Mac OS X", 
+                    "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                    "relative_path": "_docs/interfaces/odbc-linux/040-driver-configuration-options.md", 
                     "title": "Driver Configuration Options", 
                     "url": "/docs/driver-configuration-options/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                            "title": "Using ODBC on Linux and Mac OS X", 
+                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -6990,18 +7024,18 @@
                     "children": [], 
                     "next_title": "Advanced Properties", 
                     "next_url": "/docs/advanced-properties/", 
-                    "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
+                    "parent": "Using ODBC on Linux and Mac OS X", 
                     "previous_title": "Driver Configuration Options", 
                     "previous_url": "/docs/driver-configuration-options/", 
-                    "relative_path": "_docs/interfaces/odbc-linux/005-odbc-connect-str.md", 
-                    "title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                    "url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/"
+                    "relative_path": "_docs/interfaces/odbc-linux/050-using-a-connection-string.md", 
+                    "title": "Using a Connection String", 
+                    "url": "/docs/using-a-connection-string/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                            "title": "Using ODBC on Linux and Mac OS X", 
+                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -7009,20 +7043,20 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Testing the ODBC Connection on Linux and Mac OS X", 
-                    "next_url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/", 
-                    "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "previous_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                    "previous_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                    "relative_path": "_docs/interfaces/odbc-linux/006-odbc-adv-prop.md", 
+                    "next_title": "Testing the ODBC Connection", 
+                    "next_url": "/docs/testing-the-odbc-connection/", 
+                    "parent": "Using ODBC on Linux and Mac OS X", 
+                    "previous_title": "Using a Connection String", 
+                    "previous_url": "/docs/using-a-connection-string/", 
+                    "relative_path": "_docs/interfaces/odbc-linux/060-advanced-properties.md", 
                     "title": "Advanced Properties", 
                     "url": "/docs/advanced-properties/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                            "title": "Using ODBC on Linux and Mac OS X", 
+                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -7030,26 +7064,26 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using the MapR ODBC Driver on Windows", 
-                    "next_url": "/docs/using-the-mapr-odbc-driver-on-windows/", 
-                    "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
+                    "next_title": "Using ODBC on Windows", 
+                    "next_url": "/docs/using-odbc-on-windows/", 
+                    "parent": "Using ODBC on Linux and Mac OS X", 
                     "previous_title": "Advanced Properties", 
                     "previous_url": "/docs/advanced-properties/", 
-                    "relative_path": "_docs/interfaces/odbc-linux/007-odbc-connections-test.md", 
-                    "title": "Testing the ODBC Connection on Linux and Mac OS X", 
-                    "url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/"
+                    "relative_path": "_docs/interfaces/odbc-linux/070-testing-the-odbc-connection.md", 
+                    "title": "Testing the ODBC Connection", 
+                    "url": "/docs/testing-the-odbc-connection/"
                 }
             ], 
-            "next_title": "Installing the MapR Drill ODBC Driver on Linux", 
-            "next_url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/", 
+            "next_title": "Installing the Driver on Linux", 
+            "next_url": "/docs/installing-the-driver-on-linux/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using the JDBC Driver", 
-            "previous_url": "/docs/using-the-jdbc-driver/", 
-            "relative_path": "_docs/interfaces/002-odbc-linux.md", 
-            "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-            "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+            "previous_title": "Using JDBC", 
+            "previous_url": "/docs/using-jdbc/", 
+            "relative_path": "_docs/interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
+            "title": "Using ODBC on Linux and Mac OS X", 
+            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
         }, 
-        "Using the MapR ODBC Driver on Windows": {
+        "Using ODBC on Windows": {
             "breadcrumbs": [
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -7060,8 +7094,8 @@
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Windows", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                            "title": "Using ODBC on Windows", 
+                            "url": "/docs/using-odbc-on-windows/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -7069,20 +7103,20 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                    "next_url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/", 
-                    "parent": "Using the MapR ODBC Driver on Windows", 
-                    "previous_title": "Using the MapR ODBC Driver on Windows", 
-                    "previous_url": "/docs/using-the-mapr-odbc-driver-on-windows/", 
-                    "relative_path": "_docs/interfaces/odbc-win/001-install-odbc-win.md", 
-                    "title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-                    "url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/"
+                    "next_title": "Configuring Connections on Windows", 
+                    "next_url": "/docs/configuring-connections-on-windows/", 
+                    "parent": "Using ODBC on Windows", 
+                    "previous_title": "Using ODBC on Windows", 
+                    "previous_url": "/docs/using-odbc-on-windows/", 
+                    "relative_path": "_docs/interfaces/odbc-win/010-installing-the-driver-on-windows.md", 
+                    "title": "Installing the Driver on Windows", 
+                    "url": "/docs/installing-the-driver-on-windows/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Windows", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                            "title": "Using ODBC on Windows", 
+                            "url": "/docs/using-odbc-on-windows/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -7090,20 +7124,20 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                    "next_url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/", 
-                    "parent": "Using the MapR ODBC Driver on Windows", 
-                    "previous_title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-                    "previous_url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/", 
-                    "relative_path": "_docs/interfaces/odbc-win/002-conf-odbc-win.md", 
-                    "title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                    "url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/"
+                    "next_title": "Connecting to Data Sources", 
+                    "next_url": "/docs/connecting-to-data-sources/", 
+                    "parent": "Using ODBC on Windows", 
+                    "previous_title": "Installing the Driver on Windows", 
+                    "previous_url": "/docs/installing-the-driver-on-windows/", 
+                    "relative_path": "_docs/interfaces/odbc-win/020-configuring-connections-on-windows.md", 
+                    "title": "Configuring Connections on Windows", 
+                    "url": "/docs/configuring-connections-on-windows/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Windows", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                            "title": "Using ODBC on Windows", 
+                            "url": "/docs/using-odbc-on-windows/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -7113,18 +7147,18 @@
                     "children": [], 
                     "next_title": "Tableau Examples", 
                     "next_url": "/docs/tableau-examples/", 
-                    "parent": "Using the MapR ODBC Driver on Windows", 
-                    "previous_title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                    "previous_url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/", 
-                    "relative_path": "_docs/interfaces/odbc-win/003-connect-odbc-win.md", 
-                    "title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                    "url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/"
+                    "parent": "Using ODBC on Windows", 
+                    "previous_title": "Configuring Connections on Windows", 
+                    "previous_url": "/docs/configuring-connections-on-windows/", 
+                    "relative_path": "_docs/interfaces/odbc-win/030-connecting-to-data-sources.md", 
+                    "title": "Connecting to Data Sources", 
+                    "url": "/docs/connecting-to-data-sources/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Windows", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                            "title": "Using ODBC on Windows", 
+                            "url": "/docs/using-odbc-on-windows/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -7132,20 +7166,20 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Drill Explorer to Browse Data and Create Views", 
-                    "next_url": "/docs/using-drill-explorer-to-browse-data-and-create-views/", 
-                    "parent": "Using the MapR ODBC Driver on Windows", 
-                    "previous_title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                    "previous_url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/", 
-                    "relative_path": "_docs/interfaces/odbc-win/004-tableau-examples.md", 
+                    "next_title": "Using Drill Explorer", 
+                    "next_url": "/docs/using-drill-explorer/", 
+                    "parent": "Using ODBC on Windows", 
+                    "previous_title": "Connecting to Data Sources", 
+                    "previous_url": "/docs/connecting-to-data-sources/", 
+                    "relative_path": "_docs/interfaces/odbc-win/040-tableau-examples.md", 
                     "title": "Tableau Examples", 
                     "url": "/docs/tableau-examples/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Using the MapR ODBC Driver on Windows", 
-                            "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                            "title": "Using ODBC on Windows", 
+                            "url": "/docs/using-odbc-on-windows/"
                         }, 
                         {
                             "title": "ODBC/JDBC Interfaces", 
@@ -7153,24 +7187,45 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using MicroStrategy Analytics with Apache Drill", 
-                    "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                    "parent": "Using the MapR ODBC Driver on Windows", 
+                    "next_title": "Using MicroStrategy Analytics with Drill", 
+                    "next_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                    "parent": "Using ODBC on Windows", 
                     "previous_title": "Tableau Examples", 
                     "previous_url": "/docs/tableau-examples/", 
-                    "relative_path": "_docs/interfaces/odbc-win/005-browse-view.md", 
-                    "title": "Using Drill Explorer to Browse Data and Create Views", 
-                    "url": "/docs/using-drill-explorer-to-browse-data-and-create-views/"
+                    "relative_path": "_docs/interfaces/odbc-win/050-using-drill-explorer.md", 
+                    "title": "Using Drill Explorer", 
+                    "url": "/docs/using-drill-explorer/"
                 }
             ], 
-            "next_title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-            "next_url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/", 
+            "next_title": "Installing the Driver on Windows", 
+            "next_url": "/docs/installing-the-driver-on-windows/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Testing the ODBC Connection on Linux and Mac OS X", 
-            "previous_url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/", 
-            "relative_path": "_docs/interfaces/003-odbc-win.md", 
-            "title": "Using the MapR ODBC Driver on Windows", 
-            "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+            "previous_title": "Testing the ODBC Connection", 
+            "previous_url": "/docs/testing-the-odbc-connection/", 
+            "relative_path": "_docs/interfaces/040-using-odbc-on-windows.md", 
+            "title": "Using ODBC on Windows", 
+            "url": "/docs/using-odbc-on-windows/"
+        }, 
+        "Using a Connection String": {
+            "breadcrumbs": [
+                {
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Advanced Properties", 
+            "next_url": "/docs/advanced-properties/", 
+            "parent": "Using ODBC on Linux and Mac OS X", 
+            "previous_title": "Driver Configuration Options", 
+            "previous_url": "/docs/driver-configuration-options/", 
+            "relative_path": "_docs/interfaces/odbc-linux/050-using-a-connection-string.md", 
+            "title": "Using a Connection String", 
+            "url": "/docs/using-a-connection-string/"
         }, 
         "Value Vectors": {
             "breadcrumbs": [
@@ -8070,14 +8125,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "next_url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/", 
+                    "next_title": "Using JDBC", 
+                    "next_url": "/docs/using-jdbc/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "ODBC/JDBC Interfaces", 
                     "previous_url": "/docs/odbc-jdbc-interfaces/", 
-                    "relative_path": "_docs/interfaces/001-jdbc-squirrel.md", 
-                    "title": "Using the JDBC Driver", 
-                    "url": "/docs/using-the-jdbc-driver/"
+                    "relative_path": "_docs/interfaces/010-interfaces-introduction.md", 
+                    "title": "Interfaces Introduction", 
+                    "url": "/docs/interfaces-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using ODBC on Linux and Mac OS X", 
+                    "next_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Interfaces Introduction", 
+                    "previous_url": "/docs/interfaces-introduction/", 
+                    "relative_path": "_docs/interfaces/020-using-jdbc.md", 
+                    "title": "Using JDBC", 
+                    "url": "/docs/using-jdbc/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8090,8 +8162,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8099,20 +8171,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                            "next_url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/001-install-odbc-linux.md", 
-                            "title": "Installing the MapR Drill ODBC Driver on Linux", 
-                            "url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/"
+                            "next_title": "Installing the Driver on Mac OS X", 
+                            "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Using ODBC on Linux and Mac OS X", 
+                            "previous_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/010-installing-the-driver-on-linux.md", 
+                            "title": "Installing the Driver on Linux", 
+                            "url": "/docs/installing-the-driver-on-linux/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8120,20 +8192,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "next_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Installing the MapR Drill ODBC Driver on Linux", 
-                            "previous_url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/002-install-odbc-mac.md", 
-                            "title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                            "url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/"
+                            "next_title": "Configuring Connections on Linux and Mac OS X", 
+                            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Installing the Driver on Linux", 
+                            "previous_url": "/docs/installing-the-driver-on-linux/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/020-installing-the-driver-on-mac-os-x.md", 
+                            "title": "Installing the Driver on Mac OS X", 
+                            "url": "/docs/installing-the-driver-on-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8143,18 +8215,18 @@
                             "children": [], 
                             "next_title": "Driver Configuration Options", 
                             "next_url": "/docs/driver-configuration-options/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Installing the MapR Drill ODBC Driver on Mac OS X", 
-                            "previous_url": "/docs/installing-the-mapr-drill-odbc-driver-on-mac-os-x/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/003-odbc-connections-linux.md", 
-                            "title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/"
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Installing the Driver on Mac OS X", 
+                            "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/030-configuring-connections-on-linux-and-mac-os-x.md", 
+                            "title": "Configuring Connections on Linux and Mac OS X", 
+                            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8162,20 +8234,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "next_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "previous_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/004-odbc-driver-conf.md", 
+                            "next_title": "Using a Connection String", 
+                            "next_url": "/docs/using-a-connection-string/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Configuring Connections on Linux and Mac OS X", 
+                            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/040-driver-configuration-options.md", 
                             "title": "Driver Configuration Options", 
                             "url": "/docs/driver-configuration-options/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8185,18 +8257,18 @@
                             "children": [], 
                             "next_title": "Advanced Properties", 
                             "next_url": "/docs/advanced-properties/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
                             "previous_title": "Driver Configuration Options", 
                             "previous_url": "/docs/driver-configuration-options/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/005-odbc-connect-str.md", 
-                            "title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/"
+                            "relative_path": "_docs/interfaces/odbc-linux/050-using-a-connection-string.md", 
+                            "title": "Using a Connection String", 
+                            "url": "/docs/using-a-connection-string/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8204,20 +8276,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Testing the ODBC Connection on Linux and Mac OS X", 
-                            "next_url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                            "previous_title": "Configuring ODBC Connections for Linux and Mac OS X", 
-                            "previous_url": "/docs/configuring-odbc-connections-for-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/006-odbc-adv-prop.md", 
+                            "next_title": "Testing the ODBC Connection", 
+                            "next_url": "/docs/testing-the-odbc-connection/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "previous_title": "Using a Connection String", 
+                            "previous_url": "/docs/using-a-connection-string/", 
+                            "relative_path": "_docs/interfaces/odbc-linux/060-advanced-properties.md", 
                             "title": "Advanced Properties", 
                             "url": "/docs/advanced-properties/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                                    "title": "Using ODBC on Linux and Mac OS X", 
+                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8225,24 +8297,24 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using the MapR ODBC Driver on Windows", 
-                            "next_url": "/docs/using-the-mapr-odbc-driver-on-windows/", 
-                            "parent": "Using the MapR ODBC Driver on Linux and Mac OS X", 
+                            "next_title": "Using ODBC on Windows", 
+                            "next_url": "/docs/using-odbc-on-windows/", 
+                            "parent": "Using ODBC on Linux and Mac OS X", 
                             "previous_title": "Advanced Properties", 
                             "previous_url": "/docs/advanced-properties/", 
-                            "relative_path": "_docs/interfaces/odbc-linux/007-odbc-connections-test.md", 
-                            "title": "Testing the ODBC Connection on Linux and Mac OS X", 
-                            "url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/"
+                            "relative_path": "_docs/interfaces/odbc-linux/070-testing-the-odbc-connection.md", 
+                            "title": "Testing the ODBC Connection", 
+                            "url": "/docs/testing-the-odbc-connection/"
                         }
                     ], 
-                    "next_title": "Installing the MapR Drill ODBC Driver on Linux", 
-                    "next_url": "/docs/installing-the-mapr-drill-odbc-driver-on-linux/", 
+                    "next_title": "Installing the Driver on Linux", 
+                    "next_url": "/docs/installing-the-driver-on-linux/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using the JDBC Driver", 
-                    "previous_url": "/docs/using-the-jdbc-driver/", 
-                    "relative_path": "_docs/interfaces/002-odbc-linux.md", 
-                    "title": "Using the MapR ODBC Driver on Linux and Mac OS X", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-linux-and-mac-os-x/"
+                    "previous_title": "Using JDBC", 
+                    "previous_url": "/docs/using-jdbc/", 
+                    "relative_path": "_docs/interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
+                    "title": "Using ODBC on Linux and Mac OS X", 
+                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8255,8 +8327,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8264,20 +8336,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                            "next_url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
-                            "previous_title": "Using the MapR ODBC Driver on Windows", 
-                            "previous_url": "/docs/using-the-mapr-odbc-driver-on-windows/", 
-                            "relative_path": "_docs/interfaces/odbc-win/001-install-odbc-win.md", 
-                            "title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-                            "url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/"
+                            "next_title": "Configuring Connections on Windows", 
+                            "next_url": "/docs/configuring-connections-on-windows/", 
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Using ODBC on Windows", 
+                            "previous_url": "/docs/using-odbc-on-windows/", 
+                            "relative_path": "_docs/interfaces/odbc-win/010-installing-the-driver-on-windows.md", 
+                            "title": "Installing the Driver on Windows", 
+                            "url": "/docs/installing-the-driver-on-windows/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8285,20 +8357,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                            "next_url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
-                            "previous_title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-                            "previous_url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/", 
-                            "relative_path": "_docs/interfaces/odbc-win/002-conf-odbc-win.md", 
-                            "title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                            "url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/"
+                            "next_title": "Connecting to Data Sources", 
+                            "next_url": "/docs/connecting-to-data-sources/", 
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Installing the Driver on Windows", 
+                            "previous_url": "/docs/installing-the-driver-on-windows/", 
+                            "relative_path": "_docs/interfaces/odbc-win/020-configuring-connections-on-windows.md", 
+                            "title": "Configuring Connections on Windows", 
+                            "url": "/docs/configuring-connections-on-windows/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8308,18 +8380,18 @@
                             "children": [], 
                             "next_title": "Tableau Examples", 
                             "next_url": "/docs/tableau-examples/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
-                            "previous_title": "Step 2. Configure ODBC Connections to Drill Data Sources", 
-                            "previous_url": "/docs/step-2-configure-odbc-connections-to-drill-data-sources/", 
-                            "relative_path": "_docs/interfaces/odbc-win/003-connect-odbc-win.md", 
-                            "title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                            "url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/"
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Configuring Connections on Windows", 
+                            "previous_url": "/docs/configuring-connections-on-windows/", 
+                            "relative_path": "_docs/interfaces/odbc-win/030-connecting-to-data-sources.md", 
+                            "title": "Connecting to Data Sources", 
+                            "url": "/docs/connecting-to-data-sources/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8327,20 +8399,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Drill Explorer to Browse Data and Create Views", 
-                            "next_url": "/docs/using-drill-explorer-to-browse-data-and-create-views/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
-                            "previous_title": "Step 3. Connect to Drill Data Sources from a BI Tool", 
-                            "previous_url": "/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/", 
-                            "relative_path": "_docs/interfaces/odbc-win/004-tableau-examples.md", 
+                            "next_title": "Using Drill Explorer", 
+                            "next_url": "/docs/using-drill-explorer/", 
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Connecting to Data Sources", 
+                            "previous_url": "/docs/connecting-to-data-sources/", 
+                            "relative_path": "_docs/interfaces/odbc-win/040-tableau-examples.md", 
                             "title": "Tableau Examples", 
                             "url": "/docs/tableau-examples/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using the MapR ODBC Driver on Windows", 
-                                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -8348,24 +8420,24 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using MicroStrategy Analytics with Apache Drill", 
-                            "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                            "parent": "Using the MapR ODBC Driver on Windows", 
+                            "next_title": "Using MicroStrategy Analytics with Drill", 
+                            "next_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                            "parent": "Using ODBC on Windows", 
                             "previous_title": "Tableau Examples", 
                             "previous_url": "/docs/tableau-examples/", 
-                            "relative_path": "_docs/interfaces/odbc-win/005-browse-view.md", 
-                            "title": "Using Drill Explorer to Browse Data and Create Views", 
-                            "url": "/docs/using-drill-explorer-to-browse-data-and-create-views/"
+                            "relative_path": "_docs/interfaces/odbc-win/050-using-drill-explorer.md", 
+                            "title": "Using Drill Explorer", 
+                            "url": "/docs/using-drill-explorer/"
                         }
                     ], 
-                    "next_title": "Step 1. Install the MapR Drill ODBC Driver on Windows", 
-                    "next_url": "/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/", 
+                    "next_title": "Installing the Driver on Windows", 
+                    "next_url": "/docs/installing-the-driver-on-windows/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Testing the ODBC Connection on Linux and Mac OS X", 
-                    "previous_url": "/docs/testing-the-odbc-connection-on-linux-and-mac-os-x/", 
-                    "relative_path": "_docs/interfaces/003-odbc-win.md", 
-                    "title": "Using the MapR ODBC Driver on Windows", 
-                    "url": "/docs/using-the-mapr-odbc-driver-on-windows/"
+                    "previous_title": "Testing the ODBC Connection", 
+                    "previous_url": "/docs/testing-the-odbc-connection/", 
+                    "relative_path": "_docs/interfaces/040-using-odbc-on-windows.md", 
+                    "title": "Using ODBC on Windows", 
+                    "url": "/docs/using-odbc-on-windows/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8378,15 +8450,15 @@
                     "next_title": "Query Data", 
                     "next_url": "/docs/query-data/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Drill Explorer to Browse Data and Create Views", 
-                    "previous_url": "/docs/using-drill-explorer-to-browse-data-and-create-views/", 
-                    "relative_path": "_docs/interfaces/004-microstrategy.md", 
-                    "title": "Using MicroStrategy Analytics with Apache Drill", 
-                    "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
+                    "previous_title": "Using Drill Explorer", 
+                    "previous_url": "/docs/using-drill-explorer/", 
+                    "relative_path": "_docs/interfaces/050-using-microstrategy-analytics-with-drill.md", 
+                    "title": "Using MicroStrategy Analytics with Drill", 
+                    "url": "/docs/using-microstrategy-analytics-with-drill/"
                 }
             ], 
-            "next_title": "Using the JDBC Driver", 
-            "next_url": "/docs/using-the-jdbc-driver/", 
+            "next_title": "Interfaces Introduction", 
+            "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
             "previous_title": "MapR-DB Format", 
             "previous_url": "/docs/mapr-db-format/", 
@@ -8694,8 +8766,8 @@
             "next_title": "Querying a File System", 
             "next_url": "/docs/querying-a-file-system/", 
             "parent": "", 
-            "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
-            "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+            "previous_title": "Using MicroStrategy Analytics with Drill", 
+            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
             "relative_path": "_docs/070-query.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"

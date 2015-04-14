@@ -1,8 +1,8 @@
 ---
-title: "Testing the ODBC Connection on Linux and Mac OS X"
-parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
+title: "Testing the ODBC Connection"
+parent: "Using ODBC on Linux and Mac OS X"
 ---
-To test the connection, you can use an ODBC-enabled client application. For a
+To test the ODBC connection on Linux and Mac OS X, you can use an ODBC-enabled client application. For a
 basic connection test, you can also use the test utilities that are packaged
 with your driver manager installation.
 

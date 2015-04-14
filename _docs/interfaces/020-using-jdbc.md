@@ -1,5 +1,5 @@
 ---
-title: "Using the JDBC Driver"
+title: "Using JDBC"
 parent: "ODBC/JDBC Interfaces"
 ---
 To use the JDBC Driver to access Drill through Squirrel, ensure that you meet the prerequisites and follow the steps in this section.

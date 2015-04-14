@@ -1,6 +1,6 @@
 ---
-title: "Configuring ODBC Connections for Linux and Mac OS X"
-parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
+title: "Configuring Connections on Linux and Mac OS X"
+parent: "Using ODBC on Linux and Mac OS X"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data
 sources and drivers. Before you connect to Drill through an ODBC client tool

@@ -1,5 +1,5 @@
 ---
-title: "Using the MapR ODBC Driver on Windows"
+title: "Using ODBC on Windows"
 parent: "ODBC/JDBC Interfaces"
 ---
 The MapR Drill ODBC driver provides BI tools access to Drill’s flexible query

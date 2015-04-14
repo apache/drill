@@ -1,6 +1,6 @@
 ---
 title: "Tableau Examples"
-parent: "Using the MapR ODBC Driver on Windows"
+parent: "Using ODBC on Windows"
 ---
 You can generate reports in Tableau using ODBC connections to Drill data
 sources. Each example in this section takes you through the steps to create a

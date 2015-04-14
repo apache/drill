@@ -1,9 +1,9 @@
 ---
-title: "Step 1. Install the MapR Drill ODBC Driver on Windows"
-parent: "Using the MapR ODBC Driver on Windows"
+title: "Installing the Driver on Windows"
+parent: "Using ODBC on Windows"
 ---
 The MapR Drill ODBC Driver installer is available for 32-bit and 64-bit
-applications. Both versions of the driver can be installed on a 64-bit
+applications on Windows. Both versions of the driver can be installed on a 64-bit
 machine.
 
 ##  System Requirements

@@ -1,6 +1,6 @@
 ---
-title: "Installing the MapR Drill ODBC Driver on Mac OS X"
-parent: "Using the MapR ODBC Driver on Linux and Mac OS X"
+title: "Installing the Driver on Mac OS X"
+parent: "Using ODBC on Linux and Mac OS X"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
 the Drill service.
