@@ -1,5 +1,5 @@
 ---
-title: "Configuration Options Overview"
+title: "Configuration Options Introduction"
 parent: "Configuration Options"
 ---
 The sys.options table in Drill contains information about boot and system options listed in the following tables. To tune performance, you adjust some of the options to suit your application. Configure the options using the ALTER SESSION or ALTER SYSTEM command.

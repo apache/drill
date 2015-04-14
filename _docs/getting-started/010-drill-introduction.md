@@ -6,9 +6,9 @@ parent: "Getting Started"
 If you've never used Drill, visit these links to get a jump start:
 
 * [Drill in 10 Minutes]({{ site.baseurl }}/docs/drill-in-10-minutes/)
-* [Query Files]()
-* [Query HBase]()
-* [SQL Support]()
+* [Query Files]({{ site.baseurl }}/docs/querying-a-file-system)
+* [Query HBase]({{ site.baseurl }}/docs/querying-hbase)
+* [SQL Support]({{ site.baseurl }}/docs/sql-reference-introduction/)
 * [Drill Tutorials]({{ site.baseurl }}/docs/tutorials-introduction)
 
 ## Videos
