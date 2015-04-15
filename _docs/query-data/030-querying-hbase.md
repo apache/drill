@@ -2,7 +2,7 @@
 title: "Querying HBase"
 parent: "Query Data"
 ---
-This exercise creates two tables in HBase, students and clicks, that you can query with Drill. You can use the Drill Sandbox to step through the exercise. As an HBase user, you most likely are running Drill in  distributed mode. In this case, the warden starts Drill as a service. If you are not an HBase user and just kicking the tires, you are most likely running Drill in embedded mode. In embedded mode, you need to [start Drill](/docs/starting-stopping-drill/) before performing step 5. On the Drill Sandbox, HBase tables you create will be located in: /mapr/demo.mapr.com/tables
+This exercise creates two tables in HBase, students and clicks, that you can query with Drill. As an HBase user, you most likely are running Drill in  distributed mode. In this case, the warden starts Drill as a service. If you are not an HBase user and just kicking the tires, you might use the Drill Sandbox on a single-node cluster (embedded mode). In this case, you need to [start Drill](/docs/starting-stopping-drill/) before performing step 5 of this exercise. On the Drill Sandbox, HBase tables you create will be located in: /mapr/demo.mapr.com/tables
 
 You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in the last step. It is a best practice to use CAST for INT and BIGINT conversions from binary and to use CONVERT_TO and CONVERT_FROM for other conversions.
 
