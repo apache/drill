@@ -47,6 +47,6 @@ details.
 
 Note that Hadoop is not a prerequisite for Drill and users can start ramping
 up with Drill by running SQL queries directly on the local file system. Refer
-to [Apache Drill in 10 minutes](/docs/apache-drill-in-10-minutes) for an introduction to using Drill in local
+to [Apache Drill in 10 minutes](/docs/drill-in-10-minutes) for an introduction to using Drill in local
 (embedded) mode.
 

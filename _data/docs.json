@@ -1350,7 +1350,7 @@
             "title": "Date/Time Functions and Arithmetic", 
             "url": "/docs/date-time-functions-and-arithmetic/"
         }, 
-        "Deploying Apache Drill in a Clustered Environment": {
+        "Deploying Drill in a Cluster": {
             "breadcrumbs": [
                 {
                     "title": "Install Drill", 
@@ -1364,8 +1364,8 @@
             "previous_title": "Install Drill Introduction", 
             "previous_url": "/docs/install-drill-introduction/", 
             "relative_path": "_docs/install/020-deploying-drill-in-a-cluster.md", 
-            "title": "Deploying Apache Drill in a Clustered Environment", 
-            "url": "/docs/deploying-apache-drill-in-a-clustered-environment/"
+            "title": "Deploying Drill in a Cluster", 
+            "url": "/docs/deploying-drill-in-a-cluster/"
         }, 
         "Deploying and Using a Hive UDF": {
             "breadcrumbs": [
@@ -2293,7 +2293,7 @@
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Installing the Apache Drill Sandbox", 
             "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
-            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/002-get2kno-sb.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md", 
             "title": "Getting to Know the Drill Sandbox", 
             "url": "/docs/getting-to-know-the-drill-sandbox/"
         }, 
@@ -2405,8 +2405,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Deploying Apache Drill in a Clustered Environment", 
-                    "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
+                    "next_title": "Deploying Drill in a Cluster", 
+                    "next_url": "/docs/deploying-drill-in-a-cluster/", 
                     "parent": "Install Drill", 
                     "previous_title": "Install Drill", 
                     "previous_url": "/docs/install-drill/", 
@@ -2428,8 +2428,8 @@
                     "previous_title": "Install Drill Introduction", 
                     "previous_url": "/docs/install-drill-introduction/", 
                     "relative_path": "_docs/install/020-deploying-drill-in-a-cluster.md", 
-                    "title": "Deploying Apache Drill in a Clustered Environment", 
-                    "url": "/docs/deploying-apache-drill-in-a-clustered-environment/"
+                    "title": "Deploying Drill in a Cluster", 
+                    "url": "/docs/deploying-drill-in-a-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -2506,8 +2506,8 @@
                     "next_title": "Installing Drill on Linux", 
                     "next_url": "/docs/installing-drill-on-linux/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Deploying Apache Drill in a Clustered Environment", 
-                    "previous_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
+                    "previous_title": "Deploying Drill in a Cluster", 
+                    "previous_url": "/docs/deploying-drill-in-a-cluster/", 
                     "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
                     "title": "Installing Drill in Embedded Mode", 
                     "url": "/docs/installing-drill-in-embedded-mode/"
@@ -2547,8 +2547,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Deploying Apache Drill in a Clustered Environment", 
-            "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
+            "next_title": "Deploying Drill in a Cluster", 
+            "next_url": "/docs/deploying-drill-in-a-cluster/", 
             "parent": "Install Drill", 
             "previous_title": "Install Drill", 
             "previous_url": "/docs/install-drill/", 
@@ -2648,8 +2648,8 @@
             "next_title": "Installing Drill on Linux", 
             "next_url": "/docs/installing-drill-on-linux/", 
             "parent": "Install Drill", 
-            "previous_title": "Deploying Apache Drill in a Clustered Environment", 
-            "previous_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
+            "previous_title": "Deploying Drill in a Cluster", 
+            "previous_url": "/docs/deploying-drill-in-a-cluster/", 
             "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
             "title": "Installing Drill in Embedded Mode", 
             "url": "/docs/installing-drill-in-embedded-mode/"
@@ -2734,7 +2734,7 @@
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Learn Drill with the MapR Sandbox", 
             "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
-            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md", 
             "title": "Installing the Apache Drill Sandbox", 
             "url": "/docs/installing-the-apache-drill-sandbox/"
         }, 
@@ -2881,7 +2881,7 @@
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Learn Drill with the MapR Sandbox", 
                     "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
-                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md", 
                     "title": "Installing the Apache Drill Sandbox", 
                     "url": "/docs/installing-the-apache-drill-sandbox/"
                 }, 
@@ -2902,7 +2902,7 @@
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Installing the Apache Drill Sandbox", 
                     "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
-                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/002-get2kno-sb.md", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md", 
                     "title": "Getting to Know the Drill Sandbox", 
                     "url": "/docs/getting-to-know-the-drill-sandbox/"
                 }, 
@@ -2923,7 +2923,7 @@
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Getting to Know the Drill Sandbox", 
                     "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
-                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/003-lesson1.md", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md", 
                     "title": "Lession 1: Learn about the Data Set", 
                     "url": "/docs/lession-1-learn-about-the-data-set/"
                 }, 
@@ -2944,7 +2944,7 @@
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Lession 1: Learn about the Data Set", 
                     "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
-                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/004-lesson2.md", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md", 
                     "title": "Lession 2: Run Queries with ANSI SQL", 
                     "url": "/docs/lession-2-run-queries-with-ansi-sql/"
                 }, 
@@ -2965,7 +2965,7 @@
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Lession 2: Run Queries with ANSI SQL", 
                     "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/005-lesson3.md", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
                     "title": "Lession 3: Run Queries on Complex Data Types", 
                     "url": "/docs/lession-3-run-queries-on-complex-data-types/"
                 }, 
@@ -2986,7 +2986,7 @@
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                     "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/006-summary.md", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md", 
                     "title": "Summary", 
                     "url": "/docs/summary/"
                 }
@@ -3017,7 +3017,7 @@
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Getting to Know the Drill Sandbox", 
             "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
-            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/003-lesson1.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md", 
             "title": "Lession 1: Learn about the Data Set", 
             "url": "/docs/lession-1-learn-about-the-data-set/"
         }, 
@@ -3038,7 +3038,7 @@
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Lession 1: Learn about the Data Set", 
             "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
-            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/004-lesson2.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md", 
             "title": "Lession 2: Run Queries with ANSI SQL", 
             "url": "/docs/lession-2-run-queries-with-ansi-sql/"
         }, 
@@ -3059,7 +3059,7 @@
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Lession 2: Run Queries with ANSI SQL", 
             "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/005-lesson3.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
             "title": "Lession 3: Run Queries on Complex Data Types", 
             "url": "/docs/lession-3-run-queries-on-complex-data-types/"
         }, 
@@ -6601,7 +6601,7 @@
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/006-summary.md", 
+            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md", 
             "title": "Summary", 
             "url": "/docs/summary/"
         }, 
@@ -6726,7 +6726,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Learn Drill with the MapR Sandbox", 
                             "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md", 
                             "title": "Installing the Apache Drill Sandbox", 
                             "url": "/docs/installing-the-apache-drill-sandbox/"
                         }, 
@@ -6747,7 +6747,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Installing the Apache Drill Sandbox", 
                             "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/002-get2kno-sb.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md", 
                             "title": "Getting to Know the Drill Sandbox", 
                             "url": "/docs/getting-to-know-the-drill-sandbox/"
                         }, 
@@ -6768,7 +6768,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Getting to Know the Drill Sandbox", 
                             "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/003-lesson1.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md", 
                             "title": "Lession 1: Learn about the Data Set", 
                             "url": "/docs/lession-1-learn-about-the-data-set/"
                         }, 
@@ -6789,7 +6789,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 1: Learn about the Data Set", 
                             "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/004-lesson2.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md", 
                             "title": "Lession 2: Run Queries with ANSI SQL", 
                             "url": "/docs/lession-2-run-queries-with-ansi-sql/"
                         }, 
@@ -6810,7 +6810,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 2: Run Queries with ANSI SQL", 
                             "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/005-lesson3.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
                             "title": "Lession 3: Run Queries on Complex Data Types", 
                             "url": "/docs/lession-3-run-queries-on-complex-data-types/"
                         }, 
@@ -6831,7 +6831,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/006-summary.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md", 
                             "title": "Summary", 
                             "url": "/docs/summary/"
                         }
@@ -7725,7 +7725,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Learn Drill with the MapR Sandbox", 
                             "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md", 
                             "title": "Installing the Apache Drill Sandbox", 
                             "url": "/docs/installing-the-apache-drill-sandbox/"
                         }, 
@@ -7746,7 +7746,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Installing the Apache Drill Sandbox", 
                             "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/002-get2kno-sb.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md", 
                             "title": "Getting to Know the Drill Sandbox", 
                             "url": "/docs/getting-to-know-the-drill-sandbox/"
                         }, 
@@ -7767,7 +7767,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Getting to Know the Drill Sandbox", 
                             "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/003-lesson1.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md", 
                             "title": "Lession 1: Learn about the Data Set", 
                             "url": "/docs/lession-1-learn-about-the-data-set/"
                         }, 
@@ -7788,7 +7788,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 1: Learn about the Data Set", 
                             "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/004-lesson2.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md", 
                             "title": "Lession 2: Run Queries with ANSI SQL", 
                             "url": "/docs/lession-2-run-queries-with-ansi-sql/"
                         }, 
@@ -7809,7 +7809,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 2: Run Queries with ANSI SQL", 
                             "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/005-lesson3.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
                             "title": "Lession 3: Run Queries on Complex Data Types", 
                             "url": "/docs/lession-3-run-queries-on-complex-data-types/"
                         }, 
@@ -7830,7 +7830,7 @@
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
-                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/006-summary.md", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md", 
                             "title": "Summary", 
                             "url": "/docs/summary/"
                         }
@@ -7946,8 +7946,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Deploying Apache Drill in a Clustered Environment", 
-                    "next_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
+                    "next_title": "Deploying Drill in a Cluster", 
+                    "next_url": "/docs/deploying-drill-in-a-cluster/", 
                     "parent": "Install Drill", 
                     "previous_title": "Install Drill", 
                     "previous_url": "/docs/install-drill/", 
@@ -7969,8 +7969,8 @@
                     "previous_title": "Install Drill Introduction", 
                     "previous_url": "/docs/install-drill-introduction/", 
                     "relative_path": "_docs/install/020-deploying-drill-in-a-cluster.md", 
-                    "title": "Deploying Apache Drill in a Clustered Environment", 
-                    "url": "/docs/deploying-apache-drill-in-a-clustered-environment/"
+                    "title": "Deploying Drill in a Cluster", 
+                    "url": "/docs/deploying-drill-in-a-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8047,8 +8047,8 @@
                     "next_title": "Installing Drill on Linux", 
                     "next_url": "/docs/installing-drill-on-linux/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Deploying Apache Drill in a Clustered Environment", 
-                    "previous_url": "/docs/deploying-apache-drill-in-a-clustered-environment/", 
+                    "previous_title": "Deploying Drill in a Cluster", 
+                    "previous_url": "/docs/deploying-drill-in-a-cluster/", 
                     "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
                     "title": "Installing Drill in Embedded Mode", 
                     "url": "/docs/installing-drill-in-embedded-mode/"

@@ -1,5 +1,5 @@
 ---
-title: "Deploying Apache Drill in a Clustered Environment"
+title: "Deploying Drill in a Cluster"
 parent: "Install Drill"
 ---
 ## Overview
@@ -52,7 +52,7 @@ Complete the following steps to install Drill on designated nodes:
 ### Connecting Drill to Data Sources
 
 You can connect Drill to various types of data sources. Refer to [Connect
-Apache Drill to Data Sources](/docs/connect-to-data-sources) to get configuration instructions for the
+Apache Drill to Data Sources](/docs/connect-a-data-source-introduction)) to get configuration instructions for the
 particular type of data source that you want to connect to Drill.
 
 ### Starting Drill

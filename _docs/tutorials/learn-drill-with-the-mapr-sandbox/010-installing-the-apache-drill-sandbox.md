@@ -37,11 +37,11 @@ VMware Player or VMware Fusion:
 
 1. Download the MapR Sandbox with Drill file to a directory on your machine:  
    <https://www.mapr.com/products/mapr-sandbox-hadoop/download-sandbox-drill>
-2. Open the virtual machine player, and select the **Open a Virtual Machine **option.  
+2. Open the virtual machine player, and select the **Open a Virtual Machine** option.  
   
     **Tip for VMware Fusion**  
 
-    If you are running VMware Fusion, select** Import**.  
+    If you are running VMware Fusion, select **Import**.  
 
     ![drill query flow]({{ site.baseurl }}/docs/img/vmWelcome.png)
 3. Navigate to the directory where you downloaded the MapR Sandbox with Apache Drill file, and select `MapR-Sandbox-For-Apache-Drill-4.0.1_VM.ova`.
@@ -76,7 +76,7 @@ Drill.
 
 After downloading and installing the sandbox, continue with the tutorial by
 [Getting to Know the Drill
-Setup](/docs/getting-to-know-the-drill-sandbox/).
+Sandbox](/docs/getting-to-know-the-drill-sandbox/).
 
 ## Installing the MapR Sandbox with Apache Drill on VirtualBox
 
@@ -103,13 +103,13 @@ VirtualBox:
 
     The correct setting depends on your network connectivity when you run the
 Sandbox. In general, if you are going to use a wired Ethernet connection,
-select **NAT Networks **and **vboxnet0**. If you are going to use a wireless
+select **NAT Networks** and **vboxnet0**. If you are going to use a wireless
 network, select **Host-only Networks** and the **VirtualBox Host-Only Ethernet
-Adapter**. If no adapters appear, click the green** +** button to add the
+Adapter**. If no adapters appear, click the **green** + **button** to add the
 VirtualBox adapter.
 
      ![drill query flow]({{ site.baseurl }}/docs/img/vbMaprSetting.png)
-8. Click **OK **to continue.
+8. Click **OK** to continue.
 9. Click Settings.
 
     ![settings icon]({{ site.baseurl }}/docs/img/settings.png)  
@@ -138,5 +138,4 @@ VirtualBox adapter.
 ### What's Next
 
 After downloading and installing the sandbox, continue with the tutorial by
-[Getting to Know the Drill
-Setup](/docs/getting-to-know-the-drill-sandbox/).
+[Getting to Know the Drill Sandbox](/docs/getting-to-know-the-drill-sandbox/).

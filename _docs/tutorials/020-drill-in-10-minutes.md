@@ -108,7 +108,7 @@ Complete the following steps to install Drill:
   
         cd /opt/drill/apache-drill-<version>
 
-At this point, you can [start Drill](/docs/apache-drill-in-10-minutes#start-drill).
+At this point, you can [start Drill](/docs/drill-in-10-minutes/#start-drill).
 
 ### Installing Drill on Mac OS X
 
@@ -132,7 +132,7 @@ Complete the following steps to install Drill:
   
         cd /Users/max/drill/apache-drill-<version>
 
-At this point, you can [start Drill](/docs/apache-drill-in-10-minutes/#start-drill).
+At this point, you can [start Drill](/docs/drill-in-10-minutes/#start-drill).
 
 ### Installing Drill on Windows
 
@@ -180,8 +180,7 @@ directory path, Drill fails to run.
      1. When prompted, enter the user name `admin` and then press Enter.
      2. When prompted, enter the password `admin` and then press Enter. The cursor blinks for a few seconds and then `0: jdbc:drill:zk=local>` displays in the prompt.
 
-At this point, you can submit queries to Drill. Refer to the [Query Sample Dat
-a](/docs/apache-drill-in-10-minutes#query-sample-data) section of this document.
+At this point, you can submit queries to Drill. Refer to the [Query Sample Data](/docs/drill-in-10-minutes#query-sample-data) section of this document.
 
 ## Start Drill
 
@@ -202,8 +201,7 @@ Example: `~/apache-drill-<version>`
      `-u` is a JDBC connection string that directs SQLLine to connect to Drill. It
 also starts a local Drillbit. If you are connecting to an Apache Drill
 cluster, the value of `zk=` would be a list of Zookeeper quorum nodes. For
-more information about how to run Drill in clustered mode, go to [Deploying
-Apache Drill in a Clustered Environment](/docs/deploying-apache-drill-in-a-clustered-environment).
+more information about how to run Drill in clustered mode, go to [Deploying Drill in a Cluster](/docs/deploying-drill-in-a-cluster).
 
 When SQLLine starts, the system displays the following prompt:  
 `0: jdbc:drill:zk=local>`
@@ -219,10 +217,9 @@ Your Drill installation includes a `sample-date` directory with JSON and
 Parquet files that you can query. The local file system on your machine is
 configured as the `dfs` storage plugin instance by default when you install
 Drill in embedded mode. For more information about storage plugin
-configuration, refer to [Storage Plugin Registration](/docs/connect-to-data-sources).
+configuration, refer to [Storage Plugin Registration](/docs/connect-a-data-source-introduction).
 
-Use SQL syntax to query the sample `JSON` and `Parquet` files in the `sample-
-data` directory on your local file system.
+Use SQL syntax to query the sample `JSON` and `Parquet` files in the `sample-data` directory on your local file system.
 
 ### Querying a JSON File
 
@@ -341,8 +338,8 @@ following tasks:
 
 Now that you have an idea about what Drill can do, you might want to:
 
-  * [Deploy Drill in a clustered environment.](/docs/deploying-apache-drill-in-a-clustered-environment)
-  * [Configure storage plugins to connect Drill to your data sources](/docs/connect-to-data-sources).
+  * [Deploy Drill in a clustered environment.](/docs/deploying-drill-in-a-cluster)
+  * [Configure storage plugins to connect Drill to your data sources](/docs/connect-a-data-source-introduction)).
   * Query [Hive](/docs/querying-hive) and [HBase](/docs/hbase-storage-plugin) data.
   * [Query Complex Data](/docs/querying-complex-data)
   * [Query Plain Text Files](/docs/querying-plain-text-files)

@@ -26,7 +26,7 @@ example is downloadable from [Yelp](http://www.yelp.com/dataset_challenge)
 
 [http://drill.apache.org/download/](http://drill.apache.org/download/)
 
-You can also [deploy Drill in clustered mode](/docs/deploying-apache-drill-in-a-clustered-environment) if you
+You can also [deploy Drill in clustered mode](/docs/deploying-drill-in-a-cluster) if you
 want to scale your environment.
 
 ### Step 2 : Open the Drill tar file
@@ -406,8 +406,8 @@ Stay tuned for more features and upcoming activities in the Drill community.
 
 To learn more about Drill, please refer to the following resources:
 
-  * Download Drill here:<http://incubator.apache.org/drill/download/>
-  * 10 reasons we think Drill is cool:<http://incubator.apache.org/drill/why-drill/>
-  * [A simple 10-minute tutorial](/docs/apache-drill-in-10-minutes>)
-  * [A more comprehensive tutorial](/docs/apache-drill-tutorial)
+  * Download Drill here:<http://getdrill.org/drill/download>
+  * 10 reasons we think Drill is cool:</docs/why-drill>
+  * [A simple 10-minute tutorial](/docs/drill-in-10-minutes>)
+  * [More tutorials](/docs/tutorials-introduction/)
 
