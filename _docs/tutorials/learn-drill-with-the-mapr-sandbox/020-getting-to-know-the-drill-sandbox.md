@@ -23,7 +23,7 @@ Drill includes SQLLine, a JDBC utility for connecting to relational databases an
 In this tutorial you query a number of data sets, including Hive and HBase, and files on the file system, such as CSV, JSON, and Parquet files. To access these diverse data sources, you connect Drill to storage plugins. 
 
 ## Storage Plugin Overview
-This section describes storage plugins included in the sandbox. For general information about Drill storage plugins, see ["Connect to a Data Source"](/docs/connect-a-data-source-introduction)).
+This section describes storage plugins included in the sandbox. For general information about Drill storage plugins, see ["Connect to a Data Source"](/docs/connect-a-data-source-introduction).
 Take a look at the pre-configured storage plugins for the sandbox by opening the Storage tab in the Drill Web UI. Launch a web browser and go to: `http://<IP address>:8047/storage`. For example:
 
     http://localhost:8046/storage
@@ -43,7 +43,7 @@ You see that the following storage plugin controls:
 
 Click Update to look at a configuration. 
 
-In some cases, the storage plugin defined for this tutorial differs from the [default storage plugin](/docs/connect-a-data-source-introduction)) of the same name in a Drill installation. Typically you create a storage plugin or customize an existing one for analyzing a particular data source. 
+In some cases, the storage plugin defined for use in the sandbox differs from the default storage plugin of the same name in a Drill installation as described in the following sections. Typically you create a storage plugin or customize an existing one for analyzing a particular data source. 
 
 The tutorial uses the dfs, hive, maprdb, and hbase storage plugins. 
 

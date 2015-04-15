@@ -2,7 +2,7 @@
 title: "Advanced Properties"
 parent: "Using ODBC on Linux and Mac OS X"
 ---
-When you use advanced properties, you must separate them using a semi-colon
+When you use advanced properties on Linux and Mac OS X, you must separate them using a semi-colon
 (;).
 
 For example, the following Advanced Properties string excludes the schemas

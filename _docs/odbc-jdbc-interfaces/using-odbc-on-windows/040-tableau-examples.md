@@ -7,12 +7,14 @@ sources. Each example in this section takes you through the steps to create a
 DSN to a Drill data source and then access the data in Tableau 8.1.
 
 This section includes the following examples:
-  * Connecting to a Hive table
-  * Using a view to connect to Hbase table data
+
+  * Connecting to a Hive table  
+  * Using a view to connect to Hbase table data  
   * Using custom SQL to connect to data in a Parquet file
+
 The steps and results of these examples assume pre-configured schemas and
 source data. You configure schemas as storage plugin instances on the Storage
-tab of the [Drill Web UI](/docs/getting-to-know-the-drill-sandbox#storage-plugins-overview).
+tab of the [Drill Web UI](/docs/getting-to-know-the-drill-sandbox#storage-plugin-overview).
 
 ## Example: Connect to a Hive Table in Tableau
 
@@ -49,7 +51,7 @@ Now, we can connect to Hive tables.
 -or-  
 To create a connection without an existing DSN, select the Driver option,
 select the MapR Drill ODBC driver from the list and click **Connect.** Then,
-configure the connection to the Hive table and click **OK**.** **
+configure the connection to the Hive table and click **OK**.
   4. In the **Schema** field, select the Hive schema.  
      In this example, the Hive schema is named hive.default.
   5. In the _Table_ section, verify that **Single Table** is selected and then click the Search icon.  
@@ -97,8 +99,7 @@ Administrator to create a DSN that connects to the view.
      The _MapR Drill ODBC Driver DSN Setup_ window appears.
   4. Specify the Connection Type based on your requirements.
      The connection type provides the DSN access to a Drillbit. For more
-information, see [Connection Type](http://doc.mapr.com/display/MapR/Step+2.+Co
-nfigure+ODBC+Connections+to+Drill+Data+Sources#ConnectionType).
+information, see [Connection Type](/docs/configuring-connections-on-windows/#connection-type).
   5. Click **Drill Explorer** to start exploring the data.
      The Drill Explorer dialog appears. You can use the Browse tab to visually
 explore the metadata and data available from Drill data sources. Advanced
@@ -124,8 +125,7 @@ HBase table.
         hbase.voter
 
      HBase does not contain type information, so you need to cast the data in Drill
-Explorer. For information about SQL query support, see the SQL
-Reference in the [Apache Drill Wiki documentation](/docs/sql-reference).
+Explorer. For information about SQL query support, see the [SQL Reference](/docs/sql-reference).
   9. To save the view, click **Create As**.
   10. Specify the schema where you want to save the view, enter a name for the view, and click **Save**.  
 
@@ -191,7 +191,7 @@ the data in Tableau.
   3. Select **MapR Drill ODBC Driver** and click **Finish**.  
      The _MapR Drill ODBC Driver DSN Setup_ window appears.
   4. Enter a data source name.
-  5. Specify the connection type based on your requirements. See Connection Type for more information.  
+  5. Specify the connection type based on your requirements. See [Connection Type](/docs/configuring-connections-on-windows/#connection-type) for more information.  
      The connection type provides the DSN access to a Drillbit.  
      In this example, we will connect to a Zookeeper Quorum.
   6. In the _Schema_ section, select the schema associated with the data source that contains the Parquet file that you want to access. Then, click **OK**.  

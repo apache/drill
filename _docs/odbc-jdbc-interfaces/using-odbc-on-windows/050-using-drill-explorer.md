@@ -14,7 +14,8 @@ of custom queries and save the results as a view.
 
 **To Browse Data:**
 
-  1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator.**
+  1. To launch the ODBC Administrator, click
+     **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator**
   2. Click the **User DSN** tab or the **System DSN** tab and then select the DSN that corresponds to the Drill data source that you want to explore.
   3. Click **Configure**.  
      The _MapR Drill ODBC Driver DSN Setup_ dialog appears.

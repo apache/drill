@@ -54,5 +54,5 @@ driver.
   2. When the installation completes, press any key to continue.   
 For example, you can press the SPACEBAR key.
 
-#### What's Next? Go to [Step 2. Configure ODBC Connections to Drill Data Sources](/docs/step-2-configure-odbc-connections-to-drill-data-sources).
+#### What's Next? Go to [Step 2. Configure ODBC Connections to Drill Data Sources](/docs/configuring-connections-on-windows).
 

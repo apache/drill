@@ -2732,8 +2732,8 @@
             "next_title": "Getting to Know the Drill Sandbox", 
             "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
             "parent": "Learn Drill with the MapR Sandbox", 
-            "previous_title": "Learn Drill with the MapR Sandbox", 
-            "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+            "previous_title": "Installing the Apache Drill Sandbox", 
+            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md", 
             "title": "Installing the Apache Drill Sandbox", 
             "url": "/docs/installing-the-apache-drill-sandbox/"
@@ -2876,11 +2876,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Getting to Know the Drill Sandbox", 
-                    "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                    "next_title": "Installing the Apache Drill Sandbox", 
+                    "next_url": "/docs/installing-the-apache-drill-sandbox/", 
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Learn Drill with the MapR Sandbox", 
                     "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                    "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                    "title": "Installing the Apache Drill Sandbox", 
+                    "url": "/docs/installing-the-apache-drill-sandbox/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Learn Drill with the MapR Sandbox", 
+                            "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                        }, 
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Getting to Know the Drill Sandbox", 
+                    "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                    "parent": "Learn Drill with the MapR Sandbox", 
+                    "previous_title": "Installing the Apache Drill Sandbox", 
+                    "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
                     "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md", 
                     "title": "Installing the Apache Drill Sandbox", 
                     "url": "/docs/installing-the-apache-drill-sandbox/"
@@ -6721,11 +6742,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Getting to Know the Drill Sandbox", 
-                            "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                            "next_title": "Installing the Apache Drill Sandbox", 
+                            "next_url": "/docs/installing-the-apache-drill-sandbox/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Learn Drill with the MapR Sandbox", 
                             "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                            "title": "Installing the Apache Drill Sandbox", 
+                            "url": "/docs/installing-the-apache-drill-sandbox/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Getting to Know the Drill Sandbox", 
+                            "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Installing the Apache Drill Sandbox", 
+                            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md", 
                             "title": "Installing the Apache Drill Sandbox", 
                             "url": "/docs/installing-the-apache-drill-sandbox/"
@@ -7720,11 +7762,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Getting to Know the Drill Sandbox", 
-                            "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                            "next_title": "Installing the Apache Drill Sandbox", 
+                            "next_url": "/docs/installing-the-apache-drill-sandbox/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Learn Drill with the MapR Sandbox", 
                             "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/", 
+                            "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/001-install-sandbox.md", 
+                            "title": "Installing the Apache Drill Sandbox", 
+                            "url": "/docs/installing-the-apache-drill-sandbox/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Learn Drill with the MapR Sandbox", 
+                                    "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                }, 
+                                {
+                                    "title": "Tutorials", 
+                                    "url": "/docs/tutorials/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Getting to Know the Drill Sandbox", 
+                            "next_url": "/docs/getting-to-know-the-drill-sandbox/", 
+                            "parent": "Learn Drill with the MapR Sandbox", 
+                            "previous_title": "Installing the Apache Drill Sandbox", 
+                            "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md", 
                             "title": "Installing the Apache Drill Sandbox", 
                             "url": "/docs/installing-the-apache-drill-sandbox/"

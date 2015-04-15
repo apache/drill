@@ -47,5 +47,4 @@ directory path, Drill fails to run.
      1. When prompted, enter the user name `admin` and then press Enter. 
      2. When prompted, enter the password `admin` and then press Enter. The cursor blinks for a few seconds and then `0: jdbc:drill:zk=local>` displays in the prompt.
 
-At this point, you can submit queries to Drill. Refer to the [Query Sample Dat
-a](/docs/drill-in-10-minutes#query-sampledata) section of this document.
+At this point, you can submit queries to Drill. Refer to [Querying Data](/docs/query-data-introduction).

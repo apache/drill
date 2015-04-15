@@ -10,4 +10,3 @@ systems.
 
 Now that you are familiar with different ways to access the sample data with
 Drill, you can try writing your own queries against your own data sources.
-Refer to the [Apache Drill documentation](/docs) for more information.

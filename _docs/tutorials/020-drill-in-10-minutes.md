@@ -339,7 +339,7 @@ following tasks:
 Now that you have an idea about what Drill can do, you might want to:
 
   * [Deploy Drill in a clustered environment.](/docs/deploying-drill-in-a-cluster)
-  * [Configure storage plugins to connect Drill to your data sources](/docs/connect-a-data-source-introduction)).
+  * [Configure storage plugins to connect Drill to your data sources](/docs/connect-a-data-source-introduction).
   * Query [Hive](/docs/querying-hive) and [HBase](/docs/hbase-storage-plugin) data.
   * [Query Complex Data](/docs/querying-complex-data)
   * [Query Plain Text Files](/docs/querying-plain-text-files)

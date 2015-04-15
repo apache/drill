@@ -27,7 +27,7 @@ steps:
   * Step 4: Configure the MapR Drill ODBC Driver
 
 Once you have completed the required steps, refer to [Testing the ODBC
-Connection on Linux and Mac OS X](/docs/testing-the-odbc-connection-on-linux-and-mac-os-x).
+Connection on Linux and Mac OS X](/docs/testing-the-odbc-connection).
 
 #### Sample Configuration Files
 
@@ -174,5 +174,5 @@ named `DYLD_LIBRARY_PATH`.
 
 ### Next Step
 
-Refer to [Testing the ODBC Connection on Linux and Mac OS X](/docs/testing-the-odbc-connection-on-linux-and-mac-os-x).
+Refer to [Testing the ODBC Connection on Linux and Mac OS X](/docs/testing-the-odbc-connection).
 

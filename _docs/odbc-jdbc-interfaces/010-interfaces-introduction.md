@@ -7,7 +7,7 @@ You can connect to Apache Drill through the following interfaces:
   * Drill shell (SQLLine)
   * Drill Web UI
   * [ODBC](/docs/odbc-jdbc-interfaces#using-odbc-to-access-apache-drill-from-bi-tools)*
-  * [JDBC](/docs/odbc-jdbc-interfaces#using-jdbc-to-access-apache-drill-from-squirrel)
+  * [JDBC](/docs/using-jdbc/)
   * C++ API
 
 *Apache Drill does not have an open source ODBC driver. However, MapR provides an ODBC driver that you can use to connect to Apache Drill from BI tools. 
@@ -40,10 +40,10 @@ SQuirreL on Windows.
 To use the Drill JDBC driver with SQuirreL on Windows, complete the following
 steps:
 
-  * [Step 1: Getting the Drill JDBC Driver](/docs/using-the-jdbc-driver#step-1-getting-the-drill-jdbc-driver) 
-  * [Step 2: Installing and Starting SQuirreL](/docs/using-the-jdbc-driver#step-2-installing-and-starting-squirrel)
-  * [Step 3: Adding the Drill JDBC Driver to SQuirreL](/docs/using-the-jdbc-driver#step-3-adding-the-drill-jdbc-driver-to-squirrel)
-  * [Step 4: Running a Drill Query from SQuirreL](/docs/using-the-jdbc-driver#step-4-running-a-drill-query-from-squirrel)
+  * [Step 1: Getting the Drill JDBC Driver](/docs/using-jdbc#step-1:-getting-the-drill-jdbc-driver) 
+  * [Step 2: Installing and Starting SQuirreL](/docs/using-jdbc#step-2:-installing-and-starting-squirrel)
+  * [Step 3: Adding the Drill JDBC Driver to SQuirreL](/docs/using-jdbc#step-3:-adding-the-drill-jdbc-driver-to-squirrel)
+  * [Step 4: Running a Drill Query from SQuirreL](/docs/using-jdbc#step-4:-running-a-drill-query-from-squirrel)
 
 For information about how to use SQuirreL, refer to the [SQuirreL Quick
 Start](http://squirrel-sql.sourceforge.net/user-manual/quick_start.html)

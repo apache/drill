@@ -165,7 +165,7 @@ Finally, patches should be _attached_ to an issue report in
 link on the issue's JIRA. Please add a comment that asks for a code review.
 Please note that the attachment should be granted license to ASF for inclusion
 in ASF works (as per the [Apache
-License](http://www.apache.org/licenses/LICENSE-2.0)).
+License](http://www.apache.org/licenses/LICENSE-2.0).
 
 Folks should run `mvn clean install` before submitting a patch. Tests should
 all pass. If your patch involves performance optimizations, they should be
