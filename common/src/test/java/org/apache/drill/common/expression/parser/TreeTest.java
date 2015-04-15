@@ -65,6 +65,11 @@ public class TreeTest extends DrillTest {
     testExpressionParsing("goodbye[4].`hello`");
   }
 
+  @Test // DRILL-2606
+  public void testCastToBooleanExpr() throws Exception{
+    testExpressionParsing("cast( (cast( (`bool_col` ) as VARCHAR(100) ) ) as BIT )");
+  }
+
   private LogicalExpression parseExpression(String expr) throws RecognitionException, IOException{
 
     ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));

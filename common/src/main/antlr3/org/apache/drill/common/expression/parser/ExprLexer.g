@@ -41,7 +41,8 @@ Nullable: 'nullable';
 Repeat: 'repeat';
 As: 'as';
 
-INT    : 'int' | 'INT';
+BIT      : 'bit' | 'BIT';
+INT      : 'int' | 'INT';
 BIGINT   : 'bigint' | 'BIGINT';
 FLOAT4   : 'float4' | 'FLOAT4';
 FLOAT8   : 'float8' | 'FLOAT8';

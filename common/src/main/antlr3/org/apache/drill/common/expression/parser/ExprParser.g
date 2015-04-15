@@ -101,8 +101,13 @@ dataType returns [MajorType type]
 	: numType  {$type =$numType.type;}
 	| charType {$type =$charType.type;}
 	| dateType {$type =$dateType.type;}
+	| booleanType {$type =$booleanType.type;}
 	;
-  
+
+booleanType returns [MajorType type]
+	: BIT { $type = Types.required(TypeProtos.MinorType.BIT); }
+	;
+
 numType returns [MajorType type]
 	: INT    { $type = Types.required(TypeProtos.MinorType.INT); }
 	| BIGINT { $type = Types.required(TypeProtos.MinorType.BIGINT); }
