@@ -73,6 +73,7 @@ public class AvroRecordReader extends AbstractRecordReader {
 
   private DataFileReader<GenericContainer> reader = null;
   private OperatorContext operatorContext;
+  private FileSystem fs;
 
   private static final int DEFAULT_BATCH_SIZE = 1000;
 
@@ -91,6 +92,7 @@ public class AvroRecordReader extends AbstractRecordReader {
 
     hadoop = new Path(inputPath);
     buffer = fragmentContext.getManagedBuffer();
+    this.fs = fileSystem;
 
     setColumns(projectedColumns);
   }
@@ -101,7 +103,7 @@ public class AvroRecordReader extends AbstractRecordReader {
     writer = new VectorContainerWriter(output);
 
     try {
-      reader = new DataFileReader<>(new FsInput(hadoop, new Configuration()), new GenericDatumReader<GenericContainer>());
+      reader = new DataFileReader<>(new FsInput(hadoop, fs.getConf()), new GenericDatumReader<GenericContainer>());
     } catch (IOException e) {
       throw new ExecutionSetupException(e);
     }

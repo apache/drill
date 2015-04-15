@@ -18,111 +18,61 @@
 package org.apache.drill.exec.store.avro;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.ImmutableSet;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.physical.base.AbstractWriter;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
-import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FormatMatcher;
-import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
+import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
+import org.apache.drill.exec.store.dfs.easy.EasyWriter;
+import org.apache.drill.exec.store.dfs.easy.FileWork;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Format plugin for Avro data files.
  */
-public class AvroFormatPlugin implements FormatPlugin {
-
-  private final String name;
-  private final DrillbitContext context;
-  private final DrillFileSystem fs;
-  private final StoragePluginConfig storagePluginConfig;
-  private final AvroFormatConfig formatConfig;
-  private final BasicFormatMatcher matcher;
+public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
 
   public AvroFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs,
                           StoragePluginConfig storagePluginConfig) {
     this(name, context, fs, storagePluginConfig, new AvroFormatConfig());
   }
 
-  public AvroFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs,
-                          StoragePluginConfig storagePluginConfig, AvroFormatConfig formatConfig) {
-    this.name = name;
-    this.context = context;
-    this.fs = fs;
-    this.storagePluginConfig = storagePluginConfig;
-    this.formatConfig = formatConfig;
-
-    // XXX - What does 'compressible' mean in this context?
-    this.matcher = new BasicFormatMatcher(this, fs, Lists.newArrayList("avro"), false);
+  public AvroFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig config, AvroFormatConfig formatPluginConfig) {
+    super(name, context, fs, config, formatPluginConfig, true, false, false, false, Lists.newArrayList("avro"), "avro");
   }
 
   @Override
-  public boolean supportsRead() {
+  public boolean supportsPushDown() {
     return true;
   }
 
   @Override
-  public boolean supportsWrite() {
-    return false;
+  public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork, List<SchemaPath> columns) throws ExecutionSetupException {
+    return new AvroRecordReader(context, fileWork.getPath(), dfs, columns);
   }
 
   @Override
-  public FormatMatcher getMatcher() {
-    return matcher;
+  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
   }
 
   @Override
-  public AbstractWriter getWriter(final PhysicalOperator child, final String location) throws IOException {
-    throw new UnsupportedOperationException("Unimplemented");
+  public int getReaderOperatorType() {
+    return CoreOperatorType.AVRO_SUB_SCAN_VALUE;
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(final FileSelection selection) throws IOException {
-    return new AvroGroupScan(selection.getFileStatusList(fs), this, selection.selectionRoot, null);
+  public int getWriterOperatorType() {
+    throw new UnsupportedOperationException("unimplemented");
   }
 
-  @Override
-  public AbstractGroupScan getGroupScan(final FileSelection selection, final List<SchemaPath> columns) throws IOException {
-    return new AvroGroupScan(selection.getFileStatusList(fs), this, selection.selectionRoot, columns);
-  }
 
-  @Override
-  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  public AvroFormatConfig getConfig() {
-    return formatConfig;
-  }
-
-  @Override
-  public StoragePluginConfig getStorageConfig() {
-    return storagePluginConfig;
-  }
-
-  @Override
-  public DrillFileSystem getFileSystem() {
-    return fs;
-  }
-
-  @Override
-  public DrillbitContext getContext() {
-    return context;
-  }
-
-  @Override
-  public String getName() {
-    return name;
-  }
 }
