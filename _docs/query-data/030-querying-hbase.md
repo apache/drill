@@ -2,7 +2,9 @@
 title: "Querying HBase"
 parent: "Query Data"
 ---
-This exercise creates two tables in HBase, students and clicks, that you can query with Drill. You can use the Drill Sandbox to step through the exercise. You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readble output in the last step. It is a best practice to use CAST for INT and BIGINT conversions from binary and to use CONVERT_TO and CONVERT_FROM for other conversions.
+This exercise creates two tables in HBase, students and clicks, that you can query with Drill. You can use the Drill Sandbox to step through the exercise. As an HBase user, you most likely are running Drill in  distributed mode. In this case, the warden starts Drill as a service. If you are not an HBase user and just kicking the tires, you are most likely running Drill in embedded mode. In embedded mode, you need to [start Drill](/docs/starting-stopping-drill/) before performing step 5. On the Drill Sandbox, HBase tables you create will be located in: /mapr/demo.mapr.com/tables
+
+You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in the last step. It is a best practice to use CAST for INT and BIGINT conversions from binary and to use CONVERT_TO and CONVERT_FROM for other conversions.
 
 ## Create the HBase tables
 
@@ -12,12 +14,7 @@ steps:
 1. Pipe the following commands to the HBase shell to create students and  clicks tables in HBase:
   
           echo "create 'students','account','address'" | hbase shell
-  
           echo "create 'clicks','clickinfo','iteminfo'" | hbase shell
-
-   On the Drill Sandbox, HBase tables are located in:
-
-        /mapr/demo.mapr.com/tables
 
 2. Issue the following command to create a `testdata.txt` file:
 
@@ -90,13 +87,9 @@ steps:
 4. Issue the following command to put the data into hbase:  
   
         cat testdata.txt | hbase shell
-5. In Drill, use the [MapR-DB format plugin](/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services. 
-
-         USE hbase; /* If you have installed HBase services. */ 
-
-   Or:
-
-         USE maprdb; /* If you are using the Drill Sandbox */
+5. In Drill, use the [MapR-DB format plugin](/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services.  
+   * USE hbase; /* If you have installed HBase services. */  
+   * USE maprdb; /* If you are using the Drill Sandbox */
 
 The `maprdb` format plugin provides access to the `/tables` directory. Use Drill to query the students and clicks tables on the Drill Sandbox.  
 
