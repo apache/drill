@@ -472,6 +472,24 @@ public class TestFunctionsQuery extends BaseTestQuery {
   }
 
   @Test
+  public void testRoundWithOneParam() throws Exception {
+    String query = "select " +
+        "round(8124674407369523212) round_bigint," +
+        "round(9999999) round_int, " +
+        "round(cast('23.45' as float)) round_float_1, " +
+        "round(cast('23.55' as float)) round_float_2, " +
+        "round(8124674407369.2345) round_double_1, " +
+        "round(8124674407369.589) round_double_2 " +
+        " from cp.`tpch/region.parquet` limit 1";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("round_bigint", "round_int", "round_float_1", "round_float_2", "round_double_1", "round_double_2")
+        .baselineValues(8124674407369523212l, 9999999, 23.0f, 24.0f, 8124674407369.0d, 8124674407370.0d)
+        .go();
+  }
+
+  @Test
   public void testToCharFunction() throws Exception {
     String query = "SELECT " +
         "to_char(1234.5567, '#,###.##') as FLOAT8_1, " +
