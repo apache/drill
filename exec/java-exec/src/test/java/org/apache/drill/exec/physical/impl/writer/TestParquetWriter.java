@@ -19,12 +19,14 @@ package org.apache.drill.exec.physical.impl.writer;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.sql.Date;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -418,6 +420,30 @@ public class TestParquetWriter extends BaseTestQuery {
       Assert.assertEquals(fs.listStatus(path).length, 0);
     } finally {
       deleteTableIfExists(outputFile);
+    }
+  }
+
+  @Test // DRILL-2341
+  public void tableSchemaWhenSelectFieldsInDef_SelectFieldsInView() throws Exception {
+    final String newTblName = "testTableOutputSchema";
+
+    try {
+      final String ctas = String.format("CREATE TABLE dfs_test.tmp.%s(id, name, bday) AS SELECT " +
+          "cast(`employee_id` as integer), " +
+          "cast(`full_name` as varchar(100)), " +
+          "cast(`birth_date` as date) " +
+          "FROM cp.`employee.json` ORDER BY `employee_id` LIMIT 1", newTblName);
+
+      test(ctas);
+
+      testBuilder()
+          .unOrdered()
+          .sqlQuery(String.format("SELECT * FROM dfs_test.tmp.`%s`", newTblName))
+          .baselineColumns("id", "name", "bday")
+          .baselineValues(1, "Sheri Nowmer", new DateTime(Date.valueOf("1961-08-26").getTime()))
+          .go();
+    } finally {
+      deleteTableIfExists(newTblName);
     }
   }
 

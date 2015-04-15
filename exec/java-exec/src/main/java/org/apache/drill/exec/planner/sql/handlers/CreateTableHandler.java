@@ -56,38 +56,8 @@ public class CreateTableHandler extends DefaultSqlHandler {
     SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
 
     try {
-      // Convert the query in CTAS statement into a RelNode
-      SqlNode validatedQuery = validateNode(sqlCreateTable.getQuery());
-      RelNode relQuery = convertToRel(validatedQuery);
-
-      List<String> tblFiledNames = sqlCreateTable.getFieldNames();
-      RelDataType queryRowType = relQuery.getRowType();
-
-      if (tblFiledNames.size() > 0) {
-        // Field count should match.
-        if (tblFiledNames.size() != queryRowType.getFieldCount()) {
-          return DirectPlan.createDirectPlan(context, false,
-              "Table's field list and the table's query field list have different counts.");
-        }
-
-        // CTAS's query field list shouldn't have "*" when table's field list is specified.
-        for (String field : queryRowType.getFieldNames()) {
-          if (field.equals("*")) {
-            return DirectPlan.createDirectPlan(context, false,
-                "Table's query field list has a '*', which is invalid when table's field list is specified.");
-          }
-        }
-      }
-
-      // if the CTAS statement has table fields lists (ex. below), add a project rel to rename the query fields.
-      // Ex. CREATE TABLE tblname(col1, medianOfCol2, avgOfCol3) AS
-      //        SELECT col1, median(col2), avg(col3) FROM sourcetbl GROUP BY col1 ;
-      if (tblFiledNames.size() > 0) {
-        // create rowtype to which the select rel needs to be casted.
-        RelDataType rowType = new DrillFixedRelDataTypeImpl(planner.getTypeFactory(), tblFiledNames);
-
-        relQuery = RelOptUtil.createCastRel(relQuery, rowType, true);
-      }
+      final RelNode newTblRelNode =
+          SqlHandlerUtil.resolveNewTableRel(false, planner, sqlCreateTable.getFieldNames(), sqlCreateTable.getQuery());
 
       SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(),
           sqlCreateTable.getSchemaPath());
@@ -104,10 +74,10 @@ public class CreateTableHandler extends DefaultSqlHandler {
         return DirectPlan.createDirectPlan(context, false, String.format("Table '%s' already exists.", newTblName));
       }
 
-      log("Optiq Logical", relQuery);
+      log("Optiq Logical", newTblRelNode);
 
       // Convert the query to Drill Logical plan and insert a writer operator on top.
-      DrillRel drel = convertToDrel(relQuery, drillSchema, newTblName);
+      DrillRel drel = convertToDrel(newTblRelNode, drillSchema, newTblName);
       log("Drill Logical", drel);
       Prel prel = convertToPrel(drel);
       log("Drill Physical", prel);

@@ -413,4 +413,33 @@ public class TestViewSupport extends TestBaseViewSupport {
       dropViewHelper(TEMP_SCHEMA, viewName, TEMP_SCHEMA);
     }
   }
+
+  // DRILL-2341, View schema verification where view's field is not specified is already tested in
+  // TestViewSupport.infoSchemaWithView.
+  @Test
+  public void viewSchemaWhenSelectFieldsInDef_SelectFieldsInView() throws Exception {
+    final String viewName = generateViewName();
+
+    try {
+      test("USE " + TEMP_SCHEMA);
+      createViewHelper(null, viewName, TEMP_SCHEMA, "(id, name, bday)",
+          "SELECT " +
+              "cast(`region_id` as integer), " +
+              "cast(`full_name` as varchar(100)), " +
+              "cast(`birth_date` as date) " +
+              "FROM cp.`employee.json`");
+
+      // Test DESCRIBE view
+      testBuilder()
+          .sqlQuery(String.format("DESCRIBE `%s`", viewName))
+          .unOrdered()
+          .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+          .baselineValues("id", "INTEGER", "YES")
+          .baselineValues("name", "VARCHAR", "YES")
+          .baselineValues("bday", "DATE", "YES")
+          .go();
+    } finally {
+      dropViewHelper(TEMP_SCHEMA, viewName, TEMP_SCHEMA);
+    }
+  }
 }
