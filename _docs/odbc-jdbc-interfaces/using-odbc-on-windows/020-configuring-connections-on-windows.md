@@ -138,5 +138,5 @@ type:
 
         DRIVER=MapR Drill ODBC Driver;AdvancedProperties={HandshakeTimeout=0;QueryTimeout=0;TimestampTZDisplayTimezone=utc;ExcludedSchemas=sys, INFORMATION_SCHEMA;};Catalog=DRILL;Schema=;ConnectionType=ZooKeeper;ZKQuorum=192.168.39.43:5181;ZKClusterID=drillbits1
 
-#### What's Next? Go to [Step 3. Connect to Drill Data Sources from a BI Tool](/docs/connecting-to-data-sources).
+#### What's Next? Go to [Step 3. Connect to Drill Data Sources from a BI Tool](/docs/connecting-to-odbc-data-sources).
 

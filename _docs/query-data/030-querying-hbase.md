@@ -2,7 +2,7 @@
 title: "Querying HBase"
 parent: "Query Data"
 ---
-This exercise creates two tables in HBase, students and clicks, that you can query with Drill. You can use the Drill Sandbox to step through the exercise.
+This exercise creates two tables in HBase, students and clicks, that you can query with Drill. You can use the Drill Sandbox to step through the exercise. You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readble output in the last step. It is a best practice to use CAST for INT and BIGINT conversions from binary and to use CONVERT_TO and CONVERT_FROM for other conversions.
 
 ## Create the HBase tables
 
@@ -90,8 +90,7 @@ steps:
 4. Issue the following command to put the data into hbase:  
   
         cat testdata.txt | hbase shell
-5. Start Drill. Type `sqlline` on the terminal command line if you are using the Drill Sandbox; otherwise, see [Starting/Stopping Drill]({{ site.baseurl }}/docs/starting-stopping-drill).
-6. Use the [MapR-DB format plugin](/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services. 
+5. In Drill, use the [MapR-DB format plugin](/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services. 
 
          USE hbase; /* If you have installed HBase services. */ 
 
@@ -159,3 +158,14 @@ The `maprdb` format plugin provides access to the `/tables` directory. Use Drill
         | click6     | student3   | 2013-02-01 12:01:01.0001 | http://www.google.com |
         +------------+------------+------------+------------+
         3 rows selected (0.294 seconds)
+
+4. Query the clicks table to get the studentid of the student having 100 items.
+
+    SELECT CONVERT_FROM(tbl.clickinfo.studentid, 'UTF8') AS studentid, CONVERT_FROM(tbl.iteminfo.itemtype, 'UTF8'), CAST(tbl.iteminfo.quantity AS INT) AS items FROM clicks tbl WHERE tbl.iteminfo.quantity=100;
+
+    +------------+------------+------------+
+    | studentid  |   EXPR$1   |   items    |
+    +------------+------------+------------+
+    | student2   | text       | 100        |
+    +------------+------------+------------+
+    1 row selected (0.656 seconds)

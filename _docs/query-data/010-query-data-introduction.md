@@ -3,9 +3,9 @@ title: "Query Data Introduction"
 parent: "Query Data"
 ---
 You can query local and distributed file systems, Hive, and HBase data sources
-registered with Drill. If you connected directly to a particular schema when
-you invoked SQLLine, you can issue SQL queries against that schema. If you did
-not indicate a schema when you invoked SQLLine, you can issue the `USE
+registered with Drill. If you connect directly to a particular schema when
+you invoke SQLLine, you can issue SQL queries against that schema. If you d0
+not indicate a schema when you invoke SQLLine, you can issue the `USE
 <schema>` statement to run your queries against a particular schema. After you
 issue the `USE` statement, you can use absolute notation, such as `schema.table.column`.
 

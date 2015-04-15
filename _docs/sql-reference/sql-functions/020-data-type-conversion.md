@@ -30,7 +30,7 @@ If the SELECT statement includes a WHERE clause that compares a column of an unk
 
     SELECT c_row, CAST(c_int AS DECIMAL(28,8)) FROM mydata WHERE CAST(c_int AS DECIMAL(28,8)) > -3.0
 
-Do not use the CAST function for converting binary data types to other types. Although CAST works for converting VARBINARY to VARCHAR, CAST does not work in other cases for converting all binary data. Use CONVERT_TO and CONVERT_FROM for converting to or from binary data. 
+Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types other than INT AND BIGINT to other types.  
 
 Refer to the following tables for information about the data types to use for casting:
 
@@ -140,7 +140,7 @@ data to and from another data type.
 You can use the CONVERT_TO and CONVERT_FROM functions to encode and decode data that is binary or complex. For example, HBase stores
 data as encoded VARBINARY data. To read HBase data in Drill, convert every column of an HBase table *from* binary to an SQL data type while selecting the data. To write HBase or Parquet binary data, convert SQL data *to* binary data and store the data in an HBase or Parquet while creating a table as a selection (CTAS).
 
-Do not use the CAST function for converting binary data types to other types. Although CAST works for converting VARBINARY to VARCHAR, CAST does not work in some other binary conversion cases. CONVERT functions work for binary conversions and are also more efficient to use than CAST.
+Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types other than INT AND BIGINT to other types. CONVERT functions work for binary conversions and are also more efficient to use than CAST.
 
 ## Usage Notes
 Use the CONVERT_TO function to change the data type to binary when sending data back to a binary data source, such as HBase, MapR, and Parquet, from a Drill query. CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
@@ -898,7 +898,7 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
 
         export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea -Duser.timezone=UTC"
 
-3. Restart sqlline.
+3. Restart SQLLine.
 
 4. Confirm that Drill is now set to UTC:
 

@@ -45,7 +45,7 @@ _Explanation_: This is my attempt in mixing records and structures. The `from`
 statement refers to `mediawiki` as a record type / row, but also mixes in
 structural information, i.e. `page.revision`, internal to the record. The
 query now uses `page.revision` as base to all other statements, in this case
-the `select`, `where` and the `goup by`. The `where` statement again uses a
+the `select`, `where` and the `group by`. The `where` statement again uses a
 JSON like expression to state, that the timestamp must be between two values,
 paramaeters are written as question marks, similar to JDBC. The `group by`
 statement instructs the query to aggregate results based on the parent of a

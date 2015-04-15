@@ -33,7 +33,7 @@ want to scale your environment.
 
     tar -xvf apache-drill-0.6.0-incubating.tar
 
-### Step 3: Launch sqlline, a JDBC application that ships with Drill
+### Step 3: Launch SQLLine, a JDBC application that ships with Drill
 
     bin/sqlline -u jdbc:drill:zk=local
 
