@@ -161,11 +161,11 @@ The `maprdb` format plugin provides access to the `/tables` directory. Use Drill
 
 4. Query the clicks table to get the studentid of the student having 100 items.
 
-    SELECT CONVERT_FROM(tbl.clickinfo.studentid, 'UTF8') AS studentid, CONVERT_FROM(tbl.iteminfo.itemtype, 'UTF8'), CAST(tbl.iteminfo.quantity AS INT) AS items FROM clicks tbl WHERE tbl.iteminfo.quantity=100;
+        SELECT CONVERT_FROM(tbl.clickinfo.studentid, 'UTF8') AS studentid, CONVERT_FROM(tbl.iteminfo.itemtype, 'UTF8'), CAST(tbl.iteminfo.quantity AS INT) AS items FROM clicks tbl WHERE tbl.iteminfo.quantity=100;
 
-    +------------+------------+------------+
-    | studentid  |   EXPR$1   |   items    |
-    +------------+------------+------------+
-    | student2   | text       | 100        |
-    +------------+------------+------------+
-    1 row selected (0.656 seconds)
+        +------------+------------+------------+
+        | studentid  |   EXPR$1   |   items    |
+        +------------+------------+------------+
+        | student2   | text       | 100        |
+        +------------+------------+------------+
+        1 row selected (0.656 seconds)

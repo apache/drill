@@ -746,8 +746,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Connecting to Data Sources", 
-            "next_url": "/docs/connecting-to-data-sources/", 
+            "next_title": "Connecting to ODBC Data Sources", 
+            "next_url": "/docs/connecting-to-odbc-data-sources/", 
             "parent": "Using ODBC on Windows", 
             "previous_title": "Installing the Driver on Windows", 
             "previous_url": "/docs/installing-the-driver-on-windows/", 
@@ -976,7 +976,7 @@
             "title": "Connect a Data Source Introduction", 
             "url": "/docs/connect-a-data-source-introduction/"
         }, 
-        "Connecting to Data Sources": {
+        "Connecting to ODBC Data Sources": {
             "breadcrumbs": [
                 {
                     "title": "Using ODBC on Windows", 
@@ -991,11 +991,11 @@
             "next_title": "Tableau Examples", 
             "next_url": "/docs/tableau-examples/", 
             "parent": "Using ODBC on Windows", 
-            "previous_title": "Configuring Connections on Windows", 
-            "previous_url": "/docs/configuring-connections-on-windows/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-data-sources.md", 
-            "title": "Connecting to Data Sources", 
-            "url": "/docs/connecting-to-data-sources/"
+            "previous_title": "Connecting to ODBC Data Sources", 
+            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-odbc-data-sources.md", 
+            "title": "Connecting to ODBC Data Sources", 
+            "url": "/docs/connecting-to-odbc-data-sources/"
         }, 
         "Contribute to Drill": {
             "breadcrumbs": [
@@ -3798,8 +3798,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Connecting to Data Sources", 
-                            "next_url": "/docs/connecting-to-data-sources/", 
+                            "next_title": "Connecting to ODBC Data Sources", 
+                            "next_url": "/docs/connecting-to-odbc-data-sources/", 
                             "parent": "Using ODBC on Windows", 
                             "previous_title": "Installing the Driver on Windows", 
                             "previous_url": "/docs/installing-the-driver-on-windows/", 
@@ -3819,14 +3819,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Tableau Examples", 
-                            "next_url": "/docs/tableau-examples/", 
+                            "next_title": "Connecting to ODBC Data Sources", 
+                            "next_url": "/docs/connecting-to-odbc-data-sources/", 
                             "parent": "Using ODBC on Windows", 
                             "previous_title": "Configuring Connections on Windows", 
                             "previous_url": "/docs/configuring-connections-on-windows/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-data-sources.md", 
-                            "title": "Connecting to Data Sources", 
-                            "url": "/docs/connecting-to-data-sources/"
+                            "title": "Connecting to ODBC Data Sources", 
+                            "url": "/docs/connecting-to-odbc-data-sources/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Tableau Examples", 
+                            "next_url": "/docs/tableau-examples/", 
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Connecting to ODBC Data Sources", 
+                            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-odbc-data-sources.md", 
+                            "title": "Connecting to ODBC Data Sources", 
+                            "url": "/docs/connecting-to-odbc-data-sources/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -3843,8 +3864,8 @@
                             "next_title": "Using Drill Explorer", 
                             "next_url": "/docs/using-drill-explorer/", 
                             "parent": "Using ODBC on Windows", 
-                            "previous_title": "Connecting to Data Sources", 
-                            "previous_url": "/docs/connecting-to-data-sources/", 
+                            "previous_title": "Connecting to ODBC Data Sources", 
+                            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/040-tableau-examples.md", 
                             "title": "Tableau Examples", 
                             "url": "/docs/tableau-examples/"
@@ -6641,8 +6662,8 @@
             "next_title": "Using Drill Explorer", 
             "next_url": "/docs/using-drill-explorer/", 
             "parent": "Using ODBC on Windows", 
-            "previous_title": "Connecting to Data Sources", 
-            "previous_url": "/docs/connecting-to-data-sources/", 
+            "previous_title": "Connecting to ODBC Data Sources", 
+            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/040-tableau-examples.md", 
             "title": "Tableau Examples", 
             "url": "/docs/tableau-examples/"
@@ -7315,8 +7336,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Connecting to Data Sources", 
-                    "next_url": "/docs/connecting-to-data-sources/", 
+                    "next_title": "Connecting to ODBC Data Sources", 
+                    "next_url": "/docs/connecting-to-odbc-data-sources/", 
                     "parent": "Using ODBC on Windows", 
                     "previous_title": "Installing the Driver on Windows", 
                     "previous_url": "/docs/installing-the-driver-on-windows/", 
@@ -7336,14 +7357,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Tableau Examples", 
-                    "next_url": "/docs/tableau-examples/", 
+                    "next_title": "Connecting to ODBC Data Sources", 
+                    "next_url": "/docs/connecting-to-odbc-data-sources/", 
                     "parent": "Using ODBC on Windows", 
                     "previous_title": "Configuring Connections on Windows", 
                     "previous_url": "/docs/configuring-connections-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-data-sources.md", 
-                    "title": "Connecting to Data Sources", 
-                    "url": "/docs/connecting-to-data-sources/"
+                    "title": "Connecting to ODBC Data Sources", 
+                    "url": "/docs/connecting-to-odbc-data-sources/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using ODBC on Windows", 
+                            "url": "/docs/using-odbc-on-windows/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Tableau Examples", 
+                    "next_url": "/docs/tableau-examples/", 
+                    "parent": "Using ODBC on Windows", 
+                    "previous_title": "Connecting to ODBC Data Sources", 
+                    "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-odbc-data-sources.md", 
+                    "title": "Connecting to ODBC Data Sources", 
+                    "url": "/docs/connecting-to-odbc-data-sources/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7360,8 +7402,8 @@
                     "next_title": "Using Drill Explorer", 
                     "next_url": "/docs/using-drill-explorer/", 
                     "parent": "Using ODBC on Windows", 
-                    "previous_title": "Connecting to Data Sources", 
-                    "previous_url": "/docs/connecting-to-data-sources/", 
+                    "previous_title": "Connecting to ODBC Data Sources", 
+                    "previous_url": "/docs/connecting-to-odbc-data-sources/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/040-tableau-examples.md", 
                     "title": "Tableau Examples", 
                     "url": "/docs/tableau-examples/"
@@ -8590,8 +8632,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Connecting to Data Sources", 
-                            "next_url": "/docs/connecting-to-data-sources/", 
+                            "next_title": "Connecting to ODBC Data Sources", 
+                            "next_url": "/docs/connecting-to-odbc-data-sources/", 
                             "parent": "Using ODBC on Windows", 
                             "previous_title": "Installing the Driver on Windows", 
                             "previous_url": "/docs/installing-the-driver-on-windows/", 
@@ -8611,14 +8653,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Tableau Examples", 
-                            "next_url": "/docs/tableau-examples/", 
+                            "next_title": "Connecting to ODBC Data Sources", 
+                            "next_url": "/docs/connecting-to-odbc-data-sources/", 
                             "parent": "Using ODBC on Windows", 
                             "previous_title": "Configuring Connections on Windows", 
                             "previous_url": "/docs/configuring-connections-on-windows/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-data-sources.md", 
-                            "title": "Connecting to Data Sources", 
-                            "url": "/docs/connecting-to-data-sources/"
+                            "title": "Connecting to ODBC Data Sources", 
+                            "url": "/docs/connecting-to-odbc-data-sources/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using ODBC on Windows", 
+                                    "url": "/docs/using-odbc-on-windows/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Tableau Examples", 
+                            "next_url": "/docs/tableau-examples/", 
+                            "parent": "Using ODBC on Windows", 
+                            "previous_title": "Connecting to ODBC Data Sources", 
+                            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-odbc-data-sources.md", 
+                            "title": "Connecting to ODBC Data Sources", 
+                            "url": "/docs/connecting-to-odbc-data-sources/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8635,8 +8698,8 @@
                             "next_title": "Using Drill Explorer", 
                             "next_url": "/docs/using-drill-explorer/", 
                             "parent": "Using ODBC on Windows", 
-                            "previous_title": "Connecting to Data Sources", 
-                            "previous_url": "/docs/connecting-to-data-sources/", 
+                            "previous_title": "Connecting to ODBC Data Sources", 
+                            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/040-tableau-examples.md", 
                             "title": "Tableau Examples", 
                             "url": "/docs/tableau-examples/"
