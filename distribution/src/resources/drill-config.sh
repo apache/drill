@@ -85,7 +85,9 @@ fi
 touch "$DRILL_LOG_DIR/sqlline.log" &> /dev/null
 TOUCH_EXIT_CODE=$?
 if [ "$TOUCH_EXIT_CODE" = "0" ]; then
-  echo "Drill log directory: $DRILL_LOG_DIR"
+  if [ "x$DRILL_LOG_DEBUG" = "x1" ]; then
+    echo "Drill log directory: $DRILL_LOG_DIR"
+  fi
   DRILL_LOG_DIR_FALLBACK=0
 else
   #Force DRILL_LOG_DIR to fall back
@@ -93,7 +95,9 @@ else
 fi
 
 if [ ! -d "$DRILL_LOG_DIR" ] || [ "$DRILL_LOG_DIR_FALLBACK" = "1" ]; then
-  echo "Drill log directory $DRILL_LOG_DIR does not exist or is not writable, defaulting to $DRILL_HOME/log"
+  if [ "x$DRILL_LOG_DEBUG" = "x1" ]; then
+    echo "Drill log directory $DRILL_LOG_DIR does not exist or is not writable, defaulting to $DRILL_HOME/log"
+  fi
   DRILL_LOG_DIR=$DRILL_HOME/log
   mkdir -p $DRILL_LOG_DIR
 fi
