@@ -114,7 +114,6 @@ public class MongoSchemaFactory implements SchemaFactory {
     @Override
     public List<String> load(String dbName) throws Exception {
       DB db = MongoCnxnManager.getClient(addresses, options).getDB(dbName);
-      db.setReadPreference(ReadPreference.nearest());
       Set<String> collectionNames = db.getCollectionNames();
       return new ArrayList<>(collectionNames);
     }

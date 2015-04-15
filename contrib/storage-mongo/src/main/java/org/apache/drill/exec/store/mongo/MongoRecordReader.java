@@ -136,7 +136,6 @@ public class MongoRecordReader extends AbstractRecordReader {
       }
       MongoClient client = MongoCnxnManager.getClient(addresses, clientOptions);
       DB db = client.getDB(subScanSpec.getDbName());
-      db.setReadPreference(ReadPreference.nearest());
       collection = db.getCollection(subScanSpec.getCollectionName());
     } catch (UnknownHostException e) {
       throw new DrillRuntimeException(e.getMessage(), e);

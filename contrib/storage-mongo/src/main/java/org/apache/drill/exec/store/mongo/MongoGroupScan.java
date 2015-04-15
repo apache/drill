@@ -166,7 +166,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     return databaseNames.contains(CONFIG);
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   private void init() throws IOException {
     MongoClient client = null;
     try {
@@ -178,9 +178,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
       chunksInverseMapping = Maps.newLinkedHashMap();
       if (isShardedCluster(client)) {
         DB db = client.getDB(CONFIG);
-        db.setReadPreference(ReadPreference.nearest());
         DBCollection chunksCollection = db.getCollectionFromString(CHUNKS);
-
         DBObject query = new BasicDBObject(1);
         query
             .put(
@@ -212,23 +210,29 @@ public class MongoGroupScan extends AbstractGroupScan implements
             String[] tagAndHost = StringUtils.split(hostEntry, '/');
             String[] hosts = tagAndHost.length > 1 ? StringUtils.split(
                 tagAndHost[1], ',') : StringUtils.split(tagAndHost[0], ',');
-            Set<ServerAddress> addressList = chunksMapping.get(chunkId);
+            List<String> chunkHosts = Arrays.asList(hosts);
+            //to get the address list from one of the shard nodes, need to get port.
+            MongoClient shardClient = new MongoClient(hosts[0]);
+            Set<ServerAddress> addressList = getPreferredHosts(shardClient, chunkHosts);
             if (addressList == null) {
               addressList = Sets.newHashSet();
-              chunksMapping.put(chunkId, addressList);
+              for (String host : chunkHosts) {
+                addressList.add(new ServerAddress(host));
+              }
             }
-            for (String host : hosts) {
-              addressList.add(new ServerAddress(host));
-            }
+            chunksMapping.put(chunkId, addressList);
             ServerAddress address = addressList.iterator().next();
-
             List<ChunkInfo> chunkList = chunksInverseMapping.get(address
                 .getHost());
             if (chunkList == null) {
               chunkList = Lists.newArrayList();
               chunksInverseMapping.put(address.getHost(), chunkList);
             }
-            ChunkInfo chunkInfo = new ChunkInfo(Arrays.asList(hosts), chunkId);
+            List<String> chunkHostsList = new ArrayList<String>();
+            for(ServerAddress serverAddr : addressList){
+              chunkHostsList.add(serverAddr.toString());
+            }
+            ChunkInfo chunkInfo = new ChunkInfo(chunkHostsList, chunkId);
             DBObject minObj = (BasicDBObject) chunkObj.get(MIN);
 
             Map<String, Object> minFilters = Maps.newHashMap();
@@ -261,10 +265,12 @@ public class MongoGroupScan extends AbstractGroupScan implements
         String chunkName = scanSpec.getDbName() + "."
             + scanSpec.getCollectionName();
         List<String> hosts = clientURI.getHosts();
-        Set<ServerAddress> addressList = Sets.newHashSet();
-
-        for (String host : hosts) {
-          addressList.add(new ServerAddress(host));
+        Set<ServerAddress> addressList = getPreferredHosts(client, hosts);
+        if (addressList == null) {
+          addressList = Sets.newHashSet();
+          for (String host : hosts) {
+            addressList.add(new ServerAddress(host));
+          }
         }
         chunksMapping.put(chunkName, addressList);
 
@@ -285,6 +291,40 @@ public class MongoGroupScan extends AbstractGroupScan implements
       }
     }
 
+  }
+
+  @SuppressWarnings("unchecked")
+  private Set<ServerAddress> getPreferredHosts(MongoClient client,
+      List<String> hosts) throws UnknownHostException {
+    Set<ServerAddress> addressList = Sets.newHashSet();
+    DB db = client.getDB(scanSpec.getDbName());
+    ReadPreference readPreference = client.getReadPreference();
+    switch (readPreference.getName().toUpperCase()) {
+    case "PRIMARY":
+    case "PRIMARYPREFERRED":
+      String primaryHost = db.command("isMaster").getString("primary");
+      addressList.add(new ServerAddress(primaryHost));
+      return addressList;
+    case "SECONDARY":
+    case "SECONDARYPREFERRED":
+      primaryHost = db.command("isMaster").getString("primary");
+      @SuppressWarnings("unchecked")
+      List<String> hostsList = (List<String>) db.command("isMaster").get(
+          "hosts");
+      hostsList.remove(primaryHost);
+      for (String host : hostsList) {
+        addressList.add(new ServerAddress(host));
+      }
+      return addressList;
+    case "NEAREST":
+      hostsList = (List<String>) db.command("isMaster").get("hosts");
+      for (String host : hostsList) {
+        addressList.add(new ServerAddress(host));
+      }
+      return addressList;
+    default:
+      return null;
+    }
   }
 
   @Override
@@ -433,7 +473,6 @@ public class MongoGroupScan extends AbstractGroupScan implements
       MongoClient client = MongoCnxnManager.getClient(addresses,
           clientURI.getOptions());
       DB db = client.getDB(scanSpec.getDbName());
-      db.setReadPreference(ReadPreference.nearest());
       DBCollection collection = db.getCollectionFromString(scanSpec
           .getCollectionName());
       CommandResult stats = collection.getStats();
