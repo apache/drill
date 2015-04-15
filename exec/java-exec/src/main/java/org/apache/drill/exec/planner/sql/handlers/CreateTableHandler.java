@@ -18,14 +18,11 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
-import java.util.List;
 
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
 
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -36,14 +33,10 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
-import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.hep.HepPlanner;
-import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlNode;
 
 public class CreateTableHandler extends DefaultSqlHandler {
@@ -69,9 +62,11 @@ public class CreateTableHandler extends DefaultSqlHandler {
             "Can't create tables in this schema.", drillSchema.getFullSchemaName()));
       }
 
-      String newTblName = sqlCreateTable.getName();
-      if (schema.getTable(newTblName) != null) {
-        return DirectPlan.createDirectPlan(context, false, String.format("Table '%s' already exists.", newTblName));
+      final String newTblName = sqlCreateTable.getName();
+      if (SqlHandlerUtil.getTableFromSchema(drillSchema, newTblName) != null) {
+        throw new ValidationException(
+            String.format("A table or view with given name [%s] already exists in schema [%s]",
+                newTblName, drillSchema.getFullSchemaName()));
       }
 
       log("Optiq Logical", newTblRelNode);

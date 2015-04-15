@@ -17,12 +17,15 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
+import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
+import org.apache.drill.exec.store.AbstractSchema;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
@@ -82,5 +85,16 @@ public class SqlHandlerUtil {
     }
 
     return validatedQueryRelNode;
+  }
+
+  public static Table getTableFromSchema(AbstractSchema drillSchema, String tblName) throws DrillException {
+    try {
+      return drillSchema.getTable(tblName);
+    } catch (Exception e) {
+      // TODO: Move to better exception types.
+      throw new DrillException(
+          String.format("Failure while trying to check if a table or view with given name [%s] already exists " +
+              "in schema [%s]: %s", tblName, drillSchema.getFullSchemaName(), e.getMessage()), e);
+    }
   }
 }

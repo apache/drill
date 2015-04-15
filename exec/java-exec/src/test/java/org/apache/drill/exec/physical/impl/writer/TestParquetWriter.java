@@ -342,7 +342,7 @@ public class TestParquetWriter extends BaseTestQuery {
   @Ignore
   @Test
   public void test958_sql_all_columns() throws Exception {
-    compareParquetReadersHyperVector("*",  "dfs.`/tmp/store_sales`");
+    compareParquetReadersHyperVector("*", "dfs.`/tmp/store_sales`");
     compareParquetReadersHyperVector("ss_addr_sk, ss_hdemo_sk", "dfs.`/tmp/store_sales`");
     // TODO - Drill 1388 - this currently fails, but it is an issue with project, not the reader, pulled out the physical plan
     // removed the unneeded project in the plan and ran it against both readers, they outputs matched
@@ -444,6 +444,52 @@ public class TestParquetWriter extends BaseTestQuery {
           .go();
     } finally {
       deleteTableIfExists(newTblName);
+    }
+  }
+
+  @Test // DRILL-2422
+  public void createTableWhenATableWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTableWhenTableAlreadyExists";
+
+    try {
+      test("USE dfs_test.tmp");
+      final String ctas = String.format("CREATE TABLE %s AS SELECT * from cp.`region.json`", newTblName);
+
+      test(ctas);
+
+      testBuilder()
+          .unOrdered()
+          .sqlQuery(ctas)
+          .baselineColumns("ok", "summary")
+          .baselineValues(false,
+              String.format("Error: A table or view with given name [%s] already exists in schema [%s]",
+                  newTblName, "dfs_test.tmp"))
+          .go();
+    } finally {
+      deleteTableIfExists(newTblName);
+    }
+  }
+
+  @Test // DRILL-2422
+  public void createTableWhenAViewWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTableWhenAViewWithSameNameAlreadyExists";
+
+    try {
+      test("USE dfs_test.tmp");
+      final String createView = String.format("CREATE VIEW %s AS SELECT * from cp.`region.json`", newTblName);
+
+      test(createView);
+
+      testBuilder()
+          .unOrdered()
+          .sqlQuery(String.format("CREATE TABLE %s AS SELECT * FROM cp.`employee.json`", newTblName))
+          .baselineColumns("ok", "summary")
+          .baselineValues(false,
+              String.format("Error: A table or view with given name [%s] already exists in schema [%s]",
+                  newTblName, "dfs_test.tmp"))
+          .go();
+    } finally {
+      test("DROP VIEW " + newTblName);
     }
   }
 

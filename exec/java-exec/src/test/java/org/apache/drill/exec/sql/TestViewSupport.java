@@ -18,9 +18,11 @@
 package org.apache.drill.exec.sql;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.io.FileUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.List;
 
 public class TestViewSupport extends TestBaseViewSupport {
@@ -275,7 +277,8 @@ public class TestViewSupport extends TestBaseViewSupport {
           .sqlQuery(createViewSql)
           .unOrdered()
           .baselineColumns("ok", "summary")
-          .baselineValues(false, "View with given name already exists in current schema")
+          .baselineValues(false,
+              String.format("Error: A view with given name [%s] already exists in schema [%s]", viewName, TEMP_SCHEMA))
           .go();
 
       // Try creating the view with same name in same schema, but with CREATE OR REPLACE VIEW clause
@@ -298,6 +301,41 @@ public class TestViewSupport extends TestBaseViewSupport {
       );
     } finally {
       dropViewHelper(TEMP_SCHEMA, viewName, TEMP_SCHEMA);
+    }
+  }
+
+  @Test // DRILL-2422
+  public void createViewWhenATableWithSameNameAlreadyExists() throws Exception {
+    final String tableName = generateViewName();
+
+    try {
+      final String tableDef1 = "SELECT region_id, sales_city FROM cp.`region.json`";
+
+      test(String.format("CREATE TABLE %s.%s as %s", TEMP_SCHEMA, tableName, tableDef1));
+
+      // Try to create the view with same name in same schema.
+      final String createViewSql = String.format("CREATE VIEW %s.`%s` AS %s", TEMP_SCHEMA, tableName, tableDef1);
+      testBuilder()
+          .sqlQuery(createViewSql)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(false,
+              String.format("Error: A non-view table with given name [%s] already exists in schema [%s]",
+                  tableName, TEMP_SCHEMA))
+          .go();
+
+      // Try creating the view with same name in same schema, but with CREATE OR REPLACE VIEW clause
+      final String viewDef2 = "SELECT sales_state_province FROM cp.`region.json` ORDER BY `region_id`";
+      testBuilder()
+          .sqlQuery(String.format("CREATE OR REPLACE VIEW %s.`%s` AS %s", TEMP_SCHEMA, tableName, viewDef2))
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(false,
+              String.format("Error: A non-view table with given name [%s] already exists in schema [%s]",
+                  tableName, TEMP_SCHEMA))
+          .go();
+    } finally {
+      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), tableName));
     }
   }
 
