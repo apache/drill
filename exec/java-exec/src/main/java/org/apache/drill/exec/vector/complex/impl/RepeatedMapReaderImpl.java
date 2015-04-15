@@ -96,6 +96,11 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public void setPosition(int index) {
+    if (index < 0 || index == NO_VALUES) {
+      currentOffset = NO_VALUES;
+      return;
+    }
+
     super.setPosition(index);
     RepeatedMapHolder h = new RepeatedMapHolder();
     vector.getAccessor().get(index, h);
