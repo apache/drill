@@ -4,7 +4,7 @@ parent: "Query Data"
 ---
 This exercise creates two tables in HBase, students and clicks, that you can query with Drill. As an HBase user, you most likely are running Drill in  distributed mode. In this case, the warden starts Drill as a service. If you are not an HBase user and just kicking the tires, you might use the Drill Sandbox on a single-node cluster (embedded mode). In this case, you need to [start Drill](/docs/starting-stopping-drill/) before performing step 5 of this exercise. On the Drill Sandbox, HBase tables you create will be located in: /mapr/demo.mapr.com/tables
 
-You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in the last step. It is a best practice to use CAST for INT and BIGINT conversions from binary and to use CONVERT_TO and CONVERT_FROM for other conversions.
+You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in step 4 of [Querying HBase Tables](#querying-hbase-tables). It is a best practice to use CAST for INT and BIGINT conversions from binary and to use CONVERT_TO and CONVERT_FROM for other conversions.
 
 ## Create the HBase tables
 
@@ -152,9 +152,12 @@ The `maprdb` format plugin provides access to the `/tables` directory. Use Drill
         +------------+------------+------------+------------+
         3 rows selected (0.294 seconds)
 
-4. Query the clicks table to get the studentid of the student having 100 items.
+4. Query the clicks table to get the studentid of the student having 100 items. Use CONVERT_FROM to convert the textual studentid and itemtype data, but use CAST to convert the integer quantity.
 
-        SELECT CONVERT_FROM(tbl.clickinfo.studentid, 'UTF8') AS studentid, CONVERT_FROM(tbl.iteminfo.itemtype, 'UTF8'), CAST(tbl.iteminfo.quantity AS INT) AS items FROM clicks tbl WHERE tbl.iteminfo.quantity=100;
+        SELECT CONVERT_FROM(tbl.clickinfo.studentid, 'UTF8') AS studentid, 
+               CONVERT_FROM(tbl.iteminfo.itemtype, 'UTF8'), 
+               CAST(tbl.iteminfo.quantity AS INT) AS items 
+        FROM clicks tbl WHERE tbl.iteminfo.quantity=100;
 
         +------------+------------+------------+
         | studentid  |   EXPR$1   |   items    |
