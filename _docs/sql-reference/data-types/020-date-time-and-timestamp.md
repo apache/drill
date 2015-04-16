@@ -2,7 +2,7 @@
 title: "Date, Time, and Timestamp"
 parent: "Data Types"
 ---
-Using familiar date and time formats, listed in the [SQL data types table]({{ site.baseurl }}/docs/data-types/supported-data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. 
+Using familiar date and time formats, listed in the [SQL data types table]({{ site.baseurl }}/docs/data-types/data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. 
 
 DATE, TIME, and TIMESTAMP store values in Coordinated Universal Time (UTC). Drill supports time functions in the range 1971 to 2037.
 

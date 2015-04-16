@@ -12,7 +12,7 @@ To install the MapR Drill ODBC Driver, complete the following steps:
   * Step 3: Updating the DYLD_LIBRARY_PATH Environment Variable
 
 After you complete the installation steps, complete the steps listed in
-[Configuring ODBC Connections for Linux and Mac OS X]({{ site.baseurl }}/docs/configuring-connections-on-linux-and-mac-os-x)
+[Configuring ODBC Connections on Linux and Mac OS X]({{ site.baseurl }}/docs/configuring-connections-on-linux-and-mac-os-x)
 .
 
 Verify that your system meets the following prerequisites before you start.
@@ -31,9 +31,9 @@ To install the driver, you need Administrator privileges on the computer.
 
 ## Step 1: Downloading the MapR Drill ODBC Driver
 
-Click the following link to download the driver:
+Click the following link to download the driver:  
 
-  * [MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.08.1.0618/MapRDrillODBC_DriverOnly.dmg)
+[MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.08.1.0618/MapRDrillODBC_DriverOnly.dmg)
 
 ## Step 2: Installing the MapR Drill ODBC Driver
 

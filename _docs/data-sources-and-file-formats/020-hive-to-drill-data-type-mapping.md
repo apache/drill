@@ -53,11 +53,6 @@ Using Drill you can read tables created in Hive that use data types compatible w
     <td>4-byte signed integer</td>
   </tr>
   <tr>
-    <td>INTERVAL</td>
-    <td>N/A</td>
-    <td>Integer fields representing a period of time depending on the type of interval</td>
-  </tr>
-  <tr>
     <td>INTERVALDAY</td>
     <td>N/A</td>
     <td>Integer fields representing a day</td>

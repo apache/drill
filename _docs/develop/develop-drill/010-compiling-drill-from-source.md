@@ -2,6 +2,11 @@
 title: "Compiling Drill from Source"
 parent: "Develop Drill"
 ---
+To develop Drill, you compile Drill from source code and then set up a project
+in Eclipse for use as your development environment. To review or contribute to
+Drill code, you must complete the steps required to install and use the Drill
+patch review tool.
+
 ## Prerequisites
 
   * Maven 3.0.4 or later

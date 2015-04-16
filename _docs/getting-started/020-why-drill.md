@@ -38,7 +38,7 @@ Drill's schema-free JSON model allows you to query complex, semi-structured data
 
 
 ## 4. Real SQL -- not "SQL-like"
-Drill supports the standard SQL:2003 syntax. No need to learn a new "SQL-like" language or struggle with a semi-functional BI tool. Drill supports many data types including DATE, INTERVAL, TIMESTAMP, VARCHAR and DECIMAL, as well as complex query constructs such as correlated sub-queries and joins in WHERE clauses. Here is an example of a TPC-H standard query that runs in Drill "as is":
+Drill supports the standard SQL:2003 syntax. No need to learn a new "SQL-like" language or struggle with a semi-functional BI tool. Drill supports many data types including DATE, INTERVALDAY/INTERVALYEAR, TIMESTAMP, VARCHAR and DECIMAL, as well as complex query constructs such as correlated sub-queries and joins in WHERE clauses. Here is an example of a TPC-H standard query that runs in Drill "as is":
 
 ### TPC-H query 4
 

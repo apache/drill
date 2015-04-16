@@ -87,9 +87,8 @@ Cast an integer to a decimal.
 
 ### Casting Intervals
 
-To cast INTERVAL data use the following syntax:
+To cast interval data to the INTERVALDAY or INTERVALYEAR types use the following syntax:
 
-    CAST (column_name AS INTERVAL)
     CAST (column_name AS INTERVAL DAY)
     CAST (column_name AS INTERVAL YEAR)
 

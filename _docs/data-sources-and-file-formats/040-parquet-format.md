@@ -252,7 +252,7 @@ Parquet also supports logical types, fully described on the [Apache Parquet site
     <td>Logical date and time. Annotates an int64 that stores the number of milliseconds from the Unix epoch, 00:00:00.000 on 1 January 1970, UTC.</td>
   </tr>
   <tr>
-    <td>INTERVAL</td>
+    <td>INTERVALDAY and INTERVALYEAR</td>
     <td>Integer fields representing a period of time depending on the type of interval</td>
     <td>INTERVAL</td>
     <td>An interval of time. Annotates a fixed_len_byte_array of length 12. Months, days, and ms in unsigned little-endian format.</td>

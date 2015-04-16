@@ -4,8 +4,7 @@ parent: "Query Data"
 ---
 This is a simple exercise that provides steps for creating a Hive table and
 inserting data that you can query using Drill. Before you perform the steps,
-download the [customers.csv](http://doc.mapr.com/download/attachments/22906623
-/customers.csv?api=v2) file.
+download the [customers.csv](http://doc.mapr.com/download/attachments/28868943/customers.csv?version=1&modificationDate=1426874930765&api=v2) file.
 
 To create a Hive table and query it with Drill, complete the following steps:
 
