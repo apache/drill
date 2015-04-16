@@ -19,9 +19,9 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
@@ -61,7 +61,7 @@ public class Hash64WithSeedAsDouble {
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
         out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
       }
@@ -97,7 +97,7 @@ public class Hash64WithSeedAsDouble {
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
         out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
       }
@@ -133,7 +133,7 @@ public class Hash64WithSeedAsDouble {
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       }
       else {
         out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
@@ -153,7 +153,7 @@ public class Hash64WithSeedAsDouble {
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       }
       else {
         out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
@@ -221,7 +221,7 @@ public class Hash64WithSeedAsDouble {
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
         java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
         out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), seed.value);
@@ -257,7 +257,7 @@ public class Hash64WithSeedAsDouble {
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
         java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
         out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), seed.value);
@@ -294,7 +294,7 @@ public class Hash64WithSeedAsDouble {
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
         java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
             in.start, in.nDecimalDigits, in.scale);
@@ -332,7 +332,7 @@ public class Hash64WithSeedAsDouble {
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
         java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
             in.start, in.nDecimalDigits, in.scale);
