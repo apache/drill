@@ -39,4 +39,4 @@ Remember the following tips when querying data with Drill:
     Example: ``SELECT * FROM dfs.default.`sample_data/my_sample.json`; ``
   * `CAST` data to `VARCHAR` if an expression in a query returns `VARBINARY` as the result type in order to view the `VARBINARY` types as readable data. If you do not use the `CAST` function, Drill returns the results as byte data.    
      Example: `CAST (VARBINARY_expr as VARCHAR(50))`
-  * When querying schema-less data using SELECT *, the order of the returned columns might differ from the stored order and vary from query to query.
+  * When selecting all (SELECT *) schema-less data, the order of returned columns might differ from the stored order and might vary from query to query.

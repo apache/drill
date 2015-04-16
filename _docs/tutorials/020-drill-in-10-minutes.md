@@ -108,7 +108,7 @@ Complete the following steps to install Drill:
   
         cd /opt/drill/apache-drill-<version>
 
-At this point, you can [start Drill](/docs/drill-in-10-minutes/#start-drill).
+At this point, you can [start Drill]({{ site.baseurl }}/docs/drill-in-10-minutes/#start-drill).
 
 ### Installing Drill on Mac OS X
 
