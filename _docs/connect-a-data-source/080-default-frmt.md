@@ -30,7 +30,7 @@ Drill supports. Currently, Drill supports the following types:
 ## Defining a Default Input Format
 
 You define the default input format for a file system workspace through the
-Drill Web UI. You must have a [defined workspace](/docs/workspaces) before you can define a
+Drill Web UI. You must have a [defined workspace]({{ site.baseurl }}/docs/workspaces) before you can define a
 default input format.
 
 To define a default input format for a workspace, complete the following

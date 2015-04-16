@@ -7,22 +7,22 @@ You can use the following string functions in Drill queries:
 
 Function| Return Type  
 --------|---  
-[BYTE_SUBSTR](/docs/string-manipulation#byte_substr)|byte array or text
-[CHAR_LENGTH](/docs/string-manipulation#char_length)| int  
-[CONCAT](/docs/string-manipulation#concat)| text
-[INITCAP](/docs/string-manipulation#initcap)| text
-[LENGTH](/docs/string-manipulation#length)| int
-[LOWER](/docs/string-manipulation#lower)| text
-[LPAD](/docs/string-manipulation#lpad)| text
-[LTRIM](/docs/string-manipulation#ltrim)| text
-[POSITION](/docs/string-manipulation#position)| int
-[REGEXP_REPLACE](/docs/string-manipulation#regexp_replace)|text
-[RPAD](/docs/string-manipulation#rpad)| text
-[RTRIM](/docs/string-manipulation#rtrim)| text
-[STRPOS](/docs/string-manipulation#strpos)| int
-[SUBSTR](/docs/string-manipulation#substr)| text
-[TRIM](/docs/string-manipulation#trim)| text
-[UPPER](/docs/string-manipulation#upper)| text
+[BYTE_SUBSTR]({{ site.baseurl }}/docs/string-manipulation#byte_substr)|byte array or text
+[CHAR_LENGTH]({{ site.baseurl }}/docs/string-manipulation#char_length)| int  
+[CONCAT]({{ site.baseurl }}/docs/string-manipulation#concat)| text
+[INITCAP]({{ site.baseurl }}/docs/string-manipulation#initcap)| text
+[LENGTH]({{ site.baseurl }}/docs/string-manipulation#length)| int
+[LOWER]({{ site.baseurl }}/docs/string-manipulation#lower)| text
+[LPAD]({{ site.baseurl }}/docs/string-manipulation#lpad)| text
+[LTRIM]({{ site.baseurl }}/docs/string-manipulation#ltrim)| text
+[POSITION]({{ site.baseurl }}/docs/string-manipulation#position)| int
+[REGEXP_REPLACE]({{ site.baseurl }}/docs/string-manipulation#regexp_replace)|text
+[RPAD]({{ site.baseurl }}/docs/string-manipulation#rpad)| text
+[RTRIM]({{ site.baseurl }}/docs/string-manipulation#rtrim)| text
+[STRPOS]({{ site.baseurl }}/docs/string-manipulation#strpos)| int
+[SUBSTR]({{ site.baseurl }}/docs/string-manipulation#substr)| text
+[TRIM]({{ site.baseurl }}/docs/string-manipulation#trim)| text
+[UPPER]({{ site.baseurl }}/docs/string-manipulation#upper)| text
 
 ## BYTE_SUBSTR
 Returns in binary format a substring of a string.
@@ -99,7 +99,7 @@ Concatenates arguments.
     +------------+
     1 row selected (0.221 seconds)
 
-Alternatively, you can use the [string concatenation operation](/docs/operators#string-concatenate-operator) to concatenate strings.
+Alternatively, you can use the [string concatenation operation]({{ site.baseurl }}/docs/operators#string-concatenate-operator) to concatenate strings.
 
 ## INITCAP
 Returns the string using initial caps.

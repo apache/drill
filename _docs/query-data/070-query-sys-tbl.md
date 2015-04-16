@@ -152,8 +152,8 @@ The default value, which is of the double, float, or long double data type;
 otherwise, null.
 
 For information about how to configure Drill system and session options, see[
-Planning and Execution Options](/docs/planning-and-execution-options).
+Planning and Execution Options]({{ site.baseurl }}/docs/planning-and-execution-options).
 
 For information about how to configure Drill start-up options, see[ Start-Up
-Options](/docs/start-up-options).
+Options]({{ site.baseurl }}/docs/start-up-options).
 

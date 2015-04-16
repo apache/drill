@@ -2,11 +2,11 @@
 title: "Date, Time, and Timestamp"
 parent: "Data Types"
 ---
-Using familiar date and time formats, listed in the [SQL data types table](/docs/data-types/supported-data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. 
+Using familiar date and time formats, listed in the [SQL data types table]({{ site.baseurl }}/docs/data-types/supported-data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. 
 
 DATE, TIME, and TIMESTAMP store values in Coordinated Universal Time (UTC). Drill supports time functions in the range 1971 to 2037.
 
-Currently, Drill does not support casting a TIMESTAMP with time zone, but you can use the [TO_TIMESTAMP function](/docs/casting/converting-data-types#to_timestamp) in a query to use time stamp data having a time zone.
+Currently, Drill does not support casting a TIMESTAMP with time zone, but you can use the [TO_TIMESTAMP function]({{ site.baseurl }}/docs/casting/converting-data-types#to_timestamp) in a query to use time stamp data having a time zone.
 
 Next, use the following literals in a SELECT statement. 
 
@@ -110,6 +110,6 @@ The following examples show the input and output format of INTERVALYEAR (Year, M
     +------------+
     1 row selected (0.076 seconds)
 
-For information about casting interval data, see the ["CAST"](/docs/data-type-conversion#cast) function.
+For information about casting interval data, see the ["CAST"]({{ site.baseurl }}/docs/data-type-conversion#cast) function.
 
 

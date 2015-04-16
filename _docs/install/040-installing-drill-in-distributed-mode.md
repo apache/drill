@@ -51,5 +51,5 @@ Complete the following steps to install Drill on designated nodes:
          }
 
 You can connect Drill to various types of data sources. Refer to [Connect
-Apache Drill to Data Sources](/docs/connect-a-data-source-introduction) to get configuration instructions for the
+Apache Drill to Data Sources]({{ site.baseurl }}/docs/connect-a-data-source-introduction) to get configuration instructions for the
 particular type of data source that you want to connect to Drill.

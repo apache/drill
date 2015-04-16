@@ -47,7 +47,7 @@ The summary of start-up options, also known as boot options, lists default value
 
 * drill.exec.sys.store.provider.class  
   
-  Defines the persistent storage (PStore) provider. The [PStore](/docs/persistent-configuration-storage) holds configuration and profile data. 
+  Defines the persistent storage (PStore) provider. The [PStore]({{ site.baseurl }}/docs/persistent-configuration-storage) holds configuration and profile data. 
 
 * drill.exec.buffer.size
 

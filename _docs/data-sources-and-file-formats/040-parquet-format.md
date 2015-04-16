@@ -49,14 +49,14 @@ To maximize performance, set the target size of a Parquet row group to the numbe
 The default block size is 536870912 bytes.
 
 ### Type Mapping
-The high correlation between Parquet and SQL data types makes reading Parquet files effortless in Drill. Writing to Parquet files takes more work than reading. Because SQL does not support all Parquet data types, to prevent Drill from inferring a type other than one you want, use the [cast function] (/docs/sql-functions) Drill offers more liberal casting capabilities than SQL for Parquet conversions if the Parquet data is of a logical type. 
+The high correlation between Parquet and SQL data types makes reading Parquet files effortless in Drill. Writing to Parquet files takes more work than reading. Because SQL does not support all Parquet data types, to prevent Drill from inferring a type other than one you want, use the [cast function] ({{ site.baseurl }}/docs/sql-functions) Drill offers more liberal casting capabilities than SQL for Parquet conversions if the Parquet data is of a logical type. 
 
 The following general process converts a file from JSON to Parquet:
 
 * Create or use an existing storage plugin that specifies the storage location of the Parquet file, mutability of the data, and supported file formats.
 * Take a look at the JSON data. 
 * Create a table that selects the JSON file.
-* In the CTAS command, cast JSON string data to corresponding [SQL types](/docs/json-data-model/data-type-mapping).
+* In the CTAS command, cast JSON string data to corresponding [SQL types]({{ site.baseurl }}/docs/json-data-model/data-type-mapping).
 
 ### Example: Read JSON, Write Parquet
 This example demonstrates a storage plugin definition, a sample row of data from a JSON file, and a Drill query that writes the JSON input to Parquet output. 

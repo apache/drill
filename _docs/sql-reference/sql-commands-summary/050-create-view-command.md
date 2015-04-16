@@ -27,7 +27,7 @@ generate the same set of columns with the same column names and data types.
 _workspace_  
 The location where you want the view to exist. By default, the view is created
 in the current workspace. See
-[Workspaces](/docs/Workspaces).
+[Workspaces]({{ site.baseurl }}/docs/Workspaces).
 
 _view_name_  
 The name that you give the view. The view must have a unique name. It cannot

@@ -12,7 +12,7 @@ Semi-structured JSON data often consists of complex, nested elements having sche
 
 Using Drill you can natively query dynamic JSON data sets using SQL. Drill treats a JSON object as a SQL record. One object equals one row in a Drill table. 
 
-Drill 0.8 and higher can [query compressed .gz files](/docs/drill-default-input-format#querying-compressed-json) having JSON as well as uncompressed .json files. 
+Drill 0.8 and higher can [query compressed .gz files]({{ site.baseurl }}/docs/drill-default-input-format#querying-compressed-json) having JSON as well as uncompressed .json files. 
 
 In addition to the examples presented later in this section, see ["How to Analyze Highly Dynamic Datasets with Apache Drill"](https://www.mapr.com/blog/how-analyze-highly-dynamic-datasets-apache-drill) for information about how to analyze a JSON data set.
 
@@ -67,22 +67,22 @@ Use the all text mode to prevent the schema change error described in the previo
 
 When you set this option, Drill reads all data from the JSON files as VARCHAR. After reading the data, use a SELECT statement in Drill to cast data as follows:
 
-* Cast JSON numeric values to [SQL types](/docs/data-types), such as BIGINT, DECIMAL, FLOAT, INTEGER, and SMALLINT.
-* Cast JSON strings to [Drill Date/Time Data Type Formats](/docs/supported-date-time-data-type-formats).
+* Cast JSON numeric values to [SQL types]({{ site.baseurl }}/docs/data-types), such as BIGINT, DECIMAL, FLOAT, INTEGER, and SMALLINT.
+* Cast JSON strings to [Drill Date/Time Data Type Formats]({{ site.baseurl }}/docs/supported-date-time-data-type-formats).
 
-Drill uses [map and array data types](/docs/data-types) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] (/docs/lession-2-run-queries-with-ansi-sql). “Query Complex Data” shows how to access nested arrays.
+Drill uses [map and array data types]({{ site.baseurl }}/docs/data-types) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lession-2-run-queries-with-ansi-sql). “Query Complex Data” shows how to access nested arrays.
 
 ## Reading JSON
-To read JSON data using Drill, use a [file system storage plugin](/docs/connect-to-a-data-source) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 
+To read JSON data using Drill, use a [file system storage plugin]({{ site.baseurl }}/docs/connect-to-a-data-source) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 
 
-JSON data is often complex. Data can be deeply nested and semi-structured. but [you can use workarounds ](/docs/json-data-model#limitations-and-workaroumds) covered later.
+JSON data is often complex. Data can be deeply nested and semi-structured. but [you can use workarounds ]({{ site.baseurl }}/docs/json-data-model#limitations-and-workaroumds) covered later.
 
 Drill reads tuples defined in single objects, having no comma between objects. A JSON object is an unordered set of name/value pairs. Curly braces delimit objects in the JSON file:
 
     { name: "Apples", desc: "Delicious" }
     { name: "Oranges", desc: "Florida Navel" }
     
-To read and [analyze complex JSON](/docs/json-data-model#analyzing-json) files, use the FLATTEN and KVGEN functions. 
+To read and [analyze complex JSON]({{ site.baseurl }}/docs/json-data-model#analyzing-json) files, use the FLATTEN and KVGEN functions. 
 
 ## Writing JSON
 You can write data from Drill to a JSON file. The following setup is required:
@@ -109,7 +109,7 @@ You can write data from Drill to a JSON file. The following setup is required:
         CREATE TABLE my_json AS
         SELECT my column from dfs.`<path_file_name>`;
 
-Drill performs the following actions, as shown in the complete [CTAS command example](/docs/create-table-as-ctas-command):
+Drill performs the following actions, as shown in the complete [CTAS command example]({{ site.baseurl }}/docs/create-table-as-ctas-command):
    
 * Creates a directory using table name.
 * Writes the JSON data to the directory in the workspace location.
@@ -269,7 +269,7 @@ Sum the ticket sales by state and group by state and sort in ascending order.
     5 rows selected (0.203 seconds)
 
 ### Example: Access a Map Field in an Array
-To access a map field in an array, use dot notation to drill down through the hierarchy of the JSON data to the field. Examples are based on the following [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json), modified slightly as described in the empty array workaround in ["Limitations and Workarounds."](/docs/json-data-model#empty-array)
+To access a map field in an array, use dot notation to drill down through the hierarchy of the JSON data to the field. Examples are based on the following [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json), modified slightly as described in the empty array workaround in ["Limitations and Workarounds."]({{ site.baseurl }}/docs/json-data-model#empty-array)
 
     {
       "type": "FeatureCollection",
@@ -324,7 +324,7 @@ To access the second geometry coordinate of the first city lot in the San Franci
     +-------------------+
     1 row selected (0.19 seconds)
 
-More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"](/docs/query-3-selecting-nested-data-for-a-column). 
+More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"]({{ site.baseurl }}/docs/query-3-selecting-nested-data-for-a-column). 
 
 ### Example: Flatten an Array of Maps using a Subquery
 By flattening the following JSON file, which contains an array of maps, you can evaluate the records of the flattened data. 
@@ -461,9 +461,9 @@ Complex arrays and maps can be difficult or impossible to query.
 
 Workaround: Separate lengthy objects into objects delimited by curly braces using the following functions:
  
-* [flatten](/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
+* [flatten]({{ site.baseurl }}/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
 
-* [kvgen](/docs/json-data-model#generate-key-value-pairs) separates objects having more elements than optimal for querying.
+* [kvgen]({{ site.baseurl }}/docs/json-data-model#generate-key-value-pairs) separates objects having more elements than optimal for querying.
 
   
 ### Nested Column Names 
@@ -498,7 +498,7 @@ Workaround: Set the `store.json.all_text_mode` property, described earlier, to t
     ALTER SYSTEM SET `store.json.all_text_mode` = true;
 
 ### Selecting all in a JSON directory query
-Drill currently returns only fields common to all the files in a [directory query](/docs/lesson-3-create-a-storage-plugin#query-multiple-files-in-a-directory) that selects all (SELECT *) JSON files.
+Drill currently returns only fields common to all the files in a [directory query]({{ site.baseurl }}/docs/lesson-3-create-a-storage-plugin#query-multiple-files-in-a-directory) that selects all (SELECT *) JSON files.
 
 Workaround: Query each file individually.
 

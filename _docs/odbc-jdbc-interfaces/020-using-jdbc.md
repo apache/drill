@@ -6,7 +6,7 @@ To use the JDBC Driver to access Drill through Squirrel, ensure that you meet th
 ### Prerequisites
 
   * SQuirreL requires JRE 7
-  * Drill installed in distributed mode on one or multiple nodes in a cluster. Refer to the [Install Drill](/docs/install-drill/) documentation for more information.
+  * Drill installed in distributed mode on one or multiple nodes in a cluster. Refer to the [Install Drill]({{ site.baseurl }}/docs/install-drill/) documentation for more information.
   * The client must be able to resolve the actual hostname of the Drill node(s) with the IP(s). Verify that a DNS entry was created on the client machine for the Drill node(s).
      
 If a DNS entry does not exist, create the entry for the Drill node(s).

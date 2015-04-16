@@ -5,7 +5,7 @@ parent: "Using ODBC on Linux and Mac OS X"
 You can use a connection string to connect to your data source using ODBC on Linux and Mac OS X. For a list of
 all the properties that you can use in connection strings, see [Driver
 Configuration
-Options](/docs/driver-configuration-options).
+Options]({{ site.baseurl }}/docs/driver-configuration-options).
 
 The following example shows a connection string for connecting directly to a
 Drillbit:

@@ -76,7 +76,7 @@ Drill.
 
 After downloading and installing the sandbox, continue with the tutorial by
 [Getting to Know the Drill
-Sandbox](/docs/getting-to-know-the-drill-sandbox/).
+Sandbox]({{ site.baseurl }}/docs/getting-to-know-the-drill-sandbox/).
 
 ## Installing the MapR Sandbox with Apache Drill on VirtualBox
 
@@ -138,4 +138,4 @@ VirtualBox adapter.
 ### What's Next
 
 After downloading and installing the sandbox, continue with the tutorial by
-[Getting to Know the Drill Sandbox](/docs/getting-to-know-the-drill-sandbox/).
+[Getting to Know the Drill Sandbox]({{ site.baseurl }}/docs/getting-to-know-the-drill-sandbox/).

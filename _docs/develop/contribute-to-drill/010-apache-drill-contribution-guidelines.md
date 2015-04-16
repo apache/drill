@@ -156,7 +156,7 @@ One example DrillFunc:
 
 Also one can visit the JIRA issues and implement one of those too. 
 
-More contribution ideas are located on the [Contribution Ideas](/docs/apache-drill-contribution-ideas) page.
+More contribution ideas are located on the [Contribution Ideas]({{ site.baseurl }}/docs/apache-drill-contribution-ideas) page.
 
 ### Contributing your work
 

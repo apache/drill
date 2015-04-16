@@ -26,7 +26,7 @@ example is downloadable from [Yelp](http://www.yelp.com/dataset_challenge)
 
 [http://drill.apache.org/download/](http://drill.apache.org/download/)
 
-You can also [deploy Drill in clustered mode](/docs/deploying-drill-in-a-cluster) if you
+You can also [deploy Drill in clustered mode]({{ site.baseurl }}/docs/deploying-drill-in-a-cluster) if you
 want to scale your environment.
 
 ### Step 2 : Open the Drill tar file
@@ -338,10 +338,10 @@ Let’s get the total number of records from the view.
     +------------+
 
 In addition to these queries, you can get many more deeper insights using
-Drill’s [SQL functionality](/docs/sql-reference). If you are not comfortable with writing queries manually, you
+Drill’s [SQL functionality]({{ site.baseurl }}/docs/sql-reference). If you are not comfortable with writing queries manually, you
 can use a BI/Analytics tools such as Tableau/MicroStrategy to query raw
 files/Hive/HBase data or Drill-created views directly using Drill [ODBC/JDBC
-drivers](/docs/odbc-jdbc-interfaces).
+drivers]({{ site.baseurl }}/docs/odbc-jdbc-interfaces).
 
 The goal of Apache Drill is to provide the freedom and flexibility in
 exploring data in ways we have never seen before with SQL technologies. The
@@ -408,6 +408,6 @@ To learn more about Drill, please refer to the following resources:
 
   * Download Drill here:<http://getdrill.org/drill/download>
   * 10 reasons we think Drill is cool:</docs/why-drill>
-  * [A simple 10-minute tutorial](/docs/drill-in-10-minutes>)
-  * [More tutorials](/docs/tutorials-introduction/)
+  * [A simple 10-minute tutorial]({{ site.baseurl }}/docs/drill-in-10-minutes>)
+  * [More tutorials]({{ site.baseurl }}/docs/tutorials-introduction/)
 

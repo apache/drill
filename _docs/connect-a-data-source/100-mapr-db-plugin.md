@@ -13,7 +13,7 @@ Drill includes a `maprdb` format plugin for accessing data stored in MapR-DB. Th
       "enabled": true
     }
 
-Using the Sandbox and this `maprdb` format plugin, you can query HBase tables located in the `/tables` directory, as shown in the ["Query HBase"](/docs/querying-hbase) examples.
+Using the Sandbox and this `maprdb` format plugin, you can query HBase tables located in the `/tables` directory, as shown in the ["Query HBase"]({{ site.baseurl }}/docs/querying-hbase) examples.
 
 The `dfs` storage plugin includes the maprdb format when you install Drill from the `mapr-drill` package on a MapR node. Click **Update** next to the `dfs` instance
 in the Web UI of the Drill Sandbox to view the configuration for the `dfs` instance:
@@ -21,7 +21,7 @@ in the Web UI of the Drill Sandbox to view the configuration for the `dfs` insta
 ![drill query flow]({{ site.baseurl }}/docs/img/18.png)
 
 
-The examples of the [CONVERT_TO/FROM functions](/docs/data-type-conversion#convert_to-and-convert_from) show how to adapt the `dfs` storage plugin to use the `maprdb` format plugin to query HBase tables on the Sandbox.
+The examples of the [CONVERT_TO/FROM functions]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from) show how to adapt the `dfs` storage plugin to use the `maprdb` format plugin to query HBase tables on the Sandbox.
 
 You modify the `dfs` storage plugin to create a table mapping to a directory in the MapR-FS file system. You then select the table by name.
 

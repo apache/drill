@@ -19,7 +19,7 @@ You may want to run the SHOW DATABASES or SHOW SCHEMAS command to see a list of 
 
 In Drill, a database or schema is a configured storage plugin instance or a configured storage plugin instance with a configured workspace. For example, dfs.donuts where dfs is the file system configured as a storage plugin instance, and donuts is a configured workspace.
 
-You can configure and use multiple storage plugins and workspaces in Drill.  See [Storage Plugin Registration](/docs/storage-plugin-registration) and [Workspaces](/docs/workspaces).
+You can configure and use multiple storage plugins and workspaces in Drill.  See [Storage Plugin Registration]({{ site.baseurl }}/docs/storage-plugin-registration) and [Workspaces]({{ site.baseurl }}/docs/workspaces).
 
 ## Example
 

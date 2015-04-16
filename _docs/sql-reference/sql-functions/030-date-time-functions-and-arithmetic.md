@@ -9,18 +9,18 @@ This section defines the following date/time functions:
 
 **Function**| **Return Type**  
 ---|---  
-[AGE(TIMESTAMP)](/docs/date-time-functions-and-arithmetic#age)| INTERVAL
-[EXTRACT(field from time_expression)](/docs/date-time-functions-and-arithmetic#extract)| double precision
-[CURRENT_DATE](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| DATE  
-[CURRENT_TIME](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME   
-[CURRENT_TIMESTAMP](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP 
-[DATE_ADD](/docs/date-time-functions-and-arithmetic#date_add)| date/datetime  
-[DATE_PART](/docs/date-time-functions-and-arithmetic#date_part)| double precision  
-[DATE_SUB](/docs/date-time-functions-and-arithmetic#date_sub)| date/datetime     
-[LOCALTIME](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME  
-[LOCALTIMESTAMP](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
-[NOW](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
-[TIMEOFDAY](/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| text  
+[AGE(TIMESTAMP)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#age)| INTERVAL
+[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)| double precision
+[CURRENT_DATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| DATE  
+[CURRENT_TIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME   
+[CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP 
+[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)| date/datetime  
+[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)| double precision  
+[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| date/datetime     
+[LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME  
+[LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
+[NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
+[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| text  
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
@@ -56,7 +56,7 @@ Find the interval between 11:10:10 PM on January 1, 2001 and 10:10:10 PM on Janu
     +------------+
     1 row selected (0.161 seconds)
 
-For information about how to read the interval data, see the [Interval section](/docs/date-time-and-timestamp#interval).
+For information about how to read the interval data, see the [Interval section]({{ site.baseurl }}/docs/date-time-and-timestamp#interval).
 
 ### DATE_ADD
 Returns the sum of a date/time and a number of days/hours, or of a date/time and date/time interval.
@@ -333,7 +333,7 @@ The following examples show how to use these functions:
     +------------+
     1 row selected (0.05 seconds)
 
-If you set up Drill for [UTC time](/docs/casting-converting-data-types/time-zone-limitation), TIMEOFDAY returns the result for the UTC time zone.
+If you set up Drill for [UTC time]({{ site.baseurl }}/docs/casting-converting-data-types/time-zone-limitation), TIMEOFDAY returns the result for the UTC time zone.
 
     SELECT TIMEOFDAY() FROM sys.version;
     +------------+

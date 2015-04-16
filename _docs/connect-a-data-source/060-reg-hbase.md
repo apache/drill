@@ -31,4 +31,4 @@ To register HBase with Drill, complete the following steps:
 After you configure a storage plugin instance for the HBase, you can
 issue Drill queries against it.
 
-In the Drill sandbox, use the `dfs` storage plugin and the [MapR-DB format](/docs/mapr-db-format/) to query HBase files because the sandbox does not include HBase services.
+In the Drill sandbox, use the `dfs` storage plugin and the [MapR-DB format]({{ site.baseurl }}/docs/mapr-db-format/) to query HBase files because the sandbox does not include HBase services.

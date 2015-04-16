@@ -2,7 +2,7 @@
 title: "Getting to Know the Drill Sandbox"
 parent: "Learn Drill with the MapR Sandbox"
 ---
-This section covers key information about the Apache Drill tutorial. After [installing the Drill sandbox](/docs/installing-the-apache-drill-sandbox) and starting the sandbox, you can open another terminal window (Linux) or Command Prompt (Windows) and use the secure shell (ssh) to connect to the VM, assuming ssh is installed. Use the following login name and password: mapr/mapr. For
+This section covers key information about the Apache Drill tutorial. After [installing the Drill sandbox]({{ site.baseurl }}/docs/installing-the-apache-drill-sandbox) and starting the sandbox, you can open another terminal window (Linux) or Command Prompt (Windows) and use the secure shell (ssh) to connect to the VM, assuming ssh is installed. Use the following login name and password: mapr/mapr. For
 example:
 
     $ ssh mapr@localhost -p 2222
@@ -20,12 +20,12 @@ Drill includes SQLLine, a JDBC utility for connecting to relational databases an
 
 In distributed mode, the warden attempts to start Drill automatically when Drill is defined as service.
 
-[Starting SQLLine outside the sandbox](/docs/starting-stopping-drill) for use with Drill requires entering more options than are shown here. 
+[Starting SQLLine outside the sandbox]({{ site.baseurl }}/docs/starting-stopping-drill) for use with Drill requires entering more options than are shown here. 
 
 In this tutorial you query a number of data sets, including Hive and HBase, and files on the file system, such as CSV, JSON, and Parquet files. To access these diverse data sources, you connect Drill to storage plugins. 
 
 ## Storage Plugin Overview
-This section describes storage plugins included in the sandbox. For general information about Drill storage plugins, see ["Connect to a Data Source"](/docs/connect-a-data-source-introduction).
+This section describes storage plugins included in the sandbox. For general information about Drill storage plugins, see ["Connect to a Data Source"]({{ site.baseurl }}/docs/connect-a-data-source-introduction).
 Take a look at the pre-configured storage plugins for the sandbox by opening the Storage tab in the Drill Web UI. Launch a web browser and go to: `http://<IP address>:8047/storage`. For example:
 
     http://localhost:8046/storage
@@ -97,7 +97,7 @@ The `dfs` definition includes format definitions.
 
 ### maprdb
 
-The maprdb storage plugin is a configuration for MapR-DB in the sandbox. You use this plugin in the sandbox to query HBase as well as MapR-DB data because the sandbox does not include HBase services. In addition to the following brief example, see the [Registering HBase](/docs/hbase-storage-plugin) for more
+The maprdb storage plugin is a configuration for MapR-DB in the sandbox. You use this plugin in the sandbox to query HBase as well as MapR-DB data because the sandbox does not include HBase services. In addition to the following brief example, see the [Registering HBase]({{ site.baseurl }}/docs/hbase-storage-plugin) for more
 information on how to configure Drill to query HBase.
 
     {
@@ -141,5 +141,5 @@ You have a number of data sources to explore.  For example, analyzing customer r
 # What's Next
 
 Start running queries by going to [Lesson 1: Learn About the Data
-Set](/docs/lession-1-learn-about-the-data-set).
+Set]({{ site.baseurl }}/docs/lession-1-learn-about-the-data-set).
 

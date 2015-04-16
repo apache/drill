@@ -25,7 +25,7 @@ This lesson consists of select * queries on each data source.
 ### Start SQLLine
 
 If SQLLine is not already started, use a Terminal or Command window to log
-into the demo VM as root, then enter `sqlline`, as described in ["Getting to Know the Sandbox"](/docs/getting-to-know-the-drill-sandbox):
+into the demo VM as root, then enter `sqlline`, as described in ["Getting to Know the Sandbox"]({{ site.baseurl }}/docs/getting-to-know-the-drill-sandbox):
 
 You can run queries from the `sqlline` prompt to complete the tutorial. To exit from
 SQLLine, type:
@@ -380,7 +380,7 @@ subdirectories to return the total number of rows in those files.
 # What's Next
 
 Go to [Lesson 2: Run Queries with ANSI
-SQL](/docs/lession-2-run-queries-with-ansi-sql).
+SQL]({{ site.baseurl }}/docs/lession-2-run-queries-with-ansi-sql).
 
 
 

@@ -62,7 +62,7 @@ traditional DB (Databases->Tables/Views->Columns). The metadata is accessible
 through the ANSI standard INFORMATION_SCHEMA database
 
 For more information on how to configure and work various data sources with
-Drill, refer to [Connect Apache Drill to Data Sources](/docs/connect-a-data-source-introduction).
+Drill, refer to [Connect Apache Drill to Data Sources]({{ site.baseurl }}/docs/connect-a-data-source-introduction).
 
 **_Extensibility_**
 

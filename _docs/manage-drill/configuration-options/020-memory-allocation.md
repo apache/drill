@@ -28,5 +28,5 @@ env.sh`.
 
 After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart
 the Drillbit
-](/docs/starting-stopping-drill#starting-a-drillbit)on
+]({{ site.baseurl }}/docs/starting-stopping-drill#starting-a-drillbit)on
 the node.

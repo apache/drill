@@ -41,4 +41,4 @@ file. The counts are restricted to rows that contain the string `pizza`.
 	7 rows selected (2.03 seconds)
 
 For another example of this function, see the following lesson in the Apache
-Drill Tutorial for Hadoop: [Lesson 3: Run Queries on Complex Data Types](/docs/lession-3-run-queries-on-complex-data-types/).
+Drill Tutorial for Hadoop: [Lesson 3: Run Queries on Complex Data Types]({{ site.baseurl }}/docs/lession-3-run-queries-on-complex-data-types/).

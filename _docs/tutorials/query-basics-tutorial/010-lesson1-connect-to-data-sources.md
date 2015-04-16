@@ -30,10 +30,10 @@ To list the default storage plugins, use the SHOW DATABASES command.
 
   2. Take a look at the list of storage plugins and workspaces that Drill recognizes.
 
-* `dfs` is the storage plugin for connecting to the [file system](/docs/querying-a-file-system) data source on your machine.
+* `dfs` is the storage plugin for connecting to the [file system]({{ site.baseurl }}/docs/querying-a-file-system) data source on your machine.
 * `cp` is a storage plugin for connecting to a JAR data source used with MapR.
-* `sys` is a storage plugin for connecting to Drill [system tables](/docs/querying-system-tables).
-* [INFORMATION_SCHEMA](/docs/querying-the-information-schema) is a storage plugin for connecting to an ANSI standard set of metadata tables.
+* `sys` is a storage plugin for connecting to Drill [system tables]({{ site.baseurl }}/docs/querying-system-tables).
+* [INFORMATION_SCHEMA]({{ site.baseurl }}/docs/querying-the-information-schema) is a storage plugin for connecting to an ANSI standard set of metadata tables.
 
 ## List Tables
 

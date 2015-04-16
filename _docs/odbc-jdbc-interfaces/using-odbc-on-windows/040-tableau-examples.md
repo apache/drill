@@ -14,7 +14,7 @@ This section includes the following examples:
 
 The steps and results of these examples assume pre-configured schemas and
 source data. You configure schemas as storage plugin instances on the Storage
-tab of the [Drill Web UI](/docs/getting-to-know-the-drill-sandbox#storage-plugin-overview).
+tab of the [Drill Web UI]({{ site.baseurl }}/docs/getting-to-know-the-drill-sandbox#storage-plugin-overview).
 
 ## Example: Connect to a Hive Table in Tableau
 
@@ -99,7 +99,7 @@ Administrator to create a DSN that connects to the view.
      The _MapR Drill ODBC Driver DSN Setup_ window appears.
   4. Specify the Connection Type based on your requirements.
      The connection type provides the DSN access to a Drillbit. For more
-information, see [Connection Type](/docs/configuring-connections-on-windows/#connection-type).
+information, see [Connection Type]({{ site.baseurl }}/docs/configuring-connections-on-windows/#connection-type).
   5. Click **Drill Explorer** to start exploring the data.
      The Drill Explorer dialog appears. You can use the Browse tab to visually
 explore the metadata and data available from Drill data sources. Advanced
@@ -125,7 +125,7 @@ HBase table.
         hbase.voter
 
      HBase does not contain type information, so you need to cast the data in Drill
-Explorer. For information about SQL query support, see the [SQL Reference](/docs/sql-reference).
+Explorer. For information about SQL query support, see the [SQL Reference]({{ site.baseurl }}/docs/sql-reference).
   9. To save the view, click **Create As**.
   10. Specify the schema where you want to save the view, enter a name for the view, and click **Save**.  
 
@@ -191,7 +191,7 @@ the data in Tableau.
   3. Select **MapR Drill ODBC Driver** and click **Finish**.  
      The _MapR Drill ODBC Driver DSN Setup_ window appears.
   4. Enter a data source name.
-  5. Specify the connection type based on your requirements. See [Connection Type](/docs/configuring-connections-on-windows/#connection-type) for more information.  
+  5. Specify the connection type based on your requirements. See [Connection Type]({{ site.baseurl }}/docs/configuring-connections-on-windows/#connection-type) for more information.  
      The connection type provides the DSN access to a Drillbit.  
      In this example, we will connect to a Zookeeper Quorum.
   6. In the _Schema_ section, select the schema associated with the data source that contains the Parquet file that you want to access. Then, click **OK**.  

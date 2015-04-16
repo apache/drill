@@ -17,13 +17,13 @@ that is self-describing, such as HBase, Parquet, JSON, CSV, and TSV.
 Complete the following steps to connect to a Drill data source from a BI tool
 using ODBC:
 
-  * [Step 1. Install the MapR Drill ODBC Driver](/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows)
-  * [Step 2. Configure ODBC Connections to Drill Data Sources](/docs/step-2-configure-odbc-connections-to-drill-data-sources)
-  * [Step 3. Connect to Drill Data Sources from a BI Tool](/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool)
+  * [Step 1. Install the MapR Drill ODBC Driver]({{ site.baseurl }}/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows)
+  * [Step 2. Configure ODBC Connections to Drill Data Sources]({{ site.baseurl }}/docs/step-2-configure-odbc-connections-to-drill-data-sources)
+  * [Step 3. Connect to Drill Data Sources from a BI Tool]({{ site.baseurl }}/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool)
 
 For examples of how you can use the MapR Drill ODBC Driver to connect to Drill
 Data Sources from BI tools, see [Step 3. Connect to Drill Data Sources from a
-BI Tool](/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool). While the documentation includes examples for Tableau, you can use
+BI Tool]({{ site.baseurl }}/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool). While the documentation includes examples for Tableau, you can use
 this driver with any BI tool that works with ODBC, such as Excel,
 MicroStrategy, and Toad.
 

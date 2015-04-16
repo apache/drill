@@ -20,8 +20,8 @@ plugin, such as hive, or a storage plugin and workspace. For example,
 `dfs.donuts` where `dfs` is an instance of the file system configured as a
 storage plugin, and `donuts` is a workspace configured to point to a directory
 within the file system. You can configure and use multiple storage plugins and
-workspaces in Drill. See [Storage Plugin Registration](/docs/storage-plugin-registration) and
-[Workspaces](/docs/Workspaces).
+workspaces in Drill. See [Storage Plugin Registration]({{ site.baseurl }}/docs/storage-plugin-registration) and
+[Workspaces]({{ site.baseurl }}/docs/Workspaces).
 
 ## Usage Notes
 

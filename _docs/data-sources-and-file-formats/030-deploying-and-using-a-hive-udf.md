@@ -15,14 +15,14 @@ You create the JAR for a UDF to use in Drill in a conventional manner with a few
 3. Create an empty `drill-module.conf` in the resources directory in the Java project. 
 4. Export the logic to a JAR, including the `drill-module.conf` file in resources.
 
-The `drill-module.conf` file defines [startup options](/docs/start-up-options/) and makes the JAR functions available to use in queries throughout the Hadoop cluster. After exporting the UDF logic to a JAR file, set up the UDF in Drill. Drill users can access the custom UDF for use in Hive queries.
+The `drill-module.conf` file defines [startup options]({{ site.baseurl }}/docs/start-up-options/) and makes the JAR functions available to use in queries throughout the Hadoop cluster. After exporting the UDF logic to a JAR file, set up the UDF in Drill. Drill users can access the custom UDF for use in Hive queries.
 
 ## Setting Up a UDF
 After you export the custom UDF as a JAR, perform the UDF setup tasks so Drill can access the UDF. The JAR needs to be available at query execution time as a session resource, so Drill queries can refer to the UDF by its name.
  
 To set up the UDF:
 
-1. Register Hive. [Register a Hive storage plugin](/docs/registering-hive/) that connects Drill to a Hive data source.
+1. Register Hive. [Register a Hive storage plugin]({{ site.baseurl }}/docs/registering-hive/) that connects Drill to a Hive data source.
 2. In Drill 0.7 and later, add the JAR for the UDF to the Drill CLASSPATH. In earlier versions of Drill, place the JAR file in the `/jars/3rdparty` directory of the Drill installation on all nodes running a Drillbit.
 3. On each Drill node in the cluster, restart the Drillbit.
    `<drill installation directory>/bin/drillbit.sh restart`

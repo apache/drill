@@ -60,7 +60,7 @@ You can use the following subquery operators in your Drill queries:
   * EXISTS
   * IN
 
-See [SELECT Statements](/docs/select-statements).
+See [SELECT Statements]({{ site.baseurl }}/docs/select-statements).
 
 ## String Concatenate Operator
 
@@ -69,7 +69,7 @@ You can use the following string operators in your Drill queries to concatenate 
   * string || string
   * string || non-string or non-string || string
 
-The concatenate operator is an alternative to the [concat function](/docs/string-manipulation#concat).
+The concatenate operator is an alternative to the [concat function]({{ site.baseurl }}/docs/string-manipulation#concat).
 
 The concat function treats NULL as an empty string. The concatenate operator (||) returns NULL if any input is NULL.
 

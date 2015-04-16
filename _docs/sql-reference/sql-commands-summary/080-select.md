@@ -115,7 +115,7 @@ less than the number of columns defined by the subquery.
 _query_
 
 Any SELECT query that Drill supports. See
-[SELECT](/docs/SELECT+Statements).
+[SELECT]({{ site.baseurl }}/docs/SELECT+Statements).
 
 ## Usage Notes
 
