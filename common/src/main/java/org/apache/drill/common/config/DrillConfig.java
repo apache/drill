@@ -158,6 +158,7 @@ public final class DrillConfig extends NestedConfig{
     Collection<URL> urls = PathScanner.getConfigURLs();
     logger.debug("Loading configs at the following URLs {}", urls);
     for (URL url : urls) {
+      logger.trace("Loading config at URL {}.", url);
       fallback = ConfigFactory.parseURL(url).withFallback(fallback);
     }
 
