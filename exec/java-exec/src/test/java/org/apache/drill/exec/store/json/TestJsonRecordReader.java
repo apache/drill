@@ -22,7 +22,6 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.Test;
 import org.junit.Assert;
-
 import static org.junit.Assert.assertEquals;
 
 
@@ -72,6 +71,7 @@ public class TestJsonRecordReader extends BaseTestQuery{
   public void testEnableAllTextMode() throws Exception {
     testNoResult("alter session set `store.json.all_text_mode`= true");
     test("select * from cp.`jsoninput/big_numeric.json`");
+    testNoResult("alter session set `store.json.all_text_mode`= false");
   }
 
   @Test
@@ -84,6 +84,30 @@ public class TestJsonRecordReader extends BaseTestQuery{
       assertEquals("Expected Unsupported Operation Exception.", true, s.contains("Drill does not support lists of different types."));
     }
 
+  }
+
+  @Test //DRILL-1832
+  public void testJsonWithNulls1() throws Exception {
+
+    final String query="select * from cp.`jsoninput/twitter_43.json`";
+
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .jsonBaselineFile("jsoninput/drill-1832-1-result.json")
+            .go();
+  }
+
+  @Test //DRILL-1832
+  public void testJsonWithNulls2() throws Exception {
+
+    final String query="select SUM(1) as `sum_Number_of_Records_ok` from cp.`/jsoninput/twitter_43.json` having (COUNT(1) > 0)";
+
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .jsonBaselineFile("jsoninput/drill-1832-2-result.json")
+            .go();
   }
 
 }
