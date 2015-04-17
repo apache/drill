@@ -67,8 +67,6 @@ public abstract class FallbackOptionManager extends BaseOptionManager {
   private void setValidatedOption(OptionValue value) {
     if (!setLocalOption(value)) {
       fallback.setOption(value);
-    }else{
-      setLocalOption(value);
     }
   }
 

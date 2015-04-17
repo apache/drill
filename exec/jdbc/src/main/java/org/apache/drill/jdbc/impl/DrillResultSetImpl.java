@@ -32,6 +32,7 @@ import net.hydromatic.avatica.AvaticaStatement;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -191,7 +192,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     }
 
     @Override
-    public void queryCompleted() {
+    public void queryCompleted(QueryState state) {
       releaseIfFirst();
       completed = true;
     }

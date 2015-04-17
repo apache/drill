@@ -39,6 +39,7 @@ public interface OptionManager extends Iterable<OptionValue> {
 
   public interface OptionAdmin {
     public void registerOptionType(OptionValidator validator);
+    public OptionValidator getValidator(String name);
     public void validate(OptionValue v) throws SetOptionException;
     public OptionValue validate(String name, SqlLiteral value, OptionType optionType) throws SetOptionException;
   }

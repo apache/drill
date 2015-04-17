@@ -34,9 +34,11 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
 import com.google.common.base.Preconditions;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
 
 public class ScreenCreator implements RootCreator<Screen>{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
+  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(ScreenCreator.class);
 
 
 
@@ -107,6 +109,7 @@ public class ScreenCreator implements RootCreator<Screen>{
         materializer = new VectorRecordMaterializer(context, incoming);
         //$FALL-THROUGH$
       case OK:
+        injector.injectPause(context.getExecutionControls(), "sending-data", logger);
         QueryWritableBatch batch = materializer.convertNext();
         updateStats(batch);
         stats.startWait();
@@ -139,6 +142,7 @@ public class ScreenCreator implements RootCreator<Screen>{
       if (!oContext.isClosed()) {
         internalStop();
       }
+      injector.injectPause(context.getExecutionControls(), "send-complete", logger);
     }
 
     RecordBatch getIncoming() {

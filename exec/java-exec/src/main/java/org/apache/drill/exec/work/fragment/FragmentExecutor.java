@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.fragment;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -35,6 +36,8 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 
 /**
@@ -43,6 +46,7 @@ import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
  */
 public class FragmentExecutor implements Runnable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentExecutor.class);
+  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(FragmentExecutor.class);
 
   private final String fragmentName;
   private final FragmentRoot rootOperator;
@@ -101,16 +105,29 @@ public class FragmentExecutor implements Runnable {
 
   /**
    * Cancel the execution of this fragment is in an appropriate state. Messages come from external.
+   * NOTE that this can be called from threads *other* than the one running this runnable(),
+   * so we need to be careful about the state transitions that can result.
    */
   public void cancel() {
-    acceptExternalEvents.awaitUninterruptibly();
-
     /*
-     * Note that this can be called from threads *other* than the one running this runnable(), so we need to be careful
-     * about the state transitions that can result. We set the cancel requested flag but the actual cancellation is
-     * managed by the run() loop.
+     * When cancel() is called before run(), root is not initialized and the executor is not
+     * ready to accept external events. So do not wait to change the state.
+     *
+     * For example, consider the case when the Foreman sets up the root fragment executor which is
+     * waiting on incoming data, but the Foreman fails to setup non-root fragment executors. The
+     * run() method on the root executor will never be called, and the executor will never be ready
+     * to accept external events. This will make the cancelling thread wait forever.
      */
-    updateState(FragmentState.CANCELLATION_REQUESTED);
+    synchronized (this) {
+      if (root != null) {
+        acceptExternalEvents.awaitUninterruptibly();
+      }
+
+      /*
+       * We set the cancel requested flag but the actual cancellation is managed by the run() loop, if called.
+       */
+      updateState(FragmentState.CANCELLATION_REQUESTED);
+    }
   }
 
   /**
@@ -137,7 +154,8 @@ public class FragmentExecutor implements Runnable {
     final Thread myThread = Thread.currentThread();
     final String originalThreadName = myThread.getName();
     final FragmentHandle fragmentHandle = fragmentContext.getHandle();
-    final ClusterCoordinator clusterCoordinator = fragmentContext.getDrillbitContext().getClusterCoordinator();
+    final DrillbitContext drillbitContext = fragmentContext.getDrillbitContext();
+    final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
     final DrillbitStatusListener drillbitStatusListener = new FragmentDrillbitStatusListener();
     final String newThreadName = QueryIdHelper.getExecutorThreadName(fragmentHandle);
 
@@ -145,16 +163,26 @@ public class FragmentExecutor implements Runnable {
 
       myThread.setName(newThreadName);
 
-      root = ImplCreator.getExec(fragmentContext, rootOperator);
+      synchronized (this) {
+        /*
+         * fragmentState might have changed even before this method is called e.g. cancel()
+         */
+        if (shouldContinue()) {
+          root = ImplCreator.getExec(fragmentContext, rootOperator);
 
-      clusterCoordinator.addDrillbitStatusListener(drillbitStatusListener);
-      updateState(FragmentState.RUNNING);
+          clusterCoordinator.addDrillbitStatusListener(drillbitStatusListener);
+          updateState(FragmentState.RUNNING);
 
-      acceptExternalEvents.countDown();
+          acceptExternalEvents.countDown();
 
-      logger.debug("Starting fragment runner. {}:{}",
-          fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId());
+          final DrillbitEndpoint endpoint = drillbitContext.getEndpoint();
+          logger.debug("Starting fragment {}:{} on {}:{}",
+            fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId(),
+            endpoint.getAddress(), endpoint.getUserPort());
+        }
+      }
 
+      injector.injectChecked(fragmentContext.getExecutionControls(), "fragment-execution", IOException.class);
       /*
        * Run the query until root.next returns false OR we no longer need to continue.
        */
@@ -163,7 +191,6 @@ public class FragmentExecutor implements Runnable {
       }
 
       updateState(FragmentState.FINISHED);
-
     } catch (AssertionError | Exception e) {
       fail(e);
     } finally {

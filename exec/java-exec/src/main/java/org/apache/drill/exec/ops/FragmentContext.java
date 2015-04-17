@@ -49,6 +49,7 @@ import org.apache.drill.exec.server.options.FragmentOptionManager;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
+import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -63,7 +64,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   private final Map<DrillbitEndpoint, AccountingDataTunnel> tunnels = Maps.newHashMap();
   private final DrillbitContext context;
-  private final UserClientConnection connection;
+  private final UserClientConnection connection; // is null if attached to non-root fragment
   private final FragmentStats stats;
   private final FunctionImplementationRegistry funcRegistry;
   private final BufferAllocator allocator;
@@ -73,6 +74,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   private final OptionManager fragmentOptions;
   private final BufferManager bufferManager;
   private ExecutorState executorState;
+  private final ExecutionControls executionControls;
 
   private final SendingAccountor sendingAccountor = new SendingAccountor();
   private final Consumer<RpcException> exceptionConsumer = new Consumer<RpcException>() {
@@ -98,17 +100,19 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
     logger.debug("Fragment max allocation: {}", fragment.getMemMax());
 
-    try {
-      final OptionList list;
-      if (!fragment.hasOptionsJson() || fragment.getOptionsJson().isEmpty()) {
-        list = new OptionList();
-      } else {
+    final OptionList list;
+    if (!fragment.hasOptionsJson() || fragment.getOptionsJson().isEmpty()) {
+      list = new OptionList();
+    } else {
+      try {
         list = dbContext.getConfig().getMapper().readValue(fragment.getOptionsJson(), OptionList.class);
+      } catch (final Exception e) {
+        throw new ExecutionSetupException("Failure while reading plan options.", e);
       }
-      fragmentOptions = new FragmentOptionManager(context.getOptionManager(), list);
-    } catch (final Exception e) {
-      throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
+    fragmentOptions = new FragmentOptionManager(context.getOptionManager(), list);
+
+    executionControls = new ExecutionControls(fragmentOptions, dbContext.getEndpoint());
 
     // Add the fragment context to the root allocator.
     // The QueryManager will call the root allocator to recalculate all the memory limits for all the fragments
@@ -286,6 +290,10 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   public void setFragmentLimit(final long limit) {
     allocator.setFragmentLimit(limit);
+  }
+
+  public ExecutionControls getExecutionControls() {
+    return executionControls;
   }
 
   @Override

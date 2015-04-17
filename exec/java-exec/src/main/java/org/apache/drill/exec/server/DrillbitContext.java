@@ -37,7 +37,6 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
 import org.apache.drill.exec.store.sys.PStoreProvider;
-import org.apache.drill.exec.testing.SimulatedExceptions;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
@@ -59,7 +58,6 @@ public class DrillbitContext {
   private final PStoreProvider provider;
   private final CodeCompiler compiler;
   private final ExecutorService executor;
-  private final SimulatedExceptions simulatedExceptions = new SimulatedExceptions();
 
   public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord,
       Controller controller, DataConnectionCreator connectionsPool, WorkEventBus workBus, PStoreProvider provider,
@@ -164,7 +162,4 @@ public class DrillbitContext {
     return executor;
   }
 
-  public SimulatedExceptions getSimulatedExceptions() {
-    return simulatedExceptions;
-  }
 }

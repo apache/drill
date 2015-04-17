@@ -43,6 +43,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.proto.UserProtos.Property;
@@ -326,7 +327,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     @Override
-    public void queryCompleted() {
+    public void queryCompleted(QueryState state) {
       future.set(results);
     }
 
@@ -352,7 +353,9 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
     @Override
     public void queryIdArrived(QueryId queryId) {
-      logger.debug( "Query ID arrived: {}", queryId );
+      if (logger.isDebugEnabled()) {
+        logger.debug("Query ID arrived: {}", QueryIdHelper.getQueryId(queryId));
+      }
     }
 
   }

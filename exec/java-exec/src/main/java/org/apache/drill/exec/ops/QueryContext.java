@@ -39,6 +39,7 @@ import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.PartitionExplorerImpl;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.testing.ExecutionControls;
 
 // TODO except for a couple of tests, this is only created by Foreman
 // TODO the many methods that just return drillbitContext.getXxx() should be replaced with getDrillbitContext()
@@ -52,6 +53,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
   private final OptionManager queryOptions;
   private final PlannerSettings plannerSettings;
   private final DrillOperatorTable table;
+  private final ExecutionControls executionControls;
 
   private final BufferAllocator allocator;
   private final BufferManager bufferManager;
@@ -65,10 +67,11 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
    */
   private boolean closed = false;
 
-  public QueryContext(final UserSession session, final DrillbitContext drllbitContext) {
-    this.drillbitContext = drllbitContext;
+  public QueryContext(final UserSession session, final DrillbitContext drillbitContext) {
+    this.drillbitContext = drillbitContext;
     this.session = session;
     queryOptions = new QueryOptionManager(session.getOptions());
+    executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
     plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
     plannerSettings.setNumEndPoints(drillbitContext.getBits().size());
     table = new DrillOperatorTable(getFunctionRegistry());
@@ -78,7 +81,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     queryDateTimeInfo = new QueryDateTimeInfo(queryStartTime, timeZone);
 
     try {
-      allocator = drllbitContext.getAllocator().getChildAllocator(null, INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES,
+      allocator = drillbitContext.getAllocator().getChildAllocator(null, INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES,
           MAX_OFF_HEAP_ALLOCATION_IN_BYTES, false);
     } catch (OutOfMemoryException e) {
       throw new DrillRuntimeException("Error creating off-heap allocator for planning context.",e);
@@ -86,7 +89,6 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     // TODO(DRILL-1942) the new allocator has this capability built-in, so this can be removed once that is available
     bufferManager = new BufferManager(this.allocator, null);
   }
-
 
   public PlannerSettings getPlannerSettings() {
     return plannerSettings;
@@ -118,6 +120,10 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
 
   public OptionManager getOptions() {
     return queryOptions;
+  }
+
+  public ExecutionControls getExecutionControls() {
+    return executionControls;
   }
 
   public DrillbitEndpoint getCurrentEndpoint() {

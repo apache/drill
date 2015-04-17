@@ -8,6 +8,6 @@ To regenerate the sources after making changes to .proto files
 in your PATH (you may need to download and build it first). You can 
 download it from http://code.google.com/p/protobuf/downloads/list.
 
-2. Run "mvn process-sources -P proto-compile".
+2. In protocol dir, run "mvn process-sources -P proto-compile" or "mvn clean install -P proto-compile".
 
 3. Check in the new/updated files.

@@ -36,6 +36,7 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
@@ -136,7 +137,7 @@ public class QueryWrapper {
     }
 
     @Override
-    public void queryCompleted() {
+    public void queryCompleted(QueryState state) {
       latch.countDown();
     }
 

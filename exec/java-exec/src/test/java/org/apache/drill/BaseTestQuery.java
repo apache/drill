@@ -35,6 +35,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
@@ -370,7 +371,7 @@ public class BaseTestQuery extends ExecTest {
     }
 
     @Override
-    public void queryCompleted() {
+    public void queryCompleted(QueryState state) {
       System.out.println("Query completed successfully with row count: " + count.get());
       latch.countDown();
     }

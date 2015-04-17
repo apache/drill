@@ -58,7 +58,8 @@ public abstract class SingleRowListener implements UserResultsListener {
   }
 
   @Override
-  public void queryCompleted() {
+  public void queryCompleted(QueryState state) {
+    queryState = state;
     try {
       cleanup();
     } finally {

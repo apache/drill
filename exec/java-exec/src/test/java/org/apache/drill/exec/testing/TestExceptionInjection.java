@@ -17,31 +17,41 @@
  */
 package org.apache.drill.exec.testing;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.junit.Test;
 
 import java.io.IOException;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.testing.SimulatedExceptions.InjectionOption;
-import org.apache.drill.exec.testing.SimulatedExceptions.InjectionOptions;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class TestExceptionInjection extends BaseTestQuery {
-  private final static String NO_THROW_FAIL = "Didn't throw expected exception";
+  private static final String NO_THROW_FAIL = "Didn't throw expected exception";
+
+  private static final UserSession session = UserSession.Builder.newBuilder()
+    .withOptionManager(bits[0].getContext().getOptionManager())
+    .build();
 
   /**
-   * Class whose methods we want to simulate exceptions at run-time for testing
-   * purposes.
+   * Class whose methods we want to simulate runtime at run-time for testing
+   * purposes. The class must have access to QueryId, UserSession and DrillbitEndpoint.
+   * For instance, these are accessible from {@link org.apache.drill.exec.ops.QueryContext}.
    */
-  public static class DummyClass {
-    private final static ExceptionInjector injector = ExceptionInjector.getInjector(DummyClass.class);
-    private final DrillbitContext drillbitContext;
+  private static class DummyClass {
+    private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(DummyClass.class);
+    private final QueryContext context;
 
-    public DummyClass(final DrillbitContext drillbitContext) {
-      this.drillbitContext = drillbitContext;
+    public DummyClass(final QueryContext context) {
+      this.context = context;
     }
 
     /**
@@ -53,7 +63,7 @@ public class TestExceptionInjection extends BaseTestQuery {
       // ... code ...
 
       // simulated unchecked exception
-      injector.injectUnchecked(drillbitContext, desc);
+      injector.injectUnchecked(context.getExecutionControls(), desc);
 
       // ... code ...
     }
@@ -69,7 +79,7 @@ public class TestExceptionInjection extends BaseTestQuery {
       // ... code ...
 
       // simulated IOException
-      injector.injectChecked(drillbitContext, THROWS_IOEXCEPTION, IOException.class);
+      injector.injectChecked(context.getExecutionControls(), THROWS_IOEXCEPTION, IOException.class);
 
       // ... code ...
     }
@@ -77,36 +87,30 @@ public class TestExceptionInjection extends BaseTestQuery {
 
   @SuppressWarnings("static-method")
   @Test
-  public void testNoInjection() throws Exception {
-    test("select * from sys.drillbits");
-  }
-
-  private static void setInjections(final String jsonInjections) {
-    for(Drillbit bit : bits) {
-      ExceptionInjectionUtil.setInjections(bit, jsonInjections);
-    }
+  public void noInjection() throws Exception {
+    test("select * from sys.memory");
   }
 
   @SuppressWarnings("static-method")
   @Test
-  public void testEmptyInjection() throws Exception {
-    setInjections("{\"injections\":[]}");
-    test("select * from sys.drillbits");
+  public void emptyInjection() throws Exception {
+    ControlsInjectionUtil.setControls(session, "{\"injections\":[]}");
+    test("select * from sys.memory");
   }
 
   /**
    * Assert that DummyClass.descPassThroughMethod does indeed throw the expected exception.
    *
-   * @param dummyClass the instance of DummyClass
+   * @param dummyClass         the instance of DummyClass
    * @param exceptionClassName the expected exception
-   * @param exceptionDesc the expected exception site description
+   * @param exceptionDesc      the expected exception site description
    */
   private static void assertPassthroughThrows(
-      final DummyClass dummyClass, final String exceptionClassName, final String exceptionDesc) {
+    final DummyClass dummyClass, final String exceptionClassName, final String exceptionDesc) {
     try {
       dummyClass.descPassthroughMethod(exceptionDesc);
       fail(NO_THROW_FAIL);
-    } catch(Exception e) {
+    } catch (Exception e) {
       assertEquals(exceptionClassName, e.getClass().getName());
       assertEquals(exceptionDesc, e.getMessage());
     }
@@ -114,79 +118,192 @@ public class TestExceptionInjection extends BaseTestQuery {
 
   @SuppressWarnings("static-method")
   @Test
-  public void testUncheckedStringInjection() {
-    // set injections via a string
+  public void uncheckedInjection() {
+    // set exceptions via a string
     final String exceptionDesc = "<<injected from descPassthroughMethod()>>";
     final String exceptionClassName = "java.lang.RuntimeException";
     final String jsonString = "{\"injections\":[{"
-        + "\"siteClass\":\"org.apache.drill.exec.testing.TestExceptionInjection$DummyClass\","
-        + "\"desc\":\"" + exceptionDesc + "\","
-        + "\"nSkip\":0,"
-        + "\"nFire\":1,"
-        + "\"exceptionClass\":\"" + exceptionClassName + "\""
-        + "}]}";
-    setInjections(jsonString);
+      + "\"type\":\"exception\"," +
+      "\"siteClass\":\"org.apache.drill.exec.testing.TestExceptionInjection$DummyClass\","
+      + "\"desc\":\"" + exceptionDesc + "\","
+      + "\"nSkip\":0,"
+      + "\"nFire\":1,"
+      + "\"exceptionClass\":\"" + exceptionClassName + "\""
+      + "}]}";
+    ControlsInjectionUtil.setControls(session, jsonString);
+
+    final QueryContext context = new QueryContext(session, bits[0].getContext());
 
     // test that the exception gets thrown
-    final DummyClass dummyClass = new DummyClass(bits[0].getContext());
+    final DummyClass dummyClass = new DummyClass(context);
     assertPassthroughThrows(dummyClass, exceptionClassName, exceptionDesc);
+    try {
+      context.close();
+    } catch (Exception e) {
+      fail();
+    }
   }
 
-  private static InjectionOptions buildDefaultJson() {
-    final InjectionOption injectionOption = new InjectionOption();
-    injectionOption.siteClass = "org.apache.drill.exec.testing.TestExceptionInjection$DummyClass";
-    injectionOption.desc = DummyClass.THROWS_IOEXCEPTION;
-    injectionOption.nSkip = 0;
-    injectionOption.nFire = 1;
-    injectionOption.exceptionClass = "java.io.IOException";
-    final InjectionOptions injectionOptions = new InjectionOptions();
-    injectionOptions.injections = new InjectionOption[1];
-    injectionOptions.injections[0] = injectionOption;
-    return injectionOptions;
+  private static String createException(final String desc, final int nSkip, final int nFire,
+                                        final String exceptionClass) {
+    return "{\"injections\":[{"
+      + "\"type\":\"exception\","
+      + "\"siteClass\":\"org.apache.drill.exec.testing.TestExceptionInjection$DummyClass\","
+      + "\"desc\":\"" + desc + "\","
+      + "\"nSkip\": " + nSkip + ","
+      + "\"nFire\": " + nFire + ","
+      + "\"exceptionClass\":\"" + exceptionClass + "\""
+      + "}]}";
+  }
+
+  private static String createExceptionOnBit(final DrillbitEndpoint endpoint, final String desc, final int nSkip,
+                                             final int nFire, final String exceptionClass) {
+    return "{\"injections\":[{"
+      + "\"address\":\"" + endpoint.getAddress() + "\","
+      + "\"port\":\"" + endpoint.getUserPort() + "\","
+      + "\"type\":\"exception\","
+      + "\"siteClass\":\"org.apache.drill.exec.testing.TestExceptionInjection$DummyClass\","
+      + "\"desc\":\"" + desc + "\","
+      + "\"nSkip\": " + nSkip + ","
+      + "\"nFire\": " + nFire + ","
+      + "\"exceptionClass\":\"" + exceptionClass + "\""
+      + "}]}";
   }
 
   @SuppressWarnings("static-method")
   @Test
-  public void testCheckedJsonInjection() {
+  public void checkedInjection() {
     // set the injection via the parsing POJOs
-    final InjectionOptions injectionOptions = buildDefaultJson();
-    ExceptionInjectionUtil.setInjections(bits[0], injectionOptions);
+    final String controls = createException(DummyClass.THROWS_IOEXCEPTION, 0, 1, IOException.class.getName());
+    ControlsInjectionUtil.setControls(session, controls);
+
+    final QueryContext context = new QueryContext(session, bits[0].getContext());
 
     // test that the expected exception (checked) gets thrown
-    final DummyClass dummyClass = new DummyClass(bits[0].getContext());
+    final DummyClass dummyClass = new DummyClass(context);
     try {
       dummyClass.throwsIOException();
       fail(NO_THROW_FAIL);
-    } catch(IOException e) {
+    } catch (IOException e) {
       assertEquals(DummyClass.THROWS_IOEXCEPTION, e.getMessage());
+    }
+    try {
+      context.close();
+    } catch (Exception e) {
+      fail();
     }
   }
 
   @SuppressWarnings("static-method")
   @Test
-  public void testSkipAndLimit() {
+  public void skipAndLimit() {
     final String passthroughDesc = "<<injected from descPassthrough>>";
-    final InjectionOptions injectionOptions = buildDefaultJson();
-    final InjectionOption injectionOption = injectionOptions.injections[0];
-    injectionOption.desc = passthroughDesc;
-    injectionOption.nSkip = 7;
-    injectionOption.nFire = 3;
-    injectionOption.exceptionClass = RuntimeException.class.getName();
-    ExceptionInjectionUtil.setInjections(bits[0], injectionOptions);
+    final int nSkip = 7;
+    final int nFire = 3;
+    final String exceptionClass = RuntimeException.class.getName();
+    final String controls = createException(passthroughDesc, nSkip, nFire, exceptionClass);
+    ControlsInjectionUtil.setControls(session, controls);
 
-    final DummyClass dummyClass = new DummyClass(bits[0].getContext());
+    final QueryContext context = new QueryContext(session, bits[0].getContext());
+
+    final DummyClass dummyClass = new DummyClass(context);
 
     // these shouldn't throw
-    for(int i = 0; i < injectionOption.nSkip; ++i) {
+    for (int i = 0; i < nSkip; ++i) {
       dummyClass.descPassthroughMethod(passthroughDesc);
     }
 
     // these should throw
-    for(int i = 0; i < injectionOption.nFire; ++i) {
-      assertPassthroughThrows(dummyClass, injectionOption.exceptionClass, passthroughDesc);
+    for (int i = 0; i < nFire; ++i) {
+      assertPassthroughThrows(dummyClass, exceptionClass, passthroughDesc);
     }
 
     // this shouldn't throw
     dummyClass.descPassthroughMethod(passthroughDesc);
+    try {
+      context.close();
+    } catch (Exception e) {
+      fail();
+    }
+  }
+
+  @SuppressWarnings("static-method")
+  @Test
+  public void injectionOnSpecificBit() {
+    final RemoteServiceSet remoteServiceSet = RemoteServiceSet.getLocalServiceSet();
+    final ZookeeperHelper zkHelper = new ZookeeperHelper();
+    zkHelper.startZookeeper(1);
+
+    // Creating two drillbits
+    final Drillbit drillbit1, drillbit2;
+    final DrillConfig drillConfig = zkHelper.getConfig();
+    try {
+      drillbit1 = Drillbit.start(drillConfig, remoteServiceSet);
+      drillbit2 = Drillbit.start(drillConfig, remoteServiceSet);
+    } catch (DrillbitStartupException e) {
+      throw new RuntimeException("Failed to start drillbits.", e);
+    }
+
+    final DrillbitContext drillbitContext1 = drillbit1.getContext();
+    final DrillbitContext drillbitContext2 = drillbit2.getContext();
+
+    final UserSession session = UserSession.Builder.newBuilder()
+      .withOptionManager(drillbitContext1.getOptionManager())
+      .build();
+
+    final String passthroughDesc = "<<injected from descPassthrough>>";
+    final int nSkip = 7;
+    final int nFire = 3;
+    final String exceptionClass = RuntimeException.class.getName();
+    // only drillbit1's (address, port)
+    final String controls = createExceptionOnBit(drillbitContext1.getEndpoint(), passthroughDesc, nSkip, nFire,
+      exceptionClass);
+
+    ControlsInjectionUtil.setControls(session, controls);
+
+    {
+      final QueryContext queryContext1 = new QueryContext(session, drillbitContext1);
+      final DummyClass class1 = new DummyClass(queryContext1);
+
+      // these shouldn't throw
+      for (int i = 0; i < nSkip; ++i) {
+        class1.descPassthroughMethod(passthroughDesc);
+      }
+
+      // these should throw
+      for (int i = 0; i < nFire; ++i) {
+        assertPassthroughThrows(class1, exceptionClass, passthroughDesc);
+      }
+
+      // this shouldn't throw
+      class1.descPassthroughMethod(passthroughDesc);
+      try {
+        queryContext1.close();
+      } catch (Exception e) {
+        fail();
+      }
+    }
+    {
+      final QueryContext queryContext2 = new QueryContext(session, drillbitContext2);
+      final DummyClass class2 = new DummyClass(queryContext2);
+
+      // these shouldn't throw
+      for (int i = 0; i < nSkip; ++i) {
+        class2.descPassthroughMethod(passthroughDesc);
+      }
+
+      // these shouldn't throw
+      for (int i = 0; i < nFire; ++i) {
+        class2.descPassthroughMethod(passthroughDesc);
+      }
+
+      // this shouldn't throw
+      class2.descPassthroughMethod(passthroughDesc);
+      try {
+        queryContext2.close();
+      } catch (Exception e) {
+        fail();
+      }
+    }
   }
 }

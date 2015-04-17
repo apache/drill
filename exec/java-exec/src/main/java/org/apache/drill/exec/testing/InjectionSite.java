@@ -17,7 +17,12 @@
  */
 package org.apache.drill.exec.testing;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.google.common.base.Preconditions;
+
+import java.io.IOException;
 
 public class InjectionSite {
   private final Class<?> clazz;
@@ -29,14 +34,6 @@ public class InjectionSite {
 
     this.clazz = clazz;
     this.desc = desc;
-  }
-
-  public Class<?> getSiteClass() {
-    return clazz;
-  }
-
-  public String getDesc() {
-    return desc;
   }
 
   @Override
@@ -65,8 +62,35 @@ public class InjectionSite {
     return true;
   }
 
+  private static final String SEPARATOR = ",";
+
+  @Override
+  public String toString() {
+    return clazz.getName() + SEPARATOR + desc;
+  }
+
   @Override
   public int hashCode() {
     return (clazz.hashCode() + 13) ^ (1 - desc.hashCode());
+  }
+
+  /**
+   * Key Deserializer for InjectionSite.
+   * Since JSON object keys must be strings, deserialize from a string.
+   */
+  public static class InjectionSiteKeyDeserializer extends KeyDeserializer {
+
+    @Override
+    public Object deserializeKey(final String key, final DeserializationContext context)
+      throws IOException, JsonProcessingException {
+      final String[] fields = key.split(SEPARATOR);
+      final Class<?> siteClass;
+      try {
+        siteClass = Class.forName(fields[0]);
+      } catch (ClassNotFoundException e) {
+        throw new IOException("Class " + fields[0] + " not found.", e);
+      }
+      return new InjectionSite(siteClass, fields[1]);
+    }
   }
 }

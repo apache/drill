@@ -1,0 +1,193 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.testing;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.TypeValidators.TypeValidator;
+import org.apache.drill.exec.testing.InjectionSite.InjectionSiteKeyDeserializer;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Tracks the simulated controls that will be injected for testing purposes.
+ */
+public final class ExecutionControls {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExecutionControls.class);
+
+  // used to map JSON specified injections to POJOs
+  public static final ObjectMapper controlsOptionMapper = new ObjectMapper();
+
+  static {
+    controlsOptionMapper.addMixInAnnotations(Injection.class, InjectionMixIn.class);
+  }
+
+  // Jackson MixIn for all types of injections
+  @JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type")
+  @JsonSubTypes({
+    @Type(value = ExceptionInjection.class, name = "exception"),
+    @Type(value = PauseInjection.class, name = "pause")})
+  public static abstract class InjectionMixIn {
+  }
+
+  /**
+   * The JSON specified for the {@link org.apache.drill.exec.ExecConstants#DRILLBIT_CONTROL_INJECTIONS}
+   * option is validated using this class. Controls are short-lived options.
+   */
+  public static class ControlsOptionValidator extends TypeValidator {
+
+    private final int ttl; // the number of queries for which this option is valid
+
+    /**
+     * Constructor for controls option validator.
+     * @param name the name of the validator
+     * @param def  the default JSON, specified as string
+     * @param ttl  the number of queries for which this option should be valid
+     */
+    public ControlsOptionValidator(final String name, final String def, final int ttl) {
+      super(name, OptionValue.Kind.DOUBLE, OptionValue.createString(OptionType.SESSION, name, def));
+      assert ttl > 0;
+      this.ttl = ttl;
+    }
+
+    @Override
+    public int getTtl() {
+      return  ttl;
+    }
+
+    @Override
+    public boolean isShortLived() {
+      return true;
+    }
+
+    @Override
+    public void validate(final OptionValue v) throws ExpressionParsingException {
+      if (v.type != OptionType.SESSION) {
+        throw new ExpressionParsingException("Controls can be set only at SESSION level.");
+      }
+      final String jsonString = v.string_val;
+      try {
+        controlsOptionMapper.readValue(jsonString, Controls.class);
+      } catch (IOException e) {
+        throw new ExpressionParsingException("Invalid control options string (" + jsonString + ").", e);
+      }
+    }
+  }
+
+  /**
+   * POJO used to parse JSON-specified controls.
+   */
+  public static class Controls {
+    public Collection<? extends Injection> injections;
+  }
+
+  /**
+   * The default value for controls.
+   */
+  public static final String DEFAULT_CONTROLS = "{}";
+
+  /**
+   * Caches the currently specified controls.
+   */
+  @JsonDeserialize(keyUsing = InjectionSiteKeyDeserializer.class)
+  private final Map<InjectionSite, Injection> controls = new HashMap<>();
+
+  private final DrillbitEndpoint endpoint; // the current endpoint
+
+  public ExecutionControls(final OptionManager options, final DrillbitEndpoint endpoint) {
+    this.endpoint = endpoint;
+
+    final OptionValue optionValue = options.getOption(ExecConstants.DRILLBIT_CONTROL_INJECTIONS);
+    if (optionValue == null) {
+      return;
+    }
+
+    final String opString = optionValue.string_val;
+    final Controls controls;
+    try {
+      controls = controlsOptionMapper.readValue(opString, Controls.class);
+    } catch (IOException e) {
+      // This never happens. opString must have been validated.
+      logger.warn("Could not parse injections. Injections must have been validated before this point.");
+      throw new DrillRuntimeException("Could not parse injections.", e);
+    }
+    if (controls.injections == null) {
+      return;
+    }
+
+    logger.debug("Adding control injections: \n{}", opString);
+    for (final Injection injection : controls.injections) {
+      this.controls.put(new InjectionSite(injection.getSiteClass(), injection.getDesc()), injection);
+    }
+  }
+
+  /**
+   * Look for an exception injection matching the given injector, site description and endpoint.
+   *
+   * @param injector the injector, which indicates a class
+   * @param desc     the injection site description
+   * @return the exception injection, if there is one for the injector, site and endpoint; null otherwise
+   */
+  public ExceptionInjection lookupExceptionInjection(final ExecutionControlsInjector injector, final String desc) {
+    final Injection injection = lookupInjection(injector, desc);
+    return injection != null ? (ExceptionInjection) injection : null;
+  }
+
+  /**
+   * Look for an pause injection matching the given injector, site description and endpoint.
+   *
+   * @param injector the injector, which indicates a class
+   * @param desc     the injection site description
+   * @return the pause injection, if there is one for the injector, site and endpoint; null otherwise
+   */
+  public PauseInjection lookupPauseInjection(final ExecutionControlsInjector injector, final String desc) {
+    final Injection injection = lookupInjection(injector, desc);
+    return injection != null ? (PauseInjection) injection : null;
+  }
+
+  private Injection lookupInjection(final ExecutionControlsInjector injector, final String desc) {
+    if (controls.isEmpty()) {
+      return null;
+    }
+
+    // lookup the request
+    final InjectionSite site = new InjectionSite(injector.getSiteClass(), desc);
+    final Injection injection = controls.get(site);
+    if (injection == null) {
+      return null;
+    }
+    // return only if injection was meant for this drillbit
+    return injection.isValidForBit(endpoint) ? injection : null;
+  }
+}

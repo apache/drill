@@ -24,6 +24,8 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.rpc.user.UserSession.QueryCountIncrementer;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -32,6 +34,12 @@ public class UserWorker{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserWorker.class);
 
   private final WorkerBee bee;
+  private final QueryCountIncrementer incrementer = new QueryCountIncrementer() {
+    @Override
+    public void increment(final UserSession session) {
+      session.incrementQueryCount(this);
+    }
+  };
 
   public UserWorker(WorkerBee bee) {
     super();
@@ -46,6 +54,7 @@ public class UserWorker{
     long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
     long p2 = r.nextLong();
     QueryId id = QueryId.newBuilder().setPart1(p1).setPart2(p2).build();
+    incrementer.increment(connection.getSession());
     Foreman foreman = new Foreman(bee, bee.getContext(), connection, id, query);
     bee.addNewForeman(foreman);
     return id;

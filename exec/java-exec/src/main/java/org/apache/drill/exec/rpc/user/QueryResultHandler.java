@@ -29,6 +29,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcException;
@@ -114,7 +115,7 @@ public class QueryResultHandler {
         // A successful completion/canceled case--pass on via resultArrived
 
         try {
-          resultsListener.queryCompleted();
+          resultsListener.queryCompleted(queryState);
         } catch ( Exception e ) {
           resultsListener.submissionFailed(UserException.systemError(e).build());
         }
@@ -198,8 +199,8 @@ public class QueryResultHandler {
   private static class BufferingResultsListener implements UserResultsListener {
 
     private ConcurrentLinkedQueue<QueryDataBatch> results = Queues.newConcurrentLinkedQueue();
-    private volatile boolean finished = false;
     private volatile UserException ex;
+    private volatile QueryState queryState;
     private volatile UserResultsListener output;
     private volatile ConnectionThrottle throttle;
 
@@ -212,20 +213,22 @@ public class QueryResultHandler {
         if (ex != null) {
           l.submissionFailed(ex);
           return true;
-        } else if (finished) {
-          l.queryCompleted();
+        } else if (queryState != null) {
+          l.queryCompleted(queryState);
+          return true;
         }
 
-        return finished;
+        return false;
       }
     }
 
     @Override
-    public void queryCompleted() {
-      finished = true;
+    public void queryCompleted(QueryState state) {
+      assert queryState == null;
+      this.queryState = state;
       synchronized (this) {
         if (output != null) {
-          output.queryCompleted();
+          output.queryCompleted(state);
         }
       }
     }
@@ -245,7 +248,11 @@ public class QueryResultHandler {
 
     @Override
     public void submissionFailed(UserException ex) {
-      finished = true;
+      assert queryState == null;
+      // there is one case when submissionFailed() is called even though the query didn't fail on the server side
+      // it happens when UserResultsListener.batchArrived() throws an exception that will be passed to
+      // submissionFailed() by QueryResultHandler.dataArrived()
+      queryState = QueryState.FAILED;
       synchronized (this) {
         if (output == null) {
           this.ex = ex;
@@ -253,10 +260,6 @@ public class QueryResultHandler {
           output.submissionFailed(ex);
         }
       }
-    }
-
-    public boolean isFinished() {
-      return finished;
     }
 
     @Override
@@ -281,8 +284,10 @@ public class QueryResultHandler {
     @Override
     public void success(QueryId queryId, ByteBuf buf) {
       resultsListener.queryIdArrived(queryId);
-      logger.debug("Received QueryId {} successfully.  Adding results listener {}.",
-                   queryId, resultsListener);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Received QueryId {} successfully. Adding results listener {}.",
+          QueryIdHelper.getQueryId(queryId), resultsListener);
+      }
       UserResultsListener oldListener =
           queryIdToResultsListenersMap.putIfAbsent(queryId, resultsListener);
 

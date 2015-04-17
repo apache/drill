@@ -29,6 +29,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -60,7 +61,7 @@ public class PrintingResultsListener implements UserResultsListener {
   }
 
   @Override
-  public void queryCompleted() {
+  public void queryCompleted(QueryState state) {
     allocator.close();
     latch.countDown();
     System.out.println("Total rows returned: " + count.get());

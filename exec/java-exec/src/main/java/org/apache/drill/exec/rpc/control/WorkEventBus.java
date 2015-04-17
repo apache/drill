@@ -45,13 +45,17 @@ public class WorkEventBus {
           .build();
 
   public void removeFragmentStatusListener(final QueryId queryId) {
-    logger.debug("Removing fragment status listener for queryId {}.", queryId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Removing fragment status listener for queryId {}.", QueryIdHelper.getQueryId(queryId));
+    }
     listeners.remove(queryId);
   }
 
   public void addFragmentStatusListener(final QueryId queryId, final FragmentStatusListener listener)
       throws ForemanSetupException {
-    logger.debug("Adding fragment status listener for queryId {}.", queryId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Adding fragment status listener for queryId {}.", QueryIdHelper.getQueryId(queryId));
+    }
     final FragmentStatusListener old = listeners.putIfAbsent(queryId, listener);
     if (old != null) {
       throw new ForemanSetupException (
@@ -69,7 +73,9 @@ public class WorkEventBus {
   }
 
   public void addFragmentManager(final FragmentManager fragmentManager) {
-    logger.debug("Manager created: {}", QueryIdHelper.getQueryIdentifier(fragmentManager.getHandle()));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Manager created: {}", QueryIdHelper.getQueryIdentifier(fragmentManager.getHandle()));
+    }
     final FragmentManager old = managers.putIfAbsent(fragmentManager.getHandle(), fragmentManager);
       if (old != null) {
         throw new IllegalStateException(
@@ -84,7 +90,9 @@ public class WorkEventBus {
   public FragmentManager getFragmentManager(final FragmentHandle handle) throws FragmentSetupException {
     // check if this was a recently canceled fragment.  If so, throw away message.
     if (recentlyFinishedFragments.asMap().containsKey(handle)) {
-      logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
+      }
       return null;
     }
 
@@ -98,7 +106,9 @@ public class WorkEventBus {
   }
 
   public void removeFragmentManager(final FragmentHandle handle) {
-    logger.debug("Removing fragment manager: {}", QueryIdHelper.getQueryIdentifier(handle));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Removing fragment manager: {}", QueryIdHelper.getQueryIdentifier(handle));
+    }
     recentlyFinishedFragments.put(handle,  1);
     managers.remove(handle);
   }

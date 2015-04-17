@@ -97,16 +97,18 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     case RpcType.RUN_QUERY_VALUE:
       logger.debug("Received query to run.  Returning query handle.");
       try {
-        RunQuery query = RunQuery.PARSER.parseFrom(new ByteBufInputStream(pBody));
-        return new Response(RpcType.QUERY_HANDLE, worker.submitWork(connection, query));
+        final RunQuery query = RunQuery.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        final QueryId queryId = worker.submitWork(connection, query);
+        return new Response(RpcType.QUERY_HANDLE, queryId);
       } catch (InvalidProtocolBufferException e) {
         throw new RpcException("Failure while decoding RunQuery body.", e);
       }
 
     case RpcType.CANCEL_QUERY_VALUE:
       try {
-        QueryId queryId = QueryId.PARSER.parseFrom(new ByteBufInputStream(pBody));
-        return new Response(RpcType.ACK, worker.cancelQuery(queryId));
+        final QueryId queryId = QueryId.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        final Ack ack = worker.cancelQuery(queryId);
+        return new Response(RpcType.ACK, ack);
       } catch (InvalidProtocolBufferException e) {
         throw new RpcException("Failure while decoding QueryId body.", e);
       }

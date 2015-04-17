@@ -101,7 +101,7 @@ public class SystemOptionManager extends BaseOptionManager {
       QueryClassLoader.JAVA_COMPILER_DEBUG,
       ExecConstants.ENABLE_VERBOSE_ERRORS,
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
-      ExecConstants.DRILLBIT_EXCEPTION_INJECTIONS_VALIDATOR,
+      ExecConstants.DRILLBIT_CONTROLS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
   };
 
@@ -213,6 +213,11 @@ public class SystemOptionManager extends BaseOptionManager {
         throw new IllegalArgumentException("Only one option is allowed to be registered with name: "
             + validator.getOptionName());
       }
+    }
+
+    @Override
+    public OptionValidator getValidator(final String name) {
+      return knownOptions.get(name);
     }
 
     @Override

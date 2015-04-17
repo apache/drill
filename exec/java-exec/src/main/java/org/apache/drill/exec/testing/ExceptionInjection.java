@@ -17,38 +17,48 @@
  */
 package org.apache.drill.exec.testing;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Injection for a single exception. Specifies how many times to inject it, and how many times to skip
  * injecting it before the first injection. This class is used internally for tracking injected
  * exceptions; injected exceptions are specified via the
- * {@link org.apache.drill.exec.ExecConstants#DRILLBIT_EXCEPTION_INJECTIONS} system option.
+ * {@link org.apache.drill.exec.ExecConstants#DRILLBIT_CONTROL_INJECTIONS} session option.
  */
-public class ExceptionInjection {
-  private final String desc; // description of the injection site
-
-  private final AtomicInteger nSkip; // the number of times to skip the injection; starts >= 0
-  private final AtomicInteger nThrow; // the number of times to do the injection, after any skips; starts > 0
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+public class ExceptionInjection extends Injection {
 
   private final Class<? extends Throwable> exceptionClass;
 
-  /**
-   * Constructor.
-   *
-   * @param desc description of the injection site; useful for multiple injections in a single class
-   * @param nSkip non-negative number of times to skip injecting the exception
-   * @param nFire positive number of times to inject the exception
-   * @param exceptionClass
-   */
-  public ExceptionInjection(final String desc, final int nSkip, final int nFire,
-      final Class<? extends Throwable> exceptionClass) {
-    this.desc = desc;
-    this.nSkip = new AtomicInteger(nSkip);
-    this.nThrow = new AtomicInteger(nFire);
-    this.exceptionClass = exceptionClass;
+  @JsonCreator // ensures instances are created only through JSON
+  private ExceptionInjection(@JsonProperty("address") final String address,
+                             @JsonProperty("port") final int port,
+                             @JsonProperty("siteClass") final String siteClass,
+                             @JsonProperty("desc") final String desc,
+                             @JsonProperty("nSkip") final int nSkip,
+                             @JsonProperty("nFire") final int nFire,
+                             @JsonProperty("exceptionClass") String classString) throws InjectionConfigurationException {
+    super(address, port, siteClass, desc, nSkip, nFire);
+    final Class<?> clazz;
+    try {
+      clazz = Class.forName(classString);
+    } catch (ClassNotFoundException e) {
+      throw new InjectionConfigurationException("Injected exceptionClass not found.", e);
+    }
+
+    if (!Throwable.class.isAssignableFrom(clazz)) {
+      throw new InjectionConfigurationException("Injected exceptionClass is not a Throwable.");
+    }
+
+    @SuppressWarnings("unchecked")
+    final Class<? extends Throwable> exceptionClazz = (Class<? extends Throwable>) clazz;
+    this.exceptionClass = exceptionClazz;
   }
 
   /**
@@ -57,29 +67,25 @@ public class ExceptionInjection {
    * @return the exception to throw, or null if it isn't time to throw it
    */
   private Throwable constructException() {
-    final int remainingSkips = nSkip.decrementAndGet();
-    if (remainingSkips >= 0) {
-      return null;
-    }
-
-    final int remainingFirings = nThrow.decrementAndGet();
-    if (remainingFirings < 0) {
+    if (! injectNow()) {
       return null;
     }
 
     // if we get here, we should throw the specified exception
-    Constructor<?> constructor;
+    final Constructor<?> constructor;
     try {
       constructor = exceptionClass.getConstructor(String.class);
-    } catch(NoSuchMethodException e) {
-      throw new RuntimeException("No constructor found that takes a single String argument");
+    } catch (NoSuchMethodException e) {
+      // this should not throw; validated already.
+      throw new RuntimeException("No constructor found that takes a single String argument.");
     }
 
-    Throwable throwable;
+    final Throwable throwable;
     try {
-      throwable = (Throwable) constructor.newInstance(desc);
-    } catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new IllegalStateException("Couldn't construct exception instance", e);
+      throwable = (Throwable) constructor.newInstance(getDesc());
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      // this should not throw; validated already.
+      throw new IllegalStateException("Couldn't construct exception instance.", e);
     }
 
     return throwable;
@@ -105,16 +111,16 @@ public class ExceptionInjection {
       throw e;
     }
 
-    throw new IllegalStateException("throwable was not an unchecked exception");
+    throw new IllegalStateException("Throwable was not an unchecked exception.");
   }
 
   /**
    * Throw the checked exception specified by this injection.
    *
    * @param exceptionClass the class of the exception to throw
-   * @throws T if it is time to throw the exception
+   * @throws T                     if it is time to throw the exception
    * @throws IllegalStateException if it is time to throw the exception, and the exception's class
-   *   is incompatible with the class specified by the injection
+   *                               is incompatible with the class specified by the injection
    */
   public <T extends Throwable> void throwChecked(final Class<T> exceptionClass) throws T {
     final Throwable throwable = constructException();
@@ -128,6 +134,6 @@ public class ExceptionInjection {
     }
 
     throw new IllegalStateException("Constructed Throwable(" + throwable.getClass().getName()
-        + ") is incompatible with exceptionClass("+ exceptionClass.getName() + ")");
+      + ") is incompatible with exceptionClass(" + exceptionClass.getName() + ")");
   }
 }

@@ -67,7 +67,7 @@ import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.testing.ExceptionInjector;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.QueryWorkUnit;
@@ -100,7 +100,7 @@ import com.google.common.collect.Sets;
  */
 public class Foreman implements Runnable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Foreman.class);
-  private final static ExceptionInjector injector = ExceptionInjector.getInjector(Foreman.class);
+  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(Foreman.class);
   private static final int RPC_WAIT_IN_SECONDS = 90;
 
   private final QueryId queryId;
@@ -190,8 +190,7 @@ public class Foreman implements Runnable {
     queryManager.markStartTime();
 
     try {
-      injector.injectChecked(drillbitContext, "run-try-beginning", ForemanException.class);
-
+      injector.injectChecked(queryContext.getExecutionControls(), "run-try-beginning", ForemanException.class);
       // convert a run query request into action
       switch (queryRequest.getType()) {
       case LOGICAL:
@@ -206,7 +205,7 @@ public class Foreman implements Runnable {
       default:
         throw new IllegalStateException();
       }
-      injector.injectChecked(drillbitContext, "run-try-end", ForemanException.class);
+      injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
     } catch (final ForemanException e) {
       moveToState(QueryState.FAILED, e);
     } catch (AssertionError | Exception ex) {
@@ -346,6 +345,7 @@ public class Foreman implements Runnable {
     drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager.getDrillbitStatusListener());
 
     logger.debug("Submitting fragments to run.");
+    injector.injectPause(queryContext.getExecutionControls(), "pause-run-plan", logger);
 
     // set up the root fragment first so we'll have incoming buffers available.
     setupRootFragment(rootPlanFragment, initiatingClient, work.getRootOperator());
@@ -586,6 +586,7 @@ public class Foreman implements Runnable {
       Preconditions.checkState(resultState != null);
 
       logger.info("foreman cleaning up.");
+      injector.injectPause(queryContext.getExecutionControls(), "foreman-cleanup", logger);
 
       // These are straight forward removals from maps, so they won't throw.
       drillbitContext.getWorkBus().removeFragmentStatusListener(queryId);
@@ -900,6 +901,7 @@ public class Foreman implements Runnable {
           .build();
     }
 
+    injector.injectChecked(queryContext.getExecutionControls(), "send-fragments", ForemanException.class);
     /*
      * Send the remote (leaf) fragments; we don't wait for these. Any problems will come in through
      * the regular sendListener event delivery.
@@ -927,7 +929,7 @@ public class Foreman implements Runnable {
     }
     final InitializeFragments initFrags = fb.build();
 
-    logger.debug("Sending remote fragments to node {} with data {}", assignment, initFrags);
+    logger.debug("Sending remote fragments to \nNode:\n{} \n\nData:\n{}", assignment, initFrags);
     final FragmentSubmitListener listener =
         new FragmentSubmitListener(assignment, initFrags, latch, fragmentSubmitFailures);
     controller.getTunnel(assignment).sendFragments(listener, initFrags);
