@@ -828,4 +828,15 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineValues(true, true, true, true, true, true, true)
         .go();
   }
+
+  @Test
+  public void testImplicitCastVarcharToDouble() throws Exception {
+    // tests implicit cast from varchar to double
+    testBuilder()
+        .sqlQuery("select `integer` i, `float` f from cp.`jsoninput/input1.json` where `float` = '1.2'")
+        .unOrdered()
+        .baselineColumns("i", "f")
+        .baselineValues(2001l, 1.2d)
+        .go();
+  }
 }

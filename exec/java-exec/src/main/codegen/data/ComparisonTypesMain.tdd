@@ -34,15 +34,11 @@
       ],
       mode: "primitive"},
 
-    # Group:  Numeric types cross-comparable with Java primitive-type operators:
-    {comparables: [
-      "Int",
-      "BigInt",
-      "Float4",
-      "Float8"
-      ],
-      mode: "primitive"},
-
+    # Group:  Numeric types comparable with Java primitive-type operators:
+    {comparables: ["Int"], mode: "primitive"},
+    {comparables: ["BigInt"], mode: "primitive"},
+    {comparables: ["Float4"], mode: "primitive"},
+    {comparables: ["Float8"], mode: "primitive"},
 
     # Date/time types other than IntervalDay or Interval (comparable with Java
     # primitive-type operators):
