@@ -24,7 +24,7 @@ import org.apache.calcite.tools.RelConversionException;
 
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
-import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
@@ -35,7 +35,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.google.common.collect.ImmutableList;
 
-public class ShowSchemasHandler extends DefaultSqlHandler implements InfoSchemaConstants {
+public class ShowSchemasHandler extends DefaultSqlHandler {
 
   public ShowSchemasHandler(SqlHandlerConfig config) { super(config); }
 
@@ -43,7 +43,8 @@ public class ShowSchemasHandler extends DefaultSqlHandler implements InfoSchemaC
   @Override
   public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException, ForemanSetupException {
     SqlShowSchemas node = unwrap(sqlNode, SqlShowSchemas.class);
-    List<SqlNode> selectList = ImmutableList.of((SqlNode) new SqlIdentifier(COL_SCHEMA_NAME, SqlParserPos.ZERO));
+    List<SqlNode> selectList =
+        ImmutableList.of((SqlNode) new SqlIdentifier(SCHS_COL_SCHEMA_NAME, SqlParserPos.ZERO));
 
     SqlNode fromClause = new SqlIdentifier(
         ImmutableList.of(IS_SCHEMA_NAME, TAB_SCHEMATA), null, SqlParserPos.ZERO, null);
@@ -51,8 +52,8 @@ public class ShowSchemasHandler extends DefaultSqlHandler implements InfoSchemaC
     SqlNode where = null;
     final SqlNode likePattern = node.getLikePattern();
     if (likePattern != null) {
-      where = DrillParserUtil.createCondition(new SqlIdentifier(COL_SCHEMA_NAME, SqlParserPos.ZERO),
-          SqlStdOperatorTable.LIKE, likePattern);
+      where = DrillParserUtil.createCondition(new SqlIdentifier(SCHS_COL_SCHEMA_NAME, SqlParserPos.ZERO),
+                                              SqlStdOperatorTable.LIKE, likePattern);
     } else if (node.getWhereClause() != null) {
       where = node.getWhereClause();
     }

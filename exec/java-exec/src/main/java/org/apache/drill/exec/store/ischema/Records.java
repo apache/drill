@@ -66,7 +66,8 @@ public class Records {
       this.IS_NULLABLE = type.isNullable() ? "YES" : "NO";
 
       if (sqlType == SqlTypeName.ARRAY || sqlType == SqlTypeName.MAP || sqlType == SqlTypeName.ROW) {
-        // For complex types use the toString method to display the inside elements
+        // For complex types use SqlTypeName's toString method to display the
+        // inside elements.
         String typeString = type.toString();
 
         // RelDataType.toString prints "RecordType" for "STRUCT".

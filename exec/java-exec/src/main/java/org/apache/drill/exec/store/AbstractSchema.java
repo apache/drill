@@ -92,6 +92,15 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer 
     throw new UnsupportedOperationException("New tables are not allowed in this schema");
   }
 
+  /**
+   * Reports whether to show items from this schema in INFORMATION_SCHEMA
+   * tables.
+   * (Controls ... TODO:  Doc.:  Mention what this typically controls or
+   * affects.)
+   * <p>
+   *   This base implementation returns {@code true}.
+   * </p>
+   */
   public boolean showInInformationSchema() {
     return true;
   }

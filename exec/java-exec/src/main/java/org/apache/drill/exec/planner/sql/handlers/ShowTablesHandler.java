@@ -28,7 +28,7 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -41,7 +41,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class ShowTablesHandler extends DefaultSqlHandler implements InfoSchemaConstants {
+public class ShowTablesHandler extends DefaultSqlHandler {
 
   public ShowTablesHandler(SqlHandlerConfig config) { super(config); }
 
@@ -54,8 +54,8 @@ public class ShowTablesHandler extends DefaultSqlHandler implements InfoSchemaCo
     SqlNode where;
 
     // create select columns
-    selectList.add(new SqlIdentifier(COL_TABLE_SCHEMA, SqlParserPos.ZERO));
-    selectList.add(new SqlIdentifier(COL_TABLE_NAME, SqlParserPos.ZERO));
+    selectList.add(new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO));
+    selectList.add(new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO));
 
     fromClause = new SqlIdentifier(ImmutableList.of(IS_SCHEMA_NAME, TAB_TABLES), SqlParserPos.ZERO);
 
@@ -84,7 +84,7 @@ public class ShowTablesHandler extends DefaultSqlHandler implements InfoSchemaCo
     }
 
     where = DrillParserUtil.createCondition(
-        new SqlIdentifier(COL_TABLE_SCHEMA, SqlParserPos.ZERO),
+        new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
         SqlStdOperatorTable.EQUALS,
         SqlLiteral.createCharString(tableSchema, CHARSET, SqlParserPos.ZERO));
 
@@ -92,7 +92,7 @@ public class ShowTablesHandler extends DefaultSqlHandler implements InfoSchemaCo
     final SqlNode likePattern = node.getLikePattern();
     if (likePattern != null) {
       filter = DrillParserUtil.createCondition(
-          new SqlIdentifier(COL_TABLE_NAME, SqlParserPos.ZERO),
+          new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO),
           SqlStdOperatorTable.LIKE,
           likePattern);
     } else if (node.getWhereClause() != null) {

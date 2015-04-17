@@ -30,10 +30,12 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import java.util.Iterator;
 
 /**
- * An enumeration of all system tables that Drill supports.
- * <p/>
- * OPTION, DRILLBITS and VERSION are local tables available on every Drillbit.
- * MEMORY and THREADS are distributed tables with one record on every Drillbit.
+ * An enumeration of all tables in Drill's system ("sys") schema.
+ * <p>
+ *   OPTION, DRILLBITS and VERSION are local tables available on every Drillbit.
+ *   MEMORY and THREADS are distributed tables with one record on every
+ *   Drillbit.
+ * </p>
  */
 public enum SystemTable {
 

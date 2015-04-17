@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.ischema;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FieldReference;
@@ -39,8 +40,7 @@ import java.util.List;
  * conditions involving columns "TABLE_NAME", "SCHEMA_NAME" and "TABLE_SCHEMA" and
  * functions EQUAL, NOT EQUAL, LIKE, OR and AND.
  */
-public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void, RuntimeException>
-    implements InfoSchemaConstants {
+public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void, RuntimeException> {
   private final LogicalExpression filter;
 
   private boolean isAllExpressionsConverted = true;
@@ -127,7 +127,9 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
     if (e.getInput() instanceof FieldReference) {
       FieldReference fieldRef = (FieldReference) e.getInput();
       String field = fieldRef.getAsUnescapedPath().toUpperCase();
-      if (field.equals(COL_SCHEMA_NAME) || field.equals(COL_TABLE_NAME) || field.equals(COL_TABLE_SCHEMA)) {
+      if (field.equals(SCHS_COL_SCHEMA_NAME)
+          || field.equals(SHRD_COL_TABLE_NAME)
+          || field.equals(SHRD_COL_TABLE_SCHEMA)) {
         return new FieldExprNode(field);
       }
     }
@@ -143,7 +145,9 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
   @Override
   public ExprNode visitSchemaPath(SchemaPath path, Void value) throws RuntimeException {
     String field = path.getAsUnescapedPath().toUpperCase();
-    if (field.equals(COL_SCHEMA_NAME) || field.equals(COL_TABLE_NAME) || field.equals(COL_TABLE_SCHEMA)) {
+    if (field.equals(SCHS_COL_SCHEMA_NAME)
+        || field.equals(SHRD_COL_TABLE_NAME)
+        || field.equals(SHRD_COL_TABLE_SCHEMA)) {
       return new FieldExprNode(field);
     }
 

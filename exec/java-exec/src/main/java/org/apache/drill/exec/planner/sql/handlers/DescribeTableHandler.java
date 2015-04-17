@@ -26,13 +26,11 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 
-import org.apache.drill.exec.ops.QueryContext;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -44,7 +42,7 @@ import org.apache.calcite.util.Util;
 
 import com.google.common.collect.ImmutableList;
 
-public class DescribeTableHandler extends DefaultSqlHandler implements InfoSchemaConstants {
+public class DescribeTableHandler extends DefaultSqlHandler {
 
   public DescribeTableHandler(SqlHandlerConfig config) { super(config); }
 
@@ -54,9 +52,10 @@ public class DescribeTableHandler extends DefaultSqlHandler implements InfoSchem
     SqlDescribeTable node = unwrap(sqlNode, SqlDescribeTable.class);
 
     try {
-      List<SqlNode> selectList = ImmutableList.of((SqlNode) new SqlIdentifier(COL_COLUMN_NAME, SqlParserPos.ZERO),
-          new SqlIdentifier(COL_DATA_TYPE, SqlParserPos.ZERO),
-          new SqlIdentifier(COL_IS_NULLABLE, SqlParserPos.ZERO));
+      List<SqlNode> selectList =
+          ImmutableList.of((SqlNode) new SqlIdentifier(COLS_COL_COLUMN_NAME, SqlParserPos.ZERO),
+                                     new SqlIdentifier(COLS_COL_DATA_TYPE, SqlParserPos.ZERO),
+                                     new SqlIdentifier(COLS_COL_IS_NULLABLE, SqlParserPos.ZERO));
 
       SqlNode fromClause = new SqlIdentifier(
           ImmutableList.of(IS_SCHEMA_NAME, TAB_COLUMNS), null, SqlParserPos.ZERO, null);
@@ -75,14 +74,14 @@ public class DescribeTableHandler extends DefaultSqlHandler implements InfoSchem
         AbstractSchema drillSchema = getDrillSchema(schema);
 
         schemaCondition = DrillParserUtil.createCondition(
-            new SqlIdentifier(COL_TABLE_SCHEMA, SqlParserPos.ZERO),
+            new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
             SqlStdOperatorTable.EQUALS,
             SqlLiteral.createCharString(drillSchema.getFullSchemaName(), CHARSET, SqlParserPos.ZERO)
         );
       }
 
       SqlNode where = DrillParserUtil.createCondition(
-          new SqlIdentifier(COL_TABLE_NAME, SqlParserPos.ZERO),
+          new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO),
           SqlStdOperatorTable.EQUALS,
           SqlLiteral.createCharString(tableName, CHARSET, SqlParserPos.ZERO));
 
@@ -90,12 +89,16 @@ public class DescribeTableHandler extends DefaultSqlHandler implements InfoSchem
 
       SqlNode columnFilter = null;
       if (node.getColumn() != null) {
-        columnFilter = DrillParserUtil.createCondition(new SqlIdentifier(COL_COLUMN_NAME, SqlParserPos.ZERO),
-            SqlStdOperatorTable.EQUALS,
-            SqlLiteral.createCharString(node.getColumn().toString(), CHARSET, SqlParserPos.ZERO));
+        columnFilter =
+            DrillParserUtil.createCondition(
+                new SqlIdentifier(COLS_COL_COLUMN_NAME, SqlParserPos.ZERO),
+                SqlStdOperatorTable.EQUALS,
+                SqlLiteral.createCharString(node.getColumn().toString(), CHARSET, SqlParserPos.ZERO));
       } else if (node.getColumnQualifier() != null) {
-        columnFilter = DrillParserUtil.createCondition(new SqlIdentifier(COL_COLUMN_NAME, SqlParserPos.ZERO),
-            SqlStdOperatorTable.LIKE, node.getColumnQualifier());
+        columnFilter =
+            DrillParserUtil.createCondition(
+                new SqlIdentifier(COLS_COL_COLUMN_NAME, SqlParserPos.ZERO),
+                SqlStdOperatorTable.LIKE, node.getColumnQualifier());
       }
 
       where = DrillParserUtil.createCondition(where, SqlStdOperatorTable.AND, columnFilter);

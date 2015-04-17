@@ -26,19 +26,23 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.Result;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-/** Generates records for POJO RecordReader by scanning the given schema */
-public abstract class RecordGenerator implements InfoSchemaConstants {
+/**
+ * Generates records for POJO RecordReader by scanning the given schema.
+ */
+public abstract class RecordGenerator {
   protected InfoSchemaFilter filter;
 
   public void setInfoSchemaFilter(InfoSchemaFilter filter) {
@@ -69,21 +73,25 @@ public abstract class RecordGenerator implements InfoSchemaConstants {
         return false;
       }
 
-      Map<String, String> recordValues = ImmutableMap.of(COL_TABLE_SCHEMA, schemaName, COL_SCHEMA_NAME, schemaName);
+      Map<String, String> recordValues =
+          ImmutableMap.of(SHRD_COL_TABLE_SCHEMA, schemaName,
+                          SCHS_COL_SCHEMA_NAME, schemaName);
       if (filter != null && filter.evaluate(recordValues) == Result.FALSE) {
-        // If the filter evaluates to false then we don't need to visit the schema. For other two results (TRUE,
-        // INCONCLUSIVE) continue to visit the schema.
+        // If the filter evaluates to false then we don't need to visit the schema.
+        // For other two results (TRUE, INCONCLUSIVE) continue to visit the schema.
         return false;
       }
     } catch(ClassCastException e) {
-      // ignore and return true as this is not a drill schema
+      // ignore and return true as this is not a Drill schema
     }
     return true;
   }
 
   protected boolean shouldVisitTable(String schemaName, String tableName) {
-    Map<String, String> recordValues = ImmutableMap.of(
-        COL_TABLE_SCHEMA, schemaName, COL_SCHEMA_NAME, schemaName, COL_TABLE_NAME, tableName);
+    Map<String, String> recordValues =
+        ImmutableMap.of( SHRD_COL_TABLE_SCHEMA, schemaName,
+                         SCHS_COL_SCHEMA_NAME, schemaName,
+                         SHRD_COL_TABLE_NAME, tableName);
     if (filter != null && filter.evaluate(recordValues) == Result.FALSE) {
       return false;
     }
@@ -98,13 +106,13 @@ public abstract class RecordGenerator implements InfoSchemaConstants {
   }
 
   /**
-   * Recursively scan the schema, invoking the visitor as appropriate.
-   * @param schemaPath - the path to the current schema, so far,
-   * @param schema - the current schema.
+   * Recursively scans the given schema, invoking the visitor as appropriate.
+   * @param  schemaPath  the path to the given schema, so far
+   * @param  schema  the given schema
    */
   private void scanSchema(String schemaPath, SchemaPlus schema) {
 
-    // Recursively scan the subschema.
+    // Recursively scan any subschema.
     for (String name: schema.getSubSchemaNames()) {
       scanSchema(schemaPath +
           (schemaPath == "" ? "" : ".") + // If we have an empty schema path, then don't insert a leading dot.
@@ -138,7 +146,9 @@ public abstract class RecordGenerator implements InfoSchemaConstants {
   public static class Catalogs extends RecordGenerator {
     @Override
     public RecordReader getRecordReader() {
-      Records.Catalog catalogRecord = new Records.Catalog("DRILL", "The internal metadata used by Drill", "");
+      Records.Catalog catalogRecord =
+          new Records.Catalog(IS_CATALOG_NAME,
+                              "The internal metadata used by Drill", "");
       return new PojoRecordReader<>(Records.Catalog.class, ImmutableList.of(catalogRecord).iterator());
     }
   }
@@ -154,7 +164,8 @@ public abstract class RecordGenerator implements InfoSchemaConstants {
     @Override
     public boolean visitSchema(String schemaName, SchemaPlus schema) {
       AbstractSchema as = schema.unwrap(AbstractSchema.class);
-      records.add(new Records.Schema("DRILL", schemaName, "<owner>", as.getTypeName(), as.isMutable()));
+      records.add(new Records.Schema(IS_CATALOG_NAME, schemaName, "<owner>",
+                                     as.getTypeName(), as.isMutable()));
       return false;
     }
   }
@@ -169,7 +180,8 @@ public abstract class RecordGenerator implements InfoSchemaConstants {
 
     @Override
     public boolean visitTable(String schemaName, String tableName, Table table) {
-      records.add(new Records.Table("DRILL", schemaName, tableName, table.getJdbcTableType().toString()));
+      records.add(new Records.Table(IS_CATALOG_NAME, schemaName, tableName,
+                                    table.getJdbcTableType().toString()));
       return false;
     }
   }
@@ -185,7 +197,8 @@ public abstract class RecordGenerator implements InfoSchemaConstants {
     @Override
     public boolean visitTable(String schemaName, String tableName, Table table) {
       if (table.getJdbcTableType() == TableType.VIEW) {
-        records.add(new Records.View("DRILL", schemaName, tableName, ((DrillViewInfoProvider) table).getViewSql()));
+        records.add(new Records.View(IS_CATALOG_NAME, schemaName, tableName,
+                    ((DrillViewInfoProvider) table).getViewSql()));
       }
       return false;
     }
@@ -201,7 +214,7 @@ public abstract class RecordGenerator implements InfoSchemaConstants {
 
     @Override
     public boolean visitField(String schemaName, String tableName, RelDataTypeField field) {
-      records.add(new Records.Column("DRILL", schemaName, tableName, field));
+      records.add(new Records.Column(IS_CATALOG_NAME, schemaName, tableName, field));
       return false;
     }
   }
