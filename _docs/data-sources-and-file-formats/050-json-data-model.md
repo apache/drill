@@ -58,10 +58,10 @@ The following table shows SQL-JSON data type mapping, assuming you use the defau
   </tr>
 </table>
 
-JSON does not enforce types or distinguish between integers and floating point values. When reading numerical values from a JSON file, Drill distinguishes integers from floating point numbers by the presence or lack of a decimal point. If some numbers in a JSON map or array appear with and without a decimal point, such as 0 and 0.0, Drill throws a schema change error.
+Drill does not support JSON lists of different types. For example, JSON does not enforce types or distinguish between integers and floating point values. When reading numerical values from a JSON file, Drill distinguishes integers from floating point numbers by the presence or lack of a decimal point. If some numbers in a JSON map or array appear with and without a decimal point, such as 0 and 0.0, Drill throws a schema change error.
 
 ### Handling Type Differences
-Use the all text mode to prevent the schema change error described in the previous section. Set the `store.json.all_text_mode` property to true.
+Use the all text mode to prevent the schema change error that occurs from when a JSON list includes different types, as described in the previous section. Set the `store.json.all_text_mode` property to true.
 
     ALTER SYSTEM SET `store.json.all_text_mode` = true;
 
