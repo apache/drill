@@ -13,7 +13,7 @@ on Linux or Mac OS X, you must update the following configuration files:
 You can locate the configuration files in your home directory, or in`
 /opt/mapr/drillobdc/Setup`.
 
-**Note:** The installer for the Mac OS X version of the driver creates a sample User DSN, that some driver managers use, in the following files:
+{% include startnote.html %}The installer for the Mac OS X version of the driver creates a sample User DSN, that some driver managers use, in the following files:{% include endnote.html %}
 
   * `~/Library/ODBC/odbc.ini`
   * `~/.odbc.ini`
@@ -29,7 +29,7 @@ steps:
 Once you have completed the required steps, refer to [Testing the ODBC
 Connection on Linux and Mac OS X]({{ site.baseurl }}/docs/testing-the-odbc-connection).
 
-#### Sample Configuration Files
+## Sample Configuration Files
 
 The driver installation contains sample configuration files in the ~/`Setup`
 directory that you can use as a reference.
@@ -57,7 +57,7 @@ and `mapr.drillodbc.ini `configuration files, respectively:
 For example, if you are using the 32-bit driver and the files are in the
 default install directory, set the environment variables as follows:
 
-**Note:** You do not need to set these variables for the Mac OS X version of the driver.
+{% include startnote.html %}You do not need to set these variables for the Mac OS X version of the driver.{% include endnote.html %}
 
 ## Step 2: Define the ODBC Data Sources in `odbc.ini`
 

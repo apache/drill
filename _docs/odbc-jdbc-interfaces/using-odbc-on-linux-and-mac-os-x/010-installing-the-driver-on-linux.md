@@ -89,7 +89,9 @@ following:
   * Installed ODBC driver manager libraries
   * Installed MapR ODBC Driver for Apache Drill shared libraries
 
-**Important:** You can have both 32- and 64-bit versions of the driver installed at the same time on the same computer, however do not include the paths to both 32- and 64-bit shared libraries in `LD_LIBRARY PATH` at the same time. Only include the path to the shared libraries corresponding to the driver matching the bitness of the client application used.
+You can have both 32- and 64-bit versions of the driver installed at the same time on the same computer. 
+{% include startimportant.html %}Do not include the paths to both 32- and 64-bit shared libraries in `LD_LIBRARY PATH` at the same time.{% include endimportant.html %}
+Only include the path to the shared libraries corresponding to the driver matching the bitness of the client application used.
 
 For example, if you are using a 64-bit client application and ODBC driver
 manager libraries are installed in` /usr/local/lib`, then set

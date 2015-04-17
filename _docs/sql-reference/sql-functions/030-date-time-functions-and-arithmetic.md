@@ -25,16 +25,16 @@ This section defines the following date/time functions:
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
 
-#### Syntax
+### AGE Syntax
 
     AGE (timestamp[, timestamp]);
 
 *timestamp* is a timestamp formatted as shown in the examples.
 
-#### Usage Notes
+### AGE Usage Notes
 Cast string arguments to timestamp to include time data in the calculations of the interval.
 
-#### Examples
+### AGE Examples
 
 Find the interval between midnight April 3, 2015 and June 13, 1957.
 
@@ -58,10 +58,10 @@ Find the interval between 11:10:10 PM on January 1, 2001 and 10:10:10 PM on Janu
 
 For information about how to read the interval data, see the [Interval section]({{ site.baseurl }}/docs/date-time-and-timestamp#interval).
 
-### DATE_ADD
+## DATE_ADD
 Returns the sum of a date/time and a number of days/hours, or of a date/time and date/time interval.
 
-#### Syntax
+### DATE_ADD Syntax
 
     DATE_ADD(date literal_date, integer);
 
@@ -77,7 +77,7 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 *interval* is a keyword  
 *expr* is an interval expression.  
 
-#### Examples
+### DATE_ADD Examples
 
 Add two days to today's date May 15, 2015.
 
@@ -139,20 +139,20 @@ Add 1 day 2 and 1/2 hours and 45.100 seconds to the time 22:55:55.
     +------------+
     1 row selected (0.07 seconds)
 
-### DATE_PART
+## DATE_PART
 Returns a field of a date, time, timestamp, or interval.
 
-#### Syntax 
+### DATE_PART Syntax 
 
     date_part(keyword, expression);
 
 *keyword* is year, month, day, hour, minute, or second enclosed in single quotation marks.  
 *expression* is date, time, timestamp, or interval literal enclosed in single quotation marks.
 
-#### Usage Notes
+### DATE_PART Usage Notes
 Use Unix Epoch timestamp in milliseconds as the expression to get the field of a timestamp.
 
-#### Examples
+### DATE_PART Examples
 
     SELECT DATE_PART('day', '2015-04-02') FROM sys.version;
     +------------+
@@ -190,10 +190,10 @@ Return the day part of the one year, 2 months, 10 days interval.
     +------------+
     1 row selected (0.069 seconds)
 
-### DATE_SUB
+## DATE_SUB
 Returns the difference between a date/time and a number of days/hours, or between a date/time and date/time interval.
 
-#### Syntax
+### DATE_SUB Syntax
 
     DATE_SUB(date literal_date, integer);
 
@@ -209,7 +209,7 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 *interval* is a keyword.  
 *expr* is an interval expression.
 
-#### Examples
+### DATE_SUB Examples
 
 Subtract two days to today's date May 15, 2015.
 
@@ -271,7 +271,7 @@ Subtract 1 day, 2 and 1/2 hours, and 45.100 seconds from the time 22:55:55.
     +------------+
     1 row selected (0.073 seconds)
 
-### CURRENT_*x*, LOCAL*x*, NOW, and TIMEOFDAY
+## CURRENT_*x*, LOCAL*x*, NOW, and TIMEOFDAY
 
 The following examples show how to use these functions:
 
@@ -353,11 +353,11 @@ If you did not set up Drill for UTC time, TIMEOFDAY returns the local date and t
     +------------+
     1 row selected (1.199 seconds)
 
-### EXTRACT
+## EXTRACT
 
 Returns a component of a timestamp, time, date, or interval.
 
-#### Syntax
+#### EXTRACT Syntax
 
     EXTRACT (extract_expression);
 
@@ -367,11 +367,11 @@ Returns a component of a timestamp, time, date, or interval.
 
 *component* is supported time unit.
 
-#### Usage Notes
+### EXTRACT Usage Notes
 
 The extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND.
 
-#### Examples
+### EXTRACT Examples
 
 On the third day of the month, run the following function:
 

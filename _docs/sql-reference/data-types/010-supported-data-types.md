@@ -51,19 +51,24 @@ Drill supports the following SQL data types:
 
 ## Using Drill Data Types
 
-If you understand how to use Drill data types, you have captured the essence of Drill. In Drill, you use data types in the following ways:
+In Drill, you use data types in the following ways:
 
 * To cast or convert data to the required type for moving data from one data source to another
 * To cast or convert data to the required type for Drill analysis
 
-In Drill, you do not use data types alone to define the type of a column in a CREATE TABLE statement as you do in database software. Instead, you use the CREATE TABLE AS SELECT (CTAS) statement in combination with one or more of the following functions in the SELECT statement to define the type of a column:
+In Drill, assign a data type to every column name in a CREATE TABLE statement as you do in database software. Instead, you use the CREATE TABLE AS SELECT (CTAS) statement with one or more of the following functions to define the type of a column:
 
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)  
   Use the supported SQL data types listed at the beginning of this page.  
 * [CONVERT TO/FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)
   Use the [CONVERT TO AND CONVERT FROM data types]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types)  
 * Other [data conversion functions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)
-  Use the syntax described in the function descriptions.  
+  Use the syntax described in the function descriptions. 
+
+Keep the following best practices for converting to/from binary data:
+
+* Use CAST for converting INT and BIGINT to/from binary types.
+* Use CONVERT_TO and CONVERT_FROM for converting other types to/from binary. 
 
 In some cases, Drill converts schema-less data to correctly-typed data implicitly. In this case, you do not need to cast the data. The file format of the data and the nature of your query determines the requirement for casting or converting. Differences in casting depend on the data source. The following list describes how Drill treats data types from various data sources:
 
@@ -76,13 +81,13 @@ In some cases, Drill converts schema-less data to correctly-typed data implicitl
 * MapR-DB  
   Implicitly casts MapR-DB data to SQL types when you use [the maprdb format]({{ site.baseurl }}/docs/mapr-db-format) for reading MapR-DB data. The dfs storage plugin defines the format when you install Drill from the mapr-drill package on a MapR node.
 * Parquet  
-  Implicitly casts Parquet data to the SQL types shown in [SQL Data Types to Parquet]({{ site.baseurl }}/docs/parquet-format/sql-data-types-to-parquet). 
+  Implicitly casts Parquet data to the SQL types shown in [SQL Data Types to Parquet]({{ site.baseurl }}/docs/parquet-format#sql-data-types-to-parquet). 
 * Text: CSV, TSV, and other text  
   Implicitly casts all textual data to VARCHAR.
 
 ## Precedence of Data Types
 
-Drill reads from and writes to data sources having a wide variety of types, more types than those Drill [previously listed]({{ site.baseurl }}/docs/data-type-conversion#supported-data-types). Drill uses data types at the RPC level that are not supported for query input, often implicitly casting data.
+Drill reads from and writes to data sources having a wide variety of types, more types than those Drill [previously listed]({{ site.baseurl }}/docs/supported-data-types). Drill uses data types at the RPC level that are not supported for query input, often implicitly casting data.
 
 The following list includes data types Drill uses in descending order of precedence. As shown in the table, you can cast a NULL value, which has the lowest precedence, to any other type; you can cast a SMALLINT value to INT. You cannot cast an INT value to SMALLINT due to possible precision loss. Drill might deviate from these precedence rules for performance reasons. Under certain circumstances, such as queries involving SUBSTR and CONCAT functions, Drill reverses the order of precedence and allows a cast to VARCHAR from a type of higher precedence than VARCHAR, such as BIGINT.
 
@@ -169,7 +174,7 @@ The following list includes data types Drill uses in descending order of precede
   </tr>
 </table>
 
-\* Currently not supported.
+\* Currently not supported.   
 \*\* The Drill Parquet reader supports these types.
 
 ## Explicit Casting
@@ -191,13 +196,11 @@ In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as pr
 
 If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause.
 
-For more information about and examples of casting, see [CAST]().
-
-### Explicit Type Casting Maps
+## Explicit Type Casting Maps
 
 The following tables show data types that Drill can cast to/from other data types. Not all types are available for explicit casting in the current release.
 
-#### Numerical and Character Data Types
+### Numerical and Character Data Types
 
 <table>
   <tr>
@@ -345,14 +348,11 @@ The following tables show data types that Drill can cast to/from other data type
     <td>no</td>
   </tr>
 </table>
-
 \* Not supported in this release.   
-
-\*\* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
-
+\*\* Used to cast binary data other than INT and BIGINT coming to/from sources such as MapR-DB/HBase.   
 \*\*\* You cannot convert a character string having a decimal point to an INT or BIGINT.   
 
-#### Date and Time Data Types
+### Date and Time Data Types
 
 <table>
   <tr>
@@ -475,9 +475,7 @@ The following tables show data types that Drill can cast to/from other data type
     <td>No</td>
   </tr>
 </table>
-
 \* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
-
 \*\* Not supported in this release.   
 
 ## CONVERT_TO and CONVERT_FROM Data Types
@@ -508,5 +506,7 @@ TIME_EPOCH| bytes(8)| time
 UTF8| bytes| varchar  
 UTF16| bytes| var16char  
 UINT8| bytes(8)| uint8  
+
+If you are unsure that the size of the source and destination INT or BIGINT you are converting is the same, use CAST to convert these data types to/from binary.
 
 

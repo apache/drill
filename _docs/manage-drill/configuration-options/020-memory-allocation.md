@@ -1,8 +1,6 @@
 title: "Memory Allocation"
 parent: "Configuration Options"
 
-## Memory Allocation
-
 You can configure the amount of direct memory allocated to a Drillbit for
 query processing. The default limit is 8G, but Drill prefers 16G or more
 depending on the workload. The total amount of direct memory that a Drillbit
@@ -24,7 +22,7 @@ memory for a Drillbit, edit the `XX:MaxDirectMemorySize` parameter in the
 Drillbit startup script located in `<drill_installation_directory>/conf/drill-
 env.sh`.
 
-**Note:** If this parameter is not set, the limit depends on the amount of available system memory.
+{% include startnote.html %}If this parameter is not set, the limit depends on the amount of available system memory.{% include endnote.html %}
 
 After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart
 the Drillbit

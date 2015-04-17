@@ -296,7 +296,7 @@
             "parent": "Contribute to Drill", 
             "previous_title": "Contribute to Drill", 
             "previous_url": "/docs/contribute-to-drill/", 
-            "relative_path": "_docs/develop/contribute-to-drill/010-apache-drill-contribution-guidelines.md", 
+            "relative_path": "_docs/developer-information/contribute-to-drill/010-apache-drill-contribution-guidelines.md", 
             "title": "Apache Drill Contribution Guidelines", 
             "url": "/docs/apache-drill-contribution-guidelines/"
         }, 
@@ -317,7 +317,7 @@
             "parent": "Contribute to Drill", 
             "previous_title": "Apache Drill Contribution Guidelines", 
             "previous_url": "/docs/apache-drill-contribution-guidelines/", 
-            "relative_path": "_docs/develop/contribute-to-drill/020-apache-drill-contribution-ideas.md", 
+            "relative_path": "_docs/developer-information/contribute-to-drill/020-apache-drill-contribution-ideas.md", 
             "title": "Apache Drill Contribution Ideas", 
             "url": "/docs/apache-drill-contribution-ideas/"
         }, 
@@ -628,7 +628,7 @@
             "parent": "Develop Drill", 
             "previous_title": "Develop Drill", 
             "previous_url": "/docs/develop-drill/", 
-            "relative_path": "_docs/develop/develop-drill/010-compiling-drill-from-source.md", 
+            "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
             "title": "Compiling Drill from Source", 
             "url": "/docs/compiling-drill-from-source/"
         }, 
@@ -1064,7 +1064,7 @@
                     "parent": "Contribute to Drill", 
                     "previous_title": "Contribute to Drill", 
                     "previous_url": "/docs/contribute-to-drill/", 
-                    "relative_path": "_docs/develop/contribute-to-drill/010-apache-drill-contribution-guidelines.md", 
+                    "relative_path": "_docs/developer-information/contribute-to-drill/010-apache-drill-contribution-guidelines.md", 
                     "title": "Apache Drill Contribution Guidelines", 
                     "url": "/docs/apache-drill-contribution-guidelines/"
                 }, 
@@ -1085,7 +1085,7 @@
                     "parent": "Contribute to Drill", 
                     "previous_title": "Apache Drill Contribution Guidelines", 
                     "previous_url": "/docs/apache-drill-contribution-guidelines/", 
-                    "relative_path": "_docs/develop/contribute-to-drill/020-apache-drill-contribution-ideas.md", 
+                    "relative_path": "_docs/developer-information/contribute-to-drill/020-apache-drill-contribution-ideas.md", 
                     "title": "Apache Drill Contribution Ideas", 
                     "url": "/docs/apache-drill-contribution-ideas/"
                 }
@@ -1095,7 +1095,7 @@
             "parent": "Developer Information", 
             "previous_title": "Drill Patch Review Tool", 
             "previous_url": "/docs/drill-patch-review-tool/", 
-            "relative_path": "_docs/develop/020-contribute-to-drill.md", 
+            "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
             "title": "Contribute to Drill", 
             "url": "/docs/contribute-to-drill/"
         }, 
@@ -1472,7 +1472,7 @@
                     "parent": "Design Docs", 
                     "previous_title": "Design Docs", 
                     "previous_url": "/docs/design-docs/", 
-                    "relative_path": "_docs/develop/design-docs/010-drill-plan-syntax.md", 
+                    "relative_path": "_docs/developer-information/design-docs/010-drill-plan-syntax.md", 
                     "title": "Drill Plan Syntax", 
                     "url": "/docs/drill-plan-syntax/"
                 }, 
@@ -1493,7 +1493,7 @@
                     "parent": "Design Docs", 
                     "previous_title": "Drill Plan Syntax", 
                     "previous_url": "/docs/drill-plan-syntax/", 
-                    "relative_path": "_docs/develop/design-docs/020-rpc-overview.md", 
+                    "relative_path": "_docs/developer-information/design-docs/020-rpc-overview.md", 
                     "title": "RPC Overview", 
                     "url": "/docs/rpc-overview/"
                 }, 
@@ -1514,7 +1514,7 @@
                     "parent": "Design Docs", 
                     "previous_title": "RPC Overview", 
                     "previous_url": "/docs/rpc-overview/", 
-                    "relative_path": "_docs/develop/design-docs/030-query-stages.md", 
+                    "relative_path": "_docs/developer-information/design-docs/030-query-stages.md", 
                     "title": "Query Stages", 
                     "url": "/docs/query-stages/"
                 }, 
@@ -1535,7 +1535,7 @@
                     "parent": "Design Docs", 
                     "previous_title": "Query Stages", 
                     "previous_url": "/docs/query-stages/", 
-                    "relative_path": "_docs/develop/design-docs/040-useful-research.md", 
+                    "relative_path": "_docs/developer-information/design-docs/040-useful-research.md", 
                     "title": "Useful Research", 
                     "url": "/docs/useful-research/"
                 }, 
@@ -1556,7 +1556,7 @@
                     "parent": "Design Docs", 
                     "previous_title": "Useful Research", 
                     "previous_url": "/docs/useful-research/", 
-                    "relative_path": "_docs/develop/design-docs/050-value-vectors.md", 
+                    "relative_path": "_docs/developer-information/design-docs/050-value-vectors.md", 
                     "title": "Value Vectors", 
                     "url": "/docs/value-vectors/"
                 }
@@ -1566,7 +1566,7 @@
             "parent": "Developer Information", 
             "previous_title": "Apache Drill Contribution Ideas", 
             "previous_url": "/docs/apache-drill-contribution-ideas/", 
-            "relative_path": "_docs/develop/030-design-docs.md", 
+            "relative_path": "_docs/developer-information/030-design-docs.md", 
             "title": "Design Docs", 
             "url": "/docs/design-docs/"
         }, 
@@ -1727,7 +1727,7 @@
                     "parent": "Develop Drill", 
                     "previous_title": "Develop Drill", 
                     "previous_url": "/docs/develop-drill/", 
-                    "relative_path": "_docs/develop/develop-drill/010-compiling-drill-from-source.md", 
+                    "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                     "title": "Compiling Drill from Source", 
                     "url": "/docs/compiling-drill-from-source/"
                 }, 
@@ -1748,7 +1748,7 @@
                     "parent": "Develop Drill", 
                     "previous_title": "Compiling Drill from Source", 
                     "previous_url": "/docs/compiling-drill-from-source/", 
-                    "relative_path": "_docs/develop/develop-drill/020-drill-patch-review-tool.md", 
+                    "relative_path": "_docs/developer-information/develop-drill/020-drill-patch-review-tool.md", 
                     "title": "Drill Patch Review Tool", 
                     "url": "/docs/drill-patch-review-tool/"
                 }
@@ -1758,7 +1758,7 @@
             "parent": "Developer Information", 
             "previous_title": "Developer Information", 
             "previous_url": "/docs/developer-information/", 
-            "relative_path": "_docs/develop/010-develop-drill.md", 
+            "relative_path": "_docs/developer-information/010-develop-drill.md", 
             "title": "Develop Drill", 
             "url": "/docs/develop-drill/"
         }, 
@@ -1807,7 +1807,7 @@
                             "parent": "Develop Drill", 
                             "previous_title": "Develop Drill", 
                             "previous_url": "/docs/develop-drill/", 
-                            "relative_path": "_docs/develop/develop-drill/010-compiling-drill-from-source.md", 
+                            "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                             "title": "Compiling Drill from Source", 
                             "url": "/docs/compiling-drill-from-source/"
                         }, 
@@ -1828,7 +1828,7 @@
                             "parent": "Develop Drill", 
                             "previous_title": "Compiling Drill from Source", 
                             "previous_url": "/docs/compiling-drill-from-source/", 
-                            "relative_path": "_docs/develop/develop-drill/020-drill-patch-review-tool.md", 
+                            "relative_path": "_docs/developer-information/develop-drill/020-drill-patch-review-tool.md", 
                             "title": "Drill Patch Review Tool", 
                             "url": "/docs/drill-patch-review-tool/"
                         }
@@ -1838,7 +1838,7 @@
                     "parent": "Developer Information", 
                     "previous_title": "Developer Information", 
                     "previous_url": "/docs/developer-information/", 
-                    "relative_path": "_docs/develop/010-develop-drill.md", 
+                    "relative_path": "_docs/developer-information/010-develop-drill.md", 
                     "title": "Develop Drill", 
                     "url": "/docs/develop-drill/"
                 }, 
@@ -1867,7 +1867,7 @@
                             "parent": "Contribute to Drill", 
                             "previous_title": "Contribute to Drill", 
                             "previous_url": "/docs/contribute-to-drill/", 
-                            "relative_path": "_docs/develop/contribute-to-drill/010-apache-drill-contribution-guidelines.md", 
+                            "relative_path": "_docs/developer-information/contribute-to-drill/010-apache-drill-contribution-guidelines.md", 
                             "title": "Apache Drill Contribution Guidelines", 
                             "url": "/docs/apache-drill-contribution-guidelines/"
                         }, 
@@ -1888,7 +1888,7 @@
                             "parent": "Contribute to Drill", 
                             "previous_title": "Apache Drill Contribution Guidelines", 
                             "previous_url": "/docs/apache-drill-contribution-guidelines/", 
-                            "relative_path": "_docs/develop/contribute-to-drill/020-apache-drill-contribution-ideas.md", 
+                            "relative_path": "_docs/developer-information/contribute-to-drill/020-apache-drill-contribution-ideas.md", 
                             "title": "Apache Drill Contribution Ideas", 
                             "url": "/docs/apache-drill-contribution-ideas/"
                         }
@@ -1898,7 +1898,7 @@
                     "parent": "Developer Information", 
                     "previous_title": "Drill Patch Review Tool", 
                     "previous_url": "/docs/drill-patch-review-tool/", 
-                    "relative_path": "_docs/develop/020-contribute-to-drill.md", 
+                    "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
                     "title": "Contribute to Drill", 
                     "url": "/docs/contribute-to-drill/"
                 }, 
@@ -1927,7 +1927,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "Design Docs", 
                             "previous_url": "/docs/design-docs/", 
-                            "relative_path": "_docs/develop/design-docs/010-drill-plan-syntax.md", 
+                            "relative_path": "_docs/developer-information/design-docs/010-drill-plan-syntax.md", 
                             "title": "Drill Plan Syntax", 
                             "url": "/docs/drill-plan-syntax/"
                         }, 
@@ -1948,7 +1948,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "Drill Plan Syntax", 
                             "previous_url": "/docs/drill-plan-syntax/", 
-                            "relative_path": "_docs/develop/design-docs/020-rpc-overview.md", 
+                            "relative_path": "_docs/developer-information/design-docs/020-rpc-overview.md", 
                             "title": "RPC Overview", 
                             "url": "/docs/rpc-overview/"
                         }, 
@@ -1969,7 +1969,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "RPC Overview", 
                             "previous_url": "/docs/rpc-overview/", 
-                            "relative_path": "_docs/develop/design-docs/030-query-stages.md", 
+                            "relative_path": "_docs/developer-information/design-docs/030-query-stages.md", 
                             "title": "Query Stages", 
                             "url": "/docs/query-stages/"
                         }, 
@@ -1990,7 +1990,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "Query Stages", 
                             "previous_url": "/docs/query-stages/", 
-                            "relative_path": "_docs/develop/design-docs/040-useful-research.md", 
+                            "relative_path": "_docs/developer-information/design-docs/040-useful-research.md", 
                             "title": "Useful Research", 
                             "url": "/docs/useful-research/"
                         }, 
@@ -2011,7 +2011,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "Useful Research", 
                             "previous_url": "/docs/useful-research/", 
-                            "relative_path": "_docs/develop/design-docs/050-value-vectors.md", 
+                            "relative_path": "_docs/developer-information/design-docs/050-value-vectors.md", 
                             "title": "Value Vectors", 
                             "url": "/docs/value-vectors/"
                         }
@@ -2021,7 +2021,7 @@
                     "parent": "Developer Information", 
                     "previous_title": "Apache Drill Contribution Ideas", 
                     "previous_url": "/docs/apache-drill-contribution-ideas/", 
-                    "relative_path": "_docs/develop/030-design-docs.md", 
+                    "relative_path": "_docs/developer-information/030-design-docs.md", 
                     "title": "Design Docs", 
                     "url": "/docs/design-docs/"
                 }
@@ -2107,7 +2107,7 @@
             "parent": "Develop Drill", 
             "previous_title": "Compiling Drill from Source", 
             "previous_url": "/docs/compiling-drill-from-source/", 
-            "relative_path": "_docs/develop/develop-drill/020-drill-patch-review-tool.md", 
+            "relative_path": "_docs/developer-information/develop-drill/020-drill-patch-review-tool.md", 
             "title": "Drill Patch Review Tool", 
             "url": "/docs/drill-patch-review-tool/"
         }, 
@@ -2128,7 +2128,7 @@
             "parent": "Design Docs", 
             "previous_title": "Design Docs", 
             "previous_url": "/docs/design-docs/", 
-            "relative_path": "_docs/develop/design-docs/010-drill-plan-syntax.md", 
+            "relative_path": "_docs/developer-information/design-docs/010-drill-plan-syntax.md", 
             "title": "Drill Plan Syntax", 
             "url": "/docs/drill-plan-syntax/"
         }, 
@@ -4812,7 +4812,7 @@
             "parent": "Design Docs", 
             "previous_title": "RPC Overview", 
             "previous_url": "/docs/rpc-overview/", 
-            "relative_path": "_docs/develop/design-docs/030-query-stages.md", 
+            "relative_path": "_docs/developer-information/design-docs/030-query-stages.md", 
             "title": "Query Stages", 
             "url": "/docs/query-stages/"
         }, 
@@ -5336,7 +5336,7 @@
             "parent": "Design Docs", 
             "previous_title": "Drill Plan Syntax", 
             "previous_url": "/docs/drill-plan-syntax/", 
-            "relative_path": "_docs/develop/design-docs/020-rpc-overview.md", 
+            "relative_path": "_docs/developer-information/design-docs/020-rpc-overview.md", 
             "title": "RPC Overview", 
             "url": "/docs/rpc-overview/"
         }, 
@@ -7617,7 +7617,7 @@
             "parent": "Design Docs", 
             "previous_title": "Query Stages", 
             "previous_url": "/docs/query-stages/", 
-            "relative_path": "_docs/develop/design-docs/040-useful-research.md", 
+            "relative_path": "_docs/developer-information/design-docs/040-useful-research.md", 
             "title": "Useful Research", 
             "url": "/docs/useful-research/"
         }, 
@@ -8061,7 +8061,7 @@
             "parent": "Design Docs", 
             "previous_title": "Useful Research", 
             "previous_url": "/docs/useful-research/", 
-            "relative_path": "_docs/develop/design-docs/050-value-vectors.md", 
+            "relative_path": "_docs/developer-information/design-docs/050-value-vectors.md", 
             "title": "Value Vectors", 
             "url": "/docs/value-vectors/"
         }, 
@@ -10910,7 +10910,7 @@
                             "parent": "Develop Drill", 
                             "previous_title": "Develop Drill", 
                             "previous_url": "/docs/develop-drill/", 
-                            "relative_path": "_docs/develop/develop-drill/010-compiling-drill-from-source.md", 
+                            "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                             "title": "Compiling Drill from Source", 
                             "url": "/docs/compiling-drill-from-source/"
                         }, 
@@ -10931,7 +10931,7 @@
                             "parent": "Develop Drill", 
                             "previous_title": "Compiling Drill from Source", 
                             "previous_url": "/docs/compiling-drill-from-source/", 
-                            "relative_path": "_docs/develop/develop-drill/020-drill-patch-review-tool.md", 
+                            "relative_path": "_docs/developer-information/develop-drill/020-drill-patch-review-tool.md", 
                             "title": "Drill Patch Review Tool", 
                             "url": "/docs/drill-patch-review-tool/"
                         }
@@ -10941,7 +10941,7 @@
                     "parent": "Developer Information", 
                     "previous_title": "Developer Information", 
                     "previous_url": "/docs/developer-information/", 
-                    "relative_path": "_docs/develop/010-develop-drill.md", 
+                    "relative_path": "_docs/developer-information/010-develop-drill.md", 
                     "title": "Develop Drill", 
                     "url": "/docs/develop-drill/"
                 }, 
@@ -10970,7 +10970,7 @@
                             "parent": "Contribute to Drill", 
                             "previous_title": "Contribute to Drill", 
                             "previous_url": "/docs/contribute-to-drill/", 
-                            "relative_path": "_docs/develop/contribute-to-drill/010-apache-drill-contribution-guidelines.md", 
+                            "relative_path": "_docs/developer-information/contribute-to-drill/010-apache-drill-contribution-guidelines.md", 
                             "title": "Apache Drill Contribution Guidelines", 
                             "url": "/docs/apache-drill-contribution-guidelines/"
                         }, 
@@ -10991,7 +10991,7 @@
                             "parent": "Contribute to Drill", 
                             "previous_title": "Apache Drill Contribution Guidelines", 
                             "previous_url": "/docs/apache-drill-contribution-guidelines/", 
-                            "relative_path": "_docs/develop/contribute-to-drill/020-apache-drill-contribution-ideas.md", 
+                            "relative_path": "_docs/developer-information/contribute-to-drill/020-apache-drill-contribution-ideas.md", 
                             "title": "Apache Drill Contribution Ideas", 
                             "url": "/docs/apache-drill-contribution-ideas/"
                         }
@@ -11001,7 +11001,7 @@
                     "parent": "Developer Information", 
                     "previous_title": "Drill Patch Review Tool", 
                     "previous_url": "/docs/drill-patch-review-tool/", 
-                    "relative_path": "_docs/develop/020-contribute-to-drill.md", 
+                    "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
                     "title": "Contribute to Drill", 
                     "url": "/docs/contribute-to-drill/"
                 }, 
@@ -11030,7 +11030,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "Design Docs", 
                             "previous_url": "/docs/design-docs/", 
-                            "relative_path": "_docs/develop/design-docs/010-drill-plan-syntax.md", 
+                            "relative_path": "_docs/developer-information/design-docs/010-drill-plan-syntax.md", 
                             "title": "Drill Plan Syntax", 
                             "url": "/docs/drill-plan-syntax/"
                         }, 
@@ -11051,7 +11051,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "Drill Plan Syntax", 
                             "previous_url": "/docs/drill-plan-syntax/", 
-                            "relative_path": "_docs/develop/design-docs/020-rpc-overview.md", 
+                            "relative_path": "_docs/developer-information/design-docs/020-rpc-overview.md", 
                             "title": "RPC Overview", 
                             "url": "/docs/rpc-overview/"
                         }, 
@@ -11072,7 +11072,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "RPC Overview", 
                             "previous_url": "/docs/rpc-overview/", 
-                            "relative_path": "_docs/develop/design-docs/030-query-stages.md", 
+                            "relative_path": "_docs/developer-information/design-docs/030-query-stages.md", 
                             "title": "Query Stages", 
                             "url": "/docs/query-stages/"
                         }, 
@@ -11093,7 +11093,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "Query Stages", 
                             "previous_url": "/docs/query-stages/", 
-                            "relative_path": "_docs/develop/design-docs/040-useful-research.md", 
+                            "relative_path": "_docs/developer-information/design-docs/040-useful-research.md", 
                             "title": "Useful Research", 
                             "url": "/docs/useful-research/"
                         }, 
@@ -11114,7 +11114,7 @@
                             "parent": "Design Docs", 
                             "previous_title": "Useful Research", 
                             "previous_url": "/docs/useful-research/", 
-                            "relative_path": "_docs/develop/design-docs/050-value-vectors.md", 
+                            "relative_path": "_docs/developer-information/design-docs/050-value-vectors.md", 
                             "title": "Value Vectors", 
                             "url": "/docs/value-vectors/"
                         }
@@ -11124,7 +11124,7 @@
                     "parent": "Developer Information", 
                     "previous_title": "Apache Drill Contribution Ideas", 
                     "previous_url": "/docs/apache-drill-contribution-ideas/", 
-                    "relative_path": "_docs/develop/030-design-docs.md", 
+                    "relative_path": "_docs/developer-information/030-design-docs.md", 
                     "title": "Design Docs", 
                     "url": "/docs/design-docs/"
                 }

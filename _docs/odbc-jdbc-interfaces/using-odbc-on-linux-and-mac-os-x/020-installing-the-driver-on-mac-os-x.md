@@ -44,7 +44,7 @@ To install the driver, complete the following steps:
   3. Follow the instructions in the Installer to complete the installation process.
   4. When the installation completes, click **Close.**
 
-**Note:** MapR Drill ODBC Driver files install in the following locations:
+{% include startnote.html %}MapR Drill ODBC Driver files install in the following locations:{% include endnote.html %}
 
   * `/opt/mapr/drillodbc/ErrorMessages` – Error messages files directory
   * `/opt/mapr/drillodbc/Setup` – Sample configuration files directory

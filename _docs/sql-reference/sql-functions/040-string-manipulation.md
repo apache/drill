@@ -27,7 +27,7 @@ Function| Return Type
 ## BYTE_SUBSTR
 Returns in binary format a substring of a string.
 
-### Syntax
+### BYTE_SUBSTR Syntax
 
     BYTE_SUBSTR( string-expression, start  [, length [(string-expression)]] );
 
@@ -37,10 +37,10 @@ Returns in binary format a substring of a string.
 * As an integer. For example, 19 includes 19 characters to the right of the start position in the output.
 * AS length(string-expression). For example, length(my_string) includes the number of characters in my_string minus the number of the start position.
 
-### Usage Notes
+### BYTE_SUBSTR Usage Notes
 Combine the use of BYTE_SUBSTR and CONVERT_FROM to separate parts of a HBase composite key for example. 
 
-### Examples
+### BYTE_SUBSTR Examples
 
 A composite HBase row key consists of strings followed by a reverse timestamp (long). For example: AMZN_9223370655563575807. Use BYTE_SUBSTR and CONVERT_FROM to separate parts of a HBase composite key.
 
@@ -63,14 +63,14 @@ A composite HBase row key consists of strings followed by a reverse timestamp (l
 ## CHAR_LENGTH 
 Returns the number of characters in a string.
 
-### Syntax
+### CHAR_LENGTH Syntax
 
     CHAR_LENGTH(string);
 
-### Usage Notes
+### CHAR_LENGTH Usage Notes
 You can use the alias CHARACTER_LENGTH.
 
-### Example
+### CHAR_LENGTH Example
 
     SELECT CHAR_LENGTH('Drill rocks') FROM sys.version;
 
@@ -84,11 +84,11 @@ You can use the alias CHARACTER_LENGTH.
 ## CONCAT
 Concatenates arguments.
 
-### Syntax
+### CONCAT Syntax
 
     CONCAT(string [, string [, ...] );
 
-### Example
+### CONCAT Example
 
     SELECT CONCAT('Drill', ' ', 1.0, ' ', 'release') FROM sys.version;
 
@@ -104,11 +104,11 @@ Alternatively, you can use the [string concatenation operation]({{ site.baseurl 
 ## INITCAP
 Returns the string using initial caps.
 
-### Syntax
+### INITCAP Syntax
 
     INITCAP(string);
 
-### Examples
+### INITCAP Examples
 
     SELECT INITCAP('apache drill release 1.0') FROM sys.version;
 
@@ -122,10 +122,10 @@ Returns the string using initial caps.
 ## LENGTH
 Returns the number of characters in the string.
 
-### Syntax
+### LENGTH Syntax
     LENGTH( string [, encoding] );
 
-### Example
+### LENGTH Example
 
     SELECT LENGTH('apache drill release 1.0') FROM sys.version;
 
@@ -151,11 +151,11 @@ Returns the number of characters in the string.
 ## LOWER
 Converts characters in the string to lowercase.
 
-### Syntax
+### LOWER Syntax
 
     LOWER (string);
 
-### Example
+### LOWER Example
 
     SELECT LOWER('Apache Drill') FROM sys.version;
 
@@ -170,11 +170,11 @@ Converts characters in the string to lowercase.
 Pads the string to the length specified by prepending the fill or a space. Truncates the string if longer than the specified length.
 . 
 
-### Syntax
+### LPAD Syntax
 
     LPAD (string, length [, fill text]);
 
-### Example
+### LPAD Example
 
     SELECT LPAD('Release 1.0', 27, 'of Apache Drill 1.0') FROM sys.version;
 
@@ -188,11 +188,11 @@ Pads the string to the length specified by prepending the fill or a space. Trunc
 ## LTRIM
 Removes any characters from the beginning of string1 that match the characters in string2. 
 
-### Syntax
+### LTRIM Syntax
 
     LTRIM(string1, string2);
 
-### Examples
+### LTRIM Examples
 
     SELECT LTRIM('Apache Drill', 'Apache ') FROM sys.version;
 
@@ -215,11 +215,11 @@ Removes any characters from the beginning of string1 that match the characters i
 ## POSITION
 Returns the location of a substring.
 
-### Syntax
+### POSITION Syntax
 
     POSITION('substring' in 'string')
 
-### Example
+### POSITION Example
 
     SELECT POSITION('c' in 'Apache Drill') FROM sys.version;
 
@@ -234,7 +234,7 @@ Returns the location of a substring.
 
 Substitutes new text for substrings that match [POSIX regular expression patterns](http://www.regular-expressions.info/posix.html).
 
-### Syntax
+### REGEXP_REPLACE Syntax
 
     REGEXP_REPLACE(source_char, pattern, replacement);
 
@@ -244,7 +244,7 @@ Substitutes new text for substrings that match [POSIX regular expression pattern
 
 *replacement* is the string to substitute for the source.
 
-### Examples
+### REGEXP_REPLACE Examples
 
 Replace a's with b's in this string.
 
@@ -270,11 +270,11 @@ Use the regular expression *a* followed by a period (.) in the same query to rep
 ## RPAD
 Pads the string to the length specified. Appends the text you specify after the fill keyword using spaces for the fill if you provide no text or insufficient text to achieve the length.  Truncates the string if longer than the specified length.
 
-### Syntax
+### RPAD Syntax
 
     RPAD (string, length [, fill text]);
 
-### Example
+### RPAD Example
 
     SELECT RPAD('Apache Drill ', 22, 'Release 1.0') FROM sys.version;
     +------------+
@@ -287,11 +287,11 @@ Pads the string to the length specified. Appends the text you specify after the 
 ## RTRIM
 Removes any characters from the end of string1 that match the characters in string2.  
 
-### Syntax
+### RTRIM Syntax
 
     RTRIM(string1, string2);
 
-### Examples
+### RTRIM Examples
 
     SELECT RTRIM('Apache Drill', 'Drill ') FROM sys.version;
 
@@ -313,11 +313,11 @@ Removes any characters from the end of string1 that match the characters in stri
 ## STRPOS
 Returns the location of the substring in a string.
 
-### Syntax
+### STRPOS Syntax
 
 STRPOS(string, substring)
 
-### Example
+### STRPOS Example
 
     SELECT STRPOS('Apache Drill', 'Drill') FROM sys.version;
 
@@ -331,15 +331,15 @@ STRPOS(string, substring)
 ## SUBSTR
 Extracts characters from position 1 - x of the string an optional y times.
 
-### Syntax
+### SUBSTR Syntax
 
 SUBSTR(string, x, y)
 
-### Usage Notes
+### SUBSTR Usage Notes
 You can use the alias SUBSTRING for this function.
 
 
-### Example
+### SUBSTR Example
 
     SELECT SUBSTR('Apache Drill', 8) FROM sys.version;
 
@@ -362,11 +362,11 @@ You can use the alias SUBSTRING for this function.
 ## TRIM
 Removes any characters from the beginning, end, or both sides of string2 that match the characters in string1.  
 
-### Syntax
+### TRIM Syntax
 
     TRIM ([leading | trailing | both] [string1] from string2)
 
-### Example
+### TRIM Example
 
     SELECT TRIM(trailing 'l' from 'Drill') FROM sys.version;
     +------------+
@@ -395,11 +395,11 @@ Removes any characters from the beginning, end, or both sides of string2 that ma
 ## UPPER
 Converts characters in the string to uppercase.
 
-### Syntax
+### UPPER Syntax
 
     UPPER (string);
 
-### Example
+### UPPER Example
 
     SELECT UPPER('Apache Drill') FROM sys.version;
 

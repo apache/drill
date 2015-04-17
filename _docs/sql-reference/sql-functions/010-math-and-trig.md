@@ -2,7 +2,7 @@
 title: "Math and Trig"
 parent: "SQL Functions"
 ---
-Drill supports the math functions shown in the following table plus trig functions listed at the end of this section. Most math functions and all trig functions take these input types:
+Drill supports the math functions shown in the following table of math functions plus trig functions listed at the end of this section. Most math functions and all trig functions take these input types:
 
 * INT
 * BIGINT
@@ -19,7 +19,7 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except the 
 * DECIMAL9
 * DECIMAL18
 
-# Math Functions
+## Table of Math Functions
 
 <table>
   <tr>
@@ -160,7 +160,7 @@ Examples in this section use the `input2.json` file. Download the `input2.json` 
 
 You need to use a FROM clause in Drill queries. In addition to using `input2.json`, examples in this documentation often use `FROM sys.version` in the query for example purposes.
 
-#### ABS Example
+### ABS Example
 Get the absolute value of the integer key in `input2.json`. The following snippet of input2.json shows the relevant integer content:
 
     { "integer" : 2010,
@@ -266,11 +266,11 @@ Open input2.json and change the first float value from 17.4 to 3.14159. Get valu
         +------------+
         4 rows selected (0.059 seconds)
 
-## Log Examples
+### LOG Examples
 
 Get the base 2 log of 64.
 
-    SELECT log(2, 64) FROM sys.version;
+    SELECT LOG(2, 64) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -281,7 +281,7 @@ Get the base 2 log of 64.
 
 Get the common log of 100.
 
-    SELECT log10(100) FROM sys.version;
+    SELECT LOG10(100) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -292,7 +292,7 @@ Get the common log of 100.
 
 Get the natural log of 7.5.
 
-    SELECT log(7.5) FROM sys.version;
+    SELECT LOG(7.5) FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -301,7 +301,7 @@ Get the natural log of 7.5.
     +------------+
     1 row selected (0.063 seconds)
 
-# Trig Functions
+## Trig Functions
 
 Drill supports the following trig functions, which return a FLOAT8 result.
 
@@ -332,7 +332,7 @@ Drill supports the following trig functions, which return a FLOAT8 result.
 * TANH()  
   Hyperbolic tangent of hyperbolic angle x in radians
 
-## Examples
+### Trig Examples
 
 Find the sine and tangent of a 45 degree angle. First convert degrees to radians for use in the SIN() function.
 

@@ -71,22 +71,22 @@ For example, you can visualize the data in this way:
 
 ![]({{ site.baseurl }}/docs/img/student_hive.png)
 
-# Example: Connect to Self-Describing Data in Tableau
+## Example: Connect to Self-Describing Data in Tableau
 
 You can connect to self-describing data in Tableau in the following ways:
 
   1. Use Drill Explorer to explore the self-describing data sources, create a Drill view, and then use ODBC to access the view in Tableau as if it were a table. 
   2. Use Tableau’s Custom SQL to query the self-describing data directly. 
 
-## Option 1. Using a View to Connect to Self-Describing Data
+### Option 1. Using a View to Connect to Self-Describing Data
 
 The following example describes how to create a view of an HBase table and
 connect to that view in Tableau 8.1. You can also use these steps to access
 data for other sources such as Hive, Parquet, JSON, TSV, and CSV.
 
-**Note:** This example assumes that there is a schema named hbase that contains a table named s_voters. It also assumes that there is a schema named dfs.default that points to a writable location.
+{% include startnote.html %}This example assumes that there is a schema named hbase that contains a table named s_voters. It also assumes that there is a schema named dfs.default that points to a writable location.{% include endnote.html %}
 
-### Step 1. Create a View and a DSN
+#### Step 1. Create a View and a DSN
 
 In this step, we will use the ODBC Administrator to access the Drill Explorer
 where we can create a view of an HBase table. Then, we will use the ODBC
@@ -140,7 +140,7 @@ view.
   13. Click **OK** to create the DSN and return to the _ODBC Data Source Administrator_ window.
   14. Click **OK** to close the ODBC Data Source Administrator.
 
-### Step 2. Connect to the View from Tableau
+#### Step 2. Connect to the View from Tableau
 
 Now, we can connect to the view in Tableau.
 
@@ -161,7 +161,7 @@ Now, we can connect to the view in Tableau.
       ![]({{ site.baseurl }}/docs/img/ODBC_HbaseView.png)
   8. In the _Data Connection dialog_, click **Connect Live**.
 
-### Step 3. Visualize the Data in Tableau
+#### Step 3. Visualize the Data in Tableau
 
 Once you connect to the data in Tableau, the columns appear in the Data
 window. To visualize the data, drag fields from the Data window to the
@@ -171,7 +171,7 @@ For example, you can visualize the data in this way:
 
 ![]({{ site.baseurl }}/docs/img/VoterContributions_hbaseview.png)
 
-## Option 2. Using Custom SQL to Access Self-Describing Data
+### Option 2. Using Custom SQL to Access Self-Describing Data
 
 The following example describes how to use custom SQL to connect to a Parquet
 file and then visualize the data in Tableau 8.1. You can use the same steps to
@@ -179,7 +179,7 @@ access data from other sources such as Hive, HBase, JSON, TSV, and CSV.
 
 **Note:** This example assumes that there is a schema named dfs.default which contains a parquet file named region.parquet. 
 
-### Step 1. Create a DSN to the Parquet File and Preview the Data
+#### Step 1. Create a DSN to the Parquet File and Preview the Data
 
 In this step, we will create a DSN that accesses files on the DFS. We will
 also use Drill Explorer to preview the SQL that we want to use to connect to
@@ -210,7 +210,7 @@ the data in Tableau.
   8. Click **OK** to create the DSN and return to the _ODBC Data Source Administrato_r window.
   9. Click **OK** to close the ODBC Data Source Administrator.
 
-### Step 2. Connect to a Parquet File in Tableau using Custom SQL
+#### Step 2. Connect to a Parquet File in Tableau using Custom SQL
 
 Now, we can create a connection to the Parquet file using the custom SQL.
 
@@ -235,7 +235,7 @@ Now, we can create a connection to the Parquet file using the custom SQL.
      ![]({{ site.baseurl }}/docs/img/ODBC_CustomSQL.png)
   8. In the _Data Connection dialog_, click **Connect Live**.
 
-### Step 3. Visualize the Data in Tableau
+#### Step 3. Visualize the Data in Tableau
 
 Once you connect to the data, the fields appear in the Data window. To
 visualize the data, drag fields from the Data window to the workspace view.

@@ -8,14 +8,12 @@ queries that you run during the current Drill connection. Options set at the
 system level affect the entire system and persist between restarts. Session
 level settings override system level settings.
 
-#### Querying Planning and Execution Options
-
 You can run the following query to see a list of the system and session
 planning and execution options:
 
     SELECT name FROM sys.options WHERE type in ('SYSTEM','SESSION');
 
-#### Configuring Planning and Execution Options
+## Configuring Planning and Execution Options
 
 Use the` ALTER SYSTEM` or `ALTER SESSION` commands to set options. Typically,
 you set the options at the session level unless you want the setting to

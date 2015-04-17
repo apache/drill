@@ -9,7 +9,7 @@ Variables. You must also have a utility, such as
 assume that the [7-zip](http://www.7-zip.org/) decompression utility is
 installed to extract the Drill archive file that you download.
 
-#### Setting JAVA_HOME
+## Setting JAVA_HOME
 
 Complete the following steps to set `JAVA_HOME`:
 
@@ -22,7 +22,7 @@ Complete the following steps to set `JAVA_HOME`:
         C:\Program Files\Java\jdk1.7.0_65
   4. Click **OK** to exit the windows.
 
-#### Installing Drill
+## Installing Drill
 
 Complete the following steps to install Drill:
 

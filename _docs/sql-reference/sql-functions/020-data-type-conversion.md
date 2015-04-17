@@ -12,9 +12,9 @@ Drill supports the following functions for casting and converting data types:
 
 The CAST function converts an entity, such as an expression that evaluates to a single value, from one type to another.
 
-### Syntax
+### CAST Syntax
 
-    cast (<expression> AS <data type>)
+    CAST (<expression> AS <data type>)
 
 *expression*
 
@@ -24,7 +24,7 @@ A combination of one or more values, operators, and SQL functions that evaluate 
 
 The target data type, such as INTEGER or DATE, to which to cast the expression
 
-### Usage Notes
+### CAST Usage Notes
 
 If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause. For example:
 
@@ -38,11 +38,11 @@ Refer to the following tables for information about the data types to use for ca
 * [Explicit Type Casting Maps]({{ site.baseurl }}/docs/explicit-type-casting-maps)
 
 
-### Examples
+## Data Type Conversion Examples
 
 The following examples show how to cast a string to a number, a number to a string, and one type of number to another.
 
-#### Casting a character string to a number
+### Casting a Character String to a Number
 You cannot cast a character string that includes a decimal point to an INT or BIGINT. For example, if you have "1200.50" in a JSON file, attempting to select and cast the string to an INT fails. As a workaround, cast to a FLOAT or DECIMAL type, and then to an INT. 
 
 The following example shows how to cast a character to a DECIMAL having two decimal places.
@@ -54,7 +54,7 @@ The following example shows how to cast a character to a DECIMAL having two deci
     | 1.00       |
     +------------+
 
-#### Casting a number to a character string
+### Casting a Number to a Character String
 The first example shows Drill casting a number to a VARCHAR having a length of 3 bytes: The result is a 3-character string, 456. Drill supports the CHAR and CHARACTER VARYING alias.
 
     SELECT CAST(456 as VARCHAR(3)) FROM sys.version;
@@ -73,7 +73,7 @@ The first example shows Drill casting a number to a VARCHAR having a length of 3
     +------------+
     1 row selected (0.093 seconds)
 
-#### Casting from one type of number to another
+### Casting from One Type of Number to Another
 
 Cast an integer to a decimal.
 
@@ -123,7 +123,7 @@ Use a CTAS statement to cast text from a JSON file to year and day intervals and
 The CONVERT_TO and CONVERT_FROM functions encode and decode
 data to and from another data type.
 
-## Syntax  
+### CONVERT_TO and CONVERT_FROM Syntax  
 
     CONVERT_TO (column, type)
 
@@ -134,17 +134,14 @@ data to and from another data type.
 *type* is one of the data types listed in the [CONVERT_TO/FROM Data Types]({{ site.baseurl }}/docs/data-types#convert_to-and-convert_from-data-types) table.
 
 
-### Usage Notes
+### CONVERT_TO and CONVERT_FROM Usage Notes
 
-You can use the CONVERT_TO and CONVERT_FROM functions to encode and decode data that is binary or complex. For example, HBase stores
+Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types other than INT AND BIGINT to other types. CONVERT functions work for binary conversions and are also more efficient to use than CAST. For example, HBase stores
 data as encoded VARBINARY data. To read HBase data in Drill, convert every column of an HBase table *from* binary to an SQL data type while selecting the data. To write HBase or Parquet binary data, convert SQL data *to* binary data and store the data in an HBase or Parquet while creating a table as a selection (CTAS).
 
-Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types other than INT AND BIGINT to other types. CONVERT functions work for binary conversions and are also more efficient to use than CAST.
+CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
 
-## Usage Notes
-Use the CONVERT_TO function to change the data type to binary when sending data back to a binary data source, such as HBase, MapR, and Parquet, from a Drill query. CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
-
-### Examples
+### Conversion of Data Types Examples
 
 This example shows how to use the CONVERT_FROM function to convert complex HBase data to a readable type. The example summarizes and continues the ["Query HBase"]({{ site.baseurl }}/docs/querying-hbase) example. The ["Query HBase"]({{ site.baseurl }}/docs/querying-hbase) example stores the following data in the students table on the Drill Sandbox:  
 
@@ -210,7 +207,7 @@ This example uses a map as input to return a repeated list vector (JSON).
     +------------+
     1 row selected (0.074 seconds)
 
-#### Set up a storage plugin for working with HBase files
+### Set Up a Storage Plugin for Working with HBase Files
 
 This example assumes you are working in the Drill Sandbox. The `maprdb` storage plugin definition is limited, so you modify the `dfs` storage plugin slightly and use that plugin for this example.
 
@@ -247,7 +244,8 @@ This example assumes you are working in the Drill Sandbox. The `maprdb` storage 
           }
         }
 
-#### Convert the binary HBase students table to JSON data
+### Convert the Binary HBase Students Table to JSON Data
+
 First, you set the storage format to JSON. Next, you use the CREATE TABLE AS SELECT (CTAS) statement to convert from a selected file of a different format, HBase in this example, to the storage format. You then convert the JSON file to Parquet using a similar procedure. Set the storage format to Parquet, and use a CTAS statement to convert to Parquet from JSON. In each case, you [select UTF8]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from-data-types) as the file format because the data you are converting from and then to consists of strings.
 
 1. Start Drill on the Drill Sandbox and set the default storage format from Parquet to JSON.
@@ -605,7 +603,7 @@ For more information about specifying a format, refer to one of the following fo
 
 TO_CHAR converts a number, date, time, or timestamp expression to a character string.
 
-### Syntax
+### TO_CHAR Syntax
 
     TO_CHAR (expression, 'format');
 
@@ -613,11 +611,11 @@ TO_CHAR converts a number, date, time, or timestamp expression to a character st
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. 
 
-### Usage Notes
+### TO_CHAR Usage Notes
 
 You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it, as shown in the TO_TIMESTAMP description.
 
-### Examples
+### TO_CHAR Examples
 
 Convert a FLOAT to a character string.
 
@@ -671,7 +669,7 @@ Convert a timestamp to a string.
 ## TO_DATE
 Converts a character string or a UNIX epoch timestamp to a date.
 
-### Syntax
+### TO_DATE Syntax
 
     TO_DATE (expression [, 'format']);
 
@@ -679,7 +677,7 @@ Converts a character string or a UNIX epoch timestamp to a date.
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not a UNIX epoch timestamp. 
 
-### Usage Notes
+### TO_DATE Usage Notes
 Specify a format using patterns defined in [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
 
 To compare dates in the WHERE clause, use TO_DATE on the value in the date column and in the comparison value. For example:
@@ -712,7 +710,7 @@ For example:
     +------------+
     3 rows selected (0.177 seconds)
 
-### Examples
+### TO_DATE Examples
 The first example converts a character string to a date. The second example extracts the year to verify that Drill recognizes the date as a date type. 
 
     SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') FROM sys.version;
@@ -755,7 +753,7 @@ TO_NUMBER converts a character string to a formatted number using a format speci
 *'format'* is one or more [Java DecimalFormat class](http://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html) specifiers enclosed in single quotation marks that set a pattern for the output formatting.
 
 
-### Usage Notes
+### TO_NUMBER Usage Notes
 The data type of the output of TO_NUMBER is a numeric. You can use the following [Java DecimalFormat class](http://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html) specifiers to set the output formatting. 
 
 * #  
@@ -773,7 +771,7 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
 * E
   Exponent. Separates mantissa and exponent in scientific notation. 
 
-### Examples
+### TO_NUMBER Examples
 
     SELECT TO_NUMBER('987,966', '######') FROM sys.version;
     +------------+
@@ -801,7 +799,7 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
 ## TO_TIME
 Converts a character string to a time.
 
-### Syntax
+### TO_TIME Syntax
 
     TO_TIME (expression [, 'format']);
 
@@ -809,10 +807,10 @@ Converts a character string to a time.
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not milliseconds. 
 
-## Usage 
+## TO_TIME Usage Notes
 Specify a format using patterns defined in [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html).
 
-### Examples
+### TO_TIME Examples
 
     SELECT TO_TIME('12:20:30', 'HH:mm:ss') FROM sys.version;
     +------------+
@@ -834,7 +832,7 @@ Convert 828550000 milliseconds (23 hours 55 seconds) to the time.
 
 ## TO_TIMESTAMP
 
-### Syntax
+### TO_TIMESTAMP Syntax
 
     TO_TIMESTAMP (expression [, 'format']);
 
@@ -842,10 +840,10 @@ Convert 828550000 milliseconds (23 hours 55 seconds) to the time.
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not a UNIX epoch timestamp. 
 
-### Usage 
+### TO_TIMESTAMP Usage Notes
 Specify a format using patterns defined in [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
 
-### Examples
+### TO_TIMESTAMP Examples
 
 Convert a date to a timestamp. 
 

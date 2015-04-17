@@ -11,20 +11,20 @@ Drill supports the following functions for handling nulls:
 ## COALESCE
 Returns the first non-null expression in the list. 
 
-### Syntax
+### COALESCE Syntax
 
     COALESCE( expr1[, expr2, ... expr_n] )
 
 *expr1* to *expr_n* are any valid scalar expressions.
 
-## Usage Notes
+## COALESCE Usage Notes
 If all expressions evaluate to null, then the COALESCE function returns null. Expressions have to be of the same type.
 
 ## NULLIF
 Returns the first expression if the two expressions are not equal, or 
 returns a null value of the type of the first expression if the two expressions are equal.
 
-### Syntax
+### NULLIF Syntax
 
     NULLIF ( expr1[, expr2, ... expr_n] )
 
@@ -32,7 +32,7 @@ returns a null value of the type of the first expression if the two expressions 
 
 This function returns the same type as the first expression.
 
-### Example
+### NULLIF Example
 
     SELECT d9, d18 FROM alltypes LIMIT 1;
     +------------+------------+

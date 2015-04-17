@@ -2,7 +2,6 @@
 title: "Parquet Format"
 parent: "Data Sources and File Formats"
 ---
-## Parquet Format
 [Apache Parquet](http://parquet.incubator.apache.org/documentation/latest) has the following characteristics:
 
 * Self-describing
@@ -18,10 +17,10 @@ Apache Drill includes the following support for Parquet:
 * Generating Parquet files that have evolving or changing schemas and querying the data on the fly
 * Handling Parquet data types
 
-### Reading Parquet Files
+## Reading Parquet Files
 When a read of Parquet data occurs, Drill loads only the necessary columns of data, which reduces I/O. Reading only a small piece of the Parquet data from a data file or table, Drill can examine and analyze all values for a column across multiple files. You can create a Drill table from one format and store the data in another format, including Parquet.
 
-### Writing Parquet Files
+## Writing Parquet Files
 CREATE TABLE AS SELECT (CTAS) can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
 
 Although the data resides in a single table, Parquet output generally consists of multiple files that resemble MapReduce output having numbered file names,  such as 0_0_0.parquet in a directory.
@@ -61,10 +60,10 @@ The following general process converts a file from JSON to Parquet:
 ### Example: Read JSON, Write Parquet
 This example demonstrates a storage plugin definition, a sample row of data from a JSON file, and a Drill query that writes the JSON input to Parquet output. 
 
-#### Storage Plugin Definition
+### Storage Plugin Definition
 You can use the default dfs storage plugin installed with Drill for reading and writing Parquet files. The storage plugin needs to configure the writable option of the workspace to true, so Drill can write the Parquet output. The dfs storage plugin defines the tmp writable workspace, which you can use in the CTAS command to create a Parquet table.
 
-#### Sample Row of JSON Data
+### Sample Row of JSON Data
 A JSON file called sample.json contains data consisting of strings, typical of JSON data. The following example shows one row of the JSON file:
 
         {"trans_id":0,"date":"2013-07-26","time":"04:56:59","amount":80.5,"user_info":
@@ -79,7 +78,7 @@ A JSON file called sample.json contains data consisting of strings, typical of J
         }
               
 
-#### CTAS Query      
+### CTAS Query      
 The following example shows a CTAS query that creates a table from JSON data shown in the last example. The command casts the date, time, and amount strings to SQL types DATE, TIME, and DOUBLE. String-to-VARCHAR casting of the other strings occurs automatically.
 
     CREATE TABLE dfs.tmp.sampleparquet AS 
@@ -117,7 +116,7 @@ You can query the Parquet file to verify that Drill now interprets the converted
 
 For more examples of and information about using Parquet data, see ["Evolving Parquet as self-describing data format – New paradigms for consumerization of Hadoop data"](https://www.mapr.com/blog/evolving-parquet-self-describing-data-format-new-paradigms-consumerization-hadoop-data#.VNeqQbDF_8f).
 
-#### SQL Data Types to Parquet
+### SQL Data Types to Parquet
 The first table in this section maps SQL data types to Parquet data types, limited intentionally by Parquet creators to minimize the impact on disk storage:
 
 <table>
@@ -163,7 +162,7 @@ The first table in this section maps SQL data types to Parquet data types, limit
   </tr>
 </table>
 
-#### SQL Types to Parquet Logical Types
+### SQL Types to Parquet Logical Types
 Parquet also supports logical types, fully described on the [Apache Parquet site](https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md). Embedded types, JSON and BSON, annotate a binary primitive type representing a JSON or BSON document. The logical types and their mapping to SQL types are:
  
 <table>
@@ -259,7 +258,7 @@ Parquet also supports logical types, fully described on the [Apache Parquet site
   </tr>
 </table>
 
-### Data Description Language Support
+## Data Description Language Support
 Parquet supports the following data description languages:
 
 * Apache Avro
