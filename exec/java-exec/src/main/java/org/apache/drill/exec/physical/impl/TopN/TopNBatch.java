@@ -117,15 +117,14 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     if (sv4 != null) {
       sv4.clear();
     }
     if (priorityQueue != null) {
       priorityQueue.cleanup();
     }
-    super.cleanup();
-    incoming.cleanup();
+    super.close();
   }
 
   public void buildSchema() throws SchemaChangeException {
@@ -421,10 +420,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     @Override
     public WritableBatch getWritableBatch() {
       throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void cleanup() {
     }
 
     @Override

@@ -19,9 +19,13 @@
 package org.apache.drill.exec.memory;
 
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import static org.junit.Assert.assertEquals;
 import io.netty.buffer.DrillBuf;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
@@ -41,11 +45,9 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 public class TestAllocators {
 
@@ -100,23 +102,25 @@ public class TestAllocators {
     OperatorStats stats;
 
     //Use some bogus operator type to create a new operator context.
-    def = new OpProfileDef(physicalOperator1.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE, OperatorContext.getChildCount(physicalOperator1));
+    def = new OpProfileDef(physicalOperator1.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
+        OperatorContext.getChildCount(physicalOperator1));
     stats = fragmentContext1.getStats().getOperatorStats(def, fragmentContext1.getAllocator());
 
 
     // Add a couple of Operator Contexts
     // Initial allocation = 1000000 bytes for all operators
-    OperatorContext oContext11 = new OperatorContext(physicalOperator1, fragmentContext1, true);
+    OperatorContext oContext11 = fragmentContext1.newOperatorContext(physicalOperator1, true);
     DrillBuf b11=oContext11.getAllocator().buffer(1000000);
 
-    OperatorContext oContext12 = new OperatorContext(physicalOperator2, fragmentContext1, stats, true);
+    OperatorContext oContext12 = fragmentContext1.newOperatorContext(physicalOperator2, stats, true);
     DrillBuf b12=oContext12.getAllocator().buffer(500000);
 
-    OperatorContext oContext21 = new OperatorContext(physicalOperator3, fragmentContext2, true);
+    OperatorContext oContext21 = fragmentContext1.newOperatorContext(physicalOperator3, true);
 
-    def = new OpProfileDef(physicalOperator4.getOperatorId(), UserBitShared.CoreOperatorType.TEXT_WRITER_VALUE, OperatorContext.getChildCount(physicalOperator4));
+    def = new OpProfileDef(physicalOperator4.getOperatorId(), UserBitShared.CoreOperatorType.TEXT_WRITER_VALUE,
+        OperatorContext.getChildCount(physicalOperator4));
     stats = fragmentContext2.getStats().getOperatorStats(def, fragmentContext2.getAllocator());
-    OperatorContext oContext22 = new OperatorContext(physicalOperator4, fragmentContext2, stats, true);
+    OperatorContext oContext22 = fragmentContext2.newOperatorContext(physicalOperator4, stats, true);
     DrillBuf b22=oContext22.getAllocator().buffer(2000000);
 
     // New Fragment begins
@@ -127,15 +131,16 @@ public class TestAllocators {
     FragmentContext fragmentContext3 = new FragmentContext(bitContext, pf3, null, functionRegistry);
 
     // New fragment starts an operator that allocates an amount within the limit
-    def = new OpProfileDef(physicalOperator5.getOperatorId(), UserBitShared.CoreOperatorType.UNION_VALUE, OperatorContext.getChildCount(physicalOperator5));
+    def = new OpProfileDef(physicalOperator5.getOperatorId(), UserBitShared.CoreOperatorType.UNION_VALUE,
+        OperatorContext.getChildCount(physicalOperator5));
     stats = fragmentContext3.getStats().getOperatorStats(def, fragmentContext3.getAllocator());
-    OperatorContext oContext31 = new OperatorContext(physicalOperator5, fragmentContext3, stats, true);
+    OperatorContext oContext31 = fragmentContext3.newOperatorContext(physicalOperator5, stats, true);
 
     DrillBuf b31a = oContext31.getAllocator().buffer(200000);
 
     //Previously running operator completes
     b22.release();
-    oContext22.close();
+    ((AutoCloseable) oContext22).close();
 
     // Fragment 3 asks for more and fails
     boolean outOfMem=false;
@@ -153,7 +158,7 @@ public class TestAllocators {
 
     // Operator is Exempt from Fragment limits. Fragment 3 asks for more and succeeds
     outOfMem=false;
-    OperatorContext oContext32 = new OperatorContext(physicalOperator6, fragmentContext3, false);
+    OperatorContext oContext32 = fragmentContext3.newOperatorContext(physicalOperator6, false);
     DrillBuf b32=null;
     try {
       b32=oContext32.getAllocator().buffer(4400000);
@@ -165,17 +170,17 @@ public class TestAllocators {
       }else{
         outOfMem=true;
       }
-      oContext32.close();
+      closeOp(oContext32);
     }
     assertEquals(false, (boolean)outOfMem);
 
     b11.release();
-    oContext11.close();
+    closeOp(oContext11);
     b12.release();
-    oContext12.close();
-    oContext21.close();
+    closeOp(oContext12);
+    closeOp(oContext21);
     b31a.release();
-    oContext31.close();
+    closeOp(oContext31);
 
     fragmentContext1.close();
     fragmentContext2.close();
@@ -183,5 +188,9 @@ public class TestAllocators {
 
     bit.close();
     serviceSet.close();
+  }
+
+  private void closeOp(OperatorContext c) throws Exception {
+    ((AutoCloseable) c).close();
   }
 }

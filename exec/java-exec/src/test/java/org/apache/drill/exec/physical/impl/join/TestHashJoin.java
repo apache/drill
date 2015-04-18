@@ -93,7 +93,7 @@ public class TestHashJoin extends PopUnitTestBase {
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
     }
-    exec.stop();
+    exec.close();
     assertEquals(expectedRows, totalRecordCount);
     System.out.println("Total Record Count: " + totalRecordCount);
     if (context.getFailureCause() != null) {

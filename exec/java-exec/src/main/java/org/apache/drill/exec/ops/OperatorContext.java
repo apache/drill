@@ -21,57 +21,20 @@ import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 
-import org.apache.drill.common.util.Hook.Closeable;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
-import com.carrotsearch.hppc.LongObjectOpenHashMap;
+public abstract class OperatorContext {
 
-public class OperatorContext implements Closeable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContext.class);
+  public abstract DrillBuf replace(DrillBuf old, int newSize);
 
-  private final BufferAllocator allocator;
-  private boolean closed = false;
-  private PhysicalOperator popConfig;
-  private OperatorStats stats;
-  private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
-  private final boolean applyFragmentLimit;
+  public abstract DrillBuf getManagedBuffer();
 
-  public OperatorContext(PhysicalOperator popConfig, FragmentContext context, boolean applyFragmentLimit) throws OutOfMemoryException {
-    this.applyFragmentLimit=applyFragmentLimit;
-    this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
-    this.popConfig = popConfig;
+  public abstract DrillBuf getManagedBuffer(int size);
 
-    OpProfileDef def = new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(), getChildCount(popConfig));
-    this.stats = context.getStats().getOperatorStats(def, allocator);
-  }
+  public abstract BufferAllocator getAllocator();
 
-  public OperatorContext(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats, boolean applyFragmentLimit) throws OutOfMemoryException {
-    this.applyFragmentLimit=applyFragmentLimit;
-    this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
-    this.popConfig = popConfig;
-    this.stats     = stats;
-  }
-
-  public DrillBuf replace(DrillBuf old, int newSize) {
-    if (managedBuffers.remove(old.memoryAddress()) == null) {
-      throw new IllegalStateException("Tried to remove unmanaged buffer.");
-    }
-    old.release();
-    return getManagedBuffer(newSize);
-  }
-
-  public DrillBuf getManagedBuffer() {
-    return getManagedBuffer(256);
-  }
-
-  public DrillBuf getManagedBuffer(int size) {
-    DrillBuf newBuf = allocator.buffer(size);
-    managedBuffers.put(newBuf.memoryAddress(), newBuf);
-    newBuf.setOperatorContext(this);
-    return newBuf;
-  }
+  public abstract OperatorStats getStats();
 
   public static int getChildCount(PhysicalOperator popConfig) {
     Iterator<PhysicalOperator> iter = popConfig.iterator();
@@ -85,43 +48,6 @@ public class OperatorContext implements Closeable {
       i = 1;
     }
     return i;
-  }
-
-  public BufferAllocator getAllocator() {
-    if (allocator == null) {
-      throw new UnsupportedOperationException("Operator context does not have an allocator");
-    }
-    return allocator;
-  }
-
-  public boolean isClosed() {
-    return closed;
-  }
-
-  @Override
-  public void close() {
-    if (closed) {
-      logger.debug("Attempted to close Operator context for {}, but context is already closed", popConfig != null ? popConfig.getClass().getName() : null);
-      return;
-    }
-    logger.debug("Closing context for {}", popConfig != null ? popConfig.getClass().getName() : null);
-
-    // release managed buffers.
-    Object[] buffers = ((LongObjectOpenHashMap<Object>)(Object)managedBuffers).values;
-    for (int i =0; i < buffers.length; i++) {
-      if (managedBuffers.allocated[i]) {
-        ((DrillBuf)buffers[i]).release();
-      }
-    }
-
-    if (allocator != null) {
-      allocator.close();
-    }
-    closed = true;
-  }
-
-  public OperatorStats getStats() {
-    return stats;
   }
 
 }

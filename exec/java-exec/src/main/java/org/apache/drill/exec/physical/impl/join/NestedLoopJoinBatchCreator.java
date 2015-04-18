@@ -17,17 +17,18 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.util.List;
-
 public class NestedLoopJoinBatchCreator implements BatchCreator<NestedLoopJoinPOP> {
   @Override
-  public RecordBatch getBatch(FragmentContext context, NestedLoopJoinPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+  public NestedLoopJoinBatch getBatch(FragmentContext context, NestedLoopJoinPOP config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     return new NestedLoopJoinBatch(config, context, children.get(0), children.get(1));
   }
 }

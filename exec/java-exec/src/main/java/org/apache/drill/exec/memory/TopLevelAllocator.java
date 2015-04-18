@@ -118,10 +118,15 @@ public class TopLevelAllocator implements BufferAllocator {
   }
 
   @Override
-  public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation, long maximumReservation, boolean applyFragmentLimit) throws OutOfMemoryException {
+  public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation, long maximumReservation,
+      boolean applyFragmentLimit) {
     if(!acct.reserve(initialReservation)){
       logger.debug(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
-      throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
+      throw new OutOfMemoryRuntimeException(
+          String
+              .format(
+                  "You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.",
+                  initialReservation, acct.getCapacity() - acct.getAllocation()));
     };
     logger.debug("New child allocator with initial reservation {}", initialReservation);
     ChildAllocator allocator = new ChildAllocator(context, acct, maximumReservation, initialReservation, childrenMap, applyFragmentLimit);
@@ -191,7 +196,7 @@ public class TopLevelAllocator implements BufferAllocator {
                           long pre,
                           Map<ChildAllocator,
                           StackTraceElement[]> map,
-                          boolean applyFragmentLimit) throws OutOfMemoryException{
+        boolean applyFragmentLimit) {
       assert max >= pre;
       this.applyFragmentLimit=applyFragmentLimit;
       DrillConfig drillConf = context != null ? context.getConfig() : null;
@@ -240,10 +245,14 @@ public class TopLevelAllocator implements BufferAllocator {
     }
 
     @Override
-    public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation, long maximumReservation, boolean applyFragmentLimit)
-        throws OutOfMemoryException {
+    public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation, long maximumReservation,
+        boolean applyFragmentLimit) {
       if (!childAcct.reserve(initialReservation)) {
-        throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getAvailable()));
+        throw new OutOfMemoryRuntimeException(
+            String
+                .format(
+                    "You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.",
+                    initialReservation, childAcct.getAvailable()));
       };
       logger.debug("New child allocator with initial reservation {}", initialReservation);
       ChildAllocator newChildAllocator = new ChildAllocator(context, childAcct, maximumReservation, initialReservation, null, applyFragmentLimit);

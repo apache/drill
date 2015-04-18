@@ -82,7 +82,7 @@ public class TestTraceMultiRecordBatch extends ExecTest {
           }
         }
 
-        exec.stop();
+        exec.close();
 
         if(context.getFailureCause() != null){
             throw context.getFailureCause();

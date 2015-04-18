@@ -35,7 +35,8 @@ public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseScanBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, HBaseSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
+  public ScanBatch getBatch(FragmentContext context, HBaseSubScan subScan, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
     List<SchemaPath> columns = null;

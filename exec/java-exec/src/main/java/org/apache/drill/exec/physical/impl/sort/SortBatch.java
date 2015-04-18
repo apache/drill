@@ -84,10 +84,9 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     builder.clear();
-    super.cleanup();
-    incoming.cleanup();
+    super.close();
   }
 
   @Override

@@ -32,7 +32,8 @@ public class MergeJoinCreator implements BatchCreator<MergeJoinPOP> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, MergeJoinPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+  public MergeJoinBatch getBatch(FragmentContext context, MergeJoinPOP config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 2);
     if(config.getJoinType() == JoinRelType.RIGHT){
       return new MergeJoinBatch(config.flipIfRight(), context, children.get(1), children.get(0));

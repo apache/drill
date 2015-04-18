@@ -15,24 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.join;
+package org.apache.drill.exec.record;
 
-import java.util.List;
+public interface CloseableRecordBatch extends RecordBatch, AutoCloseable {
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.HashJoinPOP;
-import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.record.RecordBatch;
-
-import com.google.common.base.Preconditions;
-
-public class HashJoinBatchCreator implements BatchCreator<HashJoinPOP> {
-
-  @Override
-  public HashJoinBatch getBatch(FragmentContext context, HashJoinPOP config, List<RecordBatch> children)
-      throws ExecutionSetupException {
-    Preconditions.checkArgument(children.size() == 2);
-    return new HashJoinBatch(config, context, children.get(0), children.get(1));
-  }
 }

@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -38,8 +37,8 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -59,7 +58,7 @@ import com.google.common.collect.Maps;
 /**
  * Record batch used for a particular scan. Operators against one or more
  */
-public class ScanBatch implements RecordBatch {
+public class ScanBatch implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
 
   private static final int MAX_RECORD_CNT = Character.MAX_VALUE;
@@ -115,7 +114,7 @@ public class ScanBatch implements RecordBatch {
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers) throws ExecutionSetupException {
     this(subScanConfig, context,
-        new OperatorContext(subScanConfig, context, false /* ScanBatch is not subject to fragment memory limit */),
+        context.newOperatorContext(subScanConfig, false /* ScanBatch is not subject to fragment memory limit */),
         readers, Collections.<String[]> emptyList(), Collections.<Integer> emptyList());
   }
 
@@ -343,7 +342,7 @@ public class ScanBatch implements RecordBatch {
     return WritableBatch.get(this);
   }
 
-  public void cleanup() {
+  public void close() {
     container.clear();
     if (tempContainer != null) {
       tempContainer.clear();
@@ -353,7 +352,6 @@ public class ScanBatch implements RecordBatch {
     }
     fieldVectorMap.clear();
     currentReader.cleanup();
-    oContext.close();
   }
 
   @Override

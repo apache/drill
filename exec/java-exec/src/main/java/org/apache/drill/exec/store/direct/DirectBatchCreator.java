@@ -30,7 +30,7 @@ public class DirectBatchCreator implements BatchCreator<DirectSubScan>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, DirectSubScan config, List<RecordBatch> children)
+  public ScanBatch getBatch(FragmentContext context, DirectSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
     return new ScanBatch(config, context, Collections.singleton(config.getReader()).iterator());
   }

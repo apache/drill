@@ -31,7 +31,7 @@ public class UnorderedReceiverCreator implements BatchCreator<UnorderedReceiver>
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiverCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, UnorderedReceiver receiver, List<RecordBatch> children)
+  public UnorderedReceiverBatch getBatch(FragmentContext context, UnorderedReceiver receiver, List<RecordBatch> children)
       throws ExecutionSetupException {
     assert children == null || children.isEmpty();
     IncomingBuffers bufHolder = context.getBuffers();

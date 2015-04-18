@@ -31,7 +31,8 @@ public class InfoSchemaBatchCreator implements BatchCreator<InfoSchemaSubScan>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, InfoSchemaSubScan config, List<RecordBatch> children) throws ExecutionSetupException {
+  public ScanBatch getBatch(FragmentContext context, InfoSchemaSubScan config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     RecordReader rr = config.getTable().getRecordReader(context.getRootSchema(), config.getFilter());
     return new ScanBatch(config, context, Collections.singleton(rr).iterator());
   }

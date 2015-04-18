@@ -23,17 +23,12 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
  * A FragmentRoot is a node which is the last processing node in a query plan. FragmentTerminals include Exchange
  * output nodes and storage nodes.  They are there driving force behind the completion of a query.
  */
-public interface RootExec {
+public interface RootExec extends AutoCloseable {
   /**
    * Do the next batch of work.
    * @return Whether or not additional batches of work are necessary.  False means that this fragment is done.
    */
   public boolean next();
-
-  /**
-   * Inform all children to clean up and go away.
-   */
-  public void stop();
 
   /**
    * Inform sender that receiving fragment is finished and doesn't need any more data

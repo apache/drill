@@ -187,8 +187,8 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
 
   @Override
-  public void cleanup(){
-    super.cleanup();
+  public void close(){
+    super.close();
   }
 
   private class StraightCopier implements Copier{

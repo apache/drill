@@ -31,7 +31,8 @@ public class IteratorValidatorCreator implements BatchCreator<IteratorValidator>
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidatorCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, IteratorValidator config, List<RecordBatch> children)
+  public IteratorValidatorBatchIterator getBatch(FragmentContext context, IteratorValidator config,
+      List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new IteratorValidatorBatchIterator(children.iterator().next());

@@ -34,7 +34,8 @@ public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockScanBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, MockSubScanPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+  public ScanBatch getBatch(FragmentContext context, MockSubScanPOP config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<MockScanEntry> entries = config.getReadEntries();
     List<RecordReader> readers = Lists.newArrayList();

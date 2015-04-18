@@ -31,7 +31,8 @@ public class TopNSortBatchCreator implements BatchCreator<TopN>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNSortBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, TopN config, List<RecordBatch> children) throws ExecutionSetupException {
+  public TopNBatch getBatch(FragmentContext context, TopN config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new TopNBatch(config, context, children.iterator().next());
   }

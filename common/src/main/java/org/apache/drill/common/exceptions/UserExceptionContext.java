@@ -17,11 +17,11 @@
  */
 package org.apache.drill.common.exceptions;
 
-import org.apache.drill.exec.proto.CoordinationProtos;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import org.apache.drill.exec.proto.CoordinationProtos;
 
 /**
  * Holds context information about a DrillUserException. We can add structured context information that will added
@@ -141,7 +141,7 @@ class UserExceptionContext {
     }
 
     // add identification infos
-    sb.append("\n[");
+    sb.append("\n[Error Id: ");
     sb.append(errorId).append(" ");
     if(endpoint != null) {
       sb.append("on ")

@@ -17,7 +17,11 @@
  ******************************************************************************/
 package org.apache.drill.exec.fn.interp;
 
-import com.google.common.collect.Lists;
+import static org.junit.Assert.assertEquals;
+
+import java.nio.ByteBuffer;
+import java.util.List;
+
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -36,6 +40,7 @@ import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryDateTimeInfo;
+import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.record.MaterializedField;
@@ -49,10 +54,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.collect.Lists;
 
 public class ExpressionInterpreterTest  extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionInterpreterTest.class);
@@ -170,7 +172,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     MockGroupScanPOP.MockScanEntry entry = new MockGroupScanPOP.MockScanEntry(10, columns);
     MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", java.util.Collections.singletonList(entry));
 
-    RecordBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
+    ScanBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
 
     batch.next();
 
@@ -184,13 +186,13 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     showValueVectorContent(vv);
 
     vv.clear();
-    batch.cleanup();
+    batch.close();
     batch.getContext().close();
     bit1.close();
   }
 
 
-  private RecordBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP, BitControl.PlanFragment planFragment) {
+  private ScanBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP, BitControl.PlanFragment planFragment) {
     List<RecordBatch> children = Lists.newArrayList();
     MockScanBatchCreator creator = new MockScanBatchCreator();
 

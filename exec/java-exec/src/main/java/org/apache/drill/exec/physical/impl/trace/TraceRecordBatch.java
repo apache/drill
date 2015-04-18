@@ -155,7 +155,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     /* Release the selection vector */
     if (sv != null) {
       sv.clear();
@@ -167,8 +167,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     } catch (IOException e) {
       logger.error("Unable to close file descriptors for file: " + getFileName());
     }
-    super.cleanup();
-    incoming.cleanup();
+    super.close();
   }
 
 }

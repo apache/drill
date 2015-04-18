@@ -17,8 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
-import com.google.common.collect.Lists;
-import com.sun.codemodel.JExpr;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -49,8 +50,8 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
 
-import java.io.IOException;
-import java.util.List;
+import com.google.common.collect.Lists;
+import com.sun.codemodel.JExpr;
 
 /**
  * support for OVER(PARTITION BY expression1,expression2,... [ORDER BY expressionA, expressionB,...])
@@ -333,13 +334,12 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     if (framer != null) {
       framer.cleanup();
       framer = null;
     }
-    super.cleanup();
-    incoming.cleanup();
+    super.close();
   }
 
   @Override

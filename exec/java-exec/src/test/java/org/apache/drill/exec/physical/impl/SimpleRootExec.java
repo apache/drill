@@ -101,7 +101,6 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
     switch (incoming.next()) {
     case NONE:
     case STOP:
-      incoming.cleanup();
       return false;
     default:
       return true;
@@ -109,8 +108,8 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
   }
 
   @Override
-  public void stop() {
-    screenRoot.stop();
+  public void close() throws Exception {
+    screenRoot.close();
   }
 
   @Override

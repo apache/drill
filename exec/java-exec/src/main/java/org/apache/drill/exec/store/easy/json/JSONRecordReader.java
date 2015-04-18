@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;

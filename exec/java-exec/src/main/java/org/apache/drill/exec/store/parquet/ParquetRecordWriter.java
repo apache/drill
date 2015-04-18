@@ -99,7 +99,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException{
     super();
-    this.oContext=new OperatorContext(writer, context, true);
+    this.oContext = context.newOperatorContext(writer, true);
   }
 
   @Override
@@ -330,9 +330,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
     if (pageStore != null) {
       ColumnChunkPageWriteStoreExposer.close(pageStore);
-    }
-    if(oContext!=null){
-      oContext.close();
     }
 
     if (!hasRecords) {

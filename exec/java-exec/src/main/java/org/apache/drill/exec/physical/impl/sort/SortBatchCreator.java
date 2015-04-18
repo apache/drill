@@ -31,7 +31,8 @@ public class SortBatchCreator implements BatchCreator<Sort>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, Sort config, List<RecordBatch> children) throws ExecutionSetupException {
+  public SortBatch getBatch(FragmentContext context, Sort config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new SortBatch(config, context, children.iterator().next());
   }

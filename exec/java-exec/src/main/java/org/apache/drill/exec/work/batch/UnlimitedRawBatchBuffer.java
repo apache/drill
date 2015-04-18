@@ -105,9 +105,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   public void cleanup() {
     if (!isFinished() && context.shouldContinue()) {
       final String msg = String.format("Cleanup before finished. " + (fragmentCount - streamCounter) + " out of " + fragmentCount + " streams have finished.");
-      logger.error(msg);
       final IllegalStateException e = new IllegalStateException(msg);
-      context.fail(e);
       throw e;
     }
 

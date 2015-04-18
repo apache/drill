@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -27,14 +28,15 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.validate.IteratorValidatorInjector;
+import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.util.AssertionUtil;
+import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.hadoop.security.UserGroupInformation;
 
 /**
  * Create RecordBatch tree (PhysicalOperator implementations) for a given PhysicalOperator tree.
@@ -42,15 +44,23 @@ import org.apache.hadoop.security.UserGroupInformation;
 public class ImplCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImplCreator.class);
 
-  private static final ImplCreator INSTANCE = new ImplCreator();
+  private RootExec root = null;
+  private LinkedList<CloseableRecordBatch> operators = Lists.newLinkedList();
 
   private ImplCreator() {}
+
+  private List<CloseableRecordBatch> getOperators() {
+    return operators;
+  }
 
   /**
    * Create and return fragment RootExec for given FragmentRoot. RootExec has one or more RecordBatches as children
    * (which may contain child RecordBatches and so on).
-   * @param context FragmentContext.
-   * @param root FragmentRoot.
+   *
+   * @param context
+   *          FragmentContext.
+   * @param root
+   *          FragmentRoot.
    * @return RootExec of fragment.
    * @throws ExecutionSetupException
    */
@@ -61,10 +71,16 @@ public class ImplCreator {
     if (AssertionUtil.isAssertionsEnabled()) {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
-
+    final ImplCreator creator = new ImplCreator();
     Stopwatch watch = new Stopwatch();
     watch.start();
-    final RootExec rootExec = INSTANCE.getRootExec(root, context);
+    final RootExec rootExec = creator.getRootExec(root, context);
+
+    // skip over this for SimpleRootExec (testing)
+    if (rootExec instanceof BaseRootExec) {
+      ((BaseRootExec) rootExec).setOperators(creator.getOperators());
+    }
+
     logger.debug("Took {} ms to create RecordBatch tree", watch.elapsed(TimeUnit.MILLISECONDS));
     if (rootExec == null) {
       throw new ExecutionSetupException(
@@ -72,6 +88,7 @@ public class ImplCreator {
     }
 
     return rootExec;
+
   }
 
   /** Create RootExec and its children (RecordBatches) for given FragmentRoot */
@@ -96,6 +113,7 @@ public class ImplCreator {
     }
   }
 
+
   /** Create a RecordBatch and its children for given PhysicalOperator */
   private RecordBatch getRecordBatch(final PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
     Preconditions.checkNotNull(op);
@@ -107,7 +125,10 @@ public class ImplCreator {
       try {
         return proxyUgi.doAs(new PrivilegedExceptionAction<RecordBatch>() {
           public RecordBatch run() throws Exception {
-            return ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(context, op, childRecordBatches);
+            final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(
+                context, op, childRecordBatches);
+            operators.addFirst(batch);
+            return batch;
           }
         });
       } catch (InterruptedException | IOException e) {
@@ -116,7 +137,10 @@ public class ImplCreator {
         throw new ExecutionSetupException(errMsg, e);
       }
     } else {
-      return ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(context, op, childRecordBatches);
+      final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(context,
+          op, childRecordBatches);
+      operators.addFirst(batch);
+      return batch;
     }
   }
 
@@ -141,4 +165,5 @@ public class ImplCreator {
 
     return children;
   }
+
 }

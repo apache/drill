@@ -80,7 +80,7 @@ public class TestComparisonFunctions extends ExecTest {
 //      }
     }
 
-    exec.stop();
+    exec.close();
     context.close();
 
     if (context.getFailureCause() != null) {

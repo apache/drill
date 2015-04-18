@@ -86,14 +86,14 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
 
   @Override
-  public void cleanup() {
+  public void close() {
     if (sv2 != null) {
       sv2.clear();
     }
     if (sv4 != null) {
       sv4.clear();
     }
-    super.cleanup();
+    super.close();
   }
 
   @Override

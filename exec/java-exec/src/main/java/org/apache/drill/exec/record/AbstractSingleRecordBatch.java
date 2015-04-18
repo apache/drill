@@ -115,13 +115,6 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   }
 
   @Override
-  public void cleanup() {
-//    logger.debug("Cleaning up.");
-    super.cleanup();
-    incoming.cleanup();
-  }
-
-  @Override
   public BatchSchema getSchema() {
     if (container.hasSchema()) {
       return container.getSchema();

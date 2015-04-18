@@ -37,9 +37,9 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.record.RawFragmentBatchProvider;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
@@ -50,7 +50,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
-public class UnorderedReceiverBatch implements RecordBatch {
+public class UnorderedReceiverBatch implements CloseableRecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiverBatch.class);
 
   private final RecordBatchLoader batchLoader;
@@ -60,7 +60,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
   private final OperatorStats stats;
   private boolean first = true;
   private final UnorderedReceiver config;
-  OperatorContext oContext;
+  private final OperatorContext oContext;
 
   public enum Metric implements MetricDef {
     BYTES_RECEIVED,
@@ -77,7 +77,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
     this.context = context;
     // In normal case, batchLoader does not require an allocator. However, in case of splitAndTransfer of a value vector,
     // we may need an allocator for the new offset vector. Therefore, here we pass the context's allocator to batchLoader.
-    oContext = new OperatorContext(config, context, false);
+    oContext = context.newOperatorContext(config, false);
     this.batchLoader = new RecordBatchLoader(oContext.getAllocator());
 
     this.stats = context.getStats().getOperatorStats(new OpProfileDef(config.getOperatorId(), config.getOperatorType(), 1), null);
@@ -194,10 +194,9 @@ public class UnorderedReceiverBatch implements RecordBatch {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     batchLoader.clear();
     fragProvider.cleanup();
-    oContext.close();
   }
 
   @Override

@@ -93,7 +93,7 @@ public class TestTraceOutputDump extends ExecTest {
         while(exec.next()){
         }
 
-        exec.stop();
+        exec.close();
 
         if(context.getFailureCause() != null){
             throw context.getFailureCause();

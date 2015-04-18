@@ -20,15 +20,15 @@ package org.apache.drill.exec.physical.impl.union;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import com.google.common.collect.Lists;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -38,6 +38,7 @@ import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -53,7 +54,8 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.physical.config.UnionAll;
+
+import com.google.common.collect.Lists;
 
 public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionAllRecordBatch.class);
@@ -130,12 +132,6 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   @Override
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
-  }
-
-  @Override
-  public void cleanup() {
-    super.cleanup();
-    unionAllInput.cleanup();
   }
 
   private void setValueCount(int count) {
@@ -503,11 +499,6 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
     public RecordBatch getRightRecordBatch() {
       return rightSide.getRecordBatch();
-    }
-
-    public void cleanup() {
-      leftSide.getRecordBatch().cleanup();
-      rightSide.getRecordBatch().cleanup();
     }
 
     private class OneSideInput {

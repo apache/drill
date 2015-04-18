@@ -65,7 +65,7 @@ public class RunRootExec {
       }
       System.out.println("ENDITER: " + i);
       System.out.println("TIME: " + w.elapsed(TimeUnit.MILLISECONDS) + "ms");
-      exec.stop();
+      exec.close();
     }
     context.close();
     bit.close();

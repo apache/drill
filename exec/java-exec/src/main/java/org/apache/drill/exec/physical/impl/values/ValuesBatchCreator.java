@@ -34,7 +34,7 @@ import com.google.common.collect.Iterators;
 
 public class ValuesBatchCreator implements BatchCreator<Values> {
   @Override
-  public RecordBatch getBatch(FragmentContext context, Values config, List<RecordBatch> children)
+  public ScanBatch getBatch(FragmentContext context, Values config, List<RecordBatch> children)
       throws ExecutionSetupException {
     assert children.isEmpty();
 

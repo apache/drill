@@ -40,7 +40,7 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
       .getLogger(MongoScanBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan,
+  public ScanBatch getBatch(FragmentContext context, MongoSubScan subScan,
       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();

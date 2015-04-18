@@ -30,7 +30,6 @@ import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
-import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
@@ -135,7 +134,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         return aggregator.getOutcome();
       case UPDATE_AGGREGATOR:
         context.fail(new SchemaChangeException("Hash aggregate does not support schema changes"));
-        cleanup();
+        close();
         killIncoming(false);
         return IterOutcome.STOP;
       default:
@@ -273,12 +272,11 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     if (aggregator != null) {
       aggregator.cleanup();
     }
-    super.cleanup();
-    incoming.cleanup();
+    super.close();
   }
 
   @Override

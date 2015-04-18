@@ -39,7 +39,7 @@ public class SystemTableBatchCreator implements BatchCreator<SystemTableScan> {
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public RecordBatch getBatch(final FragmentContext context, final SystemTableScan scan,
+  public ScanBatch getBatch(final FragmentContext context, final SystemTableScan scan,
                               final List<RecordBatch> children)
     throws ExecutionSetupException {
     final SystemTable table = scan.getTable();

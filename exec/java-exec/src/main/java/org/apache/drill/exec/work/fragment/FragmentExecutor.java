@@ -272,12 +272,14 @@ public class FragmentExecutor implements Runnable {
 
   private void closeOutResources() {
 
+    // first close the operators and release all memory.
     try {
-      root.stop(); // TODO make this an AutoCloseable so we can detect lack of closure
+      root.close();
     } catch (final Exception e) {
       fail(e);
     }
 
+    // then close the fragment context.
     fragmentContext.close();
 
   }

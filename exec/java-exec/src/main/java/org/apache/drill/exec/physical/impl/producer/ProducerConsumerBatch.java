@@ -187,7 +187,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     stop = true;
     try {
       cleanUpLatch.await();
@@ -195,9 +195,8 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
       logger.warn("Interrupted while waiting for producer to clean up first. I will try to clean up now...", e);
       // TODO InterruptedException
     } finally {
-      super.cleanup();
+      super.close();
       clearQueue();
-      incoming.cleanup();
     }
   }
 

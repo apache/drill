@@ -29,7 +29,8 @@ import com.google.common.collect.Iterables;
 
 public class ProducerConsumerBatchCreator implements BatchCreator<ProducerConsumer> {
   @Override
-  public RecordBatch getBatch(FragmentContext context, ProducerConsumer config, List<RecordBatch> children) throws ExecutionSetupException {
+  public ProducerConsumerBatch getBatch(FragmentContext context, ProducerConsumer config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     return new ProducerConsumerBatch(config, context, Iterables.getOnlyElement(children));
   }
 }

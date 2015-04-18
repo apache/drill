@@ -30,7 +30,6 @@ import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
-import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
@@ -177,7 +176,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         return outcome;
       case UPDATE_AGGREGATOR:
         context.fail(new SchemaChangeException("Streaming aggregate does not support schema changes"));
-        cleanup();
+        close();
         killIncoming(false);
         return IterOutcome.STOP;
       default:
@@ -409,9 +408,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   }
 
   @Override
-  public void cleanup() {
-    super.cleanup();
-    incoming.cleanup();
+  public void close() {
+    super.close();
   }
 
   @Override

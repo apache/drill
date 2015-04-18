@@ -74,7 +74,7 @@ public class TestSimpleFilter extends ExecTest {
       assertEquals(50, exec.getRecordCount());
     }
 
-    exec.stop();
+    exec.close();
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -106,7 +106,7 @@ public class TestSimpleFilter extends ExecTest {
       }
       recordCount += exec.getSelectionVector4().getCount();
     }
-    exec.stop();
+    exec.close();
     assertEquals(50, recordCount);
 
     if(context.getFailureCause() != null){

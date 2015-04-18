@@ -34,7 +34,8 @@ import com.google.common.collect.Lists;
 public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, HiveSubScan config, List<RecordBatch> children) throws ExecutionSetupException {
+  public ScanBatch getBatch(FragmentContext context, HiveSubScan config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     List<RecordReader> readers = Lists.newArrayList();
     Table table = config.getTable();
     List<InputSplit> splits = config.getInputSplits();

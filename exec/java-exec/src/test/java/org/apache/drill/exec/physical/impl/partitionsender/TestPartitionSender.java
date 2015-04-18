@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.partitionsender;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,8 +49,8 @@ import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.pop.PopUnitTestBase;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -363,8 +366,8 @@ public class TestPartitionSender extends PlanTestBase {
       super(context, incoming, operator);
     }
 
-    public void close() {
-      oContext.close();
+    public void close() throws Exception {
+      ((AutoCloseable) oContext).close();
     }
 
     public int getNumberPartitions() {

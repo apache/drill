@@ -88,7 +88,7 @@ public class DumpCatTest  extends ExecTest{
       }
       assertTrue(!context.isFailed());
 
-      exec.stop();
+      exec.close();
 
       FragmentHandle handle = context.getHandle();
 

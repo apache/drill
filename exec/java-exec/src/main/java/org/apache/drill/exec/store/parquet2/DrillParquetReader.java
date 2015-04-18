@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
@@ -69,9 +70,9 @@ import parquet.schema.MessageType;
 import parquet.schema.Type;
 import parquet.schema.PrimitiveType;
 
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import parquet.schema.Types;
 
 public class DrillParquetReader extends AbstractRecordReader {

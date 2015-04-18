@@ -18,7 +18,6 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -117,7 +116,5 @@ public interface RecordBatch extends VectorAccessible {
    * @return
    */
   public WritableBatch getWritableBatch();
-
-  public void cleanup();
 
 }

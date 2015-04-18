@@ -35,7 +35,6 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
@@ -101,7 +100,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
   public PartitionSenderRootExec(FragmentContext context,
                                  RecordBatch incoming,
                                  HashPartitionSender operator) throws OutOfMemoryException {
-    super(context, new OperatorContext(operator, context, null, false), operator);
+    super(context, context.newOperatorContext(operator, null, false), operator);
     this.incoming = incoming;
     this.operator = operator;
     this.context = context;
@@ -141,8 +140,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
   public boolean innerNext() {
 
     if (!ok) {
-      stop();
-
       return false;
     }
 
@@ -322,17 +319,15 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
   }
 
-  public void stop() {
+  public void close() throws Exception {
     logger.debug("Partition sender stopping.");
-    super.stop();
+    super.close();
     ok = false;
     if (partitioner != null) {
       updateAggregateStats();
       partitioner.clear();
     }
 
-    oContext.close();
-    incoming.cleanup();
   }
 
   public void sendEmptyBatch(boolean isLast) {

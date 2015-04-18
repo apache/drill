@@ -23,7 +23,6 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.BroadcastSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
@@ -62,7 +61,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
   public BroadcastSenderRootExec(FragmentContext context,
                                  RecordBatch incoming,
                                  BroadcastSender config) throws OutOfMemoryException {
-    super(context, new OperatorContext(config, context, null, false), config);
+    super(context, context.newOperatorContext(config, null, false), config);
     this.ok = true;
     this.context = context;
     this.incoming = incoming;
@@ -153,10 +152,4 @@ public class BroadcastSenderRootExec extends BaseRootExec {
     stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount());
   }
 
-  @Override
-  public void stop() {
-    super.stop();
-    oContext.close();
-    incoming.cleanup();
-  }
 }

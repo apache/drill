@@ -31,7 +31,8 @@ public class FilterBatchCreator implements BatchCreator<Filter>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, Filter config, List<RecordBatch> children) throws ExecutionSetupException {
+  public FilterRecordBatch getBatch(FragmentContext context, Filter config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new FilterRecordBatch(config, children.iterator().next(), context);
   }

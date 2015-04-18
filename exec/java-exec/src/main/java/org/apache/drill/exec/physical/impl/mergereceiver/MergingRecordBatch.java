@@ -44,7 +44,6 @@ import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
@@ -130,7 +129,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   public MergingRecordBatch(final FragmentContext context,
                             final MergingReceiverPOP config,
                             final RawFragmentBatchProvider[] fragProviders) throws OutOfMemoryException {
-    super(config, context, true, new OperatorContext(config, context, false));
+    super(config, context, true, context.newOperatorContext(config, false));
     //super(config, context);
     this.fragProviders = fragProviders;
     this.context = context;
@@ -487,7 +486,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     if (sendUpstream) {
       informSenders();
     } else {
-      cleanup();
+      close();
       for (final RawFragmentBatchProvider provider : fragProviders) {
         provider.kill(context);
       }
@@ -697,7 +696,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     outgoingContainer.clear();
     if (batchLoaders != null) {
       for (final RecordBatchLoader rbl : batchLoaders) {
@@ -706,7 +705,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         }
       }
     }
-    oContext.close();
     if (fragProviders != null) {
       for (final RawFragmentBatchProvider f : fragProviders) {
         f.cleanup();

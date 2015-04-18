@@ -30,7 +30,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
-public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements RecordBatch{
+public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements CloseableRecordBatch {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
   protected final VectorContainer container; //= new VectorContainer();
@@ -42,14 +42,15 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected BatchState state;
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context) throws OutOfMemoryException {
-    this(popConfig, context, true, new OperatorContext(popConfig, context, true));
+    this(popConfig, context, true, context.newOperatorContext(popConfig, true));
   }
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema) throws OutOfMemoryException {
-    this(popConfig, context, buildSchema, new OperatorContext(popConfig, context, true));
+    this(popConfig, context, buildSchema, context.newOperatorContext(popConfig, true));
   }
 
-  protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema, final OperatorContext oContext) throws OutOfMemoryException {
+  protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema,
+      final OperatorContext oContext) throws OutOfMemoryException {
     super();
     this.context = context;
     this.popConfig = popConfig;
@@ -171,9 +172,8 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   protected abstract void killIncoming(boolean sendUpstream);
 
-  public void cleanup(){
+  public void close(){
     container.clear();
-    oContext.close();
   }
 
 

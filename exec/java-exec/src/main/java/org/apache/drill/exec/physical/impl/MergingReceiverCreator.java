@@ -32,7 +32,7 @@ public class MergingReceiverCreator implements BatchCreator<MergingReceiverPOP> 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergingReceiverCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context,
+  public MergingRecordBatch getBatch(FragmentContext context,
                               MergingReceiverPOP receiver,
                               List<RecordBatch> children)
       throws ExecutionSetupException, OutOfMemoryException {

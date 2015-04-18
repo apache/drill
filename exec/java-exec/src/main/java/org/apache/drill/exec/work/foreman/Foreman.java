@@ -212,19 +212,23 @@ public class Foreman implements Runnable {
       moveToState(QueryState.FAILED,
           new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
     } catch (final OutOfMemoryError e) {
-      /*
-       * FragmentExecutors use a DrillbitStatusListener to watch out for the death of their query's Foreman.
-       * So, if we die here, they should get notified about that, and cancel themselves; we don't have to
-       * attempt to notify them, which might not work under these conditions.
-       */
-      /*
-       * TODO this will kill everything in this JVM; why can't we just free all allocation
-       * associated with this Foreman and allow others to continue?
-       */
-      System.out.println("Out of memory, exiting.");
-      e.printStackTrace();
-      System.out.flush();
-      System.exit(-1);
+      if ("Direct buffer memory".equals(e.getMessage())) {
+        moveToState(QueryState.FAILED,
+            UserException.resourceError(e)
+                .message("One or more nodes ran out of memory while executing the query.")
+                .build());
+      } else {
+        /*
+         * FragmentExecutors use a DrillbitStatusListener to watch out for the death of their query's Foreman. So, if we
+         * die here, they should get notified about that, and cancel themselves; we don't have to attempt to notify
+         * them, which might not work under these conditions.
+         */
+        System.out.println("Node ran out of Heap memory, exiting.");
+        e.printStackTrace();
+        System.out.flush();
+        System.exit(-1);
+      }
+
     } finally {
       /*
        * Begin accepting external events.

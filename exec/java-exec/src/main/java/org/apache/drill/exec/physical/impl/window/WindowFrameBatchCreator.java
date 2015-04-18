@@ -18,19 +18,21 @@
 
 package org.apache.drill.exec.physical.impl.window;
 
-import com.google.common.base.Preconditions;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
 
 public class WindowFrameBatchCreator implements BatchCreator<WindowPOP> {
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, WindowPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+  public WindowFrameRecordBatch getBatch(FragmentContext context, WindowPOP config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new WindowFrameRecordBatch(config, context, children.iterator().next());
   }

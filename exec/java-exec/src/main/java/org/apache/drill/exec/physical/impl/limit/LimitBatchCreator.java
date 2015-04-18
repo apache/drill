@@ -29,7 +29,8 @@ import com.google.common.collect.Iterables;
 
 public class LimitBatchCreator implements BatchCreator<Limit> {
   @Override
-  public RecordBatch getBatch(FragmentContext context, Limit config, List<RecordBatch> children) throws ExecutionSetupException {
+  public LimitRecordBatch getBatch(FragmentContext context, Limit config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     return new LimitRecordBatch(config, context, Iterables.getOnlyElement(children));
   }
 }

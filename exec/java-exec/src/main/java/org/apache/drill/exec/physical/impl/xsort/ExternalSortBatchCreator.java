@@ -31,7 +31,8 @@ public class ExternalSortBatchCreator implements BatchCreator<ExternalSort>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, ExternalSort config, List<RecordBatch> children) throws ExecutionSetupException {
+  public ExternalSortBatch getBatch(FragmentContext context, ExternalSort config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new ExternalSortBatch(config, context, children.iterator().next());
   }

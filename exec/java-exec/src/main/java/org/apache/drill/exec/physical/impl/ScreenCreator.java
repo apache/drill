@@ -81,12 +81,10 @@ public class ScreenCreator implements RootCreator<Screen>{
       logger.trace("Screen Outcome {}", outcome);
       switch (outcome) {
       case STOP:
-        this.internalStop();
         return false;
       case NONE:
         if (firstBatch) {
           // this is the only data message sent to the client and may contain the schema
-          this.internalStop();
           QueryWritableBatch batch;
           QueryData header = QueryData.newBuilder() //
             .setQueryId(context.getHandle().getQueryId()) //
@@ -128,21 +126,6 @@ public class ScreenCreator implements RootCreator<Screen>{
 
     public void updateStats(QueryWritableBatch queryBatch) {
       stats.addLongStat(Metric.BYTES_SENT, queryBatch.getByteCount());
-    }
-
-
-    private void internalStop(){
-      oContext.close();
-      incoming.cleanup();
-    }
-
-    @Override
-    public void stop() {
-      super.stop();
-      if (!oContext.isClosed()) {
-        internalStop();
-      }
-      injector.injectPause(context.getExecutionControls(), "send-complete", logger);
     }
 
     RecordBatch getIncoming() {

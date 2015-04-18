@@ -31,7 +31,8 @@ public class StreamingAggBatchCreator implements BatchCreator<StreamingAggregate
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, StreamingAggregate config, List<RecordBatch> children) throws ExecutionSetupException {
+  public StreamingAggBatch getBatch(FragmentContext context, StreamingAggregate config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new StreamingAggBatch(config, children.iterator().next(), context);
   }

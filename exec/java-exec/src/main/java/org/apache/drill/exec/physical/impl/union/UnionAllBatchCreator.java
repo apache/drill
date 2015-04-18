@@ -31,7 +31,8 @@ public class UnionAllBatchCreator implements BatchCreator<UnionAll>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionAllBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, UnionAll config, List<RecordBatch> children) throws ExecutionSetupException {
+  public UnionAllRecordBatch getBatch(FragmentContext context, UnionAll config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() >= 1);
     return new UnionAllRecordBatch(config, children, context);
   }

@@ -516,7 +516,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     if (hjHelper != null) {
       hjHelper.clear();
     }
@@ -529,9 +529,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     if (hashTable != null) {
       hashTable.clear();
     }
-    super.cleanup();
-    right.cleanup();
-    left.cleanup();
+    super.close();
   }
 
 }

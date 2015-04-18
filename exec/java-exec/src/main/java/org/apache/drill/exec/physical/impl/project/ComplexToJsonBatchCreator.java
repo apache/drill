@@ -32,7 +32,8 @@ public class ComplexToJsonBatchCreator implements BatchCreator<ComplexToJson> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexToJsonBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, ComplexToJson flatten, List<RecordBatch> children) throws ExecutionSetupException {
+  public ProjectRecordBatch getBatch(FragmentContext context, ComplexToJson flatten, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new ProjectRecordBatch(new Project(null, flatten.getChild()),
                                   children.iterator().next(),

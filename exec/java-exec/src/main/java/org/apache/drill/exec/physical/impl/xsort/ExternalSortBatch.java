@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import com.google.common.base.Joiner;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
@@ -68,6 +67,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -145,7 +145,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     if (batchGroups != null) {
       for (BatchGroup group: batchGroups) {
         try {
@@ -165,8 +165,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       copier.cleanup();
     }
     copierAllocator.close();
-    super.cleanup();
-    incoming.cleanup();
+    super.close();
   }
 
   public void buildSchema() throws SchemaChangeException {

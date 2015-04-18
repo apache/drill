@@ -38,7 +38,6 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -254,14 +253,6 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   protected void killIncoming(boolean sendUpstream) {
     left.kill(sendUpstream);
     right.kill(sendUpstream);
-  }
-
-  @Override
-  public void cleanup() {
-      super.cleanup();
-
-      left.cleanup();
-      right.cleanup();
   }
 
   private void generateDoCompareNextLeft(ClassGenerator<JoinWorker> cg, JVar incomingRecordBatch,

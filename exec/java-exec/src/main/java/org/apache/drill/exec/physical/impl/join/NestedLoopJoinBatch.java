@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JVar;
+import java.io.IOException;
+import java.util.LinkedList;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
@@ -40,12 +40,11 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractContainerVector;
-import com.google.common.base.Preconditions;
 
-import java.io.IOException;
-import java.util.LinkedList;
+import com.google.common.base.Preconditions;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JVar;
 
 /*
  * RecordBatch implementation for the nested loop join operator
@@ -309,12 +308,10 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     rightContainer.clear();
     rightCounts.clear();
-    super.cleanup();
-    right.cleanup();
-    left.cleanup();
+    super.close();
   }
 
   @Override

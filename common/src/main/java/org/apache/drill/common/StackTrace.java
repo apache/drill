@@ -56,7 +56,7 @@ public class StackTrace {
         writer.write('.');
         writer.write(ste.getMethodName());
         writer.write(':');
-        writer.write(ste.getLineNumber());
+        writer.write(Integer.toString(ste.getLineNumber()));
         writer.write('\n');
       }
     } catch(IOException e) {

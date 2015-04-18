@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.FlattenPOP;
-import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -32,7 +31,8 @@ public class FlattenBatchCreator implements BatchCreator<FlattenPOP>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, FlattenPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+  public FlattenRecordBatch getBatch(FragmentContext context, FlattenPOP config, List<RecordBatch> children)
+      throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new FlattenRecordBatch(config, children.iterator().next(), context);
   }
