@@ -365,7 +365,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.17</version>
           <configuration>
-            <argLine>-Xms512m -Xmx2g -Ddrill.exec.http.enabled=false
+            <argLine>-Xms512m -Xmx3g -Ddrill.exec.http.enabled=false
               -Ddrill.exec.sys.store.provider.local.write=false
               -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
               -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=3072M
