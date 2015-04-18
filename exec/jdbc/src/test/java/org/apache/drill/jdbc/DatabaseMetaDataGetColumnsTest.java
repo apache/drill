@@ -2804,4 +2804,4 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTest {
                 rowsMetadata.isNullable( 24 ), equalTo( columnNoNulls ) );
   }
 
-} // class DatabaseMetaDataTest
+} // class DatabaseMetaGetColumnsDataTest
