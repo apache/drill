@@ -19,8 +19,8 @@ Executes statements based on one or more equality conditions.
 ## Usage Notes
 Drill processes the CASE expression as follows:
 
-1. Evaluates the Boolean expression in each WHEN clause until finding one that returns true. If none returns true, Drill executes the ELSE statement(s). If ELSE is not present, an exception occurs
-2. Executes the statements in the WHEN clause that return true.
+1. Evaluates the Boolean expression in each WHEN clause that returns true, or falls through to the ELSE statement for each WHEN clause that returns false.If ELSE is not present and a WHEN clause returns false, an exception occurs.
+2. Executes each statement in the WHEN clause that returns true or executes each ELSE statement for a WHEN clause that returns false. 
 3. Exits the CASE statement.
 
 ## Example

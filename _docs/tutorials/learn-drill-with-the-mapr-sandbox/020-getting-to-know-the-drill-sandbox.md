@@ -18,7 +18,7 @@ Drill includes SQLLine, a JDBC utility for connecting to relational databases an
     sqlline version 1.1.6
     0: jdbc:drill:>
 
-In distributed mode, the warden attempts to start Drill automatically when Drill is defined as service.
+In distributed mode, [Warden](http://doc.mapr.com/display/MapR/Apache+Drill+Installation+Overview) attempts to start Drill automatically when Drill is defined as service.
 
 [Starting SQLLine outside the sandbox]({{ site.baseurl }}/docs/starting-stopping-drill) for use with Drill requires entering more options than are shown here. 
 
