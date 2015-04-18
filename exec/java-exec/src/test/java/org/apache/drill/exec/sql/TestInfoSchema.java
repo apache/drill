@@ -285,18 +285,38 @@ public class TestInfoSchema extends BaseTestQuery {
         .sqlQuery("USE dfs_test.`default`")
         .unOrdered()
         .baselineColumns("ok", "summary")
-        .baselineValues(true, "Default schema changed to 'dfs_test.default'")
+        .baselineValues(true, "Default schema changed to [dfs_test.default]")
+        .go();
+  }
+
+  @Test
+  public void useSubSchemaWithinSchema() throws Exception{
+    testBuilder()
+        .sqlQuery("USE dfs_test")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, "Default schema changed to [dfs_test]")
+        .go();
+
+    testBuilder()
+        .sqlQuery("USE tmp")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, "Default schema changed to [dfs_test.tmp]")
+        .go();
+
+    testBuilder()
+        .sqlQuery("USE dfs.`default`")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, "Default schema changed to [dfs.default]")
         .go();
   }
 
   @Test
   public void useSchemaNegative() throws Exception{
-    testBuilder()
-        .sqlQuery("USE invalid.schema")
-        .unOrdered()
-        .baselineColumns("ok", "summary")
-        .baselineValues(false, "Failed to change default schema to 'invalid.schema'")
-        .go();
+    errorMsgTestHelper("USE invalid.schema",
+        "Schema [invalid.schema] is not valid with respect to either root schema or current default schema.");
   }
 
   // Tests using backticks around the complete schema path

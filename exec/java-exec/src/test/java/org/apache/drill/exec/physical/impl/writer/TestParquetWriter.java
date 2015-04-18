@@ -477,52 +477,6 @@ public class TestParquetWriter extends BaseTestQuery {
     }
   }
 
-  @Test // DRILL-2422
-  public void createTableWhenATableWithSameNameAlreadyExists() throws Exception{
-    final String newTblName = "createTableWhenTableAlreadyExists";
-
-    try {
-      test("USE dfs_test.tmp");
-      final String ctas = String.format("CREATE TABLE %s AS SELECT * from cp.`region.json`", newTblName);
-
-      test(ctas);
-
-      testBuilder()
-          .unOrdered()
-          .sqlQuery(ctas)
-          .baselineColumns("ok", "summary")
-          .baselineValues(false,
-              String.format("Error: A table or view with given name [%s] already exists in schema [%s]",
-                  newTblName, "dfs_test.tmp"))
-          .go();
-    } finally {
-      deleteTableIfExists(newTblName);
-    }
-  }
-
-  @Test // DRILL-2422
-  public void createTableWhenAViewWithSameNameAlreadyExists() throws Exception{
-    final String newTblName = "createTableWhenAViewWithSameNameAlreadyExists";
-
-    try {
-      test("USE dfs_test.tmp");
-      final String createView = String.format("CREATE VIEW %s AS SELECT * from cp.`region.json`", newTblName);
-
-      test(createView);
-
-      testBuilder()
-          .unOrdered()
-          .sqlQuery(String.format("CREATE TABLE %s AS SELECT * FROM cp.`employee.json`", newTblName))
-          .baselineColumns("ok", "summary")
-          .baselineValues(false,
-              String.format("Error: A table or view with given name [%s] already exists in schema [%s]",
-                  newTblName, "dfs_test.tmp"))
-          .go();
-    } finally {
-      test("DROP VIEW " + newTblName);
-    }
-  }
-
   private static void deleteTableIfExists(String tableName) {
     try {
       Path path = new Path(getDfsTestTmpSchemaLocation(), tableName);

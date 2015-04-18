@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +30,8 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
 import com.google.common.base.Joiner;
@@ -88,8 +91,34 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer 
     return this;
   }
 
+  /**
+   * Create a new view given definition.
+   * @param view View info including name, definition etc.
+   * @return Returns true if an existing view is replaced with the given view. False otherwise.
+   * @throws IOException
+   */
+  public boolean createView(View view) throws IOException {
+    throw UserException.unsupportedError()
+        .message("Creating new view is not supported in schema [%s]", getSchemaPath())
+        .build();
+  }
+
+  /**
+   * Drop the view with given name.
+   *
+   * @param viewName
+   * @throws IOException
+   */
+  public void dropView(String viewName) throws IOException {
+    throw UserException.unsupportedError()
+        .message("Dropping a view is supported in schema [%s]", getSchemaPath())
+        .build();
+  }
+
   public CreateTableEntry createNewTable(String tableName) {
-    throw new UnsupportedOperationException("New tables are not allowed in this schema");
+    throw UserException.unsupportedError()
+        .message("Creating new tables is not supported in schema [%s]", getSchemaPath())
+        .build();
   }
 
   /**

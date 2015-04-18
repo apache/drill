@@ -26,8 +26,6 @@ import java.io.File;
 import java.util.List;
 
 public class TestViewSupport extends TestBaseViewSupport {
-  private static final String TEMP_SCHEMA = "dfs_test.tmp";
-
   @Test
   public void referToSchemaInsideAndOutsideView() throws Exception {
     String use = "use dfs_test.tmp;";
@@ -273,13 +271,8 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       // Try to create the view with same name in same schema.
       final String createViewSql = String.format("CREATE VIEW %s.`%s` AS %s", TEMP_SCHEMA, viewName, viewDef1);
-      testBuilder()
-          .sqlQuery(createViewSql)
-          .unOrdered()
-          .baselineColumns("ok", "summary")
-          .baselineValues(false,
-              String.format("Error: A view with given name [%s] already exists in schema [%s]", viewName, TEMP_SCHEMA))
-          .go();
+      errorMsgTestHelper(createViewSql,
+          String.format("A view with given name [%s] already exists in schema [%s]", viewName, TEMP_SCHEMA));
 
       // Try creating the view with same name in same schema, but with CREATE OR REPLACE VIEW clause
       final String viewDef2 = "SELECT sales_state_province FROM cp.`region.json` ORDER BY `region_id`";
@@ -296,7 +289,7 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       // Make sure the new view created returns the data expected.
       queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", TEMP_SCHEMA, viewName),
-          new String[]{"sales_state_province" },
+          new String[]{"sales_state_province"},
           ImmutableList.of(new Object[]{"None"})
       );
     } finally {
@@ -315,25 +308,13 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       // Try to create the view with same name in same schema.
       final String createViewSql = String.format("CREATE VIEW %s.`%s` AS %s", TEMP_SCHEMA, tableName, tableDef1);
-      testBuilder()
-          .sqlQuery(createViewSql)
-          .unOrdered()
-          .baselineColumns("ok", "summary")
-          .baselineValues(false,
-              String.format("Error: A non-view table with given name [%s] already exists in schema [%s]",
-                  tableName, TEMP_SCHEMA))
-          .go();
+      errorMsgTestHelper(createViewSql,
+          String.format("A non-view table with given name [%s] already exists in schema [%s]", tableName, TEMP_SCHEMA));
 
       // Try creating the view with same name in same schema, but with CREATE OR REPLACE VIEW clause
       final String viewDef2 = "SELECT sales_state_province FROM cp.`region.json` ORDER BY `region_id`";
-      testBuilder()
-          .sqlQuery(String.format("CREATE OR REPLACE VIEW %s.`%s` AS %s", TEMP_SCHEMA, tableName, viewDef2))
-          .unOrdered()
-          .baselineColumns("ok", "summary")
-          .baselineValues(false,
-              String.format("Error: A non-view table with given name [%s] already exists in schema [%s]",
-                  tableName, TEMP_SCHEMA))
-          .go();
+      errorMsgTestHelper(String.format("CREATE OR REPLACE VIEW %s.`%s` AS %s", TEMP_SCHEMA, tableName, viewDef2),
+          String.format("A non-view table with given name [%s] already exists in schema [%s]", tableName, TEMP_SCHEMA));
     } finally {
       FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), tableName));
     }
@@ -445,7 +426,7 @@ public class TestViewSupport extends TestBaseViewSupport {
       test("USE dfs_test");
       queryViewHelper(
           String.format("SELECT * FROM %s.`%s` ORDER BY region_id DESC LIMIT 1", "tmp", viewName),
-          baselineColumns,baselineValues);
+          baselineColumns, baselineValues);
 
     } finally {
       dropViewHelper(TEMP_SCHEMA, viewName, TEMP_SCHEMA);
@@ -485,14 +466,14 @@ public class TestViewSupport extends TestBaseViewSupport {
   public void createViewWithDuplicateColumnsInDef1() throws Exception {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s AS SELECT region_id, region_id FROM cp.`region.json`",
-        String.format("Error: Duplicate column name [%s]", "region_id")
+        String.format("Duplicate column name [%s]", "region_id")
     );
   }
 
   @Test // DRILL-2589
   public void createViewWithDuplicateColumnsInDef2() throws Exception {
     createViewErrorTestHelper("CREATE VIEW %s.%s AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
-        String.format("Error: Duplicate column name [%s]", "sales_city")
+        String.format("Duplicate column name [%s]", "sales_city")
     );
   }
 
@@ -500,7 +481,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   public void createViewWithDuplicateColumnsInDef3() throws Exception {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, regionid) AS SELECT region_id, sales_city FROM cp.`region.json`",
-        String.format("Error: Duplicate column name [%s]", "regionid")
+        String.format("Duplicate column name [%s]", "regionid")
     );
   }
 
@@ -509,7 +490,7 @@ public class TestViewSupport extends TestBaseViewSupport {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, salescity, salescity) " +
             "AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
-        String.format("Error: Duplicate column name [%s]", "salescity")
+        String.format("Duplicate column name [%s]", "salescity")
     );
   }
 
@@ -518,7 +499,7 @@ public class TestViewSupport extends TestBaseViewSupport {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, salescity, SalesCity) " +
             "AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
-        String.format("Error: Duplicate column name [%s]", "SalesCity")
+        String.format("Duplicate column name [%s]", "SalesCity")
     );
   }
 
@@ -528,7 +509,7 @@ public class TestViewSupport extends TestBaseViewSupport {
         "CREATE VIEW %s.%s " +
             "AS SELECT t1.region_id, t2.region_id FROM cp.`region.json` t1 JOIN cp.`region.json` t2 " +
             "ON t1.region_id = t2.region_id LIMIT 1",
-        String.format("Error: Duplicate column name [%s]", "region_id")
+        String.format("Duplicate column name [%s]", "region_id")
     );
   }
 
@@ -566,7 +547,7 @@ public class TestViewSupport extends TestBaseViewSupport {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, salescity) " +
             "AS SELECT region_id, sales_city, sales_region FROM cp.`region.json`",
-        "Error: view's field list and the view's query field list have different counts."
+        "view's field list and the view's query field list have different counts."
     );
   }
 
@@ -575,40 +556,25 @@ public class TestViewSupport extends TestBaseViewSupport {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, salescity) " +
             "AS SELECT region_id, * FROM cp.`region.json`",
-        "Error: view's query field list has a '*', which is invalid when view's field list is specified."
+        "view's query field list has a '*', which is invalid when view's field list is specified."
     );
   }
 
-  private static void createViewErrorTestHelper(final String viewSql, final String errorMsg)
-      throws Exception {
+  private static void createViewErrorTestHelper(final String viewSql, final String expErrorMsg) throws Exception {
     final String createViewSql = String.format(viewSql, TEMP_SCHEMA, "duplicateColumnsInViewDef");
-
-    testBuilder()
-        .sqlQuery(createViewSql)
-        .unOrdered()
-        .baselineColumns("ok", "summary")
-        .baselineValues(false, errorMsg)
-        .go();
+    errorMsgTestHelper(createViewSql, expErrorMsg);
   }
 
   @Test // DRILL-2423
   public void showProperMsgWhenDroppingNonExistentView() throws Exception{
-    testBuilder()
-        .sqlQuery("DROP VIEW dfs_test.tmp.nonExistentView")
-        .unOrdered()
-        .baselineColumns("ok", "summary")
-        .baselineValues(false, "Unknown view [nonExistentView] in schema [dfs_test.tmp].")
-        .go();
+    errorMsgTestHelper("DROP VIEW dfs_test.tmp.nonExistentView",
+        "Unknown view [nonExistentView] in schema [dfs_test.tmp].");
   }
 
   @Test // DRILL-2423
   public void showProperMsgWhenTryingToDropAViewInImmutableSchema() throws Exception{
-    testBuilder()
-        .sqlQuery("DROP VIEW cp.nonExistentView")
-        .unOrdered()
-        .baselineColumns("ok", "summary")
-        .baselineValues(false, "Schema [cp.default] is immutable.")
-        .go();
+    errorMsgTestHelper("DROP VIEW cp.nonExistentView",
+        "Unable to create or drop tables/views. Schema [cp] is immutable.");
   }
 
   @Test // DRILL-2423
@@ -618,12 +584,8 @@ public class TestViewSupport extends TestBaseViewSupport {
       test(String.format("CREATE TABLE %s.%s AS SELECT c_custkey, c_nationkey from cp.`tpch/customer.parquet`",
           TEMP_SCHEMA, testTableName));
 
-      testBuilder()
-          .sqlQuery(String.format("DROP VIEW %s.%s", TEMP_SCHEMA, testTableName))
-          .unOrdered()
-          .baselineColumns("ok", "summary")
-          .baselineValues(false, "[testTableShowErrorMsg] is not a VIEW in schema [dfs_test.tmp]")
-          .go();
+      errorMsgTestHelper(String.format("DROP VIEW %s.%s", TEMP_SCHEMA, testTableName),
+          "[testTableShowErrorMsg] is not a VIEW in schema [dfs_test.tmp]");
     } finally {
       File tblPath = new File(getDfsTestTmpSchemaLocation(), testTableName);
       FileUtils.deleteQuietly(tblPath);

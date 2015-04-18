@@ -25,6 +25,8 @@ import java.util.List;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.RelConversionException;
 
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -67,19 +69,14 @@ public class ShowTablesHandler extends DefaultSqlHandler {
       // If no schema is given in SHOW TABLES command, list tables from current schema
       SchemaPlus schema = context.getNewDefaultSchema();
 
-      if (isRootSchema(schema)) {
+      if (SchemaUtilites.isRootSchema(schema)) {
         // If the default schema is a root schema, throw an error to select a default schema
-        throw new RelConversionException("No schema selected. Select a schema using 'USE schema' command");
+        throw UserException.validationError()
+            .message("No default schema selected. Select a schema using 'USE schema' command")
+            .build();
       }
 
-      AbstractSchema drillSchema;
-
-      try {
-        drillSchema = getDrillSchema(schema);
-      } catch(Exception ex) {
-        throw new RelConversionException("Error while rewriting SHOW TABLES query: " + ex.getMessage(), ex);
-      }
-
+      final AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schema);
       tableSchema = drillSchema.getFullSchemaName();
     }
 

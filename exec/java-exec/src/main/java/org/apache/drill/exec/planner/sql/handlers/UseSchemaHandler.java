@@ -19,9 +19,10 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
+import com.google.common.base.Strings;
+
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
-
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
@@ -38,18 +39,12 @@ public class UseSchemaHandler extends AbstractSqlHandler {
 
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
-    SqlUseSchema useSchema = unwrap(sqlNode, SqlUseSchema.class);
+    final SqlUseSchema useSchema = unwrap(sqlNode, SqlUseSchema.class);
+    final String newDefaultSchemaPath = useSchema.getSchema();
 
-    String defaultSchema = useSchema.getSchema();
-    boolean status = context.getSession().setDefaultSchemaPath(defaultSchema, context.getRootSchema());
+    context.getSession().setDefaultSchemaPath(newDefaultSchemaPath, context.getNewDefaultSchema());
 
-    String msg;
-    if (status) {
-      msg = String.format("Default schema changed to '%s'", defaultSchema);
-    } else {
-      msg = String.format("Failed to change default schema to '%s'", defaultSchema);
-    }
-
-    return DirectPlan.createDirectPlan(context, status, msg);
+    return DirectPlan.createDirectPlan(context, true,
+        String.format("Default schema changed to [%s]", context.getSession().getDefaultSchemaPath()));
   }
 }

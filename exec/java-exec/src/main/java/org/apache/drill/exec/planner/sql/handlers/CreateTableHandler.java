@@ -19,12 +19,12 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.sql.TypedSqlNode;
-import org.apache.calcite.tools.Planner;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -32,17 +32,12 @@ import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.DrillWriterRel;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlNode;
 
 public class CreateTableHandler extends DefaultSqlHandler {
   public CreateTableHandler(SqlHandlerConfig config, Pointer<String> textPlan) {
@@ -53,43 +48,32 @@ public class CreateTableHandler extends DefaultSqlHandler {
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
 
-    try {
-      final RelNode newTblRelNode =
-          SqlHandlerUtil.resolveNewTableRel(false, planner, sqlCreateTable.getFieldNames(), sqlCreateTable.getQuery());
+    final String newTblName = sqlCreateTable.getName();
+    final RelNode newTblRelNode =
+        SqlHandlerUtil.resolveNewTableRel(false, planner, sqlCreateTable.getFieldNames(), sqlCreateTable.getQuery());
 
-      SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(),
-          sqlCreateTable.getSchemaPath());
+    final AbstractSchema drillSchema =
+        SchemaUtilites.resolveToMutableDrillSchema(context.getNewDefaultSchema(), sqlCreateTable.getSchemaPath());
+    final String schemaPath = drillSchema.getFullSchemaName();
 
-      AbstractSchema drillSchema = getDrillSchema(schema);
-
-      if (!drillSchema.isMutable()) {
-        return DirectPlan.createDirectPlan(context, false, String.format("Unable to create table. " +
-            "Schema [%s] is immutable. ", drillSchema.getFullSchemaName()));
-      }
-
-      final String newTblName = sqlCreateTable.getName();
-      if (SqlHandlerUtil.getTableFromSchema(drillSchema, newTblName) != null) {
-        throw new ValidationException(
-            String.format("A table or view with given name [%s] already exists in schema [%s]",
-                newTblName, drillSchema.getFullSchemaName()));
-      }
-
-      log("Optiq Logical", newTblRelNode);
-
-      // Convert the query to Drill Logical plan and insert a writer operator on top.
-      DrillRel drel = convertToDrel(newTblRelNode, drillSchema, newTblName);
-      log("Drill Logical", drel);
-      Prel prel = convertToPrel(drel);
-      log("Drill Physical", prel);
-      PhysicalOperator pop = convertToPop(prel);
-      PhysicalPlan plan = convertToPlan(pop);
-      log("Drill Plan", plan);
-
-      return plan;
-    } catch(Exception e) {
-      logger.error("Failed to create table '{}'", sqlCreateTable.getName(), e);
-      return DirectPlan.createDirectPlan(context, false, String.format("Error: %s", e.getMessage()));
+    if (SqlHandlerUtil.getTableFromSchema(drillSchema, newTblName) != null) {
+      throw UserException.validationError()
+          .message("A table or view with given name [%s] already exists in schema [%s]", newTblName, schemaPath)
+          .build();
     }
+
+    log("Optiq Logical", newTblRelNode);
+
+    // Convert the query to Drill Logical plan and insert a writer operator on top.
+    DrillRel drel = convertToDrel(newTblRelNode, drillSchema, newTblName);
+    log("Drill Logical", drel);
+    Prel prel = convertToPrel(drel);
+    log("Drill Physical", prel);
+    PhysicalOperator pop = convertToPop(prel);
+    PhysicalPlan plan = convertToPlan(pop);
+    log("Drill Plan", plan);
+
+    return plan;
   }
 
   private DrillRel convertToDrel(RelNode relNode, AbstractSchema schema, String tableName) throws RelConversionException {

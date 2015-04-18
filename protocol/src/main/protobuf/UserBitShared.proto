@@ -77,6 +77,11 @@ message DrillPBError{
      * - schema change
      */
     UNSUPPORTED_OPERATION = 9;
+    /* SQL validation exception
+     * - invalid schema path
+     * - invalid entries in SQL tree
+     */
+    VALIDATION = 10;
   }
   optional string error_id = 1; // for debug tracing purposes
   optional DrillbitEndpoint endpoint = 2;

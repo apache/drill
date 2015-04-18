@@ -17,11 +17,17 @@
  */
 package org.apache.drill.exec.rpc.user;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.calcite.schema.SchemaPlus;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.tools.ValidationException;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
@@ -133,17 +139,37 @@ public class UserSession {
 
   /**
    * Update the schema path for the session.
-   * @param fullPath The desired path to set to.
-   * @param schema The root schema to find this path within.
-   * @return true if the path was set successfully.  false if this path was unavailable.
+   * @param newDefaultSchemaPath New default schema path to set. It could be relative to the current default schema or
+   *                             absolute schema.
+   * @param currentDefaultSchema Current default schema.
+   * @throws ValidationException If the given default schema path is invalid in current schema tree.
    */
-  public boolean setDefaultSchemaPath(String fullPath, SchemaPlus schema) {
-    SchemaPlus newDefault = findSchema(schema, fullPath);
+  public void setDefaultSchemaPath(String newDefaultSchemaPath, SchemaPlus currentDefaultSchema)
+      throws ValidationException {
+    final List<String> newDefaultPathAsList = Lists.newArrayList(newDefaultSchemaPath.split("\\."));
+    SchemaPlus newDefault;
+
+    // First try to find the given schema relative to the current default schema.
+    newDefault = SchemaUtilites.findSchema(currentDefaultSchema, newDefaultPathAsList);
+
     if (newDefault == null) {
-      return false;
+      // If we fail to find the schema relative to current default schema, consider the given new default schema path as
+      // absolute schema path.
+      newDefault = SchemaUtilites.findSchema(currentDefaultSchema, newDefaultPathAsList);
     }
-    setProp(SCHEMA, fullPath);
-    return true;
+
+    if (newDefault == null) {
+      SchemaUtilites.throwSchemaNotFoundException(currentDefaultSchema, newDefaultSchemaPath);
+    }
+
+    setProp(SCHEMA, SchemaUtilites.getSchemaPath(newDefault));
+  }
+
+  /**
+   * @return Get current default schema path.
+   */
+  public String getDefaultSchemaPath() {
+    return getProp(SCHEMA);
   }
 
   /**
@@ -152,7 +178,20 @@ public class UserSession {
    * @return A {@link org.apache.calcite.schema.SchemaPlus} object.
    */
   public SchemaPlus getDefaultSchema(SchemaPlus rootSchema) {
-    return findSchema(rootSchema, getProp(SCHEMA));
+    final String defaultSchemaPath = getProp(SCHEMA);
+
+    if (Strings.isNullOrEmpty(defaultSchemaPath)) {
+      return null;
+    }
+
+    final SchemaPlus defaultSchema = SchemaUtilites.findSchema(rootSchema, defaultSchemaPath);
+
+    if (defaultSchema == null) {
+      // If the current schema resolves to null, return root schema as the current default schema.
+      return defaultSchema;
+    }
+
+    return defaultSchema;
   }
 
   public boolean setSessionOption(String name, String value) {
@@ -166,17 +205,4 @@ public class UserSession {
   private void setProp(String key, String value) {
     properties.put(key, value);
   }
-
-  private SchemaPlus findSchema(SchemaPlus rootSchema, String schemaPath) {
-    String[] paths = schemaPath.split("\\.");
-    SchemaPlus schema = rootSchema;
-    for (String p : paths) {
-      schema = schema.getSubSchema(p);
-      if (schema == null) {
-        break;
-      }
-    }
-    return schema;
-  }
-
 }

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Schema.TableType;
@@ -28,19 +27,18 @@ import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateView;
 import org.apache.drill.exec.planner.sql.parser.SqlDropView;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
-
-import com.google.common.collect.ImmutableList;
 
 public abstract class ViewHandler extends AbstractSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ViewHandler.class);
@@ -64,65 +62,46 @@ public abstract class ViewHandler extends AbstractSqlHandler {
     public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
       SqlCreateView createView = unwrap(sqlNode, SqlCreateView.class);
 
-      try {
-        // Store the viewSql as view def SqlNode is modified as part of the resolving the new table definition below.
-        final String viewSql = createView.getQuery().toString();
+      final String newViewName = createView.getName();
 
-        final RelNode newViewRelNode =
-            SqlHandlerUtil.resolveNewTableRel(true, planner, createView.getFieldNames(), createView.getQuery());
+      // Store the viewSql as view def SqlNode is modified as part of the resolving the new table definition below.
+      final String viewSql = createView.getQuery().toString();
 
-        SchemaPlus defaultSchema = context.getNewDefaultSchema();
-        SchemaPlus schema = findSchema(context.getRootSchema(), defaultSchema, createView.getSchemaPath());
-        AbstractSchema drillSchema = getDrillSchema(schema);
+      final RelNode newViewRelNode =
+          SqlHandlerUtil.resolveNewTableRel(true, planner, createView.getFieldNames(), createView.getQuery());
 
-        String schemaPath = drillSchema.getFullSchemaName();
-        if (!drillSchema.isMutable()) {
-          return DirectPlan.createDirectPlan(context, false, String.format("Unable to create view. " +
-            "Schema [%s] is immutable. ", schemaPath));
+      final SchemaPlus defaultSchema = context.getNewDefaultSchema();
+      final AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, createView.getSchemaPath());
+
+      final String schemaPath = drillSchema.getFullSchemaName();
+      final View view = new View(newViewName, viewSql, newViewRelNode.getRowType(),
+          SchemaUtilites.getSchemaPathAsList(defaultSchema));
+
+      final Table existingTable = SqlHandlerUtil.getTableFromSchema(drillSchema, newViewName);
+
+      if (existingTable != null) {
+        if (existingTable.getJdbcTableType() != Schema.TableType.VIEW) {
+          // existing table is not a view
+          throw UserException.validationError()
+              .message("A non-view table with given name [%s] already exists in schema [%s]",
+                  newViewName, schemaPath)
+              .build();
         }
 
-        // find current workspace schema path
-        List<String> workspaceSchemaPath = ImmutableList.of();
-        if (!isRootSchema(defaultSchema)) {
-          workspaceSchemaPath = getDrillSchema(defaultSchema).getSchemaPath();
+        if (existingTable.getJdbcTableType() == Schema.TableType.VIEW && !createView.getReplace()) {
+          // existing table is a view and create view has no "REPLACE" clause
+          throw UserException.validationError()
+              .message("A view with given name [%s] already exists in schema [%s]",
+                  newViewName, schemaPath)
+              .build();
         }
-
-        View view = new View(createView.getName(), viewSql, newViewRelNode.getRowType(), workspaceSchemaPath);
-
-        final String viewName = view.getName();
-        final Table existingTable = SqlHandlerUtil.getTableFromSchema(drillSchema, viewName);
-
-        if (existingTable != null) {
-          if (existingTable.getJdbcTableType() != Schema.TableType.VIEW) {
-            // existing table is not a view
-            throw new ValidationException(
-                String.format("A non-view table with given name [%s] already exists in schema [%s]",
-                    viewName, schemaPath));
-          }
-
-          if (existingTable.getJdbcTableType() == Schema.TableType.VIEW && !createView.getReplace()) {
-            // existing table is a view and create view has no "REPLACE" clause
-            throw new ValidationException(
-                String.format("A view with given name [%s] already exists in schema [%s]",
-                    view.getName(), schemaPath));
-          }
-        }
-
-        boolean replaced;
-        if (drillSchema instanceof WorkspaceSchema) {
-          replaced = ((WorkspaceSchema) drillSchema).createView(view);
-        } else {
-          return DirectPlan.createDirectPlan(context, false, "Schema provided was not a workspace schema.");
-        }
-
-        String summary = String.format("View '%s' %s successfully in '%s' schema",
-            createView.getName(), replaced ? "replaced" : "created", schemaPath);
-
-        return DirectPlan.createDirectPlan(context, true, summary);
-      } catch(Exception e) {
-        logger.error("Failed to create view '{}'", createView.getName(), e);
-        return DirectPlan.createDirectPlan(context, false, String.format("Error: %s", e.getMessage()));
       }
+
+      final boolean replaced = drillSchema.createView(view);
+      final String summary = String.format("View '%s' %s successfully in '%s' schema",
+          createView.getName(), replaced ? "replaced" : "created", schemaPath);
+
+      return DirectPlan.createDirectPlan(context, true, summary);
     }
   }
 
@@ -136,39 +115,26 @@ public abstract class ViewHandler extends AbstractSqlHandler {
     public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
       SqlDropView dropView = unwrap(sqlNode, SqlDropView.class);
       final String viewToDrop = dropView.getName();
+      final AbstractSchema drillSchema =
+          SchemaUtilites.resolveToMutableDrillSchema(context.getNewDefaultSchema(), dropView.getSchemaPath());
 
-      try {
-        SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(), dropView.getSchemaPath());
-        AbstractSchema drillSchema = getDrillSchema(schema);
+      final String schemaPath = drillSchema.getFullSchemaName();
 
-        String schemaPath = drillSchema.getFullSchemaName();
-        if (!drillSchema.isMutable()) {
-          return DirectPlan.createDirectPlan(context, false, String.format("Schema [%s] is immutable.", schemaPath));
-        }
-
-        if (!(drillSchema instanceof WorkspaceSchema)) {
-          return DirectPlan.createDirectPlan(context, false,
-              String.format("Schema [%s] doesn't support creating/dropping views.", schemaPath));
-        }
-
-        final Table existingTable = SqlHandlerUtil.getTableFromSchema(drillSchema, viewToDrop);
-        if (existingTable != null && existingTable.getJdbcTableType() != Schema.TableType.VIEW) {
-          return DirectPlan.createDirectPlan(context, false,
-              String.format("[%s] is not a VIEW in schema [%s]", viewToDrop, schemaPath));
-        } else if (existingTable == null) {
-          return DirectPlan.createDirectPlan(context, false,
-              String.format("Unknown view [%s] in schema [%s].", viewToDrop, schemaPath));
-        }
-
-        ((WorkspaceSchema) drillSchema).dropView(viewToDrop);
-
-        return DirectPlan.createDirectPlan(context, true,
-            String.format("View [%s] deleted successfully from schema [%s].", viewToDrop, schemaPath));
-      } catch(Exception e) {
-        logger.debug("Failed to delete view {}", viewToDrop, e);
-        return DirectPlan.createDirectPlan(context, false, String.format("Error: %s", e.getMessage()));
+      final Table existingTable = SqlHandlerUtil.getTableFromSchema(drillSchema, viewToDrop);
+      if (existingTable != null && existingTable.getJdbcTableType() != Schema.TableType.VIEW) {
+        throw UserException.validationError()
+            .message("[%s] is not a VIEW in schema [%s]", viewToDrop, schemaPath)
+            .build();
+      } else if (existingTable == null) {
+        throw UserException.validationError()
+            .message("Unknown view [%s] in schema [%s].", viewToDrop, schemaPath)
+            .build();
       }
+
+      drillSchema.dropView(viewToDrop);
+
+      return DirectPlan.createDirectPlan(context, true,
+          String.format("View [%s] deleted successfully from schema [%s].", viewToDrop, schemaPath));
     }
   }
-
 }

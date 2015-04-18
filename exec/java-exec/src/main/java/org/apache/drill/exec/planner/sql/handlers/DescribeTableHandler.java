@@ -18,18 +18,17 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
-import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
-
 import java.util.List;
 
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
+
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
-import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -41,6 +40,8 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.util.Util;
 
 import com.google.common.collect.ImmutableList;
+
+import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
 
 public class DescribeTableHandler extends DefaultSqlHandler {
 
@@ -61,22 +62,25 @@ public class DescribeTableHandler extends DefaultSqlHandler {
           ImmutableList.of(IS_SCHEMA_NAME, TAB_COLUMNS), null, SqlParserPos.ZERO, null);
 
       final SqlIdentifier table = node.getTable();
-      final SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(),
-          Util.skipLast(table.names));
+      final SchemaPlus schema = SchemaUtilites.findSchema(context.getNewDefaultSchema(), Util.skipLast(table.names));
+
       final String tableName = Util.last(table.names);
 
+      // find resolved schema path
+      final String schemaPath = SchemaUtilites.getSchemaPath(schema);
+
       if (schema.getTable(tableName) == null) {
-        throw new RelConversionException(String.format("Table %s is not valid", Util.sepList(table.names, ".")));
+        throw UserException.validationError()
+            .message("Unknown table [%s] in schema [%s]", tableName, schemaPath)
+            .build();
       }
 
       SqlNode schemaCondition = null;
-      if (!isRootSchema(schema)) {
-        AbstractSchema drillSchema = getDrillSchema(schema);
-
+      if (!SchemaUtilites.isRootSchema(schema)) {
         schemaCondition = DrillParserUtil.createCondition(
             new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
             SqlStdOperatorTable.EQUALS,
-            SqlLiteral.createCharString(drillSchema.getFullSchemaName(), CHARSET, SqlParserPos.ZERO)
+            SqlLiteral.createCharString(schemaPath, CHARSET, SqlParserPos.ZERO)
         );
       }
 
@@ -106,7 +110,9 @@ public class DescribeTableHandler extends DefaultSqlHandler {
       return new SqlSelect(SqlParserPos.ZERO, null, new SqlNodeList(selectList, SqlParserPos.ZERO),
           fromClause, where, null, null, null, null, null, null);
     } catch (Exception ex) {
-      throw new RelConversionException("Error while rewriting DESCRIBE query: " + ex.getMessage(), ex);
+      throw UserException.planError(ex)
+          .message("Error while rewriting DESCRIBE query: %d", ex.getMessage())
+          .build();
     }
   }
 }

@@ -20,6 +20,7 @@ package org.apache.drill.exec.impersonation;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -207,8 +208,11 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     test("USE " + viewSchema);
 
-    test("CREATE VIEW " + viewName + " AS SELECT " +
-        "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;");
+    final String query = "CREATE VIEW " + viewName + " AS SELECT " +
+        "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;";
+    final String expErrorMsg = "PERMISSION ERROR: Permission denied: user=drillTestUser2, access=WRITE, " +
+        "inode=\"/drillTestGrp0_755\"";
+    errorMsgTestHelper(query, expErrorMsg);
 
     // SHOW TABLES is expected to return no records as view creation fails above.
     testBuilder()

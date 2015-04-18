@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -126,7 +125,8 @@ public class WorkspaceSchemaFactory {
       this.fs = ImpersonationUtil.createFileSystem(schemaConfig.getUserName(), fsConf);
     }
 
-    public boolean createView(View view) throws Exception {
+    @Override
+    public boolean createView(View view) throws IOException {
       Path viewPath = getViewPath(view.getName());
       boolean replaced = fs.exists(viewPath);
       final FsPermission viewPerms =
@@ -152,6 +152,7 @@ public class WorkspaceSchemaFactory {
       return new SubDirectoryList(fileStatuses);
     }
 
+    @Override
     public void dropView(String viewName) throws IOException {
       fs.delete(getViewPath(viewName), false);
     }

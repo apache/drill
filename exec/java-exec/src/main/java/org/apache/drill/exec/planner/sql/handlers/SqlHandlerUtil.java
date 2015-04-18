@@ -23,6 +23,8 @@ import org.apache.calcite.sql.TypedSqlNode;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.drill.common.exceptions.DrillException;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
@@ -78,17 +80,19 @@ public class SqlHandlerUtil {
       // Field count should match.
       if (tableFieldNames.size() != queryRowType.getFieldCount()) {
         final String tblType = isNewTableView ? "view" : "table";
-        throw new ValidationException(
-            String.format("%s's field list and the %s's query field list have different counts.", tblType, tblType));
+        throw UserException.validationError()
+            .message("%s's field list and the %s's query field list have different counts.", tblType, tblType)
+            .build();
       }
 
       // CTAS's query field list shouldn't have "*" when table's field list is specified.
       for (String field : queryRowType.getFieldNames()) {
         if (field.equals("*")) {
           final String tblType = isNewTableView ? "view" : "table";
-          throw new ValidationException(
-              String.format("%s's query field list has a '*', which is invalid when %s's field list is specified.",
-                  tblType, tblType));
+          throw UserException.validationError()
+              .message("%s's query field list has a '*', which is invalid when %s's field list is specified.",
+                  tblType, tblType)
+              .build();
         }
       }
 
@@ -119,12 +123,12 @@ public class SqlHandlerUtil {
     }
   }
 
-  public static Table getTableFromSchema(AbstractSchema drillSchema, String tblName) throws DrillException {
+  public static Table getTableFromSchema(AbstractSchema drillSchema, String tblName) {
     try {
       return drillSchema.getTable(tblName);
     } catch (Exception e) {
       // TODO: Move to better exception types.
-      throw new DrillException(
+      throw new DrillRuntimeException(
           String.format("Failure while trying to check if a table or view with given name [%s] already exists " +
               "in schema [%s]: %s", tblName, drillSchema.getFullSchemaName(), e.getMessage()), e);
     }
