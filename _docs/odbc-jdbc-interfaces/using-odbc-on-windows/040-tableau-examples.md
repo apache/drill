@@ -20,7 +20,7 @@ tab of the [Drill Web UI]({{ site.baseurl }}/docs/getting-to-know-the-drill-sand
 
 To access Hive tables in Tableau 8.1, connect to the Hive schema using a DSN
 and then visualize the data in Tableau.  
-{% include startnote.html %}This example assumes that there is a schema named hive.default which contains a table named student_hive.{% include endnote.html %} 
+{% include startnote.html %}This example assumes that there is a schema named hive.default which contains a table named student_hive.{% include endnote.html %}
 
 ----------
 
@@ -50,8 +50,8 @@ Now, we can connect to Hive tables.
 
   1. In Tableau, click **Data > Connect to Data**.
   2. In the _On a server_ section, click **Other Databases (ODBC**).  
-     The _Generic ODBC Connection_ dialog appears.
-  3. In the _Connect Using_ section, select the DSN that connects to the Hive table.   
+     The *Generic ODBC Connection* dialog appears.
+  3. In the *Connect Using* section, select the DSN that connects to the Hive table.   
 -or-  
 To create a connection without an existing DSN, select the Driver option,
 select the MapR Drill ODBC driver from the list and click **Connect.** Then,
@@ -90,7 +90,7 @@ The following example describes how to create a view of an HBase table and
 connect to that view in Tableau 8.1. You can also use these steps to access
 data for other sources such as Hive, Parquet, JSON, TSV, and CSV.
 
-{% include startnote.html %}This example assumes that there is a schema named hbase that contains a table named s_voters. It also assumes that there is a schema named dfs.default that points to a writable location.{% include endnote.html %}
+{% include startnote.html %}This example assumes that there is a schema named hbase that contains a table named s_voters and a schema named dfs.default that points to a writable location.{% include endnote.html %}
 
 #### Step 1. Create a View and a DSN
 
@@ -151,14 +151,14 @@ view.
 Now, we can connect to the view in Tableau.
 
   1. In Tableau, click **Data > Connect to Data**.
-  2. In the _On a server_ section, click **Other Databases (ODBC).  
-**The _Generic ODBC Connection_ dialog appears.
-  3. In the _Connect Using_ section, select the DSN that connects to the schema that contains the view that you created.   
+  2. In the _On a server_ section, click **Other Databases (ODBC)**.  
+     The *Generic ODBC Connection* dialog appears.
+  3. In the *Connect Using* section, select the DSN that connects to the schema that contains the view that you created.   
      -or-  
      To create a connection without an existing DSN, select the **Driver** option, select the **MapR Drill ODBC Driver** from the list and click **Connect**. Then, configure the connection using the steps in step 1 and click **OK**.In this example, we created SQLView-DrillDataSource to access the view.
-  4. In the **Schema **field, select the schema that contains the views that you created in Drill Explorer.  
+  4. In the **Schema** field, select the schema that contains the views that you created in Drill Explorer.  
      In this example, we saved the view to the dfs_default schema.
-  5. In the _Table _section, verify that **Single Table** is selected and then click the Search icon.  
+  5. In the *Table* section, verify that **Single Table** is selected and then click the Search icon.  
      A list of views appears.
   6. Select the view from the list and click **Select**.   
      In this example, we need to select hbase_s_voter.  
@@ -191,8 +191,8 @@ In this step, we will create a DSN that accesses files on the DFS. We will
 also use Drill Explorer to preview the SQL that we want to use to connect to
 the data in Tableau.
 
-  1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator.  
-     **The _ODBC Data Source Administrator _window appears.
+  1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator.**   
+     The *ODBC Data Source Administrator* window appears.
   2. On the **System DSN** tab, click **Add**.
   3. Select **MapR Drill ODBC Driver** and click **Finish**.  
      The _MapR Drill ODBC Driver DSN Setup_ window appears.
@@ -221,13 +221,13 @@ the data in Tableau.
 Now, we can create a connection to the Parquet file using the custom SQL.
 
   1. In Tableau, click **Data > Connect to Data**.
-  2. In the _On a server_ section, click **Other Databases (ODBC).  
-     **The _Generic ODBC Connection_ dialog appears.
-  3. In the _Connect Using_ section, select the DSN that connects to the data source.  
+  2. In the _On a server_ section, click **Other Databases (ODBC).**
+     The *Generic ODBC Connection* dialog appears.
+  3. In the *Connect Using* section, select the DSN that connects to the data source.  
      In this example, Files-DrillDataSources was selected.
-  4. In the _Schema_ section, select the schema associated with the data source.  
+  4. In the *Schema* section, select the schema associated with the data source.  
      In this example, dfs.default was selected.
-  5. In the _Table _section, select **Custom SQL**.
+  5. In the *Table* section, select **Custom SQL**.
   6. Enter the SQL query.  
      In this example, the following SQL query was entered: 
      
@@ -235,7 +235,7 @@ Now, we can create a connection to the Parquet file using the custom SQL.
          CAST(R_COMMENT as varchar(200))Comments, R_RegionKey 
          FROM `dfs`.`default`.`./opt/mapr/drill/drill-1.0.0.BETA1/sample-data/region.parquet`  
 
-     Note: The path to the file depends on its location in your file system.` `
+     {% include startnote.html %}The path to the file depends on its location in your file system.{% include endnote.html %} 
 
   7. Click **OK** to complete the connection.  
      ![]({{ site.baseurl }}/docs/img/ODBC_CustomSQL.png)

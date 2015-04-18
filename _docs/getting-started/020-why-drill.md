@@ -9,9 +9,10 @@ parent: "Getting Started"
 
 It only takes a couple minutes to start working with Drill. Untar it on your Mac or Windows laptop and run a query on a local file. No need to set up any infrastructure. No need to define schemas. Just point at the data and drill!
 
-    $ tar -xvf apache-drill-0.6.0-incubating.tar.gz
-    $ apache-drill-0.6.0-incubating/bin/sqlline -u jdbc:drill:zk=local
-    0: jdbc:drill:zk=local> SELECT * FROM dfs.root.`path/to/employee.json` limit 5;
+    $ tar -xvf apache-drill-<version>.tar.gz
+    $ <install directory>/bin/sqlline -u jdbc:drill:zk=local
+    0: jdbc:drill:zk=local> USE cp; 
+    0: jdbc:drill:zk=local> SELECT * FROM employee.json limit 5;
     +-------------+------------------+------------+------------+-------------+----------------------+------------+---------------+-----
     | employee_id | full_name        | first_name | last_name  | position_id | position_title       |  store_id  | department_id | birt 
     +-------------+------------------+------------+------------+-------------+----------------------+------------+---------------+------+
