@@ -569,6 +569,27 @@
             "title": "Archived Pages", 
             "url": "/docs/archived-pages/"
         }, 
+        "CASE": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Conditional Expressions", 
+                    "url": "/docs/sql-conditional-expressions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Reserved Keywords", 
+            "next_url": "/docs/reserved-keywords/", 
+            "parent": "SQL Conditional Expressions", 
+            "previous_title": "SQL Conditional Expressions", 
+            "previous_url": "/docs/sql-conditional-expressions/", 
+            "relative_path": "_docs/sql-reference/sql-conditional-expressions/010-case-expression.md", 
+            "title": "CASE", 
+            "url": "/docs/case/"
+        }, 
         "CREATE TABLE AS (CTAS) command": {
             "breadcrumbs": [
                 {
@@ -5483,8 +5504,8 @@
             "next_title": "SQL Extensions", 
             "next_url": "/docs/sql-extensions/", 
             "parent": "SQL Reference", 
-            "previous_title": "USE Command", 
-            "previous_url": "/docs/use-command/", 
+            "previous_title": "CASE", 
+            "previous_url": "/docs/case/", 
             "relative_path": "_docs/sql-reference/080-reserved-keywords.md", 
             "title": "Reserved Keywords", 
             "url": "/docs/reserved-keywords/"
@@ -5824,8 +5845,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Reserved Keywords", 
-                    "next_url": "/docs/reserved-keywords/", 
+                    "next_title": "SQL Conditional Expressions", 
+                    "next_url": "/docs/sql-conditional-expressions/", 
                     "parent": "SQL Commands Summary", 
                     "previous_title": "SHOW TABLES Command", 
                     "previous_url": "/docs/show-tables-command/", 
@@ -5842,6 +5863,45 @@
             "relative_path": "_docs/sql-reference/070-sql-commands-summary.md", 
             "title": "SQL Commands Summary", 
             "url": "/docs/sql-commands-summary/"
+        }, 
+        "SQL Conditional Expressions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Conditional Expressions", 
+                            "url": "/docs/sql-conditional-expressions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Reserved Keywords", 
+                    "next_url": "/docs/reserved-keywords/", 
+                    "parent": "SQL Conditional Expressions", 
+                    "previous_title": "SQL Conditional Expressions", 
+                    "previous_url": "/docs/sql-conditional-expressions/", 
+                    "relative_path": "_docs/sql-reference/sql-conditional-expressions/010-case-expression.md", 
+                    "title": "CASE", 
+                    "url": "/docs/case/"
+                }
+            ], 
+            "next_title": "CASE", 
+            "next_url": "/docs/case/", 
+            "parent": "SQL Reference", 
+            "previous_title": "USE Command", 
+            "previous_url": "/docs/use-command/", 
+            "relative_path": "_docs/sql-reference/075-sql-conditional-expressions.md", 
+            "title": "SQL Conditional Expressions", 
+            "url": "/docs/sql-conditional-expressions/"
         }, 
         "SQL Extensions": {
             "breadcrumbs": [
@@ -6699,8 +6759,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Reserved Keywords", 
-                            "next_url": "/docs/reserved-keywords/", 
+                            "next_title": "SQL Conditional Expressions", 
+                            "next_url": "/docs/sql-conditional-expressions/", 
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SHOW TABLES Command", 
                             "previous_url": "/docs/show-tables-command/", 
@@ -6725,12 +6785,51 @@
                             "url": "/docs/sql-reference/"
                         }
                     ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Conditional Expressions", 
+                                    "url": "/docs/sql-conditional-expressions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Reserved Keywords", 
+                            "next_url": "/docs/reserved-keywords/", 
+                            "parent": "SQL Conditional Expressions", 
+                            "previous_title": "SQL Conditional Expressions", 
+                            "previous_url": "/docs/sql-conditional-expressions/", 
+                            "relative_path": "_docs/sql-reference/sql-conditional-expressions/010-case-expression.md", 
+                            "title": "CASE", 
+                            "url": "/docs/case/"
+                        }
+                    ], 
+                    "next_title": "CASE", 
+                    "next_url": "/docs/case/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "USE Command", 
+                    "previous_url": "/docs/use-command/", 
+                    "relative_path": "_docs/sql-reference/075-sql-conditional-expressions.md", 
+                    "title": "SQL Conditional Expressions", 
+                    "url": "/docs/sql-conditional-expressions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
                     "children": [], 
                     "next_title": "SQL Extensions", 
                     "next_url": "/docs/sql-extensions/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "USE Command", 
-                    "previous_url": "/docs/use-command/", 
+                    "previous_title": "CASE", 
+                    "previous_url": "/docs/case/", 
                     "relative_path": "_docs/sql-reference/080-reserved-keywords.md", 
                     "title": "Reserved Keywords", 
                     "url": "/docs/reserved-keywords/"
@@ -7591,8 +7690,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Reserved Keywords", 
-            "next_url": "/docs/reserved-keywords/", 
+            "next_title": "SQL Conditional Expressions", 
+            "next_url": "/docs/sql-conditional-expressions/", 
             "parent": "SQL Commands Summary", 
             "previous_title": "SHOW TABLES Command", 
             "previous_url": "/docs/show-tables-command/", 
@@ -10406,8 +10505,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Reserved Keywords", 
-                            "next_url": "/docs/reserved-keywords/", 
+                            "next_title": "SQL Conditional Expressions", 
+                            "next_url": "/docs/sql-conditional-expressions/", 
                             "parent": "SQL Commands Summary", 
                             "previous_title": "SHOW TABLES Command", 
                             "previous_url": "/docs/show-tables-command/", 
@@ -10432,12 +10531,51 @@
                             "url": "/docs/sql-reference/"
                         }
                     ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Conditional Expressions", 
+                                    "url": "/docs/sql-conditional-expressions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Reserved Keywords", 
+                            "next_url": "/docs/reserved-keywords/", 
+                            "parent": "SQL Conditional Expressions", 
+                            "previous_title": "SQL Conditional Expressions", 
+                            "previous_url": "/docs/sql-conditional-expressions/", 
+                            "relative_path": "_docs/sql-reference/sql-conditional-expressions/010-case-expression.md", 
+                            "title": "CASE", 
+                            "url": "/docs/case/"
+                        }
+                    ], 
+                    "next_title": "CASE", 
+                    "next_url": "/docs/case/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "USE Command", 
+                    "previous_url": "/docs/use-command/", 
+                    "relative_path": "_docs/sql-reference/075-sql-conditional-expressions.md", 
+                    "title": "SQL Conditional Expressions", 
+                    "url": "/docs/sql-conditional-expressions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
                     "children": [], 
                     "next_title": "SQL Extensions", 
                     "next_url": "/docs/sql-extensions/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "USE Command", 
-                    "previous_url": "/docs/use-command/", 
+                    "previous_title": "CASE", 
+                    "previous_url": "/docs/case/", 
                     "relative_path": "_docs/sql-reference/080-reserved-keywords.md", 
                     "title": "Reserved Keywords", 
                     "url": "/docs/reserved-keywords/"
