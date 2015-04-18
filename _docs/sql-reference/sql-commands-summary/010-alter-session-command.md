@@ -43,7 +43,7 @@ execution options that are currently set at the system or session level:
     …
     +------------+----------------------------------------------+
 
-**Note:** This is a truncated version of the list.
+{% include startnote.html %}This is a truncated version of the list.{% include endnote.html %}
 
 ## Example
 

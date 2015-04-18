@@ -14,7 +14,7 @@ modes:
 
 <table ><tbody><tr><th >Mode</th><th >Description</th></tr><tr><td valign="top" >Embedded</td><td valign="top" >Drill stores persistent data in the local file system. <br />You cannot modify the PStore location for Drill in embedded mode.</td></tr><tr><td valign="top" >Distributed</td><td valign="top" >Drill stores persistent data in ZooKeeper, by default. <br />You can modify where ZooKeeper offloads data, <br />or you can change the persistent storage mode to HBase or MapR-DB.</td></tr></tbody></table></div>
   
-**Note:** Switching between storage modes does not migrate configuration data.
+{% include startnote.html %}Switching between storage modes does not migrate configuration data.{% include endnote.html %}
 
 ## ZooKeeper for Persistent Configuration Storage
 

@@ -16,6 +16,8 @@ If a DNS entry does not exist, create the entry for the Drill node(s).
 <drill-machine-IP> <drill-machine-hostname>
     Example: `127.0.1.1 maprdemo`
 
+----------
+
 ### Step 1: Getting the Drill JDBC Driver
 
 The Drill JDBC Driver `JAR` file must exist in a directory on your Windows
@@ -36,6 +38,8 @@ you can locate the driver in the following directory:
 
     <windows_directory>\apache-drill-<version>\jars\jdbc-driver\drill-jdbc-all-0.7.0-SNAPSHOT.jar
 
+----------
+
 ### Step 2: Installing and Starting SQuirreL
 
 To install and start SQuirreL, complete the following steps:
@@ -44,6 +48,8 @@ To install and start SQuirreL, complete the following steps:
 <http://www.squirrelsql.org/#installation>
   2. Double-click the SQuirreL `JAR` file. The SQuirreL installation wizard walks you through the installation process.
   3. When installation completes, navigate to the SQuirreL installation folder and then double-click `squirrel-sql.bat` to start SQuirreL.
+
+----------
 
 ### Step 3: Adding the Drill JDBC Driver to SQuirreL
 
@@ -123,6 +129,8 @@ To create an alias, complete the following steps:
     ![drill query flow]({{ site.baseurl }}/docs/img/53.png)
      
 6. Click **OK**. SQuirreL displays a series of tabs.
+
+----------
 
 ### Step 4: Running a Drill Query from SQuirreL
 

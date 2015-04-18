@@ -18,7 +18,9 @@ as well as MongoDB. Examples in this tutorial use zip code aggregation data
 provided by MongoDB. Before You Begin provides links to download tools and data
 used throughout the tutorial.
 
-**Note:** A local instance of Drill is used in this tutorial for simplicity. You can also run Drill and MongoDB together in distributed mode.
+{% include startnote.html %}A local instance of Drill is used in this tutorial for simplicity. {% include endnote.html %}
+
+You can also run Drill and MongoDB together in distributed mode.
 
 ### Before You Begin
 
@@ -57,7 +59,7 @@ completing the configuration in the Drill Web UI.
           "enabled": true
         }
 
-     **Note:** 27017 is the default port for `mongodb` instances. 
+     {% include startnote.html %}27017 is the default port for `mongodb` instances.{% include endnote.html %} 
   6. Click **Enable** to enable the instance, and save the configuration.
   7. Navigate back to the Drill command line so you can query MongoDB.
 

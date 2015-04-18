@@ -91,8 +91,8 @@ steps:
   
         cat testdata.txt | hbase shell
 5. In Drill, use the [MapR-DB format plugin]({{ site.baseurl }}/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services.  
-   * USE hbase; /* If you have installed HBase services. */  
-   * USE maprdb; /* If you are using the Drill Sandbox */
+   * USE hbase;  /* If you have installed HBase services. */  
+   * USE maprdb;  /* If you are using the Drill Sandbox */
 
 The `maprdb` format plugin provides access to the `/tables` directory. Use Drill to query the students and clicks tables on the Drill Sandbox.  
 
@@ -122,9 +122,8 @@ The `maprdb` format plugin provides access to the `/tables` directory. Use Drill
                 CONVERT_FROM(t.students.address.zipcode, 'UTF8') AS zipcode 
          FROM students;
 
-    **Note:** Use dot notation to drill down to a column in an HBase table:
+    {% include startnote.html %}Use dot notation to drill down to a column in an HBase table: tablename.columnfamilyname.columnnname{% include endnote.html %}
     
-        tablename.columnfamilyname.columnnname
 
     The query returns readable data:
 

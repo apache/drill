@@ -20,7 +20,9 @@ tab of the [Drill Web UI]({{ site.baseurl }}/docs/getting-to-know-the-drill-sand
 
 To access Hive tables in Tableau 8.1, connect to the Hive schema using a DSN
 and then visualize the data in Tableau.  
-**Note:** This example assumes that there is a schema named hive.default which contains a table named student_hive. 
+{% include startnote.html %}This example assumes that there is a schema named hive.default which contains a table named student_hive.{% include endnote.html %} 
+
+----------
 
 ## Step 1: Create a DSN to a Hive Table
 
@@ -39,6 +41,8 @@ In this example, we are connecting to a Zookeeper Quorum.
      ![]({{ site.baseurl }}/docs/img/Hive_DSN.png)
   7. Click **OK** to create the DSN and return to the ODBC Data Source Administrator window.
   8. Click **OK** to close the ODBC Data Source Administrator.
+
+----------
 
 ## Step 2: Connect to Hive Tables in Tableau
 
@@ -61,6 +65,8 @@ configure the connection to the Hive table and click **OK**.
   7. Click **OK** to complete the connection.  
      ![]({{ site.baseurl }}/docs/img/ODBC_HiveConnection.png)
   8. In the _Data Connection_ dialog, click **Connect Live**.
+
+----------
 
 ## Step 3. Visualize the Data in Tableau
 
@@ -177,7 +183,7 @@ The following example describes how to use custom SQL to connect to a Parquet
 file and then visualize the data in Tableau 8.1. You can use the same steps to
 access data from other sources such as Hive, HBase, JSON, TSV, and CSV.
 
-**Note:** This example assumes that there is a schema named dfs.default which contains a parquet file named region.parquet. 
+{% include startnote.html %}This example assumes that there is a schema named dfs.default which contains a parquet file named region.parquet.{% include endnote.html %}
 
 #### Step 1. Create a DSN to the Parquet File and Preview the Data
 

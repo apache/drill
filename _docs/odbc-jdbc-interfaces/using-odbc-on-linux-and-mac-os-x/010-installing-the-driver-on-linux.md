@@ -61,7 +61,9 @@ To install the driver, complete the following steps:
      
      `zypper install RPMFileName`
 
-**Note:** The MapR Drill ODBC Driver depends on the following resources:
+{% include startnote.html %}The MapR Drill ODBC Driver dependencies need to be resolved.{% include endnote.html %}
+
+The MapR Drill ODBC Driver depends on the following resources:
 
   * `cyrus-sasl-2.1.22-7` or above
   * `cyrus-sasl-gssapi-2.1.22-7` or above

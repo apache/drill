@@ -269,7 +269,7 @@ If you followed the Apache Drill in 10 Minutes instructions to install Drill
 in embedded mode, the path to the parquet file varies between operating
 systems.
 
-**Note:** When you enter the query, include the version of Drill that you are currently running. 
+{% include startnote.html %}When you enter the query, include the version of Drill that you are currently running.{% include endnote.html %} 
 
 To view the data in the `region.parquet` file, issue the query appropriate for
 your operating system:

@@ -63,7 +63,7 @@ execution options that you can set at the system level:
     | store.parquet.vector_fill_threshold | SYSTEM     | 85         | null       | null       | null       |
     +------------+------------+------------+------------+------------+------------+
 
-**Note:** This is a truncated version of the list.
+{% include startnote.html %}This is a truncated version of the list.{% include endnote.html %}
 
 ## Example
 

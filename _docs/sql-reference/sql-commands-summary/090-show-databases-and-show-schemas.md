@@ -11,7 +11,7 @@ The SHOW DATABASES and SHOW SCHEMAS commands support the following syntax:
     SHOW DATABASES;
     SHOW SCHEMAS;
 
-**Note:** These commands generate the same results.
+{% include startnote.html %}These commands generate the same results.{% include endnote.html %}
 
 ## Usage Notes
 

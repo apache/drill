@@ -28,7 +28,7 @@ Complete the following steps to install and configure the driver:
 
     http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.07.0.0608/MapRDrillODBC32.msi
 
-    **Note:** Use the 32-bit Windows driver for MicroStrategy 9.4.1.
+    {% include startnote.html %}Use the 32-bit Windows driver for MicroStrategy 9.4.1.{% include endnote.html %}
 
 2.	Complete steps 2-8 under *Installing the Driver* on the following page: 
 
@@ -37,7 +37,7 @@ Complete the following steps to install and configure the driver:
 
     https://cwiki.apache.org/confluence/display/DRILL/Step+2.+Configure+ODBC+Connections+to+Drill+Data+Sources 
 
-    **Note:** Verify that you are using the 32-bit driver since both drivers can coexist on the same machine. 
+    {% include startnote.html %}Verify that you are using the 32-bit driver since both drivers can coexist on the same machine.{% include endnote.html %} 
 
 	a.	Verify the version number of the driver.
 

@@ -29,7 +29,8 @@ workspace named `json` configured to point Drill to the
        } 
     },
 
-**Note:** The `connection` parameter in the configuration above is "`file:///`", connecting Drill to the local file system (`dfs`). To connect to a Hadoop or MapR file system the `connection` parameter would be "`hdfs:///" `or` "maprfs:///", `respectively.
+{% include startnote.html %}The `connection` parameter in the configuration above is "`file:///`", connecting Drill to the local file system (`dfs`).{% include endnote.html %}
+To connect to a Hadoop or MapR file system the `connection` parameter would be "`hdfs:///" `or` "maprfs:///", `respectively.
 
 To query a file in the example `json` workspace, you can issue the `USE`
 command to tell Drill to use the `json` workspace configured in the `dfs`
@@ -63,7 +64,8 @@ using either of the following formats and get the the same results:
     SELECT * FROM hive.customers LIMIT 10;
     SELECT * FROM hive.`default`.customers LIMIT 10;
 
-**Note:** Default is a reserved word. You must enclose reserved words in back ticks.
+{% include startnote.html %}Default is a reserved word. You must enclose reserved words in back ticks.{% include endnote.html %}
+
 
 Because HBase instances do not have workspaces, you can use the following
 format to query a table in HBase:

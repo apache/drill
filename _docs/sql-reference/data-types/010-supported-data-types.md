@@ -103,79 +103,72 @@ The following list includes data types Drill uses in descending order of precede
   <tr>
     <td>1</td>
     <td>INTERVALYEAR (highest)</td>
-    <td>13</td>
+    <td>11</td>
     <td>INT</td>
   </tr>
   <tr>
     <td>2</td>
     <td>INTERVLADAY</td>
-    <td>14</td>
+    <td>12</td>
     <td>UINT2</td>
   </tr>
   <tr>
     <td>3</td>
-    <td>TIMESTAMPTZ*</td>
-    <td>15</td>
+    <td>TIMESTAMP</td>
+    <td>13</td>
     <td>SMALLINT</td>
   </tr>
   <tr>
     <td>4</td>
-    <td>TIMETZ*</td>
-    <td>16</td>
+    <td>DATE</td>
+    <td>14</td>
     <td>UINT1</td>
   </tr>
   <tr>
     <td>5</td>
-    <td>TIMESTAMP</td>
-    <td>17</td>
+    <td>TIME</td>
+    <td>15</td>
     <td>VAR16CHAR</td>
   </tr>
   <tr>
     <td>6</td>
-    <td>DATE</td>
-    <td>18</td>
+    <td>DOUBLE</td>
+    <td>16</td>
     <td>FIXED16CHAR</td>
   </tr>
   <tr>
     <td>7</td>
-    <td>TIME</td>
-    <td>19</td>
+    <td>DECIMAL</td>
+    <td>17</td>
     <td>VARCHAR</td>
   </tr>
   <tr>
     <td>8</td>
-    <td>DOUBLE</td>
-    <td>20</td>
+    <td>UINT8</td>
+    <td>18</td>
     <td>CHAR</td>
   </tr>
   <tr>
     <td>9</td>
-    <td>DECIMAL</td>
-    <td>21</td>
-    <td>VARBINARY**</td>
+    <td>BIGINT</td>
+    <td>19</td>
+    <td>VARBINARY*</td>
   </tr>
   <tr>
     <td>10</td>
-    <td>UINT8</td>
-    <td>22</td>
+    <td>UINT4</td>
+    <td>20</td>
     <td>FIXEDBINARY**</td>
   </tr>
   <tr>
-    <td>11</td>
-    <td>BIGINT</td>
-    <td>23</td>
+    <td></td>
+    <td></td>
+    <td>21</td>
     <td>NULL (lowest)</td>
-  </tr>
-  <tr>
-    <td>12</td>
-    <td>UINT4</td>
-    <td></td>
-    <td></td>
   </tr>
 </table>
 
-\* Currently not supported.   
-\*\* The Drill Parquet reader supports these types.
+\* The Drill Parquet reader supports these types.
 
 ## Explicit Casting
 
@@ -370,7 +363,6 @@ The following tables show data types that Drill can cast to/from other data type
     <td>DATE</td>
     <td>TIME</td>
     <td>TIMESTAMP</td>
-    <td>TIMESTAMPTZ</td>
     <td>INTERVALYEAR</td>
     <td>INTERVALDAY</td>
   </tr>
@@ -445,16 +437,6 @@ The following tables show data types that Drill can cast to/from other data type
     <td>No</td>
   </tr>
   <tr>
-    <td>TIMESTAMPTZ**</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>No</td>
-    <td>No</td>
-    <td>No</td>
-  </tr>
-  <tr>
     <td>INTERVALYEAR</td>
     <td>Yes</td>
     <td>No</td>
@@ -476,7 +458,6 @@ The following tables show data types that Drill can cast to/from other data type
   </tr>
 </table>
 \* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
-\*\* Not supported in this release.   
 
 ## CONVERT_TO and CONVERT_FROM Data Types
 

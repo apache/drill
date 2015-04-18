@@ -21,7 +21,7 @@ The SCHEMATA table contains the CATALOG_NAME and SCHEMA_NAME columns. To allow
 maximum flexibility inside BI tools, the only catalog that Drill supports is
 `DRILL`.
 
-    0: jdbc:drill:zk=local> select CATALOG_NAME, SCHEMA_NAME as all_my_data_sources from INFORMATION_SCHEMA.SCHEMATA order by SCHEMA_NAME;
+    SELECT CATALOG_NAME, SCHEMA_NAME as all_my_data_sources FROM INFORMATION_SCHEMA.SCHEMATA ORDER BY SCHEMA_NAME;
     +--------------+---------------------+
     | CATALOG_NAME | all_my_data_sources |
     +--------------+---------------------+
@@ -38,7 +38,7 @@ maximum flexibility inside BI tools, the only catalog that Drill supports is
 The INFORMATION_SCHEMA name and associated keywords are case-sensitive. You
 can also return a list of schemas by running the SHOW DATABASES command:
 
-    0: jdbc:drill:zk=local> show databases;
+    SHOW DATABASES;
     +-------------+
     | SCHEMA_NAME |
     +-------------+
@@ -93,7 +93,7 @@ Drill can access:
     dfs.default              CustomerSocialProfile VIEW
     ----------------------------------------------------------------
 
-**Note:** Currently, Drill only supports querying Drill views; Hive views are not yet supported.
+{% include startnote.html %}Currently, Drill only supports querying Drill views; Hive views are not yet supported.{% include endnote.html %}
 
 You can run a similar query to identify columns in tables and the data types
 of those columns:

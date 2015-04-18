@@ -424,7 +424,7 @@ memory for a Drillbit, edit the `XX:MaxDirectMemorySize` parameter in the
 Drillbit startup script located in `<drill_installation_directory>/conf/drill-
 env.sh`.
 
-**Note:** If this parameter is not set, the limit depends on the amount of available system memory.
+{% include startnote.html %}If this parameter is not set, the limit depends on the amount of available system memory.{% include endnote.html %}
 
 After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart
 the Drillbit

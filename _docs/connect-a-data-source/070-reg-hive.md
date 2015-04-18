@@ -21,7 +21,7 @@ metastore service communicates with the Hive database over JDBC. Point Drill
 to the Hive metastore service address, and provide the connection parameters
 in the Drill Web UI to configure a connection to Drill.
 
-**Note:** Verify that the Hive metastore service is running before you register the Hive metastore.
+{% include startnote.html %}Verify that the Hive metastore service is running before you register the Hive metastore.{% include endnote.html %}
 
 To register a remote Hive metastore with Drill, complete the following steps:
 

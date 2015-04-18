@@ -13,10 +13,7 @@ on Linux or Mac OS X, you must update the following configuration files:
 You can locate the configuration files in your home directory, or in`
 /opt/mapr/drillobdc/Setup`.
 
-{% include startnote.html %}The installer for the Mac OS X version of the driver creates a sample User DSN, that some driver managers use, in the following files:{% include endnote.html %}
-
-  * `~/Library/ODBC/odbc.ini`
-  * `~/.odbc.ini`
+{% include startnote.html %}The installer for the Mac OS X version of the driver creates a sample User DSN that some driver managers use in ~/Library/ODBC/odbc.ini and ~/.odbc.ini.{% include endnote.html %}
 
 To configure an ODBC connection for Linux or Mac OS X, complete the following
 steps:
@@ -46,6 +43,8 @@ configuration files already exist in your home directory, you can use the
 sample configuration files as a guide for modifying the existing configuration
 files.
 
+----------
+
 ## Step 1: Set Evironment Variables (Linux only)
 
 You must set the following environment variables to point to the` odbc.ini`
@@ -58,6 +57,8 @@ For example, if you are using the 32-bit driver and the files are in the
 default install directory, set the environment variables as follows:
 
 {% include startnote.html %}You do not need to set these variables for the Mac OS X version of the driver.{% include endnote.html %}
+
+----------
 
 ## Step 2: Define the ODBC Data Sources in `odbc.ini`
 
@@ -116,6 +117,8 @@ behavior of DSNs using Simba ODBC Driver for Apache Drill, see [Driver
 Configuration
 Options]({{ site.baseurl }}/docs/driver-configuration-options).
 
+----------
+
 ## Step 3: (Optional) Define the ODBC Driver in `odbcinst.ini`
 
 The `odbcinst.ini` is an optional configuration file that defines the ODBC
@@ -142,7 +145,7 @@ You can see the sections in the following example `odbcinst.ini` file:
     Description=MapR Drill ODBC Driver
     Driver=/opt/mapr/drillodbc/lib/universal/libmaprdrillodbc.dylib
 
-### **Configuring odbcinst.ini**
+### Configuring odbcinst.ini
 
 To define a driver in the `odbcinst.ini` configuration file, complete the
 following steps:
@@ -151,6 +154,8 @@ following steps:
   2. Add a new entry to the [ODBC Drivers] section. Type the driver name, and then type `=Installed`. Assign the driver name as the value of the Driver attribute in the data source definition instead of the driver shared library name.
   3. In `odbcinst.ini,` add a new section with a name that matches the driver name you typed in step 2, and add configuration options to the section based on the sample `odbcinst.ini` file provided with MapR Drill ODBC Driver in the Setup directory. Specify configuration options as key-value pairs.
   4. Save the `.odbcinst.ini` configuration file.
+
+----------
 
 ## Step 4: Configure the MapR Drill ODBC Driver
 
@@ -164,8 +169,9 @@ To configure the MapR Drill ODBC Driver in the `mapr.drillodbc.ini` configuratio
   1. Open the `mapr.drillodbc.ini` configuration file in a text editor.
   2. Edit the DriverManagerEncoding setting. The value is typically UTF-16 or UTF-32, but depends on the driver manger used. iODBC uses UTF-32 and unixODBC uses UTF-16. Review your ODBC Driver Manager documentation for the correct setting.
   3. Edit the `ODBCInstLib` setting. The value is the name of the `ODBCInst` shared library for the ODBC driver manager that you use. The configuration file defaults to the shared library for`iODBC`. In Linux, the shared library name for iODBC is `libiodbcinst.so`. In Mac OS X, the shared library name for `iODBC` is `libiodbcinst.dylib`.
-     **Note:**Review your ODBC Driver Manager documentation for the correct
-setting. Specify an absolute or relative filename for the library. If you use
+     {% include startnote.html %}Review your ODBC Driver Manager documentation for the correct
+setting.{% include endnote.html %} 
+     Specify an absolute or relative filename for the library. If you use
 the relative file name, include the path to the library in the library path
 environment variable. In Linux, the library path environment variable is named
 `LD_LIBRARY_PATH`. In Mac OS X, the library path environment variable is

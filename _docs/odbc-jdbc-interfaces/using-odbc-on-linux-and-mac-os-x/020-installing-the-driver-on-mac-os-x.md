@@ -29,11 +29,15 @@ Example: `127.0.1.1 apachedemo`
 
 To install the driver, you need Administrator privileges on the computer.
 
+----------
+
 ## Step 1: Downloading the MapR Drill ODBC Driver
 
 Click the following link to download the driver:  
 
 [MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.08.1.0618/MapRDrillODBC_DriverOnly.dmg)
+
+----------
 
 ## Step 2: Installing the MapR Drill ODBC Driver
 
@@ -49,6 +53,8 @@ To install the driver, complete the following steps:
   * `/opt/mapr/drillodbc/ErrorMessages` – Error messages files directory
   * `/opt/mapr/drillodbc/Setup` – Sample configuration files directory
   * `/opt/mapr/drillodbc/lib/universal` – Binaries directory
+
+----------
 
 ## Step 3: Updating the DYLD_LIBRARY_PATH Environment Variable
 

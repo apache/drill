@@ -20,6 +20,8 @@ against the Yelp data set. The publicly available data set used for this
 example is downloadable from [Yelp](http://www.yelp.com/dataset_challenge)
 (business reviews) and is in JSON format.
 
+----------
+
 ## Installing and Starting Drill
 
 ### Step 1: Download Apache Drill onto your local machine
@@ -42,11 +44,13 @@ That’s it! You are now ready explore the data.
 Let’s try out some SQL examples to understand how Drill makes the raw data
 analysis extremely easy.
 
-**Note**: You need to substitute your local path to the Yelp data set in the FROM clause of each query you run.
+{% include startnote.html %}You need to substitute your local path to the Yelp data set in the FROM clause of each query you run.{% include endnote.html %}
 
-## Querying Data with Drill
+----------
 
-### **1\. View the contents of the Yelp business data**
+## Querying Data with Drill   
+   
+### 1\. View the contents of the Yelp business data
 
     0: jdbc:drill:zk=local> !set maxwidth 10000
 
@@ -62,9 +66,9 @@ analysis extremely easy.
     Phoenix, AZ 85018 | {"Tuesday":{"close":"17:00","open":"08:00"},"Friday":{"close":"17:00","open":"08:00"},"Monday":{"close":"17:00","open":"08:00"},"Wednesday":{"close":"17:00","open":"08:00"},"Thursday":{"close":"17:00","open":"08:00"},"Sunday":{},"Saturday":{}} | true              | ["Doctors","Health & Medical"] | Phoenix  | 7                   | Eric Goldberg, MD | -111.983758 | AZ       | 3.5                | 33.499313  | {"By Appointment Only":true,"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} | business   | []                  |
     +-------------+--------------+------------+------------+------------+------------+--------------+------------+------------+------------+------------+------------+------------+------------+---------------+
 
-**Note: **You can directly query self-describing files such as JSON, Parquet, and text. There is no need to create metadata definitions in the Hive metastore.
+{% include startnote.html %}You can directly query self-describing files such as JSON, Parquet, and text. There is no need to create metadata definitions in the Hive metastore.{% include endnote.html %}
 
-### **2\. Explore the business data set further**
+### 2\. Explore the business data set further
 
 #### Total reviews in the data set
 
@@ -98,7 +102,7 @@ analysis extremely easy.
     | AZ         | Glendale   | 1196         |
     +------------+------------+--------------+
 
-#### **Average number of reviews per business star rating**
+#### Average number of reviews per business star rating
 
     0: jdbc:drill:zk=local> select stars,trunc(avg(review_count)) reviewsavg 
     from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`
@@ -118,7 +122,7 @@ analysis extremely easy.
     | 1.0        | 4.0        |
     +------------+------------+
 
-#### **Top businesses with high review counts (> 1000)**
+#### Top businesses with high review counts (> 1000)
 
     0: jdbc:drill:zk=local> select name, state, city, `review_count` from
     dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`
@@ -139,7 +143,7 @@ analysis extremely easy.
     | Aria Hotel & Casino    | NV          | Las Vegas  | 2224          |
     +------------+------------+------------+----------------------------+
 
-#### **Saturday open and close times for a few businesses**
+#### Saturday open and close times for a few businesses
 
     0: jdbc:drill:zk=local> select b.name, b.hours.Saturday.`open`,
     b.hours.Saturday.`close`  
@@ -164,7 +168,7 @@ analysis extremely easy.
 
 Note how Drill can traverse and refer through multiple levels of nesting.
 
-### **3\. Get the amenities of each business in the data set**
+### 3\. Get the amenities of each business in the data set
 
 Note that the attributes column in the Yelp business data set has a different
 element for every row, representing that businesses can have separate
@@ -208,9 +212,9 @@ on data.
     +------------+------------+
     | true              | store.json.all_text_mode updated. |
 
-### **4\. Explore the restaurant businesses in the data set**
+### 4\. Explore the restaurant businesses in the data set
 
-#### **Number of restaurants in the data set**
+#### Number of restaurants in the data set
 
     0: jdbc:drill:zk=local> select count(*) as TotalRestaurants from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants');
     +------------------+
@@ -219,7 +223,7 @@ on data.
     | 14303            |
     +------------------+
 
-#### **Top restaurants in number of reviews**
+#### Top restaurants in number of reviews
 
     0: jdbc:drill:zk=local> select name,state,city,`review_count` from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by `review_count` desc limit 10
     . . . . . . . . . . . > ;
@@ -238,7 +242,7 @@ on data.
     | Mesa Grill | NV         | Las Vegas  | 2004         |
     +------------+------------+------------+--------------+
 
-**Top restaurants in number of listed categories**
+#### Top restaurants in number of listed categories
 
     0: jdbc:drill:zk=local> select name,repeated_count(categories) as categorycount, categories from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by repeated_count(categories) desc limit 10;
     +------------+---------------+------------+
@@ -256,7 +260,7 @@ on data.
     | House of Blues | 8               | ["Arts & Entertainment","Music Venues","Restaurants","Hotels","Event Planning & Services","Hotels & Travel","American (New)","Nightlife"] |
     +------------+---------------+------------+
 
-#### **Top first categories in number of review counts**
+#### Top first categories in number of review counts
 
     0: jdbc:drill:zk=local> select categories[0], count(categories[0]) as categorycount 
     from dfs.`/users/nrentachintala/Downloads/yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_business.json` 
@@ -277,9 +281,9 @@ on data.
     | Hair Salons | 901           |
     +------------+---------------+
 
-### **5\. Explore the Yelp reviews dataset and combine with the businesses.**
+### 5\. Explore the Yelp reviews dataset and combine with the businesses.
 
-#### **Take a look at the contents of the Yelp reviews dataset.**
+#### Take a look at the contents of the Yelp reviews dataset.
 
     0: jdbc:drill:zk=local> select * 
     from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_review.json` limit 1;
@@ -289,7 +293,7 @@ on data.
     | {"funny":0,"useful":2,"cool":1} | Xqd0DzHaiyRqVH3WRG7hzg | 15SdjuK7DmYqUAj6rjGowg | 5            | 2007-05-17 | dr. goldberg offers everything i look for in a general practitioner.  he's nice and easy to talk to without being patronizing; he's always on time in seeing his patients; he's affiliated with a top-notch hospital (nyu) which my parents have explained to me is very important in case something happens and you need surgery; and you can get referrals to see specialists without having to see him first.  really, what more do you need?  i'm sitting here trying to think of any complaints i have about him, but i'm really drawing a blank. | review | vcNAWiLM4dR7D2nwwJ7nCA |
     +------------+------------+------------+------------+------------+------------+------------+-------------+
 
-#### **Top businesses with cool rated reviews**
+#### Top businesses with cool rated reviews
 
 Note that we are combining the Yelp business data set that has the overall
 review_count to the Yelp review data, which holds additional details on each
@@ -310,7 +314,7 @@ of the reviews themselves.
     | Wicked Spoon |
     +------------+
 
-**Create a view with the combined business and reviews data sets**
+#### Create a view with the combined business and reviews data sets
 
 Note that Drill views are lightweight, and can just be created in the local
 file system. Drill in standalone mode comes with a dfs.tmp workspace, which we
@@ -352,7 +356,7 @@ As an example, a new FLATTEN function is in development (an upcoming feature
 in 0.7). This function can be used to dynamically rationalize semi-structured
 data so you can apply even deeper SQL functionality. Here is a sample query:
 
-#### **Get a flattened list of categories for each business**
+#### Get a flattened list of categories for each business
 
     0: jdbc:drill:zk=local> select name, flatten(categories) as category 
     from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`  limit 20;
@@ -381,7 +385,7 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
     | Spartan Animal Hospital | Veterinarians |
     +------------+------------+
 
-**Top categories used in business reviews**
+#### Top categories used in business reviews
 
     0: jdbc:drill:zk=local> select celltbl.catl, count(celltbl.catl) categorycnt 
     from (select flatten(categories) catl from dfs.`/users/nrentachintala/Downloads/yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_business.json` ) celltbl 

@@ -108,7 +108,7 @@ following commands against the view:
   * DESCRIBE 
   * DROP 
 
-**Note:** You cannot update, insert into, or delete from a view.
+{% include startnote.html %}You cannot update, insert into, or delete from a view.{% include endnote.html %}
 
 ## Example
 
