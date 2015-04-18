@@ -14,16 +14,16 @@ Drill. For ideas about _what_ you might contribute, please see open tickets in
 These guidelines include the following topics:
 
 * Getting the source code
-  * Making Changes
+* Making Changes
     * Coding Convention
     * Formatter configuration
     * Understanding Maven
     * Creating a patch
     * Applying a patch
-  * Where is a good place to start contributing?
-  * Contributing your work
-  * JIRA Guidelines
-  * See Also
+* Where is a good place to start contributing?
+* Contributing your work
+* JIRA Guidelines
+* See Also
 
 ## Getting the source code
 
