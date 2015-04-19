@@ -21,7 +21,6 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -85,12 +84,12 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
       if (first) {
         this.currentIndex = incoming.getRecordCount() == 0 ? 0 : this.getVectorIndex(underlyingIndex);
-      }
 
-      if (incoming.getRecordCount() == 0) {
-        outer: while (true) {
-          IterOutcome out = outgoing.next(0, incoming);
-          switch (out) {
+        // consume empty batches until we get one with data.
+        if (incoming.getRecordCount() == 0) {
+          outer: while (true) {
+            IterOutcome out = outgoing.next(0, incoming);
+            switch (out) {
             case OK_NEW_SCHEMA:
             case OK:
               if (incoming.getRecordCount() == 0) {
@@ -106,9 +105,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               outcome = out;
               done = true;
               return AggOutcome.CLEANUP_AND_RETURN;
+            }
           }
         }
       }
+
 
       if (newSchema) {
         return AggOutcome.UPDATE_AGGREGATOR;
