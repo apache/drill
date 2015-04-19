@@ -19,6 +19,7 @@ package org.apache.drill.exec.fn.impl;
 
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.util.FileUtils;
 import org.junit.Test;
 
 import java.util.Date;
@@ -32,6 +33,22 @@ public class TestCastFunctions extends BaseTestQuery {
       .unOrdered()
       .baselineColumns("cnt")
       .baselineValues(1l)
+      .build().run();
+  }
+
+  @Test // DRILL-2827
+  public void testImplicitCastStringToBoolean() throws Exception {
+    String boolTable= FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    String query = String.format(
+        "(select * from dfs_test.`%s` where key = 'true' or key = 'false')", boolTable);
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("key")
+      .baselineValues(true)
+      .baselineValues(false)
       .build().run();
   }
 

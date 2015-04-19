@@ -547,6 +547,11 @@ public class TypeCastRules {
     rule = new HashSet<MinorType>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.BIT);
+    rule.add(MinorType.FIXEDCHAR);
+    rule.add(MinorType.FIXED16CHAR);
+    rule.add(MinorType.VARCHAR);
+    rule.add(MinorType.VAR16CHAR);
+    rule.add(MinorType.VARBINARY);
     rules.put(MinorType.BIT, rule);
 
     /** FIXEDCHAR cast able from **/
