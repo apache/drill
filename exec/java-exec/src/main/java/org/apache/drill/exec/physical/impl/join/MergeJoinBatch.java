@@ -114,6 +114,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   public MergeJoinBatchBuilder batchBuilder;
   private boolean areNullsEqual = false; // whether nulls compare equal
 
+  private static final String LEFT_INPUT = "LEFT INPUT";
+  private static final String RIGHT_INPUT = "RIGHT INPUT";
+
   protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
     super(popConfig, context, true);
 
@@ -262,20 +265,16 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   private void generateDoCompareNextLeft(ClassGenerator<JoinWorker> cg, JVar incomingRecordBatch,
-      JVar incomingLeftRecordBatch, JVar joinStatus, ErrorCollector collector) throws ClassTransformationException {
+      LogicalExpression[] leftExpression, JVar incomingLeftRecordBatch, JVar joinStatus,
+      ErrorCollector collector) throws ClassTransformationException {
     boolean nextLeftIndexDeclared = false;
 
     cg.setMappingSet(compareLeftMapping);
 
-    for (JoinCondition condition : conditions) {
-      final LogicalExpression leftFieldExpr = condition.getLeft();
+    for (int i = 0; i < leftExpression.length; i++) {
 
       // materialize value vector readers from join expression
-      final LogicalExpression materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector, context.getFunctionRegistry());
-      if (collector.hasErrors()) {
-        throw new ClassTransformationException(String.format(
-            "Failure while trying to materialize incoming left field.  Errors:\n %s.", collector.toErrorString()));
-      }
+      final LogicalExpression materializedLeftExpr = leftExpression[i];
 
       // generate compareNextLeftKey()
       ////////////////////////////////
@@ -359,13 +358,30 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     // declare 'incoming' member so VVReadExpr generated code can point to the left or right batch
     JVar incomingRecordBatch = cg.clazz.field(JMod.NONE, recordBatchClass, "incoming");
 
+    /*
+     * Materialize expressions on both sides of the join condition. Check if both the sides
+     * have the same return type, if not then inject casts so that comparison function will work as
+     * expected
+     */
+    LogicalExpression leftExpr[] = new LogicalExpression[conditions.size()];
+    LogicalExpression rightExpr[] = new LogicalExpression[conditions.size()];
+    IterOutcome lastLeftStatus = status.getLastLeft();
+    IterOutcome lastRightStatus = status.getLastRight();
+    for (int i = 0; i < conditions.size(); i++) {
+      JoinCondition condition = conditions.get(i);
+      leftExpr[i] =  materializeExpression(condition.getLeft(), lastLeftStatus, left, collector);
+      rightExpr[i] = materializeExpression(condition.getRight(), lastRightStatus, right, collector);
+    }
+    JoinUtils.addLeastRestrictiveCasts(leftExpr, left, rightExpr, right, context);
+
     //generate doCompare() method
     /////////////////////////////////////////
-    generateDoCompare(cg, incomingRecordBatch, incomingLeftRecordBatch, incomingRightRecordBatch, collector);
+    generateDoCompare(cg, incomingRecordBatch, leftExpr, incomingLeftRecordBatch, rightExpr,
+        incomingRightRecordBatch, collector);
 
     //generate doCompareNextLeftKey() method
     /////////////////////////////////////////
-    generateDoCompareNextLeft(cg, incomingRecordBatch, incomingLeftRecordBatch, joinStatus, collector);
+    generateDoCompareNextLeft(cg, incomingRecordBatch, leftExpr, incomingLeftRecordBatch, joinStatus, collector);
 
     // generate copyLeft()
     //////////////////////
@@ -480,49 +496,25 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   private void generateDoCompare(ClassGenerator<JoinWorker> cg, JVar incomingRecordBatch,
-      JVar incomingLeftRecordBatch, JVar incomingRightRecordBatch, ErrorCollector collector) throws ClassTransformationException {
+      LogicalExpression[] leftExpression, JVar incomingLeftRecordBatch, LogicalExpression[] rightExpression,
+      JVar incomingRightRecordBatch, ErrorCollector collector) throws ClassTransformationException {
 
     cg.setMappingSet(compareMapping);
     if (status.getLastRight() != IterOutcome.NONE) {
+      assert leftExpression.length == rightExpression.length;
 
-      for (JoinCondition condition : conditions) {
-        final LogicalExpression leftFieldExpr = condition.getLeft();
-        final LogicalExpression rightFieldExpr = condition.getRight();
+      for (int i = 0; i < leftExpression.length; i++) {
 
-        // materialize value vector readers from join expression
-        LogicalExpression materializedLeftExpr;
-        if (status.getLastLeft() != IterOutcome.NONE) {
-//          if (status.isLeftPositionAllowed()) {
-          materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector, context.getFunctionRegistry());
-        } else {
-          materializedLeftExpr = new TypedNullConstant(Types.optional(MinorType.INT));
-        }
-        if (collector.hasErrors()) {
-          throw new ClassTransformationException(String.format(
-              "Failure while trying to materialize incoming left field.  Errors:\n %s.", collector.toErrorString()));
-        }
-
-        LogicalExpression materializedRightExpr;
-//        if (status.isRightPositionAllowed()) {
-        if (status.getLastRight() != IterOutcome.NONE) {
-          materializedRightExpr = ExpressionTreeMaterializer.materialize(rightFieldExpr, right, collector, context.getFunctionRegistry());
-        } else {
-          materializedRightExpr = new TypedNullConstant(Types.optional(MinorType.INT));
-        }
-        if (collector.hasErrors()) {
-          throw new ClassTransformationException(String.format(
-              "Failure while trying to materialize incoming right field.  Errors:\n %s.", collector.toErrorString()));
-        }
 
         // generate compare()
         ////////////////////////
         cg.setMappingSet(compareMapping);
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
-        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
+        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(leftExpression[i], false);
 
         cg.setMappingSet(compareRightMapping);
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
-        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(materializedRightExpr, false);
+        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(rightExpression[i], false);
 
         LogicalExpression fh =
             FunctionGenerationHelper.getOrderingComparatorNullsHigh(compareLeftExprHolder,
@@ -548,4 +540,19 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     cg.getEvalBlock()._return(JExpr.lit(0));
   }
 
+  private LogicalExpression materializeExpression(LogicalExpression expression, IterOutcome lastStatus,
+                                                  RecordBatch input, ErrorCollector collector) throws ClassTransformationException {
+    LogicalExpression materializedExpr = null;
+    if (lastStatus != IterOutcome.NONE) {
+      materializedExpr = ExpressionTreeMaterializer.materialize(expression, input, collector, context.getFunctionRegistry());
+    } else {
+      materializedExpr = new TypedNullConstant(Types.optional(MinorType.INT));
+    }
+    if (collector.hasErrors()) {
+      throw new ClassTransformationException(String.format(
+          "Failure while trying to materialize incoming field from %s batch.  Errors:\n %s.",
+          (input == left ? LEFT_INPUT : RIGHT_INPUT), collector.toErrorString()));
+    }
+    return materializedExpr;
+  }
 }

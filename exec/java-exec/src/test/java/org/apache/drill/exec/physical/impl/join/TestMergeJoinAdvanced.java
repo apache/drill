@@ -15,79 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl.join;
-
 
 import org.apache.drill.BaseTestQuery;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestHashJoinAdvanced extends BaseTestQuery {
+public class TestMergeJoinAdvanced extends BaseTestQuery {
 
-  // Have to disable merge join, if this testcase is to test "HASH-JOIN".
+  // Have to disable hash join to test merge join in this class
   @BeforeClass
   public static void disableMergeJoin() throws Exception {
-    test("alter session set `planner.enable_mergejoin` = false");
+    test("alter session set `planner.enable_hashjoin` = false");
   }
 
   @AfterClass
   public static void enableMergeJoin() throws Exception {
-    test("alter session set `planner.enable_mergejoin` = true");
+    test("alter session set `planner.enable_hashjoin` = true");
   }
 
-  @Test //DRILL-2197 Left Self Join with complex type in projection
-  public void testLeftSelfHashJoinWithMap() throws Exception {
-    final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from cp.`join/complex_1.json` a left outer join cp.`join/complex_1.json` b on a.id=b.id order by a.id";
-
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .jsonBaselineFile("join/DRILL-2197-result-1.json")
-      .build()
-      .run();
-  }
-
-  @Test //DRILL-2197 Left Join with complex type in projection
-  public void testLeftHashJoinWithMap() throws Exception {
-    final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from cp.`join/complex_1.json` a left outer join cp.`join/complex_2.json` b on a.id=b.id order by a.id";
-
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .jsonBaselineFile("join/DRILL-2197-result-2.json")
-      .build()
-      .run();
-  }
-
-  @Test
-  public void testFOJWithRequiredTypes() throws Exception {
-    String query = "select t1.varchar_col from " +
-        "cp.`parquet/drill-2707_required_types.parquet` t1 full outer join cp.`parquet/alltypes.json` t2 " +
-        "on t1.int_col = t2.INT_col order by t1.varchar_col limit 1";
-
-    testBuilder()
-        .sqlQuery(query)
-        .ordered()
-        .baselineColumns("varchar_col")
-        .baselineValues("doob")
-        .go();
-  }
-
-  @Test  // DRILL-2771, similar problem as DRILL-2197 except problem reproduces with right outer join instead of left
-  public void testRightJoinWithMap() throws Exception {
-    final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from " +
-        "cp.`join/complex_1.json` b right outer join cp.`join/complex_1.json` a on a.id = b.id order by a.id";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .jsonBaselineFile("join/DRILL-2197-result-1.json")
-        .build()
-        .run();
-  }
   @Test
   public void testJoinWithDifferentTypesInCondition() throws Exception {
     String query = "select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 " +
