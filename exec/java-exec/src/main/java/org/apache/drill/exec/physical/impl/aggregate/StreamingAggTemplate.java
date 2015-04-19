@@ -153,21 +153,18 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               }
 
               // Update the indices to set the state for processing next record in incoming batch in subsequent doWork calls.
-              previousIndex = currentIndex;
-              incIndex();
+              previousIndex = -1;
               return setOkAndReturn();
             }
           }
           previousIndex = currentIndex;
         }
 
-        InternalBatch previous = null;
+        InternalBatch previous = new InternalBatch(incoming);
+
         try {
           while (true) {
-            if (previous != null) {
-              previous.clear();
-            }
-            previous = new InternalBatch(incoming);
+
             IterOutcome out = outgoing.next(0, incoming);
             if (EXTRA_DEBUG) {
               logger.debug("Received IterOutcome of {}", out);
@@ -232,16 +229,17 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                   if (EXTRA_DEBUG) {
                     logger.debug("This is not the same as the previous, add record and continue outside.");
                   }
-                  previousIndex = currentIndex;
                   if (addedRecordCount > 0) {
                     if (outputToBatchPrev(previous, previousIndex, outputCount)) {
                       if (EXTRA_DEBUG) {
                         logger.debug("Output container is full. flushing it.");
                       }
+                      previousIndex = -1;
                       return setOkAndReturn();
                     }
-                    continue outside;
                   }
+                  previousIndex = -1;
+                  continue outside;
                 }
               }
             case STOP:
@@ -250,8 +248,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               outcome = out;
               return AggOutcome.CLEANUP_AND_RETURN;
             }
-
-        }
+          }
         } finally {
           // make sure to clear previous
           if (previous != null) {
