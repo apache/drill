@@ -51,6 +51,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.CopyUtil;
 
+import com.carrotsearch.hppc.IntArrayList;
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
@@ -78,6 +79,8 @@ public class PartitionSenderRootExec extends BaseRootExec {
   long maxReceiverRecordCount = Long.MIN_VALUE;
   protected final int numberPartitions;
   protected final int actualPartitions;
+
+  private IntArrayList terminations = new IntArrayList();
 
   public enum Metric implements MetricDef {
     BATCHES_SENT,
@@ -238,7 +241,15 @@ public class PartitionSenderRootExec extends BaseRootExec {
       subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, oContext,
         startIndex, endIndex);
     }
-    partitioner = new PartitionerDecorator(subPartitioners, stats, context);
+
+    synchronized(this){
+      partitioner = new PartitionerDecorator(subPartitioners, stats, context);
+      for (int index = 0; index < terminations.size(); index++) {
+        partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
+      }
+      terminations.clear();
+    }
+
   }
 
   private List<Partitioner> createClassInstances(int actualPartitions) throws SchemaChangeException {
@@ -296,7 +307,14 @@ public class PartitionSenderRootExec extends BaseRootExec {
   public void receivingFragmentFinished(FragmentHandle handle) {
     final int id = handle.getMinorFragmentId();
     if (remainingReceivers.compareAndSet(id, 0, 1)) {
-      partitioner.getOutgoingBatches(id).terminate();
+      synchronized (this) {
+        if (partitioner == null) {
+          terminations.add(id);
+        } else {
+          partitioner.getOutgoingBatches(id).terminate();
+        }
+      }
+
       int remaining = remaingReceiverCount.decrementAndGet();
       if (remaining == 0) {
         done = true;

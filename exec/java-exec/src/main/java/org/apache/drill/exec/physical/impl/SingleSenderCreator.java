@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -29,12 +27,10 @@ import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
-import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
-import org.apache.drill.exec.rpc.RpcException;
 
 public class SingleSenderCreator implements RootCreator<SingleSender>{
 
@@ -101,9 +97,13 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       switch (out) {
       case STOP:
       case NONE:
+        // if we didn't do anything yet, send an empty schema.
+        final BatchSchema sendSchema = incoming.getSchema() == null ? BatchSchema.newBuilder().build() : incoming
+            .getSchema();
+
         FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLastWithSchema(handle.getQueryId(),
             handle.getMajorFragmentId(), handle.getMinorFragmentId(), recMajor, oppositeHandle.getMinorFragmentId(),
-            incoming.getSchema());
+            sendSchema);
         stats.startWait();
         try {
           tunnel.sendRecordBatch(b2);

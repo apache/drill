@@ -123,7 +123,11 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
 
   @Override
   public BatchSchema getSchema() {
-    return container.getSchema();
+    if (container.hasSchema()) {
+      return container.getSchema();
+    } else {
+      return null;
+    }
   }
 
   protected abstract boolean setupNewSchema() throws SchemaChangeException;

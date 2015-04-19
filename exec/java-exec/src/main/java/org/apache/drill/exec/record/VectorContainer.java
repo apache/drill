@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -36,6 +35,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccessible {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
@@ -255,6 +255,10 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
       return null;
     }
     return va.getChildWrapper(fieldIds);
+  }
+
+  public boolean hasSchema() {
+    return schema != null;
   }
 
   public BatchSchema getSchema() {

@@ -154,7 +154,11 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   @Override
   public BatchSchema getSchema() {
-    return container.getSchema();
+    if (container.hasSchema()) {
+      return container.getSchema();
+    } else {
+      return null;
+    }
   }
 
   protected void buildSchema() throws SchemaChangeException {
