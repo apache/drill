@@ -66,21 +66,21 @@ public class TestMergingReceiver extends PopUnitTestBase {
           }
           for (Object cell : row) {
             if (cell == null) {
-              System.out.print("<null>    ");
+//              System.out.print("<null>    ");
               continue;
             }
             int len = cell.toString().length();
-            System.out.print(cell + " ");
+//            System.out.print(cell + " ");
             for (int i = 0; i < (30 - len); ++i) {
-              System.out.print(" ");
+//              System.out.print(" ");
             }
           }
-          System.out.println();
+//          System.out.println();
         }
         b.release();
         batchLoader.clear();
       }
-      assertEquals(200, count);
+      assertEquals(200000, count);
     }
   }
 
@@ -122,17 +122,17 @@ public class TestMergingReceiver extends PopUnitTestBase {
           }
           for (Object cell : row) {
             int len = cell.toString().length();
-            System.out.print(cell + " ");
+//            System.out.print(cell + " ");
             for (int i = 0; i < (30 - len); ++i) {
-              System.out.print(" ");
+//              System.out.print(" ");
             }
           }
-          System.out.println();
+//          System.out.println();
         }
         b.release();
         batchLoader.clear();
       }
-      assertEquals(400, count);
+      assertEquals(400000, count);
     }
   }
 
@@ -163,21 +163,21 @@ public class TestMergingReceiver extends PopUnitTestBase {
           }
           for (Object cell : row) {
             if (cell == null) {
-              System.out.print("<null>    ");
+//              System.out.print("<null>    ");
               continue;
             }
             int len = cell.toString().length();
-            System.out.print(cell + " ");
+//            System.out.print(cell + " ");
             for (int i = 0; i < (30 - len); ++i) {
-              System.out.print(" ");
+//              System.out.print(" ");
             }
           }
-          System.out.println();
+//          System.out.println();
         }
         b.release();
         batchLoader.clear();
       }
-      assertEquals(100, count);
+      assertEquals(100000, count);
     }
   }
 

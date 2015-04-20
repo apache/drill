@@ -12,7 +12,7 @@
       pop:"mock-scan",
       url: "http://apache.org",
       entries:[
-        {records: 100, types: [
+        {records: 100000, types: [
           {name: "blue", type: "BIGINT", mode: "OPTIONAL"},
           {name: "red", type: "BIGINT", mode: "OPTIONAL"},
           {name: "green", type: "BIGINT", mode: "OPTIONAL"}

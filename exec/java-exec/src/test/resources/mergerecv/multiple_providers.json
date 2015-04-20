@@ -12,27 +12,27 @@
       pop:"mock-scan",
       url: "http://apache.org",
       entries:[
-        {records: 100, types: [
+        {records: 100000, types: [
           {name: "blue", type: "BIGINT", mode: "REQUIRED"},
           {name: "red", type: "BIGINT", mode: "REQUIRED"},
           {name: "green", type: "BIGINT", mode: "REQUIRED"}
         ]},
-        {records: 90, types: [
+        {records: 90000, types: [
           {name: "blue", type: "BIGINT", mode: "REQUIRED"},
           {name: "red", type: "BIGINT", mode: "REQUIRED"},
           {name: "green", type: "BIGINT", mode: "REQUIRED"}
         ]},
-        {records: 80, types: [
+        {records: 80000, types: [
           {name: "blue", type: "BIGINT", mode: "REQUIRED"},
           {name: "red", type: "BIGINT", mode: "REQUIRED"},
           {name: "green", type: "BIGINT", mode: "REQUIRED"}
         ]},
-        {records: 70, types: [
+        {records: 70000, types: [
           {name: "blue", type: "BIGINT", mode: "REQUIRED"},
           {name: "red", type: "BIGINT", mode: "REQUIRED"},
           {name: "green", type: "BIGINT", mode: "REQUIRED"}
         ]},
-        {records: 60, types: [
+        {records: 60000, types: [
           {name: "blue", type: "BIGINT", mode: "REQUIRED"},
           {name: "red", type: "BIGINT", mode: "REQUIRED"},
           {name: "green", type: "BIGINT", mode: "REQUIRED"}
