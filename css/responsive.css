@@ -28,10 +28,8 @@ nav.breadcrumbs{
   }
 
 }
-@media (max-width: 1024px) {
-}
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .mw {
     min-width: 0px;
   }
@@ -75,4 +73,6 @@ nav.breadcrumbs{
     margin-right: 10px;
   }
 
+}
+@media (max-width: 768px) {
 }
