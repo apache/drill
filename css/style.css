@@ -89,7 +89,7 @@ a.anchor {
 #menu ul li a {
 	color:#FFF;
 	text-decoration:none;
-	line-height:45px;
+	line-height:50px;
 	padding:14px 20px;
 }
 /*
@@ -141,6 +141,20 @@ a.anchor {
 
 #menu ul li.l.open {
 	background-color:#145aa8;
+}
+
+#menu ul li#twitter-menu-item {
+  width:30px;
+  padding-left: 2px;
+  padding-right:10px;
+}
+
+#menu ul li#twitter-menu-item a {
+  padding: 10px;
+}
+
+#menu ul li#twitter-menu-item img {
+  width: 22px;
 }
 
 #menu ul li ul {
