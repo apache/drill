@@ -18,12 +18,16 @@
 
 package org.apache.drill.exec.resolver;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.exec.util.AssertionUtil;
 
 public class DefaultFunctionResolver implements FunctionResolver {
+
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultFunctionResolver.class);
 
   @Override
   public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods,FunctionCall call) {
@@ -31,6 +35,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
     int bestcost = Integer.MAX_VALUE;
     int currcost = Integer.MAX_VALUE;
     DrillFuncHolder bestmatch = null;
+    final List<DrillFuncHolder> bestMatchAlternatives = new LinkedList<>();
 
     for (DrillFuncHolder h : methods) {
 
@@ -44,6 +49,10 @@ public class DefaultFunctionResolver implements FunctionResolver {
       if (currcost < bestcost) {
         bestcost = currcost;
         bestmatch = h;
+        bestMatchAlternatives.clear();
+      } else if (currcost == bestcost) {
+        // keep log of different function implementations that have the same best cost
+        bestMatchAlternatives.add(h);
       }
     }
 
@@ -52,6 +61,21 @@ public class DefaultFunctionResolver implements FunctionResolver {
       //TODO: raise exception here?
       return null;
     } else {
+      if (AssertionUtil.isAssertionsEnabled() && bestMatchAlternatives.size() > 0) {
+        /*
+         * There are other alternatives to the best match function which could have been selected
+         * Log the possible functions and the chose implementation and raise an exception
+         */
+        logger.error("Chosen function impl: " + bestmatch.toString());
+
+        // printing the possible matches
+        logger.error("Printing all the possible functions that could have matched: ");
+        for (DrillFuncHolder holder: bestMatchAlternatives) {
+          logger.error(holder.toString());
+        }
+
+        throw new AssertionError("Multiple functions with best cost found");
+      }
       return bestmatch;
     }
   }
