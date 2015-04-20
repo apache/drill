@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
@@ -64,7 +63,7 @@ import parquet.schema.Type.Repetition;
 import com.google.common.collect.Lists;
 
 public class ParquetRecordWriter extends ParquetOutputRecordWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordWriter.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordWriter.class);
 
   private static final int MINIMUM_BUFFER_SIZE = 64 * 1024;
   private static final int MINIMUM_RECORD_COUNT_FOR_CHECK = 100;
@@ -72,12 +71,11 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   private ParquetFileWriter parquetFileWriter;
   private MessageType schema;
-  private Map<String, String> extraMetaData = new HashMap();
+  private Map<String, String> extraMetaData = new HashMap<>();
   private int blockSize;
-  private int pageSize = 1 * 1024 * 1024;
+  private int pageSize = 1024 * 1024;
   private int dictionaryPageSize = pageSize;
   private boolean enableDictionary = false;
-  private boolean validating = false;
   private CompressionCodecName codec = CompressionCodecName.SNAPPY;
   private WriterVersion writerVersion = WriterVersion.PARQUET_1_0;
   private DirectCodecFactory codecFactory;
@@ -96,7 +94,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private String prefix;
   private int index = 0;
   private OperatorContext oContext;
-  private ParquetDirectByteBufferAllocator allocator;
 
   public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException{
     super();
@@ -152,10 +149,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
     schema = new MessageType("root", types);
 
-    Path fileName = getPath();
-    parquetFileWriter = new ParquetFileWriter(conf, schema, fileName);
-    parquetFileWriter.start();
-
     int initialBlockBufferSize = max(MINIMUM_BUFFER_SIZE, blockSize / this.schema.getColumns().size() / 5);
     pageStore = ColumnChunkPageWriteStoreExposer.newColumnChunkPageWriteStore(this.oContext,
         codecFactory.getCompressor(codec, pageSize),
@@ -163,16 +156,9 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         initialBlockBufferSize);
     int initialPageBufferSize = max(MINIMUM_BUFFER_SIZE, min(pageSize + pageSize / 10, initialBlockBufferSize));
     store = new ColumnWriteStoreV1(pageStore, pageSize, initialPageBufferSize, dictionaryPageSize, enableDictionary, writerVersion);
-    MessageColumnIO columnIO = new ColumnIOFactory(validating).getColumnIO(this.schema);
+    MessageColumnIO columnIO = new ColumnIOFactory(false).getColumnIO(this.schema);
     consumer = columnIO.getRecordWriter(store);
     setUp(schema, consumer);
-  }
-
-  /**
-   * @return Path for the latest file created
-   */
-  private Path getPath() {
-    return new Path(location, prefix + "_" + index + ".parquet");
   }
 
   private PrimitiveType getPrimitiveType(MaterializedField field) {
@@ -204,12 +190,18 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   private void flush() throws IOException {
-    parquetFileWriter.startBlock(recordCount);
-    store.flush();
-    ColumnChunkPageWriteStoreExposer.flushPageStore(pageStore, parquetFileWriter);
-    recordCount = 0;
-    parquetFileWriter.endBlock();
-    parquetFileWriter.end(extraMetaData);
+    if (recordCount > 0) {
+      parquetFileWriter.startBlock(recordCount);
+      store.flush();
+      ColumnChunkPageWriteStoreExposer.flushPageStore(pageStore, parquetFileWriter);
+      recordCount = 0;
+      parquetFileWriter.endBlock();
+
+      // we are writing one single block per file
+      parquetFileWriter.end(extraMetaData);
+      parquetFileWriter = null;
+    }
+
     store.close();
     ColumnChunkPageWriteStoreExposer.close(pageStore);
     store = null;
@@ -307,7 +299,16 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   @Override
   public void endRecord() throws IOException {
     consumer.endMessage();
+
+    // we wait until there is at least one record before creating the parquet file
+    if (parquetFileWriter == null) {
+      Path path = new Path(location, prefix + "_" + index + ".parquet");
+      parquetFileWriter = new ParquetFileWriter(conf, schema, path);
+      parquetFileWriter.start();
+    }
+
     recordCount++;
+
     checkBlockSizeReached();
   }
 
@@ -317,34 +318,8 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   @Override
   public void cleanup() throws IOException {
-    boolean hasRecords = recordCount > 0;
-    if (hasRecords) {
-      parquetFileWriter.startBlock(recordCount);
-      store.flush();
-      ColumnChunkPageWriteStoreExposer.flushPageStore(pageStore, parquetFileWriter);
-      recordCount = 0;
-      parquetFileWriter.endBlock();
-      parquetFileWriter.end(extraMetaData);
-    }
-    if (store != null) {
-      store.close();
-    }
-    if (pageStore != null) {
-      ColumnChunkPageWriteStoreExposer.close(pageStore);
-    }
+    flush();
 
     codecFactory.close();
-
-    if (!hasRecords) {
-      // the very last file is empty, delete it (DRILL-2408)
-      Path path = getPath();
-      logger.debug("no record written, deleting parquet file {}", path);
-      FileSystem fs = path.getFileSystem(conf);
-      if (fs.exists(path)) {
-        if (!fs.delete(path, false)) {
-          throw new DrillRuntimeException("Couldn't delete empty file " + path);
-        }
-      }
-    }
   }
 }

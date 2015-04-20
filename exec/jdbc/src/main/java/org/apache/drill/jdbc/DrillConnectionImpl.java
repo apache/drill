@@ -332,7 +332,8 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
   private static void makeTmpSchemaLocationsUnique(StoragePluginRegistry pluginRegistry, Properties props) {
     try {
       if (props != null && "true".equalsIgnoreCase(props.getProperty("drillJDBCUnitTests"))) {
-        TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry);
+        final String tmpDirPath = TestUtilities.createTempDir();
+        TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, tmpDirPath);
         TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
       }
     } catch(Throwable e) {

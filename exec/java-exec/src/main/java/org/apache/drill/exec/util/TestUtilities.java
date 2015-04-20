@@ -44,29 +44,36 @@ public class TestUtilities {
   private static final String dfsTestTmpSchema = "tmp";
 
   /**
+   * Create and removes a temporary folder
+   *
+   * @return absolute path to temporary folder
+   */
+  public static String createTempDir() {
+    final File tmpDir = Files.createTempDir();
+    tmpDir.deleteOnExit();
+    return tmpDir.getAbsolutePath();
+  }
+
+  /**
    * Update the location of dfs_test.tmp location. Get the "dfs_test.tmp" workspace and update the location with an
    * exclusive temp directory just for use in the current test jvm.
    *
    * @param pluginRegistry
    * @return JVM exclusive temporary directory location.
    */
-  public static String updateDfsTestTmpSchemaLocation(final StoragePluginRegistry pluginRegistry)
+  public static void updateDfsTestTmpSchemaLocation(final StoragePluginRegistry pluginRegistry,
+                                                      final String tmpDirPath)
       throws ExecutionSetupException {
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(dfsTestPluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
     final WorkspaceConfig tmpWSConfig = pluginConfig.workspaces.get(dfsTestTmpSchema);
 
-    final File tmpDir = Files.createTempDir();
-    tmpDir.deleteOnExit();
-    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(tmpDir.getAbsolutePath(),
-        true, tmpWSConfig.getDefaultInputFormat());
+    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(tmpDirPath, true, tmpWSConfig.getDefaultInputFormat());
 
     pluginConfig.workspaces.remove(dfsTestTmpSchema);
     pluginConfig.workspaces.put(dfsTestTmpSchema, newTmpWSConfig);
 
     pluginRegistry.createOrUpdate(dfsTestPluginName, pluginConfig, true);
-
-    return tmpDir.getAbsolutePath();
   }
 
   /**

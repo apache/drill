@@ -166,15 +166,17 @@ public class BaseTestQuery extends ExecTest {
       serviceSet = RemoteServiceSet.getLocalServiceSet();
     }
 
+    dfsTestTmpSchemaLocation = TestUtilities.createTempDir();
+
     bits = new Drillbit[drillbitCount];
     for(int i = 0; i < drillbitCount; i++) {
       bits[i] = new Drillbit(config, serviceSet);
       bits[i].run();
-    }
 
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    dfsTestTmpSchemaLocation = TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry);
-    TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
+      final StoragePluginRegistry pluginRegistry = bits[i].getContext().getStorage();
+      TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, dfsTestTmpSchemaLocation);
+      TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
+    }
 
     client = QueryTestUtil.createClient(config,  serviceSet, MAX_WIDTH_PER_NODE, null);
   }
