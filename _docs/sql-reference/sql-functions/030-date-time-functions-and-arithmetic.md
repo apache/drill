@@ -10,17 +10,17 @@ This section defines the following date/time functions:
 **Function**| **Return Type**  
 ---|---  
 [AGE(TIMESTAMP)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#age)| INTERVALDAY or INTERVALYEAR
-[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)| double precision
+[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)| DOUBLE
 [CURRENT_DATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| DATE  
 [CURRENT_TIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME   
 [CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP 
-[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)| date/datetime  
-[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)| double precision  
-[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| date/datetime     
+[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)| DATE, TIMESTAMP  
+[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)| DOUBLE  
+[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| DATE, TIMESTAMOP     
 [LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME  
 [LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
 [NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
-[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| text  
+[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| VARCHAR  
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
@@ -29,7 +29,7 @@ Returns the interval between two timestamps or subtracts a timestamp from midnig
 
     AGE (timestamp[, timestamp]);
 
-*timestamp* is a timestamp formatted as shown in the examples.
+*timestamp* is the data and time formatted as shown in the following examples.
 
 ### AGE Usage Notes
 Cast string arguments to timestamp to include time data in the calculations of the interval.

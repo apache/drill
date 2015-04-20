@@ -114,8 +114,8 @@ An integer value consists of an optional minus sign, -, followed by one or more 
 Numeric constants include integers, floats, and values in E notation.
 
 * Integers: 0-9 and a minus sign prefix
-* Float: a series of one or more decimal digits, followed by a period, ., and one or more digits in decimal places. There is no optional + sign. Leading or trailing zeros are required before and after decimal points. For example, 0.52 and 52.0. 
-* E notation: Approximate-value numeric literals in scientific notation consist of a mantissa and exponent. Either or both parts can be signed. For example: 1.2E3, 1.2E-3, -1.2E3, -1.2E-3. Values consist of an optional negative sign (using -), a floating point number, letters e or E, a positive or negative sign (+ or -), and an integer exponent. For example, the following JSON file has data in E notation in two records.
+* Floats: a series of one or more decimal digits, followed by a period, ., and one or more digits in decimal places. There is no optional + sign. Leading or trailing zeros are required before and after decimal points. For example, 0.52 and 52.0. 
+* E notation: Approximate-value numerical literals in scientific notation consist of a mantissa and exponent. Either or both parts can be signed. For example: 1.2E3, 1.2E-3, -1.2E3, -1.2E-3. Values consist of an optional negative sign (using -), a floating point number, letters e or E, a positive or negative sign (+ or -), and an integer exponent. For example, the following JSON file has data in E notation in two records.
 
         {"trans_id":0,
          "date":"2013-07-26",

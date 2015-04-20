@@ -7,22 +7,22 @@ You can use the following string functions in Drill queries:
 
 Function| Return Type  
 --------|---  
-[BYTE_SUBSTR]({{ site.baseurl }}/docs/string-manipulation#byte_substr)|byte array or text
-[CHAR_LENGTH]({{ site.baseurl }}/docs/string-manipulation#char_length)| int  
-[CONCAT]({{ site.baseurl }}/docs/string-manipulation#concat)| text
-[INITCAP]({{ site.baseurl }}/docs/string-manipulation#initcap)| text
-[LENGTH]({{ site.baseurl }}/docs/string-manipulation#length)| int
-[LOWER]({{ site.baseurl }}/docs/string-manipulation#lower)| text
-[LPAD]({{ site.baseurl }}/docs/string-manipulation#lpad)| text
-[LTRIM]({{ site.baseurl }}/docs/string-manipulation#ltrim)| text
-[POSITION]({{ site.baseurl }}/docs/string-manipulation#position)| int
-[REGEXP_REPLACE]({{ site.baseurl }}/docs/string-manipulation#regexp_replace)|text
-[RPAD]({{ site.baseurl }}/docs/string-manipulation#rpad)| text
-[RTRIM]({{ site.baseurl }}/docs/string-manipulation#rtrim)| text
-[STRPOS]({{ site.baseurl }}/docs/string-manipulation#strpos)| int
-[SUBSTR]({{ site.baseurl }}/docs/string-manipulation#substr)| text
-[TRIM]({{ site.baseurl }}/docs/string-manipulation#trim)| text
-[UPPER]({{ site.baseurl }}/docs/string-manipulation#upper)| text
+[BYTE_SUBSTR]({{ site.baseurl }}/docs/string-manipulation#byte_substr)|BINARY or VARCHAR
+[CHAR_LENGTH]({{ site.baseurl }}/docs/string-manipulation#char_length)| INTEGER  
+[CONCAT]({{ site.baseurl }}/docs/string-manipulation#concat)| VARCHAR
+[INITCAP]({{ site.baseurl }}/docs/string-manipulation#initcap)| VARCHAR
+[LENGTH]({{ site.baseurl }}/docs/string-manipulation#length)| INTEGER
+[LOWER]({{ site.baseurl }}/docs/string-manipulation#lower)| VARCHAR
+[LPAD]({{ site.baseurl }}/docs/string-manipulation#lpad)| VARCHAR
+[LTRIM]({{ site.baseurl }}/docs/string-manipulation#ltrim)| VARCHAR
+[POSITION]({{ site.baseurl }}/docs/string-manipulation#position)| INTEGER
+[REGEXP_REPLACE]({{ site.baseurl }}/docs/string-manipulation#regexp_replace)|VARCHAR
+[RPAD]({{ site.baseurl }}/docs/string-manipulation#rpad)| VARCHAR
+[RTRIM]({{ site.baseurl }}/docs/string-manipulation#rtrim)| VARCHAR
+[STRPOS]({{ site.baseurl }}/docs/string-manipulation#strpos)| INTEGER
+[SUBSTR]({{ site.baseurl }}/docs/string-manipulation#substr)| VARCHAR
+[TRIM]({{ site.baseurl }}/docs/string-manipulation#trim)| VARCHAR
+[UPPER]({{ site.baseurl }}/docs/string-manipulation#upper)| VARCHAR
 
 ## BYTE_SUBSTR
 Returns in binary format a substring of a string.

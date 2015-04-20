@@ -369,25 +369,22 @@ Drill supports the format for date and time literals shown in the following exam
 
 * 22:55:55.123...
 
-If you have dates and times in other formats, use a data type conversion functions to perform the following conversions:
+If you have dates and times in other formats, use a data type conversion function to perform the following conversions:
 
-* A timestamp, integer, decimal, or double to a character string.
-* A character string to a date
-* A character string to a number
+* A TIMESTAMP, DATE, TIME, INTEGER, FLOAT, or DOUBLE to a character string, which is of type VARCHAR
+* A character string to a DATE
+* A character string to a NUMBER
 
 The following table lists data type formatting functions that you can
 use in your Drill queries as described in this section:
 
 **Function**| **Return Type**  
 ---|---  
-TO_CHAR(timestamp, format)| text  
-TO_CHAR(int, format)| text  
-TO_CHAR(double precision, format)| text  
-TO_CHAR(numeric, format)| text  
-TO_DATE(text, format)| date  
-TO_NUMBER(text, format)| numeric  
-TO_TIMESTAMP(text, format)| timestamp
-TO_TIMESTAMP(double precision)| timestamp
+[TO_CHAR](#TO_CHAR)(expression, format)| VARCHAR  
+[TO_DATE](#TO_DATE)(expression, format)| DATE  
+[TO_NUMBER](#TO_NUMBER)(VARCHAR, format)| DECIMAL  
+[TO_TIMESTAMP](#TO_TIMESTAMP)(VARCHAR, format)| TIMESTAMP
+[TO_TIMESTAMP](#TO_TIMESTAMP)(DOUBLE)| TIMESTAMP
 
 ### Format Specifiers for Numerical Conversions
 Use the following format specifiers for converting numbers:
@@ -607,7 +604,7 @@ TO_CHAR converts a number, date, time, or timestamp expression to a character st
 
     TO_CHAR (expression, 'format');
 
-*expression* is a float, integer, decimal, date, time, or timestamp expression. 
+*expression* is a INTEGER, FLOAT, DOUBLE, DATE, TIME, or TIMESTAMP expression. 
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. 
 
