@@ -29,7 +29,7 @@ Returns in binary format a substring of a string.
 
 ### BYTE_SUBSTR Syntax
 
-    BYTE_SUBSTR( string-expression, start  [, length [(string-expression)]] );
+    BYTE_SUBSTR( string-expression, start  [, length [(string-expression)]] )
 
 *string-expression* is the entire string, a column name having string values for example.
 *start* is a start position in the string. 1 is the first position.
@@ -65,7 +65,7 @@ Returns the number of characters in a string.
 
 ### CHAR_LENGTH Syntax
 
-    CHAR_LENGTH(string);
+    CHAR_LENGTH(string)
 
 ### CHAR_LENGTH Usage Notes
 You can use the alias CHARACTER_LENGTH.
@@ -86,7 +86,7 @@ Concatenates arguments.
 
 ### CONCAT Syntax
 
-    CONCAT(string [, string [, ...] );
+    CONCAT(string [, string [, ...] )
 
 ### CONCAT Example
 
@@ -106,7 +106,7 @@ Returns the string using initial caps.
 
 ### INITCAP Syntax
 
-    INITCAP(string);
+    INITCAP(string)
 
 ### INITCAP Examples
 
@@ -123,7 +123,7 @@ Returns the string using initial caps.
 Returns the number of characters in the string.
 
 ### LENGTH Syntax
-    LENGTH( string [, encoding] );
+    LENGTH( string [, encoding] )
 
 ### LENGTH Example
 
@@ -153,7 +153,7 @@ Converts characters in the string to lowercase.
 
 ### LOWER Syntax
 
-    LOWER (string);
+    LOWER (string)
 
 ### LOWER Example
 
@@ -172,7 +172,7 @@ Pads the string to the length specified by prepending the fill or a space. Trunc
 
 ### LPAD Syntax
 
-    LPAD (string, length [, fill text]);
+    LPAD (string, length [, fill text])
 
 ### LPAD Example
 
@@ -190,7 +190,7 @@ Removes any characters from the beginning of string1 that match the characters i
 
 ### LTRIM Syntax
 
-    LTRIM(string1, string2);
+    LTRIM(string1, string2)
 
 ### LTRIM Examples
 
@@ -236,7 +236,7 @@ Substitutes new text for substrings that match [POSIX regular expression pattern
 
 ### REGEXP_REPLACE Syntax
 
-    REGEXP_REPLACE(source_char, pattern, replacement);
+    REGEXP_REPLACE(source_char, pattern, replacement)
 
 *source* is the character expression to be replaced.
 
@@ -272,7 +272,7 @@ Pads the string to the length specified. Appends the text you specify after the 
 
 ### RPAD Syntax
 
-    RPAD (string, length [, fill text]);
+    RPAD (string, length [, fill text])
 
 ### RPAD Example
 
@@ -289,7 +289,7 @@ Removes any characters from the end of string1 that match the characters in stri
 
 ### RTRIM Syntax
 
-    RTRIM(string1, string2);
+    RTRIM(string1, string2)
 
 ### RTRIM Examples
 
@@ -333,7 +333,7 @@ Extracts characters from position 1 - x of the string an optional y times.
 
 ### SUBSTR Syntax
 
-SUBSTR(string, x, y)
+    SUBSTR(string, x, y)
 
 ### SUBSTR Usage Notes
 You can use the alias SUBSTRING for this function.
@@ -397,7 +397,7 @@ Converts characters in the string to uppercase.
 
 ### UPPER Syntax
 
-    UPPER (string);
+    UPPER (string)
 
 ### UPPER Example
 

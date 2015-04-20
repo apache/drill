@@ -3704,8 +3704,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Commands Summary", 
-                    "next_url": "/docs/sql-commands-summary/", 
+                    "next_title": "Querying Directories Functions", 
+                    "next_url": "/docs/querying-directories-functions/", 
                     "parent": "Nested Data Functions", 
                     "previous_title": "REPEATED_COUNT", 
                     "previous_url": "/docs/repeated-count/", 
@@ -5023,6 +5023,23 @@
             "title": "Querying Directories", 
             "url": "/docs/querying-directories/"
         }, 
+        "Querying Directories Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SQL Commands Summary", 
+            "next_url": "/docs/sql-commands-summary/", 
+            "parent": "SQL Reference", 
+            "previous_title": "REPEATED_CONTAINS", 
+            "previous_url": "/docs/repeated-contains/", 
+            "relative_path": "_docs/sql-reference/065-querying-directories-functions.md", 
+            "title": "Querying Directories Functions", 
+            "url": "/docs/querying-directories-functions/"
+        }, 
         "Querying HBase": {
             "breadcrumbs": [
                 {
@@ -5310,8 +5327,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SQL Commands Summary", 
-            "next_url": "/docs/sql-commands-summary/", 
+            "next_title": "Querying Directories Functions", 
+            "next_url": "/docs/querying-directories-functions/", 
             "parent": "Nested Data Functions", 
             "previous_title": "REPEATED_COUNT", 
             "previous_url": "/docs/repeated-count/", 
@@ -5858,8 +5875,8 @@
             "next_title": "Supported SQL Commands", 
             "next_url": "/docs/supported-sql-commands/", 
             "parent": "SQL Reference", 
-            "previous_title": "REPEATED_CONTAINS", 
-            "previous_url": "/docs/repeated-contains/", 
+            "previous_title": "Querying Directories Functions", 
+            "previous_url": "/docs/querying-directories-functions/", 
             "relative_path": "_docs/sql-reference/070-sql-commands-summary.md", 
             "title": "SQL Commands Summary", 
             "url": "/docs/sql-commands-summary/"
@@ -6489,8 +6506,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SQL Commands Summary", 
-                            "next_url": "/docs/sql-commands-summary/", 
+                            "next_title": "Querying Directories Functions", 
+                            "next_url": "/docs/querying-directories-functions/", 
                             "parent": "Nested Data Functions", 
                             "previous_title": "REPEATED_COUNT", 
                             "previous_url": "/docs/repeated-count/", 
@@ -6507,6 +6524,23 @@
                     "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Commands Summary", 
+                    "next_url": "/docs/sql-commands-summary/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "REPEATED_CONTAINS", 
+                    "previous_url": "/docs/repeated-contains/", 
+                    "relative_path": "_docs/sql-reference/065-querying-directories-functions.md", 
+                    "title": "Querying Directories Functions", 
+                    "url": "/docs/querying-directories-functions/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6772,8 +6806,8 @@
                     "next_title": "Supported SQL Commands", 
                     "next_url": "/docs/supported-sql-commands/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "REPEATED_CONTAINS", 
-                    "previous_url": "/docs/repeated-contains/", 
+                    "previous_title": "Querying Directories Functions", 
+                    "previous_url": "/docs/querying-directories-functions/", 
                     "relative_path": "_docs/sql-reference/070-sql-commands-summary.md", 
                     "title": "SQL Commands Summary", 
                     "url": "/docs/sql-commands-summary/"
@@ -10235,8 +10269,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SQL Commands Summary", 
-                            "next_url": "/docs/sql-commands-summary/", 
+                            "next_title": "Querying Directories Functions", 
+                            "next_url": "/docs/querying-directories-functions/", 
                             "parent": "Nested Data Functions", 
                             "previous_title": "REPEATED_COUNT", 
                             "previous_url": "/docs/repeated-count/", 
@@ -10253,6 +10287,23 @@
                     "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Commands Summary", 
+                    "next_url": "/docs/sql-commands-summary/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "REPEATED_CONTAINS", 
+                    "previous_url": "/docs/repeated-contains/", 
+                    "relative_path": "_docs/sql-reference/065-querying-directories-functions.md", 
+                    "title": "Querying Directories Functions", 
+                    "url": "/docs/querying-directories-functions/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10518,8 +10569,8 @@
                     "next_title": "Supported SQL Commands", 
                     "next_url": "/docs/supported-sql-commands/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "REPEATED_CONTAINS", 
-                    "previous_url": "/docs/repeated-contains/", 
+                    "previous_title": "Querying Directories Functions", 
+                    "previous_url": "/docs/querying-directories-functions/", 
                     "relative_path": "_docs/sql-reference/070-sql-commands-summary.md", 
                     "title": "SQL Commands Summary", 
                     "url": "/docs/sql-commands-summary/"
