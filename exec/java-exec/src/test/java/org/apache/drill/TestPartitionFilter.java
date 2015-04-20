@@ -20,6 +20,7 @@ package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
 
@@ -159,4 +160,24 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 6, "Filter", 9);
   }
 
+  @Test // see DRILL-2712
+  public void testMainQueryFalseCondition() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
+    String query = String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994') t where 1 = 0", root);
+    testExcludeFilter(query, 4, "Filter", 0);
+  }
+
+  @Test // see DRILL-2712
+  public void testMainQueryTrueCondition() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
+    String query =  String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994' ) t where 0 = 0", root);
+    testExcludeFilter(query, 4, "Filter", 40);
+  }
+
+  @Test // see DRILL-2712
+  public void testMainQueryFilterRegularColumn() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
+    String query =  String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994' and o_custkey = 10) t limit 0", root);
+    testIncludeFilter(query, 4, "Filter", 0);
+  }
 }
