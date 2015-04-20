@@ -1,9 +1,5 @@
 <div class="bui"></div>
 
-<div id="search">
-<input type="text" placeholder="Enter search term here">
-</div>
-
 <div id="menu" class="mw">
 <ul>
   <li class="logo"><a href="{{ site.baseurl }}/"></a></li>
@@ -33,12 +29,13 @@
   <li><a href="{{ site.baseurl }}/blog/">Blog</a></li>
   <li style="width:30px; padding-left: 2px; padding-right:10px"><a href="https://twitter.com/apachedrill" target="_blank"><img src="{{ site.baseurl }}/images/twitterbw.png" alt="" align="center" width="22" style="padding: 0px 10px 1px 0px;"></a> </li>
   <li class='search-bar'>
-    <form>
-      <input type="text" placeholder="Search Apache Drill" id="doc-search-term" />
-      <button type="submit" id="doc-search-submit">
+    <form id="drill-search-form">
+      <input type="text" placeholder="Search Apache Drill" id="drill-search-term" />
+      <button type="submit">
         <i class="fa fa-search"></i>
       </button>
     </form>
+    <form target="_blank" id="search-using-google"></form>
   </li>
   <li class="d"><a href="{{ site.baseurl }}/download/">Download</a></li>
 </ul>
