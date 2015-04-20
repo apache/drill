@@ -4,20 +4,15 @@ parent: "SQL Functions"
 ---
 Drill supports the math functions shown in the following table of math functions plus trig functions listed at the end of this section. Most math functions and all trig functions take these input types:
 
-* INT
+* INTEGER
 * BIGINT
-* FLOAT4
-* FLOAT8
-* SMALLINT
-* UINT1
-* UINT2
-* UINT4
-* UINT8
+* FLOAT
+* DOUBLE
+* SMALLINT*
 
-Exceptions are the LSHIFT and RSHIFT functions, which take all types except the float types. DEGREES, EXP, RADIANS, and the multiple LOG functions take the input types in this list plus the following additional types:
+\* Not supported in this release.
 
-* DECIMAL9
-* DECIMAL18
+Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOAT and DOUBLE types. DEGREES, EXP, RADIANS, and the multiple LOG functions take the input types in this list plus the DECIMAL type:
 
 ## Table of Math Functions
 
