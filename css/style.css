@@ -103,8 +103,7 @@ a.anchor {
 	background:url(../images/download-ico.png) no-repeat left center #4aaf4c;
 	background-size:13px auto;
 	background-position:24px 16px;
-	display:block;
-	float:right;
+	display:inline-block;
 	font-size:12px;
 	height:50px;
 	text-transform:uppercase;

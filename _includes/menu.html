@@ -3,10 +3,10 @@
 <div id="menu" class="mw">
 <ul>
   <li class="logo"><a href="{{ site.baseurl }}/"></a></li>
-  <li class='expand-menu pull-right'>
+  <li class='expand-menu'>
     <a href="javascript:void(0);"><span class='menu-text'>Menu</span><span class='expand-icon'>☰</span></a>
   </li>
-  <li>
+  <li class='nav'>
     <a href="{{ site.baseurl }}/docs/">Documentation</a>
     <ul>
       {% for doc in site.data.docs.hierarchy %}
@@ -14,7 +14,7 @@
       {% endfor %}
     </ul>
   </li>
-  <li>
+  <li class='nav'>
     <a href="{{ site.baseurl }}/community/">Community</a>
     <ul>
       <li><a href="{{ site.baseurl }}/team/">Team</a></li>
@@ -25,8 +25,8 @@
       <li><a href="https://github.com/apache/drill" target="_blank">GitHub</a></li>
     </ul>
   </li>
-  <li><a href="{{ site.baseurl }}/faq/">FAQ</a></li>
-  <li><a href="{{ site.baseurl }}/blog/">Blog</a></li>
+  <li class='nav'><a href="{{ site.baseurl }}/faq/">FAQ</a></li>
+  <li class='nav'><a href="{{ site.baseurl }}/blog/">Blog</a></li>
   <li id="twitter-menu-item"><a href="https://twitter.com/apachedrill" title="apachedrill on twitter" target="_blank"><img src="{{ site.baseurl }}/images/twitter_32_26_white.png" alt="twitter logo" align="center"></a> </li>
   <li class='search-bar'>
     <form id="drill-search-form">
