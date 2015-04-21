@@ -19,7 +19,8 @@ Drill.Site = {
   },
 
   menuIsExpanded : function() {
-    return ($("#menu ul li.d").css('display') == 'block');
+    var item_to_check = $($("#menu ul li")[3]).css("display");
+    return (item_to_check != 'none');
   },
 
   expandMenu: function(){
@@ -92,9 +93,23 @@ Drill.Site = {
 
 Drill.Docs = {
   init : function(){
+    Drill.Docs.watchCategoryBar();
     Drill.Docs.watchDocTocClicks();
     Drill.Docs.watchExpandTocClicks();
     Drill.Docs.permalinkSubHeaders();
+  },
+
+  watchCategoryBar : function() {
+    $(window).scroll(function(){
+      var category_bar = $(".toc-categories");
+      if ($(this).scrollTop() > 35) {
+        category_bar.addClass('fixed');
+        $(".page-wrap div.int_title").addClass("margin_110");
+      } else {
+        category_bar.removeClass('fixed');
+        $(".page-wrap div.int_title").removeClass("margin_110");
+      }
+    });
   },
 
   watchExpandTocClicks : function () {
@@ -149,7 +164,7 @@ Drill.Docs = {
             $toctree.children("span.contract").show();
           }
 
-          $(this).show("slide");
+          $(this).slideDown();
         } else {
 
           if ( $.inArray( $toctree[0], l2nodes ) > -1 ) {
@@ -157,7 +172,7 @@ Drill.Docs = {
             $toctree.children("span.contract").hide();
           }
 
-          $(this).hide("slide");
+          $(this).slideUp();
         }
         //$(this).toggle("slide");
       })

@@ -67,6 +67,9 @@ nav.breadcrumbs{
   #menu ul li.expand-menu {
     display: block;
   }
+  #menu ul li.expand-menu, #menu ul li.expand-menu a {
+    line-height: 45px;
+  }
   #menu ul li.expand-menu span.expand-icon{
     font-size: 24px;
   }
@@ -96,10 +99,22 @@ nav.breadcrumbs{
     width: 100%;
     margin: auto;
   }
+  #menu ul li.force-expand {
+    display:block;
+  }
+  #menu ul li.clear-float{
+    clear:both;
+    width: 0px;
+    display:block;
+  }
   #menu ul li.search-bar {
     margin: 0 11px 0 20px;
+    float: right;
+  }
+  #menu ul li.d
+  {
+    margin: 10px;
+    clear: both;
+    float: right;
   }
 
-  #menu ul li.force-expand.d {
-    margin: 10px;
-  }

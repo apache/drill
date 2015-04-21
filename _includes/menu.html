@@ -6,7 +6,8 @@
   <li class='expand-menu'>
     <a href="javascript:void(0);"><span class='menu-text'>Menu</span><span class='expand-icon'>☰</span></a>
   </li>
-  <li class='nav'>
+  <li class='clear-float'></li>
+  <li>
     <a href="{{ site.baseurl }}/docs/">Documentation</a>
     <ul>
       {% for doc in site.data.docs.hierarchy %}
@@ -37,6 +38,10 @@
     </form>
     <form target="_blank" id="search-using-google"></form>
   </li>
-  <li class="d"><a href="{{ site.baseurl }}/download/">Download</a></li>
+  <li class="d">
+    <a href="{{ site.baseurl }}/download/">
+      <i class="fa fa-cloud-download"></i> Download
+    </a>
+  </li>
 </ul>
 </div>
