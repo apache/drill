@@ -20,7 +20,7 @@ The query directory functions are recommended instead of the MAX or MIN aggregat
 The following syntax shows how to construct a SELECT statement that using the MAXDIR function:
 
     SELECT * FROM <plugin>.<workspace>.`<filename>` 
-    WHERE dir*n* = MAXDIR('<plugin>.<workspace>', '<filename>');
+    WHERE dirn = MAXDIR('<plugin>.<workspace>', '<filename>');
 
 Enclose both arguments to the query directory function in single-quotation marks, not backticks. The first argument to the function is the plugin and workspace names in dot notation, and the second argument is the directory name. The dir variable, `dir0`, `dir1`, and so on, refer to
 subdirectories in your workspace path, as explained in section, ["Querying Directories"]({{site.baseurl}}/docs/querying-directories). 
