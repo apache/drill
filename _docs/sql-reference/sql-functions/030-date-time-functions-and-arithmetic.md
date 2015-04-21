@@ -10,26 +10,26 @@ This section defines the following date/time functions:
 **Function**| **Return Type**  
 ---|---  
 [AGE(TIMESTAMP)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#age)| INTERVALDAY or INTERVALYEAR
-[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)| double precision
+[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)| DOUBLE
 [CURRENT_DATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| DATE  
 [CURRENT_TIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME   
 [CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP 
-[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)| date/datetime  
-[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)| double precision  
-[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| date/datetime     
+[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)| DATE, TIMESTAMP  
+[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)| DOUBLE  
+[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| DATE, TIMESTAMOP     
 [LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME  
 [LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
 [NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
-[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| text  
+[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| VARCHAR  
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
 
 ### AGE Syntax
 
-    AGE (timestamp[, timestamp]);
+    AGE (timestamp[, timestamp])
 
-*timestamp* is a timestamp formatted as shown in the examples.
+*timestamp* is the data and time formatted as shown in the following examples.
 
 ### AGE Usage Notes
 Cast string arguments to timestamp to include time data in the calculations of the interval.
@@ -63,9 +63,9 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 
 ### DATE_ADD Syntax
 
-    DATE_ADD(date literal_date, integer);
+    DATE_ADD(date literal_date, integer)
 
-    DATE_ADD(keyword literal, interval expr); 
+    DATE_ADD(keyword literal, interval expr)
 
 *date* is the keyword date.  
 *literal_date* is a date in yyyy-mm-dd format enclosed in single quotation marks.  
@@ -81,7 +81,7 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 
 Add two days to today's date May 15, 2015.
 
-    SELECT DATE_ADD(date '2015-05-15', 2) from sys.version;
+    SELECT DATE_ADD(date '2015-05-15', 2) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -144,7 +144,7 @@ Returns a field of a date, time, timestamp, or interval.
 
 ### DATE_PART Syntax 
 
-    date_part(keyword, expression);
+    date_part(keyword, expression) 
 
 *keyword* is year, month, day, hour, minute, or second enclosed in single quotation marks.  
 *expression* is date, time, timestamp, or interval literal enclosed in single quotation marks.
@@ -195,9 +195,9 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 
 ### DATE_SUB Syntax
 
-    DATE_SUB(date literal_date, integer);
+    DATE_SUB(date literal_date, integer) 
 
-    DATE_SUB(keyword literal, interval expr); 
+    DATE_SUB(keyword literal, interval expr)  
 
 *date* is the keyword date.  
 *literal_date* is a date in yyyy-mm-dd format enclosed in single quotation marks.  
@@ -213,7 +213,7 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 
 Subtract two days to today's date May 15, 2015.
 
-    SELECT DATE_SUB(date '2015-05-15', 2) from sys.version;
+    SELECT DATE_SUB(date '2015-05-15', 2) FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
@@ -359,7 +359,7 @@ Returns a component of a timestamp, time, date, or interval.
 
 #### EXTRACT Syntax
 
-    EXTRACT (extract_expression);
+    EXTRACT (extract_expression) 
 
 *extract_expression* is:
 
@@ -396,7 +396,7 @@ At 8:00 am, extract the hour from the value of CURRENT_DATE.
 
 What is the hour component of this time: 17:12:28.5?
 
-    SELECT EXTRACT(hour FROM TIME '17:12:28.5') from sys.version;
+    SELECT EXTRACT(hour FROM TIME '17:12:28.5') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -407,7 +407,7 @@ What is the hour component of this time: 17:12:28.5?
 
 What is the seconds component of this timestamp: 2001-02-16 20:38:40
 
-    SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') from sys.version;
+    SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') FROM sys.version;
 
     +------------+
     |   EXPR$0   |
@@ -418,8 +418,6 @@ What is the seconds component of this timestamp: 2001-02-16 20:38:40
 
 
 ## Date, Time, and Interval Arithmetic Functions
-<!-- date +/- integer
-date + interval  -->
 
 Is the day returned from the NOW function the same as the day returned from the CURRENT_DATE function?
 
@@ -451,34 +449,4 @@ Is the time 2:00 PM?
     +------------+
     1 row selected (0.033 seconds)
 
-
-<!-- timestamp + interval 
-timestamptz + interval
-date + intervalday 
-time + intervalday 
-timestamp + intervalday
-timestamptz + intervalday
-date + intervalyear 
-time + intervalyear
-timestamp + intervalyear 
-timestamptz + intervalyear
-date + time
-date - date
-time - time
-timestamp - timestamp
-timestamptz - timestamptz
-interval +/- interval
-intervalday +/- intervalday
-intervalyear +/- intervalyear
-interval *//(div) integer or float or double
-intervalday *//(div) integer or float or double
-intervalyear *//(div) integer or float or double
--interval
--intervalday
--intervalyear
-
-extract(field from timestamptz)
-extract(field from interval)
-extract(field from intervalday)
-extract(field from intervalyear) -->
 

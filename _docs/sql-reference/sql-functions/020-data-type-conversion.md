@@ -28,7 +28,7 @@ The target data type, such as INTEGER or DATE, to which to cast the expression
 
 If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause. For example:
 
-    SELECT c_row, CAST(c_int AS DECIMAL(28,8)) FROM mydata WHERE CAST(c_int AS DECIMAL(28,8)) > -3.0
+    SELECT c_row, CAST(c_int AS DECIMAL(28,8)) FROM mydata WHERE CAST(c_int AS DECIMAL(28,8)) > -3.0;
 
 Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types other than INT AND BIGINT to other types.  
 
@@ -115,8 +115,6 @@ Use a CTAS statement to cast text from a JSON file to year and day intervals and
     (SELECT CAST( INTERVALYEAR_col as interval year) INTERVALYEAR_col, 
             CAST( INTERVALDAY_col as interval day) INTERVALDAY_col 
     FROM dfs.`/Users/drill/intervals.json`);
-
-<!-- Text and include output -->
 
 ## CONVERT_TO and CONVERT_FROM
 
@@ -369,25 +367,22 @@ Drill supports the format for date and time literals shown in the following exam
 
 * 22:55:55.123...
 
-If you have dates and times in other formats, use a data type conversion functions to perform the following conversions:
+If you have dates and times in other formats, use a data type conversion function to perform the following conversions:
 
-* A timestamp, integer, decimal, or double to a character string.
-* A character string to a date
-* A character string to a number
+* A TIMESTAMP, DATE, TIME, INTEGER, FLOAT, or DOUBLE to a character string, which is of type VARCHAR
+* A character string to a DATE
+* A character string to a NUMBER
 
 The following table lists data type formatting functions that you can
 use in your Drill queries as described in this section:
 
 **Function**| **Return Type**  
 ---|---  
-TO_CHAR(timestamp, format)| text  
-TO_CHAR(int, format)| text  
-TO_CHAR(double precision, format)| text  
-TO_CHAR(numeric, format)| text  
-TO_DATE(text, format)| date  
-TO_NUMBER(text, format)| numeric  
-TO_TIMESTAMP(text, format)| timestamp
-TO_TIMESTAMP(double precision)| timestamp
+[TO_CHAR](#TO_CHAR)(expression, format)| VARCHAR  
+[TO_DATE](#TO_DATE)(expression, format)| DATE  
+[TO_NUMBER](#TO_NUMBER)(VARCHAR, format)| DECIMAL  
+[TO_TIMESTAMP](#TO_TIMESTAMP)(VARCHAR, format)| TIMESTAMP
+[TO_TIMESTAMP](#TO_TIMESTAMP)(DOUBLE)| TIMESTAMP
 
 ### Format Specifiers for Numerical Conversions
 Use the following format specifiers for converting numbers:
@@ -605,9 +600,9 @@ TO_CHAR converts a number, date, time, or timestamp expression to a character st
 
 ### TO_CHAR Syntax
 
-    TO_CHAR (expression, 'format');
+    TO_CHAR (expression, 'format')
 
-*expression* is a float, integer, decimal, date, time, or timestamp expression. 
+*expression* is a INTEGER, FLOAT, DOUBLE, DATE, TIME, or TIMESTAMP expression. 
 
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. 
 
@@ -671,7 +666,7 @@ Converts a character string or a UNIX epoch timestamp to a date.
 
 ### TO_DATE Syntax
 
-    TO_DATE (expression [, 'format']);
+    TO_DATE (expression [, 'format'])
 
 *expression* is a character string enclosed in single quotation marks or a Unix epoch timestamp in milliseconds, not enclosed in single quotation marks. 
 
@@ -746,7 +741,7 @@ TO_NUMBER converts a character string to a formatted number using a format speci
 
 ### Syntax
 
-    TO_NUMBER ('string', 'format');
+    TO_NUMBER ('string', 'format')
 
 *'string'* is a character string enclosed in single quotation marks. 
 
@@ -801,7 +796,7 @@ Converts a character string to a time.
 
 ### TO_TIME Syntax
 
-    TO_TIME (expression [, 'format']);
+    TO_TIME (expression [, 'format'])
 
 *expression* is a character string enclosed in single quotation marks or milliseconds, not enclosed in single quotation marks. 
 
@@ -834,7 +829,7 @@ Convert 828550000 milliseconds (23 hours 55 seconds) to the time.
 
 ### TO_TIMESTAMP Syntax
 
-    TO_TIMESTAMP (expression [, 'format']);
+    TO_TIMESTAMP (expression [, 'format'])
 
 *expression* is a character string enclosed in single quotation marks or a UNIX epoch timestamp, not enclosed in single quotation marks. 
 

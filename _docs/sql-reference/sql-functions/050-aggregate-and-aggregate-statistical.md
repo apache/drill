@@ -10,12 +10,12 @@ Drill queries:
 
 **Function** | **Argument Type** | **Return Type**  
   --------   |   -------------   |   -----------
-AVG(expression)| smallint, int, bigint, real, double precision, numeric, or interval| numeric for any integer-type argument, double precision for a floating-point argument, otherwise the same as the argument data type
-COUNT(*)| _-_| bigint
-COUNT([DISTINCT] expression)| any| bigint
-MAX(expression)| any array, numeric, string, or date/time type| same as argument type
-MIN(expression)| any array, numeric, string, or date/time type| same as argument type
-SUM(expression)| smallint, int, bigint, real, double precision, numeric, or interval| bigint for smallint or int arguments, numeric for bigint arguments, double precision for floating-point arguments, otherwise the same as the argument data type
+AVG(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVALYEAR or INTERVALDAY| DECIMAL for any integer-type argument, DOUBLE for a floating-point argument, otherwise the same as the argument data type
+COUNT(*)| _-_| BIGINT
+COUNT([DISTINCT] expression)| any| BIGINT
+MAX(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as argument type
+MIN(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as argument type
+SUM(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVALDAY, or INTERVALYEAR| BIGINT for SMALLINT or INTEGER arguments, DECIMAL for BIGINT arguments, DOUBLE for floating-point arguments, otherwise the same as the argument data type
 
 MIN, MAX, COUNT, AVG, and SUM accept ALL and DISTINCT keywords. The default is ALL.
 
@@ -99,14 +99,13 @@ MIN, MAX, COUNT, AVG, and SUM accept ALL and DISTINCT keywords. The default is A
   
 ## Aggregate Statistical Functions
 
-The following table provides the aggregate statistics functions that you can use in your Drill queries:
+Drill provides following aggregate statistics functions:
 
-**Function**| **Argument Type**| **Return Type**
-  --------  |   -------------  |   -----------
-stddev(expression)| smallint, int, bigint, real, double precision, or numeric| double precision for floating-point arguments, otherwise numeric
-stddev_pop(expression)| smallint, int, bigint, real, double precision, or numeric| double precision for floating-point arguments, otherwise numeric
-stddev_samp(expression)| smallint, int, bigint, real, double precision, or numeric| double precision for floating-point arguments, otherwise numeric
-variance(expression)| smallint, int, bigint, real, double precision, or numeric| double precision for floating-point arguments, otherwise numeric
-var_pop(expression)| smallint, int, bigint, real, double precision, or numeric| double precision for floating-point arguments, otherwise numeric
-var_samp(expression)| smallint, int, bigint, real, double precision, or numeric| double precision for floating-point arguments, otherwise numeric
+* stddev(expression) 
+* stddev_pop(expression)
+* stddev_samp(expression)
+* variance(expression)
+* var_pop(expression)
+* var_samp(expression)
   
+These functions take a SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, or DECIMAL expression as the argument. If the expression is FLOAT, the function returns  DOUBLE; otherwise, the function returns DECIMAL.

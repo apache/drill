@@ -37,22 +37,22 @@ The following table shows SQL-JSON data type mapping, assuming you use the defau
     <th>Description</th>
   </tr>
   <tr>
-    <td>boolean</td>
+    <td>BOOLEAN</td>
     <td>Boolean</td>
     <td>True or false</td>
   </tr>
   <tr>
-    <td>bigint</td>
+    <td>BIGINT</td>
     <td>Numeric</td>
     <td>Number having no decimal point in JSON, 8-byte signed integer in Drill</td>
   </tr>
    <tr>
-    <td>double</td>
+    <td>DOUBLE</td>
     <td>Numeric</td>
     <td>Number having a decimal point in JSON, 8-byte double precision floating point number in Drill</td>
   </tr>
   <tr>
-    <td>varchar</td>
+    <td>VARCHAR</td>
     <td>String</td>
     <td>Character string of variable length</td>
   </tr>
@@ -67,7 +67,7 @@ Use the all text mode to prevent the schema change error that occurs from when a
 
 When you set this option, Drill reads all data from the JSON files as VARCHAR. After reading the data, use a SELECT statement in Drill to cast data as follows:
 
-* Cast JSON numeric values to [SQL types]({{ site.baseurl }}/docs/data-types), such as BIGINT, DECIMAL, FLOAT, INTEGER, and SMALLINT.
+* Cast JSON values to [SQL types]({{ site.baseurl }}/docs/data-types), such as BIGINT, DECIMAL, FLOAT, and INTEGER.
 * Cast JSON strings to [Drill Date/Time Data Type Formats]({{ site.baseurl }}/docs/supported-date-time-data-type-formats).
 
 Drill uses [map and array data types]({{ site.baseurl }}/docs/data-types) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lession-2-run-queries-with-ansi-sql). “Query Complex Data” shows how to access nested arrays.
@@ -173,12 +173,12 @@ Take a look at the data in Drill:
     2 rows selected (0.041 seconds)
 
 ### Flatten Arrays
-The flatten function breaks the following _day arrays from the JSON example file shown earlier into separate rows.
+The FLATTEN function breaks the following _day arrays from the JSON example file shown earlier into separate rows.
 
     "_day": [ 15, 25, 28, 31 ] 
     "_day": [ 10, 15, 19, 31 ]
 
-Flatten the sales column of the ticket data onto separate rows, one row for each day in the array, for a better view of the data. Flatten copies the sales data related in the JSON object on each row.  Using the all (*) wildcard as the argument to flatten is not supported and returns an error.
+Flatten the sales column of the ticket data onto separate rows, one row for each day in the array, for a better view of the data. FLATTEN copies the sales data related in the JSON object on each row.  Using the all (*) wildcard as the argument to flatten is not supported and returns an error.
 
     SELECT flatten(tkt._day) AS `day`, tkt.sales FROM dfs.`/Users/drilluser/ticket_sales.json` tkt;
 
@@ -197,9 +197,9 @@ Flatten the sales column of the ticket data onto separate rows, one row for each
     8 rows selected (0.072 seconds)
 
 ### Generate Key/Value Pairs
-Use the kvgen (Key Value Generator) function to generate key/value pairs from complex data. Generating key/value pairs is often helpful when working with data that contains arbitrary maps consisting of dynamic and unknown element names, such as the ticket sales data by state. For example purposes, take a look at how kvgen breaks the sales data into keys and values representing the states and number of tickets sold:
+Use the KVGEN (Key Value Generator) function to generate key/value pairs from complex data. Generating key/value pairs is often helpful when working with data that contains arbitrary maps consisting of dynamic and unknown element names, such as the ticket sales data by state. For example purposes, take a look at how kvgen breaks the sales data into keys and values representing the states and number of tickets sold:
 
-    SELECT kvgen(tkt.sales) AS state_sales FROM dfs.`/Users/drilluser/ticket_sales.json` tkt;
+    SELECT KVGEN(tkt.sales) AS state_sales FROM dfs.`/Users/drilluser/ticket_sales.json` tkt;
     +-------------+
     | state_sales |
     +-------------+
@@ -208,13 +208,13 @@ Use the kvgen (Key Value Generator) function to generate key/value pairs from co
     +-------------+
     2 rows selected (0.039 seconds)
 
-The purpose of using kvgen function is to allow queries against maps where the keys themselves represent data rather than a schema, as shown in the next example.
+KVGEN allows queries against maps where the keys themselves represent data rather than a schema, as shown in the next example.
 
 ### Flatten JSON Data
 
-`Flatten` breaks the list of key-value pairs into separate rows on which you can apply analytic functions. The flatten function takes a JSON array, such as the output from kvgen(sales), as an argument. Using the all (*) wildcard as the argument is not supported and returns an error.
+FLATTEN breaks the list of key-value pairs into separate rows on which you can apply analytic functions. FLATTEN takes a JSON array, such as the output from kvgen(sales), as an argument. Using the all (*) wildcard as the argument is not supported and returns an error.
 
-    SELECT flatten(kvgen(sales)) Sales 
+    SELECT FLATTEN(kvgen(sales)) Sales 
     FROM dfs.`/Users/drilluser/drill/apache-drill-0.8.0-SNAPSHOT/ticket_sales.json`;
 
     +--------------------------------+
@@ -232,11 +232,11 @@ The purpose of using kvgen function is to allow queries against maps where the k
     8 rows selected (0.171 seconds)
 
 ### Example: Aggregate Loosely Structured Data
-Use flatten and kvgen together to aggregate the data. Continuing with the previous example, make sure all text mode is set to false to sum numerical values. Drill returns an error if you attempt to sum data in in all text mode. 
+Use flatten and kvgen together to aggregate the data. Continuing with the previous example, make sure all text mode is set to false to sum numbers. Drill returns an error if you attempt to sum data in all text mode. 
 
     ALTER SYSTEM SET `store.json.all_text_mode` = false;
     
-Sum the ticket sales by combining the `sum`, `flatten`, and `kvgen` functions in a single query.
+Sum the ticket sales by combining the `SUM`, `FLATTEN`, and `KVGEN` functions in a single query.
 
     SELECT SUM(tkt.tot_sales.`value`) AS TotalSales FROM (SELECT flatten(kvgen(sales)) tot_sales FROM dfs.`/Users/drilluser/ticket_sales.json`) tkt;
 
@@ -331,7 +331,7 @@ By flattening the following JSON file, which contains an array of maps, you can 
 
     {"name":"classic","fillings":[ {"name":"sugar","cal":500} , {"name":"flour","cal":300} ] }
 
-    SELECT flat.fill FROM (SELECT flatten(t.fillings) AS fill FROM dfs.flatten.`test.json` t) flat WHERE flat.fill.cal  > 300;
+    SELECT flat.fill FROM (SELECT FLATTEN(t.fillings) AS fill FROM dfs.flatten.`test.json` t) flat WHERE flat.fill.cal  > 300;
 
     +----------------------------+
     |           fill             |
@@ -461,9 +461,9 @@ Complex arrays and maps can be difficult or impossible to query.
 
 Workaround: Separate lengthy objects into objects delimited by curly braces using the following functions:
  
-* [flatten]({{ site.baseurl }}/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
+* [FLATTEN]({{ site.baseurl }}/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
 
-* [kvgen]({{ site.baseurl }}/docs/json-data-model#generate-key-value-pairs) separates objects having more elements than optimal for querying.
+* [KVGEN]({{ site.baseurl }}/docs/json-data-model#generate-key-value-pairs) separates objects having more elements than optimal for querying.
 
   
 ### Nested Column Names 
