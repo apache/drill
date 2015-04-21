@@ -11,7 +11,7 @@ You can use the following query directory functions when [querying multiple file
 
 The query directory functions restrict a query to one of a number of subdirectories. For example, suppose you had time-series data in subdirectories named 2015, 2014, and 2013. You could use the MAXDIR function to get the latest data and MINDIR to get the earliest data.
 
-The MAXDIR and MINDIR functions are case-sensitive. The IMAXDIR and IMINDIR functions are case-insensitive. 
+You use MAXDIR and MINDIR when your directory names are case-sensitive, and IMAXDIR and IMINDIR when your directory names are case-insensitive.
 
 The query directory functions are recommended instead of the MAX or MIN aggregate functions to prevent Drill from scanning all data in directories.
 
@@ -27,7 +27,7 @@ subdirectories in your workspace path, as explained in section, ["Querying Direc
 
 ## Query Directory Function Example 
 
-This example creates a top-level directory called `querylogs` in the `/tmp` directory. Using the /tmp directory is convenient for example purposes because /tmp is predefined as a workspace in the default `dfs` storage plugin. In the querylogs directory, you create three subdirectories:
+This example creates a top-level directory called `querylogs` in the `/tmp` directory. Using the `/tmp` directory is convenient for example purposes because `/tmp` is predefined as a workspace in the default `dfs` storage plugin. In the `querylogs` directory, you create three subdirectories:
 
 * 2015
 * 2014
