@@ -23,6 +23,7 @@ import java.sql.Date;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,11 +31,15 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestParquetWriter extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetWriter.class);
 
+  @Rule
+  public TemporaryFolder folder = new TemporaryFolder();
   static FileSystem fs;
 
   @BeforeClass
@@ -50,6 +55,39 @@ public class TestParquetWriter extends BaseTestQuery {
     String selection = "*";
     String inputTable = "cp.`employee.json`";
     runTestAndValidate(selection, selection, inputTable, "employee_parquet");
+  }
+
+  @Test
+  public void testLargeFooter() throws Exception {
+    StringBuffer sb = new StringBuffer();
+    // create a JSON document with a lot of columns
+    sb.append("{");
+    final int numCols = 1000;
+    String[] colNames = new String[numCols];
+    Object[] values = new Object[numCols];
+    for (int i = 0 ; i < numCols - 1; i++) {
+      sb.append(String.format("\"col_%d\" : 100,", i));
+      colNames[i] = "col_" + i;
+      values[i] = 100l;
+    }
+    // add one column without a comma after it
+    sb.append(String.format("\"col_%d\" : 100", numCols - 1));
+    sb.append("}");
+    colNames[numCols - 1] = "col_" + (numCols - 1);
+    values[numCols - 1] = 100l;
+
+    // write it to a file in the temp directory for the test
+    new TestConstantFolding.SmallFileCreator(folder).setRecord(sb.toString()).createFiles(1, 1, "json");
+
+    String path = folder.getRoot().toPath().toString();
+    test("use dfs_test.tmp");
+    test("create table WIDE_PARQUET_TABLE_TestParquetWriter_testLargeFooter as select * from dfs.`" + path + "/smallfile/smallfile.json`");
+    testBuilder()
+        .sqlQuery("select * from dfs_test.tmp.WIDE_PARQUET_TABLE_TestParquetWriter_testLargeFooter")
+        .unOrdered()
+        .baselineColumns(colNames)
+        .baselineValues(values)
+        .build().run();
   }
 
   @Test

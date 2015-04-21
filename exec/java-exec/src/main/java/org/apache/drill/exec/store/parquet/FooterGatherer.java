@@ -152,7 +152,7 @@ public class FooterGatherer {
         footerBytes = new byte[size];
 
         readFully(file, fileLength - size - FOOTER_METADATA_SIZE, footerBytes, 0, size - origFooterRead);
-        System.arraycopy(origFooterBytes, 0, footerBytes, size - footerBytes.length, origFooterRead);
+        System.arraycopy(origFooterBytes, 0, footerBytes, size - origFooterRead, origFooterRead);
       }else{
         int start = footerBytes.length - (size + FOOTER_METADATA_SIZE);
         footerBytes = ArrayUtils.subarray(footerBytes, start, start + size);

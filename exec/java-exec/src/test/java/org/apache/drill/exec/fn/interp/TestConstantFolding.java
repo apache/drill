@@ -17,6 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.exec.fn.interp;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.hadoop.io.Text;
@@ -27,6 +30,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.List;
 
 public class TestConstantFolding extends PlanTestBase {
 
@@ -41,32 +45,70 @@ public class TestConstantFolding extends PlanTestBase {
   public static class SmallFileCreator {
 
     private final TemporaryFolder folder;
+    private static final List<String> values = Lists.newArrayList("1","2","3");
+    private static final String jsonRecord =  "{\"col1\" : 1,\"col2\" : 2, \"col3\" : 3}";
+    private String record;
 
     public SmallFileCreator(TemporaryFolder folder) {
       this.folder = folder;
+      this.record = null;
     }
 
-    public void createFiles(int smallFileLines, int bigFileLines) throws Exception{
+    public SmallFileCreator setRecord(String record) {
+      this.record = record;
+      return this;
+    }
+
+    public void createFiles(int smallFileLines, int bigFileLines, String extension, String delimiter) throws Exception{
+      if (record == null) {
+        if (extension.equals("csv") || extension.equals("tsv")) {
+          record = Joiner.on(delimiter).join(values);
+        } else if (extension.equals("json") ){
+          record = jsonRecord;
+        } else {
+          throw new UnsupportedOperationException(
+              String.format("Extension %s not supported by %s",
+                  extension, SmallFileCreator.class.getSimpleName()));
+        }
+      }
       PrintWriter out;
       for (String fileAndFolderName : new String[]{"bigfile", "BIGFILE_2"}) {
         File bigFolder = folder.newFolder(fileAndFolderName);
-        File bigFile = new File (bigFolder, fileAndFolderName + ".csv");
+        File bigFile = new File (bigFolder, fileAndFolderName + "." + extension);
         out = new PrintWriter(bigFile);
         for (int i = 0; i < bigFileLines; i++ ) {
-          out.println("1,2,3");
+          out.println(record);
         }
         out.close();
       }
 
       for (String fileAndFolderName : new String[]{"smallfile", "SMALLFILE_2"}) {
         File smallFolder = folder.newFolder(fileAndFolderName);
-        File smallFile = new File (smallFolder, fileAndFolderName + ".csv");
+        File smallFile = new File (smallFolder, fileAndFolderName + "." + extension);
         out = new PrintWriter(smallFile);
         for (int i = 0; i < smallFileLines; i++ ) {
-          out.println("1,2,3");
+          out.println(record);
         }
         out.close();
       }
+    }
+
+    public void createFiles(int smallFileLines, int bigFileLines, String extension) throws Exception{
+      String delimiter;
+      if (extension.equals("json")) {
+        delimiter = null;
+      } else if (extension.equals("csv")) {
+        delimiter = ",";
+      } else if (extension.equals("tsv")) {
+        delimiter = "\t";
+      } else {
+        throw new UnsupportedOperationException("Extension not recognized, please explicitly provide a delimiter.");
+      }
+      createFiles(smallFileLines, bigFileLines, extension, delimiter);
+    }
+
+    public void createFiles(int smallFileLines, int bigFileLines) throws Exception{
+      createFiles(smallFileLines, bigFileLines, "csv", ",");
     }
 
   }
