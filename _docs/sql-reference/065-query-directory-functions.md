@@ -11,7 +11,7 @@ You can use the following query directory functions when [querying multiple file
 
 The query directory functions restrict a query to one of a number of subdirectories. For example, suppose you had time-series data in subdirectories named 2015, 2014, and 2013. You could use the MAXDIR function to get the latest data and MINDIR to get the earliest data.
 
-You use MAXDIR and MINDIR when your directory names are case-sensitive, and IMAXDIR and IMINDIR when your directory names are case-insensitive.
+In the case where the directory names contain alphabetic characters, the MAXDIR and MINDIR functions return the highest or lowest values, respectively in a case-sensitive string ordering. The IMAXDIR and IMINDIR functions return the corresponding values with [case-insensitive ordering](https://support.office.com/en-za/article/Sort-records-in-case-sensitive-order-8fea1de4-6189-40e7-9359-00cd7d7845c0?ui=en-US&rs=en-ZA&ad=ZA).
 
 The query directory functions are recommended instead of the MAX or MIN aggregate functions to prevent Drill from scanning all data in directories.
 
