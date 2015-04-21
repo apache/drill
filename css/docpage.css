@@ -82,17 +82,16 @@ div.doc-nav span.next-toc {
 .main-content .edit-link {
   position: relative;
   float: right;
-  bottom: 100px;
+  bottom: 81px;
   text-decoration: none;
   font-size: 24px;
   color: #333333;
 }
 div.int_title h1, div.main-content h1, div.main-content h2, div.main-content h3, div.main-content h4, div.main-content h5, div.main-content h6 {
-  font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /*font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;*/
   font-weight: normal;
   line-height: 24px;
   color: #313030;
-  margin: 0;
   padding: 0;
 }
 div.section > h2, div.section > h3, div.section > h4 {
@@ -188,7 +187,7 @@ div.admonition {
   background-color: #f5f6f7;
   width: 293px;
   height: auto;
-  top: 50px;
+  top: 51px;
   bottom: 0;
   left: 0;
   overflow-y: auto;
@@ -235,6 +234,9 @@ div.docsidebar ul {
 }
 div.docsidebar ul li {
   background-color: ##F5F6F7;
+  font-weight: normal;
+  line-height: 24px;
+
 }
 .docsidebarwrapper > ul > .toctree-l1.current {
   background-color: #fff;
@@ -278,6 +280,10 @@ div.docsidebar ul ul ul {
   line-height: 24px;
   display: inline-block;
   width: 100%;
+}
+.docsidebarwrapper li.toctree-l1 ul > li
+{
+  font-size: 14px;
 }
 div.docsidebar li.toctree-l2 > a {
   text-indent: -12px;
@@ -334,7 +340,6 @@ span.contract {
     margin-left: 0px;
   }
   div.doc-nav {
-    margin-left: 103px;
   }
 
   div.toc-categories {
