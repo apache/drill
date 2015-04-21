@@ -267,14 +267,24 @@ public abstract class PartitionerTemplate implements Partitioner {
 
     public void flush(boolean schemaChanged) throws IOException {
       if (dropAll) {
-        vectorContainer.zeroVectors();
+        // If we are in dropAll mode, we still want to copy the data, because we can't stop copying a single outgoing
+        // batch with out stopping all outgoing batches. Other option is check for status of dropAll before copying
+        // every single record in copy method which has the overhead for every record all the time. Resetting the output
+        // count, reusing the same buffers and copying has overhead only for outgoing batches whose receiver has
+        // terminated.
+
+        // Reset the count to 0 and use existing buffers for exhausting input where receiver of this batch is terminated
+        recordCount = 0;
         return;
       }
       final FragmentHandle handle = context.getHandle();
 
       // We need to send the last batch when
       //   1. we are actually done processing the incoming RecordBatches and no more input available
-      //   2. receiver wants to terminate (possible in case of queries involving limit clause)
+      //   2. receiver wants to terminate (possible in case of queries involving limit clause). Even when receiver wants
+      //      to terminate we need to send at least one batch with "isLastBatch" set to true, so that receiver knows
+      //      sender has acknowledged the terminate request. After sending the last batch, all further batches are
+      //      dropped.
       final boolean isLastBatch = isLast || terminated;
 
       // if the batch is not the last batch and the current recordCount is zero, then no need to send any RecordBatches
