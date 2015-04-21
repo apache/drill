@@ -93,9 +93,23 @@ Drill.Site = {
 
 Drill.Docs = {
   init : function(){
+    Drill.Docs.watchCategoryBar();
     Drill.Docs.watchDocTocClicks();
     Drill.Docs.watchExpandTocClicks();
     Drill.Docs.permalinkSubHeaders();
+  },
+
+  watchCategoryBar : function() {
+    $(window).scroll(function(){
+      var category_bar = $(".toc-categories");
+      if ($(this).scrollTop() > 35) {
+        category_bar.addClass('fixed');
+        $(".page-wrap div.int_title").css("margin-top",'110px');
+      } else {
+        category_bar.removeClass('fixed');
+        $(".page-wrap div.int_title").css("margin-top",'60px');
+      }
+    });
   },
 
   watchExpandTocClicks : function () {

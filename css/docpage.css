@@ -24,12 +24,18 @@ div.toc-categories a {
   text-decoration: none;
 }
 
+div.toc-categories.fixed {
+  position:fixed;
+  z-index: 1;
+  width: 100%;
+  top: 50px;
+}
+
 /****************
  Docs Nav (Bottom)
 ****************/
 
 div.doc-nav {
-  font-size: 120%;
   overflow: auto;
   width: 100%;
 }
@@ -50,7 +56,6 @@ div.doc-nav span.back-to-toc {
 }
 div.doc-nav span.next-toc {
   float: right;
-  width: 30%;
 }
 
 
@@ -339,7 +344,9 @@ span.contract {
   div.toc-categories .expand-toc-icon {
     font-size: 24px;
     /*padding-right: 10px;*/
-    color: white;
+  }
+  div.toc-categories .expand-toc-icon a {
+    color: black;
   }
 
   .expand-toc-icon:hover,
@@ -366,6 +373,7 @@ span.contract {
   }
   .int_title {
     margin-left: 63px;
+    margin-top: 60px;
   }
   .int_title h1 {
     font-size: 28px;
@@ -380,7 +388,7 @@ span.contract {
   }
 
   div.doc-nav {
-    margin-left: 393px;
+    margin-left: 323px;
   }
 
   #footer {
