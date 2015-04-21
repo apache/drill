@@ -100,15 +100,14 @@ a.anchor {
 }
 */
 #menu ul li.d, #menu ul li.d:hover {
-	background:url(../images/download-ico.png) no-repeat left center #4aaf4c;
-	background-size:13px auto;
-	background-position:24px 16px;
-	display:block;
-	float:right;
+	background-color: #4aaf4c;
 	font-size:12px;
-	height:50px;
 	text-transform:uppercase;
-	overflow:hidden;
+}
+#menu ul li.d a .fa {
+  position: relative;
+  right: 8px;
+  font-size: 14px;
 }
 
 #menu ul li.d:hover {
@@ -120,7 +119,7 @@ a.anchor {
 }
 
 #menu ul li.d a {
-	padding:0 30px 0 45px;
+	padding:0 30px 0 40px;
 	display:block;
 	height:50px;
 }
