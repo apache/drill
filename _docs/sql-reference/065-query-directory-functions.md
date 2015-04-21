@@ -9,8 +9,7 @@ You use the following SQL function extensions when querying multiple directories
 * IMAXDIR
 * IMINDIR
 
-These functions restrict the query to the dir*n* directory in the sorted list of subdirectories. The dir*n* variable, `dir0`, `dir1`, and so on, refer to
-subdirectories in your workspace path, as explained in section, ["Querying Directories"]({{site.baseurl}}/docs/querying-directories). The MAXDIR and MINDIR functions are case-sensitive. The IMAXDIR and IMINDIR functions are case-insensitive.
+These functions restrict the query to a directory in an alphanumerically-sorted list of subdirectories. The MAXDIR and MINDIR functions are case-sensitive. The IMAXDIR and IMINDIR functions are case-insensitive. 
 
 The query directory functions are recommended instead of the MAX or MIN aggregate functions to prevent Drill from scanning all data in directories.
 
@@ -21,7 +20,8 @@ The following syntax shows how to construct a SELECT statement that using the MA
     SELECT * FROM <plugin>.<workspace>.`<filename>` 
     WHERE dir*n* = MAXDIR('<plugin>.<workspace>', '<filename>');
 
-Enclose both arguments to the query directory function in single-quotation marks, not backticks. The first argument to the function is the plugin and workspace names in dot notation, and the second argument is the directory name.
+Enclose both arguments to the query directory function in single-quotation marks, not backticks. The first argument to the function is the plugin and workspace names in dot notation, and the second argument is the directory name. The dir variable, `dir0`, `dir1`, and so on, refer to
+subdirectories in your workspace path, as explained in section, ["Querying Directories"]({{site.baseurl}}/docs/querying-directories). 
 
 ## Query Directory Function Example 
 
