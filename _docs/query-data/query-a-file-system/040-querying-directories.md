@@ -88,3 +88,8 @@ first level down from logs, `dir1` to the next level, and so on.
     | 2013       | 2          | 12249      | 02/03/2013 | 04:45:47   | 21725      | IOS5       | nj         | 5          | no          |
     +------------+------------+------------+------------+------------+------------+------------+------------+------------+-------------+
     10 rows selected (0.583 seconds)
+
+For more information about querying directories, see the following sections:
+
+* [Lesson 3]({{site.baseurl}}/docs/lesson-3-create-a-storage-plugin) in the Query Basics tutorial
+* [Query Directory Functions]({{site.baseurl}}/docs/query-directory-functions)

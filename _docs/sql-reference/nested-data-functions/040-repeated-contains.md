@@ -43,7 +43,7 @@ The examples in this section use `testRepeatedWrite.json`. To download this file
 
 Which donuts have glazed or glaze toppings?
 
-		SELECT name, REPEATED_CONTAINS(topping, 'Glaze?') AS `Glazed?` FROM  dfs.`/Users/drill/testRepeatedWrite.json` WHERE type='donut';
+		SELECT name, REPEATED_CONTAINS(topping, 'Glaze?') AS `Glazed?` FROM  dfs.`/Users/drilluser/testRepeatedWrite.json` WHERE type='donut';
 
 		+------------+------------+
 		|    name    |  Glazed?   |
@@ -58,7 +58,7 @@ Which donuts have glazed or glaze toppings?
 
 Which objects have powdered sugar toppings? Use the asterisk wildcard instead of typing the entire keyword pair.
 
-    SELECT name, REPEATED_CONTAINS(topping, 'P*r') AS `Powdered Sugar?` FROM  dfs.`/Users/khahn/Documents/test_files_source/testRepeatedWrite.json` WHERE type='donut';
+    SELECT name, REPEATED_CONTAINS(topping, 'P*r') AS `Powdered Sugar?` FROM  dfs.`/Users/drilluser/testRepeatedWrite.json` WHERE type='donut';
 
 	+------------+-----------------+
 	|    name    | Powdered Sugar? |
@@ -73,7 +73,7 @@ Which objects have powdered sugar toppings? Use the asterisk wildcard instead of
 
 Which donuts have toppings beginning with the letters "Map" and ending in any two letters?
 
-	SELECT name, REPEATED_CONTAINS(topping, 'Map..') AS `Maple?` FROM  dfs.`/Users/drill/testRepeatedWrite.json` WHERE type='donut';
+	SELECT name, REPEATED_CONTAINS(topping, 'Map..') AS `Maple?` FROM  dfs.`/Users/drilluser/testRepeatedWrite.json` WHERE type='donut';
 
 	+------------+------------+
 	|    name    |   Maple?   |

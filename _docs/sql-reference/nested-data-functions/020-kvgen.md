@@ -47,7 +47,7 @@ users' ids and the number of interactions recorded between them. A complete data
 
 To list the users that interact most, you need to use a subquery; otherwise, Drill operates on the data before the flattening and key generation occurs:
 
-    SELECT t.flat_interactions.key, t.flat_interactions.`value` from (select flatten(kvgen(user_interactions)) as flat_interactions from dfs.`/Users/khahn/Documents/test_files_source/user_table.json`) as t order by t.flat_interactions.`value` DESC;
+    SELECT t.flat_interactions.key, t.flat_interactions.`value` from (select flatten(kvgen(user_interactions)) as flat_interactions from dfs.`/drilluser/user_table.json`) as t order by t.flat_interactions.`value` DESC;
 
     +------------+------------+
 	|   EXPR$0   |   EXPR$1   |

@@ -134,7 +134,7 @@ Numeric constants include integers, floats, and values in E notation.
         }}
   Aggregating the data in Drill produces scientific notation in the output:
 
-        SELECT sum(amount) FROM dfs.`/Users/khahn/Documents/sample2.json`;
+        SELECT sum(amount) FROM dfs.`/Users/drilluser/sample2.json`;
 
         +------------+
         |   EXPR$0   |
