@@ -285,21 +285,23 @@ div.docsidebar ul ul ul {
 {
   font-size: 14px;
 }
-div.docsidebar li.toctree-l2 > a {
+div.docsidebar li.toctree-l2 {
   text-indent: -12px;
   padding-left: 37px;
 }
-div.docsidebar li.toctree-l3 > a {
-  text-indent: -12px;
-  padding-left: 48px;
+div.docsidebar li.toctree-l1:hover, div.docsidebar li.toctree-l2:hover, div.docsidebar li.toctree-l3:hover {
+  background-color: #c6e2ff;
+}
+
+div.docsidebar li.toctree-l3  {
+  padding-left: 40px;
 }
 span.expand, span.contract{
-  float: left;
-  position: relative;
-  left: 12px;
   width: 0px;
   cursor: pointer;
-  font-size: 70%;
+  font-size: 80%;
+  position: relative;
+  right: 3px;
 }
 span.contract {
   display: none;
@@ -344,6 +346,9 @@ span.contract {
 
   div.toc-categories {
     display: block;
+  }
+  .page-wrap div.int_title.margin_110 {
+    margin-top:110px;
   }
 
   div.toc-categories .expand-toc-icon {

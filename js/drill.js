@@ -104,10 +104,10 @@ Drill.Docs = {
       var category_bar = $(".toc-categories");
       if ($(this).scrollTop() > 35) {
         category_bar.addClass('fixed');
-        $(".page-wrap div.int_title").css("margin-top",'110px');
+        $(".page-wrap div.int_title").addClass("margin_110");
       } else {
         category_bar.removeClass('fixed');
-        $(".page-wrap div.int_title").css("margin-top",'60px');
+        $(".page-wrap div.int_title").removeClass("margin_110");
       }
     });
   },
@@ -164,7 +164,7 @@ Drill.Docs = {
             $toctree.children("span.contract").show();
           }
 
-          $(this).show("slide");
+          $(this).slideDown();
         } else {
 
           if ( $.inArray( $toctree[0], l2nodes ) > -1 ) {
@@ -172,7 +172,7 @@ Drill.Docs = {
             $toctree.children("span.contract").hide();
           }
 
-          $(this).hide("slide");
+          $(this).slideUp();
         }
         //$(this).toggle("slide");
       })
