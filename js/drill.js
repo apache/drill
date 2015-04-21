@@ -19,7 +19,8 @@ Drill.Site = {
   },
 
   menuIsExpanded : function() {
-    return ($("#menu ul li.d").css('display') == 'block');
+    var item_to_check = $($("#menu ul li")[3]).css("display");
+    return (item_to_check != 'none');
   },
 
   expandMenu: function(){

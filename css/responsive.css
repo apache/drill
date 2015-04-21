@@ -54,11 +54,21 @@ nav.breadcrumbs{
   #menu ul li.force-expand, #menu ul li.d.force-expand {
     display:inline-block;
   }
+  #menu ul li.force-expand ul li{
+    display:block;
+  }
+  #menu ul li.force-expand.nav, #menu ul li.force-expand#twitter-menu-item {
+    clear:both;
+    margin: 0 auto;
+  }
   #menu ul li.logo {
     display: block;
   }
   #menu ul li.expand-menu {
     display: block;
+  }
+  #menu ul li.expand-menu, #menu ul li.expand-menu a {
+    line-height: 45px;
   }
   #menu ul li.expand-menu span.expand-icon{
     font-size: 24px;
@@ -75,4 +85,43 @@ nav.breadcrumbs{
 
 }
 @media (max-width: 768px) {
+  #menu ul li.force-expand.nav {
+    clear:both;
+    margin: 0 auto;
+  }
+  #menu ul li.force-expand.search-bar {
+    clear:both;
+  }
 }
+@media (max-width: 570px) {
+  #menu ul li.force-expand.nav, #menu ul li.force-expand#twitter-menu-item {
+    clear: both;
+    width: 100%;
+    margin: auto;
+  }
+  #menu ul li.force-expand {
+    display:block;
+  }
+  #menu ul li.clear-float{
+    clear:both;
+    width: 0px;
+    display:block;
+  }
+  #menu ul li.search-bar {
+    margin: 0 11px 0 20px;
+    float: right;
+  }
+  #menu ul li.d
+  {
+    margin: 10px;
+    clear: both;
+    float: right;
+  }
+
+  /**#menu ul li.force-expand.d {
+  /**  margin: 10px;
+  /**  clear:both;
+  /**}
+  /**#menu .search-bar #drill-search-form {
+  /**  float: right;
+  /**}**/

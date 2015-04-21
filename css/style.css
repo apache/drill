@@ -187,7 +187,9 @@ a.anchor {
 #menu ul li:hover ul {
 	display:block;
 }
-
+#menu ul li.clear-float{
+  display:none;
+}
 #subhead {
 	background:#145aa8;
 	color:#FFF;
