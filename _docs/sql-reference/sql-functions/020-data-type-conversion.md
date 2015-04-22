@@ -109,7 +109,7 @@ For example, a JSON file named intervals.json contains the following objects:
         +------------+------------+
         1 row selected (0.037 seconds)
 
-Use a CTAS statement to cast text from a JSON file to year and day intervals and to write the data to a Parquet table:
+2. Use a CTAS statement to cast text from a JSON file to year and day intervals and to write the data to a Parquet table:
 
     CREATE TABLE dfs.tmp.parquet_intervals AS 
     (SELECT CAST( INTERVALYEAR_col as interval year) INTERVALYEAR_col, 

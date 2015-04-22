@@ -59,10 +59,10 @@ In Drill, you use data types in the following ways:
 In Drill, assign a data type to every column name in a CREATE TABLE statement as you do in database software. Instead, you use the CREATE TABLE AS SELECT (CTAS) statement with one or more of the following functions to define the type of a column:
 
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)  
-  Use the supported SQL data types listed at the beginning of this page.  
-* [CONVERT TO/FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)
+  Use the supported SQL data types listed at the beginning of this page.   
+* [CONVERT TO/FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)   
   Use the [CONVERT TO AND CONVERT FROM data types]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types)  
-* Other [data conversion functions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)
+* Other [data conversion functions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)   
   Use the syntax described in the function descriptions. 
 
 Keep the following best practices for converting to/from binary data:
