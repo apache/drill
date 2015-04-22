@@ -24,12 +24,18 @@ div.toc-categories a {
   text-decoration: none;
 }
 
+div.toc-categories.fixed {
+  position:fixed;
+  z-index: 1;
+  width: 100%;
+  top: 50px;
+}
+
 /****************
  Docs Nav (Bottom)
 ****************/
 
 div.doc-nav {
-  font-size: 120%;
   overflow: auto;
   width: 100%;
 }
@@ -50,7 +56,6 @@ div.doc-nav span.back-to-toc {
 }
 div.doc-nav span.next-toc {
   float: right;
-  width: 30%;
 }
 
 
@@ -77,17 +82,16 @@ div.doc-nav span.next-toc {
 .main-content .edit-link {
   position: relative;
   float: right;
-  bottom: 100px;
+  bottom: 81px;
   text-decoration: none;
   font-size: 24px;
   color: #333333;
 }
 div.int_title h1, div.main-content h1, div.main-content h2, div.main-content h3, div.main-content h4, div.main-content h5, div.main-content h6 {
-  font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /*font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;*/
   font-weight: normal;
   line-height: 24px;
   color: #313030;
-  margin: 0;
   padding: 0;
 }
 div.section > h2, div.section > h3, div.section > h4 {
@@ -183,7 +187,7 @@ div.admonition {
   background-color: #f5f6f7;
   width: 293px;
   height: auto;
-  top: 50px;
+  top: 51px;
   bottom: 0;
   left: 0;
   overflow-y: auto;
@@ -230,6 +234,9 @@ div.docsidebar ul {
 }
 div.docsidebar ul li {
   background-color: ##F5F6F7;
+  font-weight: normal;
+  line-height: 24px;
+
 }
 .docsidebarwrapper > ul > .toctree-l1.current {
   background-color: #fff;
@@ -274,21 +281,27 @@ div.docsidebar ul ul ul {
   display: inline-block;
   width: 100%;
 }
-div.docsidebar li.toctree-l2 > a {
+.docsidebarwrapper li.toctree-l1 ul > li
+{
+  font-size: 14px;
+}
+div.docsidebar li.toctree-l2 {
   text-indent: -12px;
   padding-left: 37px;
 }
-div.docsidebar li.toctree-l3 > a {
-  text-indent: -12px;
-  padding-left: 48px;
+div.docsidebar li.toctree-l1:hover, div.docsidebar li.toctree-l2:hover, div.docsidebar li.toctree-l3:hover {
+  background-color: #c6e2ff;
+}
+
+div.docsidebar li.toctree-l3  {
+  padding-left: 40px;
 }
 span.expand, span.contract{
-  float: left;
-  position: relative;
-  left: 12px;
   width: 0px;
   cursor: pointer;
-  font-size: 70%;
+  font-size: 80%;
+  position: relative;
+  right: 3px;
 }
 span.contract {
   display: none;
@@ -329,17 +342,21 @@ span.contract {
     margin-left: 0px;
   }
   div.doc-nav {
-    margin-left: 103px;
   }
 
   div.toc-categories {
     display: block;
   }
+  .page-wrap div.int_title.margin_110 {
+    margin-top:110px;
+  }
 
   div.toc-categories .expand-toc-icon {
     font-size: 24px;
     /*padding-right: 10px;*/
-    color: white;
+  }
+  div.toc-categories .expand-toc-icon a {
+    color: black;
   }
 
   .expand-toc-icon:hover,
@@ -366,6 +383,7 @@ span.contract {
   }
   .int_title {
     margin-left: 63px;
+    margin-top: 60px;
   }
   .int_title h1 {
     font-size: 28px;
@@ -380,7 +398,7 @@ span.contract {
   }
 
   div.doc-nav {
-    margin-left: 393px;
+    margin-left: 323px;
   }
 
   #footer {

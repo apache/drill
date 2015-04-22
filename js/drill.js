@@ -5,6 +5,7 @@ Drill.Site = {
     Drill.Site.watchExpandMenuClicks();
     Drill.Site.watchInternalAnchorClicks();
     Drill.Site.watchSearchBarMouseEnter();
+    Drill.Site.watchSearchSubmit();
   },
 
   watchExpandMenuClicks : function(){
@@ -18,7 +19,8 @@ Drill.Site = {
   },
 
   menuIsExpanded : function() {
-    return ($("#menu ul li.d").css('display') == 'block');
+    var item_to_check = $($("#menu ul li")[3]).css("display");
+    return (item_to_check != 'none');
   },
 
   expandMenu: function(){
@@ -39,6 +41,19 @@ Drill.Site = {
       }
     })
   },
+
+  watchSearchSubmit: function() {
+    $("#menu .search-bar #drill-search-form").on("submit", function(e){
+      e.preventDefault();
+      var search_val = $("#drill-search-term").val();
+      var search_url = "https://www.google.com/webhp?ie=UTF-8#q="+search_val+"%20site%3Aincubator.apache.org%2Fdrill%20OR%20site%3Aissues.apache.org%2Fjira%2Fbrowse%2FDRILL%20OR%20site%3Amail-archives.apache.org%2Fmod_mbox%2Fincubator-drill-dev";
+      var form = $("#menu .search-bar form#search-using-google");
+      form.attr("action",search_url);
+      form.submit();
+      form.attr("action","");
+    });
+  },
+
 
   watchInternalAnchorClicks : function() {
     $("a.anchor").css({ display: "inline" });
@@ -78,9 +93,23 @@ Drill.Site = {
 
 Drill.Docs = {
   init : function(){
+    Drill.Docs.watchCategoryBar();
     Drill.Docs.watchDocTocClicks();
     Drill.Docs.watchExpandTocClicks();
     Drill.Docs.permalinkSubHeaders();
+  },
+
+  watchCategoryBar : function() {
+    $(window).scroll(function(){
+      var category_bar = $(".toc-categories");
+      if ($(this).scrollTop() > 35) {
+        category_bar.addClass('fixed');
+        $(".page-wrap div.int_title").addClass("margin_110");
+      } else {
+        category_bar.removeClass('fixed');
+        $(".page-wrap div.int_title").removeClass("margin_110");
+      }
+    });
   },
 
   watchExpandTocClicks : function () {
@@ -135,7 +164,7 @@ Drill.Docs = {
             $toctree.children("span.contract").show();
           }
 
-          $(this).show("slide");
+          $(this).slideDown();
         } else {
 
           if ( $.inArray( $toctree[0], l2nodes ) > -1 ) {
@@ -143,7 +172,7 @@ Drill.Docs = {
             $toctree.children("span.contract").hide();
           }
 
-          $(this).hide("slide");
+          $(this).slideUp();
         }
         //$(this).toggle("slide");
       })
