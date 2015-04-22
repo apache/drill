@@ -82,25 +82,45 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   private boolean supportComplexTypes;
   private final boolean ownsZkConnection;
   private final boolean ownsAllocator;
+  private final boolean isDirectConnection; // true if the connection bypasses zookeeper and connects directly to a drillbit
   private EventLoopGroup eventLoopGroup;
 
   public DrillClient() {
-    this(DrillConfig.create());
+    this(DrillConfig.create(), false);
+  }
+
+  public DrillClient(boolean isDirect) {
+    this(DrillConfig.create(), isDirect);
   }
 
   public DrillClient(String fileName) {
-    this(DrillConfig.create(fileName));
+    this(DrillConfig.create(fileName), false);
   }
 
   public DrillClient(DrillConfig config) {
-    this(config, null);
+    this(config, null, false);
+  }
+
+  public DrillClient(DrillConfig config, boolean isDirect) {
+    this(config, null, isDirect);
   }
 
   public DrillClient(DrillConfig config, ClusterCoordinator coordinator) {
-    this(config, coordinator, null);
+    this(config, coordinator, null, false);
+  }
+
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, boolean isDirect) {
+    this(config, coordinator, null, isDirect);
   }
 
   public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator) {
+    this(config, coordinator, allocator, false);
+  }
+
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator, boolean isDirect) {
+    // if isDirect is true, the client will connect directly to the drillbit instead of
+    // going thru the zookeeper
+    this.isDirectConnection = isDirect;
     this.ownsZkConnection = coordinator == null;
     this.ownsAllocator = allocator == null;
     this.allocator = ownsAllocator ? new TopLevelAllocator(config) : allocator;
@@ -151,29 +171,38 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       return;
     }
 
-    if (ownsZkConnection) {
-      try {
-        this.clusterCoordinator = new ZKClusterCoordinator(this.config, connect);
-        this.clusterCoordinator.start(10000);
-      } catch (Exception e) {
-        throw new RpcException("Failure setting up ZK for client.", e);
+    final DrillbitEndpoint endpoint;
+    if (isDirectConnection) {
+      String[] connectInfo = props.getProperty("drillbit").split(":");
+      endpoint = DrillbitEndpoint.newBuilder()
+              .setAddress(connectInfo[0])
+              .setUserPort(Integer.parseInt(connectInfo[1]))
+              .build();
+    } else {
+      if (ownsZkConnection) {
+        try {
+          this.clusterCoordinator = new ZKClusterCoordinator(this.config, connect);
+          this.clusterCoordinator.start(10000);
+        } catch (Exception e) {
+          throw new RpcException("Failure setting up ZK for client.", e);
+        }
       }
-    }
 
-    if (props != null) {
-      UserProperties.Builder upBuilder = UserProperties.newBuilder();
-      for (String key : props.stringPropertyNames()) {
-        upBuilder.addProperties(Property.newBuilder().setKey(key).setValue(props.getProperty(key)));
+      if (props != null) {
+        UserProperties.Builder upBuilder = UserProperties.newBuilder();
+        for (String key : props.stringPropertyNames()) {
+          upBuilder.addProperties(Property.newBuilder().setKey(key).setValue(props.getProperty(key)));
+        }
+
+        this.props = upBuilder.build();
       }
 
-      this.props = upBuilder.build();
+      ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
+      checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
+      // shuffle the collection then get the first endpoint
+      Collections.shuffle(endpoints);
+      endpoint = endpoints.iterator().next();
     }
-
-    ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
-    checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
-    // shuffle the collection then get the first endpoint
-    Collections.shuffle(endpoints);
-    DrillbitEndpoint endpoint = endpoints.iterator().next();
 
     eventLoopGroup = createEventLoop(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-");
     client = new UserClient(supportComplexTypes, allocator, eventLoopGroup);

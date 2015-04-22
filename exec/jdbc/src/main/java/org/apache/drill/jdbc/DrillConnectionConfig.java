@@ -35,6 +35,11 @@ public class DrillConnectionConfig extends ConnectionConfigImpl {
     return "local".equals(props.getProperty("zk"));
   }
 
+  // True if the URL points directly to a drillbit
+  public boolean isDirect(){
+    return props.getProperty("local")!=null;
+  }
+
   // TODO: Check: Shouldn't something validate that URL has "zk" parameter?
   public String getZookeeperConnectionString(){
     return props.getProperty("zk");

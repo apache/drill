@@ -110,6 +110,11 @@ public abstract class DrillConnectionImpl extends AvaticaConnection implements D
 
         this.client = new DrillClient(dConfig, set.getCoordinator());
         this.client.connect(null, info);
+      } else if(config.isDirect()) {
+        final DrillConfig dConfig = DrillConfig.forClient();
+        this.allocator = new TopLevelAllocator(dConfig);
+        this.client = new DrillClient(true); // Get a direct connection
+        this.client.connect(config.getZookeeperConnectionString(), info);
       } else {
         final DrillConfig dConfig = DrillConfig.forClient();
         this.allocator = new TopLevelAllocator(dConfig);
