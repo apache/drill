@@ -30,7 +30,7 @@ If the SELECT statement includes a WHERE clause that compares a column of an unk
 
     SELECT c_row, CAST(c_int AS DECIMAL(28,8)) FROM mydata WHERE CAST(c_int AS DECIMAL(28,8)) > -3.0;
 
-Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting a INT or BIGINT number having a byte count in the destination that does not match the byte count of the number in the VARBINARY source, use CAST.  
+Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.  
 
 Refer to the following tables for information about the data types to use for casting:
 
@@ -134,7 +134,7 @@ data to and from another data type.
 
 ### CONVERT_TO and CONVERT_FROM Usage Notes
 
-Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting a INT or BIGINT number having a byte count in the destination that does not match the byte count of the number in the VARBINARY source, use CAST. CONVERT_TO/FROM functions work for binary conversions and are also more efficient to use than CAST. For example, HBase stores
+Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST. CONVERT_TO/FROM functions work for binary conversions and are also more efficient to use than CAST. For example, HBase stores
 data as encoded VARBINARY data. To read HBase data in Drill, convert every column of an HBase table *from* binary to an SQL data type while selecting the data. To write HBase or Parquet binary data, convert SQL data *to* binary data and store the data in an HBase or Parquet while creating a table as a selection (CTAS).
 
 CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
