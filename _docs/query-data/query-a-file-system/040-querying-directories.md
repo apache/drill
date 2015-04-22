@@ -89,7 +89,4 @@ first level down from logs, `dir1` to the next level, and so on.
     +------------+------------+------------+------------+------------+------------+------------+------------+------------+-------------+
     10 rows selected (0.583 seconds)
 
-For more information about querying directories, see the following sections:
-
-* [Lesson 3]({{site.baseurl}}/docs/lesson-3-create-a-storage-plugin) in the Query Basics tutorial
-* [Query Directory Functions]({{site.baseurl}}/docs/query-directory-functions)
+For more information about querying directories, see the section, ["Query Directory Functions"]({{site.baseurl}}/docs/query-directory-functions).

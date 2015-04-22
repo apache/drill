@@ -498,7 +498,7 @@ Workaround: Set the `store.json.all_text_mode` property, described earlier, to t
     ALTER SYSTEM SET `store.json.all_text_mode` = true;
 
 ### Selecting all in a JSON directory query
-Drill currently returns only fields common to all the files in a [directory query]({{ site.baseurl }}/docs/lesson-3-create-a-storage-plugin#query-multiple-files-in-a-directory) that selects all (SELECT *) JSON files.
+Drill currently returns only fields common to all the files in a [directory query]({{ site.baseurl }}/docs/querying-directories) that selects all (SELECT *) JSON files.
 
 Workaround: Query each file individually.
 

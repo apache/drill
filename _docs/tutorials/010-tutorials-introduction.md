@@ -10,7 +10,4 @@ If you've never used Drill, use these tutorials to download, install, and start 
   Download and install Drill in embedded mode and use SQL examples to analyze Yelp data.  
 * Learn Drill with the MapR Sandbox  
   Explore data using a Hadoop environment pre-configured with Drill.  
-* Query Basics Tutorial  
-  Query plain text files and directories and create a custom storage plugin to simplify queries.
-
 

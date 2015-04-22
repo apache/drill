@@ -2659,8 +2659,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Lesson 3: Create a Storage Plugin", 
-            "previous_url": "/docs/lesson-3-create-a-storage-plugin/", 
+            "previous_title": "Summary", 
+            "previous_url": "/docs/summary/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -3149,8 +3149,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Basics Tutorial", 
-                    "next_url": "/docs/query-basics-tutorial/", 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                     "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
@@ -3230,69 +3230,6 @@
             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
             "title": "Lession 3: Run Queries on Complex Data Types", 
             "url": "/docs/lession-3-run-queries-on-complex-data-types/"
-        }, 
-        "Lesson 1: Connect to Data Sources": {
-            "breadcrumbs": [
-                {
-                    "title": "Query Basics Tutorial", 
-                    "url": "/docs/query-basics-tutorial/"
-                }, 
-                {
-                    "title": "Tutorials", 
-                    "url": "/docs/tutorials/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Lesson 2: Query Plain Text", 
-            "next_url": "/docs/lesson-2-query-plain-text/", 
-            "parent": "Query Basics Tutorial", 
-            "previous_title": "Query Basics Tutorial Setup", 
-            "previous_url": "/docs/query-basics-tutorial-setup/", 
-            "relative_path": "_docs/tutorials/query-basics-tutorial/010-lesson1-connect-to-data-sources.md", 
-            "title": "Lesson 1: Connect to Data Sources", 
-            "url": "/docs/lesson-1-connect-to-data-sources/"
-        }, 
-        "Lesson 2: Query Plain Text": {
-            "breadcrumbs": [
-                {
-                    "title": "Query Basics Tutorial", 
-                    "url": "/docs/query-basics-tutorial/"
-                }, 
-                {
-                    "title": "Tutorials", 
-                    "url": "/docs/tutorials/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Lesson 3: Create a Storage Plugin", 
-            "next_url": "/docs/lesson-3-create-a-storage-plugin/", 
-            "parent": "Query Basics Tutorial", 
-            "previous_title": "Lesson 1: Connect to Data Sources", 
-            "previous_url": "/docs/lesson-1-connect-to-data-sources/", 
-            "relative_path": "_docs/tutorials/query-basics-tutorial/020-lesson2-query-plain-text.md", 
-            "title": "Lesson 2: Query Plain Text", 
-            "url": "/docs/lesson-2-query-plain-text/"
-        }, 
-        "Lesson 3: Create a Storage Plugin": {
-            "breadcrumbs": [
-                {
-                    "title": "Query Basics Tutorial", 
-                    "url": "/docs/query-basics-tutorial/"
-                }, 
-                {
-                    "title": "Tutorials", 
-                    "url": "/docs/tutorials/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
-            "parent": "Query Basics Tutorial", 
-            "previous_title": "Lesson 2: Query Plain Text", 
-            "previous_url": "/docs/lesson-2-query-plain-text/", 
-            "relative_path": "_docs/tutorials/query-basics-tutorial/030-lesson3-create-a-storage-plugin.md", 
-            "title": "Lesson 3: Create a Storage Plugin", 
-            "url": "/docs/lesson-3-create-a-storage-plugin/"
         }, 
         "Lexical Structure": {
             "breadcrumbs": [
@@ -4310,129 +4247,6 @@
             "relative_path": "_docs/170-bylaws.md", 
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
-        }, 
-        "Query Basics Tutorial": {
-            "breadcrumbs": [
-                {
-                    "title": "Tutorials", 
-                    "url": "/docs/tutorials/"
-                }
-            ], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Basics Tutorial", 
-                            "url": "/docs/query-basics-tutorial/"
-                        }, 
-                        {
-                            "title": "Tutorials", 
-                            "url": "/docs/tutorials/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lesson 1: Connect to Data Sources", 
-                    "next_url": "/docs/lesson-1-connect-to-data-sources/", 
-                    "parent": "Query Basics Tutorial", 
-                    "previous_title": "Query Basics Tutorial", 
-                    "previous_url": "/docs/query-basics-tutorial/", 
-                    "relative_path": "_docs/tutorials/query-basics-tutorial/005-query-basics-tutorial-setup.md", 
-                    "title": "Query Basics Tutorial Setup", 
-                    "url": "/docs/query-basics-tutorial-setup/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Basics Tutorial", 
-                            "url": "/docs/query-basics-tutorial/"
-                        }, 
-                        {
-                            "title": "Tutorials", 
-                            "url": "/docs/tutorials/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lesson 2: Query Plain Text", 
-                    "next_url": "/docs/lesson-2-query-plain-text/", 
-                    "parent": "Query Basics Tutorial", 
-                    "previous_title": "Query Basics Tutorial Setup", 
-                    "previous_url": "/docs/query-basics-tutorial-setup/", 
-                    "relative_path": "_docs/tutorials/query-basics-tutorial/010-lesson1-connect-to-data-sources.md", 
-                    "title": "Lesson 1: Connect to Data Sources", 
-                    "url": "/docs/lesson-1-connect-to-data-sources/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Basics Tutorial", 
-                            "url": "/docs/query-basics-tutorial/"
-                        }, 
-                        {
-                            "title": "Tutorials", 
-                            "url": "/docs/tutorials/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Lesson 3: Create a Storage Plugin", 
-                    "next_url": "/docs/lesson-3-create-a-storage-plugin/", 
-                    "parent": "Query Basics Tutorial", 
-                    "previous_title": "Lesson 1: Connect to Data Sources", 
-                    "previous_url": "/docs/lesson-1-connect-to-data-sources/", 
-                    "relative_path": "_docs/tutorials/query-basics-tutorial/020-lesson2-query-plain-text.md", 
-                    "title": "Lesson 2: Query Plain Text", 
-                    "url": "/docs/lesson-2-query-plain-text/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Basics Tutorial", 
-                            "url": "/docs/query-basics-tutorial/"
-                        }, 
-                        {
-                            "title": "Tutorials", 
-                            "url": "/docs/tutorials/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
-                    "parent": "Query Basics Tutorial", 
-                    "previous_title": "Lesson 2: Query Plain Text", 
-                    "previous_url": "/docs/lesson-2-query-plain-text/", 
-                    "relative_path": "_docs/tutorials/query-basics-tutorial/030-lesson3-create-a-storage-plugin.md", 
-                    "title": "Lesson 3: Create a Storage Plugin", 
-                    "url": "/docs/lesson-3-create-a-storage-plugin/"
-                }
-            ], 
-            "next_title": "Query Basics Tutorial Setup", 
-            "next_url": "/docs/query-basics-tutorial-setup/", 
-            "parent": "Tutorials", 
-            "previous_title": "Summary", 
-            "previous_url": "/docs/summary/", 
-            "relative_path": "_docs/tutorials/050-query-basics-tutorial.md", 
-            "title": "Query Basics Tutorial", 
-            "url": "/docs/query-basics-tutorial/"
-        }, 
-        "Query Basics Tutorial Setup": {
-            "breadcrumbs": [
-                {
-                    "title": "Query Basics Tutorial", 
-                    "url": "/docs/query-basics-tutorial/"
-                }, 
-                {
-                    "title": "Tutorials", 
-                    "url": "/docs/tutorials/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Lesson 1: Connect to Data Sources", 
-            "next_url": "/docs/lesson-1-connect-to-data-sources/", 
-            "parent": "Query Basics Tutorial", 
-            "previous_title": "Query Basics Tutorial", 
-            "previous_url": "/docs/query-basics-tutorial/", 
-            "relative_path": "_docs/tutorials/query-basics-tutorial/005-query-basics-tutorial-setup.md", 
-            "title": "Query Basics Tutorial Setup", 
-            "url": "/docs/query-basics-tutorial-setup/"
         }, 
         "Query Data": {
             "breadcrumbs": [], 
@@ -7271,8 +7085,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Query Basics Tutorial", 
-            "next_url": "/docs/query-basics-tutorial/", 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
@@ -7564,8 +7378,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query Basics Tutorial", 
-                            "next_url": "/docs/query-basics-tutorial/", 
+                            "next_title": "Install Drill", 
+                            "next_url": "/docs/install-drill/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
@@ -7582,108 +7396,6 @@
                     "relative_path": "_docs/tutorials/040-learn-drill-with-the-mapr-sandbox.md", 
                     "title": "Learn Drill with the MapR Sandbox", 
                     "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Tutorials", 
-                            "url": "/docs/tutorials/"
-                        }
-                    ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Query Basics Tutorial", 
-                                    "url": "/docs/query-basics-tutorial/"
-                                }, 
-                                {
-                                    "title": "Tutorials", 
-                                    "url": "/docs/tutorials/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Lesson 1: Connect to Data Sources", 
-                            "next_url": "/docs/lesson-1-connect-to-data-sources/", 
-                            "parent": "Query Basics Tutorial", 
-                            "previous_title": "Query Basics Tutorial", 
-                            "previous_url": "/docs/query-basics-tutorial/", 
-                            "relative_path": "_docs/tutorials/query-basics-tutorial/005-query-basics-tutorial-setup.md", 
-                            "title": "Query Basics Tutorial Setup", 
-                            "url": "/docs/query-basics-tutorial-setup/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Query Basics Tutorial", 
-                                    "url": "/docs/query-basics-tutorial/"
-                                }, 
-                                {
-                                    "title": "Tutorials", 
-                                    "url": "/docs/tutorials/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Lesson 2: Query Plain Text", 
-                            "next_url": "/docs/lesson-2-query-plain-text/", 
-                            "parent": "Query Basics Tutorial", 
-                            "previous_title": "Query Basics Tutorial Setup", 
-                            "previous_url": "/docs/query-basics-tutorial-setup/", 
-                            "relative_path": "_docs/tutorials/query-basics-tutorial/010-lesson1-connect-to-data-sources.md", 
-                            "title": "Lesson 1: Connect to Data Sources", 
-                            "url": "/docs/lesson-1-connect-to-data-sources/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Query Basics Tutorial", 
-                                    "url": "/docs/query-basics-tutorial/"
-                                }, 
-                                {
-                                    "title": "Tutorials", 
-                                    "url": "/docs/tutorials/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Lesson 3: Create a Storage Plugin", 
-                            "next_url": "/docs/lesson-3-create-a-storage-plugin/", 
-                            "parent": "Query Basics Tutorial", 
-                            "previous_title": "Lesson 1: Connect to Data Sources", 
-                            "previous_url": "/docs/lesson-1-connect-to-data-sources/", 
-                            "relative_path": "_docs/tutorials/query-basics-tutorial/020-lesson2-query-plain-text.md", 
-                            "title": "Lesson 2: Query Plain Text", 
-                            "url": "/docs/lesson-2-query-plain-text/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Query Basics Tutorial", 
-                                    "url": "/docs/query-basics-tutorial/"
-                                }, 
-                                {
-                                    "title": "Tutorials", 
-                                    "url": "/docs/tutorials/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Install Drill", 
-                            "next_url": "/docs/install-drill/", 
-                            "parent": "Query Basics Tutorial", 
-                            "previous_title": "Lesson 2: Query Plain Text", 
-                            "previous_url": "/docs/lesson-2-query-plain-text/", 
-                            "relative_path": "_docs/tutorials/query-basics-tutorial/030-lesson3-create-a-storage-plugin.md", 
-                            "title": "Lesson 3: Create a Storage Plugin", 
-                            "url": "/docs/lesson-3-create-a-storage-plugin/"
-                        }
-                    ], 
-                    "next_title": "Query Basics Tutorial Setup", 
-                    "next_url": "/docs/query-basics-tutorial-setup/", 
-                    "parent": "Tutorials", 
-                    "previous_title": "Summary", 
-                    "previous_url": "/docs/summary/", 
-                    "relative_path": "_docs/tutorials/050-query-basics-tutorial.md", 
-                    "title": "Query Basics Tutorial", 
-                    "url": "/docs/query-basics-tutorial/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -8626,8 +8338,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query Basics Tutorial", 
-                            "next_url": "/docs/query-basics-tutorial/", 
+                            "next_title": "Install Drill", 
+                            "next_url": "/docs/install-drill/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
@@ -8644,108 +8356,6 @@
                     "relative_path": "_docs/tutorials/040-learn-drill-with-the-mapr-sandbox.md", 
                     "title": "Learn Drill with the MapR Sandbox", 
                     "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Tutorials", 
-                            "url": "/docs/tutorials/"
-                        }
-                    ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Query Basics Tutorial", 
-                                    "url": "/docs/query-basics-tutorial/"
-                                }, 
-                                {
-                                    "title": "Tutorials", 
-                                    "url": "/docs/tutorials/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Lesson 1: Connect to Data Sources", 
-                            "next_url": "/docs/lesson-1-connect-to-data-sources/", 
-                            "parent": "Query Basics Tutorial", 
-                            "previous_title": "Query Basics Tutorial", 
-                            "previous_url": "/docs/query-basics-tutorial/", 
-                            "relative_path": "_docs/tutorials/query-basics-tutorial/005-query-basics-tutorial-setup.md", 
-                            "title": "Query Basics Tutorial Setup", 
-                            "url": "/docs/query-basics-tutorial-setup/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Query Basics Tutorial", 
-                                    "url": "/docs/query-basics-tutorial/"
-                                }, 
-                                {
-                                    "title": "Tutorials", 
-                                    "url": "/docs/tutorials/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Lesson 2: Query Plain Text", 
-                            "next_url": "/docs/lesson-2-query-plain-text/", 
-                            "parent": "Query Basics Tutorial", 
-                            "previous_title": "Query Basics Tutorial Setup", 
-                            "previous_url": "/docs/query-basics-tutorial-setup/", 
-                            "relative_path": "_docs/tutorials/query-basics-tutorial/010-lesson1-connect-to-data-sources.md", 
-                            "title": "Lesson 1: Connect to Data Sources", 
-                            "url": "/docs/lesson-1-connect-to-data-sources/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Query Basics Tutorial", 
-                                    "url": "/docs/query-basics-tutorial/"
-                                }, 
-                                {
-                                    "title": "Tutorials", 
-                                    "url": "/docs/tutorials/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Lesson 3: Create a Storage Plugin", 
-                            "next_url": "/docs/lesson-3-create-a-storage-plugin/", 
-                            "parent": "Query Basics Tutorial", 
-                            "previous_title": "Lesson 1: Connect to Data Sources", 
-                            "previous_url": "/docs/lesson-1-connect-to-data-sources/", 
-                            "relative_path": "_docs/tutorials/query-basics-tutorial/020-lesson2-query-plain-text.md", 
-                            "title": "Lesson 2: Query Plain Text", 
-                            "url": "/docs/lesson-2-query-plain-text/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Query Basics Tutorial", 
-                                    "url": "/docs/query-basics-tutorial/"
-                                }, 
-                                {
-                                    "title": "Tutorials", 
-                                    "url": "/docs/tutorials/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Install Drill", 
-                            "next_url": "/docs/install-drill/", 
-                            "parent": "Query Basics Tutorial", 
-                            "previous_title": "Lesson 2: Query Plain Text", 
-                            "previous_url": "/docs/lesson-2-query-plain-text/", 
-                            "relative_path": "_docs/tutorials/query-basics-tutorial/030-lesson3-create-a-storage-plugin.md", 
-                            "title": "Lesson 3: Create a Storage Plugin", 
-                            "url": "/docs/lesson-3-create-a-storage-plugin/"
-                        }
-                    ], 
-                    "next_title": "Query Basics Tutorial Setup", 
-                    "next_url": "/docs/query-basics-tutorial-setup/", 
-                    "parent": "Tutorials", 
-                    "previous_title": "Summary", 
-                    "previous_url": "/docs/summary/", 
-                    "relative_path": "_docs/tutorials/050-query-basics-tutorial.md", 
-                    "title": "Query Basics Tutorial", 
-                    "url": "/docs/query-basics-tutorial/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -8917,8 +8527,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Lesson 3: Create a Storage Plugin", 
-            "previous_url": "/docs/lesson-3-create-a-storage-plugin/", 
+            "previous_title": "Summary", 
+            "previous_url": "/docs/summary/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
