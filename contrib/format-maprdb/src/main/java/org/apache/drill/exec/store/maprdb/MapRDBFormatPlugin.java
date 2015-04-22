@@ -36,6 +36,8 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
 
+import org.apache.hadoop.conf.Configuration;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -46,20 +48,20 @@ public class MapRDBFormatPlugin implements FormatPlugin{
     private final StoragePluginConfig storageConfig;
     private final MapRDBFormatPluginConfig config;
     private final MapRDBFormatMatcher matcher;
-    private final DrillFileSystem fs;
+    private final Configuration fsConf;
     private final DrillbitContext context;
     private final String name;
 
-    public MapRDBFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig){
-        this(name, context, fs, storageConfig, new MapRDBFormatPluginConfig());
+    public MapRDBFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig){
+        this(name, context, fsConf, storageConfig, new MapRDBFormatPluginConfig());
     }
 
-    public MapRDBFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig, MapRDBFormatPluginConfig formatConfig){
+    public MapRDBFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig, MapRDBFormatPluginConfig formatConfig){
         this.context = context;
         this.config = formatConfig;
-        this.matcher = new MapRDBFormatMatcher(this, fs);
+        this.matcher = new MapRDBFormatMatcher(this);
         this.storageConfig = storageConfig;
-        this.fs = fs;
+        this.fsConf = fsConf;
         this.name = name == null ? "maprdb" : name;
     }
 	@Override
@@ -77,6 +79,10 @@ public class MapRDBFormatPlugin implements FormatPlugin{
     return matcher;
 	}
 
+  public Configuration getFsConf() {
+    return fsConf;
+  }
+
 	@Override
 	public AbstractWriter getWriter(PhysicalOperator child, String location)
 			throws IOException {
@@ -84,26 +90,20 @@ public class MapRDBFormatPlugin implements FormatPlugin{
 	}
 
 	@Override
-	public AbstractGroupScan getGroupScan(FileSelection selection)
-      throws IOException {
-    return getGroupScan(selection, null);
-	}
-
-	@Override
   @JsonIgnore
 	public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    return ImmutableSet.of(MapRDBPushFilterIntoScan.INSTANCE);
+        return ImmutableSet.of(MapRDBPushFilterIntoScan.INSTANCE);
 	}
 
 	@Override
-	public AbstractGroupScan getGroupScan(FileSelection selection,
-			List<SchemaPath> columns) throws IOException {
+	public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
+		List<SchemaPath> columns) throws IOException {
         List<String> files = selection.getAsFiles();
         assert(files.size() == 1);
         String tableName = files.get(0);
         HBaseScanSpec scanSpec = new HBaseScanSpec(tableName);
         try {
-            return new MapRDBGroupScan((FileSystemPlugin)(context.getStorage().getPlugin(storageConfig)), this, scanSpec, columns);
+            return new MapRDBGroupScan(userName, (FileSystemPlugin)(context.getStorage().getPlugin(storageConfig)), this, scanSpec, columns);
         } catch (ExecutionSetupException e) {
             e.printStackTrace();
             return null;
@@ -118,11 +118,6 @@ public class MapRDBFormatPlugin implements FormatPlugin{
 	@Override
 	public StoragePluginConfig getStorageConfig() {
 		return storageConfig;
-	}
-
-	@Override
-	public DrillFileSystem getFileSystem() {
-		return fs;
 	}
 
 	@Override

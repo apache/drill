@@ -59,17 +59,20 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
 
   @JsonCreator
   public MapRDBSubScan(@JacksonInject StoragePluginRegistry registry,
+                      @JsonProperty("userName") String userName,
                       @JsonProperty("storage") StoragePluginConfig storage,
                       @JsonProperty("regionScanSpecList") LinkedList<HBaseSubScan.HBaseSubScanSpec> regionScanSpecList,
                       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+    super(userName);
     this.fsStoragePlugin = (FileSystemPlugin) registry.getPlugin(storage);
     this.regionScanSpecList = regionScanSpecList;
     this.storage = storage;
     this.columns = columns;
   }
 
-    public MapRDBSubScan(FileSystemPlugin storagePlugin, StoragePluginConfig config,
+    public MapRDBSubScan(String userName, FileSystemPlugin storagePlugin, StoragePluginConfig config,
                          List<HBaseSubScan.HBaseSubScanSpec> hBaseSubScanSpecs, List<SchemaPath> columns) {
+        super(userName);
         fsStoragePlugin = storagePlugin;
         storage = config;
         this.regionScanSpecList = hBaseSubScanSpecs;
@@ -97,7 +100,7 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new MapRDBSubScan(fsStoragePlugin, storage, regionScanSpecList, columns);
+    return new MapRDBSubScan(getUserName(), fsStoragePlugin, storage, regionScanSpecList, columns);
   }
 
   @Override

@@ -102,18 +102,20 @@ public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseCons
   private MapRDBTableStats tableStats;
 
   @JsonCreator
-  public MapRDBGroupScan(@JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
+  public MapRDBGroupScan(@JsonProperty("userName") final String userName,
+                        @JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
                         @JsonProperty("storage") FileSystemConfig storagePluginConfig,
                         @JsonProperty("format") MapRDBFormatPluginConfig formatPluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this ((FileSystemPlugin) pluginRegistry.getPlugin(storagePluginConfig),
+    this (userName, (FileSystemPlugin) pluginRegistry.getPlugin(storagePluginConfig),
             (MapRDBFormatPlugin) pluginRegistry.getFormatPlugin(storagePluginConfig, formatPluginConfig),
             hbaseScanSpec,
             columns);
   }
 
-  public MapRDBGroupScan(FileSystemPlugin storagePlugin, MapRDBFormatPlugin formatPlugin, HBaseScanSpec scanSpec, List<SchemaPath> columns) {
+  public MapRDBGroupScan(String userName, FileSystemPlugin storagePlugin, MapRDBFormatPlugin formatPlugin, HBaseScanSpec scanSpec, List<SchemaPath> columns) {
+    super(userName);
     this.storagePlugin = storagePlugin;
     this.formatPlugin = formatPlugin;
     this.hbaseScanSpec = scanSpec;
@@ -126,6 +128,7 @@ public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseCons
    * @param that The HBaseGroupScan to clone
    */
   private MapRDBGroupScan(MapRDBGroupScan that) {
+    super(that);
     this.columns = that.columns;
     this.hbaseScanSpec = that.hbaseScanSpec;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
@@ -346,7 +349,7 @@ public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseCons
     assert minorFragmentId < endpointFragmentMapping.size() : String.format(
         "Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(),
         minorFragmentId);
-    return new MapRDBSubScan(storagePlugin, storagePlugin.getConfig(), endpointFragmentMapping.get(minorFragmentId), columns);
+    return new MapRDBSubScan(getUserName(), storagePlugin, storagePlugin.getConfig(), endpointFragmentMapping.get(minorFragmentId), columns);
   }
 
   @Override
@@ -436,7 +439,9 @@ public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseCons
    * Empty constructor, do not use, only for testing.
    */
   @VisibleForTesting
-  public MapRDBGroupScan() { }
+  public MapRDBGroupScan() {
+    super((String)null);
+  }
 
   /**
    * Do not use, only for testing.

@@ -29,12 +29,10 @@ import java.io.IOException;
 
 public class MapRDBFormatMatcher extends FormatMatcher {
 
-  private FormatPlugin plugin;
-  private DrillFileSystem fs;
+  private final FormatPlugin plugin;
 
-  public MapRDBFormatMatcher(FormatPlugin plugin, DrillFileSystem fs) {
+  public MapRDBFormatMatcher(FormatPlugin plugin) {
     this.plugin = plugin;
-    this.fs = fs;
   }
 
   @Override
@@ -43,7 +41,7 @@ public class MapRDBFormatMatcher extends FormatMatcher {
   }
 
   @Override
-  public FormatSelection isReadable(FileSelection selection) throws IOException {
+  public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
     FileStatus status = selection.getFirstPath(fs);
     if (status instanceof MapRFileStatus) {
       if (((MapRFileStatus) status).isTable()) {

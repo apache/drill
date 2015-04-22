@@ -65,8 +65,8 @@ public class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRule {
       return; //no filter pushdown ==> No transformation.
     }
 
-    final MapRDBGroupScan newGroupsScan = new MapRDBGroupScan(groupScan.getStoragePlugin(), groupScan.getFormatPlugin(),
-    		newScanSpec, groupScan.getColumns());
+    final MapRDBGroupScan newGroupsScan = new MapRDBGroupScan(groupScan.getUserName(),
+        groupScan.getStoragePlugin(), groupScan.getFormatPlugin(), newScanSpec, groupScan.getColumns());
     newGroupsScan.setFilterPushedDown(true);
 
     final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
