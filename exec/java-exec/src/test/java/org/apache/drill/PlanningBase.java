@@ -102,7 +102,7 @@ public class PlanningBase extends ExecTest{
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);
-    final SchemaPlus root = SimpleOptiqSchema.createRootSchema(false);
+    final SchemaPlus root = SimpleCalciteSchema.createRootSchema(false);
     registry.getSchemaFactory().registerSchemas(SchemaConfig.newBuilder("foo", context).build(), root);
 
     new NonStrictExpectations() {

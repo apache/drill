@@ -19,10 +19,10 @@ package org.apache.drill.exec.ops;
 
 import com.carrotsearch.hppc.ObjectIntOpenHashMap;
 import com.google.common.base.Preconditions;
-import net.hydromatic.optiq.SchemaPlus;
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.exceptions.UserException;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelOptTable.ToRelContext;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelOptTable.ToRelContext;
 
 import static org.apache.drill.exec.ExecConstants.IMPERSONATION_MAX_CHAINED_USER_HOPS;
 

@@ -30,6 +30,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptTable;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 public abstract class DrillTable implements Table {
 

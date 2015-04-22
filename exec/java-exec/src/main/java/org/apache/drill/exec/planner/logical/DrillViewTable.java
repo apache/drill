@@ -31,6 +31,7 @@ import org.apache.calcite.plan.RelOptTable.ToRelContext;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.drill.exec.ops.ViewExpansionContext;
 
 public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillViewTable.class);
@@ -57,7 +58,7 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
 
   @Override
   public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
-    ViewExpansionToken token = null;
+    ViewExpansionContext.ViewExpansionToken token = null;
     try {
       RelDataType rowType = relOptTable.getRowType();
       RelNode rel;
