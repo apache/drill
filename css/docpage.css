@@ -253,14 +253,13 @@ div.docsidebar ul li {
   margin-right: 0px;
 }
 .docsidebarwrapper > ul > .toctree-l1 {
-  padding: 11px 0;
+  padding: 11px 0 0 12px;
   line-height: 24px;
   border-top: 1px solid #ebebed;
 }
 .docsidebarwrapper > ul > .toctree-l1 > a {
   font-size: 18px;
   line-height: 24px;
-  padding: 0 0 0 12px;
   width: 100%;
   display: inline-block;
 }
@@ -269,7 +268,7 @@ div.docsidebar ul ul, div.docsidebar ul.want-points {
   margin-left: 0;
 }
 div.docsidebar ul ul {
-  margin-top: -8px;
+  margin-top: 0px;
   margin-bottom: 0;
 }
 div.docsidebar ul ul ul {
