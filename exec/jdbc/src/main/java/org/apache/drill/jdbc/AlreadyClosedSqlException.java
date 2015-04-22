@@ -28,7 +28,7 @@ public class AlreadyClosedSqlException extends JdbcApiSqlException {
 
   /**
    * See {@link JdbcApiSqlException#JdbcApiSqlException(String, String, int)}.
-   * /
+   */
   public AlreadyClosedSqlException( String reason,
                                     String SQLState,
                                     int vendorCode ) {
@@ -37,7 +37,7 @@ public class AlreadyClosedSqlException extends JdbcApiSqlException {
 
   /**
    * See {@link JdbcApiSqlException#JdbcApiSqlException(String, String)}.
-   * /
+   */
   public AlreadyClosedSqlException( String reason, String SQLState ) {
     super( reason, SQLState );
   }

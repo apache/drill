@@ -199,7 +199,7 @@ public interface DrillConnection extends Connection {
   /** Returns a view onto this connection's configuration properties. Code
    * within Optiq should use this view rather than calling
    * {@link java.util.Properties#getProperty(String)}. */
-  DrillConnectionConfig config();
+  DrillConnectionConfig getConfig();
 
   DrillClient getClient();
 

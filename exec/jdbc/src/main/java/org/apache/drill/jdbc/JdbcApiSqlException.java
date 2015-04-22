@@ -87,7 +87,7 @@ import java.sql.SQLNonTransientException;
  *   etc.)
  * </p>
  */
-class JdbcApiSqlException extends SQLNonTransientException {
+public class JdbcApiSqlException extends SQLNonTransientException {
 
   private static final long serialVersionUID = 2014_12_12L;
 

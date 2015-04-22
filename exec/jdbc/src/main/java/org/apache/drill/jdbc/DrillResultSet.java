@@ -39,6 +39,11 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
+
+/**
+ * Drill-specific {@link ResultSet}.
+ * @see #unwrap
+ */
 public interface DrillResultSet extends ResultSet  {
 
   /**

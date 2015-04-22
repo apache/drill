@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.jdbc.impl;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -37,8 +37,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  *   coordinated elsewhere).)
  * </p>
  */
-// (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-public class DrillStatementRegistry {
+class DrillStatementRegistry {
 
   private static final Logger logger = getLogger( DrillStatementRegistry.class );
 
@@ -46,17 +45,17 @@ public class DrillStatementRegistry {
   private final Map<Statement, Object> openStatements = new IdentityHashMap<>();
 
 
-  public void addStatement( Statement statement ) {
+  void addStatement( Statement statement ) {
     logger.debug( "Adding to open-statements registry: " + statement );
     openStatements.put( statement, statement );
   }
 
-  public void removeStatement( Statement statement ) {
+  void removeStatement( Statement statement ) {
     logger.debug( "Removing from open-statements registry: " + statement );
     openStatements.remove( statement );
   }
 
-  public void close() {
+  void close() {
     // Note:  Can't call close() on statement during iteration of map because
     // close() calls our removeStatement(...), which modifies the map.
 

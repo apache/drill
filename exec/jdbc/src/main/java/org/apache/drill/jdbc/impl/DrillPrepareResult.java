@@ -15,33 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.jdbc.impl;
 
-import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
 
-import net.hydromatic.avatica.AvaticaConnection;
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.Handler;
+import net.hydromatic.avatica.AvaticaParameter;
+import net.hydromatic.avatica.AvaticaPrepareResult;
+import net.hydromatic.avatica.ColumnMetaData;
 
-public class DrillHandler implements Handler{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHandler.class);
+class DrillPrepareResult implements AvaticaPrepareResult{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillPrepareResult.class);
 
-  @Override
-  public void onConnectionInit(AvaticaConnection c) throws SQLException {
+  final String sql;
+  final DrillColumnMetaDataList columns = new DrillColumnMetaDataList();
+
+  DrillPrepareResult(String sql) {
+    super();
+    this.sql = sql;
   }
 
   @Override
-  public void onConnectionClose(AvaticaConnection c) throws RuntimeException {
-    DrillConnectionImpl connection = (DrillConnectionImpl) c;
-    connection.cleanup();
+  public List<ColumnMetaData> getColumnList() {
+    return columns;
   }
 
   @Override
-  public void onStatementExecute(AvaticaStatement statement, ResultSink resultSink) throws RuntimeException {
+  public String getSql() {
+    return sql;
   }
 
   @Override
-  public void onStatementClose(AvaticaStatement statement) throws RuntimeException {
-    ((DrillRemoteStatement) statement).cleanup();
+  public List<AvaticaParameter> getParameterList() {
+    return Collections.emptyList();
   }
 }

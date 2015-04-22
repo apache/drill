@@ -23,7 +23,7 @@ package org.apache.drill.jdbc;
  * accessor method before calling {@link ResultSet#next()} or after
  * {@link ResultSet#next()} returns false.
  */
-class InvalidCursorStateSqlException extends JdbcApiSqlException {
+public class InvalidCursorStateSqlException extends JdbcApiSqlException {
 
   private static final long serialVersionUID = 2014_12_09L;
 

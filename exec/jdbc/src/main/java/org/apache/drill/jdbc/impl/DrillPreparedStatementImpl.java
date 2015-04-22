@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.jdbc.impl;
 
 import java.sql.SQLException;
 
@@ -30,12 +30,16 @@ import net.hydromatic.avatica.AvaticaPreparedStatement;
  * {@link net.hydromatic.avatica.AvaticaFactory#newPreparedStatement}.
  * </p>
  */
-abstract class DrillPreparedStatement extends AvaticaPreparedStatement
+abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
     implements DrillRemoteStatement {
 
-  protected DrillPreparedStatement(DrillConnectionImpl connection, AvaticaPrepareResult prepareResult,
-      int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-    super(connection, prepareResult, resultSetType, resultSetConcurrency, resultSetHoldability);
+  protected DrillPreparedStatementImpl(DrillConnectionImpl connection,
+                                       AvaticaPrepareResult prepareResult,
+                                       int resultSetType,
+                                       int resultSetConcurrency,
+                                       int resultSetHoldability) throws SQLException {
+    super(connection, prepareResult,
+          resultSetType, resultSetConcurrency, resultSetHoldability);
     connection.openStatementsRegistry.addStatement(this);
   }
 
@@ -45,7 +49,7 @@ abstract class DrillPreparedStatement extends AvaticaPreparedStatement
   }
 
   @Override
-  public void cleanup() {
+  public void cleanUp() {
     final DrillConnectionImpl connection1 = (DrillConnectionImpl) connection;
     connection1.openStatementsRegistry.removeStatement(this);
   }

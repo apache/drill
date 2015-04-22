@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.jdbc.impl;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
@@ -44,22 +44,24 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.TestUtilities;
-import org.apache.drill.jdbc.impl.DrillStatementImpl;
+import org.apache.drill.jdbc.AlreadyClosedSqlException;
+import org.apache.drill.jdbc.DrillConnection;
+import org.apache.drill.jdbc.DrillConnectionConfig;
+import org.apache.drill.jdbc.InvalidParameterSqlException;
+import org.apache.drill.jdbc.JdbcApiSqlException;
 
-// (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
+
 /**
- * Implementation of JDBC connection in Drill.
- *
- * <p>
- * Abstract to allow newer versions of JDBC to add methods.
- * </p>
+ * Drill's implementation of {@link Connection}.
  */
-public abstract class DrillConnectionImpl extends AvaticaConnection
-                                          implements DrillConnection {
+// (Was abstract to avoid errors _here_ if newer versions of JDBC added
+// interface methods, but now newer versions would probably use Java 8's default
+// methods for compatibility.)
+class DrillConnectionImpl extends AvaticaConnection
+                                   implements DrillConnection {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
 
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-  public final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
+  final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
   final DrillConnectionConfig config;
 
   private final DrillClient client;
@@ -67,7 +69,7 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
   private Drillbit bit;
   private RemoteServiceSet serviceSet;
 
-  protected DrillConnectionImpl(Driver driver, AvaticaFactory factory, String url, Properties info) throws SQLException {
+  protected DrillConnectionImpl(DriverImpl driver, AvaticaFactory factory, String url, Properties info) throws SQLException {
     super(driver, factory, url, info);
 
     // Initialize transaction-related settings per Drill behavior.
@@ -149,7 +151,7 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
   }
 
   @Override
-  public DrillConnectionConfig config() {
+  public DrillConnectionConfig getConfig() {
     return config;
   }
 
@@ -324,11 +326,11 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
 
   @Override
   public DrillStatementImpl createStatement(int resultSetType, int resultSetConcurrency,
-                                        int resultSetHoldability) throws SQLException {
+                                            int resultSetHoldability) throws SQLException {
     checkNotClosed();
     DrillStatementImpl statement =
         (DrillStatementImpl) super.createStatement(resultSetType, resultSetConcurrency,
-                                               resultSetHoldability);
+                                                   resultSetHoldability);
     return statement;
   }
 
@@ -339,8 +341,8 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
     checkNotClosed();
     try {
       DrillPrepareResult prepareResult = new DrillPrepareResult(sql);
-      DrillPreparedStatement statement =
-          (DrillPreparedStatement) factory.newPreparedStatement(
+      DrillPreparedStatementImpl statement =
+          (DrillPreparedStatementImpl) factory.newPreparedStatement(
               this, prepareResult, resultSetType, resultSetConcurrency,
               resultSetHoldability);
       return statement;
@@ -356,9 +358,8 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
     return config.getTimeZone();
   }
 
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
   // do not make public
-  public UnregisteredDriver getDriver() {
+  UnregisteredDriver getDriver() {
     return driver;
   }
 

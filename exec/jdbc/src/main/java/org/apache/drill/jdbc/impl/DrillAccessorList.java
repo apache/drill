@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.jdbc.impl;
 
 import java.sql.SQLException;
 
@@ -26,9 +26,9 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.BoundCheckingAccessor;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
-import org.apache.drill.jdbc.impl.TypeConvertingSqlAccessor;
 
-public class DrillAccessorList extends BasicList<Accessor>{
+
+class DrillAccessorList extends BasicList<Accessor>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAccessorList.class);
 
   private Accessor[] accessors = new Accessor[0];
@@ -36,7 +36,7 @@ public class DrillAccessorList extends BasicList<Accessor>{
   // TODO  Why 1, rather than, say, -1?
   private int lastColumn = 1;
 
-  public void generateAccessors(DrillCursor cursor, RecordBatchLoader currentBatch){
+  void generateAccessors(DrillCursor cursor, RecordBatchLoader currentBatch){
     int cnt = currentBatch.getSchema().getFieldCount();
     accessors = new Accessor[cnt];
     for(int i =0; i < cnt; i++){
@@ -55,7 +55,7 @@ public class DrillAccessorList extends BasicList<Accessor>{
     return accessors[index];
   }
 
-  public boolean wasNull() throws SQLException{
+  boolean wasNull() throws SQLException{
     return accessors[lastColumn].wasNull();
   }
 

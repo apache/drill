@@ -18,9 +18,11 @@
 package org.apache.drill.jdbc;
 
 import net.hydromatic.avatica.ColumnMetaData;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.jdbc.impl.DrillColumnMetaDataList;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

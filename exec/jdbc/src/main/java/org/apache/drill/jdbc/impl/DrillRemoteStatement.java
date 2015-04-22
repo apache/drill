@@ -15,15 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.jdbc.impl;
 
-/**
- * Implementation of {@link net.hydromatic.avatica.AvaticaFactory}
- * for Drill and JDBC 4.0 (corresponds to JDK 1.6).
- */
-public class DrillJdbc40Factory extends DrillJdbc41Factory {
-  /** Creates a factory for JDBC version 4.1. */
-  public DrillJdbc40Factory() {
-    super(4, 0);
-  }
+interface DrillRemoteStatement {
+  void cleanUp();
 }

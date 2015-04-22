@@ -22,6 +22,7 @@ import java.sql.Statement;
 
 /**
  * Drill-specific {@link Statement}.
+ * @see #unwrap
  */
 public interface DrillStatement extends Statement {
 

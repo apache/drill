@@ -29,12 +29,11 @@ import org.apache.drill.exec.vector.accessor.InvalidAccessException;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 import org.apache.drill.jdbc.SQLConversionOverflowException;
 
-// (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
 /**
  * SQL accessor implementing data type conversion for JDBC
  * {@link ResultSet}.get<i>Type</i>(<i>&lt;column ID></i>) column accessor methods.
  */
-public class TypeConvertingSqlAccessor implements SqlAccessor {
+class TypeConvertingSqlAccessor implements SqlAccessor {
   private final SqlAccessor innerAccessor;
 
   public TypeConvertingSqlAccessor( SqlAccessor innerAccessor ) {

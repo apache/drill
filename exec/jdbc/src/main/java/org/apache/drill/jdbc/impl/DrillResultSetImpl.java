@@ -43,8 +43,6 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillConnection;
-import org.apache.drill.jdbc.DrillConnectionImpl;
-import org.apache.drill.jdbc.DrillCursor;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
 import org.apache.drill.jdbc.SchemaChangeListener;
@@ -55,27 +53,27 @@ import org.slf4j.Logger;
 import com.google.common.collect.Queues;
 
 
-public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
+/**
+ * Drill's implementation of {@link ResultSet}.
+ */
+class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @SuppressWarnings("unused")
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillResultSetImpl.class);
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(DrillResultSetImpl.class);
 
   private final DrillStatementImpl statement;
 
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-  public SchemaChangeListener changeListener;
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-  public final ResultsListener resultsListener;
+  SchemaChangeListener changeListener;
+  final ResultsListener resultsListener;
   private final DrillClient client;
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
   // TODO:  Resolve:  Since is barely manipulated here in DrillResultSetImpl,
   //  move down into DrillCursor and have this.clean() have cursor clean it.
-  public final RecordBatchLoader currentBatch;
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-  public final DrillCursor cursor;
-  public boolean hasPendingCancelationNotification;
+  final RecordBatchLoader currentBatch;
+  final DrillCursor cursor;
+  boolean hasPendingCancelationNotification;
 
-  public DrillResultSetImpl(DrillStatementImpl statement, AvaticaPrepareResult prepareResult,
-                            ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
+  DrillResultSetImpl(DrillStatementImpl statement, AvaticaPrepareResult prepareResult,
+                     ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
     super(statement, prepareResult, resultSetMetaData, timeZone);
     this.statement = statement;
     final int batchQueueThrottlingThreshold =
@@ -130,8 +128,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     close();
   }
 
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-  public synchronized void cleanup() {
+  synchronized void cleanup() {
     if (resultsListener.getQueryId() != null && ! resultsListener.completed) {
       client.cancelQuery(resultsListener.getQueryId());
     }
@@ -142,8 +139,15 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   @Override
   public boolean next() throws SQLException {
     checkNotClosed();
-    // Next may be called after close has been called (for example after a user cancel) which in turn
-    // sets the cursor to null. So we must check before we call next.
+    // TODO:  Resolve following comments (possibly obsolete because of later
+    // addition of preceding call to checkNotClosed.  Also, NOTE that the
+    // following check, and maybe some checkNotClosed() calls, probably must
+    // synchronize on the statement, per the comment on AvaticaStatement's
+    // openResultSet:
+
+    // Next may be called after close has been called (for example after a user
+    // cancellation) which in turn sets the cursor to null.  So we must check
+    // before we call next.
     // TODO: handle next() after close is called in the Avatica code.
     if (super.cursor != null) {
       return super.next();
@@ -168,8 +172,9 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
       // calling some wait method?
       resultsListener.latch.await();
     } catch ( InterruptedException e ) {
-      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
-      // interruption and respond to it if it wants to.
+      // Preserve evidence that the interruption occurred so that code higher up
+      // on the call stack can learn of the interruption and respond to it if it
+      // wants to.
       Thread.currentThread().interrupt();
 
       // Not normally expected--Drill doesn't interrupt in this area (right?)--
@@ -189,8 +194,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     }
   }
 
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-  public static class ResultsListener implements UserResultsListener {
+  static class ResultsListener implements UserResultsListener {
     private static final Logger logger = getLogger( ResultsListener.class );
 
     private static volatile int nextInstanceId = 1;
@@ -331,7 +335,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
       completed = true;
     }
 
-    public QueryId getQueryId() {
+    QueryId getQueryId() {
       return queryId;
     }
 
@@ -344,8 +348,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
      * @throws InterruptedException
      *         if waiting on the queue was interrupted
      */
-    public QueryDataBatch getNext() throws UserException,
-                                           InterruptedException {
+    QueryDataBatch getNext() throws UserException, InterruptedException {
       while (true) {
         if (executionFailureException != null) {
           logger.debug( "[#{}] Dequeued query failure exception: {}.",

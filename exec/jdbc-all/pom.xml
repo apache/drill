@@ -221,10 +221,12 @@
             <option>-ignorewarnings</option>
             <option>-keep class org.apache.drill.exec.proto.** { *; }</option>
             <option>-keep class org.apache.drill.common.types.** { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.DrillResultSet { *; }</option>
             <option>-keep class org.apache.drill.jdbc.Driver { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.DrillJdbc40Factory { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.DrillJdbc41Factory { *; }</option>
+            <option>-keep class org.apache.drill.jdbc.DrillConnection { *; }</option>
+            <option>-keep class org.apache.drill.jdbc.DrillStatement { *; }</option>
+            <option>-keep class org.apache.drill.jdbc.DrillResultSet { *; }</option>
+            <option>-keep class org.apache.drill.jdbc.impl.DrillJdbc40Factory { *; }</option>
+            <option>-keep class org.apache.drill.jdbc.impl.DrillJdbc41Factory { *; }</option>
             <option>-keep class org.apache.drill.jdbc.proxy.TracingProxyDriver { *; }</option>
             <option>-keep class org.apache.drill.common.config.CommonConstants { *; }</option>
             <option>-keep class org.apache.drill.common.config.ConfigProvider { *; }</option>

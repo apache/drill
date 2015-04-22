@@ -27,6 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
@@ -48,7 +49,8 @@ public class ConnectionTest extends JdbcTestBase {
     // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
-    connection = new Driver().connect( "jdbc:drill:zk=local", null );
+    Driver.load();
+    connection = DriverManager.getConnection( "jdbc:drill:zk=local" );
     executor = Executors.newSingleThreadExecutor();
   }
 

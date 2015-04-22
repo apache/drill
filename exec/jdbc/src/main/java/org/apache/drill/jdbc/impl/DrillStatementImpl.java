@@ -23,20 +23,24 @@ import java.sql.SQLFeatureNotSupportedException;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
-import org.apache.drill.jdbc.DrillConnectionImpl;
-import org.apache.drill.jdbc.DrillRemoteStatement;
 import org.apache.drill.jdbc.DrillStatement;
 import org.apache.drill.jdbc.InvalidParameterSqlException;
 
 import net.hydromatic.avatica.AvaticaStatement;
 
-public abstract class DrillStatementImpl extends AvaticaStatement
-   implements DrillStatement, DrillRemoteStatement {
+/**
+ * Drill's implementation of {@link Statement}.
+ */
+// (Was abstract to avoid errors _here_ if newer versions of JDBC added
+// interface methods, but now newer versions would probably use Java 8's default
+// methods for compatibility.)
+class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
+                                                             DrillRemoteStatement {
 
   private final DrillConnectionImpl connection;
 
-  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-  public DrillStatementImpl(DrillConnectionImpl connection, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
+  DrillStatementImpl(DrillConnectionImpl connection, int resultSetType,
+                     int resultSetConcurrency, int resultSetHoldability) {
     super(connection, resultSetType, resultSetConcurrency, resultSetHoldability);
     this.connection = connection;
     connection.openStatementsRegistry.addStatement(this);
@@ -120,7 +124,7 @@ public abstract class DrillStatementImpl extends AvaticaStatement
   }
 
   @Override
-  public void cleanup() {
+  public void cleanUp() {
     final DrillConnectionImpl connection1 = (DrillConnectionImpl) connection;
     connection1.openStatementsRegistry.removeStatement(this);
   }

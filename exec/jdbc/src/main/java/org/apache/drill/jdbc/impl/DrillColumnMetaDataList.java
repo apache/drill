@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.jdbc.impl;
 
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
@@ -160,10 +160,11 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
         return "NCLOB";
     case java.sql.Types.SQLXML:
         return "SQLXML";
+    default:
+        logger.error( "Unexpected java.sql.Types value {}", type );
+        return "unknown java.sql.Types value " + type;
     }
-
-    return "?";
-}
+  }
 
   @Override
   public boolean contains(Object o) {

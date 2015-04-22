@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.jdbc.impl;
 
 import java.sql.SQLException;
 import java.util.Calendar;
@@ -31,9 +31,9 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.jdbc.impl.DrillResultSetImpl;
 
-public class DrillCursor implements Cursor {
+
+class DrillCursor implements Cursor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillCursor.class);
 
   private static final String UNKNOWN = "--UNKNOWN--";
@@ -65,13 +65,13 @@ public class DrillCursor implements Cursor {
    *
    * @param  resultSet  the associated ResultSet implementation
    */
-  public DrillCursor(final DrillResultSetImpl resultSet) {
+  DrillCursor(final DrillResultSetImpl resultSet) {
     this.resultSet = resultSet;
     currentBatch = resultSet.currentBatch;
     resultsListener = resultSet.resultsListener;
   }
 
-  public DrillResultSetImpl getResultSet() {
+  DrillResultSetImpl getResultSet() {
     return resultSet;
   }
 
