@@ -342,7 +342,7 @@ The following tables show data types that Drill can cast to/from other data type
   </tr>
 </table>
 \* Not supported in this release.   
-\*\* Used to cast binary data other than INT and BIGINT coming to/from sources such as MapR-DB/HBase.   
+\*\* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
 \*\*\* You cannot convert a character string having a decimal point to an INT or BIGINT.   
 
 ### Date and Time Data Types
