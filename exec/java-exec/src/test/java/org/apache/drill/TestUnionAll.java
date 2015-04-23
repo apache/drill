@@ -375,15 +375,41 @@ public class TestUnionAll extends BaseTestQuery{
     String rootDate = FileUtils.getResourceAsFile("/store/json/dateData.json").toURI().toString();
     String rootTimpStmp = FileUtils.getResourceAsFile("/store/json/timeStmpData.json").toURI().toString();
 
-    String query = String.format(
+    String query1 = String.format(
         "(select max(key) as key from dfs_test.`%s` " +
         "union all " +
         "select key from dfs_test.`%s`)", rootDate, rootTimpStmp);
 
+    String query2 = String.format(
+        "select key from dfs_test.`%s` " +
+        "union all " +
+        "select max(key) as key from dfs_test.`%s`", rootDate, rootTimpStmp);
+
+    String query3 = String.format(
+        "select key from dfs_test.`%s` " +
+        "union all " +
+        "select max(key) as key from dfs_test.`%s`", rootDate, rootTimpStmp);
+
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery(query1)
         .unOrdered()
-        .csvBaselineFile("testframework/testUnionAllQueries/q18.tsv")
+        .csvBaselineFile("testframework/testUnionAllQueries/q18_1.tsv")
+        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("key")
+        .build().run();
+
+    testBuilder()
+        .sqlQuery(query2)
+        .unOrdered()
+        .csvBaselineFile("testframework/testUnionAllQueries/q18_2.tsv")
+        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineColumns("key")
+        .build().run();
+
+    testBuilder()
+        .sqlQuery(query3)
+        .unOrdered()
+        .csvBaselineFile("testframework/testUnionAllQueries/q18_3.tsv")
         .baselineTypes(TypeProtos.MinorType.VARCHAR)
         .baselineColumns("key")
         .build().run();

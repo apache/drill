@@ -400,9 +400,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
                 throw new SchemaChangeException("Schema change detected in the left input of Union-All. This is not currently supported");
               }
 
-              upstream = IterOutcome.OK;
+              iterOutcome = IterOutcome.OK;
               // fall through
-              case OK:
+            case OK:
               unionAllRecordBatch.setCurrentRecordBatch(leftSide.getRecordBatch());
               upstream = iterOutcome;
               return upstream;
