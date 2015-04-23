@@ -108,7 +108,7 @@ div.main-content h1, div.int_title h1 {
  Code Blocks, Important
 *****************/
 div.highlight pre, code {
-  background: #f5f6f7 url(/images/code-block-bg.png) 0 0 repeat;
+  background: #f5f6f7 url(../images/code-block-bg.png) 0 0 repeat;
   border-radius: 0;
   border: none;
   border-left: 5px solid #494747;
@@ -126,7 +126,7 @@ pre {
   margin: 24px 0;
 }
 code {
-  background: #f5f6f7 url(/images/code-block-bg.png) 0 0 repeat;
+  background: #f5f6f7 url(../images/code-block-bg.png) 0 0 repeat;
   border-radius: 0;
   border: none;
   border-left: 5px;
@@ -233,12 +233,10 @@ div.docsidebar ul {
   color: #000;
 }
 div.docsidebar ul li {
-  background-color: ##F5F6F7;
   font-weight: normal;
   line-height: 24px;
-
 }
-.docsidebarwrapper > ul > .toctree-l1.current {
+.docsidebarwrapper > ul > .toctree-l1.current_section {
   background-color: #fff;
   border-right: 1px solid #f5f6f7;
 }
@@ -247,7 +245,7 @@ div.docsidebar ul li {
   color: #333333;
   text-decoration: none;
 }
-.docsidebarwrapper > ul > ul.current {
+.docsidebarwrapper > ul > ul.current_section {
   background-color: #fff;
   border-right: 1px solid #f5f6f7;
   margin-right: 0px;
@@ -300,10 +298,18 @@ span.expand, span.contract{
   cursor: pointer;
   font-size: 80%;
   position: relative;
-  right: 3px;
+  left: 5px;
+  display:none;
 }
-span.contract {
-  display: none;
+span.expand.show, span.contract.show {
+  display: inline-block;
+}
+
+.docsidebarwrapper li.toctree-l2.current, .docsidebarwrapper li.toctree-l3.current {
+  background-color: #c6e2ff;
+}
+.docsidebarwrapper ul {
+  font-size: 14px;
 }
 
 .permalink
