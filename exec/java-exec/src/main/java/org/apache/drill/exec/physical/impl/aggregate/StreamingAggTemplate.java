@@ -36,7 +36,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   private int previousIndex = -1;
   private int underlyingIndex = 0;
   private int currentIndex;
-  private int addedRecordCount = 0;
+  private long addedRecordCount = 0;
   private IterOutcome outcome;
   private int outputCount = 0;
   private RecordBatch incoming;
