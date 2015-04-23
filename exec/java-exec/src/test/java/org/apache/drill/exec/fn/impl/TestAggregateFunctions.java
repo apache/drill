@@ -206,4 +206,18 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineValues(333.56708470261117d)
         .go();
   }
+
+  @Test
+  public void testAggregateWithEmptyInput() throws Exception {
+    String query = "select " +
+        "count(employee_id) col1, avg(employee_id) col2, sum(employee_id) col3 " +
+        "from cp.`employee.json` where 1 = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3")
+        .baselineValues(0l, null, null)
+        .go();
+  }
 }
