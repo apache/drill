@@ -467,26 +467,26 @@ and CONVERT_FROM functions:
 **Type**| **Input Type**| **Output Type**  
 ---|---|---  
 JSON | bytes | varchar
-BOOLEAN_BYTE| bytes(1)| boolean  
-TINYINT_BE| bytes(1)| tinyint  
-TINYINT| bytes(1)| tinyint  
-SMALLINT_BE| bytes(2)| smallint  
-SMALLINT| bytes(2)| smallint  
-INT_BE| bytes(4)| int  
-INT| bytes(4)| int  
-BIGINT_BE| bytes(8)| bigint  
-BIGINT| bytes(8)| bigint  
-FLOAT| bytes(4)| float (float4)  
-DOUBLE| bytes(8)| double (float8)  
-INT_HADOOPV| bytes(1-9)| int  
-BIGINT_HADOOPV| bytes(1-9)| bigint  
-DATE_EPOCH_BE| bytes(8)| date  
-DATE_EPOCH| bytes(8)| date  
-TIME_EPOCH_BE| bytes(8)| time  
-TIME_EPOCH| bytes(8)| time  
-UTF8| bytes| varchar  
-UTF16| bytes| var16char  
-UINT8| bytes(8)| uint8  
+BOOLEAN_BYTE| bytes(1)| BOOLEAN  
+TINYINT_BE| bytes(1)| TINYINT  
+TINYINT| bytes(1)| TINYINT  
+SMALLINT_BE| bytes(2)| SMALLINT  
+SMALLINT| bytes(2)| SMALLINT  
+INT_BE| bytes(4)| INT  
+INT| bytes(4)| INT  
+BIGINT_BE| bytes(8)| BIGINT  
+BIGINT| bytes(8)| BIGINT  
+FLOAT| bytes(4)| FLOAT (float4)  
+DOUBLE| bytes(8)| DOUBLE (float8)  
+INT_HADOOPV| bytes(1-9)| INT  
+BIGINT_HADOOPV| BYTES(1-9)| BIGINT  
+DATE_EPOCH_BE| bytes(8)| DATE  
+DATE_EPOCH| bytes(8)| DATE  
+TIME_EPOCH_BE| bytes(8)| TIME  
+TIME_EPOCH| bytes(8)| TIME  
+UTF8| bytes| VARCHAR  
+UTF16| bytes| VAR16CHAR  
+UINT8| bytes(8)| UINT8  
 
 If you are unsure that the size of the source and destination INT or BIGINT you are converting is the same, use CAST to convert these data types to/from binary.
 
