@@ -7,7 +7,7 @@ A SQL statement used in Drill can include one or more of the following parts:
 
 * Clause, such as FROM
 * Command, such as SELECT 
-* Expression, a combination of one or more values, operators, and SQL functions that evaluates to a value. For example, users.firstname is a period expression
+* Expression, a combination of one or more values, operators, and SQL functions that evaluates to a value. For example, users.firstname is a period expression.
 * Function, scalar and aggregate, such as sum
 * Literal value
 
