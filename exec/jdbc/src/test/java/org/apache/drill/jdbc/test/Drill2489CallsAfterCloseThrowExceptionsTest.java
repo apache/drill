@@ -52,20 +52,18 @@ import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 
 /**
- * Currently, test for DRILL-2565--for key methods only:  for closed Connection,
- * Statement, ResultSet, etc., object, throw some kind of "object already closed"
- * SQLException,
- *
+ * Test for JDBC requirement that almost all methods throw {@link SQLException}
+ * when called on a closed object (Connection, Statement, ResultSet, etc.).
  * <p>
- * TO BE:  Test for DRILL-2489--on closed Connection, Statement, ResultSet, etc.,
- * objects, most methods must throw some kind of "object already closed" SQLException,
- * but few do.
+ *   NOTE:  This test currently covers only {@link Connection},
+ *   {@link Statement}, {@link ResultSet} and part of {@link DatabaseMetaData}
+ *   (but not {@link Statement} subclasses, {@link ResultsetMetadata}, or any
+ *   relevant secondary objects such as {@link Array} or {@link Struct}).
  * </p>
  * <p>
- *  NOTE:  Test currently covers only {@link Connection}, {@link Statement},
- *  {@link ResultSet} and part of {@link DatabaseMetaData} (but not
- *  {@link Statement} subclasses, {@link ResultsetMetadata}, or any relevant
- *  secondary objects such as {@link Clob} or {@link Array}.
+ *   Additionally, for JDBC interfaces other than ResultSet, only key methods
+ *   currently implement the check, so many test methods are currently disabled
+ *   with @{@link Ignore}.
  * </p>
  */
 public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
@@ -101,14 +99,18 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
   ////////////////////////////////////////
   // - methods that do _not_ throw exception for closed Connection:
 
+  @Test
   public void testClosedConnection_close_doesNotThrow() throws SQLException {
     closedConnection.close();
   }
 
+  @Test
   public void testClosedConnection_isClosed_returnsTrue() throws SQLException {
     assertThat( closedConnection.isClosed(), equalTo( true ) );
   }
 
+  @Ignore( "until isValid is implemented" )
+  @Test
   public void testClosedConnection_isValid_returnsTrue() throws SQLException {
     assertThat( closedConnection.isValid( 1_000 ), equalTo( true ) );
   }
@@ -128,7 +130,6 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     closedConnection.clearWarnings();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_commit_throws() throws SQLException {
     closedConnection.commit();
@@ -298,6 +299,7 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     closedConnection.prepareStatement( "sql", -4 );
   }
 
+  @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_prepareStatement4_throws() throws SQLException {
     closedConnection.prepareStatement( "sql", -1, -2 );
   }
@@ -313,25 +315,21 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     closedConnection.prepareStatement( "sql", (int[]) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_releaseSavepoint_throws() throws SQLException {
     closedConnection.releaseSavepoint( (Savepoint) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_rollback1_throws() throws SQLException {
     closedConnection.rollback();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_rollback2_throws() throws SQLException {
     closedConnection.rollback( (Savepoint) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_setAutoCommit_throws() throws SQLException {
     closedConnection.setAutoCommit( true );
@@ -373,13 +371,11 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     closedConnection.setReadOnly( true );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_setSavepoint1_throws() throws SQLException {
     closedConnection.setSavepoint();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_setSavepoint2_throws() throws SQLException {
     closedConnection.setSavepoint( "name" );
@@ -391,7 +387,6 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     closedConnection.setSchema( "schema" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedConnection_setTransactionIsolation_throws() throws SQLException {
     closedConnection.setTransactionIsolation( -1 );
@@ -410,10 +405,12 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
   ////////////////////////////////////////
   // - methods that do _not_ throw exception for closed Statement:
 
+  @Test
   public void testClosedStatement_close_doesNotThrow() throws SQLException {
     closedStatement.close();
   }
 
+  @Test
   public void testClosedStatement_isClosed_returnsTrue() throws SQLException {
     assertThat( closedStatement.isClosed(), equalTo( true ) );
   }
@@ -602,7 +599,7 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     closedStatement.isPoolable();
   }
 
-   @Ignore( "until DRILL-2489 addressed" )
+  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_setCursorName_throws() throws SQLException {
     closedStatement.setCursorName( "name" );
@@ -638,7 +635,7 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     closedStatement.setMaxRows(1 );
   }
 
-   @Ignore( "until DRILL-2489 addressed" )
+  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedStatement_setQueryTimeout_throws() throws SQLException {
     closedStatement.setQueryTimeout( 60 );
@@ -657,10 +654,12 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
   ////////////////////////////////////////
   // - methods that do _not_ throw exception for closed ResultSet:
 
+  @Test
   public void testClosedResultSet_close_doesNotThrow() throws SQLException {
     closedResultSet.close();
   }
 
+  @Test
   public void testClosedResultSet_isClosed_returnsTrue() throws SQLException {
     assertThat( closedResultSet.isClosed(), equalTo( true ) );
   }
@@ -692,285 +691,238 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
   ////////////////////////////////////////
   // - methods that do throw exception for closed ResultSet:
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_absolute_throws() throws SQLException {
     closedResultSet.absolute( 1 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_afterLast_throws() throws SQLException {
     closedResultSet.afterLast();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_beforeFirst_throws() throws SQLException {
     closedResultSet.beforeFirst();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_cancelRowUpdates_throws() throws SQLException {
     closedResultSet.cancelRowUpdates();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_clearWarnings_throws() throws SQLException {
     closedResultSet.clearWarnings();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_deleteRow_throws() throws SQLException {
     closedResultSet.deleteRow();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_findColumn_throws() throws SQLException {
     closedResultSet.findColumn( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_first_throws() throws SQLException {
     closedResultSet.first();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getArray1_throws() throws SQLException {
     closedResultSet.getArray( 1 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getArray2_throws() throws SQLException {
     closedResultSet.getArray( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getAsciiStream1_throws() throws SQLException {
     closedResultSet.getAsciiStream( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getAsciiStream2_throws() throws SQLException {
     closedResultSet.getAsciiStream( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBigDecimal1_throws() throws SQLException {
     closedResultSet.getBigDecimal( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings( "deprecation" )
   public void testClosedResultSet_getBigDecimal2_throws() throws SQLException {
     closedResultSet.getBigDecimal( 123, 2 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBigDecimal3_throws() throws SQLException {
     closedResultSet.getBigDecimal( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings( "deprecation" )
   public void testClosedResultSet_getBigDecimal_throws() throws SQLException {
     closedResultSet.getBigDecimal( "columnLabel", 2 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBinaryStream1_throws() throws SQLException {
     closedResultSet.getBinaryStream( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBinaryStream2_throws() throws SQLException {
     closedResultSet.getBinaryStream( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBlob1_throws() throws SQLException {
     closedResultSet.getBlob( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBlob2_throws() throws SQLException {
     closedResultSet.getBlob( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBoolean1_throws() throws SQLException {
     closedResultSet.getBoolean( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBoolean2_throws() throws SQLException {
     closedResultSet.getBoolean( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getByte1_throws() throws SQLException {
     closedResultSet.getByte( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getByte2_throws() throws SQLException {
     closedResultSet.getByte( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBytes1_throws() throws SQLException {
     closedResultSet.getBytes( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getBytes2_throws() throws SQLException {
     closedResultSet.getBytes( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getCharacterStream1_throws() throws SQLException {
     closedResultSet.getCharacterStream( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getCharacterStream2_throws() throws SQLException {
     closedResultSet.getCharacterStream( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getClob1_throws() throws SQLException {
     closedResultSet.getClob( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getClob2_throws() throws SQLException {
     closedResultSet.getClob( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getConcurrency_throws() throws SQLException {
     closedResultSet.getConcurrency();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getCursorName_throws() throws SQLException {
     closedResultSet.getCursorName();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getDate1_throws() throws SQLException {
     closedResultSet.getDate( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getDate2_throws() throws SQLException {
     closedResultSet.getDate( 123, null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getDate3_throws() throws SQLException {
     closedResultSet.getDate( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getDate4_throws() throws SQLException {
     closedResultSet.getDate( "columnLabel", null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getDouble1_throws() throws SQLException {
     closedResultSet.getDouble( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getDouble2_throws() throws SQLException {
     closedResultSet.getDouble( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getFetchDirection_throws() throws SQLException {
     closedResultSet.getFetchDirection();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getFetchSize_throws() throws SQLException {
     closedResultSet.getFetchSize();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getFloat1_throws() throws SQLException {
     closedResultSet.getFloat( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getFloat2_throws() throws SQLException {
     closedResultSet.getFloat( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getHoldability_throws() throws SQLException {
     closedResultSet.getHoldability();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getInt1_throws() throws SQLException {
     closedResultSet.getInt( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getInt2_throws() throws SQLException {
     closedResultSet.getInt( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getLong1_throws() throws SQLException {
     closedResultSet.getLong( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getLong2_throws() throws SQLException {
     closedResultSet.getLong( "columnLabel" );
@@ -981,835 +933,698 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     closedResultSet.getMetaData();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getNCharacterStream1_throws() throws SQLException {
     closedResultSet.getNCharacterStream( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getNCharacterStream2_throws() throws SQLException {
     closedResultSet.getNCharacterStream( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getNClob1_throws() throws SQLException {
     closedResultSet.getNClob( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getNClob2_throws() throws SQLException {
     closedResultSet.getNClob( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getNString1_throws() throws SQLException {
     closedResultSet.getNString( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getNString2_throws() throws SQLException {
     closedResultSet.getNString( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getObject1_throws() throws SQLException {
     closedResultSet.getObject( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getObject2_throws() throws SQLException {
     closedResultSet.getObject( 123, String.class );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getObject3_throws() throws SQLException {
     closedResultSet.getObject( 123, (Map<String,Class<?>>) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getObject4_throws() throws SQLException {
     closedResultSet.getObject( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getObject5_throws() throws SQLException {
     closedResultSet.getObject( "columnLabel", String.class );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getObject6_throws() throws SQLException {
     closedResultSet.getObject( "columnLabel", (Map<String,Class<?>>) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getRef1_throws() throws SQLException {
     closedResultSet.getRef( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getRef2_throws() throws SQLException {
     closedResultSet.getRef( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getRow_throws() throws SQLException {
     closedResultSet.getRow();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getRowId1_throws() throws SQLException {
     closedResultSet.getRowId( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getRowId2_throws() throws SQLException {
     closedResultSet.getRowId( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getShort1_throws() throws SQLException {
     closedResultSet.getShort( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getShort2_throws() throws SQLException {
     closedResultSet.getShort( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getSQLXML1_throws() throws SQLException {
     closedResultSet.getSQLXML( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getSQLXML2_throws() throws SQLException {
     closedResultSet.getSQLXML( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
-  @Test( expected = AlreadyClosedSqlException.class )
-  public void testClosedResultSet_getStatement_throws() throws SQLException {
+  @Test
+  public void testClosedResultSet_getStatement_doesNotThrow() throws SQLException {
     closedResultSet.getStatement();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getString1_throws() throws SQLException {
     closedResultSet.getString( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getString2_throws() throws SQLException {
     closedResultSet.getString( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getTime1_throws() throws SQLException {
     closedResultSet.getTime( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getTime2_throws() throws SQLException {
     closedResultSet.getTime( 123, null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getTime3_throws() throws SQLException {
     closedResultSet.getTime( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getTime4_throws() throws SQLException {
     closedResultSet.getTime( "columnLabel", null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getTimestamp1_throws() throws SQLException {
     closedResultSet.getTimestamp( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getTimestamp2_throws() throws SQLException {
     closedResultSet.getTimestamp( 123, null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getTimestamp3_throws() throws SQLException {
     closedResultSet.getTimestamp( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getTimestamp4_throws() throws SQLException {
     closedResultSet.getTimestamp( "columnLabel", null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getType_throws() throws SQLException {
     closedResultSet.getType();
   }
 
   @Test( expected = AlreadyClosedSqlException.class )
-  @SuppressWarnings("deprecation")
-  @Ignore( "until DRILL-2489 addressed" )
+  @SuppressWarnings( "deprecation" )
   public void testClosedResultSet_getUnicodeStream1_throws() throws SQLException {
     closedResultSet.getUnicodeStream( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings( "deprecation" )
   public void testClosedResultSet_getUnicodeStream2_throws() throws SQLException {
     closedResultSet.getUnicodeStream( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getURL1_throws() throws SQLException {
     closedResultSet.getURL( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getURL2_throws() throws SQLException {
     closedResultSet.getURL( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_getWarnings_throws() throws SQLException {
     closedResultSet.getWarnings();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_insertRow_throws() throws SQLException {
     closedResultSet.insertRow();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_isAfterLast_throws() throws SQLException {
     closedResultSet.isAfterLast();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_isBeforeFirst_throws() throws SQLException {
     closedResultSet.isBeforeFirst();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_isFirst_throws() throws SQLException {
     closedResultSet.isFirst();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_isLast_throws() throws SQLException {
     closedResultSet.isLast();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_last_throws() throws SQLException {
     closedResultSet.last();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_moveToCurrentRow_throws() throws SQLException {
     closedResultSet.moveToCurrentRow();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_moveToInsertRow_throws() throws SQLException {
     closedResultSet.moveToInsertRow();
   }
 
+  @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_next_throws() throws SQLException {
     closedResultSet.next();
   }
 
-   @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_previous_throws() throws SQLException {
     closedResultSet.previous();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_refreshRow_throws() throws SQLException {
     closedResultSet.refreshRow();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_relative_throws() throws SQLException {
     closedResultSet.relative( 2 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_rowDeleted_throws() throws SQLException {
     closedResultSet.rowDeleted();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_rowInserted_throws() throws SQLException {
     closedResultSet.rowInserted();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_rowUpdated_throws() throws SQLException {
     closedResultSet.rowUpdated();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_setFetchDirection_throws() throws SQLException {
     closedResultSet.setFetchDirection( -123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_setFetchSize_throws() throws SQLException {
     closedResultSet.setFetchSize( 1 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateArray1_throws() throws SQLException {
     closedResultSet.updateArray( 123, (Array) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateArray_throws() throws SQLException {
     closedResultSet.updateArray( "columnLabel2", (Array) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateAsciiStream1_throws() throws SQLException {
     closedResultSet.updateAsciiStream( 123, (InputStream) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateAsciiStream2_throws() throws SQLException {
     closedResultSet.updateAsciiStream( 123, (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateAsciiStream3_throws() throws SQLException {
     closedResultSet.updateAsciiStream( 123, (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateAsciiStream4_throws() throws SQLException {
     closedResultSet.updateAsciiStream( "columnLabel", (InputStream) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateAsciiStream5_throws() throws SQLException {
     closedResultSet.updateAsciiStream( "columnLabel", (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateAsciiStream6_throws() throws SQLException {
     closedResultSet.updateAsciiStream( "columnLabel", (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBigDecimal1_throws() throws SQLException {
     closedResultSet.updateBigDecimal( 123, (BigDecimal) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBigDecimal2_throws() throws SQLException {
     closedResultSet.updateBigDecimal( "columnLabel", (BigDecimal) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBinaryStream3_throws() throws SQLException {
     closedResultSet.updateBinaryStream( 123, (InputStream) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBinaryStream4_throws() throws SQLException {
     closedResultSet.updateBinaryStream( 123, (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBinaryStream5_throws() throws SQLException {
     closedResultSet.updateBinaryStream( 123, (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBinaryStream6_throws() throws SQLException {
     closedResultSet.updateBinaryStream( "columnLabel", (InputStream) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBinaryStream7_throws() throws SQLException {
     closedResultSet.updateBinaryStream( "columnLabel", (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBinaryStream8_throws() throws SQLException {
     closedResultSet.updateBinaryStream( "columnLabel", (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBlob1_throws() throws SQLException {
     closedResultSet.updateBlob( 123, (Blob) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBlob2_throws() throws SQLException {
     closedResultSet.updateBlob( 123, (InputStream) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBlob3_throws() throws SQLException {
     closedResultSet.updateBlob( 123, (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBlob4_throws() throws SQLException {
     closedResultSet.updateBlob( "columnLabel", (Blob) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBlob5_throws() throws SQLException {
     closedResultSet.updateBlob( "columnLabel", (InputStream) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBlob6_throws() throws SQLException {
     closedResultSet.updateBlob( "columnLabel", (InputStream) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBoolean1_throws() throws SQLException {
     closedResultSet.updateBoolean( 123, true );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBoolean2_throws() throws SQLException {
     closedResultSet.updateBoolean( "columnLabel", true );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateByte1_throws() throws SQLException {
     closedResultSet.updateByte( 123, (byte) 0 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateByte2_throws() throws SQLException {
     closedResultSet.updateByte( "columnLabel", (byte) 0 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBytes1_throws() throws SQLException {
     closedResultSet.updateBytes( 123, (byte[]) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateBytes2_throws() throws SQLException {
     closedResultSet.updateBytes( "columnLabel", (byte[]) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateCharacterStream1_throws() throws SQLException {
     closedResultSet.updateCharacterStream( 123, (Reader) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateCharacterStream2_throws() throws SQLException {
     closedResultSet.updateCharacterStream( 123, (Reader)  null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateCharacterStream3_throws() throws SQLException {
     closedResultSet.updateCharacterStream( 123, (Reader)  null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateCharacterStream4_throws() throws SQLException {
     closedResultSet.updateCharacterStream( "columnLabel", (Reader) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateCharacterStream5_throws() throws SQLException {
     closedResultSet.updateCharacterStream( "columnLabel", (Reader) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateCharacterStream6_throws() throws SQLException {
     closedResultSet.updateCharacterStream( "columnLabel", (Reader) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateClob1_throws() throws SQLException {
     closedResultSet.updateClob( 123, (Clob) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateClob2_throws() throws SQLException {
     closedResultSet.updateClob( 123, (Reader) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateClob3_throws() throws SQLException {
     closedResultSet.updateClob( 123, (Reader) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateClob4_throws() throws SQLException {
     closedResultSet.updateClob( "columnLabel", (Clob) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateClob5_throws() throws SQLException {
     closedResultSet.updateClob( "columnLabel", (Reader) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateClob6_throws() throws SQLException {
     closedResultSet.updateClob( "columnLabel", (Reader) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateDate1() throws SQLException {
     closedResultSet.updateDate( 123, (Date) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateDate2_throws() throws SQLException {
     closedResultSet.updateDate( "columnLabel", (Date) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateDouble1_throws() throws SQLException {
     closedResultSet.updateDouble( 123, (double) 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateDouble2_throws() throws SQLException {
     closedResultSet.updateDouble( "columnLabel", 456 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateFloat1_throws() throws SQLException {
     closedResultSet.updateFloat( 123, 1f );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateFloat2_throws() throws SQLException {
     closedResultSet.updateFloat( "columnLabel", 345 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateInt1_throws() throws SQLException {
     closedResultSet.updateInt( 123, 1 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateInt2_throws() throws SQLException {
     closedResultSet.updateInt( "columnLabel", 234 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateLong1_throws() throws SQLException {
     closedResultSet.updateLong( 123, 234 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateLong2_throws() throws SQLException {
     closedResultSet.updateLong( "columnLabel", 234 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNCharacterStream1_throws() throws SQLException {
     closedResultSet.updateNCharacterStream( 123, (Reader) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNCharacterStream2_throws() throws SQLException {
     closedResultSet.updateNCharacterStream( 123, (Reader) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNCharacterStream3_throws() throws SQLException {
     closedResultSet.updateNCharacterStream( "columnLabel", (Reader) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNCharacterStream4_throws() throws SQLException {
     closedResultSet.updateNCharacterStream( "columnLabel", (Reader) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNClob1_throws() throws SQLException {
     closedResultSet.updateNClob( 123, (NClob) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNClob2_throws() throws SQLException {
     closedResultSet.updateNClob( 123, (Reader) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNClob3_throws() throws SQLException {
     closedResultSet.updateNClob( 123, (Reader) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNClob4_throws() throws SQLException {
     closedResultSet.updateNClob( "columnLabel", (NClob) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNClob5_throws() throws SQLException {
     closedResultSet.updateNClob( "columnLabel", (Reader) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNClob6_throws() throws SQLException {
     closedResultSet.updateNClob( "columnLabel", (Reader) null, 12 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNString1_throws() throws SQLException {
     closedResultSet.updateNString( 123, (String) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNString2_throws() throws SQLException {
     closedResultSet.updateNString( "columnLabel", (String) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNull1_throws() throws SQLException {
     closedResultSet.updateNull( 123 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateNull2_throws() throws SQLException {
     closedResultSet.updateNull( "columnLabel" );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateObject1_throws() throws SQLException {
     closedResultSet.updateObject( 123, (Object) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateObject2_throws() throws SQLException {
     closedResultSet.updateObject( 123, (Object) null, 7 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateObject3_throws() throws SQLException {
     closedResultSet.updateObject( "columnLabel", (Object) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateObject4_throws() throws SQLException {
     closedResultSet.updateObject( "columnLabel", (Object) null, 17 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateRef1_throws() throws SQLException {
     closedResultSet.updateRef( 123, (Ref) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateRef2_throws() throws SQLException {
     closedResultSet.updateRef( "columnLabel", (Ref) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateRow_throws() throws SQLException {
     closedResultSet.updateRow();
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateRowId1_throws() throws SQLException {
     closedResultSet.updateRowId( 123, (RowId) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateRowId2_throws() throws SQLException {
     closedResultSet.updateRowId( "columnLabel", (RowId) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateShort1_throws() throws SQLException {
     closedResultSet.updateShort( 123, (short) 127 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateShort2_throws() throws SQLException {
     closedResultSet.updateShort( "columnLabel", (short) 127 );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateSQLXML1_throws() throws SQLException {
     closedResultSet.updateSQLXML( 123, (SQLXML) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateSQLXML2_throws() throws SQLException {
     closedResultSet.updateSQLXML( "columnLabel", (SQLXML) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateString1_throws() throws SQLException {
     closedResultSet.updateString( 123, (String) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateString2_throws() throws SQLException {
     closedResultSet.updateString( "columnLabel", (String) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateTime1_throws() throws SQLException {
     closedResultSet.updateTime( 123, (Time) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateTime2_throws() throws SQLException {
     closedResultSet.updateTime( "columnLabel", (Time) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateTimestamp1_throws() throws SQLException {
     closedResultSet.updateTimestamp( 123, (Timestamp) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_updateTimestamp2_throws() throws SQLException {
     closedResultSet.updateTimestamp( "columnLabel", (Timestamp) null );
   }
 
-  @Ignore( "until DRILL-2489 addressed" )
   @Test( expected = AlreadyClosedSqlException.class )
   public void testClosedResultSet_wasNull_throws() throws SQLException {
     closedResultSet.wasNull();
