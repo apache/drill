@@ -44,6 +44,7 @@ import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
+import org.apache.drill.exec.planner.physical.HashPrelUtil;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -313,7 +314,7 @@ public class ChainedHashTable {
      * aggregate. For join we need to hash everything as double (both for distribution and for comparison) but
      * for aggregation we can avoid the penalty of casting to double
      */
-    LogicalExpression hashExpression = PrelUtil.getHashExpression(Arrays.asList(keyExprs),
+    LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs),
         incomingProbe != null ? true : false);
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
     HoldingContainer hash = cg.addExpr(materializedExpr);

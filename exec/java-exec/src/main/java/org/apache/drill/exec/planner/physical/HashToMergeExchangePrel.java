@@ -84,7 +84,7 @@ public class HashToMergeExchangePrel extends ExchangePrel {
     }
 
     HashToMergeExchange g = new HashToMergeExchange(childPOP,
-        PrelUtil.getHashExpression(this.distFields, getInput().getRowType()),
+        HashPrelUtil.getHashExpression(this.distFields, getInput().getRowType()),
         PrelUtil.getOrdering(this.collation, getInput().getRowType()));
     return creator.addMetadata(this, g);
 

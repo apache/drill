@@ -95,7 +95,7 @@ public class HashToRandomExchangePrel extends ExchangePrel {
     }
 
     // TODO - refactor to different exchange name
-    HashToRandomExchange g = new HashToRandomExchange(childPOP, PrelUtil.getHashExpression(this.fields, getInput().getRowType()));
+    HashToRandomExchange g = new HashToRandomExchange(childPOP, HashPrelUtil.getHashExpression(this.fields, getInput().getRowType()));
     return creator.addMetadata(this, g);
   }
 

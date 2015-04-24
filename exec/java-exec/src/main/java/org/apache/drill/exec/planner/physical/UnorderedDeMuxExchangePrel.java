@@ -49,7 +49,7 @@ public class UnorderedDeMuxExchangePrel extends ExchangePrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    UnorderedDeMuxExchange p = new UnorderedDeMuxExchange(childPOP, PrelUtil.getHashExpression(this.fields, getInput().getRowType()));
+    UnorderedDeMuxExchange p = new UnorderedDeMuxExchange(childPOP, HashPrelUtil.getHashExpression(this.fields, getInput().getRowType()));
     return creator.addMetadata(this, p);
   }
 
