@@ -16,7 +16,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <td valign="top">9223372036854775807</td>
   </tr>
   <tr>
-    <td valign="top">BINARY</td>
+    <td valign="top">BINARY VARYING, VARBINARY, BINARY</td>
     <td valign="top">Variable-length byte string</td>
     <td valign="top">B@e6d9eb7</td>
   </tr>

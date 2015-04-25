@@ -27,7 +27,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>drill.exec.buffer.size</td>
     <td>6</td>
-    <td>Available memory in terms of record batches to hold data downstream of an operation.Increase this value to increase query speed.</td>
+    <td>Available memory in terms of record batches to hold data downstream of an operation. Increase this value to increase query speed.</td>
   </tr>
   <tr>
     <td>drill.exec.compile.debug</td>
@@ -67,7 +67,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>drill.exec.storage.packages</td>
     <td>"org.apache.drill.exec.store" "org.apache.drill.exec.store.mock"</td>
-    <td>#   This file tells Drill to consider this module when class path scanning.     #   This file can also include any supplementary configuration information.  #   This file is in HOCON format see https://github.com/typesafehub/config/blob/master/HOCON.md for more information.</td>
+    <td>Ignore or include this module, including supplementary configuraiton information when scanning the class path scanning. This file is in [HOCON format](https://github.com/typesafehub/config/blob/master/HOCON.md).</td>
   </tr>
   <tr>
     <td>drill.exec.sys.store.provider.class</td>
@@ -182,7 +182,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>exec.queue.enable</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Changes the state of query queues to control the number of queries that run simultaneously.</td>
   </tr>
   <tr>
     <td>exec.queue.large</td>
@@ -365,7 +365,7 @@ The sys.options table in Drill contains information about boot and system option
     <td>Output format for data written to tables with the CREATE TABLE AS (CTAS) command. Allowed values are parquet, json, or text. Allowed values: 0, -1, 1000000</td>
   </tr>
   <tr>
-    <td><a href="/docs/json-data-model#handling-type-differences">store.json.all_text_mode</a></td>
+    <td>store.json.all_text_mode</a></td>
     <td>FALSE</td>
     <td>Drill reads all data from the JSON files as VARCHAR. Prevents schema change errors.</td>
   </tr>
@@ -375,7 +375,7 @@ The sys.options table in Drill contains information about boot and system option
     <td>Similar to store.json.all_text_mode for MongoDB.</td>
   </tr>
   <tr>
-    <td><a href="/docs/parquet-format#configuring-the-size-of-parquet-files">store.parquet.block-size</a></td>
+    <td>store.parquet.block-size</a></td>
     <td>536870912</td>
     <td>Sets the size of a Parquet row group to the number of bytes less than or equal to the block size of MFS, HDFS, or the file system.</td>
   </tr>
@@ -395,11 +395,13 @@ The sys.options table in Drill contains information about boot and system option
     <td></td>
   </tr>
   <tr>
-    <td>window.enable</td>
+    <td>window.enable*</td>
     <td>FALSE</td>
     <td></td>
   </tr>
 </table>
+
+\* Not supported in this release.
 
 ## Memory Allocation
 
