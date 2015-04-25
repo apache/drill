@@ -46,7 +46,7 @@ Drill.Site = {
     $("#menu .search-bar #drill-search-form").on("submit", function(e){
       e.preventDefault();
       var search_val = $("#drill-search-term").val();
-      var search_url = "https://www.google.com/webhp?ie=UTF-8#q="+search_val+"%20site%3Aincubator.apache.org%2Fdrill%20OR%20site%3Aissues.apache.org%2Fjira%2Fbrowse%2FDRILL%20OR%20site%3Amail-archives.apache.org%2Fmod_mbox%2Fincubator-drill-dev";
+      var search_url = "https://www.google.com/webhp?ie=UTF-8#q="+search_val+"%20site%3Adrill.apache.org%20OR%20site%3Aissues.apache.org%2Fjira%2Fbrowse%2FDRILL%20OR%20site%3Amail-archives.apache.org%2Fmod_mbox%2Fdrill-user";
       var form = $("#menu .search-bar form#search-using-google");
       form.attr("action",search_url);
       form.submit();
