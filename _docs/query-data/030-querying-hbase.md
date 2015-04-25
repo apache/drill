@@ -4,10 +4,7 @@ parent: "Query Data"
 ---
 This exercise creates two tables in HBase, students and clicks, that you can query with Drill. As an HBase user, you most likely are running Drill in  distributed mode. In this case, [Warden](http://doc.mapr.com/display/MapR/Apache+Drill+Installation+Overview) starts Drill as a service. If you are not an HBase user and just kicking the tires, you might use the Drill Sandbox on a single-node cluster (embedded mode). In this case, you need to [start Drill]({{ site.baseurl }}/docs/starting-stopping-drill/) before performing step 5 of this exercise. On the Drill Sandbox, HBase tables you create will be located in: /mapr/demo.mapr.com/tables
 
-You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in step 4 of [Query HBase Tables]({{site.baseurl}}/docs/querying-hbase/#query-hbase-tables). Keep the following best practices for converting to/from HBase data:
-
-* Use CAST for converting INT and BIGINT to/from binary types.
-* Use CONVERT_TO and CONVERT_FROM for converting other types to/from binary.
+You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in step 4 of [Query HBase Tables]({{site.baseurl}}/docs/querying-hbase/#query-hbase-tables). When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.
 
 ## Create the HBase tables
 

@@ -41,8 +41,8 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <td valign="top">0.456<br><a href="http://tshiran.github.io/drill/docs/handling-different-data-types/">See guidelines</a></td>
   </tr>
   <tr>
-    <td valign="top">DOUBLE, DOUBLE PRECISION**</td>
-    <td valign="top">8-byte floating point number, precision-scalable</td>
+    <td valign="top">DOUBLE, DOUBLE PRECISION</td>
+    <td valign="top">8-byte floating point number, precision-scalable. Precision (p) is digits in the number. Scale (s) is digits to the right of the decimal point. Specify both p and s or neither. Default is 1.</td>
     <td valign="top">0.456<br><a href="http://tshiran.github.io/drill/docs/handling-different-data-types/">See guidelines</a></td>
   </tr>
   <tr>
@@ -76,32 +76,25 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <td valign="top">2015-12-30 22:55:55.23<br> <a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/">More examples</a></td>
   </tr>
   <tr>
-    <td valign="top">CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR***</td>
-    <td valign="top">UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647.</td>
+    <td valign="top">CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR**</td>
+    <td valign="top">UTF8-encoded variable-length string. In this release, CHAR, its aliases, and VARCHAR types are not fundamentally different types. The default limit is 1 character. The maximum character limit is 2,147,483,647.</td>
     <td valign="top">CHAR(30) casts data to a 30-character string maximum.</td>
   </tr>
 </table>
 
 \* Not currently supported.  
-\*\* You specify a DECIMAL using a precision and scale. The precision (p) is the total number of digits required to represent the number. The scale (s) is the number of decimal digits to the right of the decimal point. Subtract s from p to determine the maximum number of digits to the left of the decimal point. Scale is a value from 0 through p. Scale is specified only if precision is specified. The default scale is 0.   
-\*\*\* Currently, Drill supports only variable-length strings. The CHAR and VARCHAR types are not fundamentally different types in this release.  
+\*\* Currently, Drill supports only variable-length strings. 
++  
 
 ## Casting and Converting Data Types
 
 In Drill, you cast or convert data to the required type for moving data from one data source to another or to make the data readable.
-You do not assign a data type to every column name in a CREATE TABLE statement as you do in database software. Instead, you use the CREATE TABLE AS SELECT (CTAS) statement with one or more of the following functions to define the type of a column:
+You do not assign a data type to every column name in a CREATE TABLE statement to define the table as you do in database software. Instead, you use the CREATE TABLE AS SELECT (CTAS) statement with one or more of the following functions to define the table:
 
-* [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)  
-  Use the supported SQL data types listed at the beginning of this page.   
+* [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)    
 * [CONVERT TO/FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)   
   Use the [CONVERT TO AND CONVERT FROM data types]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types)  
 * Other [data conversion functions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)   
-  Use the syntax described in the function descriptions. 
-
-Keep the following best practices in mind for converting to/from binary data:
-
-* Use CAST for converting INT and BIGINT to/from binary types.
-* Use CONVERT_TO and CONVERT_FROM for converting other types to/from binary. 
 
 In some cases, Drill converts schema-less data to correctly-typed data implicitly. In this case, you do not need to cast the data. The file format of the data and the nature of your query determines the requirement for casting or converting. Differences in casting depend on the data source. The following list describes how Drill treats data types from various data sources:
 
