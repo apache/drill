@@ -11,79 +11,80 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <th>Example</th>
   </tr>
   <tr>
-    <td>BIGINT</td>
-    <td>8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807</td>
-    <td>9223372036854775807</td>
+    <td valign="top">BIGINT</td>
+    <td valign="top">8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807</td>
+    <td valign="top">9223372036854775807</td>
   </tr>
   <tr>
-    <td>BINARY</td>
-    <td>Variable-length byte string</td>
-    <td>B@e6d9eb7</td>
+    <td valign="top">BINARY</td>
+    <td valign="top">Variable-length byte string</td>
+    <td valign="top">B@e6d9eb7</td>
   </tr>
   <tr>
-    <td>BOOLEAN</td>
-    <td>True or false</td>
-    <td>true</td>
+    <td valign="top">BOOLEAN</td>
+    <td valign="top">True or false</td>
+    <td valign="top">true</td>
   </tr>
   <tr>
-    <td>DATE</td>
-    <td>Years, months, and days in YYYY-MM-DD format since 4713 BC</td>
-    <td>2015-12-30</td>
+    <td valign="top">DATE</td>
+    <td valign="top">Years, months, and days in YYYY-MM-DD format since 4713 BC</td>
+    <td valign="top">2015-12-30</td>
   </tr>
   <tr>
-    <td>DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)</td>
-    <td>38-digit precision number, precision is p, and scale is s</td>
-    <td>DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point</td>
+    <td valign="top">DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)</td>
+    <td valign="top">38-digit precision number, precision is p, and scale is s</td>
+    <td valign="top">DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point</td>
   </tr>
   <tr>
-    <td>FLOAT</td>
-    <td>4-byte floating point number</td>
-    <td>0.456</td>
+    <td valign="top">FLOAT</td>
+    <td valign="top">4-byte floating point number</td>
+    <td valign="top">0.456<br><a href="http://tshiran.github.io/drill/docs/handling-different-data-types/">See guidelines</a></td>
   </tr>
   <tr>
-    <td>DOUBLE, DOUBLE PRECISION**</td>
-    <td>8-byte floating point number, precision-scalable</td>
-    <td>0.456</td>
+    <td valign="top">DOUBLE, DOUBLE PRECISION**</td>
+    <td valign="top">8-byte floating point number, precision-scalable</td>
+    <td valign="top">0.456<br><a href="http://tshiran.github.io/drill/docs/handling-different-data-types/">See guidelines</a></td>
   </tr>
   <tr>
-    <td>INTEGER or INT</td>
-    <td>4-byte signed integer in the range -2,147,483,648 to 2,147,483,647</td>
-    <td>2147483646</td>
+    <td valign="top">INTEGER or INT</td>
+    <td valign="top">4-byte signed integer in the range -2,147,483,648 to 2,147,483,647</td>
+    <td valign="top">2147483646</td>
   </tr>
   <tr>
-    <td>INTERVALDAY</td>
-    <td>A period of time in days, hours, minutes, and seconds only</td>
-    <td>'1 10:20:30.123' More examples</td>
+    <td valign="top">INTERVALDAY</td>
+    <td valign="top">A period of time in days, hours, minutes, and seconds only</td>
+    <td valign="top">'1 10:20:30.123'<a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/#intervalyear-and-intervalday">More examples</a></td>
   </tr>
   <tr>
-    <td>INTERVALYEAR</td>
-    <td>A period of time in years and months only</td>
-    <td>'1-2' year to month More examples</td>
+    <td valign="top">INTERVALYEAR</td>
+    <td valign="top">A period of time in years and months only</td>
+    <td valign="top">'1-2' year to month<br><a href="http://tshiran.github.io/drill/docs/data-type-conversion/#casting-intervals">More examples</a></td>
   </tr>
   <tr>
-    <td>SMALLINT*</td>
-    <td>2-byte signed integer in the range -32,768 to 32,767</td>
-    <td>32000</td>
+    <td valign="top">SMALLINT*</td>
+    <td valign="top">2-byte signed integer in the range -32,768 to 32,767</td>
+    <td valign="top">32000</td>
   </tr>
   <tr>
-    <td>TIME</td>
-    <td>24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss</td>
-    <td>22:55:55.23 More examples</td>
+    <td valign="top">TIME</td>
+    <td valign="top">24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss</td>
+    <td valign="top">22:55:55.23<br><a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/">More examples</a></td>
   </tr>
   <tr>
-    <td>TIMESTAMP</td>
-    <td>JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS</td>
-    <td>2015-12-30 22:55:55.23 More examples</td>
+    <td valign="top">TIMESTAMP</td>
+    <td valign="top">JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS</td>
+    <td valign="top">2015-12-30 22:55:55.23<br> <a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/">More examples</a></td>
   </tr>
   <tr>
-    <td>CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR</td>
-    <td>UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647.</td>
-    <td>CHAR(30) casts data to a 30-character string maximum. More examples</td>
+    <td valign="top">CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR***</td>
+    <td valign="top">UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647.</td>
+    <td valign="top">CHAR(30) casts data to a 30-character string maximum.</td>
   </tr>
 </table>
 
 \* Not currently supported.  
-\*\* You specify a DECIMAL using a precision and scale. The precision (p) is the total number of digits required to represent the number. The scale (s) is the number of decimal digits to the right of the decimal point. Subtract s from p to determine the maximum number of digits to the left of the decimal point. Scale is a value from 0 through p. Scale is specified only if precision is specified. The default scale is 0.  
+\*\* You specify a DECIMAL using a precision and scale. The precision (p) is the total number of digits required to represent the number. The scale (s) is the number of decimal digits to the right of the decimal point. Subtract s from p to determine the maximum number of digits to the left of the decimal point. Scale is a value from 0 through p. Scale is specified only if precision is specified. The default scale is 0.
+\*\*\* Currently, Drill supports only variable-length strings. The CHAR and VARCHAR types are not fundamentally different types in this release.  
 
 ## Casting and Converting Data Types
 
@@ -131,70 +132,70 @@ The following list includes data types Drill uses in descending order of precede
     <th>Data Type</th>
   </tr>
   <tr>
-    <td>1</td>
-    <td>INTERVALYEAR (highest)</td>
-    <td>11</td>
-    <td>INT</td>
+    <td valign="top">1</td>
+    <td valign="top">INTERVALYEAR (highest)</td>
+    <td valign="top">11</td>
+    <td valign="top">INT</td>
   </tr>
   <tr>
-    <td>2</td>
-    <td>INTERVLADAY</td>
-    <td>12</td>
-    <td>UINT2</td>
+    <td valign="top">2</td>
+    <td valign="top">INTERVLADAY</td>
+    <td valign="top">12</td>
+    <td valign="top">UINT2</td>
   </tr>
   <tr>
-    <td>3</td>
-    <td>TIMESTAMP</td>
-    <td>13</td>
-    <td>SMALLINT</td>
+    <td valign="top">3</td>
+    <td valign="top">TIMESTAMP</td>
+    <td valign="top">13</td>
+    <td valign="top">SMALLINT</td>
   </tr>
   <tr>
-    <td>4</td>
-    <td>DATE</td>
-    <td>14</td>
-    <td>UINT1</td>
+    <td valign="top">4</td>
+    <td valign="top">DATE</td>
+    <td valign="top">14</td>
+    <td valign="top">UINT1</td>
   </tr>
   <tr>
-    <td>5</td>
-    <td>TIME</td>
-    <td>15</td>
-    <td>VAR16CHAR</td>
+    <td valign="top">5</td>
+    <td valign="top">TIME</td>
+    <td valign="top">15</td>
+    <td valign="top">VAR16CHAR</td>
   </tr>
   <tr>
-    <td>6</td>
-    <td>DOUBLE</td>
-    <td>16</td>
-    <td>FIXED16CHAR</td>
+    <td valign="top">6</td>
+    <td valign="top">DOUBLE</td>
+    <td valign="top">16</td>
+    <td valign="top">FIXED16CHAR</td>
   </tr>
   <tr>
-    <td>7</td>
-    <td>DECIMAL</td>
-    <td>17</td>
-    <td>VARCHAR</td>
+    <td valign="top">7</td>
+    <td valign="top">DECIMAL</td>
+    <td valign="top">17</td>
+    <td valign="top">VARCHAR</td>
   </tr>
   <tr>
-    <td>8</td>
-    <td>UINT8</td>
-    <td>18</td>
-    <td>CHAR</td>
+    <td valign="top">8</td>
+    <td valign="top">UINT8</td>
+    <td valign="top">18</td>
+    <td valign="top">CHAR</td>
   </tr>
   <tr>
-    <td>9</td>
-    <td>BIGINT</td>
-    <td>19</td>
-    <td>VARBINARY*</td>
+    <td valign="top">9</td>
+    <td valign="top">BIGINT</td>
+    <td valign="top">19</td>
+    <td valign="top">VARBINARY*</td>
   </tr>
   <tr>
-    <td>10</td>
-    <td>UINT4</td>
-    <td>20</td>
-    <td>FIXEDBINARY**</td>
+    <td valign="top">10</td>
+    <td valign="top">UINT4</td>
+    <td valign="top">20</td>
+    <td valign="top">FIXEDBINARY**</td>
   </tr>
   <tr>
-    <td></td>
-    <td></td>
-    <td>21</td>
-    <td>NULL (lowest)</td>
+    <td valign="top"></td>
+    <td valign="top"></td>
+    <td valign="top">21</td>
+    <td valign="top">NULL (lowest)</td>
   </tr>
 </table>
 
@@ -239,136 +240,136 @@ The following tables show data types that Drill can cast to/from other data type
     <th></th>
   </tr>
   <tr>
-    <td>From:</td>
-    <td>SMALLINT</td>
-    <td>INT</td>
-    <td>BIGINT</td>
-    <td>DECIMAL</td>
-    <td>FLOAT</td>
-    <td>CHAR</td>
-    <td>FIXEDBINARY</td>
-    <td>VARCHAR</td>
-    <td>VARBINARY</td>
+    <td valign="top">From:</td>
+    <td valign="top">SMALLINT</td>
+    <td valign="top">INT</td>
+    <td valign="top">BIGINT</td>
+    <td valign="top">DECIMAL</td>
+    <td valign="top">FLOAT</td>
+    <td valign="top">CHAR</td>
+    <td valign="top">FIXEDBINARY</td>
+    <td valign="top">VARCHAR</td>
+    <td valign="top">VARBINARY</td>
   </tr>
   <tr>
-    <td>SMALLINT*</td>
-    <td></td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
+    <td valign="top">SMALLINT*</td>
+    <td valign="top"></td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
   </tr>
   <tr>
-    <td>INT</td>
-    <td>yes</td>
-    <td>no</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
+    <td valign="top">INT</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
   </tr>
   <tr>
-    <td>BIGINT</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
+    <td valign="top">BIGINT</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
   </tr>
   <tr>
-    <td>DECIMAL</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
+    <td valign="top">DECIMAL</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
   </tr>
   <tr>
-    <td>DOUBLE</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>no</td>
-    <td>yes</td>
-    <td>no</td>
+    <td valign="top">DOUBLE</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
   </tr>
   <tr>
-    <td>FLOAT</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>no</td>
-    <td>yes</td>
-    <td>no</td>
-    <td>yes</td>
-    <td>no</td>
+    <td valign="top">FLOAT</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
   </tr>
   <tr>
-    <td>CHAR</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>no</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
+    <td valign="top">CHAR</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
   </tr>
   <tr>
-    <td>FIXEDBINARY**</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>no</td>
-    <td>no</td>
-    <td>yes</td>
-    <td>yes</td>
+    <td valign="top">FIXEDBINARY**</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
+    <td valign="top">no</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
   </tr>
   <tr>
-    <td>VARCHAR***</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>no</td>
-    <td>yes</td>
+    <td valign="top">VARCHAR***</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
+    <td valign="top">yes</td>
   </tr>
   <tr>
-    <td>VARBINARY**</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>no</td>
-    <td>yes</td>
-    <td>yes</td>
-    <td>no</td>
+    <td valign="top">VARBINARY**</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
+    <td valign="top">yes</td>
+    <td valign="top">yes</td>
+    <td valign="top">no</td>
   </tr>
 </table>
 \* Not supported in this release.   
@@ -389,102 +390,102 @@ The following tables show data types that Drill can cast to/from other data type
     <th></th>
   </tr>
   <tr>
-    <td>From:</td>
-    <td>DATE</td>
-    <td>TIME</td>
-    <td>TIMESTAMP</td>
-    <td>INTERVALYEAR</td>
-    <td>INTERVALDAY</td>
+    <td valign="top">From:</td>
+    <td valign="top">DATE</td>
+    <td valign="top">TIME</td>
+    <td valign="top">TIMESTAMP</td>
+    <td valign="top">INTERVALYEAR</td>
+    <td valign="top">INTERVALDAY</td>
   </tr>
   <tr>
-    <td>CHAR</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
+    <td valign="top">CHAR</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
   </tr>
   <tr>
-    <td>FIXEDBINARY*</td>
-    <td>No</td>
-    <td>No</td>
-    <td>No</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>No</td>
-    <td>No</td>
+    <td valign="top">FIXEDBINARY*</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
   </tr>
   <tr>
-    <td>VARCHAR</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
+    <td valign="top">VARCHAR</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
   </tr>
   <tr>
-    <td>VARBINARY*</td>
-    <td>No</td>
-    <td>No</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>No</td>
-    <td>No</td>
+    <td valign="top">VARBINARY*</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
   </tr>
   <tr>
-    <td>DATE</td>
-    <td>No</td>
-    <td>No</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>No</td>
-    <td>No</td>
+    <td valign="top">DATE</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
   </tr>
   <tr>
-    <td>TIME</td>
-    <td>No</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>No</td>
-    <td>No</td>
+    <td valign="top">TIME</td>
+    <td valign="top">No</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
   </tr>
   <tr>
-    <td>TIMESTAMP</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>No</td>
-    <td>No</td>
+    <td valign="top">TIMESTAMP</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
+    <td valign="top">No</td>
   </tr>
   <tr>
-    <td>INTERVALYEAR</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>Yes</td>
+    <td valign="top">INTERVALYEAR</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
+    <td valign="top">Yes</td>
   </tr>
   <tr>
-    <td>INTERVALDAY</td>
-    <td>Yes</td>
-    <td>No</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>Yes</td>
-    <td>No</td>
+    <td valign="top">INTERVALDAY</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">Yes</td>
+    <td valign="top">No</td>
   </tr>
 </table>
 \* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
