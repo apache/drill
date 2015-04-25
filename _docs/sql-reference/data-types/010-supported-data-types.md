@@ -2,61 +2,93 @@
 title: "Supported Data Types"
 parent: "Data Types"
 ---
-Drill supports the following SQL data types:
+Drill reads from and writes to data sources having a wide variety of types. Drill uses data types at the RPC level that are not supported for query input, often implicitly casting data. Drill supports the following SQL data types for query input:
 
-* BIGINT  
-  8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807.
-
-* BINARY
-  Variable-length byte string
-
-* BOOLEAN  
-  True or false  
-
-* DATE  
-  Years, months, and days in YYYY-MM-DD format since 4713 BC.
-
-* DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)  
-  38-digit precision number, precision is p, and scale is s. Example: DECIMAL(6,2) has 4 digits before the decimal point and 2 digits after the decimal point. 
-
-* FLOAT  
-  4-byte floating point number
-
-* DOUBLE, DOUBLE PRECISION**  
-  8-byte floating point number, precision-scalable 
-
-* INTEGER or INT  
-  4-byte signed integer in the range -2,147,483,648 to 2,147,483,647
-
-* INTERVALDAY  
-  A simple version of the interval type expressing a period of time in days, hours, minutes, and seconds only
-
-* INTERVALYEAR  
-  A simple version of interval representing a period of time in years and months only
-
-* SMALLINT*  
-  2-byte signed integer in the range -32,768 to 32,767
-
-* TIME  
-  24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss 
-
-* TIMESTAMP  
-  JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS
-
-* CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR  
-  UTF8-encoded variable-length string. For example, CHAR(30) casts data to a 30-character string maximum. The default limit is 1 character. The maximum character limit is 255.
+<table>
+  <tr>
+    <th>SQL Data Type</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>BIGINT</td>
+    <td>8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807</td>
+    <td>9223372036854775807</td>
+  </tr>
+  <tr>
+    <td>BINARY</td>
+    <td>Variable-length byte string</td>
+    <td>B@e6d9eb7</td>
+  </tr>
+  <tr>
+    <td>BOOLEAN</td>
+    <td>True or false</td>
+    <td>true</td>
+  </tr>
+  <tr>
+    <td>DATE</td>
+    <td>Years, months, and days in YYYY-MM-DD format since 4713 BC</td>
+    <td>2015-12-30</td>
+  </tr>
+  <tr>
+    <td>DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)</td>
+    <td>38-digit precision number, precision is p, and scale is s</td>
+    <td>DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point</td>
+  </tr>
+  <tr>
+    <td>FLOAT</td>
+    <td>4-byte floating point number</td>
+    <td>0.456</td>
+  </tr>
+  <tr>
+    <td>DOUBLE, DOUBLE PRECISION**</td>
+    <td>8-byte floating point number, precision-scalable</td>
+    <td>0.456</td>
+  </tr>
+  <tr>
+    <td>INTEGER or INT</td>
+    <td>4-byte signed integer in the range -2,147,483,648 to 2,147,483,647</td>
+    <td>2147483646</td>
+  </tr>
+  <tr>
+    <td>INTERVALDAY</td>
+    <td>A period of time in days, hours, minutes, and seconds only</td>
+    <td>'1 10:20:30.123' More examples</td>
+  </tr>
+  <tr>
+    <td>INTERVALYEAR</td>
+    <td>A period of time in years and months only</td>
+    <td>'1-2' year to month More examples</td>
+  </tr>
+  <tr>
+    <td>SMALLINT*</td>
+    <td>2-byte signed integer in the range -32,768 to 32,767</td>
+    <td>32000</td>
+  </tr>
+  <tr>
+    <td>TIME</td>
+    <td>24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss</td>
+    <td>22:55:55.23 More examples</td>
+  </tr>
+  <tr>
+    <td>TIMESTAMP</td>
+    <td>JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS</td>
+    <td>2015-12-30 22:55:55.23 More examples</td>
+  </tr>
+  <tr>
+    <td>CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR</td>
+    <td>UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647.</td>
+    <td>CHAR(30) casts data to a 30-character string maximum. More examples</td>
+  </tr>
+</table>
 
 \* Not currently supported.  
 \*\* You specify a DECIMAL using a precision and scale. The precision (p) is the total number of digits required to represent the number. The scale (s) is the number of decimal digits to the right of the decimal point. Subtract s from p to determine the maximum number of digits to the left of the decimal point. Scale is a value from 0 through p. Scale is specified only if precision is specified. The default scale is 0.  
 
-## Using Drill Data Types
+## Casting and Converting Data Types
 
-In Drill, you use data types in the following ways:
-
-* To cast or convert data to the required type for moving data from one data source to another
-* To cast or convert data to the required type for Drill analysis
-
-In Drill, assign a data type to every column name in a CREATE TABLE statement as you do in database software. Instead, you use the CREATE TABLE AS SELECT (CTAS) statement with one or more of the following functions to define the type of a column:
+In Drill, you cast or convert data to the required type for moving data from one data source to another or to make the data readable.
+You do not assign a data type to every column name in a CREATE TABLE statement as you do in database software. Instead, you use the CREATE TABLE AS SELECT (CTAS) statement with one or more of the following functions to define the type of a column:
 
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)  
   Use the supported SQL data types listed at the beginning of this page.   
@@ -65,7 +97,7 @@ In Drill, assign a data type to every column name in a CREATE TABLE statement as
 * Other [data conversion functions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)   
   Use the syntax described in the function descriptions. 
 
-Keep the following best practices for converting to/from binary data:
+Keep the following best practices in mind for converting to/from binary data:
 
 * Use CAST for converting INT and BIGINT to/from binary types.
 * Use CONVERT_TO and CONVERT_FROM for converting other types to/from binary. 
@@ -86,8 +118,6 @@ In some cases, Drill converts schema-less data to correctly-typed data implicitl
   Implicitly casts all textual data to VARCHAR.
 
 ## Precedence of Data Types
-
-Drill reads from and writes to data sources having a wide variety of types, more types than those Drill [previously listed]({{ site.baseurl }}/docs/supported-data-types). Drill uses data types at the RPC level that are not supported for query input, often implicitly casting data.
 
 The following list includes data types Drill uses in descending order of precedence. As shown in the table, you can cast a NULL value, which has the lowest precedence, to any other type; you can cast a SMALLINT value to INT. You cannot cast an INT value to SMALLINT due to possible precision loss. Drill might deviate from these precedence rules for performance reasons. Under certain circumstances, such as queries involving SUBSTR and CONCAT functions, Drill reverses the order of precedence and allows a cast to VARCHAR from a type of higher precedence than VARCHAR, such as BIGINT.
 
