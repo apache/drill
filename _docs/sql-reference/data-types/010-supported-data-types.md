@@ -53,7 +53,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
   <tr>
     <td valign="top">INTERVALDAY</td>
     <td valign="top">A period of time in days, hours, minutes, and seconds only</td>
-    <td valign="top">'1 10:20:30.123'<a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/#intervalyear-and-intervalday">More examples</a></td>
+    <td valign="top">'1 10:20:30.123'<br><a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/#intervalyear-and-intervalday">More examples</a></td>
   </tr>
   <tr>
     <td valign="top">INTERVALYEAR</td>
@@ -83,7 +83,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
 </table>
 
 \* Not currently supported.  
-\*\* You specify a DECIMAL using a precision and scale. The precision (p) is the total number of digits required to represent the number. The scale (s) is the number of decimal digits to the right of the decimal point. Subtract s from p to determine the maximum number of digits to the left of the decimal point. Scale is a value from 0 through p. Scale is specified only if precision is specified. The default scale is 0.
+\*\* You specify a DECIMAL using a precision and scale. The precision (p) is the total number of digits required to represent the number. The scale (s) is the number of decimal digits to the right of the decimal point. Subtract s from p to determine the maximum number of digits to the left of the decimal point. Scale is a value from 0 through p. Scale is specified only if precision is specified. The default scale is 0.   
 \*\*\* Currently, Drill supports only variable-length strings. The CHAR and VARCHAR types are not fundamentally different types in this release.  
 
 ## Casting and Converting Data Types
