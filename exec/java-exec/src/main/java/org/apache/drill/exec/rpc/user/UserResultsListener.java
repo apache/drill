@@ -37,17 +37,17 @@ public interface UserResultsListener {
   void submissionFailed(UserException ex);
 
   /**
-   * The query has completed (successsful completion or cancellation). The listener will not receive any other
-   * data or result message. Called when the server returns a terminal-non failing- state (COMPLETED or CANCELLED)
-   * @param state
-   */
-  void queryCompleted(QueryState state);
-
-  /**
    * A {@link org.apache.drill.exec.proto.beans.QueryData QueryData} message was received
    * @param result data batch received
    * @param throttle connection throttle
    */
   void dataArrived(QueryDataBatch result, ConnectionThrottle throttle);
+
+  /**
+   * The query has completed (successsful completion or cancellation). The listener will not receive any other
+   * data or result message. Called when the server returns a terminal-non failing- state (COMPLETED or CANCELLED)
+   * @param state
+   */
+  void queryCompleted(QueryState state);
 
 }

@@ -65,7 +65,7 @@ public class DrillCursor implements Cursor {
   public DrillCursor(final DrillResultSetImpl resultSet) {
     this.resultSet = resultSet;
     currentBatch = resultSet.currentBatch;
-    resultsListener = resultSet.resultslistener;
+    resultsListener = resultSet.resultsListener;
   }
 
   public DrillResultSetImpl getResultSet() {
