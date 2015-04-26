@@ -50,13 +50,8 @@ can [query Hive tables]({{ site.baseurl }}/docs/querying-hive/).
 
 ## Hive Embedded Metastore
 
-In this configuration, the Hive metastore is embedded within the Drill
-process. Provide the metastore database configuration settings in the Drill
-Web UI. Before you register Hive, verify that the driver you use to connect to
-the Hive metastore is in the Drill classpath located in `/<drill installation
-dirctory>/lib/.` If the driver is not there, copy the driver to `/<drill
-installation directory>/lib` on the Drill node. For more information about
-storage types and configurations, refer to ["Hive Metastore Administration"](https://cwiki.apache.org/confluence/display/Hive/AdminManual+MetastoreAdmin).
+In this configuration, the Hive metastore is embedded within the Drill process. Provide the metastore database configuration settings in the Drill Web UI. Before you register Hive, verify that the driver you use to connect to the Hive metastore is in the Drill classpath located in `/<drill installation dirctory>/lib/.` If the driver is not there, copy the driver to `/<drill
+installation directory>/lib` on the Drill node. For more information about storage types and configurations, refer to ["Hive Metastore Administration"](https://cwiki.apache.org/confluence/display/Hive/AdminManual+MetastoreAdmin).
 
 To register an embedded Hive metastore with Drill, complete the following
 steps:
@@ -76,7 +71,7 @@ steps:
             "fs.default.name": "file:///",   
           }
         }
-  4. Click** Enable.**
+  4. Click **Enable**.
   5. Verify that `HADOOP_CLASSPATH` is set in `drill-env.sh`. If you need to set the classpath, add the following line to `drill-env.sh`.
   
         export HADOOP_CLASSPATH=/<directory path>/hadoop/hadoop-<version-number>
