@@ -20,7 +20,7 @@ Drill includes SQLLine, a JDBC utility for connecting to relational databases an
 
 In distributed mode, [Warden](http://doc.mapr.com/display/MapR/Apache+Drill+Installation+Overview) attempts to start Drill automatically when Drill is defined as service.
 
-[Starting SQLLine outside the sandbox]({{ site.baseurl }}/docs/starting-stopping-drill) for use with Drill requires entering more options than are shown here. 
+[Starting SQLLine outside the sandbox]({{ site.baseurl }}/docs/starting-stopping-drill) for use with Drill requires entering more options than are shown here. When you type sqlline on the Sandbox command line, a script runs that includes startup options shown in the section, ["Starting/Stopping Drill"](http://tshiran.github.io/drill/docs/starting-stopping-drill/#invoking-sqlline/connecting-to-a-schema).
 
 In this tutorial you query a number of data sets, including Hive and HBase, and files on the file system, such as CSV, JSON, and Parquet files. To access these diverse data sources, you connect Drill to storage plugins. 
 
@@ -132,11 +132,11 @@ through both an established web-based interface and a new mobile application.
 Your job is data-driven and independent with little or no interaction with the IT department. Recently the central IT team
 has implemented a Hadoop-based infrastructure to reduce the cost of the legacy
 database system, and most of the DWH/ETL workload is now handled by
-Hadoop/Hive. MapR DB manages the master customer profile information and product catalog. MapR DB is a NoSQL database. The IT team has also started
+Hadoop/Hive. MapR-DB manages the master customer profile information and product catalog. MapR-DB is a NoSQL database. The IT team has also started
 acquiring clickstream data that comes from web and mobile applications. This
 data is stored in Hadoop as JSON files.
 
-You have a number of data sources to explore.  For example, analyzing customer records in the clickstream data and tying them to the master customer data in MapR DB might yield some potentially interesting analytical connections. You decide to explore various data sources by using Apache Drill. You need Apache Drill to provide flexibility and analytic capability.
+You have a number of data sources to explore.  For example, analyzing customer records in the clickstream data and tying them to the master customer data in MapR-DB might yield some potentially interesting analytical connections. You decide to explore various data sources by using Apache Drill. You need Apache Drill to provide flexibility and analytic capability.
 
 # What's Next
 

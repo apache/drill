@@ -8,8 +8,7 @@ If the extensive Hive functions, such as the mathematical and date functions, wh
 You create the JAR for a UDF to use in Drill in a conventional manner with a few caveats, using a unique name and creating a Drill resource, covered in this section.
 
 1. Use a unique name for the Hive UDF to avoid conflicts with Drill custom functions of the same name.
-2. Create a custom Hive UDF using either of these APIs:
-
+2. Create a custom Hive UDF using either of these APIs:  
    * Simple API: org.apache.hadoop.hive.ql.exec.UDF
    * Complex API: org.apache.hadoop.hive.ql.udf.generic.GenericUDF
 3. Create an empty `drill-module.conf` in the resources directory in the Java project. 

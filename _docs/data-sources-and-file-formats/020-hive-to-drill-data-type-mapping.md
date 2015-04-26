@@ -104,7 +104,7 @@ Drill does not support the following Hive types:
 * TIMESTAMP (Unix Epoch format)
 * UNION
 
-The Hive version used in MapR supports the Hive timestamp in Unix Epoch format. Currently, the Apache Hive version used by Drill does not support this timestamp format. The workaround is to use the JDBC format for the timestamp, which Hive accepts and Drill uses, as shown in the type mapping example. The timestamp value appears in the CSV file in JDBC format: 2015-03-25 01:23:15. The Hive table defines column i as a timestamp column. The Drill extract function verifies that Drill interprets the timestamp correctly.
+The Hive version used in MapR supports the Hive timestamp in Unix Epoch format. Currently, the Apache Hive version used by Drill does not support this timestamp format. The workaround is to use the JDBC format for the timestamp, which Hive accepts and Drill uses, as shown in the following type mapping example. The timestamp value appears in the example CSV file in JDBC format: 2015-03-25 01:23:15. The Hive table defines column i in the CREATE EXTERNAL TABLE command as a timestamp column. The Drill extract function verifies that Drill interprets the timestamp correctly.
 
 ## Type Mapping Example
 This example demonstrates the mapping of Hive data types to Drill data types. Using a CSV that has the following contents, you create a Hive table having values of different supported types:
