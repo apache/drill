@@ -46,7 +46,7 @@ Drill.Site = {
     $("#menu .search-bar #drill-search-form").on("submit", function(e){
       e.preventDefault();
       var search_val = $("#drill-search-term").val();
-      var search_url = "https://www.google.com/webhp?ie=UTF-8#q="+search_val+"%20site%3Aincubator.apache.org%2Fdrill%20OR%20site%3Aissues.apache.org%2Fjira%2Fbrowse%2FDRILL%20OR%20site%3Amail-archives.apache.org%2Fmod_mbox%2Fincubator-drill-dev";
+      var search_url = "https://www.google.com/webhp?ie=UTF-8#q="+search_val+"%20site%3Adrill.apache.org%20OR%20site%3Aissues.apache.org%2Fjira%2Fbrowse%2FDRILL%20OR%20site%3Amail-archives.apache.org%2Fmod_mbox%2Fdrill-user";
       var form = $("#menu .search-bar form#search-using-google");
       form.attr("action",search_url);
       form.submit();
@@ -54,14 +54,9 @@ Drill.Site = {
     });
   },
 
-
   watchInternalAnchorClicks : function() {
     $("a.anchor").css({ display: "inline" });
     Drill.Site.offsetHeader();
-  },
-
-  pathname : function(loc) {
-    return (loc.protocol + '//' + loc.host + loc.pathname)
   },
 
   offsetHeader : function() {
@@ -93,10 +88,37 @@ Drill.Site = {
 
 Drill.Docs = {
   init : function(){
+    Drill.Docs.add_expand_contract_buttons();
+    Drill.Docs.show_or_hide_on_click();
+    Drill.Docs.setCurrentDoc();
     Drill.Docs.watchCategoryBar();
     Drill.Docs.watchDocTocClicks();
     Drill.Docs.watchExpandTocClicks();
     Drill.Docs.permalinkSubHeaders();
+  },
+
+  setCurrentDoc : function() {
+    var current_l1 = $("li.toctree-l3.current");
+    var current_l2 = $("li.toctree-l2.current");
+    var current_l3 = $("li.toctree-l3.current");
+
+    Drill.Docs._setPlusMinus(current_l2);
+    Drill.Docs._setPlusMinus( current_l3.parent().prev("li") ); // requires knowledge of html structure...bad...bad.
+    // alternatively, set these up in the rendering of the docs, like the current_section and current are done.
+
+    // set current <li>, starting from innermost possibility
+    if(current_l3.length > 0){
+      current_l3.addClass("current");
+    } else if(current_l2.length > 0){
+      current_l2.addClass("current");
+    } else if(current_l1.length > 0){
+      current_l1.addClass("current");
+    }
+  },
+
+  _setPlusMinus : function(parent) {
+    parent.children("span.expand").removeClass('show');
+    parent.children("span.contract").addClass('show');
   },
 
   watchCategoryBar : function() {
@@ -115,40 +137,24 @@ Drill.Docs = {
   watchExpandTocClicks : function () {
     $(".expand-toc-icon").on("click", function(){
       if($(".int_text .sidebar").css('left') == '0px'){
-        Drill.Docs.contractSidebar();
+        Drill.Docs._contractSidebar();
       } else {
-        Drill.Docs.expandSidebar();
+        Drill.Docs._expandSidebar();
       }
     })
   },
 
-  expandSidebar : function(){
-    $(".int_text .sidebar").addClass("force-expand");
-  },
-
-  contractSidebar : function() {
-    $(".int_text .sidebar").removeClass("force-expand");
-  },
-
-  l2nodes_with_children : function(){
-    $('li.toctree-l2').filter(function(){ 
-      return $(this).next('ul').length > 0;
-    });
-  },
-
   watchDocTocClicks : function(){
     $('li.toctree-l1').on('click', function(){
-      Drill.Docs.make_current(this);
+      Drill.Docs._make_current(this);
     })
-
-    Drill.Docs.add_expand_contract_buttons();
-    Drill.Docs.show_or_hide_on_click();
   },
 
   show_or_hide_on_click : function() {
     var l2nodes = $('li.toctree-l2').filter(function(){ 
       return $(this).next('ul').length > 0;
     });
+
     $('li[class^=toctree]')
     .filter(function(){
       return $(this).next('ul').length > 0;
@@ -160,42 +166,32 @@ Drill.Docs = {
         if ( $(this).is(':hidden') ) {
 
           if ( $.inArray( $toctree[0], l2nodes ) > -1 ) {
-            $toctree.children("span.expand").hide();
-            $toctree.children("span.contract").show();
+            $toctree.children("span.expand").removeClass('show');
+            $toctree.children("span.contract").addClass('show');
           }
 
           $(this).slideDown();
         } else {
 
           if ( $.inArray( $toctree[0], l2nodes ) > -1 ) {
-            $toctree.children("span.expand").show();
-            $toctree.children("span.contract").hide();
+            $toctree.children("span.expand").addClass('show');
+            $toctree.children("span.contract").removeClass('show');
           }
 
           $(this).slideUp();
         }
-        //$(this).toggle("slide");
       })
-
-      $('li[class^=toctree] ul').not($this_ul).hide("slide");
     })
   },
 
-  make_current : function(that) {
-    Drill.Docs.remove_current();
-    $(that).addClass("current");
-    $(that).next('ul').addClass("current");
-  },
-
-  remove_current : function() {
-    $(".current").removeClass("current");
-  },
 
   add_expand_contract_buttons : function() {
+    var expand_btn = '<span class="expand show"><i class="fa fa-plus"></i></span>';
+    var contract_btn = '<span class="contract"><i class="fa fa-minus"></i></span>';
     $('li.toctree-l2').filter(function(){ 
       return $(this).next('ul').length > 0;
     })
-    .prepend('<span class="expand"><i class="fa fa-plus"></i></span><span class="contract"><i class="fa fa-minus"></i></span>');
+    .prepend(expand_btn + contract_btn);
   },
 
   permalinkSubHeaders : function() {
@@ -222,6 +218,30 @@ Drill.Docs = {
       Drill.Site.offsetHeader();
       //Drill.Site.copyToClipboard(Drill.Site.pathname(location) + "#" + hash);
     })
+  },
+
+  _expandSidebar : function(){
+    $(".int_text .sidebar").addClass("force-expand");
+  },
+
+  _contractSidebar : function() {
+    $(".int_text .sidebar").removeClass("force-expand");
+  },
+
+  _make_current : function(that) {
+    Drill.Docs._remove_current();
+    $(that).addClass("current_section");
+    $(that).next('ul').addClass("current_section");
+  },
+
+  _remove_current : function() {
+    $(".current_section").removeClass("current_section");
+  },
+
+  _l2nodes_with_children : function(){
+    $('li.toctree-l2').filter(function(){ 
+      return $(this).next('ul').length > 0;
+    });
   }
 }
 
