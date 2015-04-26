@@ -673,8 +673,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Start-Up Options", 
-                    "next_url": "/docs/start-up-options/", 
+                    "next_title": "Configuring a Cluster for Different Workloads", 
+                    "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                     "parent": "Configuration Options", 
                     "previous_title": "Configuration Options", 
                     "previous_url": "/docs/configuration-options/", 
@@ -694,11 +694,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Planning and Execution Options", 
-                    "next_url": "/docs/planning-and-execution-options/", 
+                    "next_title": "Start-Up Options", 
+                    "next_url": "/docs/start-up-options/", 
                     "parent": "Configuration Options", 
                     "previous_title": "Configuration Options Introduction", 
                     "previous_url": "/docs/configuration-options-introduction/", 
+                    "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                    "title": "Configuring a Cluster for Different Workloads", 
+                    "url": "/docs/configuring-a-cluster-for-different-workloads/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuration Options", 
+                            "url": "/docs/configuration-options/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Planning and Execution Options", 
+                    "next_url": "/docs/planning-and-execution-options/", 
+                    "parent": "Configuration Options", 
+                    "previous_title": "Configuring a Cluster for Different Workloads", 
+                    "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                     "relative_path": "_docs/manage-drill/configuration-options/030-start-up-options.md", 
                     "title": "Start-Up Options", 
                     "url": "/docs/start-up-options/"
@@ -767,8 +788,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Start-Up Options", 
-            "next_url": "/docs/start-up-options/", 
+            "next_title": "Configuring a Cluster for Different Workloads", 
+            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
             "parent": "Configuration Options", 
             "previous_title": "Configuration Options", 
             "previous_url": "/docs/configuration-options/", 
@@ -817,6 +838,27 @@
             "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/020-configuring-connections-on-windows.md", 
             "title": "Configuring Connections on Windows", 
             "url": "/docs/configuring-connections-on-windows/"
+        }, 
+        "Configuring a Cluster for Different Workloads": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuration Options", 
+                    "url": "/docs/configuration-options/"
+                }, 
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Start-Up Options", 
+            "next_url": "/docs/start-up-options/", 
+            "parent": "Configuration Options", 
+            "previous_title": "Configuration Options Introduction", 
+            "previous_url": "/docs/configuration-options-introduction/", 
+            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+            "title": "Configuring a Cluster for Different Workloads", 
+            "url": "/docs/configuring-a-cluster-for-different-workloads/"
         }, 
         "Connect a Data Source": {
             "breadcrumbs": [], 
@@ -3288,8 +3330,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Start-Up Options", 
-                            "next_url": "/docs/start-up-options/", 
+                            "next_title": "Configuring a Cluster for Different Workloads", 
+                            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options", 
                             "previous_url": "/docs/configuration-options/", 
@@ -3309,11 +3351,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Planning and Execution Options", 
-                            "next_url": "/docs/planning-and-execution-options/", 
+                            "next_title": "Start-Up Options", 
+                            "next_url": "/docs/start-up-options/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options Introduction", 
                             "previous_url": "/docs/configuration-options-introduction/", 
+                            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                            "title": "Configuring a Cluster for Different Workloads", 
+                            "url": "/docs/configuring-a-cluster-for-different-workloads/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Planning and Execution Options", 
+                            "next_url": "/docs/planning-and-execution-options/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Configuring a Cluster for Different Workloads", 
+                            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                             "relative_path": "_docs/manage-drill/configuration-options/030-start-up-options.md", 
                             "title": "Start-Up Options", 
                             "url": "/docs/start-up-options/"
@@ -6889,8 +6952,8 @@
             "next_title": "Planning and Execution Options", 
             "next_url": "/docs/planning-and-execution-options/", 
             "parent": "Configuration Options", 
-            "previous_title": "Configuration Options Introduction", 
-            "previous_url": "/docs/configuration-options-introduction/", 
+            "previous_title": "Configuring a Cluster for Different Workloads", 
+            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
             "relative_path": "_docs/manage-drill/configuration-options/030-start-up-options.md", 
             "title": "Start-Up Options", 
             "url": "/docs/start-up-options/"
@@ -10521,8 +10584,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Start-Up Options", 
-                            "next_url": "/docs/start-up-options/", 
+                            "next_title": "Configuring a Cluster for Different Workloads", 
+                            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options", 
                             "previous_url": "/docs/configuration-options/", 
@@ -10542,11 +10605,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Planning and Execution Options", 
-                            "next_url": "/docs/planning-and-execution-options/", 
+                            "next_title": "Start-Up Options", 
+                            "next_url": "/docs/start-up-options/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options Introduction", 
                             "previous_url": "/docs/configuration-options-introduction/", 
+                            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                            "title": "Configuring a Cluster for Different Workloads", 
+                            "url": "/docs/configuring-a-cluster-for-different-workloads/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Planning and Execution Options", 
+                            "next_url": "/docs/planning-and-execution-options/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Configuring a Cluster for Different Workloads", 
+                            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                             "relative_path": "_docs/manage-drill/configuration-options/030-start-up-options.md", 
                             "title": "Start-Up Options", 
                             "url": "/docs/start-up-options/"
