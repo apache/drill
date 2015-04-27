@@ -45,6 +45,8 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.hadoop.io.Text;
 import org.joda.time.Period;
 
+// Source code generated using FreeMarker template ${.template_name}
+
 @SuppressWarnings("unused")
 public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
@@ -104,7 +106,9 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
   @Override
   public boolean isSet() {
-    <#if nullMode == "Nullable">
+    <#if holderMode == "Repeated">
+    return this.repeatedHolder.end!=this.repeatedHolder.start;
+    <#elseif nullMode == "Nullable">
     return this.holder.isSet == 1;
     <#else>
     return true;
