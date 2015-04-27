@@ -2,9 +2,7 @@
 title: "Configuring a Cluster for Different Workloads"
 parent: "Configuration Options"
 ---
-This is something like resource(CPU/memory/disk) allocation best practice.
-Actually memory is easiest to consider as of now. Because CPU/disks are kind of shared by everyone.
-I do not have actual customer's configuration since many of the POC projects are dedicated Drill cluster.
+In this release of Drill, to configure a Drill cluster for different workloads, you re-allocate memory resources only. Currently, you do not configure disk or CPU resources because Drill shares disk and CPU resources with other services. To re-allocate memory from the default settings to other settings based on your performance testing. Currently, you configuration changes to memory re-allocation 
 
 But to understand this, you have to dig into the resource allocation from warden firstly.
 http://doc.mapr.com/display/MapR/Cluster+Resource+Allocation
@@ -36,167 +34,13 @@ service.command.tt.heapsize.percent=2
 service.command.tt.heapsize.max=325
 service.command.tt.heapsize.min=64
 
+continued later
+*********************************
 
+Warden only allocates resources for MapR Hadoop services associated with roles that are installed on the node.
 
-
-
-*****************************************************************
-
-services=webserver:all:cldb;nfs:all:cldb;kvstore:all;cldb:all:kvstore;hoststats:
-all:kvstore
-service.command.jt.start=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daemon.sh sta
-rt jobtracker
-service.command.tt.start=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daemon.sh sta
-rt tasktracker
-service.command.hbmaster.start=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-daemon.sh 
-start master
-service.command.hbregion.start=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-daemon.sh 
-start regionserver
-service.command.cldb.start=/opt/mapr/initscripts/mapr-cldb start
-service.command.kvstore.start=/opt/mapr/initscripts/mapr-mfs start
-service.command.mfs.start=/opt/mapr/initscripts/mapr-mfs start
-service.command.nfs.start=/opt/mapr/initscripts/mapr-nfsserver start
-service.command.hoststats.start=/opt/mapr/initscripts/mapr-hoststats start
-service.command.webserver.start=/opt/mapr/adminuiapp/webserver start
-service.command.jt.stop=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daemon.sh stop
- jobtracker
-service.command.tt.stop=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daemon.sh stop
- tasktracker
-service.command.hbmaster.stop=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-daemon.sh s
-top master
-service.command.hbregion.stop=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-daemon.sh s
-top regionserver
-service.command.cldb.stop=/opt/mapr/initscripts/mapr-cldb stop
-service.command.kvstore.stop=/opt/mapr/initscripts/mapr-mfs stop
-service.command.mfs.stop=/opt/mapr/initscripts/mapr-mfs stop
-service.command.nfs.stop=/opt/mapr/initscripts/mapr-nfsserver stop
-service.command.hoststats.stop=/opt/mapr/initscripts/mapr-hoststats stop
-service.command.webserver.stop=/opt/mapr/adminuiapp/webserver stop
-service.command.jt.type=BACKGROUND
-service.command.tt.type=BACKGROUND
-service.command.hbmaster.type=BACKGROUND
-service.command.hbregion.type=BACKGROUND
-service.command.cldb.type=BACKGROUND
-service.command.kvstore.type=BACKGROUND
-service.command.mfs.type=BACKGROUND
-service.command.nfs.type=BACKGROUND
-service.command.hoststats.type=BACKGROUND
-service.command.webserver.type=BACKGROUND
-service.command.jt.monitor=org.apache.hadoop.mapred.JobTracker
-service.command.tt.monitor=org.apache.hadoop.mapred.TaskTracker
-service.command.hbmaster.monitor=org.apache.hadoop.hbase.master.HMaster start
-service.command.hbregion.monitor=org.apache.hadoop.hbase.regionserver.HRegionSer
-ver start
-service.command.cldb.monitor=com.mapr.fs.cldb.CLDB
-service.command.kvstore.monitor=server/mfs
-service.command.mfs.monitor=server/mfs
-service.command.nfs.monitor=server/nfsserver
-service.command.jt.monitorcommand=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daem
-on.sh status jobtracker
-service.command.tt.monitorcommand=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daem
-on.sh status tasktracker
-service.command.hbmaster.monitorcommand=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-d
-aemon.sh status master
-service.command.hbregion.monitorcommand=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-d
-aemon.sh status regionserver
-service.command.cldb.monitorcommand=/opt/mapr/initscripts/mapr-cldb status
-service.command.kvstore.monitorcommand=/opt/mapr/initscripts/mapr-mfs status
-service.command.mfs.monitorcommand=/opt/mapr/initscripts/mapr-mfs status
-service.command.nfs.monitorcommand=/opt/mapr/initscripts/mapr-nfsserver status
-service.command.hoststats.monitorcommand=/opt/mapr/initscripts/mapr-hoststats st
-atus
-service.command.webserver.monitorcommand=/opt/mapr/adminuiapp/webserver status
-# Memory allocation for JobTracker is only used
-# to calculate total memory required for all services to run
-# but -Xmx JobTracker itself is not set allowing memory 
-# on JobTracker to grow as needed
-# if upper limit on memory is strongly desired
-# set HADOOP_HEAPSIZE env. variable in /opt/mapr/hadoop/hadoop-0.20.2/conf/hadoo
-p-env.sh
-service.command.jt.heapsize.percent=10
-service.command.jt.heapsize.max=5000
-service.command.jt.heapsize.min=256
-# Memory allocation for TaskTracker is only used
-# to calculate total memory required for all services to run
-# but -Xmx TaskTracker itself is not set allowing memory 
-# on TaskTracker to grow as needed
-# if upper limit on memory is strongly desired
-# set HADOOP_HEAPSIZE env. variable in /opt/mapr/hadoop/hadoop-0.20.2/conf/hadoo
-p-env.sh
-service.command.tt.heapsize.percent=2
-service.command.tt.heapsize.max=325
-service.command.tt.heapsize.min=64
-service.command.hbmaster.heapsize.percent=4
-service.command.hbmaster.heapsize.max=128
-service.command.hbmaster.heapsize.min=128
-service.command.hbregion.heapsize.percent=25
-service.command.hbregion.heapsize.max=256
-service.command.hbregion.heapsize.min=256
-service.command.cldb.heapsize.percent=8
-service.command.cldb.heapsize.max=256
-service.command.cldb.heapsize.min=256
-service.command.mfs.heapsize.percent=35
-service.command.mfs.heapsize.maxpercent=85
-service.command.mfs.heapsize.min=512
-service.command.webserver.heapsize.percent=3
-service.command.webserver.heapsize.max=128
-service.command.webserver.heapsize.min=128
-service.command.nfs.heapsize.percent=3
-service.command.nfs.heapsize.min=64
-service.command.nfs.heapsize.max=64
-service.command.os.heapsize.percent=10
-service.command.os.heapsize.max=4000
-service.command.os.heapsize.min=256
-service.command.warden.heapsize.percent=1
-service.command.warden.heapsize.max=750
-service.command.warden.heapsize.min=64
-service.command.zk.heapsize.percent=1
-service.command.zk.heapsize.max=1500
-service.command.zk.heapsize.min=256
-service.nice.value=-10
-zookeeper.servers=maprdemo:5181
-nodes.mincount=1
-services.retries=3
-cldb.port=7222
-mfs.port=5660
-hbmaster.port=60000
-hoststats.port=5660
-jt.port=9001
-jt.http.port=50030
-kvstore.port=5660
-mapr.home.dir=/opt/mapr
-centralconfig.enabled=true
-pollcentralconfig.interval.seconds=300
-rpc.drop=false
-hs.rpcon=true
-hs.port=1111
-hs.host=localhost
-service.command.cldb.retryinterval.time.sec=600
-services.retryinterval.time.sec=1800
-jt.response.timeout.minutes=10
-isM7=0
-mr1.memory.percent=50
-mr1.cpu.percent=50
-mr1.disk.percent=50
-log.retention.exceptions=cldb.log,hoststats.log,configure.log,mfs.log-*
-services.memoryallocation.alarm.threshold=97
-isDB=true
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-*****************************************************************
-Typo:
+**********************************
+ypo:
 IMPALA_STATE_STORE_ARGS=>IMPALA_SERVER_ARGS
 
 On Mon, Apr 20, 2015 at 2:11 PM, David Tucker <dtucker@maprtech.com> wrote:
@@ -351,6 +195,20 @@ Hi Latha,
 
 Please make sure you have enough free RAM for :
 DRILL_MAX_DIRECT_MEMORY + DRILL_MAX_HEAP .
+
+
+************************************************
+Configure these options in <drill installation directory>/conf/drill-env.sh by modifying DRILL_JAVA_OPTS. The defaults are:
+
+
+DRILL_MAX_DIRECT_MEMORY="8G"
+DRILL_MAX_HEAP="4G"
+
+export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea"
+
+
+
+************************************************
 
 Some other services like MFS may take significant part of OS RAM.
 
@@ -1233,37 +1091,674 @@ Latha.Sivasubramaniam@aspect.com> wrote:
 > > >> > > > >
 > > >> > > > > Thanks,
 > > >> > > > > Latha
-> > >> > > > >
-> > >> > > > >
-> > >> > > > > This email (including any attachments) is proprietary to
-> > >> > > > > Aspect Software, Inc. and may contain information that is
-> > confidential.
-> > >> > > > > If you have received this message in error, please do not
-> > >> > > > > read, copy or
-> > >> > > > forward this message.
-> > >> > > > > Please notify the sender immediately, delete it from your
-> > >> > > > > system and destroy any copies. You may not further disclose
-> > >> > > > > or distribute this email or its attachments.
-> > >> > > > >
-> > >> > > > This email (including any attachments) is proprietary to
-> > >> > > > Aspect Software, Inc. and may contain information that is
-> > >> > > > confidential. If you have received this message in error,
-> > >> > > > please do not read, copy or
-> > >> > > forward this message.
-> > >> > > > Please notify the sender immediately, delete it from your
-> > >> > > > system and destroy any copies. You may not further disclose
-> > >> > > > or distribute this email or its attachments.
-> > >> > > >
-> > >> > > This email (including any attachments) is proprietary to Aspect
-> > >> > > Software, Inc. and may contain information that is confidential.
-> > >> > > If you have received this message in error, please do not read,
-> > >> > > copy or
-> > >> > forward this message.
-> > >> > > Please notify the sender immediately, delete it from your
-> > >> > > system and destroy any copies. You may not further disclose or
-> > >> > > distribute this email or its attachments.
-> > >> > >
-> > >> >
-> > >>
-> > >
-> > >
+
+
+
+
+
+
+
+
+
+
+********************************
+services=webserver:all:cldb;nfs:all:cldb;kvstore:all;cldb:all:kvstore;hoststats:
+all:kvstore
+service.command.jt.start=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daemon.sh sta
+rt jobtracker
+service.command.tt.start=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daemon.sh sta
+rt tasktracker
+service.command.hbmaster.start=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-daemon.sh 
+start master
+service.command.hbregion.start=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-daemon.sh 
+start regionserver
+service.command.cldb.start=/opt/mapr/initscripts/mapr-cldb start
+service.command.kvstore.start=/opt/mapr/initscripts/mapr-mfs start
+service.command.mfs.start=/opt/mapr/initscripts/mapr-mfs start
+service.command.nfs.start=/opt/mapr/initscripts/mapr-nfsserver start
+service.command.hoststats.start=/opt/mapr/initscripts/mapr-hoststats start
+service.command.webserver.start=/opt/mapr/adminuiapp/webserver start
+service.command.jt.stop=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daemon.sh stop
+ jobtracker
+service.command.tt.stop=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daemon.sh stop
+ tasktracker
+service.command.hbmaster.stop=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-daemon.sh s
+top master
+service.command.hbregion.stop=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-daemon.sh s
+top regionserver
+service.command.cldb.stop=/opt/mapr/initscripts/mapr-cldb stop
+service.command.kvstore.stop=/opt/mapr/initscripts/mapr-mfs stop
+service.command.mfs.stop=/opt/mapr/initscripts/mapr-mfs stop
+service.command.nfs.stop=/opt/mapr/initscripts/mapr-nfsserver stop
+service.command.hoststats.stop=/opt/mapr/initscripts/mapr-hoststats stop
+service.command.webserver.stop=/opt/mapr/adminuiapp/webserver stop
+service.command.jt.type=BACKGROUND
+service.command.tt.type=BACKGROUND
+service.command.hbmaster.type=BACKGROUND
+service.command.hbregion.type=BACKGROUND
+service.command.cldb.type=BACKGROUND
+service.command.kvstore.type=BACKGROUND
+service.command.mfs.type=BACKGROUND
+service.command.nfs.type=BACKGROUND
+service.command.hoststats.type=BACKGROUND
+service.command.webserver.type=BACKGROUND
+service.command.jt.monitor=org.apache.hadoop.mapred.JobTracker
+service.command.tt.monitor=org.apache.hadoop.mapred.TaskTracker
+service.command.hbmaster.monitor=org.apache.hadoop.hbase.master.HMaster start
+service.command.hbregion.monitor=org.apache.hadoop.hbase.regionserver.HRegionSer
+ver start
+service.command.cldb.monitor=com.mapr.fs.cldb.CLDB
+service.command.kvstore.monitor=server/mfs
+service.command.mfs.monitor=server/mfs
+service.command.nfs.monitor=server/nfsserver
+service.command.jt.monitorcommand=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daem
+on.sh status jobtracker
+service.command.tt.monitorcommand=/opt/mapr/hadoop/hadoop-0.20.2/bin/hadoop-daem
+on.sh status tasktracker
+service.command.hbmaster.monitorcommand=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-d
+aemon.sh status master
+service.command.hbregion.monitorcommand=/opt/mapr/hbase/hbase-0.98.9/bin/hbase-d
+aemon.sh status regionserver
+service.command.cldb.monitorcommand=/opt/mapr/initscripts/mapr-cldb status
+service.command.kvstore.monitorcommand=/opt/mapr/initscripts/mapr-mfs status
+service.command.mfs.monitorcommand=/opt/mapr/initscripts/mapr-mfs status
+service.command.nfs.monitorcommand=/opt/mapr/initscripts/mapr-nfsserver status
+service.command.hoststats.monitorcommand=/opt/mapr/initscripts/mapr-hoststats st
+atus
+service.command.webserver.monitorcommand=/opt/mapr/adminuiapp/webserver status
+# Memory allocation for JobTracker is only used
+# to calculate total memory required for all services to run
+# but -Xmx JobTracker itself is not set allowing memory 
+# on JobTracker to grow as needed
+# if upper limit on memory is strongly desired
+# set HADOOP_HEAPSIZE env. variable in /opt/mapr/hadoop/hadoop-0.20.2/conf/hadoo
+p-env.sh
+service.command.jt.heapsize.percent=10
+service.command.jt.heapsize.max=5000
+service.command.jt.heapsize.min=256
+# Memory allocation for TaskTracker is only used
+# to calculate total memory required for all services to run
+# but -Xmx TaskTracker itself is not set allowing memory 
+# on TaskTracker to grow as needed
+# if upper limit on memory is strongly desired
+# set HADOOP_HEAPSIZE env. variable in /opt/mapr/hadoop/hadoop-0.20.2/conf/hadoo
+p-env.sh
+service.command.tt.heapsize.percent=2
+service.command.tt.heapsize.max=325
+service.command.tt.heapsize.min=64
+service.command.hbmaster.heapsize.percent=4
+service.command.hbmaster.heapsize.max=128
+service.command.hbmaster.heapsize.min=128
+service.command.hbregion.heapsize.percent=25
+service.command.hbregion.heapsize.max=256
+service.command.hbregion.heapsize.min=256
+service.command.cldb.heapsize.percent=8
+service.command.cldb.heapsize.max=256
+service.command.cldb.heapsize.min=256
+service.command.mfs.heapsize.percent=35
+service.command.mfs.heapsize.maxpercent=85
+service.command.mfs.heapsize.min=512
+service.command.webserver.heapsize.percent=3
+service.command.webserver.heapsize.max=128
+service.command.webserver.heapsize.min=128
+service.command.nfs.heapsize.percent=3
+service.command.nfs.heapsize.min=64
+service.command.nfs.heapsize.max=64
+service.command.os.heapsize.percent=10
+service.command.os.heapsize.max=4000
+service.command.os.heapsize.min=256
+service.command.warden.heapsize.percent=1
+service.command.warden.heapsize.max=750
+service.command.warden.heapsize.min=64
+service.command.zk.heapsize.percent=1
+service.command.zk.heapsize.max=1500
+service.command.zk.heapsize.min=256
+service.nice.value=-10
+zookeeper.servers=maprdemo:5181
+nodes.mincount=1
+services.retries=3
+cldb.port=7222
+mfs.port=5660
+hbmaster.port=60000
+hoststats.port=5660
+jt.port=9001
+jt.http.port=50030
+kvstore.port=5660
+mapr.home.dir=/opt/mapr
+centralconfig.enabled=true
+pollcentralconfig.interval.seconds=300
+rpc.drop=false
+hs.rpcon=true
+hs.port=1111
+hs.host=localhost
+service.command.cldb.retryinterval.time.sec=600
+services.retryinterval.time.sec=1800
+jt.response.timeout.minutes=10
+isM7=0
+mr1.memory.percent=50
+mr1.cpu.percent=50
+mr1.disk.percent=50
+log.retention.exceptions=cldb.log,hoststats.log,configure.log,mfs.log-*
+services.memoryallocation.alarm.threshold=97
+isDB=true
+
+
+
+*****************************************************************
+
+
+[mapr@maprdemo conf]$ hadoop conf
+Try 'hadoop conf-details' for more detailed configuration.
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><configuration>
+<property><name>mapreduce.job.ubertask.enable</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.delayed.delegation-token.removal-interval-ms</name><value>30000</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.max-completed-applications</name><value>10000</value><source>yarn-default.xml</source></property>
+<property><name>io.bytes.per.checksum</name><value>512</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.leveldb-timeline-store.read-cache-size</name><value>104857600</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.client.submit.file.replication</name><value>10</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.shuffle.connection-keep-alive.enable</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.container-manager.thread-count</name><value>20</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobhistory.cleaner.interval-ms</name><value>86400000</value><source>mapred-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.container.log.limit.kb</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>yarn.timeline-service.handler-thread-count</name><value>10</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.pmem-check-enabled</name><value>true</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobhistory.done-dir</name><value>${yarn.app.mapreduce.am.staging-dir}/history/done</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.tasktracker.healthchecker.interval</name><value>60000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobtracker.staging.root.dir</name><value>${hadoop.tmp.dir}/mapred/staging</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.ha.custom-ha-enabled</name><value>true</value><source>yarn-site.xml</source></property>
+<property><name>yarn.resourcemanager.recovery.enabled</name><value>true</value><source>yarn-site.xml</source></property>
+<property><name>mapreduce.task.profile.reduce.params</name><value>${mapreduce.task.profile.params}</value><source>mapred-default.xml</source></property>
+<property><name>fs.AbstractFileSystem.file.impl</name><value>org.apache.hadoop.fs.local.LocalFs</value><source>core-default.xml</source></property>
+<property><name>fs.du.interval</name><value>600000</value><source>core-default.xml</source></property>
+<property><name>fs.AbstractFileSystem.har.impl</name><value>org.apache.hadoop.fs.HarFs</value><source>core-default.xml</source></property>
+<property><name>mapreduce.client.completion.pollinterval</name><value>5000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.client.thread-count</name><value>10</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.ubertask.maxreduces</name><value>1</value><source>mapred-default.xml</source></property>
+<property><name>yarn.timeline-service.generic-application-history.enabled</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>yarn.client.max-nodemanagers-proxies</name><value>500</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.reduce.shuffle.memory.limit.percent</name><value>0.25</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.ssl.keystores.factory.class</name><value>org.apache.hadoop.security.ssl.FileBasedKeyStoresFactory</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.keytab</name><value>/etc/krb5.keytab</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.http.authentication.kerberos.keytab</name><value>${user.home}/hadoop.keytab</value><source>core-default.xml</source></property>
+<property><name>io.seqfile.sorter.recordlimit</name><value>1000000</value><source>core-default.xml</source></property>
+<property><name>ipc.client.connect.retry.interval</name><value>1000</value><source>core-default.xml</source></property>
+<property><name>s3.blocksize</name><value>67108864</value><source>core-default.xml</source></property>
+<property><name>mapreduce.task.io.sort.factor</name><value>256</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.disk-health-checker.interval-ms</name><value>120000</value><source>yarn-default.xml</source></property>
+<property><name>yarn.admin.acl</name><value>*</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.job.speculative.speculativecap</name><value>0.1</value><source>mapred-default.xml</source></property>
+<property><name>yarn.timeline-service.leveldb-timeline-store.path</name><value>${hadoop.tmp.dir}/yarn/timeline</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.resource.memory-mb</name><value>${nodemanager.resource.memory-mb}</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.task.local.output.class</name><value>org.apache.hadoop.mapred.MapRFsOutputFile</value></property>
+<property><name>io.map.index.interval</name><value>128</value><source>core-default.xml</source></property>
+<property><name>s3.client-write-packet-size</name><value>65536</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.fs.state-store.uri</name><value>/var/mapr/cluster/yarn/rm/system</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.workaround.non.threadsafe.getpwuid</name><value>false</value></property>
+<property><name>mapreduce.task.files.preserve.failedtasks</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.aux-services.RMVolumeManager.class</name><value>com.mapr.hadoop.yarn.resourcemanager.RMVolumeManager</value></property>
+<property><name>ha.zookeeper.session-timeout.ms</name><value>5000</value><source>core-default.xml</source></property>
+<property><name>fs.ramfs.impl</name><value>org.apache.hadoop.fs.InMemoryFileSystem</value></property>
+<property><name>s3.replication</name><value>3</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name><value>org.apache.hadoop.mapred.ShuffleHandler</value><source>yarn-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.container.log.backups</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.reduce.shuffle.connect.timeout</name><value>180000</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.aux-services</name><value>mapreduce_shuffle,mapr_direct_shuffle</value></property>
+<property><name>hadoop.ssl.enabled</name><value>false</value><source>core-default.xml</source></property>
+<property><name>mapreduce.job.counters.max</name><value>120</value><source>mapred-default.xml</source></property>
+<property><name>yarn.timeline-service.keytab</name><value>/etc/krb5.keytab</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.recovery.enabled</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.security.groups.cache.warn.after.ms</name><value>5000</value><source>core-default.xml</source></property>
+<property><name>ipc.client.connect.max.retries.on.timeouts</name><value>45</value><source>core-default.xml</source></property>
+<property><name>mapreduce.job.complete.cancel.delegation.tokens</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>dfs.namenode.checkpoint.dir</name><value>${hadoop.tmp.dir}/dfs/namesecondary</value></property>
+<property><name>yarn.resourcemanager.admin.address</name><value>${yarn.resourcemanager.hostname}:8033</value><source>yarn-default.xml</source></property>
+<property><name>fs.trash.interval</name><value>0</value><source>core-default.xml</source></property>
+<property><name>ha.health-monitor.check-interval.ms</name><value>1000</value><source>core-default.xml</source></property>
+<property><name>hadoop.jetty.logs.serve.aliases</name><value>true</value><source>core-default.xml</source></property>
+<property><name>hadoop.http.authentication.kerberos.principal</name><value>HTTP/_HOST@LOCALHOST</value><source>core-default.xml</source></property>
+<property><name>mapreduce.tasktracker.taskmemorymanager.monitoringinterval</name><value>5000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.reduce.shuffle.consumer.plugin.class</name><value>org.apache.hadoop.mapreduce.task.reduce.DirectShuffle</value><source>mapred-default.xml</source></property>
+<property><name>mapr.home</name><value>/opt/mapr</value></property>
+<property><name>s3native.blocksize</name><value>67108864</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.leveldb-timeline-store.start-time-read-cache-size</name><value>10000</value><source>yarn-default.xml</source></property>
+<property><name>ha.health-monitor.sleep-after-disconnect.ms</name><value>1000</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.staging</name><value>/var/mapr/cluster/yarn/rm/staging</value></property>
+<property><name>yarn.resourcemanager.nodemanagers.heartbeat-interval-ms</name><value>1000</value><source>yarn-default.xml</source></property>
+<property><name>yarn.log-aggregation.retain-check-interval-seconds</name><value>-1</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.proxyuser.mapr.groups</name><value>*</value><source>core-site.xml</source></property>
+<property><name>mapreduce.jobtracker.jobhistory.task.numberprogresssplits</name><value>12</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.map.cpu.vcores</name><value>1</value><source>mapred-default.xml</source></property>
+<property><name>yarn.acl.enable</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.security.instrumentation.requires.admin</name><value>false</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.localizer.fetch.thread-count</name><value>4</value><source>yarn-default.xml</source></property>
+<property><name>mapr.localoutput.dir</name><value>output</value></property>
+<property><name>hadoop.security.authorization</name><value>false</value><source>core-default.xml</source></property>
+<property><name>hadoop.security.group.mapping.ldap.search.filter.group</name><value>(objectClass=group)</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.ttl-ms</name><value>604800000</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.output.fileoutputformat.compress.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.shuffle.max.connections</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>fs.s3.blockSize</name><value>33554432</value></property>
+<property><name>mapreduce.shuffle.port</name><value>13562</value><source>mapred-default.xml</source></property>
+<property><name>yarn.log-aggregation-enable</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.reduce.log.level</name><value>INFO</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.app-submission.cross-platform</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobtracker.instrumentation</name><value>org.apache.hadoop.mapred.JobTrackerMetricsInst</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.security.group.mapping.ldap.search.attr.group.name</name><value>cn</value><source>core-default.xml</source></property>
+<property><name>mapr.map.keyprefix.ints</name><value>1</value></property>
+<property><name>mapreduce.map.java.opts</name><value>-Xmx900m</value></property>
+<property><name>fs.client.resolve.remote.symlinks</name><value>true</value><source>core-default.xml</source></property>
+<property><name>yarn.app.mapreduce.client-am.ipc.max-retries-on-timeouts</name><value>3</value><source>mapred-default.xml</source></property>
+<property><name>s3native.bytes-per-checksum</name><value>512</value><source>core-default.xml</source></property>
+<property><name>mapreduce.tasktracker.tasks.sleeptimebeforesigkill</name><value>5000</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.local-dirs</name><value>${hadoop.tmp.dir}/nm-local-dir</value><source>yarn-default.xml</source></property>
+<property><name>tfile.fs.output.buffer.size</name><value>262144</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobtracker.persist.jobstatus.active</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>mapred.ifile.outputstream</name><value>org.apache.hadoop.mapred.MapRIFileOutputStream</value></property>
+<property><name>fs.AbstractFileSystem.hdfs.impl</name><value>com.mapr.fs.MFS</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobhistory.recovery.store.fs.uri</name><value>${hadoop.tmp.dir}/mapred/history/recoverystore</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.map.output.collector.class</name><value>org.apache.hadoop.mapred.MapRFsOutputBuffer</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.tasktracker.local.dir.minspacestart</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.security.uid.cache.secs</name><value>14400</value><source>core-default.xml</source></property>
+<property><name>fs.har.impl.disable.cache</name><value>true</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.scheduler.monitor.policies</name><value>org.apache.hadoop.yarn.server.resourcemanager.monitor.capacity.ProportionalCapacityPreemptionPolicy</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.ssl.client.conf</name><value>ssl-client.xml</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.webapp.address</name><value>${yarn.timeline-service.hostname}:8188</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.tasktracker.local.dir.minspacekill</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobtracker.retiredjobs.cache.size</name><value>1000</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.scheduler.class</name><value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.job.reduce.slowstart.completedmaps</name><value>0.95</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.end-notification.retry.attempts</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.task.profile.map.params</name><value>${mapreduce.task.profile.params}</value><source>mapred-default.xml</source></property>
+<property><name>fs.s3n.impl</name><value>org.apache.hadoop.fs.s3native.NativeS3FileSystem</value></property>
+<property><name>mapreduce.map.memory.mb</name><value>1024</value></property>
+<property><name>mapreduce.tasktracker.outofband.heartbeat</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>fs.s3n.multipart.uploads.enabled</name><value>false</value><source>core-default.xml</source></property>
+<property><name>io.native.lib.available</name><value>true</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobtracker.persist.jobstatus.hours</name><value>1</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.ha.automatic-failover.enabled</name><value>true</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.client.progressmonitor.pollinterval</name><value>1000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.reduce.input.buffer.percent</name><value>0.0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.map.output.compress.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.map.skip.proc.count.autoincr</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.user.group.static.mapping.overrides</name><value>dr.who=;</value><source>core-default.xml</source></property>
+<property><name>hadoop.logfile.size</name><value>10000000</value></property>
+<property><name>mapreduce.jobtracker.address</name><value>local</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.cluster.local.dir</name><value>${hadoop.tmp.dir}/mapred/local</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.input.fileinputformat.list-status.num-threads</name><value>1</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.tasktracker.taskcontroller</name><value>org.apache.hadoop.mapred.DefaultTaskController</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.shuffle.connection-keep-alive.timeout</name><value>5</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.env-whitelist</name><value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,HADOOP_YARN_HOME</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.reduce.shuffle.parallelcopies</name><value>12</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.resource.io-spindles</name><value>${nodemanager.resource.io-spindles}</value></property>
+<property><name>mapreduce.jobtracker.heartbeats.in.second</name><value>100</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.maxtaskfailures.per.tracker</name><value>3</value><source>mapred-default.xml</source></property>
+<property><name>ipc.client.connection.maxidletime</name><value>10000</value><source>core-default.xml</source></property>
+<property><name>mapreduce.shuffle.ssl.enabled</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.max.split.locations</name><value>10</value><source>mapred-default.xml</source></property>
+<property><name>fs.checkpoint.size</name><value>67108864</value></property>
+<property><name>fs.s3.sleepTimeSeconds</name><value>10</value><source>core-default.xml</source></property>
+<property><name>yarn.scheduler.maximum-allocation-vcores</name><value>32</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.ssl.server.conf</name><value>ssl-server.xml</value><source>core-default.xml</source></property>
+<property><name>yarn.dfs-logging.handler-class</name><value>com.mapr.hadoop.yarn.util.MapRFSLoggingHandler</value></property>
+<property><name>fs.s3n.multipart.uploads.block.size</name><value>67108864</value><source>core-default.xml</source></property>
+<property><name>ha.zookeeper.parent-znode</name><value>/hadoop-ha</value><source>core-default.xml</source></property>
+<property><name>io.seqfile.lazydecompress</name><value>true</value><source>core-default.xml</source></property>
+<property><name>mapreduce.reduce.merge.inmem.threshold</name><value>1000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.input.fileinputformat.split.minsize</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>ipc.client.tcpnodelay</name><value>true</value><source>core-default.xml</source></property>
+<property><name>mapred.maxthreads.generate.mapoutput</name><value>1</value></property>
+<property><name>yarn.resourcemanager.zk-retry-interval-ms</name><value>1000</value><source>yarn-default.xml</source></property>
+<property><name>s3.stream-buffer-size</name><value>4096</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobtracker.tasktracker.maxblacklists</name><value>4</value><source>mapred-default.xml</source></property>
+<property><name>yarn.dfs-logging.dir-glob</name><value>maprfs:////var/mapr/local/*/logs/yarn/userlogs</value></property>
+<property><name>mapreduce.job.jvm.numtasks</name><value>1</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.task.io.sort.mb</name><value>100</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.ha.enabled</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>io.compression.codecs</name><value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compress.DeflateCodec,org.apache.hadoop.io.compress.SnappyCodec</value></property>
+<property><name>io.file.buffer.size</name><value>8192</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.generic-application-history.aux-services</name><value>HSVolumeManager</value></property>
+<property><name>yarn.nodemanager.admin-env</name><value>MALLOC_ARENA_MAX=$MALLOC_ARENA_MAX</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.job.split.metainfo.maxsize</name><value>10000000</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.scheduler.monitor.enable</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.scheduler.heartbeat.interval-ms</name><value>1000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.reduce.maxattempts</name><value>4</value><source>mapred-default.xml</source></property>
+<property><name>nfs.exports.allowed.hosts</name><value>* rw</value><source>core-default.xml</source></property>
+<property><name>fs.har.impl</name><value>org.apache.hadoop.fs.HarFileSystem</value></property>
+<property><name>hadoop.security.authentication</name><value>SIMPLE</value><source>core-default.xml</source></property>
+<property><name>fs.s3.buffer.dir</name><value>${hadoop.tmp.dir}/s3</value><source>core-default.xml</source></property>
+<property><name>mapred.maxthreads.partition.closer</name><value>1</value></property>
+<property><name>rpc.metrics.quantile.enable</name><value>false</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobtracker.taskscheduler</name><value>org.apache.hadoop.mapred.JobQueueTaskScheduler</value><source>mapred-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.job.task.listener.thread-count</name><value>30</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.reduces</name><value>1</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.map.sort.spill.percent</name><value>0.99</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.end-notification.retry.interval</name><value>1000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.minicluster.fixed.ports</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.maps</name><value>2</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.speculative.slownodethreshold</name><value>1.0</value><source>mapred-default.xml</source></property>
+<property><name>tfile.fs.input.buffer.size</name><value>262144</value><source>core-default.xml</source></property>
+<property><name>mapreduce.map.speculative</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.acl-view-job</name><value> </value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.reduce.shuffle.retry-delay.max.ms</name><value>60000</value><source>mapred-default.xml</source></property>
+<property><name>yarn.ipc.serializer.type</name><value>protocolbuffers</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.job.end-notification.max.retry.interval</name><value>5000</value><source>mapred-default.xml</source></property>
+<property><name>mapr.localvolumes.path</name><value>/var/mapr/local</value></property>
+<property><name>ftp.blocksize</name><value>67108864</value><source>core-default.xml</source></property>
+<property><name>mapreduce.tasktracker.http.threads</name><value>40</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.reduce.java.opts</name><value>-Xmx2560m</value></property>
+<property><name>ha.failover-controller.cli-check.rpc-timeout.ms</name><value>20000</value><source>core-default.xml</source></property>
+<property><name>mapreduce.job.token.tracking.ids.enabled</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.principal</name><value>mapr</value></property>
+<property><name>fs.file.impl</name><value>org.apache.hadoop.fs.LocalFileSystem</value></property>
+<property><name>yarn.nodemanager.resourcemanager.connect.wait.secs</name><value>900</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.task.skip.start.attempts</name><value>2</value><source>mapred-default.xml</source></property>
+<property><name>yarn.use-central-logging-for-mapreduce-only</name><value>false</value></property>
+<property><name>mapreduce.jobtracker.persist.jobstatus.dir</name><value>/jobtracker/jobsInfo</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.aux-services</name><value>RMVolumeManager</value></property>
+<property><name>ipc.client.kill.max</name><value>10</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.linux-container-executor.cgroups.mount</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobhistory.keytab</name><value>/etc/security/keytab/jhs.service.keytab</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.linux-container-executor.cgroups.hierarchy</name><value>/hadoop-yarn</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.job.end-notification.max.attempts</name><value>5</value><source>mapred-default.xml</source></property>
+<property><name>yarn.http.policy</name><value>HTTP_ONLY</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobhistory.max-age-ms</name><value>604800000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.task.tmp.dir</name><value>./tmp</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.reducer.preempt.delay.sec</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.reduce.memory.mb</name><value>3072</value></property>
+<property><name>yarn.resourcemanager.zk-state-store.parent-path</name><value>/rmstore</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.http.filter.initializers</name><value>org.apache.hadoop.http.lib.StaticUserWebFilter</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.address</name><value>${yarn.timeline-service.hostname}:10200</value><source>yarn-default.xml</source></property>
+<property><name>yarn.timeline-service.hostname</name><value>0.0.0.0</value><source>yarn-default.xml</source></property>
+<property><name>yarn.timeline-service.generic-application-history.fs-history-store.compression-type</name><value>none</value><source>yarn-default.xml</source></property>
+<property><name>yarn.client.application-client-protocol.poll-interval-ms</name><value>200</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.http.authentication.type</name><value>simple</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.client.thread-count</name><value>50</value><source>yarn-default.xml</source></property>
+<property><name>ipc.server.listen.queue.size</name><value>128</value><source>core-default.xml</source></property>
+<property><name>mapreduce.reduce.skip.maxgroups</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>file.stream-buffer-size</name><value>4096</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.store.class</name><value>org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStateStore</value><source>yarn-default.xml</source></property>
+<property><name>io.mapfile.bloom.size</name><value>1048576</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.container-executor.class</name><value>org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor</value><source>yarn-default.xml</source></property>
+<property><name>fs.hsftp.impl</name><value>org.apache.hadoop.hdfs.HsftpFileSystem</value></property>
+<property><name>fs.swift.impl</name><value>org.apache.hadoop.fs.swift.snative.SwiftNativeFileSystem</value><source>core-default.xml</source></property>
+<property><name>mapreduce.map.maxattempts</name><value>4</value><source>mapred-default.xml</source></property>
+<property><name>yarn.log-aggregation.retain-seconds</name><value>2592000</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobtracker.jobhistory.block.size</name><value>3145728</value><source>mapred-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.job.committer.cancel-timeout</name><value>60000</value><source>mapred-default.xml</source></property>
+<property><name>ftp.replication</name><value>3</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobtracker.http.address</name><value>0.0.0.0:50030</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.health-checker.script.timeout-ms</name><value>1200000</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobhistory.intermediate-done-dir</name><value>${yarn.app.mapreduce.am.staging-dir}/history/done_intermediate</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.address</name><value>maprdemo:10020</value><source>mapred-site.xml</source></property>
+<property><name>mapreduce.jobtracker.taskcache.levels</name><value>2</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.recovery.dir</name><value>${hadoop.tmp.dir}/yarn-nm-recovery</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.log.retain-seconds</name><value>10800</value><source>yarn-default.xml</source></property>
+<property><name>yarn.timeline-service.enabled</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.local-cache.max-files-per-directory</name><value>8192</value><source>yarn-default.xml</source></property>
+<property><name>mapred.child.java.opts</name><value>-Xmx200m</value><source>mapred-default.xml</source></property>
+<property><name>map.sort.class</name><value>org.apache.hadoop.util.QuickSort</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.util.hash.type</name><value>murmur</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobhistory.move.interval-ms</name><value>180000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.reduce.skip.proc.count.autoincr</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.ha.automatic-failover.embedded</name><value>true</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.container-monitor.interval-ms</name><value>3000</value><source>yarn-default.xml</source></property>
+<property><name>yarn.client.nodemanager-client-async.thread-pool-max-size</name><value>500</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.disk-health-checker.min-healthy-disks</name><value>0.25</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobhistory.http.policy</name><value>HTTP_ONLY</value><source>mapred-default.xml</source></property>
+<property><name>ha.zookeeper.acl</name><value>world:anyone:rwcda</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.sleep-delay-before-sigkill.ms</name><value>250</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.proxyuser.mapr.hosts</name><value>*</value><source>core-site.xml</source></property>
+<property><name>mapr.mapred.localvolume.mount.path</name><value>${mapr.localvolumes.path}/${mapr.host}/mapred</value></property>
+<property><name>io.map.index.skip</name><value>0</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.zk-num-retries</name><value>1000</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.ssl.exclude.cipher.suites</name><value>SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,SSL_RSA_EXPORT_WITH_DES40_CBC_SHA,SSL_RSA_EXPORT_WITH_RC4_40_MD5</value></property>
+<property><name>net.topology.node.switch.mapping.impl</name><value>org.apache.hadoop.net.ScriptBasedMapping</value><source>core-default.xml</source></property>
+<property><name>fs.s3.maxRetries</name><value>4</value><source>core-default.xml</source></property>
+<property><name>ha.failover-controller.new-active.rpc-timeout.ms</name><value>60000</value><source>core-default.xml</source></property>
+<property><name>s3native.client-write-packet-size</name><value>65536</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.amliveliness-monitor.interval-ms</name><value>1000</value><source>yarn-default.xml</source></property>
+<property><name>mapred.ifile.inputstream</name><value>org.apache.hadoop.mapred.MapRIFileInputStream</value></property>
+<property><name>hadoop.http.staticuser.user</name><value>unknown</value><source>core-default.xml</source></property>
+<property><name>mapreduce.reduce.speculative</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.client.output.filter</name><value>FAILED</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.datestring.cache.size</name><value>200000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.ifile.readahead.bytes</name><value>4194304</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.tasktracker.report.address</name><value>127.0.0.1:0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.task.userlog.limit.kb</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.tasktracker.map.tasks.maximum</name><value>2</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.http.authentication.simple.anonymous.allowed</name><value>true</value><source>core-default.xml</source></property>
+<property><name>mapreduce.job.classloader.system.classes</name><value>java.,javax.,org.apache.commons.logging.,org.apache.log4j.,
+          org.apache.hadoop.,core-default.xml,hdfs-default.xml,
+          mapred-default.xml,yarn-default.xml</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.reduce.disk</name><value>1.33</value></property>
+<property><name>hadoop.rpc.socket.factory.class.default</name><value>org.apache.hadoop.net.StandardSocketFactory</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.resourcemanager.connect.retry_interval.secs</name><value>30</value><source>yarn-default.xml</source></property>
+<property><name>fs.hftp.impl</name><value>org.apache.hadoop.hdfs.HftpFileSystem</value></property>
+<property><name>yarn.resourcemanager.connect.max-wait.ms</name><value>900000</value><source>yarn-default.xml</source></property>
+<property><name>fs.automatic.close</name><value>true</value><source>core-default.xml</source></property>
+<property><name>fs.kfs.impl</name><value>org.apache.hadoop.fs.kfs.KosmosFileSystem</value></property>
+<property><name>mapreduce.tasktracker.healthchecker.script.timeout</name><value>600000</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.address</name><value>${yarn.resourcemanager.hostname}:8032</value><source>yarn-default.xml</source></property>
+<property><name>fs.hdfs.impl</name><value>com.mapr.fs.MapRFileSystem</value></property>
+<property><name>yarn.client.failover-retries</name><value>0</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.ha.automatic-failover.zk-base-path</name><value>/yarn-leader-election</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.health-checker.interval-ms</name><value>600000</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.container-tokens.master-key-rolling-interval-secs</name><value>86400</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.reduce.markreset.buffer.percent</name><value>0.0</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.fs.state-store.retry-policy-spec</name><value>2000, 500</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.security.group.mapping.ldap.directory.search.timeout</name><value>10000</value><source>core-default.xml</source></property>
+<property><name>mapreduce.map.log.level</name><value>INFO</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.localizer.address</name><value>${yarn.nodemanager.hostname}:8040</value><source>yarn-default.xml</source></property>
+<property><name>dfs.bytes-per-checksum</name><value>512</value></property>
+<property><name>yarn.resourcemanager.keytab</name><value>/etc/krb5.keytab</value><source>yarn-default.xml</source></property>
+<property><name>ftp.stream-buffer-size</name><value>4096</value><source>core-default.xml</source></property>
+<property><name>ha.health-monitor.rpc-timeout.ms</name><value>45000</value><source>core-default.xml</source></property>
+<property><name>hadoop.security.group.mapping.ldap.search.attr.member</name><value>member</value><source>core-default.xml</source></property>
+<property><name>mapreduce.task.profile.params</name><value>-agentlib:hprof=cpu=samples,heap=sites,force=n,thread=y,verbose=n,file=%s</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.disk-health-checker.min-free-space-per-disk-mb</name><value>0</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.job.classloader</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>fs.maprfs.impl</name><value>com.mapr.fs.MapRFileSystem</value></property>
+<property><name>yarn.nm.liveness-monitor.expiry-interval-ms</name><value>600000</value><source>yarn-default.xml</source></property>
+<property><name>io.compression.codec.bzip2.library</name><value>system-native</value><source>core-default.xml</source></property>
+<property><name>hadoop.http.authentication.token.validity</name><value>36000</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.ttl-enable</name><value>true</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.resourcemanager.minimum.version</name><value>NONE</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.job.hdfs-servers</name><value>${fs.defaultFS}</value><source>yarn-default.xml</source></property>
+<property><name>fs.ftp.impl</name><value>org.apache.hadoop.fs.ftp.FTPFileSystem</value></property>
+<property><name>yarn.external.token.manager</name><value>com.mapr.hadoop.yarn.security.MapRTicketManager</value></property>
+<property><name>s3native.replication</name><value>3</value><source>core-default.xml</source></property>
+<property><name>yarn.app.mapreduce.task.container.log.backups</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.localizer.client.thread-count</name><value>5</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.container.liveness-monitor.interval-ms</name><value>600000</value><source>yarn-default.xml</source></property>
+<property><name>dfs.ha.fencing.ssh.connect-timeout</name><value>30000</value><source>core-default.xml</source></property>
+<property><name>yarn.am.liveness-monitor.expiry-interval-ms</name><value>600000</value><source>yarn-default.xml</source></property>
+<property><name>fs.mapr.working.dir</name><value>/user/$USERNAME/</value></property>
+<property><name>net.topology.impl</name><value>org.apache.hadoop.net.NetworkTopology</value><source>core-default.xml</source></property>
+<property><name>mapreduce.shuffle.max.threads</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.task.profile</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.linux-container-executor.resources-handler.class</name><value>org.apache.hadoop.yarn.server.nodemanager.util.DefaultLCEResourcesHandler</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.tasktracker.instrumentation</name><value>org.apache.hadoop.mapred.TaskTrackerMetricsInst</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.tasktracker.http.address</name><value>0.0.0.0:50060</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.webapp.address</name><value>maprdemo:19888</value><source>mapred-site.xml</source></property>
+<property><name>yarn.ipc.rpc.class</name><value>org.apache.hadoop.yarn.ipc.HadoopYarnProtoRPC</value><source>yarn-default.xml</source></property>
+<property><name>ha.failover-controller.graceful-fence.rpc-timeout.ms</name><value>5000</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.application-tokens.master-key-rolling-interval-secs</name><value>86400</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.zk-acl</name><value>world:anyone:rwcda</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.am.max-attempts</name><value>2</value><source>yarn-default.xml</source></property>
+<property><name>hbase.table.namespace.mappings</name><value>*:/tables</value><source>core-site.xml</source></property>
+<property><name>mapreduce.job.ubertask.maxmaps</name><value>9</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.state-store.max-completed-applications</name><value>${yarn.resourcemanager.max-completed-applications}</value><source>yarn-default.xml</source></property>
+<property><name>yarn.scheduler.maximum-allocation-mb</name><value>8192</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.webapp.https.address</name><value>${yarn.resourcemanager.hostname}:8090</value><source>yarn-default.xml</source></property>
+<property><name>mapr.localspill.dir</name><value>spill</value></property>
+<property><name>mapreduce.job.userlog.retain.hours</name><value>24</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.linux-container-executor.nonsecure-mode.user-pattern</name><value>^[_.A-Za-z0-9][-@_.A-Za-z0-9]{0,255}?[$]?$</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.task.timeout</name><value>600000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.loadedjobs.cache.size</name><value>5</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.framework.name</name><value>yarn</value><source>mapred-default.xml</source></property>
+<property><name>ipc.client.idlethreshold</name><value>4000</value><source>core-default.xml</source></property>
+<property><name>ipc.server.tcpnodelay</name><value>true</value><source>core-default.xml</source></property>
+<property><name>ftp.bytes-per-checksum</name><value>512</value><source>core-default.xml</source></property>
+<property><name>hadoop.logfile.count</name><value>10</value></property>
+<property><name>yarn.resourcemanager.hostname</name><value>0.0.0.0</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.shuffle.transfer.buffer.size</name><value>131072</value><source>mapred-default.xml</source></property>
+<property><name>s3.bytes-per-checksum</name><value>512</value><source>core-default.xml</source></property>
+<property><name>mapreduce.job.speculative.slowtaskthreshold</name><value>1.0</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.recovery.store.class</name><value>org.apache.hadoop.mapreduce.v2.hs.HistoryServerFileSystemStateStoreService</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.localizer.cache.target-size-mb</name><value>10240</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.remote-app-log-dir</name><value>/tmp/logs</value><source>yarn-default.xml</source></property>
+<property><name>fs.s3.block.size</name><value>33554432</value><source>core-default.xml</source></property>
+<property><name>mapreduce.job.queuename</name><value>default</value><source>mapred-default.xml</source></property>
+<property><name>yarn.scheduler.minimum-allocation-mb</name><value>1024</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.rpc.protection</name><value>authentication</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.linux-container-executor.nonsecure-mode.local-user</name><value>nobody</value><source>yarn-default.xml</source></property>
+<property><name>yarn.timeline-service.store-class</name><value>org.apache.hadoop.yarn.server.timeline.LeveldbTimelineStore</value><source>yarn-default.xml</source></property>
+<property><name>yarn.timeline-service.leveldb-timeline-store.start-time-write-cache-size</name><value>10000</value><source>yarn-default.xml</source></property>
+<property><name>yarn.app.mapreduce.client-am.ipc.max-retries</name><value>3</value><source>mapred-default.xml</source></property>
+<property><name>ftp.client-write-packet-size</name><value>65536</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.address</name><value>${yarn.nodemanager.hostname}:0</value><source>yarn-default.xml</source></property>
+<property><name>fs.defaultFS</name><value>maprfs:///</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.scheduler.client.thread-count</name><value>50</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.task.merge.progress.records</name><value>10000</value><source>mapred-default.xml</source></property>
+<property><name>file.client-write-packet-size</name><value>65536</value><source>core-default.xml</source></property>
+<property><name>mapred.local.mapoutput</name><value>false</value></property>
+<property><name>mapreduce.reduce.cpu.vcores</name><value>1</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.delete.thread-count</name><value>4</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.scheduler.address</name><value>${yarn.resourcemanager.hostname}:8030</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobhistory.admin.address</name><value>0.0.0.0:10033</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.job.shuffle.provider.services</name><value>mapr_direct_shuffle</value></property>
+<property><name>fs.trash.checkpoint.interval</name><value>0</value><source>core-default.xml</source></property>
+<property><name>hadoop.http.authentication.signature.secret.file</name><value>${user.home}/hadoop-http-auth-signature-secret</value><source>core-default.xml</source></property>
+<property><name>s3native.stream-buffer-size</name><value>4096</value><source>core-default.xml</source></property>
+<property><name>ipc.client.max.connection.setup.timeout</name><value>20</value></property>
+<property><name>yarn.resourcemanager.webapp.delegation-token-auth-filter.enabled</name><value>true</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.reduce.shuffle.read.timeout</name><value>180000</value><source>mapred-default.xml</source></property>
+<property><name>fs.AbstractFileSystem.maprfs.impl</name><value>com.mapr.fs.MFS</value></property>
+<property><name>yarn.app.mapreduce.am.command-opts</name><value>-Xmx1024m</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.map.disk</name><value>0.5</value></property>
+<property><name>mapreduce.local.clientfactory.class.name</name><value>org.apache.hadoop.mapred.LocalClientFactory</value><source>mapred-default.xml</source></property>
+<property><name>dfs.namenode.checkpoint.edits.dir</name><value>${fs.checkpoint.dir}</value></property>
+<property><name>fs.permissions.umask-mode</name><value>022</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobhistory.admin.acl</name><value>*</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.move.thread-count</name><value>3</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.common.configuration.version</name><value>0.23.0</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.dir</name><value>/var/mapr/cluster/yarn/rm</value></property>
+<property><name>mapreduce.tasktracker.dns.interface</name><value>default</value><source>mapred-default.xml</source></property>
+<property><name>fs.s3n.blockSize</name><value>33554432</value></property>
+<property><name>yarn.nodemanager.container-monitor.procfs-tree.smaps-based-rss.enabled</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.connect.retry-interval.ms</name><value>30000</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.output.fileoutputformat.compress.type</name><value>RECORD</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.security.group.mapping.ldap.ssl</name><value>false</value><source>core-default.xml</source></property>
+<property><name>mapreduce.ifile.readahead</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>io.serializations</name><value>org.apache.hadoop.io.serializer.WritableSerialization</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.webapp.https.address</name><value>${yarn.timeline-service.hostname}:8190</value><source>yarn-default.xml</source></property>
+<property><name>fs.df.interval</name><value>60000</value><source>core-default.xml</source></property>
+<property><name>mapreduce.reduce.shuffle.input.buffer.percent</name><value>0.70</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage</name><value>100.0</value><source>yarn-default.xml</source></property>
+<property><name>io.seqfile.compress.blocksize</name><value>1000000</value><source>core-default.xml</source></property>
+<property><name>ipc.client.connect.max.retries</name><value>10</value><source>core-default.xml</source></property>
+<property><name>hadoop.security.groups.cache.secs</name><value>300</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.process-kill-wait.ms</name><value>2000</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.vmem-check-enabled</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>yarn.app.mapreduce.client.max-retries</name><value>3</value><source>mapred-default.xml</source></property>
+<property><name>yarn.timeline-service.generic-application-history.fs-history-store.uri</name><value>${hadoop.tmp.dir}/yarn/timeline/generic-history</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.log-aggregation.compression-type</name><value>none</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.security.group.mapping.ldap.search.filter.user</name><value>(&amp;(objectClass=user)(sAMAccountName={0}))</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.localizer.cache.cleanup.interval-ms</name><value>600000</value><source>yarn-default.xml</source></property>
+<property><name>mapr.host</name><value>maprdemo</value></property>
+<property><name>yarn.nodemanager.log-dirs</name><value>${yarn.log.dir}/userlogs</value><source>yarn-default.xml</source></property>
+<property><name>fs.s3n.multipart.copy.block.size</name><value>5368709120</value><source>core-default.xml</source></property>
+<property><name>fs.s3n.block.size</name><value>33554432</value><source>core-default.xml</source></property>
+<property><name>fs.ftp.host</name><value>0.0.0.0</value><source>core-default.xml</source></property>
+<property><name>hadoop.security.group.mapping</name><value>org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback</value><source>core-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.resource.cpu-vcores</name><value>1</value><source>mapred-default.xml</source></property>
+<property><name>mapr.mapred.localvolume.root.dir.name</name><value>nodeManager</value></property>
+<property><name>yarn.client.failover-proxy-provider</name><value>org.apache.hadoop.yarn.client.MapRZKBasedRMFailoverProxyProvider</value><source>yarn-site.xml</source></property>
+<property><name>mapreduce.jobhistory.cleaner.enable</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.map.skip.maxrecords</name><value>0</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.external.token.localizer</name><value>com.mapr.hadoop.yarn.nodemanager.MapRTicketLocalizer</value></property>
+<property><name>yarn.scheduler.minimum-allocation-vcores</name><value>1</value><source>yarn-default.xml</source></property>
+<property><name>fs.s3.impl</name><value>org.apache.hadoop.fs.s3native.NativeS3FileSystem</value></property>
+<property><name>file.replication</name><value>1</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.configuration.provider-class</name><value>org.apache.hadoop.yarn.LocalConfigurationProvider</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.resource-tracker.address</name><value>${yarn.resourcemanager.hostname}:8031</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.aux-services.HSVolumeManager.class</name><value>com.mapr.hadoop.yarn.resourcemanager.RMVolumeManager</value></property>
+<property><name>yarn.resourcemanager.work-preserving-recovery.enabled</name><value>false</value><source>yarn-default.xml</source></property>
+<property><name>yarn.resourcemanager.history-writer.multi-threaded-dispatcher.pool-size</name><value>10</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.security.java.security.login.config.jar.path</name><value>/mapr.login.conf</value></property>
+<property><name>mapreduce.jobtracker.restart.recover</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.work.around.non.threadsafe.getpwuid</name><value>false</value><source>core-default.xml</source></property>
+<property><name>mapreduce.tasktracker.indexcache.mb</name><value>10</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.output.fileoutputformat.compress</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.tmp.dir</name><value>/tmp/hadoop-${user.name}</value><source>core-default.xml</source></property>
+<property><name>yarn.nodemanager.resource.cpu-vcores</name><value>${nodemanager.resource.cpu-vcores}</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.kerberos.kinit.command</name><value>kinit</value><source>core-default.xml</source></property>
+<property><name>mapreduce.job.committer.setup.cleanup.needed</name><value>true</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.task.profile.reduces</name><value>0-2</value><source>mapred-default.xml</source></property>
+<property><name>file.bytes-per-checksum</name><value>512</value><source>core-default.xml</source></property>
+<property><name>mapr.mapred.localvolume.root.dir.path</name><value>${mapr.mapred.localvolume.mount.path}/${mapr.mapred.localvolume.root.dir.name}</value></property>
+<property><name>mapreduce.jobtracker.handler.count</name><value>10</value><source>mapred-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.job.committer.commit-window</name><value>10000</value><source>mapred-default.xml</source></property>
+<property><name>net.topology.script.number.args</name><value>100</value><source>core-default.xml</source></property>
+<property><name>mapreduce.task.profile.maps</name><value>0-2</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.webapp.address</name><value>${yarn.resourcemanager.hostname}:8088</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.jobtracker.system.dir</name><value>${hadoop.tmp.dir}/mapred/system</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.vmem-pmem-ratio</name><value>2.1</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.ssl.hostname.verifier</name><value>DEFAULT</value><source>core-default.xml</source></property>
+<property><name>yarn.timeline-service.generic-application-history.store-class</name><value>org.apache.hadoop.yarn.server.applicationhistoryservice.FileSystemApplicationHistoryStore</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.hostname</name><value>0.0.0.0</value><source>yarn-default.xml</source></property>
+<property><name>ipc.client.connect.timeout</name><value>20000</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobhistory.principal</name><value>jhs/_HOST@REALM.TLD</value><source>mapred-default.xml</source></property>
+<property><name>io.mapfile.bloom.error.rate</name><value>0.005</value><source>core-default.xml</source></property>
+<property><name>yarn.mapr.ticket.expiration</name><value>604800000</value></property>
+<property><name>mapreduce.shuffle.ssl.file.buffer.size</name><value>65536</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.aux-services.mapr_direct_shuffle.class</name><value>com.mapr.hadoop.mapred.LocalVolumeAuxService</value></property>
+<property><name>io.sort.record.percent</name><value>0.17</value></property>
+<property><name>mapreduce.jobtracker.expire.trackers.interval</name><value>600000</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.cluster.acls.enabled</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>yarn.nodemanager.remote-app-log-dir-suffix</name><value>logs</value><source>yarn-default.xml</source></property>
+<property><name>ha.failover-controller.graceful-fence.connection.retries</name><value>1</value><source>core-default.xml</source></property>
+<property><name>yarn.client.failover-retries-on-socket-timeouts</name><value>0</value><source>yarn-default.xml</source></property>
+<property><name>ha.health-monitor.connect-retry-interval.ms</name><value>1000</value><source>core-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.resource.mb</name><value>1536</value><source>mapred-default.xml</source></property>
+<property><name>io.seqfile.local.dir</name><value>${hadoop.tmp.dir}/io/local</value><source>core-default.xml</source></property>
+<property><name>mapreduce.reduce.shuffle.merge.percent</name><value>0.66</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.nm.liveness-monitor.interval-ms</name><value>1000</value><source>yarn-default.xml</source></property>
+<property><name>tfile.io.chunk.size</name><value>1048576</value><source>core-default.xml</source></property>
+<property><name>file.blocksize</name><value>67108864</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobtracker.jobhistory.lru.cache.size</name><value>5</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobtracker.maxtasks.perjob</name><value>-1</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.nodemanager.minimum.version</name><value>NONE</value><source>yarn-default.xml</source></property>
+<property><name>yarn.nodemanager.webapp.address</name><value>${yarn.nodemanager.hostname}:8042</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.job.acl-modify-job</name><value> </value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.am.max-attempts</name><value>2</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.tasktracker.reduce.tasks.maximum</name><value>2</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.cluster.temp.dir</name><value>${hadoop.tmp.dir}/mapred/temp</value><source>mapred-default.xml</source></property>
+<property><name>io.skip.checksum.errors</name><value>false</value><source>core-default.xml</source></property>
+<property><name>mapreduce.jobhistory.joblist.cache.size</name><value>20000</value><source>mapred-default.xml</source></property>
+<property><name>yarn.app.mapreduce.am.staging-dir</name><value>${fs.defaultFS}/var/mapr/cluster/yarn/rm/staging</value><source>mapred-default.xml</source></property>
+<property><name>mapreduce.jobhistory.recovery.enable</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>hadoop.http.authentication.signature.secret</name><value>com.mapr.security.maprauth.MaprSignatureSecretFactory</value></property>
+<property><name>yarn.resourcemanager.zk-timeout-ms</name><value>10000</value><source>yarn-default.xml</source></property>
+<property><name>fs.ftp.host.port</name><value>21</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.admin.client.thread-count</name><value>1</value><source>yarn-default.xml</source></property>
+<property><name>dfs.namenode.checkpoint.period</name><value>3600</value></property>
+<property><name>fs.AbstractFileSystem.viewfs.impl</name><value>org.apache.hadoop.fs.viewfs.ViewFs</value><source>core-default.xml</source></property>
+<property><name>yarn.resourcemanager.resource-tracker.client.thread-count</name><value>50</value><source>yarn-default.xml</source></property>
+<property><name>yarn.timeline-service.leveldb-timeline-store.ttl-interval-ms</name><value>300000</value><source>yarn-default.xml</source></property>
+<property><name>mapreduce.tasktracker.dns.nameserver</name><value>default</value><source>mapred-default.xml</source></property>
+<property><name>yarn.resourcemanager.system</name><value>/var/mapr/cluster/yarn/rm/system</value></property>
+<property><name>ipc.client.fallback-to-simple-auth-allowed</name><value>false</value><source>core-default.xml</source></property>
+<property><name>mapreduce.map.output.compress</name><value>false</value><source>mapred-default.xml</source></property>
+<property><name>fs.webhdfs.impl</name><value>org.apache.hadoop.hdfs.web.WebHdfsFileSystem</value></property>
+<property><name>yarn.nodemanager.delete.debug-delay-sec</name><value>0</value><source>yarn-default.xml</source></property>
+<property><name>hadoop.ssl.require.client.cert</name><value>false</value><source>core-default.xml</source></property>
+</configuration>
+
+
+
+
+
+
+
+

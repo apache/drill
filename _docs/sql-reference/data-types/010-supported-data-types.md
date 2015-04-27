@@ -81,7 +81,6 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <td valign="top">CHAR(30) casts data to a 30-character string maximum.</td>
   </tr>
 </table>
-
 \* Not currently supported.  
 \*\* Currently, Drill supports only variable-length strings. 
 +  
