@@ -699,7 +699,7 @@
                     "parent": "Configuration Options", 
                     "previous_title": "Configuration Options Introduction", 
                     "previous_url": "/docs/configuration-options-introduction/", 
-                    "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                    "relative_path": "_docs/manage-drill/configuration-options/020-configuring-a-cluster-for-different-workloads.md", 
                     "title": "Configuring a Cluster for Different Workloads", 
                     "url": "/docs/configuring-a-cluster-for-different-workloads/"
                 }, 
@@ -856,7 +856,7 @@
             "parent": "Configuration Options", 
             "previous_title": "Configuration Options Introduction", 
             "previous_url": "/docs/configuration-options-introduction/", 
-            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+            "relative_path": "_docs/manage-drill/configuration-options/020-configuring-a-cluster-for-different-workloads.md", 
             "title": "Configuring a Cluster for Different Workloads", 
             "url": "/docs/configuring-a-cluster-for-different-workloads/"
         }, 
@@ -3356,7 +3356,7 @@
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options Introduction", 
                             "previous_url": "/docs/configuration-options-introduction/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                            "relative_path": "_docs/manage-drill/configuration-options/020-configuring-a-cluster-for-different-workloads.md", 
                             "title": "Configuring a Cluster for Different Workloads", 
                             "url": "/docs/configuring-a-cluster-for-different-workloads/"
                         }, 
@@ -10610,7 +10610,7 @@
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options Introduction", 
                             "previous_url": "/docs/configuration-options-introduction/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                            "relative_path": "_docs/manage-drill/configuration-options/020-configuring-a-cluster-for-different-workloads.md", 
                             "title": "Configuring a Cluster for Different Workloads", 
                             "url": "/docs/configuring-a-cluster-for-different-workloads/"
                         }, 
