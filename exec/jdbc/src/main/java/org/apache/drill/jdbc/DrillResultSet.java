@@ -108,7 +108,7 @@ public interface DrillResultSet extends ResultSet  {
    * </ul>
    * <p>
    *   Conversion throws {@link SQLConversionOverflowException} for a source
-   *   value whose magnitude is outside the range of {@code short} values.
+   *   value whose magnitude is outside the range of {@code byte} values.
    * </p>
    * @throws  SQLConversionOverflowException  if a source value was too large
    *   to convert
@@ -135,7 +135,7 @@ public interface DrillResultSet extends ResultSet  {
    * </ul>
    * <p>
    *   Conversion throws {@link SQLConversionOverflowException} for a source
-   *   value whose magnitude is outside the range of {@code int} values.
+   *   value whose magnitude is outside the range of {@code short} values.
    * </p>
    * @throws  SQLConversionOverflowException  if a source value was too large
    *   to convert

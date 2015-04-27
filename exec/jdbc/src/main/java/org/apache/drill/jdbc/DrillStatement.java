@@ -55,7 +55,7 @@ public abstract class DrillStatement extends AvaticaStatement
   }
 
   @Override
-  public ResultSet  executeQuery( String sql ) throws SQLException {
+  public ResultSet executeQuery( String sql ) throws SQLException {
     checkNotClosed();
     return super.executeQuery( sql );
   }

@@ -44,6 +44,7 @@ import org.apache.drill.jdbc.DrillConnection;
 import org.apache.drill.jdbc.DrillConnectionImpl;
 import org.apache.drill.jdbc.DrillCursor;
 import org.apache.drill.jdbc.DrillResultSet;
+import org.apache.drill.jdbc.ExecutionCanceledSqlException;
 import org.apache.drill.jdbc.SchemaChangeListener;
 
 import com.google.common.collect.Queues;
@@ -67,6 +68,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   public final RecordBatchLoader currentBatch;
   // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
   public final DrillCursor cursor;
+  public boolean hasPendingCancelationNotification;
 
   public DrillResultSetImpl(AvaticaStatement statement, AvaticaPrepareResult prepareResult,
       ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
@@ -80,14 +82,25 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   }
 
   /**
-   * Throws AlreadyClosedSqlException if this ResultSet is closed.
+   * Throws AlreadyClosedSqlException or QueryCanceledSqlException if this
+   * ResultSet is closed.
    *
-   * @throws AlreadyClosedSqlException if ResultSet is closed
+   * @throws  ExecutionCanceledSqlException  if ResultSet is closed because of
+   *          cancelation and no QueryCanceledSqlException had been thrown yet
+   *          for this ResultSet
+   * @throws  AlreadyClosedSqlException  if ResultSet is closed
    * @throws SQLException if error in calling {@link #isClosed()}
    */
   private void checkNotClosed() throws SQLException {
     if ( isClosed() ) {
-      throw new AlreadyClosedSqlException( "ResultSet is already closed." );
+      if ( hasPendingCancelationNotification ) {
+        hasPendingCancelationNotification = false;
+        throw new ExecutionCanceledSqlException(
+            "SQL statement execution canceled; resultSet closed." );
+      }
+      else {
+        throw new AlreadyClosedSqlException( "ResultSet is already closed." );
+      }
     }
   }
 
@@ -100,6 +113,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
 
   @Override
   protected void cancel() {
+    hasPendingCancelationNotification = true;
     cleanup();
     close();
   }
@@ -128,8 +142,6 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
 
   @Override
   protected DrillResultSetImpl execute() throws SQLException{
-    checkNotClosed();
-    // Call driver's callback. It is permitted to throw a RuntimeException.
     DrillConnectionImpl connection = (DrillConnectionImpl) statement.getConnection();
 
     connection.getClient().runQuery(QueryType.SQL, this.prepareResult.getSql(),
