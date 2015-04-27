@@ -17,7 +17,7 @@ Warden allocates resources for MapR Hadoop services, such as Zookeeper or NFS, a
 MapR shares memory and disk among services, such as Drill and Impala, that are not associated with roles on the cluster. You manage the memory for these services in multiple files:
 
 * The os heap settings in `warden.conf`
-* Configuration files of the particular service, such as [Drill](#drill-memory-configuration), [Impala](#impala-memory-configuation), and [JobTracker](#jobtracker-memory-configuration) configuration files
+* Configuration files of the particular service, such as [Drill](#drill-memory-configuration), [Impala](#impala-memory-configuration), and [JobTracker](#jobtracker-memory-configuration) configuration files
 
 The names of os heap settings are:
 
