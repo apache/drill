@@ -85,7 +85,7 @@ Build drill client
 Test
 ----
 Run query submitter from the command line
-    $> querySubmitter query='select * from dfs.`/Users/pchandra/work/data/tpc-h/customer.parquet`' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace
+    $> querySubmitter query='select * from dfs.`/Users/pchandra/work/data/tpc-h/customer.parquet`' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace user=yourUserName password=yourPassWord
 
 Valgrind
 --------
