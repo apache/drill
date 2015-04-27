@@ -68,7 +68,8 @@ public class ResultSetGetMethodConversionsTest extends JdbcTest {
   public static void setUpConnectionAndMetadataToCheck() throws SQLException {
     // Get JDBC connection to Drill:
     // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
-    // connection on test method failure, but we use ResultSet across methods.)
+    // Connection--and other JDBC objects--on test method failure, but this test
+    // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", null );
 
     // Set up result row with values of various types.

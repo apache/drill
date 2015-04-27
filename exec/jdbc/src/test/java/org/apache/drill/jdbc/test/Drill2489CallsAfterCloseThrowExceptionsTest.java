@@ -77,7 +77,9 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTest {
 
   @BeforeClass
   public static void setUpConnection() throws Exception {
-    final Connection connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+    // (Note: Can't use JdbcTest's connect(...) for this test class.)
+    final Connection connection =
+        new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
     final Statement stmt = connection.createStatement();
     final ResultSet result =
         stmt.executeQuery( "SELECT * FROM INFORMATION_SCHEMA.CATALOGS" );

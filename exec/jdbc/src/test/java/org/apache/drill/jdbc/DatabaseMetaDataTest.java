@@ -22,12 +22,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
+
 import org.apache.drill.jdbc.Driver;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
 
 import static java.sql.Connection.*;
 import java.sql.Connection;
@@ -47,6 +47,9 @@ public class DatabaseMetaDataTest {
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
+    // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
+    // Connection--and other JDBC objects--on test method failure, but this test
+    // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", null );
   }
 

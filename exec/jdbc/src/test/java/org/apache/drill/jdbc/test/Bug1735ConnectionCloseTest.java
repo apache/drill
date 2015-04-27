@@ -77,7 +77,8 @@ public class Bug1735ConnectionCloseTest extends JdbcTestQueryBase {
     for ( int i = 1; i <= SMALL_ITERATION_COUNT; i++ ) {
       logger.info( "iteration " + i + ":" );
       System.out.println( "iteration " + i + ":" );
-      Connection connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+      Connection connection = new Driver().connect( "jdbc:drill:zk=local",
+                                                     JdbcAssert.getDefaultProperties() );
       connection.close();
     }
   }
@@ -94,7 +95,11 @@ public class Bug1735ConnectionCloseTest extends JdbcTestQueryBase {
     for ( int i = 1; i <= LARGE_ITERATION_COUNT; i++ ) {
       logger.info( "iteration " + i + ":" );
       System.out.println( "iteration " + i + ":" );
-      Connection connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+
+      // (Note: Can't use JdbcTest's connect(...) because it returns connection
+      // that doesn't really close.
+      Connection connection = new Driver().connect( "jdbc:drill:zk=local",
+                                                    JdbcAssert.getDefaultProperties() );
       connection.close();
     }
   }

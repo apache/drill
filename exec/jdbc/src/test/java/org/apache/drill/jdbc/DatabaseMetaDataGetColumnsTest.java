@@ -169,6 +169,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTest {
   public static void setUpConnectionAndMetadataToCheck() throws Exception {
 
     // Get JDBC connection to Drill:
+    // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
+    // Connection--and other JDBC objects--on test method failure, but this test
+    // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties());
     dbMetadata = connection.getMetaData();
     Statement stmt = connection.createStatement();

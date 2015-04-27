@@ -17,6 +17,8 @@
  */
 package org.apache.drill.jdbc;
 
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -25,15 +27,21 @@ import java.sql.Statement;
 import java.util.Properties;
 
 import com.google.common.base.Strings;
+
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.jdbc.test.JdbcAssert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
+// TODO:  Document this, especially what writers of unit tests need to know
+//   (e.g., the reusing of connections, the automatic interception of test
+//   failures and resetting of connections, etc.).
 public class JdbcTest extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTest.class);
 
@@ -130,4 +138,18 @@ public class JdbcTest extends ExecTest {
   public static void tearDownTestCase() throws Exception {
     factory.closeConnections();
   }
+
+  /**
+   * Test of whether tests that get connection from JdbcTest.connect(...)
+   * work with resetting of connections.  If enabling this (failing) test method
+   * causes other test methods to fail, something needs to be fixed.
+   * (Note:  Not a guaranteed test--depends on order in which test methods are
+   * run.)
+   */
+  @Ignore( "Usually disabled; enable temporarily to check tests" )
+  @Test
+  public void testJdbcTestConnectionResettingCompatibility() {
+    fail( "Intentional failure--did other test methods still run?" );
+  }
+
 }

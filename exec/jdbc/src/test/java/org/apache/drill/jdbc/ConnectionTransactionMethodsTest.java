@@ -41,6 +41,9 @@ public class ConnectionTransactionMethodsTest {
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
+    // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
+    // Connection--and other JDBC objects--on test method failure, but this test
+    // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", null );
   }
 
