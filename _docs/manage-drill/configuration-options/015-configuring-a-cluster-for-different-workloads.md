@@ -2,7 +2,7 @@
 title: "Configuring a Cluster for Different Workloads"
 parent: "Configuration Options"
 ---
-In this release of Drill, to configure a Drill cluster for different workloads, you re-allocate memory resources only. Warden allocates resources for MapR Hadoop services associated with roles that are installed on the node. For example, warden allocates memory MapR Hadoop services, such as Zookeeper or NFS. You modify warden.conf to manage the memory allocation. For example:
+In this release of Drill, to configure a Drill cluster for different workloads, you re-allocate memory resources only. Warden allocates resources for MapR Hadoop services associated with roles that are installed on the node. For example, warden allocates memory MapR Hadoop services, such as Zookeeper or NFS. You modify `warden.conf` to manage the memory allocation. For example:
 
     service.command.nfs.heapsize.percent=3
     service.command.nfs.heapsize.min=64
