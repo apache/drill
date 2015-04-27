@@ -24,6 +24,10 @@ Memory and disk for Drill and other services that are not associated with roles 
 
 Memory allocated for JobTracker in the warden.conf is used only to calculate total memory required for services to run. The -Xmx JobTracker itself is not set, allowing memory on JobTracker to grow as needed. If you want to set an upper limit on memory, set the HADOOP_HEAPSIZE env. variable in `/opt/mapr/hadoop/hadoop-0.20.2/conf/hadoop-env.sh`.
 
+## Sharing MapReduce, Hive, and Drill Resources
+
+TBD
+
 ## Allocating Memory for Drill
 You can configure the amount of direct memory allocated to a Drillbit for
 query processing. The default limit is 8G, but Drill prefers 16G or more
@@ -51,3 +55,4 @@ the Drillbit
 ]({{ site.baseurl }}/docs/starting-stopping-drill#starting-a-drillbit)on
 the node.
 
+## CPU Considerations
