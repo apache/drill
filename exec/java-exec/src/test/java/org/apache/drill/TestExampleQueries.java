@@ -284,6 +284,7 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
+  @Ignore("DRILL-3004")
   public void testJoin() throws Exception{
     test("alter session set `planner.enable_hashjoin` = false");
     test("SELECT\n" +

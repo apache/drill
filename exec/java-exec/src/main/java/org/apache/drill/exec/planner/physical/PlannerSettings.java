@@ -33,6 +33,7 @@ public class PlannerSettings implements Context{
 
   private int numEndPoints = 0;
   private boolean useDefaultCosting = false; // True: use default Optiq costing, False: use Drill costing
+  private boolean forceSingleMode;
 
   public static final int MAX_BROADCAST_THRESHOLD = Integer.MAX_VALUE;
   public static final int DEFAULT_IDENTIFIER_MAX_LENGTH = 1024;
@@ -81,7 +82,11 @@ public class PlannerSettings implements Context{
   }
 
   public boolean isSingleMode() {
-    return options.getOption(EXCHANGE.getOptionName()).bool_val;
+    return forceSingleMode || options.getOption(EXCHANGE.getOptionName()).bool_val;
+  }
+
+  public void forceSingleMode() {
+    forceSingleMode = true;
   }
 
   public int numEndPoints() {
