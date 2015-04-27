@@ -12,7 +12,12 @@ In this release of Drill, to configure a Drill cluster for different workloads, 
     service.command.zk.heapsize.max=1500
     service.command.zk.heapsize.min=256
 
-Memory and disk for Drill, Impala, and other services that are not associated with roles on a MapR cluster are shared with other services. You manage the chunk of memory for these services in os heap settings in `warden.conf` and in configuration files of the particular service. The warden os heap settings are:
+Memory and disk for Drill, Impala, and other services that are not associated with roles on a MapR cluster are shared with other services. You manage the memory for these services in multiple files:
+
+* The os heap settings in `warden.conf`
+* Configuration files of the particular service, such as [Drill](#drill-memory-configuration), [Impala](#impala-memory-configuation), and [#jobtracker-memory-configuration] configuration files
+
+The warden os heap settings are:
 
     service.command.os.heapsize.percent
     service.command.os.heapsize.max
@@ -20,7 +25,7 @@ Memory and disk for Drill, Impala, and other services that are not associated wi
 
 To re-allocate memory for services, establish baselines for performance testing, make changes in small increments, test and compare the effects of the change. 
 
-## Allocating Memory for Drill
+## Drill Memory Configuration
 You can configure the amount of direct memory allocated to a Drillbit for
 query processing. The default limit is 8G, but Drill prefers 16G or more
 depending on the workload. The total amount of direct memory that a Drillbit
@@ -31,7 +36,7 @@ operations in memory instead of storing the operations on disk. Drill does not
 write to disk unless absolutely necessary, unlike MapReduce where everything
 is written to disk during each phase of a job.
 
-The JVM’s heap memory does not limit the amount of direct memory available in
+The JVM heap memory does not limit the amount of direct memory available in
 a Drillbit. The on-heap memory for Drill is only about 4-8G, which should
 suffice because Drill avoids having data sit in heap memory.
 
@@ -47,10 +52,10 @@ the Drillbit
 ]({{ site.baseurl }}/docs/starting-stopping-drill#starting-a-drillbit)on
 the node.
 
-## Allocating Memory for Impala
+## Impala Memory Configuration
 
 The configuration service for the Impala service is in the Impala env.sh file.
 
-## Allocating Memory for JobTracker
+## JobTracker Memory Configuration
 
-Memory allocated for JobTracker in the warden.conf is used only to calculate total memory required for services to run. The -Xmx JobTracker itself is not set, allowing memory on JobTracker to grow as needed. If you want to set an upper limit on memory, set the HADOOP_HEAPSIZE env. variable in `/opt/mapr/hadoop/hadoop-0.20.2/conf/hadoop-env.sh`.
+Memory allocated for JobTracker in `warden.conf` is used only to calculate total memory required for services to run. The -Xmx JobTracker itself is not set, allowing memory on JobTracker to grow as needed. If you want to set an upper limit on memory, set the HADOOP_HEAPSIZE env. variable in `/opt/mapr/hadoop/hadoop-0.20.2/conf/hadoop-env.sh`.
