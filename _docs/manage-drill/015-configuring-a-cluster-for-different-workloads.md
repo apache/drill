@@ -2,7 +2,7 @@
 title: "Configuring a Cluster for Different Workloads"
 parent: "Manage Drill"
 ---
-In this release of Drill, to configure a Drill cluster for different workloads, you re-allocate memory resources only. Warden allocates resources for MapR Hadoop services associated with roles that are installed on the node. For example, warden allocates memory MapR Hadoop services, such as Zookeeper or NFS. You modify warden.conf to manage the memory allocation. For example:
+In this release of Drill, to configure a Drill cluster for different workloads, you re-allocate memory resources only. Warden allocates resources for MapR Hadoop services associated with roles that are installed on the node. For example, warden allocates memory for MapR Hadoop services, such as Zookeeper and NFS. You modify `warden.conf` to manage memory allocation. For example, you re-allocate memory for the following services by modifying these settings: 
 
     service.command.nfs.heapsize.percent=3
     service.command.nfs.heapsize.min=64
@@ -12,17 +12,13 @@ In this release of Drill, to configure a Drill cluster for different workloads, 
     service.command.zk.heapsize.max=1500
     service.command.zk.heapsize.min=256
 
-Memory and disk for Drill, Impala, and other services that are not associated with roles on a MapR cluster are shared with other services. You manage the chunk of memory for these services in os heap settings in `warden.conf` and in configuration files of the particular service. The warden os heap settings are:
+First, establish baselines for performance testing. Next, make changes to memory allocation properties in small increments. Finally, test and compare the effects of the change.
+
+Memory and disk for Drill and other services that are not associated with roles on a MapR cluster are shared with other services. You manage the chunk of memory for these services in os heap settings in `warden.conf` and in configuration files of the particular service. The warden os heap settings are:
 
     service.command.os.heapsize.percent
     service.command.os.heapsize.max
     service.command.os.heapsize.min
-
-To re-allocate memory for services, establish baselines for performance testing, make changes in small increments, test and compare the effects of the change. 
-
-## Allocating Memory for Impala
-
-The configuration service for the Impala service is in the Impala env.sh file.
 
 ## Allocating Memory for JobTracker
 
