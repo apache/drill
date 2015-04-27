@@ -2,7 +2,9 @@
 title: "Configuring a Cluster for Different Workloads"
 parent: "Configuration Options"
 ---
-In this release of Drill, to configure a Drill cluster for different workloads, you re-allocate memory resources only. Warden allocates resources for MapR Hadoop services, such as Zookeeper or NFS, associated with roles installed on the node. You modify `warden.conf` to manage the memory allocation. For example:
+In this release of Drill, to configure a Drill cluster for different workloads, you re-allocate memory resources only. To re-allocate memory for services, establish baselines for performance testing, make changes in small increments, test and compare the effects of the change. 
+
+Warden allocates resources for MapR Hadoop services, such as Zookeeper or NFS, associated with roles installed on the node. You modify `warden.conf` to manage the memory allocation. For example, you might modify these default settings:
 
     service.command.nfs.heapsize.percent=3
     service.command.nfs.heapsize.min=64
@@ -12,18 +14,16 @@ In this release of Drill, to configure a Drill cluster for different workloads, 
     service.command.zk.heapsize.max=1500
     service.command.zk.heapsize.min=256
 
-Memory and disk for Drill, Impala, and other services that are not associated with roles on a MapR cluster are shared with other services. You manage the memory for these services in multiple files:
+MapR shares memory and disk among services, such as Drill and Impala that are not associated with roles on the cluster. You manage the memory for these services in multiple files:
 
 * The os heap settings in `warden.conf`
 * Configuration files of the particular service, such as [Drill](#drill-memory-configuration), [Impala](#impala-memory-configuation), and [#jobtracker-memory-configuration] configuration files
 
-The warden os heap settings are:
+The names of os heap settings are:
 
     service.command.os.heapsize.percent
     service.command.os.heapsize.max
     service.command.os.heapsize.min
-
-To re-allocate memory for services, establish baselines for performance testing, make changes in small increments, test and compare the effects of the change. 
 
 ## Drill Memory Configuration
 You can configure the amount of direct memory allocated to a Drillbit for
