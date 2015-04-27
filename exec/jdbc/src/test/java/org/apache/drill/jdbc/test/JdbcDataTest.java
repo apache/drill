@@ -35,7 +35,7 @@ import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
-import org.apache.drill.jdbc.JdbcTest;
+import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.jdbc.test.JdbcAssert.TestDataConnection;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.junit.Assert;
@@ -53,7 +53,7 @@ import com.google.common.io.Resources;
 
 
 @Ignore // ignore for now.
-public class JdbcDataTest extends JdbcTest{
+public class JdbcDataTest extends JdbcTestBase {
   private static String MODEL;
   private static String EXPECTED;
 

@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import com.google.common.base.Function;
 
-public class TestJdbcQuery extends JdbcTestQueryBase{
+public class TestJdbcQuery extends JdbcTestQueryBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
   // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment race

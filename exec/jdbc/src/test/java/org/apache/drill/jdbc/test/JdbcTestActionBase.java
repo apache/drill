@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
+import org.apache.drill.jdbc.JdbcTestBase;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -40,7 +40,7 @@ import org.junit.runner.Description;
 
 import com.google.common.base.Stopwatch;
 
-public class JdbcTestActionBase extends JdbcTest {
+public class JdbcTestActionBase extends JdbcTestBase {
   // Set a timeout unless we're debugging.
   @Rule
   public TestRule TIMEOUT = TestTools.getTimeoutRule(40000);

@@ -49,7 +49,7 @@ public class SingleConnectionCachingFactory implements CachingConnectionFactory 
     if (connection == null) {
       connection = delegate.getConnection(info);
     } else {
-      JdbcTest.changeSchemaIfSupplied(connection, info.getParamsAsProperties());
+      JdbcTestBase.changeSchemaIfSupplied(connection, info.getParamsAsProperties());
     }
     return new NonClosableConnection(connection);
   }

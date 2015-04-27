@@ -21,12 +21,12 @@ import java.nio.file.Paths;
 import java.sql.Date;
 
 import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
+import org.apache.drill.jdbc.JdbcTestBase;
 import org.joda.time.chrono.ISOChronology;
 import org.junit.Test;
 
 
-public class TestAggregateFunctionsQuery extends JdbcTest {
+public class TestAggregateFunctionsQuery extends JdbcTestBase {
 
   public static final String WORKING_PATH;
   static{

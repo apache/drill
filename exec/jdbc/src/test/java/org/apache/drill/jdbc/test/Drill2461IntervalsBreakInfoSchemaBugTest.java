@@ -23,7 +23,7 @@ import static org.hamcrest.CoreMatchers.*;
 
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
+import org.apache.drill.jdbc.JdbcTestBase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -37,7 +37,7 @@ import java.sql.Statement;
 import java.sql.SQLException;
 
 
-public class Drill2461IntervalsBreakInfoSchemaBugTest extends JdbcTest {
+public class Drill2461IntervalsBreakInfoSchemaBugTest extends JdbcTestBase {
 
   private static final String VIEW_NAME =
       Drill2461IntervalsBreakInfoSchemaBugTest.class.getSimpleName() + "_View";

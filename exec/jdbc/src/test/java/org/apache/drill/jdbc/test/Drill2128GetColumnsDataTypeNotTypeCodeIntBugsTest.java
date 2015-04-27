@@ -36,14 +36,14 @@ import java.sql.Types;
 
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
+import org.apache.drill.jdbc.JdbcTestBase;
 
 
 /**
  * Basic (spot-check/incomplete) tests for DRILL-2128 bugs (many
  * DatabaseMetaData.getColumns(...) result table problems).
  */
-public class Drill2128GetColumnsDataTypeNotTypeCodeIntBugsTest extends JdbcTest {
+public class Drill2128GetColumnsDataTypeNotTypeCodeIntBugsTest extends JdbcTestBase {
 
   private static Connection connection;
   private static DatabaseMetaData dbMetadata;

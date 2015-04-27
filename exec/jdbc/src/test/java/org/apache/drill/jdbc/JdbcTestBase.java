@@ -42,8 +42,8 @@ import org.junit.runner.Description;
 // TODO:  Document this, especially what writers of unit tests need to know
 //   (e.g., the reusing of connections, the automatic interception of test
 //   failures and resetting of connections, etc.).
-public class JdbcTest extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTest.class);
+public class JdbcTestBase extends ExecTest {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestBase.class);
 
   @Rule
   public final TestRule watcher = new TestWatcher() {

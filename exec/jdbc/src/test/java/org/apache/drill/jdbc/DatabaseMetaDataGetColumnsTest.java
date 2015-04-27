@@ -78,7 +78,7 @@ import java.sql.Types;
  *   Based on JDBC 4.1 (Java 7).
  * </p>
  */
-public class DatabaseMetaDataGetColumnsTest extends JdbcTest {
+public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   private static final String VIEW_NAME =
       DatabaseMetaDataGetColumnsTest.class.getSimpleName() + "_View";

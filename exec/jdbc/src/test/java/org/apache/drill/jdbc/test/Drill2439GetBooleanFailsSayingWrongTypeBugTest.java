@@ -26,7 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
+import org.apache.drill.jdbc.JdbcTestBase;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -34,7 +34,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 
-public class Drill2439GetBooleanFailsSayingWrongTypeBugTest extends JdbcTest {
+public class Drill2439GetBooleanFailsSayingWrongTypeBugTest extends JdbcTestBase {
 
   private static Connection connection;
   private static Statement statement;

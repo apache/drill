@@ -59,7 +59,7 @@ import java.sql.Statement;
  *   {@link org.apache.drill.jdbc.impl.TypeConvertingAccessor}).
  * </p>
  */
-public class ResultSetGetMethodConversionsTest extends JdbcTest {
+public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
 
   private static Connection connection;
   private static ResultSet testDataRow;
