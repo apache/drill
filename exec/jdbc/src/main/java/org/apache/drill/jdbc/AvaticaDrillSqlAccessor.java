@@ -58,13 +58,18 @@ public class AvaticaDrillSqlAccessor implements Accessor {
   }
 
   private int getCurrentRecordNumber() throws SQLException {
-    if ( cursor.getResultSet().isBeforeFirst() ) {
-      throw new InvalidCursorStateSqlException(
-          "Result set cursor is positioned before all rows.  Call next() first." );
-    }
-    else if ( cursor.getResultSet().isAfterLast() ) {
+    // WORKAROUND:  isBeforeFirst can't be called first here because AvaticaResultSet
+    // .next() doesn't increment its row field when cursor.next() returns false,
+    // so in that case row can be left at -1, so isBeforeFirst() returns true
+    // even though we're not longer before the empty set of rows--and it's all
+    // private, so we can't get to it to override any of several candidates.
+    if ( cursor.getResultSet().isAfterLast() ) {
       throw new InvalidCursorStateSqlException(
           "Result set cursor is already positioned past all rows." );
+    }
+    else if ( cursor.getResultSet().isBeforeFirst() ) {
+      throw new InvalidCursorStateSqlException(
+          "Result set cursor is positioned before all rows.  Call next() first." );
     }
     else {
       return cursor.getCurrentRecordNumber();

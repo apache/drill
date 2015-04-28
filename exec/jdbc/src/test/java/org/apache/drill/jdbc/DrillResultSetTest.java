@@ -106,7 +106,7 @@ public class DrillResultSetTest extends DrillTest {
     // Main check:  That row data access methods now throw SQLException.
     try {
       resultSet.getInt( 1 );
-      fail( "Did get expected SQLException." );
+      fail( "Didn't get expected SQLException." );
     }
     catch ( SQLException e ) {
       // Expect something like current InvalidCursorStateSqlException saying
@@ -139,13 +139,14 @@ public class DrillResultSetTest extends DrillTest {
     // Main check:  That row data access methods throw SQLException.
     try {
       resultSet.getString( 1 );
-      fail( "Did get expected SQLException." );
+      fail( "Didn't get expected SQLException." );
     }
     catch ( SQLException e ) {
       // Expect something like current InvalidRowSQLException saying
-      // "Result set cursor is still before all rows.  Call next() first."
+      // "Result set cursor is already positioned past all rows."
       assertThat( e, instanceOf( InvalidCursorStateSqlException.class ) );
-      assertThat( e.toString(), containsString( "before" ) );
+      assertThat( e.toString(), containsString( "past" ) );
+      assertThat( e.toString(), containsString( "rows" ) );
     }
     // (Any non-SQLException exception is unexpected result.)
 
