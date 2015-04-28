@@ -64,14 +64,14 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
   }
 
   public MapWriter map(String name){
-    FieldWriter writer = fields.get(name);
+    FieldWriter writer = fields.get(name.toLowerCase());
     if(writer == null){
       int vectorCount = container.size();
       MapVector vector = container.addOrGet(name, MapVector.TYPE, MapVector.class);
       writer = new SingleMapWriter(vector, this);
       if(vectorCount != container.size()) writer.allocate();
       writer.setPosition(${index});
-      fields.put(name, writer);
+      fields.put(name.toLowerCase(), writer);
     }
     return writer;
   }
@@ -91,11 +91,11 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
   }
   
   public ListWriter list(String name){
-    FieldWriter writer = fields.get(name);
+    FieldWriter writer = fields.get(name.toLowerCase());
     if(writer == null){
       writer = new SingleListWriter(name, container, this);
       writer.setPosition(${index});
-      fields.put(name, writer);
+      fields.put(name.toLowerCase(), writer);
     }
     return writer;
   }
@@ -159,7 +159,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
   <#if minor.class?starts_with("Decimal") >
   public ${minor.class}Writer ${lowerName}(String name){
     // returns existing writer
-    FieldWriter writer = fields.get(name);
+    FieldWriter writer = fields.get(name.toLowerCase());
     assert writer != null;
     return writer;
   }
@@ -170,13 +170,13 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
   private static final MajorType ${upperName}_TYPE = Types.optional(MinorType.${upperName});
   public ${minor.class}Writer ${lowerName}(String name){
   </#if>
-    FieldWriter writer = fields.get(name);
+    FieldWriter writer = fields.get(name.toLowerCase());
     if(writer == null){
       ${vectName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
       vector.allocateNewSafe();
       writer = new ${vectName}WriterImpl(vector, this);
       writer.setPosition(${index});
-      fields.put(name, writer);
+      fields.put(name.toLowerCase(), writer);
     }
     return writer;
   }
