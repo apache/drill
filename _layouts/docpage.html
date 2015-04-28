@@ -1,42 +1,59 @@
 ---
-layout: default
 title: Documentation
 ---
-{% include breadcrumbs.html %}
-{% include doctoccategories.html %}
-    
-<div class="int_title">
-<h1>{{ page.title }}</h1>
-</div>
+<!DOCTYPE html>
+<html>
 
-<div class="int_text" align="left">
+{% include head.html %}
 
-<link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
+<body onResize="resized();">
+<div class="page-wrap">
+  {% include menu.html %}
+  {% include doctoccategories.html %}
 
-{% include doctoc.html %}
+  {% include doctoc.html %}
 
-<div class="main-content">
-  <div class="int_text" align="left">
-    <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/{{ page.relative_path }}" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
-    {% if page_data.children.size == 0 %}
-      {{ content }}
-    {% else %}
-      <ul>
-      {% for doc0 in page_data.children %}
-        <li><a href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
-        {% if doc0.children.size > 0 %}
+  <div class="main-content-wrapper">
+    <div class="main-content">
+
+      {% include breadcrumbs.html %}
+
+      <div class="int_title">
+        <h1>{{ page.title }}</h1>
+      </div>
+
+      <link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
+
+      <div class="int_text" align="left">
+        <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/{{ page.relative_path }}" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
+        {% if page_data.children.size == 0 %}
+          {{ content }}
+        {% else %}
           <ul>
-          {% for doc1 in doc0.children %}
-            <li><a href="{{ site.baseurl }}{{ doc1.url }}">{{ doc1.title }}</a></li>
+          {% for doc0 in page_data.children %}
+            <li><a href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
+          {% if doc0.children.size > 0 %}
+            <ul>
+            {% for doc1 in doc0.children %}
+              <li><a href="{{ site.baseurl }}{{ doc1.url }}">{{ doc1.title }}</a></li>
           {% endfor %}
           </ul>
         {% endif %}
-      {% endfor %}
-      </ul>
-    {% endif %}
+        {% endfor %}
+        </ul>
+      {% endif %}
+      </div>
+
+      {% include docnav.html %}
+
+    </div>
+
+
   </div>
-</div>
 
-{% include docnav.html %}
-
+      {% include footer.html %}
 </div>
+{% include scripts.html %}
+</body>
+</html>
+

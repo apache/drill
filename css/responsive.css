@@ -68,7 +68,7 @@ nav.breadcrumbs{
     display: block;
   }
   #menu ul li.expand-menu, #menu ul li.expand-menu a {
-    line-height: 45px;
+    height: 50px;
   }
   #menu ul li.expand-menu span.expand-icon{
     font-size: 24px;
