@@ -6,7 +6,7 @@ If you've never used Drill, use these tutorials to download, install, and start 
 
 * [Drill in 10 Minutes]({{site.baseurl}}/docs/drill-in-10-minutes)  
   Download and install Drill in embedded mode, which means you use a single-node cluster.  
-* [Analyzing the Yelp Academic Dataset]({{site.baseurl}}/drill/docs/analyzing-the-yelp-academic-dataset)  
+* [Analyzing the Yelp Academic Dataset]({{site.baseurl}}/docs/analyzing-the-yelp-academic-dataset)  
   Download and install Drill in embedded mode and use SQL examples to analyze Yelp data.  
 * [Learn Drill with the MapR Sandbox]({{site.baseurl}}/docs/about-the-mapr-sandbox)  
   Explore data using a Hadoop environment pre-configured with Drill.  
