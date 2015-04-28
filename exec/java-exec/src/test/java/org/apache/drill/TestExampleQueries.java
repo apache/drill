@@ -756,4 +756,19 @@ public class TestExampleQueries extends BaseTestQuery{
         .baselineValues((long) 3, (long) 6)
         .build().run();
   }
+
+  @Test // DRILL-2479
+  public void testCorrelatedExistsWithInSubq() throws Exception {
+    String query = "select count(*) as cnt from cp.`tpch/lineitem.parquet` l where exists "
+        + " (select ps.ps_suppkey from cp.`tpch/partsupp.parquet` ps where ps.ps_suppkey = l.l_suppkey and ps.ps_partkey "
+        + " in (select p.p_partkey from cp.`tpch/part.parquet` p where p.p_type like '%NICKEL'))";
+
+    testBuilder()
+    .sqlQuery(query)
+    .unOrdered()
+    .baselineColumns("cnt")
+    .baselineValues(60175l)
+    .go();
+  }
+
 }
