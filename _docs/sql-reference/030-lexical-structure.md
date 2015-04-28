@@ -25,7 +25,7 @@ A SQL statement used in Drill can include one or more of the following parts:
 
         /* This is a comment. */
 
-The upper/lowercase sensitivity of the parts differs.
+The parts of a SQL statement differ with regard to upper/lowercase sensitivity.
 
 ## Case-sensitivity
 
