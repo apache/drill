@@ -57,6 +57,7 @@ import java.util.List;
 import java.io.Closeable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 
 import java.sql.Date;
 import java.sql.Time;

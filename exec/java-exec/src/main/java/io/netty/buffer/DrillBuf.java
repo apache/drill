@@ -36,6 +36,8 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.util.AssertionUtil;
 
+import com.google.common.base.Preconditions;
+
 public final class DrillBuf extends AbstractByteBuf {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBuf.class);
 
@@ -69,19 +71,6 @@ public final class DrillBuf extends AbstractByteBuf {
     this.offset = 0;
     this.rootBuffer = true;
     this.allocator = allocator;
-  }
-
-  private DrillBuf(ByteBuffer bb) {
-    super(bb.remaining());
-    UnpooledUnsafeDirectByteBuf bytebuf = new UnpooledUnsafeDirectByteBuf(UnpooledByteBufAllocator.DEFAULT, bb, bb.remaining());
-    this.acct = FakeAllocator.FAKE_ACCOUNTOR;
-    this.addr = bytebuf.memoryAddress();
-    this.allocator = FakeAllocator.FAKE_ALLOCATOR;
-    this.b = bytebuf;
-    this.length = bytebuf.capacity();
-    this.offset = 0;
-    this.rootBuffer = true;
-    this.writerIndex(bb.remaining());
   }
 
   private DrillBuf(BufferAllocator allocator, Accountor a) {
@@ -257,7 +246,9 @@ public final class DrillBuf extends AbstractByteBuf {
   public synchronized boolean release(int decrement) {
 
     if(rootBuffer){
-      if(0 == this.rootRefCnt.addAndGet(-decrement)){
+      final long newRefCnt = this.rootRefCnt.addAndGet(-decrement);
+      Preconditions.checkArgument(newRefCnt > -1, "Buffer has negative reference count.");
+      if (newRefCnt == 0) {
         b.release(decrement);
         acct.release(this, length);
         return true;
@@ -699,6 +690,25 @@ public final class DrillBuf extends AbstractByteBuf {
     return this;
   }
 
+  public ByteBuf setBytes(int index, ByteBuffer src, int srcIndex, int length) {
+    if (src.isDirect()) {
+      checkIndex(index, length);
+      PlatformDependent.copyMemory(PlatformDependent.directBufferAddress(src) + srcIndex, this.memoryAddress() + index,
+          length);
+    } else {
+      if (srcIndex == 0 && src.capacity() == length) {
+        b.setBytes(index + offset, src);
+      } else {
+        ByteBuffer newBuf = src.duplicate();
+        newBuf.position(srcIndex);
+        newBuf.limit(srcIndex + length);
+        b.setBytes(index + offset, src);
+      }
+    }
+
+    return this;
+  }
+
   @Override
   public ByteBuf setBytes(int index, byte[] src, int srcIndex, int length) {
     b.setBytes(index + offset, src, srcIndex, length);
@@ -733,15 +743,6 @@ public final class DrillBuf extends AbstractByteBuf {
 
   public boolean isRootBuffer() {
     return rootBuffer;
-  }
-
-  public static DrillBuf wrapByteBuffer(ByteBuffer b) {
-    if (!b.isDirect()) {
-      throw new IllegalStateException("DrillBufs can only refer to direct memory.");
-    } else {
-      return new DrillBuf(b);
-    }
-
   }
 
 }

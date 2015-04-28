@@ -44,12 +44,14 @@ public class DrillMetrics {
 
   private static class RegistryHolder {
     public static final MetricRegistry REGISTRY;
-//    private static JmxReporter jmxReporter = getJmxReporter();
-//    private static Slf4jReporter logReporter = getLogReporter();
+    // private static final JmxReporter JMX_REPORTER;
+    private static final Slf4jReporter LOG_REPORTER;
 
     static {
       REGISTRY = new MetricRegistry();
       registerSysStats();
+      // JMX_REPORTER = getJmxReporter();
+      LOG_REPORTER = getLogReporter();
     }
 
     private static void registerSysStats(){

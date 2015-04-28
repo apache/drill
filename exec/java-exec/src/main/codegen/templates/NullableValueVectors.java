@@ -460,6 +460,19 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       <#if type.major == "VarLen">lastSet = index;</#if>
       </#if>
     }
+    
+    public void setSafe(int index, ByteBuffer value, int start, int length) {
+      <#if type.major != "VarLen">
+      throw new UnsupportedOperationException();
+      <#else>
+      fillEmpties(index);
+
+      bits.getMutator().setSafe(index, 1);
+      values.getMutator().setSafe(index, value, start, length);
+      setCount++;
+      <#if type.major == "VarLen">lastSet = index;</#if>
+      </#if>
+    }
 
     public void setNull(int index){
       bits.getMutator().setSafe(index, 0);

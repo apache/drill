@@ -21,6 +21,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.drill.common.util.CoreDecimalUtility;
@@ -159,6 +160,13 @@ public class DecimalUtility extends CoreDecimalUtility{
       BigInteger unscaledValue = new BigInteger(value);
       return new BigDecimal(unscaledValue, scale);
     }
+
+  public static BigDecimal getBigDecimalFromByteBuffer(ByteBuffer bytebuf, int start, int length, int scale) {
+    byte[] value = new byte[length];
+    bytebuf.get(value);
+    BigInteger unscaledValue = new BigInteger(value);
+    return new BigDecimal(unscaledValue, scale);
+  }
 
     /* Create a BigDecimal object using the data in the DrillBuf.
      * This function assumes that data is provided in a non-dense format

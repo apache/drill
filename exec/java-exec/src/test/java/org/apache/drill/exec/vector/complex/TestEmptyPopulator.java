@@ -17,39 +17,29 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import java.nio.ByteBuffer;
-
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TestEmptyPopulator extends ExecTest {
   private static final int BUF_SIZE = 10000;
 
-  @Mock
-  private BufferAllocator allocator;
   private UInt4Vector offsets;
   private UInt4Vector.Accessor accessor;
   private UInt4Vector.Mutator mutator;
   private EmptyValuePopulator populator;
-
-  private final ByteBuffer buffer = ByteBuffer.allocateDirect(BUF_SIZE);
-  private final ByteBuffer empty = ByteBuffer.allocateDirect(0);
+  private BufferAllocator allocator = new TopLevelAllocator();
 
 
   @Before
   public void initialize() {
-    Mockito.when(allocator.buffer(Mockito.anyInt())).thenReturn(DrillBuf.wrapByteBuffer(buffer));
-    Mockito.when(allocator.getEmpty()).thenReturn(DrillBuf.wrapByteBuffer(empty));
     offsets = new UInt4Vector(null, allocator);
     offsets.allocateNewSafe();
     accessor = offsets.getAccessor();

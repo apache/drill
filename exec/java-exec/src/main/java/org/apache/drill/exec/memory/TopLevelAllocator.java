@@ -22,8 +22,8 @@ import io.netty.buffer.DrillBuf;
 import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.buffer.UnsafeDirectLittleEndian;
 
-import java.util.IdentityHashMap;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 

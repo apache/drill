@@ -17,10 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.ByteBuf;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -38,7 +35,7 @@ final class BitReader extends ColumnReader {
   @Override
   protected void readField(long recordsToReadInThisPass) {
 
-    recordsReadInThisIteration = Math.min(pageReader.currentPage.getValueCount()
+    recordsReadInThisIteration = Math.min(pageReader.currentPageCount
         - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
 
     // A more optimized reader for bit columns was removed to fix the bug

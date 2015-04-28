@@ -94,10 +94,16 @@ public class ScanBatch implements CloseableRecordBatch {
     this.oContext = oContext;
     this.currentReader.setOperatorContext(this.oContext);
 
+    boolean setup = false;
     try {
       oContext.getStats().startProcessing();
       this.currentReader.setup(mutator);
+      setup = true;
     } finally {
+      // if we had an exception during setup, make sure to release existing data.
+      if (!setup) {
+        currentReader.cleanup();
+      }
       oContext.getStats().stopProcessing();
     }
     this.partitionColumns = partitionColumns.iterator();

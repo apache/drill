@@ -17,14 +17,13 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import java.io.IOException;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.UnsafeDirectLittleEndian;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.GenericFutureListener;
+
+import java.io.IOException;
 
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -105,7 +104,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   private final static FragmentRecordBatch OOM_FRAGMENT = FragmentRecordBatch.newBuilder().setIsOutOfMemory(true).build();
 
 
-  private FragmentHandle getHandle(FragmentRecordBatch batch, int index){
+  private static FragmentHandle getHandle(FragmentRecordBatch batch, int index) {
     return FragmentHandle.newBuilder()
         .setQueryId(batch.getQueryId())
         .setMajorFragmentId(batch.getReceivingMajorFragmentId())
@@ -138,32 +137,14 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
         }
 
       }else{
-
-        for(int minor = 0; minor < targetCount; minor++){
-          FragmentManager manager = workBus.getFragmentManager(getHandle(fragmentBatch, minor));
-          if(manager == null){
-            continue;
+        if (targetCount > 1) {
+          for (int minor = 0; minor < targetCount; minor++) {
+            send(fragmentBatch, (DrillBuf) body, minor, ack, true);
           }
-
-          BufferAllocator allocator = manager.getFragmentContext().getAllocator();
-
-          boolean withinMemoryEnvelope = allocator.takeOwnership((DrillBuf) body, out);
-
-          if(!withinMemoryEnvelope){
-            // if we over reserved, we need to add poison pill before batch.
-            dataHandler.handle(manager, OOM_FRAGMENT, null, null);
-          }
-
-          ack.increment();
-          dataHandler.handle(manager, fragmentBatch, out.value, ack);
-
-          // make sure to release the reference count we have to the new buffer.
-          // dataHandler.handle should have taken any ownership it needed.
-          out.value.release();
+        } else {
+          send(fragmentBatch, (DrillBuf) body, 0, ack, false);
         }
-        out = null;
       }
-
     } catch (IOException | FragmentSetupException e) {
       logger.error("Failure while getting fragment manager. {}",
           QueryIdHelper.getQueryIdentifiers(fragmentBatch.getQueryId(),
@@ -179,6 +160,45 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
         out.value.release();
       }
     }
+  }
+
+  private void send(final FragmentRecordBatch fragmentBatch, final DrillBuf body, final int minor, final AckSender ack,
+      final boolean shared)
+      throws FragmentSetupException, IOException {
+
+    FragmentManager manager = workBus.getFragmentManager(getHandle(fragmentBatch, minor));
+    if (manager == null) {
+      return;
+    }
+
+    final BufferAllocator allocator = manager.getFragmentContext().getAllocator();
+    final Pointer<DrillBuf> out = new Pointer<DrillBuf>();
+
+    final boolean withinMemoryEnvelope;
+    final DrillBuf submitBody;
+
+    if (shared) {
+      withinMemoryEnvelope = allocator.takeOwnership((DrillBuf) body, out);
+      submitBody = out.value;
+    }else{
+      withinMemoryEnvelope = allocator.takeOwnership((DrillBuf) body.unwrap());
+      submitBody = body;
+    }
+
+    if (!withinMemoryEnvelope) {
+      // if we over reserved, we need to add poison pill before batch.
+      dataHandler.handle(manager, OOM_FRAGMENT, null, null);
+    }
+
+    ack.increment();
+    dataHandler.handle(manager, fragmentBatch, submitBody, ack);
+
+    if (shared) {
+      // make sure to release the reference count we have to the new buffer.
+      // dataHandler.handle should have taken any ownership it needed.
+      out.value.release();
+    }
+
   }
 
   private class ProxyCloseHandler implements GenericFutureListener<ChannelFuture> {

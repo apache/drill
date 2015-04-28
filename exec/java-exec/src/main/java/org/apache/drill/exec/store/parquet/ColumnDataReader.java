@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.fs.FSDataInputStream;
 
 import parquet.bytes.BytesInput;
@@ -53,19 +52,11 @@ public class ColumnDataReader {
     return new HadoopBytesInput(b);
   }
 
-  public ByteBuf getPageAsBytesBuf(ByteBuf byteBuf, int pageLength) throws IOException{
-    ByteBuffer directBuffer=byteBuf.nioBuffer(0, pageLength);
-    int l=directBuffer.remaining();
-    int bl=byteBuf.capacity();
-    try{
-      while (directBuffer.remaining() > 0) {
-        CompatibilityUtil.getBuf(input, directBuffer, directBuffer.remaining());
-      }
-    }catch(Exception e) {
-      logger.error("Failed to read data into Direct ByteBuffer with exception: "+e.getMessage());
-      throw new DrillRuntimeException(e.getMessage());
+  public void loadPage(DrillBuf target, int pageLength) throws IOException {
+    ByteBuffer directBuffer = target.nioBuffer(0, pageLength);
+    while (directBuffer.remaining() > 0) {
+      CompatibilityUtil.getBuf(input, directBuffer, directBuffer.remaining());
     }
-    return byteBuf;
   }
 
   public void clear(){

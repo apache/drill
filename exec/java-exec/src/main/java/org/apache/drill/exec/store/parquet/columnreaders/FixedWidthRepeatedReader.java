@@ -178,7 +178,7 @@ public class FixedWidthRepeatedReader extends VarLengthColumn {
             definitionLevelsRead++;
 
             // we hit the end of this page, without confirmation that we reached the end of the current record
-            if (definitionLevelsRead == pageReader.currentPage.getValueCount()) {
+            if (definitionLevelsRead == pageReader.currentPageCount) {
               // check that we have not hit the end of the row group (in which case we will not find the repetition level indicating
               // the end of this record as there is no next page to check, we have read all the values in this repetition so it is okay
               // to add it to the read )

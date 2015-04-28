@@ -18,13 +18,15 @@
 package org.apache.drill.exec.store.sys;
 
 
-import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
+import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.Iterator;
+import java.util.List;
+
+import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 public class MemoryIterator implements Iterator<Object> {
 
@@ -56,9 +58,23 @@ public class MemoryIterator implements Iterator<Object> {
     memoryInfo.heap_current = heapMemoryUsage.getUsed();
     memoryInfo.heap_max = heapMemoryUsage.getMax();
 
+    BufferPoolMXBean directBean = getDirectBean();
+    memoryInfo.jvm_direct_current = directBean.getMemoryUsed();
+
+
     memoryInfo.direct_current = context.getDrillbitContext().getAllocator().getAllocatedMemory();
     memoryInfo.direct_max = TopLevelAllocator.MAXIMUM_DIRECT_MEMORY;
     return memoryInfo;
+  }
+
+  private BufferPoolMXBean getDirectBean() {
+    List<BufferPoolMXBean> pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
+    for (BufferPoolMXBean b : pools) {
+      if (b.getName().equals("direct")) {
+        return b;
+      }
+    }
+    throw new IllegalStateException("Unable to find direct buffer bean.  JVM must be too old.");
   }
 
   @Override
@@ -72,6 +88,7 @@ public class MemoryIterator implements Iterator<Object> {
     public long heap_current;
     public long heap_max;
     public long direct_current;
+    public long jvm_direct_current;
     public long direct_max;
   }
 }

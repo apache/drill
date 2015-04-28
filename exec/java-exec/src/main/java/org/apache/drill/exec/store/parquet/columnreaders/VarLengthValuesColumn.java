@@ -56,7 +56,7 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
   protected void readField(long recordToRead) {
     dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
-    boolean success = setSafe((int) valuesReadInCurrentPass, pageReader.pageDataByteArray,
+    boolean success = setSafe((int) valuesReadInCurrentPass, pageReader.pageData,
         (int) pageReader.readPosInBytes + 4, dataTypeLengthInBits);
     assert success;
     updatePosition();
@@ -91,10 +91,9 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
       currDictValToWrite = currLengthDeterminingDictVal;
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = currLengthDeterminingDictVal.length();
-    }
-    else {
+    } else {
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
-      dataTypeLengthInBits = pageReader.pageDataByteArray.getInt((int) pageReader.readyToReadPosInBytes);
+      dataTypeLengthInBits = pageReader.pageData.getInt((int) pageReader.readyToReadPosInBytes);
     }
 
     // this should not fail

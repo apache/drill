@@ -18,6 +18,7 @@
 package parquet.hadoop;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,7 +28,6 @@ import java.nio.channels.WritableByteChannel;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.DirectDecompressionCodec;
@@ -57,18 +57,18 @@ public class CodecFactoryExposer{
     return codecFactory.getDecompressor(codecName).decompress(bytes, uncompressedSize);
   }
 
-  public BytesInput getBytesInput(ByteBuf uncompressedByteBuf, int uncompressedSize) throws IOException {
+  public static BytesInput getBytesInput(ByteBuf uncompressedByteBuf, int uncompressedSize) throws IOException {
     ByteBuffer outBuffer=uncompressedByteBuf.nioBuffer(0, uncompressedSize);
     return new HadoopByteBufBytesInput(outBuffer, 0, outBuffer.limit());
   }
 
-  public BytesInput decompress(CompressionCodecName codecName,
-                               ByteBuf compressedByteBuf,
-                               ByteBuf uncompressedByteBuf,
+  public void decompress(CompressionCodecName codecName,
+      final DrillBuf compressedByteBuf,
+      final DrillBuf uncompressedByteBuf,
                                int compressedSize,
                                int uncompressedSize) throws IOException {
-    ByteBuffer inpBuffer=compressedByteBuf.nioBuffer(0, compressedSize);
-    ByteBuffer outBuffer=uncompressedByteBuf.nioBuffer(0, uncompressedSize);
+    final ByteBuffer inpBuffer = compressedByteBuf.nioBuffer(0, compressedSize);
+    final ByteBuffer outBuffer = uncompressedByteBuf.nioBuffer(0, uncompressedSize);
     CompressionCodec c = getCodec(codecName);
     //TODO: Create the decompressor only once at init time.
     Class<?> cx = c.getClass();
@@ -100,7 +100,6 @@ public class CodecFactoryExposer{
       // by a byte array).
       outBuffer.put(outBytesInp.toByteArray());
     }
-    return new HadoopByteBufBytesInput(outBuffer, 0, outBuffer.limit());
   }
 
   private DirectDecompressionCodec getCodec(CompressionCodecName codecName) {
@@ -123,13 +122,13 @@ public class CodecFactoryExposer{
     }
   }
 
-  public class HadoopByteBufBytesInput extends BytesInput{
+  public static class HadoopByteBufBytesInput extends BytesInput {
 
     private final ByteBuffer byteBuf;
     private final int length;
     private final int offset;
 
-    private HadoopByteBufBytesInput(ByteBuffer byteBuf, int offset, int length) {
+    public HadoopByteBufBytesInput(ByteBuffer byteBuf, int offset, int length) {
       super();
       this.byteBuf = byteBuf;
       this.offset = offset;

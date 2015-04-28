@@ -21,21 +21,39 @@ package io.netty.buffer;
 import io.netty.util.internal.PlatformDependent;
 
 import java.nio.ByteOrder;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.drill.exec.util.AssertionUtil;
 
 public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
     private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
-    private final PooledUnsafeDirectByteBuf wrapped;
-    private final long memoryAddress;
+  private final AbstractByteBuf wrapped;
+  private final long memoryAddress;
+  private AtomicLong bufferCount;
+  private AtomicLong bufferSize;
+  private long initCap = -1;
 
-    UnsafeDirectLittleEndian(PooledUnsafeDirectByteBuf buf) {
-        super(buf);
-        if (!NATIVE_ORDER || buf.order() != ByteOrder.BIG_ENDIAN) {
-          throw new IllegalStateException("Drill only runs on LittleEndian systems.");
-        }
-        wrapped = buf;
-        this.memoryAddress = buf.memoryAddress();
+  UnsafeDirectLittleEndian(LargeBuffer buf) {
+    this(buf, true);
+  }
+
+  UnsafeDirectLittleEndian(PooledUnsafeDirectByteBuf buf, AtomicLong bufferCount, AtomicLong bufferSize) {
+    this(buf, true);
+    this.bufferCount = bufferCount;
+    this.bufferSize = bufferSize;
+
+    // initCap is used if we're tracking memory release. If we're in non-debug mode, we'll skip this.
+    this.initCap = AssertionUtil.ASSERT_ENABLED ? capacity() : -1;
+  }
+
+  private UnsafeDirectLittleEndian(AbstractByteBuf buf, boolean fake) {
+    super(buf);
+    if (!NATIVE_ORDER || buf.order() != ByteOrder.BIG_ENDIAN) {
+      throw new IllegalStateException("Drill only runs on LittleEndian systems.");
     }
-
+    wrapped = buf;
+    this.memoryAddress = buf.memoryAddress();
+  }
     private long addr(int index) {
         return memoryAddress + index;
     }
@@ -52,7 +70,27 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
         return Float.intBitsToFloat(getInt(index));
     }
 
-    @Override
+  @Override
+  public ByteBuf slice() {
+    return slice(this.readerIndex(), readableBytes());
+  }
+
+  @Override
+  public ByteBuf slice(int index, int length) {
+    return new SlicedByteBuf(this, index, length);
+  }
+
+  @Override
+  public ByteOrder order() {
+    return ByteOrder.LITTLE_ENDIAN;
+  }
+
+  @Override
+  public ByteBuf order(ByteOrder endianness) {
+    return this;
+  }
+
+  @Override
     public double getDouble(int index) {
         return Double.longBitsToDouble(getLong(index));
     }
@@ -189,5 +227,21 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
       PlatformDependent.putByte(addr(index), (byte) value);
       return this;
     }
+
+  @Override
+  public boolean release() {
+    return release(1);
+  }
+
+  @Override
+  public boolean release(int decrement) {
+    boolean released = super.release(decrement);
+    if (released && initCap != -1) {
+      bufferCount.decrementAndGet();
+      bufferSize.addAndGet(-initCap);
+    }
+    return released;
+  }
+
 
 }

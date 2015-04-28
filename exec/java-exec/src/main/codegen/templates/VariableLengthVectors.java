@@ -444,6 +444,18 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       offsetVector.getMutator().set(index + 1, currentOffset + length);
       data.setBytes(currentOffset, bytes, start, length);
     }
+    
+    public void setSafe(int index, ByteBuffer bytes, int start, int length) {
+      assert index >= 0;
+
+      int currentOffset = offsetVector.getAccessor().get(index);
+
+      while (data.capacity() < currentOffset + length) {
+        reAlloc();
+      }
+      offsetVector.getMutator().setSafe(index + 1, currentOffset + length);
+      data.setBytes(currentOffset, bytes, start, length);
+    }
 
     public void setSafe(int index, byte[] bytes, int start, int length) {
       assert index >= 0;

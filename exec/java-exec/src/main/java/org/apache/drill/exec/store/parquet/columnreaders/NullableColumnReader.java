@@ -70,9 +70,9 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
       boolean lastRunBrokenByNull = false;
       while (indexInOutputVector < recordsToReadInThisPass && indexInOutputVector < valueVec.getValueCapacity()){
         // read a page if needed
-        if ( pageReader.currentPage == null
+      if (!pageReader.hasPage()
             || ((readStartInBytes + readLength >= pageReader.byteLength && bitsUsed == 0) &&
-            definitionLevelsRead >= pageReader.currentPage.getValueCount())) {
+          definitionLevelsRead >= pageReader.currentPageCount)) {
           if (!pageReader.next()) {
             break;
           }
@@ -89,7 +89,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         // loop to find the longest run of defined values available, can be preceded by several nulls
         while(indexInOutputVector < recordsToReadInThisPass
             && indexInOutputVector < valueVec.getValueCapacity()
-            && definitionLevelsRead < pageReader.currentPage.getValueCount()){
+          && definitionLevelsRead < pageReader.currentPageCount) {
           currentDefinitionLevel = pageReader.definitionLevels.readInteger();
           definitionLevelsRead++;
           indexInOutputVector++;

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
@@ -52,21 +51,20 @@ class FixedByteAlignedReader extends ColumnReader {
   @Override
   protected void readField(long recordsToReadInThisPass) {
 
-    recordsReadInThisIteration = Math.min(pageReader.currentPage.getValueCount()
+    recordsReadInThisIteration = Math.min(pageReader.currentPageCount
         - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
 
     readStartInBytes = pageReader.readPosInBytes;
     readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
     readLength = (int) Math.ceil(readLengthInBits / 8.0);
 
-    bytebuf = pageReader.pageDataByteArray;
+    bytebuf = pageReader.pageData;
     // vectorData is assigned by the superclass read loop method
     writeData();
   }
 
   protected void writeData() {
-    vectorData.writeBytes(bytebuf,
-        (int) readStartInBytes, (int) readLength);
+    vectorData.writeBytes(bytebuf, (int) readStartInBytes, (int) readLength);
   }
 
   public static class FixedBinaryReader extends FixedByteAlignedReader {
@@ -120,12 +118,12 @@ class FixedByteAlignedReader extends ColumnReader {
 
   public static class DateReader extends ConvertedReader {
 
-    DateVector dateVector;
+    private final DateVector.Mutator mutator;
 
     DateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                     boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      dateVector = (DateVector) v;
+      mutator = ((DateVector) v).getMutator();
     }
 
     @Override
@@ -137,17 +135,9 @@ class FixedByteAlignedReader extends ColumnReader {
         intValue = readIntLittleEndian(bytebuf, start);
       }
 
-      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+      mutator.set(index, DateTimeUtils.fromJulianDay(intValue - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
     }
 
-    // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
-    public static int readIntLittleEndian(ByteBuf in, int offset) {
-      int ch4 = in.getByte(offset) & 0xff;
-      int ch3 = in.getByte(offset + 1) & 0xff;
-      int ch2 = in.getByte(offset + 2) & 0xff;
-      int ch1 = in.getByte(offset + 3) & 0xff;
-      return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
-    }
   }
 
   public static class Decimal28Reader extends ConvertedReader {
@@ -163,7 +153,8 @@ class FixedByteAlignedReader extends ColumnReader {
     @Override
     void addNext(int start, int index) {
       int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
+          schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
     }
@@ -182,7 +173,8 @@ class FixedByteAlignedReader extends ColumnReader {
     @Override
     void addNext(int start, int index) {
       int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
+          schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
     }

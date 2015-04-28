@@ -274,7 +274,9 @@ public class FragmentExecutor implements Runnable {
 
     // first close the operators and release all memory.
     try {
-      root.close();
+      if (root != null) {
+        root.close();
+      }
     } catch (final Exception e) {
       fail(e);
     }

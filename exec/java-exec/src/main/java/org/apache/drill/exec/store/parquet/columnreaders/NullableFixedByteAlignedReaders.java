@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
@@ -29,15 +28,15 @@ import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableDateVector;
+import org.apache.drill.exec.vector.NullableDecimal18Vector;
 import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
 import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal9Vector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableDecimal9Vector;
-import org.apache.drill.exec.vector.NullableDecimal18Vector;
-import org.apache.drill.exec.vector.NullableTimeVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
+import org.apache.drill.exec.vector.NullableTimeVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTimeUtils;
 
@@ -58,7 +57,7 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      this.bytebuf = pageReader.pageDataByteArray;
+      this.bytebuf = pageReader.pageData;
 
       // fill in data.
       vectorData.writeBytes(bytebuf, (int) readStartInBytes, (int) readLength);
@@ -259,7 +258,7 @@ public class NullableFixedByteAlignedReaders {
     @Override
     protected void readField(long recordsToReadInThisPass) {
 
-      this.bytebuf = pageReader.pageDataByteArray;
+      this.bytebuf = pageReader.pageData;
 
       dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
       for (int i = 0; i < recordsToReadInThisPass; i++) {
@@ -292,15 +291,6 @@ public class NullableFixedByteAlignedReaders {
       dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
     }
 
-    // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
-    public static int readIntLittleEndian(ByteBuf in, int offset) {
-      int ch4 = in.getByte(offset) & 0xff;
-      int ch3 = in.getByte(offset + 1) & 0xff;
-      int ch2 = in.getByte(offset + 2) & 0xff;
-      int ch1 = in.getByte(offset + 3) & 0xff;
-      return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
-    }
-
   }
 
   public static class NullableDecimal28Reader extends NullableConvertedReader {
@@ -316,7 +306,8 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int width = NullableDecimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
+          schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getBuffer(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal28SparseHolder.nDecimalDigits);
     }
@@ -335,7 +326,8 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int width = NullableDecimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
+          schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getBuffer(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal38SparseHolder.nDecimalDigits);
     }

@@ -115,7 +115,7 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-epoll</artifactId>
       <classifier>linux-x86_64</classifier>
-      <version>4.0.24.Final</version>
+      <version>4.0.27.Final</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.ext</groupId>
