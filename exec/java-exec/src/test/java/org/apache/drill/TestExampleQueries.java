@@ -771,4 +771,64 @@ public class TestExampleQueries extends BaseTestQuery{
     .go();
   }
 
+  @Test // DRILL-2094
+  public void testOrderbyArrayElementInSubquery() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/json/orderByArrayElement.json").toURI().toString();
+
+    String query = String.format("select s.id from \n" +
+        "(select id \n" +
+        "from dfs_test.`%s` \n" +
+        "order by list[0]) s", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("id")
+        .baselineValues((long) 1)
+        .baselineValues((long) 5)
+        .baselineValues((long) 4)
+        .baselineValues((long) 2)
+        .baselineValues((long) 3)
+        .build().run();
+  }
+
+  @Test // DRILL-1978
+  public void testCTASOrderByCoumnNotInSelectClause() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    String queryCTAS1 = "CREATE TABLE TestExampleQueries_testCTASOrderByCoumnNotInSelectClause1 as " +
+        "select r_name from cp.`tpch/region.parquet` order by r_regionkey;";
+
+    String queryCTAS2 = String.format("CREATE TABLE TestExampleQueries_testCTASOrderByCoumnNotInSelectClause2 as " +
+        "SELECT columns[1] as col FROM dfs_test.`%s` ORDER BY cast(columns[0] as double)", root);
+
+    String query1 = "select * from TestExampleQueries_testCTASOrderByCoumnNotInSelectClause1";
+    String query2 = "select * from TestExampleQueries_testCTASOrderByCoumnNotInSelectClause2";
+
+    test("use dfs_test.tmp");
+    test(queryCTAS1);
+    test(queryCTAS2);
+
+
+    testBuilder()
+        .sqlQuery(query1)
+        .ordered()
+        .baselineColumns("r_name")
+        .baselineValues("AFRICA")
+        .baselineValues("AMERICA")
+        .baselineValues("ASIA")
+        .baselineValues("EUROPE")
+        .baselineValues("MIDDLE EAST")
+        .build().run();
+
+    testBuilder()
+        .sqlQuery(query2)
+        .ordered()
+        .baselineColumns("col")
+        .baselineValues("AFRICA")
+        .baselineValues("AMERICA")
+        .baselineValues("ASIA")
+        .baselineValues("EUROPE")
+        .baselineValues("MIDDLE EAST")
+        .build().run();
+  }
 }
