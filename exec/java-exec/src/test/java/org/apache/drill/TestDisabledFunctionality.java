@@ -17,6 +17,7 @@
  */
 package org.apache.drill;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
@@ -305,6 +306,64 @@ public class TestDisabledFunctionality extends BaseTestQuery{
           "order by employee_id;");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
+    }
+  }
+
+  @Test(expected = UnsupportedFunctionException.class) // see DRILL-2181
+  public void testFlattenWithinGroupBy() throws Exception {
+    try {
+      String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
+      String query = String.format("select flatten(j.topping) tt " +
+          "from dfs_test.`%s` j " +
+          "group by flatten(j.topping)", root);
+
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedFunctionException.class) // see DRILL-2181
+  public void testFlattenWithinOrderBy() throws Exception {
+    try {
+      String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
+      String query = String.format("select flatten(j.topping) tt " +
+          "from dfs_test.`%s` j " +
+          "order by flatten(j.topping)", root);
+
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedFunctionException.class) // see DRILL-2181
+  public void testFlattenWithinAggFunction() throws Exception {
+    try {
+      String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
+      String query = String.format("select count(flatten(j.topping)) tt " +
+          "from dfs_test.`%s` j", root);
+
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test(expected = UnsupportedFunctionException.class) // see DRILL-2181
+  public void testFlattenWithinDistinct() throws Exception {
+    try {
+      String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
+      String query = String.format("select Distinct (flatten(j.topping)) tt " +
+          "from dfs_test.`%s` j", root);
+
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
     }
   }
 }

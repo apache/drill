@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.fun.SqlCountAggFunction;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.ops.QueryContext;
@@ -135,6 +137,68 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
+    // Disable complex functions being present in any place other than Select-Clause
+    if(sqlCall instanceof SqlSelect) {
+      SqlSelect sqlSelect = (SqlSelect) sqlCall;
+      if(sqlSelect.hasOrderBy()) {
+        for (SqlNode sqlNode : sqlSelect.getOrderList()) {
+          if(containsFlatten(sqlNode)) {
+            unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                "Flatten function is not supported in Order By\n" +
+                "See Apache Drill JIRA: DRILL-2181");
+            throw new UnsupportedOperationException();
+          }
+        }
+      }
+
+      if(sqlSelect.getGroup() != null) {
+        for(SqlNode sqlNode : sqlSelect.getGroup()) {
+          if(containsFlatten(sqlNode)) {
+            unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                "Flatten function is not supported in Group By\n" +
+                "See Apache Drill JIRA: DRILL-2181");
+            throw new UnsupportedOperationException();
+          }
+        }
+      }
+
+      if(sqlSelect.isDistinct()) {
+        for(SqlNode column : sqlSelect.getSelectList()) {
+          if(column.getKind() ==  SqlKind.AS) {
+            if(containsFlatten(((SqlCall) column).getOperandList().get(0))) {
+              unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                  "Flatten function is not supported in Distinct\n" +
+                  "See Apache Drill JIRA: DRILL-2181");
+              throw new UnsupportedOperationException();
+            }
+          } else {
+            if(containsFlatten(column)) {
+              unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                  "Flatten function is not supported in Distinct\n" +
+                  "See Apache Drill JIRA: DRILL-2181");
+              throw new UnsupportedOperationException();
+            }
+          }
+        }
+      }
+    }
+
+    if(sqlCall.getOperator() instanceof SqlCountAggFunction) {
+      for(SqlNode sqlNode : sqlCall.getOperandList()) {
+        if(containsFlatten(sqlNode)) {
+          unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+              "Flatten function in aggregate functions is not supported\n" +
+              "See Apache Drill JIRA: DRILL-2181");
+          throw new UnsupportedOperationException();
+        }
+      }
+    }
+
     return sqlCall.getOperator().acceptCall(this, sqlCall);
+  }
+
+  private boolean containsFlatten(SqlNode sqlNode) throws UnsupportedOperationException {
+    return sqlNode instanceof SqlCall
+        && ((SqlCall) sqlNode).getOperator().getName().toLowerCase().equals("flatten");
   }
 }
