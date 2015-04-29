@@ -12,9 +12,7 @@ Drill supports the following architectures:
 * Multi-instance  
   Tenants use separate drillbits running on different nodes in the cluster.
 
-This section covers the multitenancy. The next section, ["How Multiple Users Share a Drillbit"]({{site.baseurl}}/docs/how-multiple-users-share-a-drillbit), covers multi-instance architecture.
-
-Drill typically runs along side many application frameworks:  
+Drill typically runs along side many application frameworks, including the following:  
 
 * Mapreduce  
 * Yarn  
@@ -22,13 +20,14 @@ Drill typically runs along side many application frameworks:
 * Hive and Pig  
 * Spark  
 * Sqoop  
-* and others  
 
 You need to plan and configure the following resources for use with Drill in a multitenant or multi-instance environment:
 
 * Memory  
 * CPU  
 * Disk  
+
+This section covers the multitenancy. The next section, ["How Multiple Users Share a Drillbit"]({{site.baseurl}}/docs/how-multiple-users-share-a-drillbit), covers multi-instance architecture.
 
 ## Partitioning Workloads
 
