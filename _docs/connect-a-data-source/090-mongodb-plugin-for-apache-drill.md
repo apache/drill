@@ -4,19 +4,12 @@ parent: "Connect a Data Source"
 ---
 ## Overview
 
-You can leverage the power of Apache Drill to query data without any upfront
-schema definitions. Drill enables you to create an architecture that works
-with nested and dynamic schemas, making it the perfect SQL query tool to use
-on NoSQL databases, such as MongoDB.
-
-As of Apache Drill 0.6, you can configure MongoDB as a Drill data source.
 Drill provides a mongodb format plugin to connect to MongoDB, and run queries
-on the data using ANSI SQL.
+to read, but not to write, the Mongo data ANSI SQL. You do not need any upfront schema definitions.
 
-This tutorial assumes that you have Drill installed locally (embedded mode),
+This procedures in this section assume that you have Drill installed locally (embedded mode),
 as well as MongoDB. Examples in this tutorial use zip code aggregation data
-provided by MongoDB. Before You Begin provides links to download tools and data
-used throughout the tutorial.
+provided by MongoDB. Before You Begin provides links to download tools and data.
 
 {% include startnote.html %}A local instance of Drill is used in this tutorial for simplicity. {% include endnote.html %}
 
