@@ -357,7 +357,7 @@ The sys.options table in Drill contains information about boot and system option
   <tr>
     <td>planner.width.max_per_query</td>
     <td>1000</td>
-    <td>Same as planner but applies to the query as executed by the entire cluster.</td>
+    <td>Same as max per node but applies to the query as executed by the entire cluster.</td>
   </tr>
   <tr>
     <td>store.format</td>

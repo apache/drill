@@ -3,7 +3,7 @@ title: "Handling Different Data Types"
 parent: "Data Types"
 ---
 ## Handling HBase Data
-To query HBase data in Drill, convert every column of an HBase table to/from byte arrays from/to an SQL data type using [CONVERT_TO or CONVERT_FROM]({{ site.baseurl }}/docs//data-type-conversion/#convert_to-and-convert_from) with one exception: When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST. Use [CAST]({{ site.baseurl }}/docs/data-type-conversion/#cast) to convert integers to/from HBase.
+To query HBase data in Drill, convert every column of an HBase table to/from byte arrays from/to an SQL data type using [CONVERT_TO or CONVERT_FROM]({{ site.baseurl }}/docs//data-type-conversion/#convert_to-and-convert_from) with one exception: When converting data represented as a string to an INT or BIGINT number, use CAST. Use [CAST]({{ site.baseurl }}/docs/data-type-conversion/#cast) to convert integers to/from HBase.
 
 ## Handling Textual Data
 In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as previously mentioned. In addition to using the CAST function, you can also use TO_CHAR, TO_DATE, TO_NUMBER, and TO_TIMESTAMP. If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause.

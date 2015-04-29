@@ -485,10 +485,10 @@ The following tables show data types that Drill can cast to/from other data type
 ## CONVERT_TO and CONVERT_FROM Data Types
 
 You use the CONVERT_TO and CONVERT_FROM data types as arguments to the CONVERT_TO
-and CONVERT_FROM functions. 
+and CONVERT_FROM functions. CONVERT_FROM and CONVERT_TO methods transform a known binary representation/encoding to a Drill internal format. 
 
-\*\_BE in the data type name denotes Big Endian encoding. Use the \*\_BE types to store integer data types in an HBase or Mapr-DB
-table. The comparison order of \*\_BE encoded bytes is the same as the integer value itself if the bytes are unsigned or positive. Using a *_BE type facilitates scan range pruning and filter pushdown into HBase scan. 
+We recommend storing HBase/MapR-DB data in a binary representation rather than
+a string representation. Use the \*\_BE types to store integer data types in an HBase or Mapr-DB table.  INT is a 4-byte little endian signed integer. INT_BE is a 4-byte big endian signed integer. The comparison order of \*\_BE encoded bytes is the same as the integer value itself if the bytes are unsigned or positive. Using a *_BE type facilitates scan range pruning and filter pushdown into HBase scan. 
 
 \*\_HADOOPV in the data type name denotes the variable length integer as defined by Hadoop libraries. Use a \*\_HADOOPV type if user data is encoded in this format by a Hadoop tool outside MapR.
 
