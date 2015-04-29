@@ -72,7 +72,7 @@ div.doc-nav span.next-toc {
 }
 .int_title
 {
-  margin-left: 63px;
+  margin-left: 30px;
   text-align: left;
   margin-top: 30px;
 }
@@ -82,7 +82,7 @@ div.doc-nav span.next-toc {
 .main-content .edit-link {
   position: relative;
   float: right;
-  bottom: 81px;
+  bottom: 105px;
   text-decoration: none;
   font-size: 24px;
   color: #333333;
@@ -94,6 +94,16 @@ div.int_title h1, div.main-content h1, div.main-content h2, div.main-content h3,
   color: #313030;
   padding: 0;
 }
+div.main-content h1, div.main-content h2 {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+div.main-content h3 {
+  margin-top: 24px;
+  font-weight: bold;
+}
+
 div.section > h2, div.section > h3, div.section > h4 {
   margin: 24px 0;
 }
@@ -402,7 +412,7 @@ span.expand.show, span.contract.show {
     margin-left: 0;
   }
   .int_title {
-    margin-left: 63px;
+    margin-left: 30px;
     margin-top: 60px;
   }
   .int_title h1 {

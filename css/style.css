@@ -12,7 +12,7 @@ html {
 }
 
 body {
-	font-family:"Lato";
+  font-family: 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	padding:0;
   margin: 0;
   height: 100%;
@@ -269,7 +269,6 @@ a.anchor {
 	background:transparent;
 	border:none;
 	color:#FFF;
-	font-family:"Lato";
 	font-size:34px;
 	font-weight:lighter;
 	width:100%;
@@ -774,7 +773,7 @@ ul.num {
 
 .int_title:after {
 	background:#1a6bc7;
-	bottom:0px;
+	bottom:24px;
 	content:" ";
 	height:5px;
 	left:275px;
@@ -876,7 +875,6 @@ li p {
   border: none;
   color: white;
   background-color: transparent !important;
-  font-family: lato;
   font-size: 14px;
   font-weight: inherit;
   padding: 0 0 0 8px;
