@@ -22,8 +22,8 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 
 
-public abstract class BaseDataValueVector<V extends BaseValueVector<V, A, M>, A extends BaseValueVector.BaseAccessor,
-    M extends BaseValueVector.BaseMutator> extends BaseValueVector<V, A, M> {
+public abstract class BaseDataValueVector<A extends BaseValueVector.BaseAccessor, M extends BaseValueVector.BaseMutator>
+    extends BaseValueVector<A, M> {
 
   protected DrillBuf data;
 
@@ -36,6 +36,7 @@ public abstract class BaseDataValueVector<V extends BaseValueVector<V, A, M>, A 
   public void clear() {
     data.release();
     data = allocator.getEmpty();
+    super.clear();
   }
 
   @Override

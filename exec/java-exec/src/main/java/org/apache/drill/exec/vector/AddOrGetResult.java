@@ -17,9 +17,22 @@
  */
 package org.apache.drill.exec.vector;
 
-public interface RepeatedVector extends ValueVector {
-  public static final int DEFAULT_REPEAT_PER_RECORD = 4;
+import com.google.common.base.Preconditions;
 
-  public RepeatedFixedWidthVector.RepeatedAccessor getAccessor();
+public class AddOrGetResult<V extends ValueVector> {
+  private final V vector;
+  private final boolean created;
 
+  public AddOrGetResult(V vector, boolean created) {
+    this.vector = Preconditions.checkNotNull(vector);
+    this.created = created;
+  }
+
+  public V getVector() {
+    return vector;
+  }
+
+  public boolean isCreated() {
+    return created;
+  }
 }

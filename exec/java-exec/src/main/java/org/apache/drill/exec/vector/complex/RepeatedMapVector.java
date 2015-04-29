@@ -41,11 +41,15 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.vector.AddOrGetResult;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
+import org.apache.drill.exec.vector.BaseRepeatedValueVector;
+import org.apache.drill.exec.vector.RepeatedFixedWidthVectorLike;
+import org.apache.drill.exec.vector.RepeatedValueVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VectorDescriptor;
 import org.apache.drill.exec.vector.complex.impl.NullReader;
 import org.apache.drill.exec.vector.complex.impl.RepeatedMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -53,7 +57,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
-public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixedWidthVector {
+public class RepeatedMapVector extends AbstractMapVector implements RepeatedValueVector, RepeatedFixedWidthVectorLike {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RepeatedMapVector.class);
 
@@ -71,10 +75,27 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
     this.emptyPopulator = new EmptyValuePopulator(offsets);
   }
 
+  @Override
+  public UInt4Vector getOffsetVector() {
+    return offsets;
+  }
+
+  @Override
+  public ValueVector getDataVector() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public <T extends ValueVector> AddOrGetResult<T> addOrGetVector(VectorDescriptor descriptor) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void setInitialCapacity(int numRecords) {
     offsets.setInitialCapacity(numRecords + 1);
-    for(ValueVector v : (ValueVector<?,?,?>)this) {
-      v.setInitialCapacity(numRecords * DEFAULT_REPEAT_PER_RECORD);
+    final Iterable<ValueVector> container = this;
+    for(ValueVector v : container) {
+      v.setInitialCapacity(numRecords * RepeatedValueVector.DEFAULT_REPEAT_PER_RECORD);
     }
   }
 
@@ -84,18 +105,14 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
   }
 
   @Override
-  public void allocateNew(int groupCount, int valueCount) {
+  public void allocateNew(int groupCount, int innerValueCount) {
     clear();
     offsets.allocateNew(groupCount+1);
     offsets.zeroVector();
     for (ValueVector v : getChildren()) {
-      AllocationHelper.allocatePrecomputedChildCount(v, groupCount, 50, valueCount);
+      AllocationHelper.allocatePrecomputedChildCount(v, groupCount, 50, innerValueCount);
     }
     mutator.reset();
-  }
-
-  public void reAlloc() {
-    offsets.reAlloc();
   }
 
   public Iterator<String> fieldNameIterator() {
@@ -111,7 +128,7 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
 
   @Override
   public int getBufferSize() {
-    if (accessor.getGroupCount() == 0) {
+    if (getAccessor().getValueCount() == 0) {
       return 0;
     }
     long buffer = offsets.getBufferSize();
@@ -425,14 +442,15 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
     Preconditions.checkArgument(bufOffset == buf.capacity());
   }
 
+
   @Override
   public SerializedField getMetadata() {
     SerializedField.Builder b = getField() //
         .getAsBuilder() //
         .setBufferLength(getBufferSize()) //
-        .setGroupCount(accessor.getGroupCount())
+        .setGroupCount(accessor.getValueCount())
         // while we don't need to actually read this on load, we need it to make sure we don't skip deserialization of this vector
-        .setValueCount(accessor.getGroupCount());
+        .setValueCount(accessor.getInnerValueCount());
     for (ValueVector v : getChildren()) {
       b.addChild(v.getMetadata());
     }
@@ -467,16 +485,31 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
 
     @Override
     public int getValueCount() {
-      return offsets.getAccessor().get(offsets.getAccessor().getValueCount() - 1);
+      return Math.max(offsets.getAccessor().getValueCount() - 1, 0);
     }
 
-    public int getGroupSizeAtIndex(int index) {
+    @Override
+    public int getInnerValueCount() {
+      final int valueCount = getValueCount();
+      if (valueCount == 0) {
+        return 0;
+      }
+      return offsets.getAccessor().get(valueCount);
+    }
+
+    @Override
+    public int getInnerValueCountAt(int index) {
       return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
     }
 
     @Override
-    public ValueVector getAllChildValues() {
-      throw new UnsupportedOperationException("Cannot retrieve inner vector from repeated map.");
+    public boolean isEmpty(int index) {
+      return false;
+    }
+
+    @Override
+    public boolean isNull(int index) {
+      return false;
     }
 
     public void get(int index, RepeatedMapHolder holder) {
@@ -504,32 +537,18 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
       }
     }
 
-    @Override
-    public boolean isNull(int index) {
-      return false;
-    }
-
-    @Override
-    public int getGroupCount() {
-      final int valueCount = offsets.getAccessor().getValueCount();
-      return valueCount == 0 ? 0 : valueCount - 1;
-    }
   }
 
 
-  public class Mutator implements ValueVector.Mutator, RepeatedMutator {
+  public class Mutator implements RepeatedMutator {
 
-    public void startNewGroup(int index) {
+    @Override
+    public void startNewValue(int index) {
       emptyPopulator.populate(index+1);
       offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
     }
 
-    public int add(int index) {
-      final int prevEnd = offsets.getAccessor().get(index+1);
-      offsets.getMutator().setSafe(index + 1, prevEnd + 1);
-      return prevEnd;
-    }
-
+    @Override
     public void setValueCount(int topLevelValueCount) {
       emptyPopulator.populate(topLevelValueCount);
       offsets.getMutator().setValueCount(topLevelValueCount == 0 ? 0 : topLevelValueCount+1);
@@ -543,22 +562,12 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
     public void reset() { }
 
     @Override
-    public void generateTestData(int values) {
-    }
+    public void generateTestData(int values) { }
 
-    @Override
-    public void setValueCounts(int parentValueCount, int childValueCount) {
-      // TODO - determine if this should be implemented for this class
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setRepetitionAtIndexSafe(int index, int repetitionCount) {
-    }
-
-    @Override
-    public BaseDataValueVector getDataVector() {
-      return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public int add(int index) {
+      final int prevEnd = offsets.getAccessor().get(index+1);
+      offsets.getMutator().setSafe(index + 1, prevEnd + 1);
+      return prevEnd;
     }
   }
 
@@ -573,7 +582,7 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedFixe
   }
 
   @Override
-  public int load(int parentValueCount, int childValueCount, DrillBuf buf) {
+  public int load(int valueCount, int innerValueCount, DrillBuf buf) {
     throw new UnsupportedOperationException();
   }
 }

@@ -18,9 +18,9 @@
 package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
+import org.apache.drill.exec.vector.RepeatedFixedWidthVectorLike;
 import org.apache.drill.exec.vector.RepeatedMutator;
-import org.apache.drill.exec.vector.RepeatedVariableWidthVector;
+import org.apache.drill.exec.vector.RepeatedVariableWidthVectorLike;
 import org.apache.drill.exec.vector.ValueVector;
 
 public class VectorHolder {
@@ -35,7 +35,7 @@ public class VectorHolder {
   public VectorHolder(int length, ValueVector vector) {
     this.length = length;
     this.vector = vector;
-    if (vector instanceof RepeatedFixedWidthVector || vector instanceof  RepeatedVariableWidthVector) {
+    if (vector instanceof RepeatedFixedWidthVectorLike || vector instanceof RepeatedVariableWidthVectorLike) {
       repeated = true;
     }
   }
@@ -43,7 +43,7 @@ public class VectorHolder {
   public VectorHolder(ValueVector vector) {
     this.length = vector.getValueCapacity();
     this.vector = vector;
-    if (vector instanceof RepeatedFixedWidthVector || vector instanceof  RepeatedVariableWidthVector) {
+    if (vector instanceof RepeatedFixedWidthVectorLike || vector instanceof RepeatedVariableWidthVectorLike) {
       repeated = true;
     }
   }
@@ -90,7 +90,7 @@ public class VectorHolder {
 
   public void populateVectorLength() {
     ValueVector.Mutator mutator = vector.getMutator();
-    if (vector instanceof RepeatedFixedWidthVector || vector instanceof RepeatedVariableWidthVector) {
+    if (vector instanceof RepeatedFixedWidthVectorLike || vector instanceof RepeatedVariableWidthVectorLike) {
       mutator.setValueCount(groupCount);
     } else {
       mutator.setValueCount(count);

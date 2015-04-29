@@ -37,12 +37,11 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
  * A vector when instantiated, relies on a {@link org.apache.drill.exec.record.DeadBuf dead buffer}. It is important
  * that vector is allocated before attempting to read or write.
  *
- * @param <V>  actual value vector type
  * @param <A>  accessor type that supports reading from this vector
  * @param <M>  mutator type that supports writing to this vector
  */
-public interface ValueVector<V extends ValueVector, A extends ValueVector.Accessor, M extends ValueVector.Mutator>
-    extends Closeable, Iterable<ValueVector<V, A, M>> {
+public interface ValueVector<A extends ValueVector.Accessor, M extends ValueVector.Mutator>
+    extends Closeable, Iterable<ValueVector> {
 
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
@@ -94,7 +93,7 @@ public interface ValueVector<V extends ValueVector, A extends ValueVector.Access
    * Returns a new {@link org.apache.drill.exec.record.TransferPair transfer pair} that is used to transfer underlying
    * buffers into the target vector.
    */
-  TransferPair makeTransferPair(V target);
+  TransferPair makeTransferPair(ValueVector target);
 
   /**
    * Returns an {@link org.apache.drill.exec.vector.ValueVector.Accessor accessor} that is used to read from this vector

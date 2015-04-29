@@ -63,6 +63,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.carrotsearch.hppc.IntOpenHashSet;
@@ -415,7 +416,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
         ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
         cg.addExpr(expr);
-      } else{
+      } else {
         // need to do evaluation.
         final ValueVector vector = container.addOrGet(outputField, callBack);
         allocationVectors.add(vector);
@@ -424,6 +425,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         final ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, useSetSafe);
         final HoldingContainer hc = cg.addExpr(write);
 
+        // We cannot do multiple transfers from the same vector. However we still need to instantiate the output vector.
+        if (expr instanceof ValueVectorReadExpression) {
+          final ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
+          if (!vectorRead.hasReadPath()) {
+            final TypedFieldId id = vectorRead.getFieldId();
+            final ValueVector vvIn = incoming.getValueAccessorById(id.getIntermediateClass(), id.getFieldIds()).getValueVector();
+            vvIn.makeTransferPair(vector);
+          }
+        }
         logger.debug("Added eval for project expression.");
       }
     }

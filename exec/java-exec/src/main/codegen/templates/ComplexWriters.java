@@ -77,24 +77,24 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
 
   public void write(${minor.class?cap_first}Holder h){
     mutator.addSafe(idx(), h);
-    vector.getMutator().setValueCount(idx());
+    vector.getMutator().setValueCount(idx()+1);
   }
   
   public void write(Nullable${minor.class?cap_first}Holder h){
     mutator.addSafe(idx(), h);
-    vector.getMutator().setValueCount(idx());
+    vector.getMutator().setValueCount(idx()+1);
   }
 
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
     mutator.addSafe(idx(), <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-    vector.getMutator().setValueCount(idx());
+    vector.getMutator().setValueCount(idx()+1);
   }
   </#if>
   
   public void setPosition(int idx){
     super.setPosition(idx);
-    mutator.startNewGroup(idx);
+    mutator.startNewValue(idx);
   }
   
   
@@ -102,24 +102,24 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
   
   public void write(${minor.class}Holder h){
     mutator.setSafe(idx(), h);
-    vector.getMutator().setValueCount(idx());
+    vector.getMutator().setValueCount(idx()+1);
   }
   
   public void write(Nullable${minor.class}Holder h){
     mutator.setSafe(idx(), h);
-    vector.getMutator().setValueCount(idx());
+    vector.getMutator().setValueCount(idx()+1);
   }
 
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
     mutator.setSafe(idx(), <#if mode == "Nullable">1, </#if><#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-    vector.getMutator().setValueCount(idx());
+    vector.getMutator().setValueCount(idx()+1);
   }
 
   <#if mode == "Nullable">
   public void writeNull(){
     mutator.setNull(idx());
-    vector.getMutator().setValueCount(idx());
+    vector.getMutator().setValueCount(idx()+1);
   }
   </#if>
   </#if>

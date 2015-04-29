@@ -31,8 +31,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.drill.exec.vector.RepeatedFixedWidthVector.RepeatedAccessor;
-import org.apache.drill.exec.vector.RepeatedVector;
+import org.apache.drill.exec.vector.RepeatedValueVector;
 
 public abstract class FlattenTemplate implements Flattener {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenTemplate.class);
@@ -43,9 +42,9 @@ public abstract class FlattenTemplate implements Flattener {
   private SelectionVector2 vector2;
   private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
-  RepeatedVector fieldToFlatten;
-  RepeatedAccessor accessor;
-  private int groupIndex;
+  private RepeatedValueVector fieldToFlatten;
+  private RepeatedValueVector.RepeatedAccessor accessor;
+  private int valueIndex;
 
   // this allows for groups to be written between batches if we run out of space, for cases where we have finished
   // a batch on the boundary it will be set to 0
@@ -60,12 +59,12 @@ public abstract class FlattenTemplate implements Flattener {
   }
 
   @Override
-  public void setFlattenField(RepeatedVector flattenField) {
+  public void setFlattenField(RepeatedValueVector flattenField) {
     this.fieldToFlatten = flattenField;
-    this.accessor = flattenField.getAccessor();
+    this.accessor = RepeatedValueVector.RepeatedAccessor.class.cast(flattenField.getAccessor());
   }
 
-  public RepeatedVector getFlattenField() {
+  public RepeatedValueVector getFlattenField() {
     return fieldToFlatten;
   }
 
@@ -84,14 +83,14 @@ public abstract class FlattenTemplate implements Flattener {
           childIndexWithinCurrGroup = 0;
         }
         outer: {
-          final int groupCount = accessor.getGroupCount();
-          for ( ; groupIndex < groupCount; groupIndex++) {
-            currGroupSize = accessor.getGroupSizeAtIndex(groupIndex);
+          final int valueCount = accessor.getValueCount();
+          for ( ; valueIndex < valueCount; valueIndex++) {
+            currGroupSize = accessor.getInnerValueCountAt(valueIndex);
             for ( ; childIndexWithinCurrGroup < currGroupSize; childIndexWithinCurrGroup++) {
               if (firstOutputIndex == OUTPUT_BATCH_SIZE) {
                 break outer;
               }
-              doEval(groupIndex, firstOutputIndex);
+              doEval(valueIndex, firstOutputIndex);
               firstOutputIndex++;
               childIndex++;
             }
@@ -133,7 +132,7 @@ public abstract class FlattenTemplate implements Flattener {
 
   @Override
   public void resetGroupIndex() {
-    this.groupIndex = 0;
+    this.valueIndex = 0;
     this.currGroupSize = 0;
     this.childIndex = 0;
   }

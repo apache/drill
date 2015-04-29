@@ -31,10 +31,10 @@ public class AllocationHelper {
       ((FixedWidthVector) v).allocateNew(valueCount);
     } else if (v instanceof VariableWidthVector) {
       ((VariableWidthVector) v).allocateNew(valueCount * bytesPerValue, valueCount);
-    }else if(v instanceof RepeatedFixedWidthVector){
-      ((RepeatedFixedWidthVector) v).allocateNew(valueCount, childValCount);
-    }else if(v instanceof RepeatedVariableWidthVector){
-      ((RepeatedVariableWidthVector) v).allocateNew(childValCount * bytesPerValue, valueCount, childValCount);
+    }else if(v instanceof RepeatedFixedWidthVectorLike){
+      ((RepeatedFixedWidthVectorLike) v).allocateNew(valueCount, childValCount);
+    }else if(v instanceof RepeatedVariableWidthVectorLike){
+      ((RepeatedVariableWidthVectorLike) v).allocateNew(childValCount * bytesPerValue, valueCount, childValCount);
     }else{
       v.allocateNew();
     }

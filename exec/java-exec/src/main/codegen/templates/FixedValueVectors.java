@@ -764,6 +764,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
        allocationMonitor = 0;
      }
      VectorTrimmer.trim(data, idx);
+     data.writerIndex(valueCount * ${type.width});
    }
 
 

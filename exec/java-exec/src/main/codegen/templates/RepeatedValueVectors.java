@@ -19,9 +19,9 @@
 import java.lang.Override;
 
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.vector.BaseRepeatedValueVector;
 import org.apache.drill.exec.vector.BaseValueVector;
-import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
-import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.RepeatedFixedWidthVectorLike;
 import org.mortbay.jetty.servlet.Holder;
 
 <@pp.dropOutputFile />
@@ -48,14 +48,11 @@ package org.apache.drill.exec.vector;
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 
-public final class Repeated${minor.class}Vector extends BaseValueVector implements Repeated<#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
+public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector implements Repeated<#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>VectorLike {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Repeated${minor.class}Vector.class);
 
-  private int parentValueCount;
-  private int childValueCount;
-
-  private final UInt4Vector offsets;   // offsets to start of each record
-  private final ${minor.class}Vector values;
+  // we maintain local reference to concrete vector type for performance reasons.
+  private ${minor.class}Vector values;
   private final FieldReader reader = new Repeated${minor.class}ReaderImpl(Repeated${minor.class}Vector.this);
   private final Mutator mutator = new Mutator();
   private final Accessor accessor = new Accessor();
@@ -63,9 +60,17 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
   
   public Repeated${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    this.offsets = new UInt4Vector(null, allocator);
-    MaterializedField mf = MaterializedField.create(field.getPath(), Types.required(field.getType().getMinorType()));
-    this.values = new ${minor.class}Vector(mf, allocator);
+    addOrGetVector(VectorDescriptor.create(Types.required(field.getType().getMinorType())));
+  }
+
+  @Override
+  public Mutator getMutator() {
+    return mutator;
+  }
+
+  @Override
+  public Accessor getAccessor() {
+    return accessor;
   }
 
   @Override
@@ -73,46 +78,39 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     return reader;
   }
 
-  public int getValueCapacity(){
-    return Math.min(values.getValueCapacity(), offsets.getValueCapacity() - 1);
-  }
-
-  public int getBufferSize(){
-    if(accessor.getGroupCount() == 0){
-      return 0;
-    }
-    return offsets.getBufferSize() + values.getBufferSize();
-  }
-
-  public UInt4Vector getOffsetVector(){
-    return offsets;
-  }
-  
-  public ${minor.class}Vector getValuesVector(){
+  @Override
+  public ${minor.class}Vector getDataVector(){
     return values;
   }
-  
-  public DrillBuf getBuffer(){
-    return values.getBuffer();
-  }
-  
+
+  @Override
   public TransferPair getTransferPair(){
     return new TransferImpl(getField());
   }
+
+  @Override
   public TransferPair getTransferPair(FieldReference ref){
     return new TransferImpl(getField().clone(ref));
   }
 
+  @Override
   public TransferPair makeTransferPair(ValueVector to) {
     return new TransferImpl((Repeated${minor.class}Vector) to);
   }
-  
+
+  @Override
+  public AddOrGetResult<${minor.class}Vector> addOrGetVector(VectorDescriptor descriptor) {
+    final AddOrGetResult<${minor.class}Vector> result = super.addOrGetVector(descriptor);
+    if (result.isCreated()) {
+      values = result.getVector();
+    }
+    return result;
+  }
+
   public void transferTo(Repeated${minor.class}Vector target){
     target.clear();
     offsets.transferTo(target.offsets);
     values.transferTo(target.values);
-    target.parentValueCount = parentValueCount;
-    target.childValueCount = childValueCount;
     clear();
   }
 
@@ -132,8 +130,6 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
       normalizedPos = a.get(startIndex+i) - startPos;
       m.set(i, normalizedPos);
     }
-    to.parentValueCount = groups;
-    to.childValueCount  = valuesToCopy;
     m.setValueCount(groups == 0 ? 0 : groups + 1);
   }
   
@@ -167,33 +163,27 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
   }
 
     public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
-      int count = v.getAccessor().getCount(inIndex);
-      getMutator().startNewGroup(outIndex);
+      final int count = v.getAccessor().getInnerValueCountAt(inIndex);
+      getMutator().startNewValue(outIndex);
       for (int i = 0; i < count; i++) {
         getMutator().add(outIndex, v.getAccessor().get(inIndex, i));
       }
     }
 
     public void copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
-      int count = v.getAccessor().getCount(inIndex);
-      getMutator().startNewGroup(outIndex);
+      final int count = v.getAccessor().getInnerValueCountAt(inIndex);
+      getMutator().startNewValue(outIndex);
       for (int i = 0; i < count; i++) {
         getMutator().addSafe(outIndex, v.getAccessor().get(inIndex, i));
       }
     }
 
-  @Override
-  public void setInitialCapacity(int numRecords) {
-    offsets.setInitialCapacity(numRecords + 1);
-    values.setInitialCapacity(numRecords * DEFAULT_REPEAT_PER_RECORD);
-  }
 
   public boolean allocateNewSafe(){
     if(!offsets.allocateNewSafe()) return false;
     offsets.zeroVector();
     if(!values.allocateNewSafe()) return false;
     mutator.reset();
-    accessor.reset();
     return true;
   }
   
@@ -202,36 +192,28 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     offsets.zeroVector();
     values.allocateNew();
     mutator.reset();
-    accessor.reset();
   }
 
   <#if type.major == "VarLen">
   @Override
-  public SerializedField getMetadata() {
-    return getMetadataBuilder() //
-             .setGroupCount(this.parentValueCount) //
-             .setValueCount(this.childValueCount) //
-             .setVarByteLength(values.getVarByteLength()) //
-             .setBufferLength(getBufferSize()) //
-             .build();
+  protected SerializedField.Builder getMetadataBuilder() {
+    return super.getMetadataBuilder()
+            .setVarByteLength(values.getVarByteLength());
   }
   
-  public void allocateNew(int totalBytes, int parentValueCount, int childValueCount) {
-    offsets.allocateNew(parentValueCount+1);
+  public void allocateNew(int totalBytes, int valueCount, int innerValueCount) {
+    offsets.allocateNew(valueCount+1);
     offsets.zeroVector();
-    values.allocateNew(totalBytes, childValueCount);
+    values.allocateNew(totalBytes, innerValueCount);
     mutator.reset();
-    accessor.reset();
   }
   
   @Override
-  public int load(int dataBytes, int parentValueCount, int childValueCount, DrillBuf buf){
+  public int load(int dataBytes, int valueCount, int innerValueCount, DrillBuf buf){
     clear();
-    this.parentValueCount = parentValueCount;
-    this.childValueCount = childValueCount;
     int loaded = 0;
-    loaded += offsets.load(parentValueCount+1, buf.slice(loaded, buf.capacity() - loaded));
-    loaded += values.load(dataBytes + 4*(childValueCount + 1), childValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += offsets.load(valueCount+1, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += values.load(dataBytes + 4*(innerValueCount + 1), innerValueCount, buf.slice(loaded, buf.capacity() - loaded));
     return loaded;
   }
   
@@ -247,32 +229,20 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
   }
 
   <#else>
-  
-  @Override
-  public SerializedField getMetadata() {
-    return getMetadataBuilder()
-             .setGroupCount(this.parentValueCount)
-             .setValueCount(this.childValueCount)
-             .setBufferLength(getBufferSize())
-             .build();
-  }
-  
-  public void allocateNew(int parentValueCount, int childValueCount) {
+
+  public void allocateNew(int valueCount, int innerValueCount) {
     clear();
-    offsets.allocateNew(parentValueCount+1);
+    offsets.allocateNew(valueCount+1);
     offsets.zeroVector();
-    values.allocateNew(childValueCount);
+    values.allocateNew(innerValueCount);
     mutator.reset();
-    accessor.reset();
   }
   
-  public int load(int parentValueCount, int childValueCount, DrillBuf buf){
+  public int load(int valueCount, int innerValueCount, DrillBuf buf){
     clear();
-    this.parentValueCount = parentValueCount;
-    this.childValueCount = childValueCount;
     int loaded = 0;
-    loaded += offsets.load(parentValueCount+1, buf.slice(loaded, buf.capacity() - loaded));
-    loaded += values.load(childValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += offsets.load(valueCount+1, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += values.load(innerValueCount, buf.slice(loaded, buf.capacity() - loaded));
     return loaded;
   }
   
@@ -284,49 +254,12 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
   }
   </#if>
 
-  @Override
-  public DrillBuf[] getBuffers(boolean clear) {
-    DrillBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(false), values.getBuffers(false), DrillBuf.class);
-    if (clear) {
-      for (DrillBuf buffer:buffers) {
-        buffer.retain();
-      }
-      clear();
-    }
-    return buffers;
-  }
-
-  public void clear(){
-    offsets.clear();
-    values.clear();
-    parentValueCount = 0;
-    childValueCount = 0;
-  }
-
-  public Mutator getMutator(){
-    return mutator;
-  }
-  
-  public Accessor getAccessor(){
-    return accessor;
-  }
 
   // This is declared a subclass of the accessor declared inside of FixedWidthVector, this is also used for
   // variable length vectors, as they should ahve consistent interface as much as possible, if they need to diverge
   // in the future, the interface shold be declared in the respective value vector superclasses for fixed and variable
   // and we should refer to each in the generation template
-  public final class Accessor extends BaseValueVector.BaseAccessor implements RepeatedFixedWidthVector.RepeatedAccessor{
-
-    /**
-     * Get the elements at the given index.
-     */
-    public int getCount(int index) {
-      return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
-    }
-
-    public ValueVector getAllChildValues() {
-      return values;
-    }
+  public final class Accessor extends BaseRepeatedValueVector.BaseRepeatedAccessor {
 
     public List<${friendlyType}> getObject(int index) {
       List<${friendlyType}> vals = new JsonStringArrayList();
@@ -336,10 +269,6 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
         vals.add(values.getAccessor().getObject(i));
       }
       return vals;
-    }
-
-    public int getGroupSizeAtIndex(int index){
-      return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
     }
     
     public ${friendlyType} getSingleObject(int index, int arrayIndex){
@@ -360,12 +289,7 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
            </#if> get(int index, int positionIndex) {
       return values.getAccessor().get(offsets.getAccessor().get(index) + positionIndex);
     }
-        
-           
-    public boolean isNull(int index){
-      return false;
-    }
-    
+
     public void get(int index, Repeated${minor.class}Holder holder){
       holder.start = offsets.getAccessor().get(index);
       holder.end =  offsets.getAccessor().get(index+1);
@@ -375,61 +299,24 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     public void get(int index, int positionIndex, ${minor.class}Holder holder) {
       int offset = offsets.getAccessor().get(index);
       assert offset >= 0;
-      assert positionIndex < getCount(index);
+      assert positionIndex < getInnerValueCountAt(index);
       values.getAccessor().get(offset + positionIndex, holder);
     }
     
     public void get(int index, int positionIndex, Nullable${minor.class}Holder holder) {
       int offset = offsets.getAccessor().get(index);
       assert offset >= 0;
-      if (positionIndex >= getCount(index)) {
+      if (positionIndex >= getInnerValueCountAt(index)) {
         holder.isSet = 0;
         return;
       }
       values.getAccessor().get(offset + positionIndex, holder);
     }
-
-    public MaterializedField getField() {
-      return field;
-    }
-    
-    public int getGroupCount(){
-      return parentValueCount;
-    }
-    
-    public int getValueCount(){
-      return childValueCount;
-    }
-    
-    public void reset(){
-      
-    }
   }
   
-  public final class Mutator extends BaseValueVector.BaseMutator implements RepeatedMutator {
+  public final class Mutator extends BaseRepeatedValueVector.BaseRepeatedMutator implements RepeatedMutator {
 
-    
-    private Mutator(){
-    }
-
-    public void setRepetitionAtIndexSafe(int index, int repetitionCount) {
-      offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index) + repetitionCount);
-    }
-
-    public BaseDataValueVector getDataVector() {
-      return values;
-    }
-
-    public void setValueCounts(int parentValueCount, int childValueCount){
-      Repeated${minor.class}Vector.this.parentValueCount = parentValueCount;
-      Repeated${minor.class}Vector.this.childValueCount = childValueCount;
-      values.getMutator().setValueCount(childValueCount);
-      offsets.getMutator().setValueCount(parentValueCount == 0 ? 0 : parentValueCount + 1);
-    }
-
-    public void startNewGroup(int index) {
-      offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
-    }
+    private Mutator() { }
 
     /**
      * Add an element to the given record index.  This is similar to the set() method in other
@@ -468,7 +355,7 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     
     public void setSafe(int index, Repeated${minor.class}Holder h){
       ${minor.class}Holder ih = new ${minor.class}Holder();
-      getMutator().startNewGroup(index);
+      getMutator().startNewValue(index);
       for(int i = h.start; i < h.end; i++){
         h.vector.getAccessor().get(i, ih);
         getMutator().addSafe(index, ih);
@@ -510,17 +397,6 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
         accessor.get(i, innerHolder);
         add(index, innerHolder);
       }
-    }
-    
-    /**
-     * Set the number of value groups in this repeated field.
-     * @param groupCount Count of Value Groups.
-     */
-    public void setValueCount(int groupCount) {
-      parentValueCount = groupCount;
-      childValueCount = offsets.getAccessor().get(groupCount);
-      offsets.getMutator().setValueCount(groupCount == 0 ? 0 : groupCount+1);
-      values.getMutator().setValueCount(childValueCount);
     }
 
     public void generateTestData(final int valCount){

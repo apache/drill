@@ -19,35 +19,29 @@ package org.apache.drill.exec.vector;
 
 import io.netty.buffer.DrillBuf;
 
-public interface RepeatedFixedWidthVector extends ValueVector, RepeatedVector {
+public interface RepeatedVariableWidthVectorLike {
   /**
    * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
    *
+   * @param totalBytes   Desired size of the underlying data buffer.
    * @param parentValueCount   Number of separate repeating groupings.
    * @param childValueCount   Number of supported values in the vector.
    */
-  public void allocateNew(int parentValueCount, int childValueCount);
+  public void allocateNew(int totalBytes, int parentValueCount, int childValueCount);
+
+  /**
+   * Provide the maximum amount of variable width bytes that can be stored int his vector.
+   * @return
+   */
+  public int getByteCapacity();
 
   /**
    * Load the records in the provided buffer based on the given number of values.
+   * @param dataBytes   The number of bytes associated with the data array.
    * @param parentValueCount   Number of separate repeating groupings.
-   * @param valueCount Number atomic values the buffer contains.
+   * @param childValueCount   Number of supported values in the vector.
    * @param buf Incoming buffer.
    * @return The number of bytes of the buffer that were consumed.
    */
-  public int load(int parentValueCount, int childValueCount, DrillBuf buf);
-
-  public abstract RepeatedMutator getMutator();
-
-  public interface RepeatedAccessor extends Accessor {
-    public int getGroupCount();
-    public int getValueCount();
-    public int getGroupSizeAtIndex(int index);
-    public ValueVector getAllChildValues();
-  }
-  public interface RepeatedMutator extends Mutator {
-    public void setValueCounts(int parentValueCount, int childValueCount);
-    public void setRepetitionAtIndexSafe(int index, int repetitionCount);
-    public BaseDataValueVector getDataVector();
-  }
+  public int load(int dataBytes, int parentValueCount, int childValueCount, DrillBuf buf);
 }

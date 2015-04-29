@@ -15,22 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.drill.exec.exception;
 
-package org.apache.drill.exec.vector;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 
-import org.apache.drill.exec.util.CallBack;
-
-public class SchemaChangeCallBack implements CallBack {
-  private boolean schemaChange = false;
-
-  public void doWork() {
-    schemaChange = true;
+public class SchemaChangeRuntimeException extends DrillRuntimeException {
+  public SchemaChangeRuntimeException() {
+    super();
   }
 
-  public boolean getSchemaChange() {
-    final boolean current = schemaChange;
-    schemaChange = false;
-    return current;
+  public SchemaChangeRuntimeException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+  }
+
+  public SchemaChangeRuntimeException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public SchemaChangeRuntimeException(String message) {
+    super(message);
+  }
+
+  public SchemaChangeRuntimeException(Throwable cause) {
+    super(cause);
   }
 }
-

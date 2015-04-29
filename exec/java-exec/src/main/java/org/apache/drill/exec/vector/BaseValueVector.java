@@ -25,9 +25,10 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TransferPair;
 
-public abstract class BaseValueVector<V extends BaseValueVector<V, A, M>, A extends BaseValueVector.BaseAccessor,
-    M extends BaseValueVector.BaseMutator> implements ValueVector<V, A, M> {
+public abstract class BaseValueVector<A extends ValueVector.Accessor, M extends ValueVector.Mutator>
+    implements ValueVector<A, M> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseValueVector.class);
 
   protected final BufferAllocator allocator;
@@ -37,6 +38,11 @@ public abstract class BaseValueVector<V extends BaseValueVector<V, A, M>, A exte
   protected BaseValueVector(MaterializedField field, BufferAllocator allocator) {
     this.field = field;
     this.allocator = Preconditions.checkNotNull(allocator, "allocator cannot be null");
+  }
+
+  @Override
+  public void clear() {
+    getMutator().reset();
   }
 
   @Override
@@ -51,6 +57,11 @@ public abstract class BaseValueVector<V extends BaseValueVector<V, A, M>, A exte
 
   public MaterializedField getField(FieldReference ref){
     return getField().clone(ref);
+  }
+
+  @Override
+  public TransferPair getTransferPair() {
+    return getTransferPair(new FieldReference(getField().getPath()));
   }
 
   @Override
@@ -76,11 +87,15 @@ public abstract class BaseValueVector<V extends BaseValueVector<V, A, M>, A exte
   public abstract static class BaseMutator implements ValueVector.Mutator {
     protected BaseMutator() { }
 
+    @Override
+    public void generateTestData(int values) { }
+
+    //TODO: consider making mutator stateless(if possible) on another issue.
     public void reset() { }
   }
 
   @Override
-  public Iterator<ValueVector<V,A,M>> iterator() {
+  public Iterator<ValueVector> iterator() {
     return Iterators.emptyIterator();
   }
 

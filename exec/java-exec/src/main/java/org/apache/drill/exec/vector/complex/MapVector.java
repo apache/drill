@@ -101,7 +101,8 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void setInitialCapacity(int numRecords) {
-    for (ValueVector v : (ValueVector<?,?,?>)this) {
+    final Iterable<ValueVector> container = this;
+    for (ValueVector v : container) {
       v.setInitialCapacity(numRecords);
     }
   }

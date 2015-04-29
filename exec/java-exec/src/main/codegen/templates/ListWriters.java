@@ -46,7 +46,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   protected final ${containerClass} container;
   private Mode mode = Mode.INIT;
   private FieldWriter writer;
-  protected RepeatedVector innerVector;
+  protected RepeatedValueVector innerVector;
   
   <#if mode == "Repeated">private int currentChildIndex = 0;</#if>
   public ${mode}ListWriter(String name, ${containerClass} container, FieldWriter parent){
@@ -158,7 +158,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
   public void start(){
     
     final RepeatedListVector list = (RepeatedListVector) container;
-    final RepeatedListVector.Mutator mutator = list.getMutator();
+    final RepeatedListVector.RepeatedMutator mutator = list.getMutator();
     
     // make sure that the current vector can support the end position of this list.
     if(container.getValueCapacity() <= idx()){
@@ -169,7 +169,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     RepeatedListHolder h = new RepeatedListHolder();
     list.getAccessor().get(idx(), h);
     if(h.start >= h.end){
-      mutator.startNewGroup(idx());  
+      mutator.startNewValue(idx());  
     }
     currentChildIndex = container.getMutator().add(idx());
     if(writer != null){

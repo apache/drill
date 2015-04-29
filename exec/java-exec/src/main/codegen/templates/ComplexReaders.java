@@ -89,7 +89,7 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   }
   
   public int size(){
-    return vector.getAccessor().getCount(idx());
+    return vector.getAccessor().getInnerValueCountAt(idx());
   }
   
   public void read(int arrayIndex, ${minor.class?cap_first}Holder h){

@@ -15,22 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.vector;
 
-import org.apache.drill.exec.util.CallBack;
+/**
+ * A mix-in used for introducing container vector-like behaviour.
+ */
+public interface ContainerVectorLike {
 
-public class SchemaChangeCallBack implements CallBack {
-  private boolean schemaChange = false;
+  /**
+   * Creates and adds a child vector if none with the same name exists, else returns the vector instance.
+   *
+   * @param  descriptor vector descriptor
+   * @return  result of operation wrapping vector corresponding to the given descriptor and whether it's newly created
+   * @throws org.apache.drill.common.exceptions.DrillRuntimeException
+   *    if schema change is not permissible between the given and existing data vector types.
+   */
+  <T extends ValueVector> AddOrGetResult<T> addOrGetVector(VectorDescriptor descriptor);
 
-  public void doWork() {
-    schemaChange = true;
-  }
-
-  public boolean getSchemaChange() {
-    final boolean current = schemaChange;
-    schemaChange = false;
-    return current;
-  }
+  /**
+   * Returns the number of child vectors in this container vector-like instance.
+   */
+  int size();
 }
-

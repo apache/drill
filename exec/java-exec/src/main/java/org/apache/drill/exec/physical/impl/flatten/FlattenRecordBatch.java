@@ -21,15 +21,13 @@ import java.io.IOException;
 import java.util.List;
 
 import com.carrotsearch.hppc.IntOpenHashSet;
-import com.google.common.base.Preconditions;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -52,9 +50,8 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.RepeatedVector;
+import org.apache.drill.exec.vector.RepeatedValueVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
@@ -129,13 +126,13 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
   private void setFlattenVector() {
     try {
-      flattener.setFlattenField((RepeatedVector) incoming.getValueAccessorById(
-          incoming.getSchema().getColumn(
-              incoming.getValueVectorId(
-                  popConfig.getColumn()).getFieldIds()[0]).getValueClass(),
-          incoming.getValueVectorId(popConfig.getColumn()).getFieldIds()).getValueVector());
+      final TypedFieldId typedFieldId = incoming.getValueVectorId(popConfig.getColumn());
+      final MaterializedField field = incoming.getSchema().getColumn(typedFieldId.getFieldIds()[0]);
+      final RepeatedValueVector vector = RepeatedValueVector.class.cast(incoming.getValueAccessorById(
+          field.getValueClass(), typedFieldId.getFieldIds()).getValueVector());
+      flattener.setFlattenField(vector);
     } catch (Exception ex) {
-      throw new DrillRuntimeException("Trying to flatten a non-repeated filed.");
+      throw UserException.unsupportedError(ex).message("Trying to flatten a non-repeated field.").build();
     }
   }
 
@@ -152,7 +149,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     // inside of the the flattener for the current batch
     setFlattenVector();
 
-    int childCount = incomingRecordCount == 0 ? 0 : flattener.getFlattenField().getAccessor().getValueCount();
+    int childCount = incomingRecordCount == 0 ? 0 : flattener.getFlattenField().getAccessor().getInnerValueCount();
     int outputRecords = flattener.flattenRecords(0, incomingRecordCount, 0);
     // TODO - change this to be based on the repeated vector length
     if (outputRecords < childCount) {
@@ -178,7 +175,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
   }
 
   private void handleRemainder() {
-    int remainingRecordCount = flattener.getFlattenField().getAccessor().getValueCount() - remainderIndex;
+    int remainingRecordCount = flattener.getFlattenField().getAccessor().getInnerValueCount() - remainderIndex;
     if (!doAlloc()) {
       outOfMemory = true;
       return;
@@ -271,7 +268,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     if (flattenField instanceof RepeatedMapVector) {
       tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap(reference);
     } else {
-      ValueVector vvIn = ((RepeatedVector)flattenField).getAccessor().getAllChildValues();
+      final ValueVector vvIn = RepeatedValueVector.class.cast(flattenField).getDataVector();
       // vvIn may be null because of fast schema return for repeated list vectors
       if (vvIn != null) {
         tp = vvIn.getTransferPair(reference);

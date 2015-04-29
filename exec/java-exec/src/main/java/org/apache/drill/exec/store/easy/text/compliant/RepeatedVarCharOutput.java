@@ -192,7 +192,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharDataAddress(){
-    DrillBuf buf = vector.getValuesVector().getBuffer();
+    DrillBuf buf = vector.getDataVector().getBuffer();
     checkBuf(buf);
     this.characterData = buf.memoryAddress();
     this.characterDataOriginal = buf.memoryAddress();
@@ -200,7 +200,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharOffsetAddress(){
-    DrillBuf buf = vector.getValuesVector().getOffsetVector().getBuffer();
+    DrillBuf buf = vector.getDataVector().getOffsetVector().getBuffer();
     checkBuf(buf);
     this.charLengthOffset = buf.memoryAddress() + 4;
     this.charLengthOffsetOriginal = buf.memoryAddress() + 4; // add four as offsets conceptually start at 1. (first item is 0..1)
@@ -208,14 +208,14 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void expandVarCharOffsets(){
-    vector.getValuesVector().getOffsetVector().reAlloc();
+    vector.getDataVector().getOffsetVector().reAlloc();
     long diff = charLengthOffset - charLengthOffsetOriginal;
     loadVarCharOffsetAddress();
     charLengthOffset += diff;
   }
 
   private void expandVarCharData(){
-    vector.getValuesVector().reAlloc();
+    vector.getDataVector().reAlloc();
     long diff = characterData - characterDataOriginal;
     loadVarCharDataAddress();
     characterData += diff;

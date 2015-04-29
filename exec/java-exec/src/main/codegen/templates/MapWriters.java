@@ -116,7 +116,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter{
 
     map.getAccessor().get(idx(), h);
     if(h.start >= h.end){
-      container.getMutator().startNewGroup(idx());  
+      container.getMutator().startNewValue(idx());  
     }
     currentChildIndex = container.getMutator().add(idx());
     for(FieldWriter w: fields.values()){
