@@ -198,16 +198,16 @@ Drill.Docs = {
     var subheaders = $.merge($(".main-content h2[id]"), $(".main-content h3[id]"));
     $.each( subheaders, function( index, el ){
       //create permalink element
-      var permalink = "<a class='hidden permalink' href='javascript:void(0);' title='Grab the permalink!'> ¶</a>";
+      var permalink = "<a class='hide permalink' href='javascript:void(0);' title='Grab the permalink!'> ¶</a>";
       $(el).append(permalink);
 
       //show permalink element on hover
       $(el).on({
         mouseenter: function(){
-          $(this).children("a.permalink").show();
+          $(this).children("a.permalink").removeClass('hide');
         },
         mouseleave: function() {
-          $(this).children("a.permalink").hide();
+          $(this).children("a.permalink").addClass('hide');
         }
       });
     })

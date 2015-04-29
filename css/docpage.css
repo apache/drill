@@ -330,6 +330,9 @@ span.expand.show, span.contract.show {
   font-size: 70%;
   color: #1A6BC7;
 }
+.permalink.hide {
+  visibility: hidden;
+}
 /****************************
 /* Responsive media queries
 /***************************/
