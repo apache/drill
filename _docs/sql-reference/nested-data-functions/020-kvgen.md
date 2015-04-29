@@ -76,16 +76,21 @@ keys or constrain the keys in some way. For example, you can use the
 [FLATTEN]({{ site.baseurl }}/docs/flatten-function) function to break the
 array down into multiple distinct rows and further query those rows.
 
-For example, assume that a JSON file contains this data:  
+For example, assume that a JSON file named `simplemaps.json` contains this data:  
 
-    {"a": "valA", "b": "valB"}
-    {"c": "valC", "d": "valD"}
-  
+	{"rec1":{"a": "valA", "b": "valB"}}
+	{"rec1":{"c": "valC", "d": "valD"}}
 
-KVGEN would operate on this data to generate:
+KVGEN would operate on this data as follows:
 
-    [{"key": "a", "value": "valA"}, {"key": "b", "value": "valB"}]
-    [{"key": "c", "value": "valC"}, {"key": "d", "value": "valD"}]
+	SELECT KVGEN(rec1) FROM `simplemaps.json`;
+	+------------+
+	|   EXPR$0   |
+	+------------+
+	| [{"key":"a","value":"valA"},{"key":"b","value":"valB"}] |
+	| [{"key":"c","value":"valC"},{"key":"d","value":"valD"}] |
+	+------------+
+	2 rows selected (0.201 seconds)
 
 Applying the [FLATTEN]({{ site.baseurl }}/docs/flatten-function) function to
 this data would return:
