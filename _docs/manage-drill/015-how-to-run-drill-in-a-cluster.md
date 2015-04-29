@@ -2,6 +2,36 @@
 title: "How to Run Drill in a Cluster"
 parent: "Manage Drill"
 ---
+
+## Introduction and Key Considerations
+
+Drill supports the following architectures:
+
+* Multitenant
+  Multiple users can share a drillbit. 
+* Multi-instance
+  Tenants use separate drillbits running on different nodes in the cluster.
+
+This section covers the multitenancy. The next section, ["How Multiple Users Share a Drillbit"]({{site.baseurl}}/docs/how-multiple-users-share-a-drillbit), covers multi-instance architecture.
+
+Drill typically runs along side many application frameworks:  
+
+* Mapreduce  
+* Yarn  
+* HBase  
+* Hive and Pig  
+* Spark  
+* Sqoop  
+* and others  
+
+You need to plan and configure the following resources for use with Drill in a multitenant or multi-instance environment:
+
+* Memory  
+* CPU  
+* Disk  
+
+## Partitioning Workloads
+
 Drill operations are memory and CPU-intensive. You need to statically partition the cluster to designation which partition handles which workload. For example, you have 120G of available memory that you allocate to following workloads in a Yarn-enabled cluster:
 
 File system = 20G  
@@ -14,6 +44,8 @@ To add Drill to the cluster, how do you change memory allocation? It depends on 
 {% include startnote.html %}Drill will execute queries within Yarn soon.{% include endnote.html %}
 
 For information about Drill and Yarn, see [DRILL-142](https://issues.apache.org/jira/browse/DRILL-142).
+
+## Managing Memory
 
 To run Drill in a cluster with MapReduce, HBase, Spark, and other workloads, allocate memory in the same manner according to your application needs. 
 
@@ -40,6 +72,21 @@ Drillbit startup script located in `<drill_installation_directory>/conf/drill-
 env.sh`.
 
 If this parameter is not set, the limit depends on the amount of available system memory.
+
+### Managing Memory in a Yarn-enabled Cluster
+TBD
+
+### Managing Memory in MapReduce, HBase, Spark, and other clusters
+TBD
+
+### Managing Memory in a MapR Cluster
+Memory and disk for Drill and other services that are not associated with roles on a MapR cluster are shared with other services. You manage the chunk of memory for these services in os heap settings in `warden.conf` and in configuration files of the particular service. The warden os heap settings are:
+
+    service.command.os.heapsize.percent
+    service.command.os.heapsize.max
+    service.command.os.heapsize.min
+
+For more information about managing memory in a MapR cluster, see [Memory Allocation for Nodes](http://doc.mapr.com/display/MapR40x/Memory+Allocation+for+Nodes) in the MapR documentation.
 
 ## How to Manage Drill CPU Resources
 Currently, you do not manage CPU resources within Drill. [Use Linux `cgroups`](http://en.wikipedia.org/wiki/Cgroups) to manage the CPU resources.
