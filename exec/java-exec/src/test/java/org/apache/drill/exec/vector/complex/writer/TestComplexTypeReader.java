@@ -225,12 +225,11 @@ public class TestComplexTypeReader extends BaseTestQuery{
   @Test //DRILL-2872.
   public void testRepeatedJson() throws Exception {
 
-    final String query="select cast(convert_to(interests, 'JSON') as varchar(0)) as interests from dfs.`/Users/pchandra/work/data/test/complex_student.json`";
-
+    final String query="select cast(convert_to(interests, 'JSON') as varchar(0)) as interests from cp.`complex_student.json`";
     testBuilder()
             .sqlQuery(query)
             .unOrdered()
-            .jsonBaselineFile("drill-2872-result.json")
+            .jsonBaselineFile("DRILL-2872-result.json")
             .go();
   }
 
