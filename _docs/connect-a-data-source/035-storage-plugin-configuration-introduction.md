@@ -1,6 +1,6 @@
 ---
-title: "Storage Plugin Configuration"
-parent: "Connect a Data Source"
+title: "Storage Plugin Configuration Introduction"
+parent: "Storage Plugin Configuration"
 ---
 When you add or update storage plugin instances on one Drill node in a Drill
 cluster, Drill broadcasts the information to all of the other Drill nodes 
@@ -131,5 +131,3 @@ For example, this command creates a plugin named myplugin for reading files of a
 If you need to add a storage plugin to Drill and do not want to use a web browser, you can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin loads when Drill starts up.
 
 If you configure an HBase storage plugin using bootstrap-storage-plugins.json file and HBase is not install, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html#config.files) and retry settings in the config block of HBase plugin instance configuration.
-
-
