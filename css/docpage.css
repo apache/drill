@@ -1,34 +1,20 @@
 /*****************
  Categories Bar
 *****************/
-
-div.toc-categories {
-  background-color: #ccc;
-  line-height: 48px;
+#menu ul li.toc-categories a {
+	height:50px;
+	padding:0;
+  text-decoration: none;
+	width: 60px;
+  text-align: center;
+  color: #bababa;
+}
+#menu ul li.toc-categories {
+	float:left;
+  line-height: 45px;
   font-size: 18px;
-  color: black;
   display: none;
   overflow: auto;
-}
-div.toc-categories .pull-left {
-  float: left;
-  margin-left: 10px;
-}
-
-div.toc-categories .pull-right {
-  float: right;
-  margin-right: 10px;
-}
-
-div.toc-categories a {
-  text-decoration: none;
-}
-
-div.toc-categories.fixed {
-  position:fixed;
-  z-index: 1;
-  width: 100%;
-  top: 50px;
 }
 
 /****************
@@ -63,17 +49,17 @@ div.doc-nav span.next-toc {
  Main Area
 *****************/
 
-.int_text {
+.main-content .int_text {
+  margin-left: 0px;
   margin-top:30px;
-  margin-left: 30px;
 }
 .main-content .int_text img {
   margin: 30px 0px;
 }
-.int_title
+.main-content .int_title
 {
-  margin-left: 30px;
   text-align: left;
+  margin-left: 0px;
   margin-top: 30px;
 }
 .int_title::after{
@@ -318,9 +304,9 @@ span.expand.show, span.contract.show {
 
 .docsidebarwrapper li.toctree-l2.current, .docsidebarwrapper li.toctree-l3.current {
   background-color: #1A6BC7;
+  color: white;
 }
-.docsidebarwrapper li.current a {
-  background-color: #1A6BC7;
+.docsidebarwrapper li.toctree-l2.current.current > a, .docsidebarwrapper li.toctree-l3.current.current > a {
   color: white;
 }
 .docsidebarwrapper a:hover {
@@ -372,21 +358,28 @@ span.expand.show, span.contract.show {
   #footer {
     margin-left: 0px;
   }
-  div.doc-nav {
+
+  #menu ul li.toc-categories {
+    display: inline-block;
+    width: 60px;
+    text-align: center;
+  }
+  #menu ul li.logo {
+    padding-left: 0px;
+  }
+  #menu ul li.force-expand.toc-categories {
+    display: inline-block;
   }
 
-  div.toc-categories {
-    display: block;
-  }
   .page-wrap div.int_title.margin_110 {
     margin-top:110px;
   }
 
-  div.toc-categories .expand-toc-icon {
+  li.toc-categories .expand-toc-icon {
     font-size: 24px;
     /*padding-right: 10px;*/
   }
-  div.toc-categories .expand-toc-icon a {
+  li.toc-categories a.expand-toc-icon {
     color: black;
   }
 
@@ -394,10 +387,6 @@ span.expand.show, span.contract.show {
   .expand-toc-icon:active {
     color: white;
     text-decoration: none;
-  }
-
-  #menu ul li.logo {
-    /*padding-left: 70px; */
   }
 
   .sidebar {
@@ -410,10 +399,9 @@ span.expand.show, span.contract.show {
   }
 
   .main-content{
-    margin-left: 0;
+    margin: 0px 20px 0px 20px;
   }
   .int_title {
-    margin-left: 30px;
     margin-top: 60px;
   }
   .int_title h1 {
@@ -424,10 +412,6 @@ span.expand.show, span.contract.show {
   .main-content-wrapper {
     width: 1092px; 
   }
-  .main-content {
-
-  }
-
   div.doc-nav {
     margin-left: 30px;
   }
@@ -437,7 +421,7 @@ span.expand.show, span.contract.show {
   }
   .main-content
   {
-    margin-left: 293px;
+    margin-left: 313px;
   }
   #menu ul li.logo {
     padding-left: 30px;

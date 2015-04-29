@@ -19,7 +19,8 @@ Drill.Site = {
   },
 
   menuIsExpanded : function() {
-    var item_to_check = $($("#menu ul li")[3]).css("display");
+    // Note: depends on status of documentation-menu item to check menu visibility. May be a cleaner approach.
+    var item_to_check = $($("#menu ul li.documentation-menu")).css("display");
     return (item_to_check != 'none');
   },
 
@@ -91,7 +92,6 @@ Drill.Docs = {
     Drill.Docs.add_expand_contract_buttons();
     Drill.Docs.show_or_hide_on_click();
     Drill.Docs.setCurrentDoc();
-    Drill.Docs.watchCategoryBar();
     Drill.Docs.watchDocTocClicks();
     Drill.Docs.watchExpandTocClicks();
     Drill.Docs.permalinkSubHeaders();
@@ -121,22 +121,10 @@ Drill.Docs = {
     parent.children("span.contract").addClass('show');
   },
 
-  watchCategoryBar : function() {
-    $(window).scroll(function(){
-      var category_bar = $(".toc-categories");
-      if ($(this).scrollTop() > 35) {
-        category_bar.addClass('fixed');
-        $(".page-wrap div.int_title").addClass("margin_110");
-      } else {
-        category_bar.removeClass('fixed');
-        $(".page-wrap div.int_title").removeClass("margin_110");
-      }
-    });
-  },
-
   watchExpandTocClicks : function () {
     $(".expand-toc-icon").on("click", function(){
-      if($(".int_text .sidebar").css('left') == '0px'){
+      //  This relies on .sidebar's 'left' attribute...may be a cleaner approach
+      if($(".sidebar").css('left') == '0px'){
         Drill.Docs._contractSidebar();
       } else {
         Drill.Docs._expandSidebar();
@@ -221,11 +209,11 @@ Drill.Docs = {
   },
 
   _expandSidebar : function(){
-    $(".int_text .sidebar").addClass("force-expand");
+    $(".sidebar").addClass("force-expand");
   },
 
   _contractSidebar : function() {
-    $(".int_text .sidebar").removeClass("force-expand");
+    $(".sidebar").removeClass("force-expand");
   },
 
   _make_current : function(that) {

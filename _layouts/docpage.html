@@ -9,7 +9,6 @@ title: Documentation
 <body onResize="resized();">
 <div class="page-wrap">
   {% include menu.html %}
-  {% include doctoccategories.html %}
 
   {% include doctoc.html %}
 
@@ -28,7 +27,7 @@ title: Documentation
         <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/{{ page.relative_path }}" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
         {% if page_data.children.size == 0 %}
           {{ content }}
-        {% else %}
+      {% else %}
           <ul>
           {% for doc0 in page_data.children %}
             <li><a href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
@@ -42,16 +41,13 @@ title: Documentation
         {% endfor %}
         </ul>
       {% endif %}
+
+        {% include docnav.html %}
       </div>
-
-      {% include docnav.html %}
-
     </div>
-
-
   </div>
 
-      {% include footer.html %}
+  {% include footer.html %}
 </div>
 {% include scripts.html %}
 </body>

@@ -679,7 +679,7 @@ table.intro a {
 }
 
 .int_text {
-	margin:60px auto 60px auto;
+	margin:40px auto 60px auto;
 	width:780px;
 }
 
@@ -735,7 +735,7 @@ ul.num {
 	font-size:16px;
 	font-weight:lighter;
 	margin:auto;
-	margin-top:60px;
+	margin-top:80px;
 	padding:0 0 15px 0;
 	position:relative;
 	text-align:center;
@@ -768,7 +768,7 @@ ul.num {
 
 .int_title h1 {
 	font-size:36px;
-	margin:0;
+	margin: 20px 0px 20px 0px;
 }
 
 .int_title:after {
@@ -879,6 +879,7 @@ li p {
   font-weight: inherit;
   padding: 0 0 0 8px;
   line-height: 20px;
+  font-family: "Lato";
   width: 44px;
 }
 #menu .search-bar input[placeholder] {

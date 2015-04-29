@@ -2,12 +2,15 @@
 
 <div id="menu" class="mw">
 <ul>
+  <li class='toc-categories'>
+    <a class="expand-toc-icon" href="javascript:void(0);">☰</a>
+  </li>
   <li class="logo"><a href="{{ site.baseurl }}/"></a></li>
   <li class='expand-menu'>
     <a href="javascript:void(0);"><span class='menu-text'>Menu</span><span class='expand-icon'>☰</span></a>
   </li>
   <li class='clear-float'></li>
-  <li>
+  <li class="documentation-menu">
     <a href="{{ site.baseurl }}/docs/">Documentation</a>
     <ul>
       {% for doc in site.data.docs.hierarchy %}
