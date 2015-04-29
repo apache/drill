@@ -4,14 +4,14 @@ parent: "Manage Drill"
 ---
 Drill operations are memory and CPU-intensive. You need to statically partition the cluster to designation which partition handles which workload. For example, you have 120G of available memory that you allocate to following workloads in a Yarn-enabled cluster:
 
-File system = 20G
-HBase = 20G
-Yarn = 20G
-OS = 8G
+File system = 20G  
+HBase = 20G  
+Yarn = 20G  
+OS = 8G  
 
 To add Drill to the cluster, how do you change memory allocation? It depends on your application. If Yarn does most of the work, give Drill 20G, for example, and give Yarn 60G. If you expect a heavy query load, give Drill 60G and Drill 20G.
 
-{% include startnote.html %}Drill will execute queries within Yarn soon. For more information, see DRILL-142.{% include endnote.html %}
+{% include startnote.html %}Drill will execute queries within Yarn soon. For more information, see [DRILL-142](https://issues.apache.org/jira/browse/DRILL-142).{% include endnote.html %}
 
 To run Drill in a cluster with MapReduce, HBase, Spark, and other workloads, allocate memory in the same manner according to your application needs. 
 
