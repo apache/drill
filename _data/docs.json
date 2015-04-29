@@ -177,6 +177,23 @@
             "title": "Aggregate and Aggregate Statistical", 
             "url": "/docs/aggregate-and-aggregate-statistical/"
         }, 
+        "Analyzing Highly Dynamic Datasets": {
+            "breadcrumbs": [
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
+            "parent": "Tutorials", 
+            "previous_title": "Summary", 
+            "previous_url": "/docs/summary/", 
+            "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
+            "title": "Analyzing Highly Dynamic Datasets", 
+            "url": "/docs/analyzing-highly-dynamic-datasets/"
+        }, 
         "Analyzing the Yelp Academic Dataset": {
             "breadcrumbs": [
                 {
@@ -2743,8 +2760,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Summary", 
-            "previous_url": "/docs/summary/", 
+            "previous_title": "Analyzing Highly Dynamic Datasets", 
+            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -3233,8 +3250,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Highly Dynamic Datasets", 
+                    "next_url": "/docs/analyzing-highly-dynamic-datasets/", 
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                     "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
@@ -7373,8 +7390,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
+            "next_title": "Analyzing Highly Dynamic Datasets", 
+            "next_url": "/docs/analyzing-highly-dynamic-datasets/", 
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
@@ -7666,8 +7683,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Install Drill", 
-                            "next_url": "/docs/install-drill/", 
+                            "next_title": "Analyzing Highly Dynamic Datasets", 
+                            "next_url": "/docs/analyzing-highly-dynamic-datasets/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
@@ -7684,6 +7701,23 @@
                     "relative_path": "_docs/tutorials/040-learn-drill-with-the-mapr-sandbox.md", 
                     "title": "Learn Drill with the MapR Sandbox", 
                     "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Summary", 
+                    "previous_url": "/docs/summary/", 
+                    "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
+                    "title": "Analyzing Highly Dynamic Datasets", 
+                    "url": "/docs/analyzing-highly-dynamic-datasets/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -8626,8 +8660,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Install Drill", 
-                            "next_url": "/docs/install-drill/", 
+                            "next_title": "Analyzing Highly Dynamic Datasets", 
+                            "next_url": "/docs/analyzing-highly-dynamic-datasets/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Lession 3: Run Queries on Complex Data Types", 
                             "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
@@ -8644,6 +8678,23 @@
                     "relative_path": "_docs/tutorials/040-learn-drill-with-the-mapr-sandbox.md", 
                     "title": "Learn Drill with the MapR Sandbox", 
                     "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Summary", 
+                    "previous_url": "/docs/summary/", 
+                    "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
+                    "title": "Analyzing Highly Dynamic Datasets", 
+                    "url": "/docs/analyzing-highly-dynamic-datasets/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -8815,8 +8866,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Summary", 
-            "previous_url": "/docs/summary/", 
+            "previous_title": "Analyzing Highly Dynamic Datasets", 
+            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
