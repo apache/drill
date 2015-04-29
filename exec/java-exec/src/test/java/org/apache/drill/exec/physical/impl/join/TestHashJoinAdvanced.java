@@ -114,5 +114,16 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .baselineColumns("bigint_col")
         .baselineValues(1l)
         .go();
+
+    query = "select count(*) col1 from " +
+        "(select t1.date_opt from cp.`parquet/date_dictionary.parquet` t1, cp.`parquet/timestamp_table.parquet` t2 " +
+        "where t1.date_opt = t2.timestamp_col)"; // join condition contains date and timestamp
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(4l)
+        .go();
   }
 }

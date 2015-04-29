@@ -138,6 +138,12 @@ public class JoinUtils {
       return true;
     }
 
+    // allow implicit cast if input types are date/ timestamp
+    if ((input1 == TypeProtos.MinorType.DATE || input1 == TypeProtos.MinorType.TIMESTAMP) &&
+        (input2 == TypeProtos.MinorType.DATE || input2 == TypeProtos.MinorType.TIMESTAMP)) {
+      return true;
+    }
+
     // allow implicit cast if both the input types are varbinary/ varchar
     if ((input1 == TypeProtos.MinorType.VARCHAR || input1 == TypeProtos.MinorType.VARBINARY) &&
         (input2 == TypeProtos.MinorType.VARCHAR || input2 == TypeProtos.MinorType.VARBINARY)) {
