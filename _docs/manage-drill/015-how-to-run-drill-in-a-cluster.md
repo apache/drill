@@ -11,7 +11,9 @@ OS = 8G
 
 To add Drill to the cluster, how do you change memory allocation? It depends on your application. If Yarn does most of the work, give Drill 20G, for example, and give Yarn 60G. If you expect a heavy query load, give Drill 60G and Drill 20G.
 
-{% include startnote.html %}Drill will execute queries within Yarn soon. For more information, see [DRILL-142](https://issues.apache.org/jira/browse/DRILL-142).{% include endnote.html %}
+{% include startnote.html %}Drill will execute queries within Yarn soon.{% include endnote.html %}
+
+For information about Drill and Yarn, see [DRILL-142](https://issues.apache.org/jira/browse/DRILL-142).
 
 To run Drill in a cluster with MapReduce, HBase, Spark, and other workloads, allocate memory in the same manner according to your application needs. 
 
@@ -40,7 +42,7 @@ env.sh`.
 If this parameter is not set, the limit depends on the amount of available system memory.
 
 ## How to Manage Drill CPU Resources
-Currently, you do not manage CPU resources within Drill. [Use Linux `cgroups`] to manage the CPU resources.
+Currently, you do not manage CPU resources within Drill. [Use Linux `cgroups`](http://en.wikipedia.org/wiki/Cgroups) to manage the CPU resources.
 
 
 
