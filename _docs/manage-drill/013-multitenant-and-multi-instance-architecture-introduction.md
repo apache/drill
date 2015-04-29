@@ -1,6 +1,6 @@
 ---
 title: "Multitenant and Multi-instance Architectures Introduction"
-parent: "Manage Drill"
+parent: "Multitenant and Multi-instance Architectures"
 ---
 
 Drill supports multitenant and multi-instance architectures. In a multitenant architecture, multiple users share a drillbit. In a multi-instance architectures, tenants use separate drillbits running on different nodes in the cluster.
