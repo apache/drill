@@ -7,9 +7,9 @@ parent: "Manage Drill"
 
 Drill supports the following architectures:
 
-* Multitenant
+* Multitenant  
   Multiple users can share a drillbit. 
-* Multi-instance
+* Multi-instance  
   Tenants use separate drillbits running on different nodes in the cluster.
 
 This section covers the multitenancy. The next section, ["How Multiple Users Share a Drillbit"]({{site.baseurl}}/docs/how-multiple-users-share-a-drillbit), covers multi-instance architecture.
