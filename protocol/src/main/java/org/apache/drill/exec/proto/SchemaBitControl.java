@@ -535,15 +535,14 @@ public final class SchemaBitControl
                     output.writeInt64(12, message.getMemInitial(), false);
                 if(message.hasMemMax())
                     output.writeInt64(13, message.getMemMax(), false);
-                if(message.hasQueryStartTime())
-                    output.writeInt64(14, message.getQueryStartTime(), false);
                 if(message.hasCredentials())
-                    output.writeObject(15, message.getCredentials(), org.apache.drill.exec.proto.SchemaUserBitShared.UserCredentials.WRITE, false);
+                    output.writeObject(14, message.getCredentials(), org.apache.drill.exec.proto.SchemaUserBitShared.UserCredentials.WRITE, false);
 
-                if(message.hasTimeZone())
-                    output.writeInt32(16, message.getTimeZone(), false);
                 if(message.hasOptionsJson())
-                    output.writeString(17, message.getOptionsJson(), false);
+                    output.writeString(15, message.getOptionsJson(), false);
+                if(message.hasContext())
+                    output.writeObject(16, message.getContext(), org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.WRITE, false);
+
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitControl.PlanFragment message)
             {
@@ -620,17 +619,15 @@ public final class SchemaBitControl
                             builder.setMemMax(input.readInt64());
                             break;
                         case 14:
-                            builder.setQueryStartTime(input.readInt64());
-                            break;
-                        case 15:
                             builder.setCredentials(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.UserCredentials.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.UserCredentials.MERGE));
 
                             break;
-                        case 16:
-                            builder.setTimeZone(input.readInt32());
-                            break;
-                        case 17:
+                        case 15:
                             builder.setOptionsJson(input.readString());
+                            break;
+                        case 16:
+                            builder.setContext(input.mergeObject(org.apache.drill.exec.proto.BitControl.QueryContextInformation.newBuilder(), org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.MERGE));
+
                             break;
                         default:
                             input.handleUnknownField(number, this);
@@ -683,10 +680,9 @@ public final class SchemaBitControl
                 case 11: return "foreman";
                 case 12: return "memInitial";
                 case 13: return "memMax";
-                case 14: return "queryStartTime";
-                case 15: return "credentials";
-                case 16: return "timeZone";
-                case 17: return "optionsJson";
+                case 14: return "credentials";
+                case 15: return "optionsJson";
+                case 16: return "context";
                 default: return null;
             }
         }
@@ -709,10 +705,134 @@ public final class SchemaBitControl
             fieldMap.put("foreman", 11);
             fieldMap.put("memInitial", 12);
             fieldMap.put("memMax", 13);
-            fieldMap.put("queryStartTime", 14);
-            fieldMap.put("credentials", 15);
-            fieldMap.put("timeZone", 16);
-            fieldMap.put("optionsJson", 17);
+            fieldMap.put("credentials", 14);
+            fieldMap.put("optionsJson", 15);
+            fieldMap.put("context", 16);
+        }
+    }
+
+    public static final class QueryContextInformation
+    {
+        public static final org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.QueryContextInformation>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.QueryContextInformation message) throws java.io.IOException
+            {
+                if(message.hasQueryStartTime())
+                    output.writeInt64(1, message.getQueryStartTime(), false);
+                if(message.hasTimeZone())
+                    output.writeInt32(2, message.getTimeZone(), false);
+                if(message.hasDefaultSchemaName())
+                    output.writeString(3, message.getDefaultSchemaName(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.QueryContextInformation message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.QueryContextInformation> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.QueryContextInformation.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.QueryContextInformation.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.QueryContextInformation.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.QueryContextInformation message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.BitControl.QueryContextInformation newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.QueryContextInformation.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.QueryContextInformation.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setQueryStartTime(input.readInt64());
+                            break;
+                        case 2:
+                            builder.setTimeZone(input.readInt32());
+                            break;
+                        case 3:
+                            builder.setDefaultSchemaName(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.QueryContextInformation.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.BitControl.QueryContextInformation.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.BitControl.QueryContextInformation.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.QueryContextInformation.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.QueryContextInformation.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.QueryContextInformation.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.QueryContextInformation.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.QueryContextInformation.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "queryStartTime";
+                case 2: return "timeZone";
+                case 3: return "defaultSchemaName";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("queryStartTime", 1);
+            fieldMap.put("timeZone", 2);
+            fieldMap.put("defaultSchemaName", 3);
         }
     }
 

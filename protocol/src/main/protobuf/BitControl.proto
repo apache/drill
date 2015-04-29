@@ -59,15 +59,20 @@ message PlanFragment {
   optional float disk_cost = 6;
   optional float memory_cost = 7;
   optional string fragment_json = 8;
-  optional DrillbitEndpoint assignment = 10;
   optional bool leaf_fragment = 9;
+  optional DrillbitEndpoint assignment = 10;
   optional DrillbitEndpoint foreman = 11;
   optional int64 mem_initial = 12 [default = 20000000]; // 20 megs
   optional int64 mem_max = 13 [default = 2000000000]; // 20 gigs
-  optional int64 query_start_time = 14; // start time of query in milliseconds
-  optional exec.shared.UserCredentials credentials = 15;
-  optional int32 time_zone = 16;
-  optional string options_json = 17;
+  optional exec.shared.UserCredentials credentials = 14;
+  optional string options_json = 15;
+  optional QueryContextInformation context = 16;
+}
+
+message QueryContextInformation {
+  optional int64 query_start_time = 1;      // start time of query in milliseconds
+  optional int32 time_zone = 2;             // timezone of the Drillbit where user is connected
+  optional string default_schema_name = 3;  // default schema in current session when the query is submitted
 }
 
 message WorkQueueStatus{

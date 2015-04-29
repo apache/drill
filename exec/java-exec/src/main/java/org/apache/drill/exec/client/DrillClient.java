@@ -20,6 +20,8 @@ package org.apache.drill.exec.client;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
+
+import com.google.common.base.Strings;
 import io.netty.buffer.DrillBuf;
 
 import java.io.Closeable;
@@ -301,7 +303,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
     if (props != null) {
       for (Property property: props.getPropertiesList()) {
-        if (property.getKey().equalsIgnoreCase("user")) {
+        if (property.getKey().equalsIgnoreCase("user") && !Strings.isNullOrEmpty(property.getValue())) {
           userName = property.getValue();
           break;
         }

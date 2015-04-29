@@ -20,6 +20,7 @@ package org.apache.drill.exec.testing;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public class TestPauseInjection extends BaseTestQuery {
 
   private static final UserSession session = UserSession.Builder.newBuilder()
       .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+      .withUserProperties(UserProperties.getDefaultInstance())
       .withOptionManager(bits[0].getContext().getOptionManager())
       .build();
 

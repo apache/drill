@@ -24,8 +24,6 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.TestBuilder;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.config.UnorderedDeMuxExchange;
 import org.apache.drill.exec.physical.config.HashToRandomExchange;
@@ -34,16 +32,16 @@ import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
-import org.apache.drill.exec.planner.physical.HashPrelUtil;
-import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -409,13 +407,10 @@ public class TestLocalExchange extends PlanTestBase {
 
     findFragmentsWithPartitionSender(rootFragment, planningSet, deMuxFragments, htrFragments);
 
-    long queryStartTime = System.currentTimeMillis();
-    int timeZone = DateUtility.getIndex(System.getProperty("user.timezone"));
-    QueryDateTimeInfo queryDateTimeInfo = new QueryDateTimeInfo(queryStartTime, timeZone);
-
+    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName");
     QueryWorkUnit qwu = PARALLELIZER.getFragments(new OptionList(), drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
-        drillbitContext.getBits(), planReader, rootFragment, USER_SESSION, queryDateTimeInfo);
+        drillbitContext.getBits(), planReader, rootFragment, USER_SESSION, queryContextInfo);
 
     // Make sure the number of minor fragments with HashPartitioner within a major fragment is not more than the
     // number of Drillbits in cluster

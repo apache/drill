@@ -118,6 +118,10 @@ public class UserSession {
     return credentials;
   }
 
+  public String getDefaultSchemaName() {
+    return getProp(SCHEMA);
+  }
+
   public void incrementQueryCount(final QueryCountIncrementer incrementer) {
     assert incrementer != null;
     queryCount.incrementAndGet();

@@ -34,18 +34,22 @@ public interface UdfUtilities {
   public static final ImmutableMap<Class, String> INJECTABLE_GETTER_METHODS =
       new ImmutableMap.Builder<Class, String>()
           .put(DrillBuf.class, "getManagedBuffer")
-          .put(QueryDateTimeInfo.class, "getQueryDateTimeInfo")
           .put(PartitionExplorer.class, "getPartitionExplorer")
+          .put(ContextInformation.class, "getContextInformation")
           .build();
 
+
   /**
-   * Get the query start time and timezone recorded by the head node during
-   * planning. This allows for SQL functions like now() to return a stable
-   * result within the context of a distributed query.
+   * Get the context information such as:
+   *  - query start time
+   *  - root fragment timezone
+   *  - query userName
+   *  - system userName
+   *  - default schema name in current session at the time of query.
    *
-   * @return - object wrapping the raw time and timezone values
+   * @return - ContextInformation
    */
-  QueryDateTimeInfo getQueryDateTimeInfo();
+  ContextInformation getContextInformation();
 
   /**
    * For UDFs to allocate general purpose intermediate buffers we provide the

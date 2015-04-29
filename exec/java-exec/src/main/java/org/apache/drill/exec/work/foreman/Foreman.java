@@ -443,7 +443,7 @@ public class Foreman implements Runnable {
     final QueryWorkUnit queryWorkUnit = parallelizer.getFragments(
         queryContext.getOptions().getOptionList(), queryContext.getCurrentEndpoint(),
         queryId, queryContext.getActiveEndpoints(), drillbitContext.getPlanReader(), rootFragment,
-        initiatingClient.getSession(), queryContext.getQueryDateTimeInfo());
+        initiatingClient.getSession(), queryContext.getQueryContextInfo());
 
     if (logger.isTraceEnabled()) {
       final StringBuilder sb = new StringBuilder();

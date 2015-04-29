@@ -34,7 +34,6 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.Exchange.ParallelizationDependency;
@@ -44,6 +43,7 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.planner.fragment.Materializer.IndexedFragmentNode;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -107,12 +107,13 @@ public class SimpleParallelizer {
    * @param reader          Tool used to read JSON plans
    * @param rootFragment    The root node of the PhysicalPlan that we will be parallelizing.
    * @param session         UserSession of user who launched this query.
+   * @param queryContextInfo Info related to the context when query has started.
    * @return The list of generated PlanFragment protobuf objects to be assigned out to the individual nodes.
    * @throws ExecutionSetupException
    */
   public QueryWorkUnit getFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
       Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootFragment,
-      UserSession session, QueryDateTimeInfo queryDateTimeInfo) throws ExecutionSetupException {
+      UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
 
     final PlanningSet planningSet = new PlanningSet();
 
@@ -125,7 +126,8 @@ public class SimpleParallelizer {
       parallelizeFragment(wrapper, planningSet, activeEndpoints);
     }
 
-    return generateWorkUnit(options, foremanNode, queryId, reader, rootFragment, planningSet, session, queryDateTimeInfo);
+    return generateWorkUnit(
+        options, foremanNode, queryId, reader, rootFragment, planningSet, session, queryContextInfo);
   }
 
   // For every fragment, create a Wrapper in PlanningSet.
@@ -320,14 +322,11 @@ public class SimpleParallelizer {
 
   private QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
       PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
-      UserSession session, QueryDateTimeInfo queryDateTimeInfo) throws ExecutionSetupException {
+      UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
     List<PlanFragment> fragments = Lists.newArrayList();
 
     PlanFragment rootFragment = null;
     FragmentRoot rootOperator = null;
-
-    long queryStartTime = queryDateTimeInfo.getQueryStartTime();
-    int timeZone = queryDateTimeInfo.getRootFragmentTimeZone();
 
     // now we generate all the individual plan fragments and associated assignments. Note, we need all endpoints
     // assigned before we can materialize, so we start a new loop here rather than utilizing the previous one.
@@ -374,8 +373,7 @@ public class SimpleParallelizer {
             .setHandle(handle) //
             .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId)) //
             .setLeafFragment(isLeafFragment) //
-            .setQueryStartTime(queryStartTime)
-            .setTimeZone(timeZone)//
+            .setContext(queryContextInfo)
             .setMemInitial(wrapper.getInitialAllocation())//
             .setMemMax(wrapper.getMaxAllocation())
             .setOptionsJson(optionsData)

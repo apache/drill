@@ -61,7 +61,7 @@ public class TestCustomUserAuthenticator extends BaseTestQuery {
     negativeAuthHelper(TEST_USER_1, "blah.. blah..");
     negativeAuthHelper(TEST_USER_2, "blah.. blah..");
     negativeAuthHelper(TEST_USER_2, "");
-    negativeAuthHelper("", "blah.. blah..");
+    negativeAuthHelper("invalidUserName", "blah.. blah..");
   }
 
   @Test

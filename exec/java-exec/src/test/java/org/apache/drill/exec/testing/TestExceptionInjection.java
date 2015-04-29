@@ -24,6 +24,7 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -40,6 +41,7 @@ public class TestExceptionInjection extends BaseTestQuery {
 
   private static final UserSession session = UserSession.Builder.newBuilder()
       .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+      .withUserProperties(UserProperties.getDefaultInstance())
       .withOptionManager(bits[0].getContext().getOptionManager())
       .build();
 
@@ -251,6 +253,7 @@ public class TestExceptionInjection extends BaseTestQuery {
 
     final UserSession session = UserSession.Builder.newBuilder()
         .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+        .withUserProperties(UserProperties.getDefaultInstance())
         .withOptionManager(drillbitContext1.getOptionManager())
         .build();
 

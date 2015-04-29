@@ -39,10 +39,10 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.QueryDateTimeInfo;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl;
+import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.Drillbit;
@@ -127,10 +127,10 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.INT)};
     String expressionStr = "now()";
     BitControl.PlanFragment planFragment = BitControl.PlanFragment.getDefaultInstance();
-    QueryDateTimeInfo dateTime = new QueryDateTimeInfo(planFragment.getQueryStartTime(), planFragment.getTimeZone());
-    int                        timeZoneIndex = dateTime.getRootFragmentTimeZone();
+    QueryContextInformation queryContextInfo = planFragment.getContext();
+    int                        timeZoneIndex = queryContextInfo.getTimeZone();
     org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-    org.joda.time.DateTime     now = new org.joda.time.DateTime(dateTime.getQueryStartTime(), timeZone);
+    org.joda.time.DateTime     now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
 
     long queryStartDate = now.getMillis();
 

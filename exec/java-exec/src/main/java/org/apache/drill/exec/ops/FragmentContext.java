@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.jdbc.SimpleCalciteSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -76,7 +75,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   private final FunctionImplementationRegistry funcRegistry;
   private final BufferAllocator allocator;
   private final PlanFragment fragment;
-  private final QueryDateTimeInfo queryDateTimeInfo;
+  private final ContextInformation contextInformation;
   private IncomingBuffers buffers;
   private final OptionManager fragmentOptions;
   private final BufferManager bufferManager;
@@ -126,7 +125,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     this.accountingUserConnection = new AccountingUserConnection(connection, sendingAccountor, statusHandler);
     this.fragment = fragment;
     this.funcRegistry = funcRegistry;
-    queryDateTimeInfo = new QueryDateTimeInfo(fragment.getQueryStartTime(), fragment.getTimeZone());
+    contextInformation = new ContextInformation(fragment.getCredentials(), fragment.getContext());
 
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
     logger.debug("Fragment max allocation: {}", fragment.getMemMax());
@@ -234,8 +233,8 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   }
 
   @Override
-  public QueryDateTimeInfo getQueryDateTimeInfo(){
-    return this.queryDateTimeInfo;
+  public ContextInformation getContextInformation() {
+    return contextInformation;
   }
 
   public DrillbitEndpoint getForemanEndpoint() {

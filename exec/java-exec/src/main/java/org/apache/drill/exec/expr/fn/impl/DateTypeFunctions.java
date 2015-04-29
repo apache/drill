@@ -36,7 +36,7 @@ import org.apache.drill.exec.expr.holders.IntervalYearHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.ops.QueryDateTimeInfo;
+import org.apache.drill.exec.ops.ContextInformation;
 
 public class DateTypeFunctions {
 
@@ -181,13 +181,13 @@ public class DateTypeFunctions {
     public static class CurrentDate implements DrillSimpleFunc {
         @Workspace long queryStartDate;
         @Output DateHolder out;
-        @Inject QueryDateTimeInfo dateTime;
+        @Inject ContextInformation contextInfo;
 
         public void setup() {
 
-            int timeZoneIndex = dateTime.getRootFragmentTimeZone();
+            int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            org.joda.time.DateTime now = new org.joda.time.DateTime(dateTime.getQueryStartTime(), timeZone);
+            org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
             queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).
                 withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
         }
@@ -220,11 +220,11 @@ public class DateTypeFunctions {
     public static class LocalTimeStamp implements DrillSimpleFunc {
         @Workspace long queryStartDate;
         @Output TimeStampHolder out;
-        @Inject QueryDateTimeInfo dateTime;
+        @Inject ContextInformation contextInfo;
 
         public void setup() {
 
-            org.joda.time.DateTime now = (new org.joda.time.DateTime(dateTime.getQueryStartTime())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC);
+            org.joda.time.DateTime now = (new org.joda.time.DateTime(contextInfo.getQueryStartTime())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC);
             queryStartDate = now.getMillis();
         }
 
@@ -237,13 +237,13 @@ public class DateTypeFunctions {
     public static class CurrentTime implements DrillSimpleFunc {
         @Workspace int queryStartTime;
         @Output TimeHolder out;
-        @Inject QueryDateTimeInfo dateTime;
+        @Inject ContextInformation contextInfo;
 
         public void setup() {
 
-            int timeZoneIndex = dateTime.getRootFragmentTimeZone();
+            int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            org.joda.time.DateTime now = new org.joda.time.DateTime(dateTime.getQueryStartTime(), timeZone);
+            org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
             queryStartTime= (int) ((now.getHourOfDay() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
                                    (now.getMinuteOfHour() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
                                    (now.getSecondOfMinute() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
@@ -331,12 +331,12 @@ public class DateTypeFunctions {
         @Param TimeStampHolder right;
         @Workspace long queryStartDate;
         @Output IntervalHolder out;
-        @Inject QueryDateTimeInfo dateTime;
+        @Inject ContextInformation contextInfo;
 
         public void setup() {
-            int timeZoneIndex = dateTime.getRootFragmentTimeZone();
+            int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            org.joda.time.DateTime now = new org.joda.time.DateTime(dateTime.getQueryStartTime(), timeZone);
+            org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
             queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
         }
 
@@ -374,12 +374,12 @@ public class DateTypeFunctions {
         @Param DateHolder right;
         @Workspace long queryStartDate;
         @Output IntervalHolder out;
-        @Inject QueryDateTimeInfo dateTime;
+        @Inject ContextInformation contextInfo;
 
         public void setup() {
-            int timeZoneIndex = dateTime.getRootFragmentTimeZone();
+            int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            org.joda.time.DateTime now = new org.joda.time.DateTime(dateTime.getQueryStartTime(), timeZone);
+            org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
             queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
         }
 
@@ -411,11 +411,11 @@ public class DateTypeFunctions {
     public static class UnixTimeStamp implements DrillSimpleFunc {
       @Output BigIntHolder out;
       @Workspace long queryStartDate;
-      @Inject QueryDateTimeInfo dateTime;
+      @Inject ContextInformation contextInfo;
 
       @Override
       public void setup() {
-         queryStartDate = dateTime.getQueryStartTime();
+         queryStartDate = contextInfo.getQueryStartTime();
       }
 
       @Override
