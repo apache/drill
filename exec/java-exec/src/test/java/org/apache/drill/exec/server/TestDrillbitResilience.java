@@ -68,6 +68,7 @@ import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -75,6 +76,7 @@ import org.slf4j.Logger;
  * Test how resilient drillbits are to throwing exceptions during various phases of query
  * execution by injecting exceptions at various points. The test cases are mentioned in DRILL-2383.
  */
+@Ignore
 public class TestDrillbitResilience {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(TestDrillbitResilience.class);
 
