@@ -450,7 +450,12 @@ span.expand.show, span.contract.show {
     margin-left: 293px;
   }
 }
-
+/*
 div.page-wrap:after {
   height: 0px;
+}
+*/
+#footer {
+  position: absolute;
+  width: 100%;
 }
