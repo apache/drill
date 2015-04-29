@@ -2527,6 +2527,10 @@
         "How Multiple Users Share a Drillbit": {
             "breadcrumbs": [
                 {
+                    "title": "Multitenant and Multi-instance Architectures", 
+                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                }, 
+                {
                     "title": "Manage Drill", 
                     "url": "/docs/manage-drill/"
                 }
@@ -2534,7 +2538,7 @@
             "children": [], 
             "next_title": "Configuration Options", 
             "next_url": "/docs/configuration-options/", 
-            "parent": "Manage Drill", 
+            "parent": "Multitenant and Multi-instance Architectures", 
             "previous_title": "How to Run Drill in a Cluster", 
             "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
             "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
@@ -2544,6 +2548,10 @@
         "How to Run Drill in a Cluster": {
             "breadcrumbs": [
                 {
+                    "title": "Multitenant and Multi-instance Architectures", 
+                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                }, 
+                {
                     "title": "Manage Drill", 
                     "url": "/docs/manage-drill/"
                 }
@@ -2551,9 +2559,9 @@
             "children": [], 
             "next_title": "How Multiple Users Share a Drillbit", 
             "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Manage Drill Introduction", 
-            "previous_url": "/docs/manage-drill-introduction/", 
+            "parent": "Multitenant and Multi-instance Architectures", 
+            "previous_title": "Multitenant and Multi-instance Architectures", 
+            "previous_url": "/docs/multitenant-and-multi-instance-architectures/", 
             "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
             "title": "How to Run Drill in a Cluster", 
             "url": "/docs/how-to-run-drill-in-a-cluster/"
@@ -3335,8 +3343,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "How to Run Drill in a Cluster", 
-                    "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
+                    "next_title": "Multitenant and Multi-instance Architectures", 
+                    "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -3351,32 +3359,58 @@
                             "url": "/docs/manage-drill/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "How Multiple Users Share a Drillbit", 
-                    "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Multitenant and Multi-instance Architectures", 
+                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "How Multiple Users Share a Drillbit", 
+                            "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
+                            "parent": "Multitenant and Multi-instance Architectures", 
+                            "previous_title": "Multitenant and Multi-instance Architectures", 
+                            "previous_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                            "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
+                            "title": "How to Run Drill in a Cluster", 
+                            "url": "/docs/how-to-run-drill-in-a-cluster/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Multitenant and Multi-instance Architectures", 
+                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuration Options", 
+                            "next_url": "/docs/configuration-options/", 
+                            "parent": "Multitenant and Multi-instance Architectures", 
+                            "previous_title": "How to Run Drill in a Cluster", 
+                            "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
+                            "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
+                            "title": "How Multiple Users Share a Drillbit", 
+                            "url": "/docs/how-multiple-users-share-a-drillbit/"
+                        }
+                    ], 
+                    "next_title": "How to Run Drill in a Cluster", 
+                    "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
-                    "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
-                    "title": "How to Run Drill in a Cluster", 
-                    "url": "/docs/how-to-run-drill-in-a-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "How to Run Drill in a Cluster", 
-                    "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
-                    "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
-                    "title": "How Multiple Users Share a Drillbit", 
-                    "url": "/docs/how-multiple-users-share-a-drillbit/"
+                    "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
+                    "title": "Multitenant and Multi-instance Architectures", 
+                    "url": "/docs/multitenant-and-multi-instance-architectures/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3587,8 +3621,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "How to Run Drill in a Cluster", 
-            "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
+            "next_title": "Multitenant and Multi-instance Architectures", 
+            "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
             "parent": "Manage Drill", 
             "previous_title": "Manage Drill", 
             "previous_url": "/docs/manage-drill/", 
@@ -3667,6 +3701,66 @@
             "relative_path": "_docs/manage-drill/060-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
             "title": "Monitoring and Canceling Queries in the Drill Web UI", 
             "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
+        }, 
+        "Multitenant and Multi-instance Architectures": {
+            "breadcrumbs": [
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Multitenant and Multi-instance Architectures", 
+                            "url": "/docs/multitenant-and-multi-instance-architectures/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "How Multiple Users Share a Drillbit", 
+                    "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
+                    "parent": "Multitenant and Multi-instance Architectures", 
+                    "previous_title": "Multitenant and Multi-instance Architectures", 
+                    "previous_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                    "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
+                    "title": "How to Run Drill in a Cluster", 
+                    "url": "/docs/how-to-run-drill-in-a-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Multitenant and Multi-instance Architectures", 
+                            "url": "/docs/multitenant-and-multi-instance-architectures/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Multitenant and Multi-instance Architectures", 
+                    "previous_title": "How to Run Drill in a Cluster", 
+                    "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
+                    "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
+                    "title": "How Multiple Users Share a Drillbit", 
+                    "url": "/docs/how-multiple-users-share-a-drillbit/"
+                }
+            ], 
+            "next_title": "How to Run Drill in a Cluster", 
+            "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
+            "parent": "Manage Drill", 
+            "previous_title": "Manage Drill Introduction", 
+            "previous_url": "/docs/manage-drill-introduction/", 
+            "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
+            "title": "Multitenant and Multi-instance Architectures", 
+            "url": "/docs/multitenant-and-multi-instance-architectures/"
         }, 
         "Nested Data Functions": {
             "breadcrumbs": [
@@ -10623,8 +10717,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "How to Run Drill in a Cluster", 
-                    "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
+                    "next_title": "Multitenant and Multi-instance Architectures", 
+                    "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -10639,32 +10733,58 @@
                             "url": "/docs/manage-drill/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "How Multiple Users Share a Drillbit", 
-                    "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Multitenant and Multi-instance Architectures", 
+                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "How Multiple Users Share a Drillbit", 
+                            "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
+                            "parent": "Multitenant and Multi-instance Architectures", 
+                            "previous_title": "Multitenant and Multi-instance Architectures", 
+                            "previous_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                            "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
+                            "title": "How to Run Drill in a Cluster", 
+                            "url": "/docs/how-to-run-drill-in-a-cluster/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Multitenant and Multi-instance Architectures", 
+                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuration Options", 
+                            "next_url": "/docs/configuration-options/", 
+                            "parent": "Multitenant and Multi-instance Architectures", 
+                            "previous_title": "How to Run Drill in a Cluster", 
+                            "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
+                            "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
+                            "title": "How Multiple Users Share a Drillbit", 
+                            "url": "/docs/how-multiple-users-share-a-drillbit/"
+                        }
+                    ], 
+                    "next_title": "How to Run Drill in a Cluster", 
+                    "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
-                    "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
-                    "title": "How to Run Drill in a Cluster", 
-                    "url": "/docs/how-to-run-drill-in-a-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "How to Run Drill in a Cluster", 
-                    "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
-                    "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
-                    "title": "How Multiple Users Share a Drillbit", 
-                    "url": "/docs/how-multiple-users-share-a-drillbit/"
+                    "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
+                    "title": "Multitenant and Multi-instance Architectures", 
+                    "url": "/docs/multitenant-and-multi-instance-architectures/"
                 }, 
                 {
                     "breadcrumbs": [

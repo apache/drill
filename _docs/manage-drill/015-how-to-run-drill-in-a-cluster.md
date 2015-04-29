@@ -1,36 +1,7 @@
 ---
 title: "How to Run Drill in a Cluster"
-parent: "Manage Drill"
+parent: "Multitenant and Multi-instance Architectures"
 ---
-
-## Introduction and Key Considerations
-
-Drill supports the following architectures:
-
-* Multitenant  
-  Multiple users can share a drillbit. 
-* Multi-instance  
-  Tenants use separate drillbits running on different nodes in the cluster.
-
-Drill typically runs along side many application frameworks, including the following:  
-
-* Mapreduce  
-* Yarn  
-* HBase  
-* Hive and Pig  
-* Spark  
-* Sqoop  
-
-You need to plan and configure the following resources for use with Drill in a multitenant or multi-instance environment:
-
-* Memory  
-* CPU  
-* Disk  
-
-This section covers the multitenancy. The next section, ["How Multiple Users Share a Drillbit"]({{site.baseurl}}/docs/how-multiple-users-share-a-drillbit), covers multi-instance architecture.
-
-## Partitioning Workloads
-
 Drill operations are memory and CPU-intensive. You need to statically partition the cluster to designation which partition handles which workload. For example, you have 120G of available memory that you allocate to following workloads in a Yarn-enabled cluster:
 
 File system = 20G  
@@ -89,11 +60,3 @@ For more information about managing memory in a MapR cluster, see [Memory Alloca
 
 ## How to Manage Drill CPU Resources
 Currently, you do not manage CPU resources within Drill. [Use Linux `cgroups`](http://en.wikipedia.org/wiki/Cgroups) to manage the CPU resources.
-
-
-
-
-
-
-
-
