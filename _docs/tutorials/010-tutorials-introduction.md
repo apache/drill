@@ -10,6 +10,8 @@ If you've never used Drill, use these tutorials to download, install, and start 
   Download and install Drill in embedded mode and use SQL examples to analyze Yelp data.  
 * [Learn Drill with the MapR Sandbox]({{site.baseurl}}/docs/about-the-mapr-sandbox)  
   Explore data using a Hadoop environment pre-configured with Drill.  
+* [Analyzing Highly Dynamic Datasets]({{site.baseurl}}/docs/analyzing-highly-dynamic-datasets)
+  Delve into changing data without creating a schema or going through an ETL phase.
 * [Tableau Examples]({{site.baseurl}}/docs/tableau-examples)  
   Access Hive tables in Tableau.  
 * [Using MicroStrategy Analytics with Drill]({{site.baseurl}}/docs/using-microstrategy-analytics-with-drill/)  

@@ -673,8 +673,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Start-Up Options", 
-                    "next_url": "/docs/start-up-options/", 
+                    "next_title": "Configuring a Cluster for Different Workloads", 
+                    "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                     "parent": "Configuration Options", 
                     "previous_title": "Configuration Options", 
                     "previous_url": "/docs/configuration-options/", 
@@ -694,11 +694,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Planning and Execution Options", 
-                    "next_url": "/docs/planning-and-execution-options/", 
+                    "next_title": "Start-Up Options", 
+                    "next_url": "/docs/start-up-options/", 
                     "parent": "Configuration Options", 
                     "previous_title": "Configuration Options Introduction", 
                     "previous_url": "/docs/configuration-options-introduction/", 
+                    "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                    "title": "Configuring a Cluster for Different Workloads", 
+                    "url": "/docs/configuring-a-cluster-for-different-workloads/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuration Options", 
+                            "url": "/docs/configuration-options/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Planning and Execution Options", 
+                    "next_url": "/docs/planning-and-execution-options/", 
+                    "parent": "Configuration Options", 
+                    "previous_title": "Configuring a Cluster for Different Workloads", 
+                    "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                     "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
                     "title": "Start-Up Options", 
                     "url": "/docs/start-up-options/"
@@ -749,8 +770,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "Configuring a Cluster for Different Workloads", 
-            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+            "previous_title": "How Multiple Users Share a Drillbit", 
+            "previous_url": "/docs/how-multiple-users-share-a-drillbit/", 
             "relative_path": "_docs/manage-drill/020-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -767,8 +788,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Start-Up Options", 
-            "next_url": "/docs/start-up-options/", 
+            "next_title": "Configuring a Cluster for Different Workloads", 
+            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
             "parent": "Configuration Options", 
             "previous_title": "Configuration Options", 
             "previous_url": "/docs/configuration-options/", 
@@ -821,17 +842,21 @@
         "Configuring a Cluster for Different Workloads": {
             "breadcrumbs": [
                 {
+                    "title": "Configuration Options", 
+                    "url": "/docs/configuration-options/"
+                }, 
+                {
                     "title": "Manage Drill", 
                     "url": "/docs/manage-drill/"
                 }
             ], 
             "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Manage Drill Introduction", 
-            "previous_url": "/docs/manage-drill-introduction/", 
-            "relative_path": "_docs/manage-drill/015-configuring-a-cluster-for-different-workloads.md", 
+            "next_title": "Start-Up Options", 
+            "next_url": "/docs/start-up-options/", 
+            "parent": "Configuration Options", 
+            "previous_title": "Configuration Options Introduction", 
+            "previous_url": "/docs/configuration-options-introduction/", 
+            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
             "title": "Configuring a Cluster for Different Workloads", 
             "url": "/docs/configuring-a-cluster-for-different-workloads/"
         }, 
@@ -2499,6 +2524,40 @@
             "title": "Hive-to-Drill Data Type Mapping", 
             "url": "/docs/hive-to-drill-data-type-mapping/"
         }, 
+        "How Multiple Users Share a Drillbit": {
+            "breadcrumbs": [
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
+            "parent": "Manage Drill", 
+            "previous_title": "How to Run Drill in a Cluster", 
+            "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
+            "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
+            "title": "How Multiple Users Share a Drillbit", 
+            "url": "/docs/how-multiple-users-share-a-drillbit/"
+        }, 
+        "How to Run Drill in a Cluster": {
+            "breadcrumbs": [
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "How Multiple Users Share a Drillbit", 
+            "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
+            "parent": "Manage Drill", 
+            "previous_title": "Manage Drill Introduction", 
+            "previous_url": "/docs/manage-drill-introduction/", 
+            "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
+            "title": "How to Run Drill in a Cluster", 
+            "url": "/docs/how-to-run-drill-in-a-cluster/"
+        }, 
         "How to Run the Drill Demo": {
             "breadcrumbs": [
                 {
@@ -3276,8 +3335,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring a Cluster for Different Workloads", 
-                    "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                    "next_title": "How to Run Drill in a Cluster", 
+                    "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -3293,14 +3352,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "How Multiple Users Share a Drillbit", 
+                    "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
-                    "relative_path": "_docs/manage-drill/015-configuring-a-cluster-for-different-workloads.md", 
-                    "title": "Configuring a Cluster for Different Workloads", 
-                    "url": "/docs/configuring-a-cluster-for-different-workloads/"
+                    "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
+                    "title": "How to Run Drill in a Cluster", 
+                    "url": "/docs/how-to-run-drill-in-a-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Manage Drill", 
+                    "previous_title": "How to Run Drill in a Cluster", 
+                    "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
+                    "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
+                    "title": "How Multiple Users Share a Drillbit", 
+                    "url": "/docs/how-multiple-users-share-a-drillbit/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3322,8 +3398,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Start-Up Options", 
-                            "next_url": "/docs/start-up-options/", 
+                            "next_title": "Configuring a Cluster for Different Workloads", 
+                            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options", 
                             "previous_url": "/docs/configuration-options/", 
@@ -3343,11 +3419,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Planning and Execution Options", 
-                            "next_url": "/docs/planning-and-execution-options/", 
+                            "next_title": "Start-Up Options", 
+                            "next_url": "/docs/start-up-options/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options Introduction", 
                             "previous_url": "/docs/configuration-options-introduction/", 
+                            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                            "title": "Configuring a Cluster for Different Workloads", 
+                            "url": "/docs/configuring-a-cluster-for-different-workloads/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Planning and Execution Options", 
+                            "next_url": "/docs/planning-and-execution-options/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Configuring a Cluster for Different Workloads", 
+                            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                             "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
                             "title": "Start-Up Options", 
                             "url": "/docs/start-up-options/"
@@ -3398,8 +3495,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring a Cluster for Different Workloads", 
-                    "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                    "previous_title": "How Multiple Users Share a Drillbit", 
+                    "previous_url": "/docs/how-multiple-users-share-a-drillbit/", 
                     "relative_path": "_docs/manage-drill/020-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -3490,8 +3587,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring a Cluster for Different Workloads", 
-            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+            "next_title": "How to Run Drill in a Cluster", 
+            "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
             "parent": "Manage Drill", 
             "previous_title": "Manage Drill", 
             "previous_url": "/docs/manage-drill/", 
@@ -6923,8 +7020,8 @@
             "next_title": "Planning and Execution Options", 
             "next_url": "/docs/planning-and-execution-options/", 
             "parent": "Configuration Options", 
-            "previous_title": "Configuration Options Introduction", 
-            "previous_url": "/docs/configuration-options-introduction/", 
+            "previous_title": "Configuring a Cluster for Different Workloads", 
+            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
             "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
             "title": "Start-Up Options", 
             "url": "/docs/start-up-options/"
@@ -10526,8 +10623,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring a Cluster for Different Workloads", 
-                    "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                    "next_title": "How to Run Drill in a Cluster", 
+                    "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -10543,14 +10640,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "How Multiple Users Share a Drillbit", 
+                    "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
-                    "relative_path": "_docs/manage-drill/015-configuring-a-cluster-for-different-workloads.md", 
-                    "title": "Configuring a Cluster for Different Workloads", 
-                    "url": "/docs/configuring-a-cluster-for-different-workloads/"
+                    "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
+                    "title": "How to Run Drill in a Cluster", 
+                    "url": "/docs/how-to-run-drill-in-a-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Manage Drill", 
+                    "previous_title": "How to Run Drill in a Cluster", 
+                    "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
+                    "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
+                    "title": "How Multiple Users Share a Drillbit", 
+                    "url": "/docs/how-multiple-users-share-a-drillbit/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10572,8 +10686,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Start-Up Options", 
-                            "next_url": "/docs/start-up-options/", 
+                            "next_title": "Configuring a Cluster for Different Workloads", 
+                            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options", 
                             "previous_url": "/docs/configuration-options/", 
@@ -10593,11 +10707,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Planning and Execution Options", 
-                            "next_url": "/docs/planning-and-execution-options/", 
+                            "next_title": "Start-Up Options", 
+                            "next_url": "/docs/start-up-options/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options Introduction", 
                             "previous_url": "/docs/configuration-options-introduction/", 
+                            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
+                            "title": "Configuring a Cluster for Different Workloads", 
+                            "url": "/docs/configuring-a-cluster-for-different-workloads/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Planning and Execution Options", 
+                            "next_url": "/docs/planning-and-execution-options/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Configuring a Cluster for Different Workloads", 
+                            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
                             "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
                             "title": "Start-Up Options", 
                             "url": "/docs/start-up-options/"
@@ -10648,8 +10783,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring a Cluster for Different Workloads", 
-                    "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                    "previous_title": "How Multiple Users Share a Drillbit", 
+                    "previous_url": "/docs/how-multiple-users-share-a-drillbit/", 
                     "relative_path": "_docs/manage-drill/020-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
