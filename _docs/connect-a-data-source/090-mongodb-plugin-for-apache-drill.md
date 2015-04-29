@@ -5,7 +5,7 @@ parent: "Connect a Data Source"
 ## Overview
 
 Drill provides a mongodb format plugin to connect to MongoDB, and run queries
-to read, but not to write, the Mongo data ANSI SQL. You do not need any upfront schema definitions.
+to read, but not to write, the Mongo data ANSI SQL. Attempting to write data back to Mongo results in an error. You do not need any upfront schema definitions. 
 
 This procedures in this section assume that you have Drill installed locally (embedded mode),
 as well as MongoDB. Examples in this tutorial use zip code aggregation data
