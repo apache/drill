@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector;
 
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+
 public class AllocationHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocationHelper.class);
 
@@ -44,16 +46,15 @@ public class AllocationHelper {
 
   /**
    * Allocates the exact amount if v is fixed width, otherwise falls back to dynamic allocation
-   * @param v
-   * @param valueCount
-   * @return
+   * @param v value vector we are trying to allocate
+   * @param valueCount  size we are trying to allocate
+   * @throws org.apache.drill.exec.memory.OutOfMemoryRuntimeException if it can't allocate the memory
    */
-  public static boolean allocateNew(ValueVector v, int valueCount){
+  public static void allocateNew(ValueVector v, int valueCount) {
     if (v instanceof  FixedWidthVector) {
       ((FixedWidthVector) v).allocateNew(valueCount);
-      return true;
     } else {
-      return v.allocateNewSafe();
+      v.allocateNew();
     }
   }
 

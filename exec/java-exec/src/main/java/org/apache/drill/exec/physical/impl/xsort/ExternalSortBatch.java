@@ -44,6 +44,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -185,12 +186,16 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         }
         container.buildSchema(SelectionVectorMode.NONE);
         container.setRecordCount(0);
-        return;
+        break;
       case STOP:
+        state = BatchState.STOP;
+        break;
+      case OUT_OF_MEMORY:
+        state = BatchState.OUT_OF_MEMORY;
+        break;
       case NONE:
         state = BatchState.DONE;
-      default:
-        return;
+        break;
     }
   }
 
@@ -273,7 +278,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             try {
               sv2 = newSV2();
             } catch (OutOfMemoryException e) {
-              throw new RuntimeException(e);
+              throw new OutOfMemoryRuntimeException(e);
             }
           }
           int count = sv2.getCount();
@@ -316,11 +321,15 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 //          logger.debug("Took {} us to sort {} records", t, count);
           break;
         case OUT_OF_MEMORY:
+          logger.debug("received OUT_OF_MEMORY, trying to spill");
           highWaterMark = totalSizeInMemory;
           if (batchesSinceLastSpill > 2) {
             spilledBatchGroups.add(mergeAndSpill(batchGroups));
+            batchesSinceLastSpill = 0;
+          } else {
+            logger.debug("not enough batches to spill, sending OUT_OF_MEMORY downstream");
+            return IterOutcome.OUT_OF_MEMORY;
           }
-          batchesSinceLastSpill = 0;
           break;
         default:
           throw new UnsupportedOperationException();

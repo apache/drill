@@ -96,10 +96,12 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     clear();
     int valueSize = getSizeFromCount(allocationValueCount);
-    data = allocator.buffer(valueSize);
-    if (data == null) {
+    DrillBuf newBuf = allocator.buffer(valueSize);
+    if (newBuf == null) {
       return false;
     }
+
+    data = newBuf;
     zeroVector();
     return true;
   }
@@ -113,7 +115,12 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   public void allocateNew(int valueCount) {
     clear();
     int valueSize = getSizeFromCount(valueCount);
-    data = allocator.buffer(valueSize);
+    DrillBuf newBuf = allocator.buffer(valueSize);
+    if (newBuf == null) {
+      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of d% bytes.", valueSize));
+    }
+
+    data = newBuf;
     zeroVector();
   }
 
@@ -122,7 +129,12 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
    */
   public void reAlloc() {
     allocationValueCount *= 2;
-    DrillBuf newBuf = allocator.buffer(getSizeFromCount(allocationValueCount));
+    int valueSize = getSizeFromCount(allocationValueCount);
+    DrillBuf newBuf = allocator.buffer(valueSize);
+    if (newBuf == null) {
+      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes.", valueSize));
+    }
+
     newBuf.setZero(0, newBuf.capacity());
     newBuf.setBytes(0, data, 0, data.capacity());
     data.release();

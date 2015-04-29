@@ -34,7 +34,7 @@ import com.google.common.collect.Lists;
 
 public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
 
   private SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
@@ -42,7 +42,6 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   private int recordsLeft;
   private boolean noEndLimit;
   private boolean skipBatch;
-  private boolean done = false;
   private boolean first = true;
   List<TransferPair> transfers = Lists.newArrayList();
 
@@ -90,14 +89,13 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
   @Override
   public IterOutcome innerNext() {
-    if (done) {
-      return IterOutcome.NONE;
-    }
-
     if(!first && !noEndLimit && recordsLeft <= 0) {
       incoming.kill(true);
 
       IterOutcome upStream = next(incoming);
+      if (upStream == IterOutcome.OUT_OF_MEMORY) {
+        return upStream;
+      }
 
       while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
 
@@ -106,10 +104,14 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
           wrapper.getValueVector().clear();
         }
         upStream = next(incoming);
+        if (upStream == IterOutcome.OUT_OF_MEMORY) {
+          return upStream;
+        }
       }
 
       return IterOutcome.NONE;
     }
+
     return super.innerNext();
   }
 

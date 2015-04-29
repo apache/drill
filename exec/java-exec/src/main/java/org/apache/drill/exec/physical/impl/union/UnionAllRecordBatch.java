@@ -37,6 +37,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -143,7 +144,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
   private boolean doAlloc() {
     for (ValueVector v : allocationVectors) {
-      if(!AllocationHelper.allocateNew(v, current.getRecordCount())) {
+      try {
+        AllocationHelper.allocateNew(v, current.getRecordCount());
+      } catch (OutOfMemoryRuntimeException ex) {
         return false;
       }
     }

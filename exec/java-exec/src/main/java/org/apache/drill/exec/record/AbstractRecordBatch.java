@@ -20,6 +20,7 @@ package org.apache.drill.exec.record;
 import java.util.Iterator;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
@@ -67,7 +68,9 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected static enum BatchState {
     BUILD_SCHEMA, // Need to build schema and return
     FIRST, // This is still the first data batch
-    NOT_FIRST, // The first data batch has alread been returned
+    NOT_FIRST, // The first data batch has already been returned
+    STOP, // The query most likely failed, we need to propagate STOP to the root
+    OUT_OF_MEMORY, // Out of Memory while building the Schema...Ouch!
     DONE // All work is done, no more data to be sent
   }
 
@@ -119,23 +122,21 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   public final IterOutcome next() {
     try {
       stats.startProcessing();
-//      if (state == BatchState.BUILD_SCHEMA) {
-//        buildSchema();
-//        if (state == BatchState.BUILD_SCHEMA.DONE) {
-//          return IterOutcome.NONE;
-//        } else {
-//          state = BatchState.FIRST;
-//          return IterOutcome.OK_NEW_SCHEMA;
-//        }
-//      }
       switch (state) {
         case BUILD_SCHEMA: {
           buildSchema();
-          if (state == BatchState.DONE) {
-            return IterOutcome.NONE;
-          } else {
-            state = BatchState.FIRST;
-            return IterOutcome.OK_NEW_SCHEMA;
+          switch (state) {
+            case DONE:
+              return IterOutcome.NONE;
+            case OUT_OF_MEMORY:
+              // because we don't support schema changes, it is safe to fail the query right away
+              context.fail(UserException.memoryError().build());
+              // FALL-THROUGH
+            case STOP:
+              return IterOutcome.STOP;
+            default:
+              state = BatchState.FIRST;
+              return IterOutcome.OK_NEW_SCHEMA;
           }
         }
         case DONE: {

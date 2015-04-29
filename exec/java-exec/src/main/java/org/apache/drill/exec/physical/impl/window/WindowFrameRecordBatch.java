@@ -37,7 +37,6 @@ import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -128,6 +127,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
         case NONE:
           noMoreBatches = true;
           break;
+        case OUT_OF_MEMORY:
         case NOT_YET:
         case STOP:
           return upstream;
@@ -160,7 +160,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     // process a saved batch
     try {
       framer.doWork();
-    } catch (DrillException | OutOfMemoryRuntimeException e) {
+    } catch (DrillException e) {
       context.fail(e);
       if (framer != null) {
         framer.cleanup();
@@ -179,10 +179,18 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   @Override
   protected void buildSchema() throws SchemaChangeException {
     logger.trace("buildSchema()");
-    if (next(incoming) == IterOutcome.NONE) {
-      state = BatchState.DONE;
-      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-      return;
+    IterOutcome outcome = next(incoming);
+    switch (outcome) {
+      case NONE:
+        state = BatchState.DONE;
+        container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+        return;
+      case STOP:
+        state = BatchState.STOP;
+        return;
+      case OUT_OF_MEMORY:
+        state = BatchState.OUT_OF_MEMORY;
+        return;
     }
 
     try {

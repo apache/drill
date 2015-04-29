@@ -29,6 +29,32 @@ class ErrorHelper {
 
   private final static Pattern IGNORE= Pattern.compile("^(sun|com\\.sun|java).*");
 
+  /**
+   * Constructs the root error message in the form [root exception class name]: [root exception message]
+   *
+   * @param cause exception we want the root message for
+   * @return root error message or empty string if none found
+   */
+  static String getRootMessage(final Throwable cause) {
+    String message = "";
+
+    Throwable ex = cause;
+    while (ex != null) {
+      if (ex.getMessage() != null) {
+        message = ex.getClass().getName() + ": " + ex.getMessage();
+      }
+
+      if (ex.getCause() != null && ex.getCause() != ex) {
+        ex = ex.getCause();
+      } else {
+        break;
+      }
+    }
+
+    return message;
+  }
+
+
   static String buildCausesMessage(final Throwable t) {
 
     StringBuilder sb = new StringBuilder();

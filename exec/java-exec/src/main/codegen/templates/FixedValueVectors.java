@@ -38,7 +38,7 @@ package org.apache.drill.exec.vector;
  *   The width of each element is ${type.width} byte(s)
  *   The equivalent Java primitive is '${minor.javaType!type.javaType}'
  *
- * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
+ * Source code generated using FreeMarker template ${.template_name}
  */
 @SuppressWarnings("unused")
 public final class ${minor.class}Vector extends BaseDataValueVector implements FixedWidthVector{
@@ -92,8 +92,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       allocationValueCount = (int) (allocationValueCount * 2);
       allocationMonitor = 0;
     }
-    this.data = allocator.buffer(allocationValueCount * ${type.width});
-    if(data == null) return false;
+
+    DrillBuf newBuf = allocator.buffer(allocationValueCount * ${type.width});
+    if(newBuf == null) {
+      return false;
+    }
+
+    this.data = newBuf;
     this.data.readerIndex(0);
     return true;
   }
@@ -101,21 +106,36 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   /**
    * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
    * @param valueCount
+   * @throws org.apache.drill.exec.memory.OutOfMemoryRuntimeException if it can't allocate the new buffer
    */
   public void allocateNew(int valueCount) {
     clear();
-    this.data = allocator.buffer(valueCount * ${type.width});
+
+    DrillBuf newBuf = allocator.buffer(valueCount * ${type.width});
+    if (newBuf == null) {
+      throw new OutOfMemoryRuntimeException(
+        String.format("Failure while allocating buffer of %d bytes",valueCount * ${type.width}));
+    }
+
+    this.data = newBuf;
     this.data.readerIndex(0);
     this.allocationValueCount = valueCount;
   }
 
 /**
  * Allocate new buffer with double capacity, and copy data into the new buffer. Replace vector's buffer with new buffer, and release old one
+ *
+ * @throws org.apache.drill.exec.memory.OutOfMemoryRuntimeException if it can't allocate the new buffer
  */
   public void reAlloc() {
     logger.info("Realloc vector {}. [{}] -> [{}]", field, allocationValueCount * ${type.width}, allocationValueCount * 2 * ${type.width});
     allocationValueCount *= 2;
     DrillBuf newBuf = allocator.buffer(allocationValueCount * ${type.width});
+    if (newBuf == null) {
+      throw new OutOfMemoryRuntimeException(
+      String.format("Failure while reallocating buffer to %d bytes",allocationValueCount * ${type.width}));
+    }
+
     newBuf.setBytes(0, data, 0, data.capacity());
     newBuf.setZero(newBuf.capacity() / 2, newBuf.capacity() / 2);
     newBuf.writerIndex(data.writerIndex());

@@ -42,7 +42,7 @@ import org.apache.drill.exec.vector.VarCharVector;
 
 /* Write the RecordBatch to the given RecordWriter. */
 public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WriterRecordBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WriterRecordBatch.class);
 
   private EventBasedRecordWriter eventBasedRecordWriter;
   private RecordWriter recordWriter;
@@ -78,11 +78,6 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
 
   @Override
   public void buildSchema() throws SchemaChangeException {
-//    try {
-//      setupNewSchema();
-//    } catch (Exception e) {
-//      throw new SchemaChangeException(e);
-//    }
   }
 
   @Override
@@ -101,8 +96,9 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
         upstream = next(incoming);
 
         switch(upstream) {
+          case OUT_OF_MEMORY:
           case STOP:
-            return IterOutcome.STOP;
+            return upstream;
 
           case NOT_YET:
           case NONE:
@@ -124,7 +120,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
             throw new UnsupportedOperationException();
         }
       } while(upstream != IterOutcome.NONE);
-    }catch(Exception ex){
+    } catch(IOException ex) {
       logger.error("Failure during query", ex);
       kill(false);
       context.fail(ex);
@@ -154,7 +150,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     container.setRecordCount(1);
   }
 
-  protected void setupNewSchema() throws Exception {
+  protected void setupNewSchema() throws IOException {
     try {
       // update the schema in RecordWriter
       stats.startSetup();

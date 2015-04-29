@@ -43,13 +43,12 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
-import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
 public class SortBatch extends AbstractRecordBatch<Sort> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortBatch.class);
 
   public final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
   public final MappingSet leftMapping = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
@@ -107,6 +106,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
           break outer;
         case NOT_YET:
           throw new UnsupportedOperationException();
+        case OUT_OF_MEMORY:
         case STOP:
           return upstream;
         case OK_NEW_SCHEMA:

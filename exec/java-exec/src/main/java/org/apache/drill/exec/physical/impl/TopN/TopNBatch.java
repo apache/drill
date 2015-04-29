@@ -48,9 +48,7 @@ import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
@@ -61,10 +59,8 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
-import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
@@ -72,8 +68,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
 
   private static final long MAX_SORT_BYTES = 1L * 1024 * 1024 * 1024;
-  public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
-  public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
   private  final int batchPurgeThreshold;
 
   public final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
@@ -89,10 +83,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   private long countSincePurge;
   private int batchCount;
   private Copier copier;
-  private boolean schemaBuilt = false;
   private boolean first = true;
   private int recordCount = 0;
-  private boolean stop;
 
   public TopNBatch(TopN popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -153,7 +145,11 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         container.setRecordCount(0);
         return;
       case STOP:
-        stop = true;
+        state = BatchState.STOP;
+        return;
+      case OUT_OF_MEMORY:
+        state = BatchState.OUT_OF_MEMORY;
+        return;
       case NONE:
         state = BatchState.DONE;
       default:
@@ -198,6 +194,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           break outer;
         case NOT_YET:
           throw new UnsupportedOperationException();
+        case OUT_OF_MEMORY:
         case STOP:
           return upstream;
         case OK_NEW_SCHEMA:

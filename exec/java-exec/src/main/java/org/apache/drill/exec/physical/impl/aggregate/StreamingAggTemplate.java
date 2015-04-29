@@ -97,6 +97,9 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               } else {
                 break outer;
               }
+            case OUT_OF_MEMORY:
+              outcome = out;
+              return AggOutcome.RETURN_OUTCOME;
             case NONE:
               out = IterOutcome.OK_NEW_SCHEMA;
             case STOP:

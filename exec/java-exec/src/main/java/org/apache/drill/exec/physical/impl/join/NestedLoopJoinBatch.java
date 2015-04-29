@@ -147,7 +147,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       }
 
       boolean drainRight = true;
-      while (drainRight == true) {
+      while (drainRight) {
         rightUpstream = next(RIGHT_INPUT, right);
         switch (rightUpstream) {
           case OK_NEW_SCHEMA:
@@ -159,8 +159,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
           case OK:
             addBatchToHyperContainer(right);
             break;
+          case OUT_OF_MEMORY:
+            return IterOutcome.OUT_OF_MEMORY;
           case NONE:
           case STOP:
+            //TODO we got a STOP, shouldn't we stop immediately ?
           case NOT_YET:
             drainRight = false;
             break;
@@ -273,6 +276,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     try {
       leftUpstream = next(LEFT_INPUT, left);
       rightUpstream = next(RIGHT_INPUT, right);
+
+      if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
+        state = BatchState.OUT_OF_MEMORY;
+        return;
+      }
 
       if (leftUpstream != IterOutcome.NONE) {
         leftSchema = left.getSchema();

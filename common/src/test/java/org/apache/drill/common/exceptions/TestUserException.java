@@ -40,9 +40,10 @@ public class TestUserException {
   @Test
   public void testBuildSystemException() {
     String message = "This is an exception";
-    UserException uex = UserException.systemError(new RuntimeException(message)).build();
+    UserException uex = UserException.systemError(new Exception(new RuntimeException(message))).build();
 
-    Assert.assertEquals(message, uex.getOriginalMessage());
+    Assert.assertTrue(uex.getOriginalMessage().contains(message));
+    Assert.assertTrue(uex.getOriginalMessage().contains("RuntimeException"));
 
     DrillPBError error = uex.getOrCreatePBError(true);
 

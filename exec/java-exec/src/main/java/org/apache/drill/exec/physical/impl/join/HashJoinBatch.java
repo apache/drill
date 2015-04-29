@@ -171,6 +171,12 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   protected void buildSchema() throws SchemaChangeException {
     leftUpstream = next(left);
     rightUpstream = next(right);
+
+    if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
+      state = BatchState.OUT_OF_MEMORY;
+      return;
+    }
+
     // Initialize the hash join helper context
     hjHelper = new HashJoinHelper(context, oContext.getAllocator());
     try {
@@ -328,6 +334,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
       switch (rightUpstream) {
 
+      case OUT_OF_MEMORY:
       case NONE:
       case NOT_YET:
       case STOP:

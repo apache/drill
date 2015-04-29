@@ -42,6 +42,8 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.DistributedSemaphore;
 import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.OptimizerException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
@@ -222,6 +224,8 @@ public class Foreman implements Runnable {
         throw new IllegalStateException();
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
+    } catch (final OutOfMemoryException | OutOfMemoryRuntimeException e) {
+      moveToState(QueryState.FAILED, UserException.memoryError(e).build());
     } catch (final ForemanException e) {
       moveToState(QueryState.FAILED, e);
     } catch (AssertionError | Exception ex) {

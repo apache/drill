@@ -108,8 +108,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     } else {
       sv = null;
     }
-    WritableBatch batch = WritableBatch.getBatchNoHVWrap(incoming.getRecordCount(), incoming, incomingHasSv2 ? true
-        : false);
+    WritableBatch batch = WritableBatch.getBatchNoHVWrap(incoming.getRecordCount(), incoming, incomingHasSv2);
     VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, sv, oContext.getAllocator());
 
     try {

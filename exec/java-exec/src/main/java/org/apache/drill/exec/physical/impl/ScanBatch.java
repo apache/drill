@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -32,6 +33,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -47,6 +49,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
@@ -60,13 +63,11 @@ import com.google.common.collect.Maps;
  */
 public class ScanBatch implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
-
-  private static final int MAX_RECORD_CNT = Character.MAX_VALUE;
+  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(ScanBatch.class);
 
   private final Map<MaterializedField.Key, ValueVector> fieldVectorMap = Maps.newHashMap();
 
   private final VectorContainer container = new VectorContainer();
-  private VectorContainer tempContainer;
   private int recordCount;
   private final FragmentContext context;
   private final OperatorContext oContext;
@@ -79,7 +80,6 @@ public class ScanBatch implements CloseableRecordBatch {
   private List<ValueVector> partitionVectors;
   private List<Integer> selectedPartitionColumns;
   private String partitionColumnDesignator;
-  private boolean first = true;
   private boolean done = false;
   private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
 
@@ -159,13 +159,14 @@ public class ScanBatch implements CloseableRecordBatch {
     if (done) {
       return IterOutcome.NONE;
     }
-    long t1 = System.nanoTime();
     oContext.getStats().startProcessing();
     try {
       try {
+        injector.injectChecked(context.getExecutionControls(), "next-allocate", OutOfMemoryException.class);
+
         currentReader.allocate(fieldVectorMap);
-      } catch (OutOfMemoryException e) {
-        logger.debug("Caught OutOfMemoryException");
+      } catch (OutOfMemoryException | OutOfMemoryRuntimeException e) {
+        logger.debug("Caught Out of Memory Exception", e);
         for (ValueVector v : fieldVectorMap.values()) {
           v.clear();
         }
@@ -219,6 +220,9 @@ public class ScanBatch implements CloseableRecordBatch {
       } else {
         return IterOutcome.OK;
       }
+    } catch (OutOfMemoryRuntimeException ex) {
+      context.fail(UserException.memoryError(ex).build());
+      return IterOutcome.STOP;
     } catch (Exception ex) {
       logger.debug("Failed to read the batch. Stopping...", ex);
       context.fail(ex);
@@ -328,7 +332,7 @@ public class ScanBatch implements CloseableRecordBatch {
     @Override
     public boolean isNewSchema() {
       // Check if top level schema has changed, second condition checks if one of the deeper map schema has changed
-      if (schemaChange == true || callBack.getSchemaChange()) {
+      if (schemaChange || callBack.getSchemaChange()) {
         schemaChange = false;
         return true;
       }
@@ -353,9 +357,6 @@ public class ScanBatch implements CloseableRecordBatch {
 
   public void close() {
     container.clear();
-    if (tempContainer != null) {
-      tempContainer.clear();
-    }
     for (ValueVector v : partitionVectors) {
       v.clear();
     }

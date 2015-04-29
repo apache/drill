@@ -46,7 +46,7 @@ package org.apache.drill.exec.vector;
  *   The width of each element is ${type.width} byte(s)
  *   The equivalent Java primitive is '${minor.javaType!type.javaType}'
  *
- * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
+ * Source code generated using FreeMarker template ${.template_name}
  */
 @SuppressWarnings("unused")
 public final class ${minor.class}Vector extends BaseDataValueVector implements VariableWidthVector{
@@ -281,12 +281,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       allocationMonitor = 0;
     }
 
-    data = allocator.buffer(allocationTotalByteCount);
-    if(data == null){
+    DrillBuf newBuf = allocator.buffer(allocationTotalByteCount);
+    if(newBuf == null){
       return false;
     }
-    
+
+    this.data = newBuf;
     data.readerIndex(0);
+
     if(!offsetVector.allocateNewSafe()){
       return false;
     }
@@ -297,7 +299,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   public void allocateNew(int totalBytes, int valueCount) {
     clear();
     assert totalBytes >= 0;
-    data = allocator.buffer(totalBytes);
+    DrillBuf newBuf = allocator.buffer(totalBytes);
+    if(newBuf == null){
+      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", totalBytes));
+    }
+
+    this.data = newBuf;
     data.readerIndex(0);
     allocationTotalByteCount = totalBytes;
     offsetVector.allocateNew(valueCount+1);
@@ -307,6 +314,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     public void reAlloc() {
       allocationTotalByteCount *= 2;
       DrillBuf newBuf = allocator.buffer(allocationTotalByteCount);
+      if(newBuf == null){
+        throw new OutOfMemoryRuntimeException(
+          String.format("Failure while reallocating buffer of %d bytes", allocationTotalByteCount));
+      }
+
       newBuf.setBytes(0, data, 0, data.capacity());
       data.release();
       data = newBuf;

@@ -17,9 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -36,7 +34,6 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -44,13 +41,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVectorRemover>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemovingRecordBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemovingRecordBatch.class);
 
   private Copier copier;
   private int recordCount;
   private boolean hasRemainder;
   private int remainderIndex;
-  private boolean first;
 
   public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, incoming);
@@ -248,7 +244,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
     for(VectorWrapper<?> vv : batch){
       ValueVector v = vv.getValueVectors()[0];
-      TransferPair tp = v.makeTransferPair(container.addOrGet(v.getField()));
+      v.makeTransferPair(container.addOrGet(v.getField()));
     }
 
     try {

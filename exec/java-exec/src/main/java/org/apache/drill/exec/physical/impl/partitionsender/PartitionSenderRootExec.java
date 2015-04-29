@@ -32,6 +32,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -168,6 +169,9 @@ public class PartitionSenderRootExec extends BaseRootExec {
           context.fail(e);
         }
         return false;
+
+      case OUT_OF_MEMORY:
+        throw new OutOfMemoryRuntimeException();
 
       case STOP:
         if (partitioner != null) {
