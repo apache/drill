@@ -56,9 +56,7 @@ The MapR Drill ODBC driver installer installs the TDC file automatically. If you
   2. When the installation completes, press any key to continue.   
 For example, you can press the SPACEBAR key.
 
-If the installation of the Tableau datasource connection (TDC) file fails, this is likely due to your Tableau repository being in a different location.  In this case, you should manually copy the TDC file to one of the following locations:
+If the installation of the Tableau datasource connection (TDC) file fails, this is likely due to your Tableau repository being in a different location.  In this case, you should manually copy the TDC file to the Datasources folder in the My Tableau Repository. By default, the My Tableau Repository is located in C:\Users\<user>\Documents\My Tableau Repository.
 
-* For Tableau Desktop, save the file to the Datasources folder in the My Tableau Repository. By default, the My Tableau Repository is located in C:\Users\<user>\Documents\My Tableau Repository.
-* For Tableau Server, save the file to the C:\ProgramData\Tableau\Tableau Server\data\tabsvc\vizqlserver\Datasources directory.
 
 #### What's Next? Go to [Step 2. Configure ODBC Connections to Drill Data Sources]({{ site.baseurl }}/docs/configuring-connections-on-windows).
