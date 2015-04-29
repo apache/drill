@@ -62,7 +62,7 @@ import com.google.common.collect.Lists;
 public abstract class DrillProjectRelBase extends Project implements DrillRelNode {
   private final int nonSimpleFieldCount ;
 
-  protected DrillProjectRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
+  protected DrillProjectRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, List<? extends RexNode> exps,
       RelDataType rowType) {
     super(cluster, traits, child, exps, rowType, Flags.BOXED);
     assert getConvention() == convention;

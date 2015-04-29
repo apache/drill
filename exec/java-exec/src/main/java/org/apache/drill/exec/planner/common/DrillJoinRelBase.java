@@ -51,7 +51,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
   private final double joinRowFactor;
 
   public DrillJoinRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType) throws InvalidRelException {
+      JoinRelType joinType){
     super(cluster, traits, left, right, condition, joinType, Collections.<String> emptySet());
     this.joinRowFactor = PrelUtil.getPlannerSettings(cluster.getPlanner()).getRowCountEstimateFactor();
   }
@@ -65,7 +65,19 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
           if (hasScalarSubqueryInput()) {
             return computeLogicalJoinCost(planner);
           } else {
-            return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+            /*
+             *  Why do we return non-infinite cost for CartsianJoin with non-scalar subquery, when LOPT planner is enabled?
+             *   - We do not want to turn on the two Join permutation rule : PushJoinPastThroughJoin.LEFT, RIGHT.
+             *   - As such, we may end up with filter on top of join, which will cause CanNotPlan in LogicalPlanning, if we
+             *   return infinite cost.
+             *   - Such filter on top of join might be pushed into JOIN, when LOPT planner is called.
+             *   - Return non-infinite cost will give LOPT planner a chance to try to push the filters.
+             */
+            if (PrelUtil.getPlannerSettings(planner).isHepJoinOptEnabled()) {
+             return computeCartesianJoinCost(planner);
+            } else {
+              return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+            }
           }
         } else {
           return computeLogicalJoinCost(planner);
@@ -107,6 +119,41 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
 
   public List<Integer> getRightKeys() {
     return this.rightKeys;
+  }
+
+  protected  RelOptCost computeCartesianJoinCost(RelOptPlanner planner) {
+    double probeRowCount = RelMetadataQuery.getRowCount(this.getLeft());
+    double buildRowCount = RelMetadataQuery.getRowCount(this.getRight());
+
+    // cpu cost of hashing the join keys for the build side
+    double cpuCostBuild = DrillCostBase.HASH_CPU_COST * getRightKeys().size() * buildRowCount;
+    // cpu cost of hashing the join keys for the probe side
+    double cpuCostProbe = DrillCostBase.HASH_CPU_COST * getLeftKeys().size() * probeRowCount;
+
+    // cpu cost of evaluating each leftkey=rightkey join condition
+    double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
+
+    double factor = PrelUtil.getPlannerSettings(planner).getOptions()
+        .getOption(ExecConstants.HASH_JOIN_TABLE_FACTOR_KEY).float_val;
+    long fieldWidth = PrelUtil.getPlannerSettings(planner).getOptions()
+        .getOption(ExecConstants.AVERAGE_FIELD_WIDTH_KEY).num_val;
+
+    // table + hashValues + links
+    double memCost =
+        (
+            (fieldWidth * this.getRightKeys().size()) +
+                IntHolder.WIDTH +
+                IntHolder.WIDTH
+        ) * buildRowCount * factor;
+
+    double cpuCost = joinConditionCost * (probeRowCount * buildRowCount) // probe size determine the join condition comparison cost
+        + cpuCostBuild + cpuCostProbe ;
+
+    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
+
+    final double mulFactor = 100000; // This is a magic number, just to make sure CartesianJoin is more expensive than Non-CartesianJoin.
+
+    return costFactory.makeCost(buildRowCount * probeRowCount, cpuCost * mulFactor, 0, 0, memCost * mulFactor);
   }
 
   protected RelOptCost computeLogicalJoinCost(RelOptPlanner planner) {

@@ -53,4 +53,8 @@ public class DrillFilterRel extends DrillFilterRelBase implements DrillRel {
     return new DrillFilterRel(context.getCluster(), context.getLogicalTraits(), input, context.toRex(filter.getExpr()));
   }
 
+  public static DrillFilterRel create(RelNode child, RexNode condition) {
+    return new DrillFilterRel(child.getCluster(), child.getTraitSet(), child, condition)  ;
+  }
+
 }

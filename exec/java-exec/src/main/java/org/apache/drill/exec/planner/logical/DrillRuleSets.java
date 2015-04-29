@@ -111,24 +111,24 @@ public class DrillRuleSets {
    * @param context - shared state used during planning, currently used here
    *                to gain access to the fucntion registry described above.
    * @return - a RuleSet containing the logical rules that will always
-   *           be used.
+   *           be used, either by VolcanoPlanner directly, or
+   *           used VolcanoPlanner as pre-processing for LOPTPlanner.
+   *
+   * Note : Join permutation rule is excluded here.
    */
   public static RuleSet getDrillBasicRules(QueryContext context) {
     if (DRILL_BASIC_RULES == null) {
 
       DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
         // Add support for WHERE style joins.
-//      PushFilterPastProjectRule.INSTANCE, // Replaced by DrillPushFilterPastProjectRule
       DrillPushFilterPastProjectRule.INSTANCE,
       DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
       DrillFilterJoinRules.DRILL_JOIN,
-      JoinPushThroughJoinRule.RIGHT,
-      JoinPushThroughJoinRule.LEFT,
+//      JoinPushThroughJoinRule.RIGHT,
+//      JoinPushThroughJoinRule.LEFT,
       // End support for WHERE style joins.
 
-      //Add back rules
-      FilterMergeRule.INSTANCE,   // MergeFilterRule. TODO: NO NEED OF DRILL'S version?
-      ExpandConversionRule.INSTANCE,
+      FilterMergeRule.INSTANCE,
 //      SwapJoinRule.INSTANCE,
       AggregateRemoveRule.INSTANCE,   // RemoveDistinctRule
 //      UnionToDistinctRule.INSTANCE,
@@ -136,34 +136,24 @@ public class DrillRuleSets {
 //      RemoveTrivialCalcRule.INSTANCE,
       SortRemoveRule.INSTANCE,      //RemoveSortRule.INSTANCE,
 
-//      TableAccessRule.INSTANCE, //
-      //MergeProjectRule.INSTANCE, //
       DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
       AggregateExpandDistinctAggregatesRule.INSTANCE, //RemoveDistinctAggregateRule.INSTANCE, //
-      // ReduceAggregatesRule.INSTANCE, // replaced by DrillReduceAggregatesRule
-      DrillValuesRule.INSTANCE,
+      DrillReduceAggregatesRule.INSTANCE,
 
       /*
       Projection push-down related rules
       */
-//      PushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastFilterRule.INSTANCE,
-//      ProjectJoinTransposeRule.INSTANCE,
       DrillPushProjectPastJoinRule.INSTANCE,
-
-//      SwapJoinRule.INSTANCE, //
-//      PushJoinThroughJoinRule.RIGHT, //
-//      PushJoinThroughJoinRule.LEFT, //
-//      PushSortPastProjectRule.INSTANCE, //
-
       DrillPushProjIntoScan.INSTANCE,
 
-//      DrillPushPartitionFilterIntoScan.FILTER_ON_PROJECT,
-//      DrillPushPartitionFilterIntoScan.FILTER_ON_SCAN,
       PruneScanRule.getFilterOnProject(context),
       PruneScanRule.getFilterOnScan(context),
 
-      ////////////////////////////////
+      /*
+       Convert from Calcite Logical to Drill Logical Rules.
+       */
+      ExpandConversionRule.INSTANCE,
       DrillScanRule.INSTANCE,
       DrillFilterRule.INSTANCE,
       DrillProjectRule.INSTANCE,
@@ -174,13 +164,20 @@ public class DrillRuleSets {
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
       DrillUnionRule.INSTANCE,
-
-      DrillReduceAggregatesRule.INSTANCE
+      DrillValuesRule.INSTANCE
       )
       .build());
     }
 
     return DRILL_BASIC_RULES;
+  }
+
+  // Ruleset for join permutation, used only in VolcanoPlanner.
+  public static RuleSet getJoinPermRules(QueryContext context) {
+    return new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
+        JoinPushThroughJoinRule.RIGHT,
+        JoinPushThroughJoinRule.LEFT
+        ).build());
   }
 
   public static final RuleSet DRILL_PHYSICAL_DISK = new DrillRuleSet(ImmutableSet.of( //

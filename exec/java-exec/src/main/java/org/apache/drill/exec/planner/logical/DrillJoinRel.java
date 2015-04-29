@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Join;
@@ -42,13 +43,16 @@ import org.apache.calcite.util.Pair;
 import com.google.common.collect.Lists;
 
 /**
- * Join implemented in Drill.
+ * Logical Join implemented in Drill.
  */
 public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
 
-  /** Creates a DrillJoinRel. */
+  /** Creates a DrillJoinRel.
+   * We do not throw InvalidRelException in Logical planning phase. It's up to the post-logical planning check or physical planning
+   * to detect the unsupported join type, and throw exception.
+   * */
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType) throws InvalidRelException {
+      JoinRelType joinType)  {
     super(cluster, traits, left, right, condition, joinType);
 
     RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
@@ -66,11 +70,7 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
 
   @Override
   public DrillJoinRel copy(RelTraitSet traitSet, RexNode condition, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
-    try {
-      return new DrillJoinRel(getCluster(), traitSet, left, right, condition, joinType);
-    } catch (InvalidRelException e) {
-      throw new AssertionError(e);
-    }
+    return new DrillJoinRel(getCluster(), traitSet, left, right, condition, joinType);
   }
 
   @Override

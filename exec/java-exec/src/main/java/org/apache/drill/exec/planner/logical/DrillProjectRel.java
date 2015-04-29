@@ -41,7 +41,7 @@ import com.google.common.collect.Lists;
  * Project implemented in Drill.
  */
 public class DrillProjectRel extends DrillProjectRelBase implements DrillRel {
-  protected DrillProjectRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
+  protected DrillProjectRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<? extends RexNode> exps,
       RelDataType rowType) {
     super(DRILL_LOGICAL, cluster, traits, child, exps, rowType);
   }
@@ -84,7 +84,7 @@ public class DrillProjectRel extends DrillProjectRelBase implements DrillRel {
    * @param rowType
    * @return new instance of DrillProjectRel
    */
-  public static DrillProjectRel create(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
+  public static DrillProjectRel create(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<? extends RexNode> exps,
                                        RelDataType rowType) {
     return new DrillProjectRel(cluster, traits, child, exps, rowType);
   }
