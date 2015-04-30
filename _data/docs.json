@@ -856,6 +856,23 @@
             "title": "Configuring Connections on Windows", 
             "url": "/docs/configuring-connections-on-windows/"
         }, 
+        "Configuring Memory": {
+            "breadcrumbs": [
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Multitenant and Multi-instance Architectures", 
+            "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+            "parent": "Manage Drill", 
+            "previous_title": "Manage Drill Introduction", 
+            "previous_url": "/docs/manage-drill-introduction/", 
+            "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
+            "title": "Configuring Memory", 
+            "url": "/docs/configuring-memory/"
+        }, 
         "Configuring a Cluster for Different Workloads": {
             "breadcrumbs": [
                 {
@@ -3381,14 +3398,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Multitenant and Multi-instance Architectures", 
-                    "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                    "next_title": "Configuring Memory", 
+                    "next_url": "/docs/configuring-memory/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
                     "relative_path": "_docs/manage-drill/010-manage-drill-introduction.md", 
                     "title": "Manage Drill Introduction", 
                     "url": "/docs/manage-drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Multitenant and Multi-instance Architectures", 
+                    "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                    "parent": "Manage Drill", 
+                    "previous_title": "Manage Drill Introduction", 
+                    "previous_url": "/docs/manage-drill-introduction/", 
+                    "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
+                    "title": "Configuring Memory", 
+                    "url": "/docs/configuring-memory/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3465,8 +3499,8 @@
                     "next_title": "Multitenant and Multi-instance Architectures Introduction", 
                     "next_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Manage Drill Introduction", 
-                    "previous_url": "/docs/manage-drill-introduction/", 
+                    "previous_title": "Configuring Memory", 
+                    "previous_url": "/docs/configuring-memory/", 
                     "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
                     "title": "Multitenant and Multi-instance Architectures", 
                     "url": "/docs/multitenant-and-multi-instance-architectures/"
@@ -3680,8 +3714,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Multitenant and Multi-instance Architectures", 
-            "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+            "next_title": "Configuring Memory", 
+            "next_url": "/docs/configuring-memory/", 
             "parent": "Manage Drill", 
             "previous_title": "Manage Drill", 
             "previous_url": "/docs/manage-drill/", 
@@ -3836,8 +3870,8 @@
             "next_title": "Multitenant and Multi-instance Architectures Introduction", 
             "next_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "Manage Drill Introduction", 
-            "previous_url": "/docs/manage-drill-introduction/", 
+            "previous_title": "Configuring Memory", 
+            "previous_url": "/docs/configuring-memory/", 
             "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
             "title": "Multitenant and Multi-instance Architectures", 
             "url": "/docs/multitenant-and-multi-instance-architectures/"
@@ -10915,14 +10949,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Multitenant and Multi-instance Architectures", 
-                    "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                    "next_title": "Configuring Memory", 
+                    "next_url": "/docs/configuring-memory/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
                     "relative_path": "_docs/manage-drill/010-manage-drill-introduction.md", 
                     "title": "Manage Drill Introduction", 
                     "url": "/docs/manage-drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Multitenant and Multi-instance Architectures", 
+                    "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                    "parent": "Manage Drill", 
+                    "previous_title": "Manage Drill Introduction", 
+                    "previous_url": "/docs/manage-drill-introduction/", 
+                    "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
+                    "title": "Configuring Memory", 
+                    "url": "/docs/configuring-memory/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10999,8 +11050,8 @@
                     "next_title": "Multitenant and Multi-instance Architectures Introduction", 
                     "next_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Manage Drill Introduction", 
-                    "previous_url": "/docs/manage-drill-introduction/", 
+                    "previous_title": "Configuring Memory", 
+                    "previous_url": "/docs/configuring-memory/", 
                     "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
                     "title": "Multitenant and Multi-instance Architectures", 
                     "url": "/docs/multitenant-and-multi-instance-architectures/"

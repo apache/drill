@@ -15,7 +15,7 @@ Drill typically runs along side many application frameworks, including the follo
 
 You need to plan and configure these resources for use with Drill in a multitenant or multi-instance environment: 
 
-* [Memory]()  
+* [Memory]({{site.baseurl}}/docs/configuring-memory)  
 * [CPU]({{site.baseurl}}/docs/how-to-manage-drill-cpu-resources)  
 * Disk  
 
