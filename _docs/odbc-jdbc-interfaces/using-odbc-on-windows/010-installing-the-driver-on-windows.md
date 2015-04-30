@@ -39,14 +39,11 @@ To install the driver, you need Administrator privileges on the computer.
 
 ## The Tableau Data-connection Customization (TDC) File
 
-The MapR Drill ODBC Driver includes a file named `MapRDrillODBC.TDC`. The TDC
-file includes customizations that improve ODBC configuration and performance
+The MapR Drill ODBC Driver includes a file named `MapRDrillODBC.TDC`. The TDC file includes customizations that improve ODBC configuration and performance
 when using Tableau.
 
-If you install Tableau after you install the MapR Drill ODBC driver, you must
-install the Tableau TDC FIle. When Tableau is already installed on the
-machine, the TDC file is installed automatically with the MapR Drill ODBC
-driver.
+### Installing the TDC File
+The MapR Drill ODBC driver installer automatically installs the TDC file if the installer can find the Tableau installation. If you installed the MapR Drill ODBC driver first and then installed Tableau, the TDC file is not installed automatically, and you need to install the TDC file manually. 
 
 **To install the MapRDrillODBC.TDC file manually:**
 
@@ -54,5 +51,7 @@ driver.
   2. When the installation completes, press any key to continue.   
 For example, you can press the SPACEBAR key.
 
-#### What's Next? Go to [Step 2. Configure ODBC Connections to Drill Data Sources]({{ site.baseurl }}/docs/configuring-connections-on-windows).
+If the installation of the TDC file fails, this is likely due to your Tableau repository being in location other than the default one.  In this case, manually copy the My Tableau Repository to C:\Users\<user>\Documents\My Tableau Repository. Repeat the procedure to install the MapRDrillODBC.TDC file manually.
 
+
+#### What's Next? Go to [Step 2. Configure ODBC Connections to Drill Data Sources]({{ site.baseurl }}/docs/configuring-connections-on-windows).

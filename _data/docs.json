@@ -910,7 +910,7 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "Connect a Data Source Introduction", 
                     "previous_url": "/docs/connect-a-data-source-introduction/", 
-                    "relative_path": "_docs/connect-a-data-source/020-plugin-reg.md", 
+                    "relative_path": "_docs/connect-a-data-source/020-storage-plugin-registration.md", 
                     "title": "Storage Plugin Registration", 
                     "url": "/docs/storage-plugin-registration/"
                 }, 
@@ -934,11 +934,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "File System Storage Plugin", 
-                            "next_url": "/docs/file-system-storage-plugin/", 
+                            "next_title": "Workspaces", 
+                            "next_url": "/docs/workspaces/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
+                            "relative_path": "_docs/connect-a-data-source/035-storage-plugin-configuration-introduction.md", 
+                            "title": "Storage Plugin Configuration Introduction", 
+                            "url": "/docs/storage-plugin-configuration-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Storage Plugin Configuration", 
+                                    "url": "/docs/storage-plugin-configuration/"
+                                }, 
+                                {
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "File System Storage Plugin", 
+                            "next_url": "/docs/file-system-storage-plugin/", 
+                            "parent": "Storage Plugin Configuration", 
+                            "previous_title": "Storage Plugin Configuration Introduction", 
+                            "previous_url": "/docs/storage-plugin-configuration-introduction/", 
                             "relative_path": "_docs/connect-a-data-source/040-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
@@ -960,7 +981,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Workspaces", 
                             "previous_url": "/docs/workspaces/", 
-                            "relative_path": "_docs/connect-a-data-source/050-reg-fs.md", 
+                            "relative_path": "_docs/connect-a-data-source/050-file-system-storage-plugin.md", 
                             "title": "File System Storage Plugin", 
                             "url": "/docs/file-system-storage-plugin/"
                         }, 
@@ -981,7 +1002,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "File System Storage Plugin", 
                             "previous_url": "/docs/file-system-storage-plugin/", 
-                            "relative_path": "_docs/connect-a-data-source/060-reg-hbase.md", 
+                            "relative_path": "_docs/connect-a-data-source/060-hbase-storage-plugin.md", 
                             "title": "HBase Storage Plugin", 
                             "url": "/docs/hbase-storage-plugin/"
                         }, 
@@ -1002,7 +1023,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "HBase Storage Plugin", 
                             "previous_url": "/docs/hbase-storage-plugin/", 
-                            "relative_path": "_docs/connect-a-data-source/070-reg-hive.md", 
+                            "relative_path": "_docs/connect-a-data-source/070-hive-storage-plugin.md", 
                             "title": "Hive Storage Plugin", 
                             "url": "/docs/hive-storage-plugin/"
                         }, 
@@ -1023,17 +1044,17 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Hive Storage Plugin", 
                             "previous_url": "/docs/hive-storage-plugin/", 
-                            "relative_path": "_docs/connect-a-data-source/080-default-frmt.md", 
+                            "relative_path": "_docs/connect-a-data-source/080-drill-default-input-format.md", 
                             "title": "Drill Default Input Format", 
                             "url": "/docs/drill-default-input-format/"
                         }
                     ], 
-                    "next_title": "Workspaces", 
-                    "next_url": "/docs/workspaces/", 
+                    "next_title": "Storage Plugin Configuration Introduction", 
+                    "next_url": "/docs/storage-plugin-configuration-introduction/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Storage Plugin Registration", 
                     "previous_url": "/docs/storage-plugin-registration/", 
-                    "relative_path": "_docs/connect-a-data-source/030-plugin-conf.md", 
+                    "relative_path": "_docs/connect-a-data-source/030-storage-plugin-configuration.md", 
                     "title": "Storage Plugin Configuration", 
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
@@ -1050,7 +1071,7 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "Drill Default Input Format", 
                     "previous_url": "/docs/drill-default-input-format/", 
-                    "relative_path": "_docs/connect-a-data-source/090-mongo-plugin.md", 
+                    "relative_path": "_docs/connect-a-data-source/090-mongodb-plugin-for-apache-drill.md", 
                     "title": "MongoDB Plugin for Apache Drill", 
                     "url": "/docs/mongodb-plugin-for-apache-drill/"
                 }, 
@@ -1067,7 +1088,7 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "MongoDB Plugin for Apache Drill", 
                     "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                    "relative_path": "_docs/connect-a-data-source/100-mapr-db-plugin.md", 
+                    "relative_path": "_docs/connect-a-data-source/100-mapr-db-format.md", 
                     "title": "MapR-DB Format", 
                     "url": "/docs/mapr-db-format/"
                 }
@@ -2149,7 +2170,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "Hive Storage Plugin", 
             "previous_url": "/docs/hive-storage-plugin/", 
-            "relative_path": "_docs/connect-a-data-source/080-default-frmt.md", 
+            "relative_path": "_docs/connect-a-data-source/080-drill-default-input-format.md", 
             "title": "Drill Default Input Format", 
             "url": "/docs/drill-default-input-format/"
         }, 
@@ -2347,7 +2368,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "Workspaces", 
             "previous_url": "/docs/workspaces/", 
-            "relative_path": "_docs/connect-a-data-source/050-reg-fs.md", 
+            "relative_path": "_docs/connect-a-data-source/050-file-system-storage-plugin.md", 
             "title": "File System Storage Plugin", 
             "url": "/docs/file-system-storage-plugin/"
         }, 
@@ -2478,7 +2499,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "File System Storage Plugin", 
             "previous_url": "/docs/file-system-storage-plugin/", 
-            "relative_path": "_docs/connect-a-data-source/060-reg-hbase.md", 
+            "relative_path": "_docs/connect-a-data-source/060-hbase-storage-plugin.md", 
             "title": "HBase Storage Plugin", 
             "url": "/docs/hbase-storage-plugin/"
         }, 
@@ -2520,7 +2541,7 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "HBase Storage Plugin", 
             "previous_url": "/docs/hbase-storage-plugin/", 
-            "relative_path": "_docs/connect-a-data-source/070-reg-hive.md", 
+            "relative_path": "_docs/connect-a-data-source/070-hive-storage-plugin.md", 
             "title": "Hive Storage Plugin", 
             "url": "/docs/hive-storage-plugin/"
         }, 
@@ -3681,7 +3702,7 @@
             "parent": "Connect a Data Source", 
             "previous_title": "MongoDB Plugin for Apache Drill", 
             "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-            "relative_path": "_docs/connect-a-data-source/100-mapr-db-plugin.md", 
+            "relative_path": "_docs/connect-a-data-source/100-mapr-db-format.md", 
             "title": "MapR-DB Format", 
             "url": "/docs/mapr-db-format/"
         }, 
@@ -3719,7 +3740,7 @@
             "parent": "Connect a Data Source", 
             "previous_title": "Drill Default Input Format", 
             "previous_url": "/docs/drill-default-input-format/", 
-            "relative_path": "_docs/connect-a-data-source/090-mongo-plugin.md", 
+            "relative_path": "_docs/connect-a-data-source/090-mongodb-plugin-for-apache-drill.md", 
             "title": "MongoDB Plugin for Apache Drill", 
             "url": "/docs/mongodb-plugin-for-apache-drill/"
         }, 
@@ -7237,11 +7258,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "File System Storage Plugin", 
-                    "next_url": "/docs/file-system-storage-plugin/", 
+                    "next_title": "Workspaces", 
+                    "next_url": "/docs/workspaces/", 
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Storage Plugin Configuration", 
                     "previous_url": "/docs/storage-plugin-configuration/", 
+                    "relative_path": "_docs/connect-a-data-source/035-storage-plugin-configuration-introduction.md", 
+                    "title": "Storage Plugin Configuration Introduction", 
+                    "url": "/docs/storage-plugin-configuration-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Storage Plugin Configuration", 
+                            "url": "/docs/storage-plugin-configuration/"
+                        }, 
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "File System Storage Plugin", 
+                    "next_url": "/docs/file-system-storage-plugin/", 
+                    "parent": "Storage Plugin Configuration", 
+                    "previous_title": "Storage Plugin Configuration Introduction", 
+                    "previous_url": "/docs/storage-plugin-configuration-introduction/", 
                     "relative_path": "_docs/connect-a-data-source/040-workspaces.md", 
                     "title": "Workspaces", 
                     "url": "/docs/workspaces/"
@@ -7263,7 +7305,7 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Workspaces", 
                     "previous_url": "/docs/workspaces/", 
-                    "relative_path": "_docs/connect-a-data-source/050-reg-fs.md", 
+                    "relative_path": "_docs/connect-a-data-source/050-file-system-storage-plugin.md", 
                     "title": "File System Storage Plugin", 
                     "url": "/docs/file-system-storage-plugin/"
                 }, 
@@ -7284,7 +7326,7 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "File System Storage Plugin", 
                     "previous_url": "/docs/file-system-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/060-reg-hbase.md", 
+                    "relative_path": "_docs/connect-a-data-source/060-hbase-storage-plugin.md", 
                     "title": "HBase Storage Plugin", 
                     "url": "/docs/hbase-storage-plugin/"
                 }, 
@@ -7305,7 +7347,7 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "HBase Storage Plugin", 
                     "previous_url": "/docs/hbase-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/070-reg-hive.md", 
+                    "relative_path": "_docs/connect-a-data-source/070-hive-storage-plugin.md", 
                     "title": "Hive Storage Plugin", 
                     "url": "/docs/hive-storage-plugin/"
                 }, 
@@ -7326,19 +7368,40 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Hive Storage Plugin", 
                     "previous_url": "/docs/hive-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/080-default-frmt.md", 
+                    "relative_path": "_docs/connect-a-data-source/080-drill-default-input-format.md", 
                     "title": "Drill Default Input Format", 
                     "url": "/docs/drill-default-input-format/"
                 }
             ], 
-            "next_title": "Workspaces", 
-            "next_url": "/docs/workspaces/", 
+            "next_title": "Storage Plugin Configuration Introduction", 
+            "next_url": "/docs/storage-plugin-configuration-introduction/", 
             "parent": "Connect a Data Source", 
             "previous_title": "Storage Plugin Registration", 
             "previous_url": "/docs/storage-plugin-registration/", 
-            "relative_path": "_docs/connect-a-data-source/030-plugin-conf.md", 
+            "relative_path": "_docs/connect-a-data-source/030-storage-plugin-configuration.md", 
             "title": "Storage Plugin Configuration", 
             "url": "/docs/storage-plugin-configuration/"
+        }, 
+        "Storage Plugin Configuration Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Storage Plugin Configuration", 
+                    "url": "/docs/storage-plugin-configuration/"
+                }, 
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Workspaces", 
+            "next_url": "/docs/workspaces/", 
+            "parent": "Storage Plugin Configuration", 
+            "previous_title": "Storage Plugin Configuration", 
+            "previous_url": "/docs/storage-plugin-configuration/", 
+            "relative_path": "_docs/connect-a-data-source/035-storage-plugin-configuration-introduction.md", 
+            "title": "Storage Plugin Configuration Introduction", 
+            "url": "/docs/storage-plugin-configuration-introduction/"
         }, 
         "Storage Plugin Registration": {
             "breadcrumbs": [
@@ -7353,7 +7416,7 @@
             "parent": "Connect a Data Source", 
             "previous_title": "Connect a Data Source Introduction", 
             "previous_url": "/docs/connect-a-data-source-introduction/", 
-            "relative_path": "_docs/connect-a-data-source/020-plugin-reg.md", 
+            "relative_path": "_docs/connect-a-data-source/020-storage-plugin-registration.md", 
             "title": "Storage Plugin Registration", 
             "url": "/docs/storage-plugin-registration/"
         }, 
@@ -8298,8 +8361,8 @@
             "next_title": "File System Storage Plugin", 
             "next_url": "/docs/file-system-storage-plugin/", 
             "parent": "Storage Plugin Configuration", 
-            "previous_title": "Storage Plugin Configuration", 
-            "previous_url": "/docs/storage-plugin-configuration/", 
+            "previous_title": "Storage Plugin Configuration Introduction", 
+            "previous_url": "/docs/storage-plugin-configuration-introduction/", 
             "relative_path": "_docs/connect-a-data-source/040-workspaces.md", 
             "title": "Workspaces", 
             "url": "/docs/workspaces/"
@@ -8905,7 +8968,7 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "Connect a Data Source Introduction", 
                     "previous_url": "/docs/connect-a-data-source-introduction/", 
-                    "relative_path": "_docs/connect-a-data-source/020-plugin-reg.md", 
+                    "relative_path": "_docs/connect-a-data-source/020-storage-plugin-registration.md", 
                     "title": "Storage Plugin Registration", 
                     "url": "/docs/storage-plugin-registration/"
                 }, 
@@ -8929,11 +8992,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "File System Storage Plugin", 
-                            "next_url": "/docs/file-system-storage-plugin/", 
+                            "next_title": "Workspaces", 
+                            "next_url": "/docs/workspaces/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
+                            "relative_path": "_docs/connect-a-data-source/035-storage-plugin-configuration-introduction.md", 
+                            "title": "Storage Plugin Configuration Introduction", 
+                            "url": "/docs/storage-plugin-configuration-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Storage Plugin Configuration", 
+                                    "url": "/docs/storage-plugin-configuration/"
+                                }, 
+                                {
+                                    "title": "Connect a Data Source", 
+                                    "url": "/docs/connect-a-data-source/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "File System Storage Plugin", 
+                            "next_url": "/docs/file-system-storage-plugin/", 
+                            "parent": "Storage Plugin Configuration", 
+                            "previous_title": "Storage Plugin Configuration Introduction", 
+                            "previous_url": "/docs/storage-plugin-configuration-introduction/", 
                             "relative_path": "_docs/connect-a-data-source/040-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
@@ -8955,7 +9039,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Workspaces", 
                             "previous_url": "/docs/workspaces/", 
-                            "relative_path": "_docs/connect-a-data-source/050-reg-fs.md", 
+                            "relative_path": "_docs/connect-a-data-source/050-file-system-storage-plugin.md", 
                             "title": "File System Storage Plugin", 
                             "url": "/docs/file-system-storage-plugin/"
                         }, 
@@ -8976,7 +9060,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "File System Storage Plugin", 
                             "previous_url": "/docs/file-system-storage-plugin/", 
-                            "relative_path": "_docs/connect-a-data-source/060-reg-hbase.md", 
+                            "relative_path": "_docs/connect-a-data-source/060-hbase-storage-plugin.md", 
                             "title": "HBase Storage Plugin", 
                             "url": "/docs/hbase-storage-plugin/"
                         }, 
@@ -8997,7 +9081,7 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "HBase Storage Plugin", 
                             "previous_url": "/docs/hbase-storage-plugin/", 
-                            "relative_path": "_docs/connect-a-data-source/070-reg-hive.md", 
+                            "relative_path": "_docs/connect-a-data-source/070-hive-storage-plugin.md", 
                             "title": "Hive Storage Plugin", 
                             "url": "/docs/hive-storage-plugin/"
                         }, 
@@ -9018,17 +9102,17 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Hive Storage Plugin", 
                             "previous_url": "/docs/hive-storage-plugin/", 
-                            "relative_path": "_docs/connect-a-data-source/080-default-frmt.md", 
+                            "relative_path": "_docs/connect-a-data-source/080-drill-default-input-format.md", 
                             "title": "Drill Default Input Format", 
                             "url": "/docs/drill-default-input-format/"
                         }
                     ], 
-                    "next_title": "Workspaces", 
-                    "next_url": "/docs/workspaces/", 
+                    "next_title": "Storage Plugin Configuration Introduction", 
+                    "next_url": "/docs/storage-plugin-configuration-introduction/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Storage Plugin Registration", 
                     "previous_url": "/docs/storage-plugin-registration/", 
-                    "relative_path": "_docs/connect-a-data-source/030-plugin-conf.md", 
+                    "relative_path": "_docs/connect-a-data-source/030-storage-plugin-configuration.md", 
                     "title": "Storage Plugin Configuration", 
                     "url": "/docs/storage-plugin-configuration/"
                 }, 
@@ -9045,7 +9129,7 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "Drill Default Input Format", 
                     "previous_url": "/docs/drill-default-input-format/", 
-                    "relative_path": "_docs/connect-a-data-source/090-mongo-plugin.md", 
+                    "relative_path": "_docs/connect-a-data-source/090-mongodb-plugin-for-apache-drill.md", 
                     "title": "MongoDB Plugin for Apache Drill", 
                     "url": "/docs/mongodb-plugin-for-apache-drill/"
                 }, 
@@ -9062,7 +9146,7 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "MongoDB Plugin for Apache Drill", 
                     "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                    "relative_path": "_docs/connect-a-data-source/100-mapr-db-plugin.md", 
+                    "relative_path": "_docs/connect-a-data-source/100-mapr-db-format.md", 
                     "title": "MapR-DB Format", 
                     "url": "/docs/mapr-db-format/"
                 }
