@@ -252,18 +252,6 @@ public class TestDisabledFunctionality extends BaseTestQuery{
     }
   }
 
-  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1325,
-  @Ignore // TODO: currently errors out in NLJ
-  public void testSubqueryWithoutCorrelatedJoinCondition() throws Exception {
-    try {
-      test("select a.lastname " +
-          "from cp.`employee.json` a " +
-          "where exists (select n_name from cp.`tpch/nation.parquet` b) AND a.position_id = 10");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
   @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2068, DRILL-1325
   public void testExplainPlanForCartesianJoin() throws Exception {
     try {

@@ -19,7 +19,9 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -201,4 +203,54 @@ public class TestNestedLoopJoin extends PlanTestBase {
         .go();
   }
 
+  @Test
+  public void testNLJWithEmptyBatch() throws Exception {
+    Long result = 0l;
+
+    test(DISABLE_NLJ_SCALAR);
+    test(DISABLE_HJ);
+    test(DISABLE_MJ);
+
+    // We have a false filter causing empty left batch
+    String query = "select count(*) col from (select a.lastname " +
+        "from cp.`employee.json` a " +
+        "where exists (select n_name from cp.`tpch/nation.parquet` b) AND 1 = 0)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(result)
+        .go();
+
+    // Below tests use NLJ in a general case (non-scalar subqueries, followed by filter) with empty batches
+    query = "select count(*) col from " +
+        "(select t1.department_id " +
+        "from cp.`employee.json` t1 inner join cp.`department.json` t2 " +
+        "on t1.department_id = t2.department_id where t1.department_id = -1)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(result)
+        .go();
+
+    query = "select count(*) col from " +
+        "(select t1.department_id " +
+        "from cp.`employee.json` t1 inner join cp.`department.json` t2 " +
+        "on t1.department_id = t2.department_id where t2.department_id = -1)";
+
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(result)
+        .go();
+
+    test(ENABLE_NLJ_SCALAR);
+    test(ENABLE_HJ);
+    test(ENABLE_MJ);
+  }
 }
