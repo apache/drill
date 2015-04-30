@@ -12,20 +12,24 @@ title: Documentation
 
   {% include doctoc.html %}
 
+
+  {% include breadcrumbs.html %}
   <div class="main-content-wrapper">
     <div class="main-content">
 
-      {% include breadcrumbs.html %}
+      {% if page.relative_path %}
+        <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/{{ page.relative_path }}" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
+      {% endif %}
 
       <div class="int_title">
         <h1>{{ page.title }}</h1>
+
       </div>
 
       <link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
 
       <div class="int_text" align="left">
-        <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/{{ page.relative_path }}" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
-        {% if page_data.children.size == 0 %}
+        {% if page_data.children.size == 0 or page.noChildren %}
           {{ content }}
       {% else %}
           <ul>
@@ -41,8 +45,9 @@ title: Documentation
         {% endfor %}
         </ul>
       {% endif %}
-
-        {% include docnav.html %}
+        {% unless page.noChildren %}
+          {% include docnav.html %}
+      {% endunless %}
       </div>
     </div>
   </div>
