@@ -9,9 +9,10 @@ env.sh` and `drill-override.conf` files. Drill stores these files in the
 `/conf` directory. Drill sources` /etc/drill/conf` if it exists. Otherwise,
 Drill sources the local `<drill_installation_directory>/conf` directory.
 
-The sys.options table in Drill contains information about boot and system options listed in the following tables. To tune performance, you adjust some of the options to suit your application. Configure the options using the ALTER SESSION or ALTER SYSTEM command.
+The sys.options table in Drill contains information about boot (start-up) and system options listed in the tables on this page. 
 
 ## Boot Options
+The section, ["Start-up Options"]({{site.baseurl}}/docs/start-up-options), covers how to configure and view these options. 
 
 <table>
   <tr>
@@ -132,6 +133,7 @@ The sys.options table in Drill contains information about boot and system option
 </table>
 
 ## System Options
+The sys.options table lists the following options that you can set at the session or system level as described in the section, ["Planning and Execution Options"]({{site.baseurl}}/docs/planning-and-execution-options) 
 
 <table>
   <tr>
