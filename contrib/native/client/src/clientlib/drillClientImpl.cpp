@@ -411,6 +411,10 @@ DrillClientQueryResult* DrillClientImpl::SubmitQuery(::exec::shared::QueryType t
     {
         if(this->m_pListenerThread==NULL){
             // Stopping the io_service from running out-of-work
+            if(m_io_service.stopped()){
+                DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::SubmitQuery: io_service is stopped. Restarting." <<std::endl;
+                m_io_service.reset();
+            }
             this->m_pWork = new boost::asio::io_service::work(m_io_service);
             this->m_pListenerThread = new boost::thread(boost::bind(&boost::asio::io_service::run,
                 &this->m_io_service));
