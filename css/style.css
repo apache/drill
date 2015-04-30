@@ -247,32 +247,6 @@ a.anchor {
 	background-image:url(../images/familiarity-w.png);
 }
 
-
-#search {
-	background:#145aa8;
-	display:none;
-	left:0px;
-	right:0px;
-	padding:30px;
-	position:fixed;	
-	top:50px;
-	z-index:5;
-}
-
-#search.r {
-	position:absolute;
-	width:779px;	
-}
-
-#search input {
-	background:transparent;
-	border:none;
-	color:#FFF;
-	font-size:34px;
-	font-weight:lighter;
-	width:100%;
-}
-
 #header {
 	background:url(../images/reel-bg.png) no-repeat;
 	background-size:cover;

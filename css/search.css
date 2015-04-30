@@ -1,0 +1,9 @@
+.int_search {
+  margin:50px auto 0 auto;
+  width:780px;
+  font-family: 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.int_search .gsc-control-cse, .int_search .gsc-control-cse .gsc-table-result {
+  font-family: 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
