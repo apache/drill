@@ -247,14 +247,14 @@ public class AssignmentCreator<T extends CompleteWork> {
       FragIteratorWrapper wrapper = new FragIteratorWrapper();
       wrapper.iter = Iterators.cycle(mmap.get(endpoint));
       wrapper.maxCount = maxWork * mmap.get(endpoint).size();
-      wrapper.minCount = Math.max((maxWork - 1) * mmap.get(endpoint).size(), 1);
+      wrapper.minCount = Math.max(maxWork - 1, 1) * mmap.get(endpoint).size();
       map.put(endpoint, wrapper);
     }
     return map;
   }
 
   /**
-   * A struct that holds an fragment iterator and keeps track of how many units have been assigned, as well as the maximum
+   * A struct that holds a fragment iterator and keeps track of how many units have been assigned, as well as the maximum
    * number of assignment it will accept
    */
   private static class FragIteratorWrapper {
