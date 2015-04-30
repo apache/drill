@@ -182,7 +182,7 @@ public class TestPartitionSender extends PlanTestBase {
     // try multiple scenarios with different set of options
     options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1));
     testThreadsHelper(hashToRandomExchange, drillbitContext, options,
-        incoming, registry, planReader, planningSet, rootFragment, 2);
+        incoming, registry, planReader, planningSet, rootFragment, 1);
 
     options.clear();
     options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1));

@@ -111,8 +111,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
     stats.setLongStat(Metric.N_RECEIVERS, outGoingBatchCount);
     // Algorithm to figure out number of threads to parallelize output
     // numberOfRows/sliceTarget/numReceivers/threadfactor
-    // threadFactor = 4 by default
-    // one more param to put a limit on number max number of threads: default 32
     this.cost = operator.getChild().getCost();
     final OptionManager optMgr = context.getOptions();
     long sliceTarget = optMgr.getOption(ExecConstants.SLICE_TARGET).num_val;
