@@ -67,25 +67,33 @@ public final class UserProtos {
      */
     REQUEST_RESULTS(5, 5),
     /**
+     * <code>RESUME_PAUSED_QUERY = 11;</code>
+     *
+     * <pre>
+     * user is sending a query resume request to the drillbit
+     * </pre>
+     */
+    RESUME_PAUSED_QUERY(6, 11),
+    /**
      * <code>QUERY_DATA = 6;</code>
      *
      * <pre>
      * bit to user
      * </pre>
      */
-    QUERY_DATA(6, 6),
+    QUERY_DATA(7, 6),
     /**
      * <code>QUERY_HANDLE = 7;</code>
      */
-    QUERY_HANDLE(7, 7),
+    QUERY_HANDLE(8, 7),
     /**
      * <code>REQ_META_FUNCTIONS = 8;</code>
      */
-    REQ_META_FUNCTIONS(8, 8),
+    REQ_META_FUNCTIONS(9, 8),
     /**
      * <code>RESP_FUNCTION_LIST = 9;</code>
      */
-    RESP_FUNCTION_LIST(9, 9),
+    RESP_FUNCTION_LIST(10, 9),
     /**
      * <code>QUERY_RESULT = 10;</code>
      *
@@ -93,7 +101,7 @@ public final class UserProtos {
      * drillbit is reporting a query status change, most likely a terminal message, to the user
      * </pre>
      */
-    QUERY_RESULT(10, 10),
+    QUERY_RESULT(11, 10),
     ;
 
     /**
@@ -128,6 +136,14 @@ public final class UserProtos {
      * <code>REQUEST_RESULTS = 5;</code>
      */
     public static final int REQUEST_RESULTS_VALUE = 5;
+    /**
+     * <code>RESUME_PAUSED_QUERY = 11;</code>
+     *
+     * <pre>
+     * user is sending a query resume request to the drillbit
+     * </pre>
+     */
+    public static final int RESUME_PAUSED_QUERY_VALUE = 11;
     /**
      * <code>QUERY_DATA = 6;</code>
      *
@@ -168,6 +184,7 @@ public final class UserProtos {
         case 3: return RUN_QUERY;
         case 4: return CANCEL_QUERY;
         case 5: return REQUEST_RESULTS;
+        case 11: return RESUME_PAUSED_QUERY;
         case 6: return QUERY_DATA;
         case 7: return QUERY_HANDLE;
         case 8: return REQ_META_FUNCTIONS;
@@ -4986,16 +5003,17 @@ public final class UserProtos {
       "n\030\003 \001(\t\"|\n\022BitToUserHandshake\022\023\n\013rpc_ver" +
       "sion\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exec.user.H" +
       "andshakeStatus\022\017\n\007errorId\030\004 \001(\t\022\024\n\014error" +
-      "Message\030\005 \001(\t*\310\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000",
+      "Message\030\005 \001(\t*\341\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000",
       "\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n" +
-      "\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\016\n\n" +
-      "QUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n\022REQ_ME" +
-      "TA_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIST\020\t\022\020" +
-      "\n\014QUERY_RESULT\020\n*#\n\020QueryResultsMode\022\017\n\013" +
-      "STREAM_FULL\020\001*^\n\017HandshakeStatus\022\013\n\007SUCC" +
-      "ESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013AUTH_" +
-      "FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004B+\n\033org.apa" +
-      "che.drill.exec.protoB\nUserProtosH\001"
+      "\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027\n\023" +
+      "RESUME_PAUSED_QUERY\020\013\022\016\n\nQUERY_DATA\020\006\022\020\n" +
+      "\014QUERY_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022" +
+      "\026\n\022RESP_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020" +
+      "\n*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL\020\001*^" +
+      "\n\017HandshakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VE" +
+      "RSION_MISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNK" +
+      "NOWN_FAILURE\020\004B+\n\033org.apache.drill.exec." +
+      "protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

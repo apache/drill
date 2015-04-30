@@ -20,7 +20,7 @@ package org.apache.drill.exec.testing;
 import org.slf4j.Logger;
 
 /**
- * An injector that does not inject any controls.
+ * An injector that does not inject any controls, useful when not testing (i.e. assertions are not enabled).
  */
 public final class NoOpControlsInjector extends ExecutionControlsInjector {
 
@@ -29,20 +29,42 @@ public final class NoOpControlsInjector extends ExecutionControlsInjector {
   }
 
   @Override
-  public ExecutionControlsInjector injectUnchecked(final ExecutionControls executionControls, final String desc) {
-    return this;
+  public void injectUnchecked(final ExecutionControls executionControls, final String desc) {
   }
 
   @Override
-  public <T extends Throwable> ExecutionControlsInjector injectChecked(
+  public <T extends Throwable> void injectChecked(
     final ExecutionControls executionControls, final String desc, final Class<T> exceptionClass) throws T {
-    return this;
   }
 
   @Override
-  public ExecutionControlsInjector injectPause(final ExecutionControls executionControls, final String desc,
+  public void injectPause(final ExecutionControls executionControls, final String desc,
                                                final Logger logger) {
-    return this;
   }
 
+  /**
+   * When assertions are not enabled, this count down latch that does nothing is injected.
+   */
+  public static final CountDownLatchInjection LATCH = new CountDownLatchInjection() {
+    @Override
+    public void initialize(int count) {
+    }
+
+    @Override
+    public void await() {
+    }
+
+    @Override
+    public void awaitUninterruptibly() {
+    }
+
+    @Override
+    public void countDown() {
+    }
+  };
+
+  @Override
+  public CountDownLatchInjection getLatch(final ExecutionControls executionControls, final String desc) {
+    return LATCH;
+  }
 }

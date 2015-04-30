@@ -312,10 +312,18 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   public DrillRpcFuture<Ack> cancelQuery(QueryId id) {
-    logger.debug("Cancelling query {}", QueryIdHelper.getQueryId(id));
+    if(logger.isDebugEnabled()) {
+      logger.debug("Cancelling query {}", QueryIdHelper.getQueryId(id));
+    }
     return client.send(RpcType.CANCEL_QUERY, id, Ack.class);
   }
 
+  public DrillRpcFuture<Ack> resumeQuery(final QueryId queryId) {
+    if(logger.isDebugEnabled()) {
+      logger.debug("Resuming query {}", QueryIdHelper.getQueryId(queryId));
+    }
+    return client.send(RpcType.RESUME_PAUSED_QUERY, queryId, Ack.class);
+  }
 
   /**
    * Submits a Logical plan for direct execution (bypasses parsing)

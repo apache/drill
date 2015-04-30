@@ -49,6 +49,12 @@ public interface FragmentManager {
 
   public abstract void cancel();
 
+  /**
+   * If the executor is paused (for testing), this method should unpause the executor. This method should handle
+   * multiple calls.
+   */
+  public abstract void unpause();
+
   public boolean isWaiting();
 
   public abstract FragmentHandle getHandle();

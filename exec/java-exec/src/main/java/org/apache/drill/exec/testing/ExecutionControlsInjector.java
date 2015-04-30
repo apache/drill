@@ -75,12 +75,11 @@ public class ExecutionControlsInjector {
    * @param desc              the site description
    *                          throws the exception specified by the injection, if it is time
    */
-  public ExecutionControlsInjector injectUnchecked(final ExecutionControls executionControls, final String desc) {
+  public void injectUnchecked(final ExecutionControls executionControls, final String desc) {
     final ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
     if (exceptionInjection != null) {
       exceptionInjection.throwUnchecked();
     }
-    return this;
   }
 
   /**
@@ -95,13 +94,12 @@ public class ExecutionControlsInjector {
    * @param exceptionClass    the expected class of the exception (or a super class of it)
    * @throws T the exception specified by the injection, if it is time
    */
-  public <T extends Throwable> ExecutionControlsInjector injectChecked(
+  public <T extends Throwable> void injectChecked(
     final ExecutionControls executionControls, final String desc, final Class<T> exceptionClass) throws T {
     final ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
     if (exceptionInjection != null) {
       exceptionInjection.throwChecked(exceptionClass);
     }
-    return this;
   }
 
   /**
@@ -114,7 +112,7 @@ public class ExecutionControlsInjector {
    * @param desc              the site description
    * @param logger            logger of the class containing the injection site
    */
-  public ExecutionControlsInjector injectPause(final ExecutionControls executionControls, final String desc,
+  public void injectPause(final ExecutionControls executionControls, final String desc,
                                                final Logger logger) {
     final PauseInjection pauseInjection =
       executionControls.lookupPauseInjection(this, desc);
@@ -124,6 +122,9 @@ public class ExecutionControlsInjector {
       pauseInjection.pause();
       logger.debug("Resuming at {}", desc);
     }
-    return this;
+  }
+
+  public CountDownLatchInjection getLatch(final ExecutionControls executionControls, final String desc) {
+    return executionControls.lookupCountDownLatchInjection(this, desc);
   }
 }

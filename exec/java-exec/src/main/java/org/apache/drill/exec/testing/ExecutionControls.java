@@ -50,13 +50,15 @@ public final class ExecutionControls {
     controlsOptionMapper.addMixInAnnotations(Injection.class, InjectionMixIn.class);
   }
 
-  // Jackson MixIn for all types of injections
+  // Jackson MixIn: an annotated class that is used only by Jackson's ObjectMapper to allow a list of injections to
+  // hold various types of injections
   @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "type")
   @JsonSubTypes({
     @Type(value = ExceptionInjection.class, name = "exception"),
+    @Type(value = CountDownLatchInjectionImpl.class, name = "latch"),
     @Type(value = PauseInjection.class, name = "pause")})
   public static abstract class InjectionMixIn {
   }
@@ -99,7 +101,7 @@ public final class ExecutionControls {
       final String jsonString = v.string_val;
       try {
         controlsOptionMapper.readValue(jsonString, Controls.class);
-      } catch (IOException e) {
+      } catch (final IOException e) {
         throw new ExpressionParsingException("Invalid control options string (" + jsonString + ").", e);
       }
     }
@@ -137,7 +139,7 @@ public final class ExecutionControls {
     final Controls controls;
     try {
       controls = controlsOptionMapper.readValue(opString, Controls.class);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       // This never happens. opString must have been validated.
       logger.warn("Could not parse injections. Injections must have been validated before this point.");
       throw new DrillRuntimeException("Could not parse injections.", e);
@@ -153,7 +155,7 @@ public final class ExecutionControls {
   }
 
   /**
-   * Look for an exception injection matching the given injector, site description and endpoint.
+   * Look for an exception injection matching the given injector, site descriptor, and endpoint.
    *
    * @param injector the injector, which indicates a class
    * @param desc     the injection site description
@@ -165,7 +167,7 @@ public final class ExecutionControls {
   }
 
   /**
-   * Look for an pause injection matching the given injector, site description and endpoint.
+   * Look for an pause injection matching the given injector, site descriptor, and endpoint.
    *
    * @param injector the injector, which indicates a class
    * @param desc     the injection site description
@@ -174,6 +176,20 @@ public final class ExecutionControls {
   public PauseInjection lookupPauseInjection(final ExecutionControlsInjector injector, final String desc) {
     final Injection injection = lookupInjection(injector, desc);
     return injection != null ? (PauseInjection) injection : null;
+  }
+
+  /**
+   * Look for a count down latch injection matching the given injector, site descriptor, and endpoint.
+   *
+   * @param injector the injector, which indicates a class
+   * @param desc     the injection site description
+   * @return the count down latch injection, if there is one for the injector, site and endpoint;
+   * otherwise, a latch that does nothing
+   */
+  public CountDownLatchInjection lookupCountDownLatchInjection(final ExecutionControlsInjector injector,
+                                                               final String desc) {
+    final Injection injection = lookupInjection(injector, desc);
+    return injection != null ? (CountDownLatchInjection) injection : NoOpControlsInjector.LATCH;
   }
 
   private Injection lookupInjection(final ExecutionControlsInjector injector, final String desc) {
@@ -189,5 +205,16 @@ public final class ExecutionControls {
     }
     // return only if injection was meant for this drillbit
     return injection.isValidForBit(endpoint) ? injection : null;
+  }
+
+  /**
+   * This method resumes all pauses within the current context (QueryContext or FragmentContext).
+   */
+  public void unpauseAll() {
+    for (final Injection injection : controls.values()) {
+      if (injection instanceof PauseInjection) {
+        ((PauseInjection) injection).unpause();
+      }
+    }
   }
 }

@@ -47,13 +47,13 @@ public final class BitControl {
      */
     GOODBYE(2, 2),
     /**
-     * <code>REQ_INIATILIZE_FRAGMENTS = 3;</code>
+     * <code>REQ_INITIALIZE_FRAGMENTS = 3;</code>
      *
      * <pre>
      * bit requests
      * </pre>
      */
-    REQ_INIATILIZE_FRAGMENTS(3, 3),
+    REQ_INITIALIZE_FRAGMENTS(3, 3),
     /**
      * <code>REQ_CANCEL_FRAGMENT = 6;</code>
      *
@@ -91,25 +91,33 @@ public final class BitControl {
      */
     REQ_QUERY_CANCEL(9, 15),
     /**
+     * <code>REQ_UNPAUSE_FRAGMENT = 16;</code>
+     *
+     * <pre>
+     * send a resume message for a fragment, returns Ack
+     * </pre>
+     */
+    REQ_UNPAUSE_FRAGMENT(10, 16),
+    /**
      * <code>RESP_FRAGMENT_HANDLE = 11;</code>
      *
      * <pre>
      * bit responses
      * </pre>
      */
-    RESP_FRAGMENT_HANDLE(10, 11),
+    RESP_FRAGMENT_HANDLE(11, 11),
     /**
      * <code>RESP_FRAGMENT_STATUS = 12;</code>
      */
-    RESP_FRAGMENT_STATUS(11, 12),
+    RESP_FRAGMENT_STATUS(12, 12),
     /**
      * <code>RESP_BIT_STATUS = 13;</code>
      */
-    RESP_BIT_STATUS(12, 13),
+    RESP_BIT_STATUS(13, 13),
     /**
      * <code>RESP_QUERY_STATUS = 14;</code>
      */
-    RESP_QUERY_STATUS(13, 14),
+    RESP_QUERY_STATUS(14, 14),
     ;
 
     /**
@@ -125,13 +133,13 @@ public final class BitControl {
      */
     public static final int GOODBYE_VALUE = 2;
     /**
-     * <code>REQ_INIATILIZE_FRAGMENTS = 3;</code>
+     * <code>REQ_INITIALIZE_FRAGMENTS = 3;</code>
      *
      * <pre>
      * bit requests
      * </pre>
      */
-    public static final int REQ_INIATILIZE_FRAGMENTS_VALUE = 3;
+    public static final int REQ_INITIALIZE_FRAGMENTS_VALUE = 3;
     /**
      * <code>REQ_CANCEL_FRAGMENT = 6;</code>
      *
@@ -169,6 +177,14 @@ public final class BitControl {
      */
     public static final int REQ_QUERY_CANCEL_VALUE = 15;
     /**
+     * <code>REQ_UNPAUSE_FRAGMENT = 16;</code>
+     *
+     * <pre>
+     * send a resume message for a fragment, returns Ack
+     * </pre>
+     */
+    public static final int REQ_UNPAUSE_FRAGMENT_VALUE = 16;
+    /**
      * <code>RESP_FRAGMENT_HANDLE = 11;</code>
      *
      * <pre>
@@ -197,13 +213,14 @@ public final class BitControl {
         case 0: return HANDSHAKE;
         case 1: return ACK;
         case 2: return GOODBYE;
-        case 3: return REQ_INIATILIZE_FRAGMENTS;
+        case 3: return REQ_INITIALIZE_FRAGMENTS;
         case 6: return REQ_CANCEL_FRAGMENT;
         case 7: return REQ_RECEIVER_FINISHED;
         case 8: return REQ_FRAGMENT_STATUS;
         case 9: return REQ_BIT_STATUS;
         case 10: return REQ_QUERY_STATUS;
         case 15: return REQ_QUERY_CANCEL;
+        case 16: return REQ_UNPAUSE_FRAGMENT;
         case 11: return RESP_FRAGMENT_HANDLE;
         case 12: return RESP_FRAGMENT_STATUS;
         case 13: return RESP_BIT_STATUS;
@@ -7395,16 +7412,17 @@ public final class BitControl {
       "oint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report_tim" +
       "e\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010receiver\030",
       "\001 \001(\0132\030.exec.bit.FragmentHandle\022(\n\006sende" +
-      "r\030\002 \001(\0132\030.exec.bit.FragmentHandle*\271\002\n\007Rp" +
+      "r\030\002 \001(\0132\030.exec.bit.FragmentHandle*\323\002\n\007Rp" +
       "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE" +
-      "\020\002\022\034\n\030REQ_INIATILIZE_FRAGMENTS\020\003\022\027\n\023REQ_" +
+      "\020\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_" +
       "CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISH" +
       "ED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT" +
       "_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_Q" +
-      "UERY_CANCEL\020\017\022\030\n\024RESP_FRAGMENT_HANDLE\020\013\022" +
-      "\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BIT_ST" +
-      "ATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016B+\n\033org.apa",
-      "che.drill.exec.protoB\nBitControlH\001"
+      "UERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022" +
+      "\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAGME" +
+      "NT_STATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP",
+      "_QUERY_STATUS\020\016B+\n\033org.apache.drill.exec" +
+      ".protoB\nBitControlH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

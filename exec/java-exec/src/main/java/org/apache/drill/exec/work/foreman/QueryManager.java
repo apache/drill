@@ -189,7 +189,8 @@ public class QueryManager {
           final DrillbitEndpoint endpoint = data.getEndpoint();
           final FragmentHandle handle = data.getHandle();
           // TODO is the CancelListener redundant? Does the FragmentStatusListener get notified of the same?
-          controller.getTunnel(endpoint).cancelFragment(new CancelListener(endpoint, handle), handle);
+          controller.getTunnel(endpoint).cancelFragment(new SignalListener(endpoint, handle,
+            SignalListener.Signal.CANCEL), handle);
         }
         break;
 
@@ -203,25 +204,52 @@ public class QueryManager {
     }
   }
 
+  /**
+   * Sends a resume signal to all fragments, regardless of their state, since the fragment might have paused before
+   * sending any message. Resume the root fragment directly and all other (local and remote) fragments through the
+   * control tunnel.
+   */
+  void unpauseExecutingFragments(final DrillbitContext drillbitContext, final FragmentExecutor rootRunner) {
+    if (rootRunner != null) {
+      rootRunner.unpause();
+    }
+    final Controller controller = drillbitContext.getController();
+    for(final FragmentData data : fragmentDataSet) {
+      final DrillbitEndpoint endpoint = data.getEndpoint();
+      final FragmentHandle handle = data.getHandle();
+      controller.getTunnel(endpoint).resumeFragment(new SignalListener(endpoint, handle,
+        SignalListener.Signal.UNPAUSE), handle);
+    }
+  }
+
   /*
    * This assumes that the FragmentStatusListener implementation takes action when it hears
-   * that the target fragment has been cancelled. As a result, this listener doesn't do anything
+   * that the target fragment has acknowledged the signal. As a result, this listener doesn't do anything
    * but log messages.
    */
-  private class CancelListener extends EndpointListener<Ack, FragmentHandle> {
-    public CancelListener(final DrillbitEndpoint endpoint, final FragmentHandle handle) {
+  private static class SignalListener extends EndpointListener<Ack, FragmentHandle> {
+    /**
+     * An enum of possible signals that {@link SignalListener} listens to.
+     */
+    public static enum Signal { CANCEL, UNPAUSE }
+
+    private final Signal signal;
+
+    public SignalListener(final DrillbitEndpoint endpoint, final FragmentHandle handle, final Signal signal) {
       super(endpoint, handle);
+      this.signal = signal;
     }
 
     @Override
     public void failed(final RpcException ex) {
-      logger.error("Failure while attempting to cancel fragment {} on endpoint {}.", value, endpoint, ex);
+      logger.error("Failure while attempting to {} fragment {} on endpoint {} with {}.", signal, value, endpoint, ex);
     }
 
     @Override
-    public void success(final Ack value, final ByteBuf buf) {
-      if (!value.getOk()) {
-        logger.warn("Remote node {} responded negative on cancellation request for fragment {}.", endpoint, value);
+    public void success(final Ack ack, final ByteBuf buf) {
+      if (!ack.getOk()) {
+        logger.warn("Remote node {} responded negative on {} request for fragment {} with {}.", endpoint, signal, value,
+          ack);
       }
     }
   }

@@ -28,8 +28,8 @@ public abstract class Injection {
 
   protected final String address;  // the address of the drillbit on which to inject
   protected final int port; // user port of the drillbit; useful when there are multiple drillbits on same machine
-  private final Class<?> siteClass; // the class where the injection should happen
-  private final String desc; // description of the injection site; useful for multiple exception injections in a single class
+  protected final Class<?> siteClass; // the class where the injection should happen
+  protected final String desc; // description of the injection site; useful for multiple exception injections in a single class
   private final AtomicInteger nSkip; // the number of times to skip the injection; starts >= 0
   private final AtomicInteger nFire;  // the number of times to do the injection, after any skips; starts > 0
 
@@ -64,7 +64,7 @@ public abstract class Injection {
    *
    * @return if the injection should be injected now
    */
-  protected final boolean injectNow() {
+  protected boolean injectNow() {
     return nSkip.decrementAndGet() < 0 && nFire.decrementAndGet() >= 0;
   }
 

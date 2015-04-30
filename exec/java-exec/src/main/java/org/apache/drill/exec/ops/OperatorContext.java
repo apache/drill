@@ -23,6 +23,7 @@ import java.util.Iterator;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.testing.ExecutionControls;
 
 public abstract class OperatorContext {
 
@@ -35,6 +36,8 @@ public abstract class OperatorContext {
   public abstract BufferAllocator getAllocator();
 
   public abstract OperatorStats getStats();
+
+  public abstract ExecutionControls getExecutionControls();
 
   public static int getChildCount(PhysicalOperator popConfig) {
     Iterator<PhysicalOperator> iter = popConfig.iterator();

@@ -21,43 +21,40 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 
 /**
- * Injection for a single pause. Specifies how long to pause. This class is used internally for tracking
- * injected pauses; these pauses are specified via
+ * Injection for a single pause. Pause indefinitely until signalled. This class is used internally for tracking
+ * injected pauses. Note that pauses can be fired only once; nFire field is ignored. These pauses are specified via
  * {@link org.apache.drill.exec.ExecConstants#DRILLBIT_CONTROL_INJECTIONS} session option.
  *
- * TODO(DRILL-2697): Pause indefinitely until signalled, rather than for a specified time.
+ * After the pauses are set, the user sends another signal to unpause all the pauses. This triggers the Foreman to
+ * 1) unpause all pauses in QueryContext, and
+ * 2) send an unpause signal to all fragments, each of which unpauses all pauses in FragmentContext.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class PauseInjection extends Injection {
 
-  private final long millis;
+  private final ExtendedLatch latch = new ExtendedLatch(1);
 
   @JsonCreator // ensures instances are created only through JSON
   private PauseInjection(@JsonProperty("address") final String address,
                          @JsonProperty("port") final int port,
                          @JsonProperty("siteClass") final String siteClass,
                          @JsonProperty("desc") final String desc,
-                         @JsonProperty("nSkip") final int nSkip,
-                         @JsonProperty("nFire") final int nFire,
-                         @JsonProperty("millis") final long millis) throws InjectionConfigurationException {
-    super(address, port, siteClass, desc, nSkip, nFire);
-    if (millis <= 0) {
-      throw new InjectionConfigurationException("Pause millis is non-positive.");
-    }
-    this.millis = millis;
+                         @JsonProperty("nSkip") final int nSkip) throws InjectionConfigurationException {
+    super(address, port, siteClass, desc, nSkip, 1);
   }
 
   public void pause() {
-    if (! injectNow()) {
+    if (!injectNow()) {
       return;
     }
-    try {
-      Thread.sleep(millis);
-    } catch (InterruptedException e) {
-      throw new DrillRuntimeException("Well, I should be sleeping.");
-    }
+    latch.awaitUninterruptibly();
+  }
+
+  public void unpause() {
+    latch.countDown();
   }
 }

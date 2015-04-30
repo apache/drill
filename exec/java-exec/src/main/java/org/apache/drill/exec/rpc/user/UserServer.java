@@ -113,6 +113,15 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
         throw new RpcException("Failure while decoding QueryId body.", e);
       }
 
+    case RpcType.RESUME_PAUSED_QUERY_VALUE:
+      try {
+        final QueryId queryId = QueryId.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        final Ack ack = worker.resumeQuery(queryId);
+        return new Response(RpcType.ACK, ack);
+      } catch (final InvalidProtocolBufferException e) {
+        throw new RpcException("Failure while decoding QueryId body.", e);
+      }
+
     default:
       throw new UnsupportedOperationException(String.format("UserServer received rpc of unknown type.  Type was %d.", rpcType));
     }

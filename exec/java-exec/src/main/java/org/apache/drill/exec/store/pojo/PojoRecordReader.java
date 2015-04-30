@@ -42,13 +42,16 @@ import org.apache.drill.exec.store.pojo.Writers.NDoubleWriter;
 import org.apache.drill.exec.store.pojo.Writers.NIntWriter;
 import org.apache.drill.exec.store.pojo.Writers.NTimeStampWriter;
 import org.apache.drill.exec.store.pojo.Writers.StringWriter;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 
 public class PojoRecordReader<T> extends AbstractRecordReader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoRecordReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoRecordReader.class);
+  private static final ExecutionControlsInjector injector =
+    ExecutionControlsInjector.getInjector(PojoRecordReader.class);
 
   public final int forJsonIgnore = 1;
 
@@ -64,16 +67,9 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
     this.iterator = iterator;
   }
 
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
-  }
-
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
-  }
-
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+    operatorContext = context;
     try {
       Field[] fields = pojoClass.getDeclaredFields();
       List<PojoWriter> writers = Lists.newArrayList();
@@ -147,7 +143,7 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
   @Override
   public int next() {
     boolean allocated = false;
-
+    injector.injectPause(operatorContext.getExecutionControls(), "read-next", logger);
     try {
       int i =0;
       outside:

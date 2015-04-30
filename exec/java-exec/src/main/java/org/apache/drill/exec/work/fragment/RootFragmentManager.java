@@ -29,8 +29,8 @@ import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 // TODO a lot of this is the same as NonRootFragmentManager
-public class RootFragmentManager implements FragmentManager{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootFragmentManager.class);
+public class RootFragmentManager implements FragmentManager {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootFragmentManager.class);
 
   private final IncomingBuffers buffers;
   private final FragmentExecutor runner;
@@ -67,6 +67,11 @@ public class RootFragmentManager implements FragmentManager{
   @Override
   public void cancel() {
     cancel = true;
+  }
+
+  @Override
+  public void unpause() {
+    runner.unpause();
   }
 
   @Override

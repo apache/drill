@@ -68,6 +68,14 @@ public class UserWorker{
     return Acks.OK;
   }
 
+  public Ack resumeQuery(final QueryId queryId) {
+    final Foreman foreman = bee.getForemanForQueryId(queryId);
+    if (foreman != null) {
+      foreman.resume();
+    }
+    return Acks.OK;
+  }
+
   public OptionManager getSystemOptions() {
     return bee.getContext().getOptionManager();
   }

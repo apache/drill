@@ -18,12 +18,23 @@
 package org.apache.drill.exec.testing;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.concurrent.ExtendedLatch;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.util.Pointer;
 import org.junit.Test;
 import org.slf4j.Logger;
+
+import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -31,7 +42,9 @@ import static org.junit.Assert.fail;
 public class TestPauseInjection extends BaseTestQuery {
 
   private static final UserSession session = UserSession.Builder.newBuilder()
-      .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+      .withCredentials(UserCredentials.newBuilder()
+        .setUserName("foo")
+        .build())
       .withUserProperties(UserProperties.getDefaultInstance())
       .withOptionManager(bits[0].getContext().getOptionManager())
       .build();
@@ -46,9 +59,11 @@ public class TestPauseInjection extends BaseTestQuery {
     private static final ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(DummyClass.class);
 
     private final QueryContext context;
+    private final CountDownLatch latch;
 
-    public DummyClass(final QueryContext context) {
+    public DummyClass(final QueryContext context, final CountDownLatch latch) {
       this.context = context;
+      this.latch = latch;
     }
 
     public static final String PAUSES = "<<pauses>>";
@@ -61,6 +76,7 @@ public class TestPauseInjection extends BaseTestQuery {
     public long pauses() {
       // ... code ...
 
+      latch.countDown();
       final long startTime = System.currentTimeMillis();
       // simulated pause
       injector.injectPause(context.getExecutionControls(), PAUSES, logger);
@@ -71,30 +87,136 @@ public class TestPauseInjection extends BaseTestQuery {
     }
   }
 
+  private static class ResumingThread extends Thread {
+
+    private final QueryContext context;
+    private final ExtendedLatch latch;
+    private final Pointer<Exception> ex;
+    private final long millis;
+
+    public ResumingThread(final QueryContext context, final ExtendedLatch latch, final Pointer<Exception> ex,
+                          final long millis) {
+      this.context = context;
+      this.latch = latch;
+      this.ex = ex;
+      this.millis = millis;
+    }
+
+    @Override
+    public void run() {
+      latch.awaitUninterruptibly();
+      try {
+        Thread.sleep(millis);
+      } catch (final InterruptedException ex) {
+        this.ex.value = ex;
+      }
+      context.getExecutionControls().unpauseAll();
+    }
+  }
+
   @Test
   public void pauseInjected() {
-    final long pauseMillis = 1000L;
+    final long expectedDuration = 1000L;
+    final ExtendedLatch trigger = new ExtendedLatch(1);
+    final Pointer<Exception> ex = new Pointer<>();
+
     final String jsonString = "{\"injections\":[{"
       + "\"type\":\"pause\"," +
       "\"siteClass\":\"org.apache.drill.exec.testing.TestPauseInjection$DummyClass\","
       + "\"desc\":\"" + DummyClass.PAUSES + "\","
-      + "\"millis\":" + pauseMillis + ","
-      + "\"nSkip\":0,"
-      + "\"nFire\":1"
+      + "\"nSkip\":0"
       + "}]}";
 
     ControlsInjectionUtil.setControls(session, jsonString);
 
     final QueryContext queryContext = new QueryContext(session, bits[0].getContext());
 
+    (new ResumingThread(queryContext, trigger, ex, expectedDuration)).start();
+
     // test that the pause happens
-    final DummyClass dummyClass = new DummyClass(queryContext);
-    final long time = dummyClass.pauses();
-    assertTrue((time >= pauseMillis));
+    final DummyClass dummyClass = new DummyClass(queryContext, trigger);
+    final long actualDuration = dummyClass.pauses();
+    assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration),
+      expectedDuration <= actualDuration);
+    assertTrue("No exception should be thrown.", ex.value == null);
     try {
       queryContext.close();
-    } catch (Exception e) {
-      fail();
+    } catch (final Exception e) {
+      fail("Failed to close query context: " + e);
+    }
+  }
+
+  @Test
+  public void pauseOnSpecificBit() {
+    final RemoteServiceSet remoteServiceSet = RemoteServiceSet.getLocalServiceSet();
+    final ZookeeperHelper zkHelper = new ZookeeperHelper();
+    zkHelper.startZookeeper(1);
+
+    // Creating two drillbits
+    final Drillbit drillbit1, drillbit2;
+    final DrillConfig drillConfig = zkHelper.getConfig();
+    try {
+      drillbit1 = Drillbit.start(drillConfig, remoteServiceSet);
+      drillbit2 = Drillbit.start(drillConfig, remoteServiceSet);
+    } catch (final DrillbitStartupException e) {
+      throw new RuntimeException("Failed to start two drillbits.", e);
+    }
+
+    final DrillbitContext drillbitContext1 = drillbit1.getContext();
+    final DrillbitContext drillbitContext2 = drillbit2.getContext();
+
+    final UserSession session = UserSession.Builder.newBuilder()
+      .withCredentials(UserCredentials.newBuilder()
+        .setUserName("foo")
+        .build())
+      .withUserProperties(UserProperties.getDefaultInstance())
+      .withOptionManager(drillbitContext1.getOptionManager())
+      .build();
+
+    final DrillbitEndpoint drillbitEndpoint1 = drillbitContext1.getEndpoint();
+    final String jsonString = "{\"injections\":[{"
+      + "\"type\" : \"pause\"," +
+      "\"siteClass\" : \"org.apache.drill.exec.testing.TestPauseInjection$DummyClass\","
+      + "\"desc\" : \"" + DummyClass.PAUSES + "\","
+      + "\"nSkip\" : 0, "
+      + "\"address\" : \"" + drillbitEndpoint1.getAddress() + "\","
+      + "\"port\" : " + drillbitEndpoint1.getUserPort()
+      + "}]}";
+
+    ControlsInjectionUtil.setControls(session, jsonString);
+
+    {
+      final long expectedDuration = 1000L;
+      final ExtendedLatch trigger = new ExtendedLatch(1);
+      final Pointer<Exception> ex = new Pointer<>();
+      final QueryContext queryContext = new QueryContext(session, drillbitContext1);
+      (new ResumingThread(queryContext, trigger, ex, expectedDuration)).start();
+
+      // test that the pause happens
+      final DummyClass dummyClass = new DummyClass(queryContext, trigger);
+      final long actualDuration = dummyClass.pauses();
+      assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration),
+        expectedDuration <= actualDuration);
+      assertTrue("No exception should be thrown.", ex.value == null);
+      try {
+        queryContext.close();
+      } catch (final Exception e) {
+        fail("Failed to close query context: " + e);
+      }
+    }
+
+    {
+      final ExtendedLatch trigger = new ExtendedLatch(1);
+      final QueryContext queryContext = new QueryContext(session, drillbitContext2);
+
+      // if the resume did not happen, the test would hang
+      final DummyClass dummyClass = new DummyClass(queryContext, trigger);
+      dummyClass.pauses();
+      try {
+        queryContext.close();
+      } catch (final Exception e) {
+        fail("Failed to close query context: " + e);
+      }
     }
   }
 }

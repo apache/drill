@@ -14,24 +14,24 @@ enum RpcType {
   HANDSHAKE = 0;
   ACK = 1;
   GOODBYE = 2;
-    
+
   // bit requests
-  REQ_INIATILIZE_FRAGMENTS = 3; // Returns Handle
-    
+  REQ_INITIALIZE_FRAGMENTS = 3; // Returns Handle
+
   REQ_CANCEL_FRAGMENT = 6; // send a cancellation message for a fragment, returns Ack
   REQ_RECEIVER_FINISHED = 7;
   REQ_FRAGMENT_STATUS = 8; // send a fragment status, return Ack
   REQ_BIT_STATUS = 9; // get bit status.
   REQ_QUERY_STATUS = 10;
   REQ_QUERY_CANCEL = 15;
-      
-    // bit responses
+  REQ_UNPAUSE_FRAGMENT = 16; // send a resume message for a fragment, returns Ack
+
+  // bit responses
   RESP_FRAGMENT_HANDLE = 11;
   RESP_FRAGMENT_STATUS = 12;
   RESP_BIT_STATUS = 13;
   RESP_QUERY_STATUS = 14;
 }
-
 
 message BitControlHandshake{
   optional int32 rpc_version = 1;

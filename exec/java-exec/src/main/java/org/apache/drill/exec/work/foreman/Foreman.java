@@ -119,6 +119,7 @@ public class Foreman implements Runnable {
   private final DrillbitContext drillbitContext;
   private final UserClientConnection initiatingClient; // used to send responses
   private volatile QueryState state;
+  private boolean resume = false;
 
   private volatile DistributedLease lease; // used to limit the number of concurrent queries
 
@@ -196,6 +197,18 @@ public class Foreman implements Runnable {
   }
 
   /**
+   * Resume the query. Regardless of the current state, this method sends a resume signal to all fragments.
+   * This method can be called multiple times.
+   */
+  public void resume() {
+    resume = true;
+    // resume all pauses through query context
+    queryContext.getExecutionControls().unpauseAll();
+    // resume all pauses through all fragment contexts
+    queryManager.unpauseExecutingFragments(drillbitContext, rootRunner);
+  }
+
+  /**
    * Called by execution pool to do query setup, and kick off remote execution.
    *
    * <p>Note that completion of this function is not the end of the Foreman's role
@@ -268,8 +281,19 @@ public class Foreman implements Runnable {
        * If we do throw an exception during setup, and have already moved to QueryState.FAILED, we just need to
        * make sure that we can't make things any worse as those events are delivered, but allow
        * any necessary remaining cleanup to proceed.
+       *
+       * Note that cancellations cannot be simulated before this point, i.e. pauses can be injected, because Foreman
+       * would wait on the cancelling thread to signal a resume and the cancelling thread would wait on the Foreman
+       * to accept events.
        */
       acceptExternalEvents.countDown();
+
+      // If we received the resume signal before fragments are setup, the first call does not actually resume the
+      // fragments. Since setup is done, all fragments must have been delivered to remote nodes. Now we can resume.
+      if(resume) {
+        resume();
+      }
+      injector.injectPause(queryContext.getExecutionControls(), "foreman-ready", logger);
 
       // restore the thread's original name
       currentThread.setName(originalName);
@@ -375,7 +399,6 @@ public class Foreman implements Runnable {
     drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager.getDrillbitStatusListener());
 
     logger.debug("Submitting fragments to run.");
-    injector.injectPause(queryContext.getExecutionControls(), "pause-run-plan", logger);
 
     // set up the root fragment first so we'll have incoming buffers available.
     setupRootFragment(rootPlanFragment, work.getRootOperator());

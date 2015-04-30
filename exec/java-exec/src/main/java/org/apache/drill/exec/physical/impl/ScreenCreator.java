@@ -52,7 +52,6 @@ public class ScreenCreator implements RootCreator<Screen>{
 
 
   static class ScreenRoot extends BaseRootExec {
-//    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     private final RecordBatch incoming;
     private final FragmentContext context;
     private final AccountingUserConnection userConnection;
@@ -136,6 +135,11 @@ public class ScreenCreator implements RootCreator<Screen>{
     }
 
 
+    @Override
+    public void close() throws Exception {
+      injector.injectPause(context.getExecutionControls(), "send-complete", logger);
+      super.close();
+    }
   }
 
 

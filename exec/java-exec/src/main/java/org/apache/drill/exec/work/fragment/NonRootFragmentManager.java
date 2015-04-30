@@ -112,6 +112,11 @@ public class NonRootFragmentManager implements FragmentManager {
   }
 
   @Override
+  public void unpause() {
+    runner.unpause();
+  }
+
+  @Override
   public FragmentHandle getHandle() {
     return fragment.getHandle();
   }

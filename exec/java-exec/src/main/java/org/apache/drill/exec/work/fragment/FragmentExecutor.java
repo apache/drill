@@ -108,7 +108,7 @@ public class FragmentExecutor implements Runnable {
 
   /**
    * Cancel the execution of this fragment is in an appropriate state. Messages come from external.
-   * NOTE that this can be called from threads *other* than the one running this runnable(),
+   * NOTE that this will be called from threads *other* than the one running this runnable(),
    * so we need to be careful about the state transitions that can result.
    */
   public void cancel() {
@@ -140,11 +140,18 @@ public class FragmentExecutor implements Runnable {
   }
 
   /**
+   * Resume all the pauses within the current context. Note that this method will be called from threads *other* than
+   * the one running this runnable(). Also, this method can be called multiple times.
+   */
+  public synchronized void unpause() {
+    fragmentContext.getExecutionControls().unpauseAll();
+  }
+
+  /**
    * Inform this fragment that one of its downstream partners no longer needs additional records. This is most commonly
    * called in the case that a limit query is executed.
    *
-   * @param handle
-   *          The downstream FragmentHandle of the Fragment that needs no more records from this Fragment.
+   * @param handle The downstream FragmentHandle of the Fragment that needs no more records from this Fragment.
    */
   public void receivingFragmentFinished(final FragmentHandle handle) {
     acceptExternalEvents.awaitUninterruptibly();
@@ -277,6 +284,8 @@ public class FragmentExecutor implements Runnable {
 
     // first close the operators and release all memory.
     try {
+      // Say executor was cancelled before setup. Now when executor actually runs, root is not initialized, but this
+      // method is called in finally. So root can be null.
       if (root != null) {
         root.close();
       }

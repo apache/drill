@@ -17,6 +17,7 @@ enum RpcType {
   RUN_QUERY = 3; // user is submitting a new query to the drillbit
   CANCEL_QUERY = 4; // user is sending a query cancellation request to the drillbit
   REQUEST_RESULTS = 5;
+  RESUME_PAUSED_QUERY = 11; // user is sending a query resume request to the drillbit
 
   // bit to user
   QUERY_DATA = 6; // drillbit is sending a query result data batch to the user

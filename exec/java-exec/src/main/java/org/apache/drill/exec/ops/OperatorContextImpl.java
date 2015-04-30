@@ -24,11 +24,13 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
 import com.carrotsearch.hppc.LongObjectOpenHashMap;
+import org.apache.drill.exec.testing.ExecutionControls;
 
 class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContextImpl.class);
 
   private final BufferAllocator allocator;
+  private final ExecutionControls executionControls;
   private boolean closed = false;
   private PhysicalOperator popConfig;
   private OperatorStats stats;
@@ -42,6 +44,7 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
 
     OpProfileDef def = new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(), getChildCount(popConfig));
     this.stats = context.getStats().getOperatorStats(def, allocator);
+    executionControls = context.getExecutionControls();
   }
 
   public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats, boolean applyFragmentLimit) throws OutOfMemoryException {
@@ -49,6 +52,7 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
     this.popConfig = popConfig;
     this.stats     = stats;
+    executionControls = context.getExecutionControls();
   }
 
   public DrillBuf replace(DrillBuf old, int newSize) {
@@ -68,6 +72,10 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     managedBuffers.put(newBuf.memoryAddress(), newBuf);
     newBuf.setOperatorContext(this);
     return newBuf;
+  }
+
+  public ExecutionControls getExecutionControls() {
+    return executionControls;
   }
 
   public BufferAllocator getAllocator() {
