@@ -105,6 +105,9 @@ nav.breadcrumbs{
   }
 }
 @media (max-width: 570px) {
+  body {
+    font-size: 20px;
+  }
   #menu ul li.force-expand.nav, #menu ul li.force-expand#twitter-menu-item {
     clear: both;
     width: 100%;
