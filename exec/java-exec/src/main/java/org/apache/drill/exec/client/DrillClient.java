@@ -174,9 +174,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     final DrillbitEndpoint endpoint;
     if (isDirectConnection) {
       String[] connectInfo = props.getProperty("drillbit").split(":");
+      String port = connectInfo.length==2?connectInfo[1]:config.getString(ExecConstants.INITIAL_USER_PORT);
       endpoint = DrillbitEndpoint.newBuilder()
               .setAddress(connectInfo[0])
-              .setUserPort(Integer.parseInt(connectInfo[1]))
+              .setUserPort(Integer.parseInt(port))
               .build();
     } else {
       if (ownsZkConnection) {

@@ -37,7 +37,7 @@ public class DrillConnectionConfig extends ConnectionConfigImpl {
 
   // True if the URL points directly to a drillbit
   public boolean isDirect(){
-    return props.getProperty("local")!=null;
+    return props.getProperty("drillbit")!=null;
   }
 
   // TODO: Check: Shouldn't something validate that URL has "zk" parameter?
