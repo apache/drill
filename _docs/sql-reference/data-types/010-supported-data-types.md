@@ -31,7 +31,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <td valign="top">2015-12-30</td>
   </tr>
   <tr>
-    <td valign="top">DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)</td>
+    <td valign="top">DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)***</td>
     <td valign="top">38-digit precision number, precision is p, and scale is s</td>
     <td valign="top">DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point</td>
   </tr>
@@ -82,7 +82,8 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
   </tr>
 </table>
 \* Not currently supported.  
-\*\* Currently, Drill supports only variable-length strings. 
+\*\* Currently, Drill supports only variable-length strings. .
+\*\*\* In this release the NUMERIC data type is an alias for the DECIMAL data type.
 +  
 
 ## Casting and Converting Data Types

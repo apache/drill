@@ -15,5 +15,9 @@ If you've never used Drill, use these tutorials to download, install, and start 
 * [Tableau Examples]({{site.baseurl}}/docs/tableau-examples)  
   Access Hive tables in Tableau.  
 * [Using MicroStrategy Analytics with Drill]({{site.baseurl}}/docs/using-microstrategy-analytics-with-drill/)  
-  Use the Drill ODBC driver from MapR to analyze data and generate a report using Drill from the MicroStrategy UI.
+  Use the Drill ODBC driver from MapR to analyze data and generate a report using Drill from the MicroStrategy UI.  
+* [Using Drill to Analyze Amazon Spot Prices](https://github.com/vicenteg/spot-price-history#drill-workshop---amazon-spot-prices)  
+  A Drill workshop on github that covers views of JSON and Parquet data.  
+* [Running Drill Queries on S3 Data](http://drill.apache.org/blog/2014/12/09/running-sql-queries-on-amazon-s3/)  
+  Nick Amato's blog that steps through querying files using Drill and Amazon Simple Storage Service (S3).  
 
