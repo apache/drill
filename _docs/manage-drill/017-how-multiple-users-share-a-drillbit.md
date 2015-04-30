@@ -39,7 +39,9 @@ To configure parallelization, configure the following options in the `sys.option
 * `planner.width.max.per.query`  
   Same as max per node but applies to the query as executed by the entire cluster.
 
-Configure the `planner.width.max.per.node` to achieve fine grained, absolute control over parallelization. ??For example, setting the `planner.width.max.per.query` to 60 will not accelerate Drill operations because overlapping does not occur when executing 60 queries at the same time.??
+Configure the `planner.width.max.per.node` to achieve fine grained, absolute control over parallelization. 
+
+<!-- ??For example, setting the `planner.width.max.per.query` to 60 will not accelerate Drill operations because overlapping does not occur when executing 60 queries at the same time.??
 
 ### Example of Configuring Parallelization
 
@@ -47,7 +49,7 @@ For example, the default settings parallelize 70 percent of operations up to 1,0
 
 A parallelizer in the Foreman transforms the physical plan into multiple phases. A complicated query can have multiple, major fragments. A default parallelization of 70 percent of operations allows some overlap of query phases. In the example, 210 ??for each core or major fragment to a maximum of 410??.
 
-??Drill uses pipelines, blocking/nonblocking, memory is not fungible. CPU resources are fungible. There is contention for CPUs.??
+??Drill uses pipelines, blocking/nonblocking, memory is not fungible. CPU resources are fungible. There is contention for CPUs.?? -->
 
 ## Data Isolation
 
