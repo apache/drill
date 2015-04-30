@@ -17,13 +17,13 @@ Notes:
         {% if doc0.children.size == 0 %}
           <li class="toctree-l1{% if page.title == doc0.title %} current{% endif %}"><a class="reference internal" href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
         {% else %}
-          <li class="toctree-l1{% if page.title == doc0.title %} current{% endif %}"><a href="#">{{ doc0.title }}</a></li>
+          <li class="toctree-l1{% if page.title == doc0.title %} current{% endif %}"><a href="javascript: void(0);">{{ doc0.title }}</a></li>
           <ul {% if titles_array contains doc0.title %}class="current_section"{% else %}style="display: none"{% endif %}>
           {% for doc1 in doc0.children %}
             {% if doc1.children.size == 0 %}
               <li class="toctree-l2{% if page.title == doc1.title %} current{% endif %}"><a class="reference internal" href="{{ site.baseurl }}{{ doc1.url }}">{{ doc1.title }}</a></li>
             {% else %}
-              <li class="toctree-l2{% if page.title == doc1.title %} current{% endif %}"><a href="#">{{ doc1.title }}</a></li>
+              <li class="toctree-l2{% if page.title == doc1.title %} current{% endif %}"><a href="javascript: void(0);">{{ doc1.title }}</a></li>
               <ul style="{% if titles_array contains doc1.title%}{%else%}display: none{% endif %}">
               {% for doc2 in doc1.children %}
                 <li class="toctree-l3{% if page.title == doc2.title %} current{% endif %}"><a class="reference internal" href="{{ site.baseurl }}{{ doc2.url }}">{{ doc2.title }}</a></li>

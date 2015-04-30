@@ -12,7 +12,7 @@ html {
 }
 
 body {
-	font-family:"Lato";
+  font-family: 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	padding:0;
   margin: 0;
   height: 100%;
@@ -89,7 +89,7 @@ a.anchor {
 #menu ul li a {
 	color:#FFF;
 	text-decoration:none;
-	line-height:50px;
+	line-height:51px;
 	padding:14px 20px;
 }
 /*
@@ -269,7 +269,6 @@ a.anchor {
 	background:transparent;
 	border:none;
 	color:#FFF;
-	font-family:"Lato";
 	font-size:34px;
 	font-weight:lighter;
 	width:100%;
@@ -631,9 +630,9 @@ table.intro a {
   content: "";
 }
 #footer {
-	background:#232323;
-	color:#FFF;
-	font-size:10px;
+  color: black;
+  background-color: white;
+	font-size:9px;
 	font-weight:lighter;
 	line-height:20px;
 	padding:30px 0;
@@ -680,7 +679,7 @@ table.intro a {
 }
 
 .int_text {
-	margin:60px auto 60px auto;
+	margin:40px auto 60px auto;
 	width:780px;
 }
 
@@ -736,7 +735,7 @@ ul.num {
 	font-size:16px;
 	font-weight:lighter;
 	margin:auto;
-	margin-top:60px;
+	margin-top:80px;
 	padding:0 0 15px 0;
 	position:relative;
 	text-align:center;
@@ -769,12 +768,12 @@ ul.num {
 
 .int_title h1 {
 	font-size:36px;
-	margin:0;
+	margin: 20px 0px 20px 0px;
 }
 
 .int_title:after {
 	background:#1a6bc7;
-	bottom:0px;
+	bottom:24px;
 	content:" ";
 	height:5px;
 	left:275px;
@@ -876,11 +875,11 @@ li p {
   border: none;
   color: white;
   background-color: transparent !important;
-  font-family: lato;
   font-size: 14px;
   font-weight: inherit;
   padding: 0 0 0 8px;
   line-height: 20px;
+  font-family: "Lato";
   width: 44px;
 }
 #menu .search-bar input[placeholder] {

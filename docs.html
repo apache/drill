@@ -1,30 +1,6 @@
 ---
-layout: default
+layout: docpage
 title: Documentation
 ---
-<div style="margin-top:75px"></div>
 
-{% include doctoccategories.html %}
-    
-<div class="int_title">
-<h1>{{ page.title }}</h1>
-  {% if page.description %}<p>{{ page.description }}</p>{% endif %}
-</div>
-
-<div class="int_text" align="left">
-
-<link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
-
-{% include doctoc.html %}
-
-<div class="main-content">
-  <div class="int_text" align="left">
-    <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/docs.html" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
     Welcome to the Apache Drill Documentation. If you're new to Drill, try out one of these resources:
-    <ul>
-      <li><a href="{{ site.baseurl }}/docs/analyzing-the-yelp-academic-dataset/">Analyzing the Yelp Academic Dataset</a></li>
-    </ul>
-  </div>
-</div>
-
-</div>

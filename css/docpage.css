@@ -1,34 +1,20 @@
 /*****************
  Categories Bar
 *****************/
-
-div.toc-categories {
-  background-color: #ccc;
-  line-height: 48px;
+#menu ul li.toc-categories a {
+	height:50px;
+	padding:0;
+  text-decoration: none;
+	width: 60px;
+  text-align: center;
+  color: #bababa;
+}
+#menu ul li.toc-categories {
+	float:left;
+  line-height: 45px;
   font-size: 18px;
-  color: black;
   display: none;
   overflow: auto;
-}
-div.toc-categories .pull-left {
-  float: left;
-  margin-left: 10px;
-}
-
-div.toc-categories .pull-right {
-  float: right;
-  margin-right: 10px;
-}
-
-div.toc-categories a {
-  text-decoration: none;
-}
-
-div.toc-categories.fixed {
-  position:fixed;
-  z-index: 1;
-  width: 100%;
-  top: 50px;
 }
 
 /****************
@@ -63,17 +49,17 @@ div.doc-nav span.next-toc {
  Main Area
 *****************/
 
-.int_text {
+.main-content .int_text {
+  margin-left: 0px;
   margin-top:30px;
-  margin-left: 30px;
 }
 .main-content .int_text img {
   margin: 30px 0px;
 }
-.int_title
+.main-content .int_title
 {
-  margin-left: 353px;
   text-align: left;
+  margin-left: 0px;
   margin-top: 30px;
 }
 .int_title::after{
@@ -82,7 +68,7 @@ div.doc-nav span.next-toc {
 .main-content .edit-link {
   position: relative;
   float: right;
-  bottom: 81px;
+  bottom: 105px;
   text-decoration: none;
   font-size: 24px;
   color: #333333;
@@ -94,6 +80,16 @@ div.int_title h1, div.main-content h1, div.main-content h2, div.main-content h3,
   color: #313030;
   padding: 0;
 }
+div.main-content h1, div.main-content h2 {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+div.main-content h3 {
+  margin-top: 24px;
+  font-weight: bold;
+}
+
 div.section > h2, div.section > h3, div.section > h4 {
   margin: 24px 0;
 }
@@ -198,7 +194,7 @@ div.admonition {
   -moz-transition: left 0.4s cubic-bezier(.02,.01,.47,1);
   -webkit-transition: left 0.4s cubic-bezier(.02,.01,.47,1);
 }
-.int_text .sidebar.force-expand {
+.sidebar.force-expand {
   left: 0px;
 }
 aside {
@@ -284,30 +280,43 @@ div.docsidebar ul ul ul {
 }
 div.docsidebar li.toctree-l2 {
   text-indent: -12px;
-  padding-left: 37px;
+  padding-left: 47px;
 }
-div.docsidebar li.toctree-l1:hover, div.docsidebar li.toctree-l2:hover, div.docsidebar li.toctree-l3:hover {
-  background-color: #c6e2ff;
+div.docsidebar li.toctree-l1 a:hover, div.docsidebar li.toctree-l2 a:hover, div.docsidebar li.toctree-l3 a:hover {
+  text-decoration: underline;
 }
 
 div.docsidebar li.toctree-l3  {
-  padding-left: 40px;
+  padding-left: 57px;
+  text-indent: -12px;
 }
 span.expand, span.contract{
   width: 0px;
   cursor: pointer;
   font-size: 80%;
+  display:none; 
   position: relative;
-  left: 5px;
-  display:none;
+  right: 5px;
 }
 span.expand.show, span.contract.show {
   display: inline-block;
 }
 
 .docsidebarwrapper li.toctree-l2.current, .docsidebarwrapper li.toctree-l3.current {
-  background-color: #c6e2ff;
+  background-color: #1A6BC7;
+  color: white;
 }
+.docsidebarwrapper li.toctree-l2.current.current > a, .docsidebarwrapper li.toctree-l3.current.current > a {
+  color: white;
+}
+.docsidebarwrapper a:hover {
+  color: black;
+}
+.docsidebarwrapper a {
+  display: inline-block;
+  width: 100%;
+}
+
 .docsidebarwrapper ul {
   font-size: 14px;
 }
@@ -317,6 +326,9 @@ span.expand.show, span.contract.show {
   text-decoration:none;
   font-size: 70%;
   color: #1A6BC7;
+}
+.permalink.hide {
+  visibility: hidden;
 }
 /****************************
 /* Responsive media queries
@@ -346,21 +358,28 @@ span.expand.show, span.contract.show {
   #footer {
     margin-left: 0px;
   }
-  div.doc-nav {
+
+  #menu ul li.toc-categories {
+    display: inline-block;
+    width: 60px;
+    text-align: center;
+  }
+  #menu ul li.logo {
+    padding-left: 0px;
+  }
+  #menu ul li.force-expand.toc-categories {
+    display: inline-block;
   }
 
-  div.toc-categories {
-    display: block;
-  }
   .page-wrap div.int_title.margin_110 {
     margin-top:110px;
   }
 
-  div.toc-categories .expand-toc-icon {
+  li.toc-categories .expand-toc-icon {
     font-size: 24px;
     /*padding-right: 10px;*/
   }
-  div.toc-categories .expand-toc-icon a {
+  li.toc-categories a.expand-toc-icon {
     color: black;
   }
 
@@ -370,24 +389,19 @@ span.expand.show, span.contract.show {
     text-decoration: none;
   }
 
-  #menu ul li.logo {
-    /*padding-left: 70px; */
-  }
-
-  .int_text .sidebar {
+  .sidebar {
     left: -293px;
     box-shadow: 0 0 13px rgba(0,0,0,0.3);
   }
 
-  .int_text .sidebar.reveal {
+  .sidebar.reveal {
     left: 0;
   }
 
-  .int_text .main-content{
-    margin-left: 0;
+  .main-content{
+    margin: 0px 20px 0px 20px;
   }
   .int_title {
-    margin-left: 63px;
     margin-top: 60px;
   }
   .int_title h1 {
@@ -395,26 +409,29 @@ span.expand.show, span.contract.show {
   }
 }
 @media (min-width: 1025px) {
-  .mw {
-    min-width: 100%;
+  .main-content-wrapper {
+    width: 1092px; 
   }
-  nav.breadcrumbs {
-    margin-left: 293px;
-  }
-
   div.doc-nav {
-    margin-left: 323px;
-  }
-
-  #footer {
-    margin-left: 293px;
-    text-align: left;
+    margin-left: 30px;
   }
   .main-content
   {
-    margin-left: 293px;
+    margin-left: 313px;
   }
   #menu ul li.logo {
     padding-left: 30px;
   }
+  #footer .wrapper {
+    margin-left: 293px;
+  }
+}
+/*
+div.page-wrap:after {
+  height: 0px;
+}
+*/
+#footer {
+  position: absolute;
+  width: 100%;
 }
