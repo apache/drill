@@ -31,7 +31,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <td valign="top">2015-12-30</td>
   </tr>
   <tr>
-    <td valign="top">DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)***</td>
+    <td valign="top">DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)*</td>
     <td valign="top">38-digit precision number, precision is p, and scale is s</td>
     <td valign="top">DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point</td>
   </tr>
@@ -61,7 +61,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <td valign="top">'1-2' year to month<br><a href="http://tshiran.github.io/drill/docs/data-type-conversion/#casting-intervals">More examples</a></td>
   </tr>
   <tr>
-    <td valign="top">SMALLINT*</td>
+    <td valign="top">SMALLINT**</td>
     <td valign="top">2-byte signed integer in the range -32,768 to 32,767</td>
     <td valign="top">32000</td>
   </tr>
@@ -76,14 +76,14 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
     <td valign="top">2015-12-30 22:55:55.23<br> <a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/">More examples</a></td>
   </tr>
   <tr>
-    <td valign="top">CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR**</td>
+    <td valign="top">CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR***</td>
     <td valign="top">UTF8-encoded variable-length string. In this release, CHAR, its aliases, and VARCHAR types are not fundamentally different types. The default limit is 1 character. The maximum character limit is 2,147,483,647.</td>
     <td valign="top">CHAR(30) casts data to a 30-character string maximum.</td>
   </tr>
 </table>
-\* Not currently supported.  
-\*\* Currently, Drill supports only variable-length strings.  
-\*\*\* In this release, the NUMERIC data type is an alias for the DECIMAL data type.  
+\* In this release, the NUMERIC data type is an alias for the DECIMAL data type.  
+\*\* Not currently supported.  
+\*\*\* Currently, Drill supports only variable-length strings.  
 
 ## Casting and Converting Data Types
 
