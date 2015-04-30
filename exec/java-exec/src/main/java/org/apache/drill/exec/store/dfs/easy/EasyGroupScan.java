@@ -183,7 +183,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
+    mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks, formatPlugin.getContext());
   }
 
   private void createMappings(List<EndpointAffinity> affinities) {

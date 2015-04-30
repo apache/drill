@@ -227,4 +227,7 @@ public interface ExecConstants {
   public static final String NEW_VIEW_DEFAULT_PERMS_KEY = "new_view_default_permissions";
   public static final OptionValidator NEW_VIEW_DEFAULT_PERMS_VALIDATOR =
       new StringValidator(NEW_VIEW_DEFAULT_PERMS_KEY, "700");
+
+  public static final String USE_OLD_ASSIGNMENT_CREATOR = "exec.schedule.assignment.old";
+  public static final OptionValidator USE_OLD_ASSIGNMENT_CREATOR_VALIDATOR = new BooleanValidator(USE_OLD_ASSIGNMENT_CREATOR, false);
 }

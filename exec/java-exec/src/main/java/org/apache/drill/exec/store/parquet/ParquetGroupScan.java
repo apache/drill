@@ -384,7 +384,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) throws PhysicalOperatorSetupException {
 
-    this.mappings = AssignmentCreator.getMappings(incomingEndpoints, rowGroupInfos);
+    this.mappings = AssignmentCreator.getMappings(incomingEndpoints, rowGroupInfos, formatPlugin.getContext());
   }
 
   @Override
