@@ -89,7 +89,7 @@ a.anchor {
 #menu ul li a {
 	color:#FFF;
 	text-decoration:none;
-	line-height:51px;
+	line-height:50px;
 	padding:14px 20px;
 }
 /*
@@ -104,7 +104,7 @@ a.anchor {
 	font-size:12px;
 	text-transform:uppercase;
 }
-#menu ul li.d a .fa {
+#menu ul li.d a .fam {
   position: relative;
   right: 8px;
   font-size: 14px;
@@ -119,9 +119,8 @@ a.anchor {
 }
 
 #menu ul li.d a {
-	padding:0 30px 0 40px;
+	padding:0px 30px 0 40px;
 	display:block;
-	height:50px;
 }
 
 
@@ -244,7 +243,7 @@ a.anchor {
 	background-image:url(../images/flexibility-w.png);
 }
 
-#subhead ul li.fa a {
+#subhead ul li.fam a {
 	background-image:url(../images/familiarity-w.png);
 }
 
@@ -499,7 +498,7 @@ table.intro td.fl {
 	background-image:url(../images/flexibility.png);
 }
 
-table.intro td.fa {
+table.intro td.fam {
 	background-image:url(../images/familiarity.png);
 }
 
@@ -697,8 +696,13 @@ table.intro a {
 }
 
 .int_text {
-	margin:40px auto 60px auto;
+	margin:40px auto 30px auto;
 	width:780px;
+}
+
+/* Blog */
+div.post.int_text {
+	margin:40px auto 60px auto;
 }
 
 .int_text a, .int_title a {

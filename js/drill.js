@@ -116,8 +116,10 @@ Drill.Docs = {
       //  This relies on .sidebar's 'left' attribute...may be a cleaner approach
       if($(".sidebar").css('left') == '0px'){
         Drill.Docs._contractSidebar();
+        //Drill.Docs._contractView();
       } else {
         Drill.Docs._expandSidebar();
+        //Drill.Docs._expandView();
       }
     })
   },
@@ -202,8 +204,18 @@ Drill.Docs = {
     $(".sidebar").addClass("force-expand");
   },
 
+  _expandView : function(){
+    $("nav.breadcrumbs li:first").addClass("force-expand");
+    $(".main-content").addClass("force-expand");
+  },
+
   _contractSidebar : function() {
     $(".sidebar").removeClass("force-expand");
+  },
+
+  _contractView : function() {
+    $("nav.breadcrumbs li:first").removeClass("force-expand");
+    $(".main-content").removeClass("force-expand");
   },
 
   _make_current : function(that) {

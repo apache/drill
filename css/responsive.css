@@ -1,6 +1,3 @@
-nav.breadcrumbs{
-  margin-left: -8px;
-}
 #menu ul li.toc-categories {
   display:none;
 }
@@ -34,6 +31,9 @@ nav.breadcrumbs{
   }
   .mw {
     min-width: 0px;
+  }
+  .breadcrumbs li:first-of-type {
+    margin-left: 8px;
   }
   #menu ul li.logo {
     padding-left: 30px;
@@ -195,7 +195,7 @@ nav.breadcrumbs{
     text-align: left;
     padding-left: 70px;
   }
-  table.intro td.ag, table.intro td.fl, table.intro td.fa {
+  table.intro td.ag, table.intro td.fl, table.intro td.fam {
     background-position: 30px 23%;
   }
   table.intro p {

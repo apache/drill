@@ -24,6 +24,7 @@
 div.doc-nav {
   overflow: auto;
   width: 100%;
+  margin-top: 30px;
 }
 div.doc-nav a{
   text-decoration: none;
@@ -51,7 +52,7 @@ div.doc-nav span.next-toc {
 
 .main-content .int_text {
   margin-left: 0px;
-  margin-top:30px;
+  margin-top: 0px;
 }
 .main-content .int_text img {
   margin: 30px 0px;
@@ -68,7 +69,8 @@ div.doc-nav span.next-toc {
 .main-content .edit-link {
   position: relative;
   float: right;
-  bottom: 105px;
+  margin-top: 13px;
+  margin-right: 20px;
   text-decoration: none;
   font-size: 24px;
   color: #333333;
@@ -358,6 +360,9 @@ span.expand.show, span.contract.show {
   #footer {
     margin-left: 0px;
   }
+  .main-content .edit-link {
+    margin-right: 0px; /* container takes care of right margin */
+  }
 
   #menu ul li.toc-categories {
     display: inline-block;
@@ -412,9 +417,6 @@ span.expand.show, span.contract.show {
   .main-content-wrapper {
     width: 1092px; 
   }
-  div.doc-nav {
-    margin-left: 30px;
-  }
   .main-content
   {
     margin-left: 313px;
@@ -424,6 +426,12 @@ span.expand.show, span.contract.show {
   }
   #footer .wrapper {
     margin-left: 293px;
+  }
+ .breadcrumbs {
+    margin-left: 0px;
+  }
+  .breadcrumbs li:first-of-type {
+    margin-left: 301px;
   }
 }
 /*

@@ -3,8 +3,10 @@
   display: block;
   padding: 0.5625rem 0 0.5625rem 0;
   overflow: hidden;
-  margin-top: 55px;
+  margin-top: 56px;
+  margin-left: 0px;
   list-style: none;
+  border-bottom: solid 1px #E4E4E4;
   width: 100%;
 }
 
