@@ -2,11 +2,6 @@
 title: "Manage Drill Introduction"
 parent: "Manage Drill"
 ---
-When using Drill, you may need to stop and restart a Drillbit on a node, or
-modify various options. For example, the default storage format for CTAS
+When using Drill, you need to configure memory to make sufficient memory available for your application. The more memory for Drill, the better. You may need to modify options for performance or functionality. For example, the default storage format for CTAS
 statements is Parquet. You can modify the default setting so that output data
-is stored in CSV or JSON format.
-
-You can use certain SQL commands to manage Drill from within the Drill shell
-(SQLLine). You can also modify Drill configuration options, such as memory
-allocation, in Drill's configuration files.
+is stored in CSV or JSON format. The many options you can configure are covered in this section. This section also includes stopping and restarting a Drillbit on a node, ports used by Drill, and partition pruning.
