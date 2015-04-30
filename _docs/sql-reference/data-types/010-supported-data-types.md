@@ -82,9 +82,8 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
   </tr>
 </table>
 \* Not currently supported.  
-\*\* Currently, Drill supports only variable-length strings. .
-\*\*\* In this release the NUMERIC data type is an alias for the DECIMAL data type.
-+  
+\*\* Currently, Drill supports only variable-length strings.  
+\*\*\* In this release, the NUMERIC data type is an alias for the DECIMAL data type.  
 
 ## Casting and Converting Data Types
 
