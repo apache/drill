@@ -17,15 +17,16 @@ To register HBase with Drill, complete the following steps:
   
 
      **Example**
-        {
-          "type": "hbase",
-          "config": {
-            "hbase.zookeeper.quorum": "10.10.100.62,10.10.10.52,10.10.10.53",
-            "hbase.zookeeper.property.clientPort": "2181"
-          },
-          "size.calculator.enabled": false,
-          "enabled": true
-        }
+     
+          {
+            "type": "hbase",
+            "config": {
+              "hbase.zookeeper.quorum": "10.10.100.62,10.10.10.52,10.10.10.53",
+              "hbase.zookeeper.property.clientPort": "2181"
+            },
+            "size.calculator.enabled": false,
+            "enabled": true
+          }
 
   4. Click **Enable**.
 

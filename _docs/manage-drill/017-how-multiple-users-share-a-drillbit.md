@@ -13,7 +13,7 @@ Set [options in sys.options]({{site.baseurl}}/docs/configuration-options-introdu
 
 ### Example Configuration
 
-For example, you configure the queue reserved for large queries to hold a 5-query maximum. You configure the queue reserved for small queue to hold 20 queries. Users start to run queries, and Drill receives the following query requests in this order:
+For example, you configure the queue reserved for large queries to hold a 5-query maximum. You configure the queue reserved for small queries to hold 20 queries. Users start to run queries, and Drill receives the following query requests in this order:
 
 * Query A (blue): 1 billion records, Drill estimates 10 million rows will be processed  
 * Query B (red): 2 billion records, Drill estimates 20 million rows will be processed  
@@ -24,7 +24,7 @@ The exec.queue.threshold default is 30 million, which is the estimated rows to b
 
 ![drill queuing]({{ site.baseurl }}/docs/img/queuing.png)
 
-The Drill queuing configuration in this example tends to give many users running small queries a rapid response. Users running a large query might experience some delay until an earlier-received large query returns.
+The Drill queuing configuration in this example tends to give many users running small queries a rapid response. Users running a large query might experience some delay until an earlier-received large query returns, freeing space in the large queue to process queries that are waiting.
 
 ## Controlling Parallelization
 
@@ -51,7 +51,7 @@ A parallelizer in the Foreman transforms the physical plan into multiple phases.
 
 ## Data Isolation
 
-Data isolation is typically a requirement for multiple users on a Drill cluster. By using row/column level security permissions ??link to doc?? in views, you can achieve data isolation.
+Tenants can share data on a cluster using Drill views and impersonation. ??Link to impersonation doc.??
 
 
 
