@@ -415,20 +415,12 @@ span.expand.show, span.contract.show {
   div.doc-nav {
     margin-left: 30px;
   }
-
-  #footer {
-    text-align: left;
-  }
   .main-content
   {
     margin-left: 313px;
   }
   #menu ul li.logo {
     padding-left: 30px;
-  }
-
-  #footer {
-    width: auto;
   }
   #footer .wrapper {
     margin-left: 293px;

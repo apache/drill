@@ -630,9 +630,9 @@ table.intro a {
   content: "";
 }
 #footer {
-	background:#232323;
-	color:#FFF;
-	font-size:10px;
+  color: black;
+  background-color: white;
+	font-size:9px;
 	font-weight:lighter;
 	line-height:20px;
 	padding:30px 0;
