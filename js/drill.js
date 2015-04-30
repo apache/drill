@@ -98,22 +98,12 @@ Drill.Docs = {
   },
 
   setCurrentDoc : function() {
-    var current_l1 = $("li.toctree-l3.current");
     var current_l2 = $("li.toctree-l2.current");
     var current_l3 = $("li.toctree-l3.current");
 
     Drill.Docs._setPlusMinus(current_l2);
     Drill.Docs._setPlusMinus( current_l3.parent().prev("li") ); // requires knowledge of html structure...bad...bad.
     // alternatively, set these up in the rendering of the docs, like the current_section and current are done.
-
-    // set current <li>, starting from innermost possibility
-    if(current_l3.length > 0){
-      current_l3.addClass("current");
-    } else if(current_l2.length > 0){
-      current_l2.addClass("current");
-    } else if(current_l1.length > 0){
-      current_l1.addClass("current");
-    }
   },
 
   _setPlusMinus : function(parent) {

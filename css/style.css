@@ -339,11 +339,14 @@ a.anchor {
 	width:530px;
 }
 
-#header .scroller .item .tc h1 {
+#header .scroller .item .tc h1, #header .scroller .item .tc h2 {
 	font-size:36px;
 	font-weight:lighter;
 	margin:0 0 8px 0;
 	padding:0;
+}
+#header .scroller .item .tc h2 {
+  font-size: 20px;
 }
 
 #header .scroller .item .tc p {
@@ -452,6 +455,20 @@ a.anchor {
 .dots .dot.sel {
 	box-shadow: inset 0 0 0 8px white;
 }
+div.alertbar
+  {
+    background-color:#ffc;
+    text-align: center;
+    display: block;
+    padding:10px;
+    border-bottom: solid 1px #cc9;
+  }
+div.alertbar .hor-bar:after {
+  content: "|";
+}
+span.strong {
+  font-weight: bold;
+}
 
 .introWrapper {
 	border-bottom:1px solid #CCC;
@@ -462,6 +479,7 @@ table.intro {
 	background:url(../images/intro-bg.gif) no-repeat center;
 	table-layout:fixed;
 	text-align:center;	
+  width: 940px;
 }
 
 table.intro td {

@@ -8,6 +8,9 @@ nav.breadcrumbs{
 #menu ul li.menu-break {
   display:none;
 }
+.mobile-break {
+  display: none;
+}
 
 /*@media (max-width: 768px) {
   #menu ul li{
@@ -26,6 +29,9 @@ nav.breadcrumbs{
 }
 
 @media (max-width: 1024px) {
+  table.intro {
+    width: 940px;
+  }
   .mw {
     min-width: 0px;
   }
@@ -103,11 +109,26 @@ nav.breadcrumbs{
   #menu ul li.force-expand.search-bar {
     clear:both;
   }
-}
-@media (max-width: 570px) {
-  body {
-    font-size: 20px;
+
+  /* Responsive Homepage 768 max width */
+  div.headlines.tc {
+    margin-left: 35px;
   }
+  br.mobile-break {
+    display: block;
+  }
+  table.intro {
+    width: 768px;
+  }
+}
+
+@media (max-width: 570px) {
+
+  /* Responsive Layout 570 max width */
+
+
+  /* Responsive Menu 570 max width */
+
   #menu ul li.force-expand.nav, #menu ul li.force-expand#twitter-menu-item {
     clear: both;
     width: 100%;
@@ -131,4 +152,79 @@ nav.breadcrumbs{
     clear: both;
     float: right;
   }
+
+  /* Responsive Homepage 570 max width */
+  #header .scroller .item .tc h1{
+    font-size: 40px;
+  }
+  #header .scroller .item .tc h2 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+  #header .scroller .item div.headlines.tc {
+    margin-left: 30px;
+  }
+  div.headlines a.download-headline {
+    font-size: .7em;
+  }
+  #header .scroller .item div.headlines .btn { font-size: 16px; }
+
+  div.alertbar .hor-bar:after {
+    content: "";
+  }
+  div.alertbar {
+    text-align: left;
+    padding-left: 25px;
+  }
+  div.alertbar a {
+    display:block;
+  }
+  div.alertbar span.strong {
+    display: block;
+  }
+  table.intro {
+    width: 100%;
+    background: none;
+  }
+  table.intro td {
+    display: block;
+    padding: 25px 0 5px 0;
+  }
+  table.intro td h1 {
+    font-size: 24px;
+    text-align: left;
+    padding-left: 70px;
+  }
+  table.intro td.ag, table.intro td.fl, table.intro td.fa {
+    background-position: 30px 23%;
+  }
+  table.intro p {
+    font-size: 16px;
+    line-height: 24px;
+    padding: 2px 25px 15px 30px;
+    text-align: left;
+  }
+  table.intro span {
+    position: relative;
+    bottom: 10px;
+    padding-left: 30px;
+    text-align: left;
+  }
+
+  .home_txt p {
+    margin: 20px 10px 20px 10px;
+  }
+  .home_txt h1 {
+    font-size: 32px;
+    margin: 20px 10px 20px 10px;
+  }
+
+  .home_txt h2 {
+    font-size: 20px;
+    margin: 20px 10px 20px 10px;
+
+  }
+
+}
+
 
