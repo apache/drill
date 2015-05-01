@@ -1,6 +1,6 @@
 ---
-title: "Configuring Resources in a Mixed Cluster"
-parent: "Configuring Different Workloads"
+title: "Configuring Multitenant Resources"
+parent: "Configuring a Multitenant Cluster"
 ---
 Drill operations are memory and CPU-intensive. You need to statically partition the cluster to designate which partition handles which workload. To configure resources for Drill in a MapR cluster, modify one or more of the following files in `/opt/mapr/conf/conf.d` that the installation process creates. 
 
