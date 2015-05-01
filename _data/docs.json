@@ -20,8 +20,8 @@
         "ALTER SESSION Command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -31,18 +31,18 @@
             "children": [], 
             "next_title": "ALTER SYSTEM Command", 
             "next_url": "/docs/alter-system-command/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "Supported SQL Commands", 
             "previous_url": "/docs/supported-sql-commands/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/010-alter-session-command.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session-command.md", 
             "title": "ALTER SESSION Command", 
             "url": "/docs/alter-session-command/"
         }, 
         "ALTER SYSTEM Command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -52,10 +52,10 @@
             "children": [], 
             "next_title": "CREATE TABLE AS (CTAS) command", 
             "next_url": "/docs/create-table-as-ctas-command/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "ALTER SESSION Command", 
             "previous_url": "/docs/alter-session-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/020-alter-system.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
             "title": "ALTER SYSTEM Command", 
             "url": "/docs/alter-system-command/"
         }, 
@@ -610,8 +610,8 @@
         "CREATE TABLE AS (CTAS) command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -621,18 +621,18 @@
             "children": [], 
             "next_title": "CREATE VIEW command", 
             "next_url": "/docs/create-view-command/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "ALTER SYSTEM Command", 
             "previous_url": "/docs/alter-system-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/030-create-table-as-command.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
             "title": "CREATE TABLE AS (CTAS) command", 
             "url": "/docs/create-table-as-ctas-command/"
         }, 
         "CREATE VIEW command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -642,10 +642,10 @@
             "children": [], 
             "next_title": "DESCRIBE Command", 
             "next_url": "/docs/describe-command/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "CREATE TABLE AS (CTAS) command", 
             "previous_url": "/docs/create-table-as-ctas-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/050-create-view-command.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
             "title": "CREATE VIEW command", 
             "url": "/docs/create-view-command/"
         }, 
@@ -690,8 +690,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring a Cluster for Different Workloads", 
-                    "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                    "next_title": "Start-Up Options", 
+                    "next_url": "/docs/start-up-options/", 
                     "parent": "Configuration Options", 
                     "previous_title": "Configuration Options", 
                     "previous_url": "/docs/configuration-options/", 
@@ -711,32 +711,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Start-Up Options", 
-                    "next_url": "/docs/start-up-options/", 
-                    "parent": "Configuration Options", 
-                    "previous_title": "Configuration Options Introduction", 
-                    "previous_url": "/docs/configuration-options-introduction/", 
-                    "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
-                    "title": "Configuring a Cluster for Different Workloads", 
-                    "url": "/docs/configuring-a-cluster-for-different-workloads/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configuration Options", 
-                            "url": "/docs/configuration-options/"
-                        }, 
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Planning and Execution Options", 
                     "next_url": "/docs/planning-and-execution-options/", 
                     "parent": "Configuration Options", 
-                    "previous_title": "Configuring a Cluster for Different Workloads", 
-                    "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                    "previous_title": "Configuration Options Introduction", 
+                    "previous_url": "/docs/configuration-options-introduction/", 
                     "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
                     "title": "Start-Up Options", 
                     "url": "/docs/start-up-options/"
@@ -787,8 +766,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "How Multiple Users Share a Drillbit", 
-            "previous_url": "/docs/how-multiple-users-share-a-drillbit/", 
+            "previous_title": "Configuring a Shared Drillbit", 
+            "previous_url": "/docs/configuring-a-shared-drillbit/", 
             "relative_path": "_docs/manage-drill/020-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -805,8 +784,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring a Cluster for Different Workloads", 
-            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+            "next_title": "Start-Up Options", 
+            "next_url": "/docs/start-up-options/", 
             "parent": "Configuration Options", 
             "previous_title": "Configuration Options", 
             "previous_url": "/docs/configuration-options/", 
@@ -856,28 +835,92 @@
             "title": "Configuring Connections on Windows", 
             "url": "/docs/configuring-connections-on-windows/"
         }, 
-        "Configuring Memory": {
+        "Configuring Different Workloads": {
             "breadcrumbs": [
                 {
                     "title": "Manage Drill", 
                     "url": "/docs/manage-drill/"
                 }
             ], 
-            "children": [], 
-            "next_title": "Multitenant and Multi-instance Architectures", 
-            "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring Different Workloads", 
+                            "url": "/docs/configuring-different-workloads/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Drill in a Cluster", 
+                    "next_url": "/docs/configuring-drill-in-a-cluster/", 
+                    "parent": "Configuring Different Workloads", 
+                    "previous_title": "Configuring Different Workloads", 
+                    "previous_url": "/docs/configuring-different-workloads/", 
+                    "relative_path": "_docs/manage-drill/013-configuring-dfferent-workloads-introduction.md", 
+                    "title": "Configuring Different Workloads Introduction", 
+                    "url": "/docs/configuring-different-workloads-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring Different Workloads", 
+                            "url": "/docs/configuring-different-workloads/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring a Shared Drillbit", 
+                    "next_url": "/docs/configuring-a-shared-drillbit/", 
+                    "parent": "Configuring Different Workloads", 
+                    "previous_title": "Configuring Different Workloads Introduction", 
+                    "previous_url": "/docs/configuring-different-workloads-introduction/", 
+                    "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
+                    "title": "Configuring Drill in a Cluster", 
+                    "url": "/docs/configuring-drill-in-a-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring Different Workloads", 
+                            "url": "/docs/configuring-different-workloads/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configuring Different Workloads", 
+                    "previous_title": "Configuring Drill in a Cluster", 
+                    "previous_url": "/docs/configuring-drill-in-a-cluster/", 
+                    "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                    "title": "Configuring a Shared Drillbit", 
+                    "url": "/docs/configuring-a-shared-drillbit/"
+                }
+            ], 
+            "next_title": "Configuring Different Workloads Introduction", 
+            "next_url": "/docs/configuring-different-workloads-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "Manage Drill Introduction", 
-            "previous_url": "/docs/manage-drill-introduction/", 
-            "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
-            "title": "Configuring Memory", 
-            "url": "/docs/configuring-memory/"
+            "previous_title": "Configuring Memory for Drill", 
+            "previous_url": "/docs/configuring-memory-for-drill/", 
+            "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
+            "title": "Configuring Different Workloads", 
+            "url": "/docs/configuring-different-workloads/"
         }, 
-        "Configuring a Cluster for Different Workloads": {
+        "Configuring Different Workloads Introduction": {
             "breadcrumbs": [
                 {
-                    "title": "Configuration Options", 
-                    "url": "/docs/configuration-options/"
+                    "title": "Configuring Different Workloads", 
+                    "url": "/docs/configuring-different-workloads/"
                 }, 
                 {
                     "title": "Manage Drill", 
@@ -885,14 +928,73 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Start-Up Options", 
-            "next_url": "/docs/start-up-options/", 
-            "parent": "Configuration Options", 
-            "previous_title": "Configuration Options Introduction", 
-            "previous_url": "/docs/configuration-options-introduction/", 
-            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
-            "title": "Configuring a Cluster for Different Workloads", 
-            "url": "/docs/configuring-a-cluster-for-different-workloads/"
+            "next_title": "Configuring Drill in a Cluster", 
+            "next_url": "/docs/configuring-drill-in-a-cluster/", 
+            "parent": "Configuring Different Workloads", 
+            "previous_title": "Configuring Different Workloads", 
+            "previous_url": "/docs/configuring-different-workloads/", 
+            "relative_path": "_docs/manage-drill/013-configuring-dfferent-workloads-introduction.md", 
+            "title": "Configuring Different Workloads Introduction", 
+            "url": "/docs/configuring-different-workloads-introduction/"
+        }, 
+        "Configuring Drill in a Cluster": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuring Different Workloads", 
+                    "url": "/docs/configuring-different-workloads/"
+                }, 
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring a Shared Drillbit", 
+            "next_url": "/docs/configuring-a-shared-drillbit/", 
+            "parent": "Configuring Different Workloads", 
+            "previous_title": "Configuring Different Workloads Introduction", 
+            "previous_url": "/docs/configuring-different-workloads-introduction/", 
+            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
+            "title": "Configuring Drill in a Cluster", 
+            "url": "/docs/configuring-drill-in-a-cluster/"
+        }, 
+        "Configuring Memory for Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Different Workloads", 
+            "next_url": "/docs/configuring-different-workloads/", 
+            "parent": "Manage Drill", 
+            "previous_title": "Manage Drill Introduction", 
+            "previous_url": "/docs/manage-drill-introduction/", 
+            "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
+            "title": "Configuring Memory for Drill", 
+            "url": "/docs/configuring-memory-for-drill/"
+        }, 
+        "Configuring a Shared Drillbit": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuring Different Workloads", 
+                    "url": "/docs/configuring-different-workloads/"
+                }, 
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
+            "parent": "Configuring Different Workloads", 
+            "previous_title": "Configuring Drill in a Cluster", 
+            "previous_url": "/docs/configuring-drill-in-a-cluster/", 
+            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+            "title": "Configuring a Shared Drillbit", 
+            "url": "/docs/configuring-a-shared-drillbit/"
         }, 
         "Connect a Data Source": {
             "breadcrumbs": [], 
@@ -1254,8 +1356,8 @@
         "DESCRIBE Command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -1265,10 +1367,10 @@
             "children": [], 
             "next_title": "EXPLAIN commands", 
             "next_url": "/docs/explain-commands/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "CREATE VIEW command", 
             "previous_url": "/docs/create-view-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/060-describe-command.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
             "title": "DESCRIBE Command", 
             "url": "/docs/describe-command/"
         }, 
@@ -2291,8 +2393,8 @@
         "EXPLAIN commands": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -2302,10 +2404,10 @@
             "children": [], 
             "next_title": "SELECT Statements", 
             "next_url": "/docs/select-statements/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "DESCRIBE Command", 
             "previous_url": "/docs/describe-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/070-explain-commands.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
             "title": "EXPLAIN commands", 
             "url": "/docs/explain-commands/"
         }, 
@@ -2578,48 +2680,6 @@
             "relative_path": "_docs/data-sources-and-file-formats/020-hive-to-drill-data-type-mapping.md", 
             "title": "Hive-to-Drill Data Type Mapping", 
             "url": "/docs/hive-to-drill-data-type-mapping/"
-        }, 
-        "How Multiple Users Share a Drillbit": {
-            "breadcrumbs": [
-                {
-                    "title": "Multitenant and Multi-instance Architectures", 
-                    "url": "/docs/multitenant-and-multi-instance-architectures/"
-                }, 
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
-            "parent": "Multitenant and Multi-instance Architectures", 
-            "previous_title": "How to Run Drill in a Cluster", 
-            "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
-            "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
-            "title": "How Multiple Users Share a Drillbit", 
-            "url": "/docs/how-multiple-users-share-a-drillbit/"
-        }, 
-        "How to Run Drill in a Cluster": {
-            "breadcrumbs": [
-                {
-                    "title": "Multitenant and Multi-instance Architectures", 
-                    "url": "/docs/multitenant-and-multi-instance-architectures/"
-                }, 
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "How Multiple Users Share a Drillbit", 
-            "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
-            "parent": "Multitenant and Multi-instance Architectures", 
-            "previous_title": "Multitenant and Multi-instance Architectures Introduction", 
-            "previous_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
-            "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
-            "title": "How to Run Drill in a Cluster", 
-            "url": "/docs/how-to-run-drill-in-a-cluster/"
         }, 
         "How to Run the Drill Demo": {
             "breadcrumbs": [
@@ -3398,8 +3458,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Memory", 
-                    "next_url": "/docs/configuring-memory/", 
+                    "next_title": "Configuring Memory for Drill", 
+                    "next_url": "/docs/configuring-memory-for-drill/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -3415,14 +3475,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Multitenant and Multi-instance Architectures", 
-                    "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                    "next_title": "Configuring Different Workloads", 
+                    "next_url": "/docs/configuring-different-workloads/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
                     "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
-                    "title": "Configuring Memory", 
-                    "url": "/docs/configuring-memory/"
+                    "title": "Configuring Memory for Drill", 
+                    "url": "/docs/configuring-memory-for-drill/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3435,8 +3495,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Multitenant and Multi-instance Architectures", 
-                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -3444,20 +3504,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "How to Run Drill in a Cluster", 
-                            "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
-                            "parent": "Multitenant and Multi-instance Architectures", 
-                            "previous_title": "Multitenant and Multi-instance Architectures", 
-                            "previous_url": "/docs/multitenant-and-multi-instance-architectures/", 
-                            "relative_path": "_docs/manage-drill/013-multitenant-and-multi-instance-architecture-introduction.md", 
-                            "title": "Multitenant and Multi-instance Architectures Introduction", 
-                            "url": "/docs/multitenant-and-multi-instance-architectures-introduction/"
+                            "next_title": "Configuring Drill in a Cluster", 
+                            "next_url": "/docs/configuring-drill-in-a-cluster/", 
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Different Workloads", 
+                            "previous_url": "/docs/configuring-different-workloads/", 
+                            "relative_path": "_docs/manage-drill/013-configuring-dfferent-workloads-introduction.md", 
+                            "title": "Configuring Different Workloads Introduction", 
+                            "url": "/docs/configuring-different-workloads-introduction/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Multitenant and Multi-instance Architectures", 
-                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -3465,20 +3525,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "How Multiple Users Share a Drillbit", 
-                            "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
-                            "parent": "Multitenant and Multi-instance Architectures", 
-                            "previous_title": "Multitenant and Multi-instance Architectures Introduction", 
-                            "previous_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
-                            "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
-                            "title": "How to Run Drill in a Cluster", 
-                            "url": "/docs/how-to-run-drill-in-a-cluster/"
+                            "next_title": "Configuring a Shared Drillbit", 
+                            "next_url": "/docs/configuring-a-shared-drillbit/", 
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Different Workloads Introduction", 
+                            "previous_url": "/docs/configuring-different-workloads-introduction/", 
+                            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
+                            "title": "Configuring Drill in a Cluster", 
+                            "url": "/docs/configuring-drill-in-a-cluster/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Multitenant and Multi-instance Architectures", 
-                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -3488,22 +3548,22 @@
                             "children": [], 
                             "next_title": "Configuration Options", 
                             "next_url": "/docs/configuration-options/", 
-                            "parent": "Multitenant and Multi-instance Architectures", 
-                            "previous_title": "How to Run Drill in a Cluster", 
-                            "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
-                            "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
-                            "title": "How Multiple Users Share a Drillbit", 
-                            "url": "/docs/how-multiple-users-share-a-drillbit/"
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Drill in a Cluster", 
+                            "previous_url": "/docs/configuring-drill-in-a-cluster/", 
+                            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                            "title": "Configuring a Shared Drillbit", 
+                            "url": "/docs/configuring-a-shared-drillbit/"
                         }
                     ], 
-                    "next_title": "Multitenant and Multi-instance Architectures Introduction", 
-                    "next_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
+                    "next_title": "Configuring Different Workloads Introduction", 
+                    "next_url": "/docs/configuring-different-workloads-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Memory", 
-                    "previous_url": "/docs/configuring-memory/", 
-                    "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
-                    "title": "Multitenant and Multi-instance Architectures", 
-                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                    "previous_title": "Configuring Memory for Drill", 
+                    "previous_url": "/docs/configuring-memory-for-drill/", 
+                    "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
+                    "title": "Configuring Different Workloads", 
+                    "url": "/docs/configuring-different-workloads/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3525,8 +3585,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring a Cluster for Different Workloads", 
-                            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                            "next_title": "Start-Up Options", 
+                            "next_url": "/docs/start-up-options/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options", 
                             "previous_url": "/docs/configuration-options/", 
@@ -3546,32 +3606,11 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Start-Up Options", 
-                            "next_url": "/docs/start-up-options/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Configuration Options Introduction", 
-                            "previous_url": "/docs/configuration-options-introduction/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
-                            "title": "Configuring a Cluster for Different Workloads", 
-                            "url": "/docs/configuring-a-cluster-for-different-workloads/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
                             "next_title": "Planning and Execution Options", 
                             "next_url": "/docs/planning-and-execution-options/", 
                             "parent": "Configuration Options", 
-                            "previous_title": "Configuring a Cluster for Different Workloads", 
-                            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                            "previous_title": "Configuration Options Introduction", 
+                            "previous_url": "/docs/configuration-options-introduction/", 
                             "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
                             "title": "Start-Up Options", 
                             "url": "/docs/start-up-options/"
@@ -3622,8 +3661,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "How Multiple Users Share a Drillbit", 
-                    "previous_url": "/docs/how-multiple-users-share-a-drillbit/", 
+                    "previous_title": "Configuring a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-a-shared-drillbit/", 
                     "relative_path": "_docs/manage-drill/020-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -3714,8 +3753,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Memory", 
-            "next_url": "/docs/configuring-memory/", 
+            "next_title": "Configuring Memory for Drill", 
+            "next_url": "/docs/configuring-memory-for-drill/", 
             "parent": "Manage Drill", 
             "previous_title": "Manage Drill", 
             "previous_url": "/docs/manage-drill/", 
@@ -3794,108 +3833,6 @@
             "relative_path": "_docs/manage-drill/060-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
             "title": "Monitoring and Canceling Queries in the Drill Web UI", 
             "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
-        }, 
-        "Multitenant and Multi-instance Architectures": {
-            "breadcrumbs": [
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Multitenant and Multi-instance Architectures", 
-                            "url": "/docs/multitenant-and-multi-instance-architectures/"
-                        }, 
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "How to Run Drill in a Cluster", 
-                    "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
-                    "parent": "Multitenant and Multi-instance Architectures", 
-                    "previous_title": "Multitenant and Multi-instance Architectures", 
-                    "previous_url": "/docs/multitenant-and-multi-instance-architectures/", 
-                    "relative_path": "_docs/manage-drill/013-multitenant-and-multi-instance-architecture-introduction.md", 
-                    "title": "Multitenant and Multi-instance Architectures Introduction", 
-                    "url": "/docs/multitenant-and-multi-instance-architectures-introduction/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Multitenant and Multi-instance Architectures", 
-                            "url": "/docs/multitenant-and-multi-instance-architectures/"
-                        }, 
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "How Multiple Users Share a Drillbit", 
-                    "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
-                    "parent": "Multitenant and Multi-instance Architectures", 
-                    "previous_title": "Multitenant and Multi-instance Architectures Introduction", 
-                    "previous_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
-                    "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
-                    "title": "How to Run Drill in a Cluster", 
-                    "url": "/docs/how-to-run-drill-in-a-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Multitenant and Multi-instance Architectures", 
-                            "url": "/docs/multitenant-and-multi-instance-architectures/"
-                        }, 
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
-                    "parent": "Multitenant and Multi-instance Architectures", 
-                    "previous_title": "How to Run Drill in a Cluster", 
-                    "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
-                    "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
-                    "title": "How Multiple Users Share a Drillbit", 
-                    "url": "/docs/how-multiple-users-share-a-drillbit/"
-                }
-            ], 
-            "next_title": "Multitenant and Multi-instance Architectures Introduction", 
-            "next_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Configuring Memory", 
-            "previous_url": "/docs/configuring-memory/", 
-            "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
-            "title": "Multitenant and Multi-instance Architectures", 
-            "url": "/docs/multitenant-and-multi-instance-architectures/"
-        }, 
-        "Multitenant and Multi-instance Architectures Introduction": {
-            "breadcrumbs": [
-                {
-                    "title": "Multitenant and Multi-instance Architectures", 
-                    "url": "/docs/multitenant-and-multi-instance-architectures/"
-                }, 
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "How to Run Drill in a Cluster", 
-            "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
-            "parent": "Multitenant and Multi-instance Architectures", 
-            "previous_title": "Multitenant and Multi-instance Architectures", 
-            "previous_url": "/docs/multitenant-and-multi-instance-architectures/", 
-            "relative_path": "_docs/manage-drill/013-multitenant-and-multi-instance-architecture-introduction.md", 
-            "title": "Multitenant and Multi-instance Architectures Introduction", 
-            "url": "/docs/multitenant-and-multi-instance-architectures-introduction/"
         }, 
         "Nested Data Functions": {
             "breadcrumbs": [
@@ -4998,8 +4935,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SQL Commands Summary", 
-            "next_url": "/docs/sql-commands-summary/", 
+            "next_title": "SQL Commands", 
+            "next_url": "/docs/sql-commands/", 
             "parent": "SQL Reference", 
             "previous_title": "REPEATED_CONTAINS", 
             "previous_url": "/docs/repeated-contains/", 
@@ -5704,8 +5641,8 @@
         "SELECT Statements": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -5715,18 +5652,18 @@
             "children": [], 
             "next_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
             "next_url": "/docs/show-databases-and-show-schemas-command/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "EXPLAIN commands", 
             "previous_url": "/docs/explain-commands/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/080-select.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
             "title": "SELECT Statements", 
             "url": "/docs/select-statements/"
         }, 
         "SHOW DATABASES AND SHOW SCHEMAS Command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -5736,18 +5673,18 @@
             "children": [], 
             "next_title": "SHOW FILES Command", 
             "next_url": "/docs/show-files-command/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "SELECT Statements", 
             "previous_url": "/docs/select-statements/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/090-show-databases-and-show-schemas.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
             "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
             "url": "/docs/show-databases-and-show-schemas-command/"
         }, 
         "SHOW FILES Command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -5757,18 +5694,18 @@
             "children": [], 
             "next_title": "SHOW TABLES Command", 
             "next_url": "/docs/show-tables-command/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/100-show-files.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
             "title": "SHOW FILES Command", 
             "url": "/docs/show-files-command/"
         }, 
         "SHOW TABLES Command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -5778,14 +5715,14 @@
             "children": [], 
             "next_title": "USE Command", 
             "next_url": "/docs/use-command/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "SHOW FILES Command", 
             "previous_url": "/docs/show-files-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/110-show-tables-command.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables-command.md", 
             "title": "SHOW TABLES Command", 
             "url": "/docs/show-tables-command/"
         }, 
-        "SQL Commands Summary": {
+        "SQL Commands": {
             "breadcrumbs": [
                 {
                     "title": "SQL Reference", 
@@ -5796,8 +5733,8 @@
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5807,18 +5744,18 @@
                     "children": [], 
                     "next_title": "ALTER SESSION Command", 
                     "next_url": "/docs/alter-session-command/", 
-                    "parent": "SQL Commands Summary", 
-                    "previous_title": "SQL Commands Summary", 
-                    "previous_url": "/docs/sql-commands-summary/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/005-supported-sql-commands.md", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SQL Commands", 
+                    "previous_url": "/docs/sql-commands/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/005-supported-sql-commands.md", 
                     "title": "Supported SQL Commands", 
                     "url": "/docs/supported-sql-commands/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5828,18 +5765,18 @@
                     "children": [], 
                     "next_title": "ALTER SYSTEM Command", 
                     "next_url": "/docs/alter-system-command/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "Supported SQL Commands", 
                     "previous_url": "/docs/supported-sql-commands/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/010-alter-session-command.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/010-alter-session-command.md", 
                     "title": "ALTER SESSION Command", 
                     "url": "/docs/alter-session-command/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5849,18 +5786,18 @@
                     "children": [], 
                     "next_title": "CREATE TABLE AS (CTAS) command", 
                     "next_url": "/docs/create-table-as-ctas-command/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "ALTER SESSION Command", 
                     "previous_url": "/docs/alter-session-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/020-alter-system.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
                     "title": "ALTER SYSTEM Command", 
                     "url": "/docs/alter-system-command/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5870,18 +5807,18 @@
                     "children": [], 
                     "next_title": "CREATE VIEW command", 
                     "next_url": "/docs/create-view-command/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "ALTER SYSTEM Command", 
                     "previous_url": "/docs/alter-system-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/030-create-table-as-command.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
                     "title": "CREATE TABLE AS (CTAS) command", 
                     "url": "/docs/create-table-as-ctas-command/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5891,18 +5828,18 @@
                     "children": [], 
                     "next_title": "DESCRIBE Command", 
                     "next_url": "/docs/describe-command/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "CREATE TABLE AS (CTAS) command", 
                     "previous_url": "/docs/create-table-as-ctas-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/050-create-view-command.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
                     "title": "CREATE VIEW command", 
                     "url": "/docs/create-view-command/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5912,18 +5849,18 @@
                     "children": [], 
                     "next_title": "EXPLAIN commands", 
                     "next_url": "/docs/explain-commands/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "CREATE VIEW command", 
                     "previous_url": "/docs/create-view-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/060-describe-command.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
                     "title": "DESCRIBE Command", 
                     "url": "/docs/describe-command/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5933,18 +5870,18 @@
                     "children": [], 
                     "next_title": "SELECT Statements", 
                     "next_url": "/docs/select-statements/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "DESCRIBE Command", 
                     "previous_url": "/docs/describe-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/070-explain-commands.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
                     "title": "EXPLAIN commands", 
                     "url": "/docs/explain-commands/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5954,18 +5891,18 @@
                     "children": [], 
                     "next_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                     "next_url": "/docs/show-databases-and-show-schemas-command/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "EXPLAIN commands", 
                     "previous_url": "/docs/explain-commands/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/080-select.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
                     "title": "SELECT Statements", 
                     "url": "/docs/select-statements/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5975,18 +5912,18 @@
                     "children": [], 
                     "next_title": "SHOW FILES Command", 
                     "next_url": "/docs/show-files-command/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "SELECT Statements", 
                     "previous_url": "/docs/select-statements/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/090-show-databases-and-show-schemas.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
                     "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                     "url": "/docs/show-databases-and-show-schemas-command/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -5996,18 +5933,18 @@
                     "children": [], 
                     "next_title": "SHOW TABLES Command", 
                     "next_url": "/docs/show-tables-command/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                     "previous_url": "/docs/show-databases-and-show-schemas-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/100-show-files.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
                     "title": "SHOW FILES Command", 
                     "url": "/docs/show-files-command/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -6017,18 +5954,18 @@
                     "children": [], 
                     "next_title": "USE Command", 
                     "next_url": "/docs/use-command/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "SHOW FILES Command", 
                     "previous_url": "/docs/show-files-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/110-show-tables-command.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/110-show-tables-command.md", 
                     "title": "SHOW TABLES Command", 
                     "url": "/docs/show-tables-command/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "SQL Commands Summary", 
-                            "url": "/docs/sql-commands-summary/"
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
                         }, 
                         {
                             "title": "SQL Reference", 
@@ -6038,10 +5975,10 @@
                     "children": [], 
                     "next_title": "SQL Conditional Expressions", 
                     "next_url": "/docs/sql-conditional-expressions/", 
-                    "parent": "SQL Commands Summary", 
+                    "parent": "SQL Commands", 
                     "previous_title": "SHOW TABLES Command", 
                     "previous_url": "/docs/show-tables-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands-summary/120-use-command.md", 
+                    "relative_path": "_docs/sql-reference/sql-commands/120-use-command.md", 
                     "title": "USE Command", 
                     "url": "/docs/use-command/"
                 }
@@ -6052,8 +5989,8 @@
             "previous_title": "Query Directory Functions", 
             "previous_url": "/docs/query-directory-functions/", 
             "relative_path": "_docs/sql-reference/070-sql-commands-summary.md", 
-            "title": "SQL Commands Summary", 
-            "url": "/docs/sql-commands-summary/"
+            "title": "SQL Commands", 
+            "url": "/docs/sql-commands/"
         }, 
         "SQL Conditional Expressions": {
             "breadcrumbs": [
@@ -6707,8 +6644,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Commands Summary", 
-                    "next_url": "/docs/sql-commands-summary/", 
+                    "next_title": "SQL Commands", 
+                    "next_url": "/docs/sql-commands/", 
                     "parent": "SQL Reference", 
                     "previous_title": "REPEATED_CONTAINS", 
                     "previous_url": "/docs/repeated-contains/", 
@@ -6727,8 +6664,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6738,18 +6675,18 @@
                             "children": [], 
                             "next_title": "ALTER SESSION Command", 
                             "next_url": "/docs/alter-session-command/", 
-                            "parent": "SQL Commands Summary", 
-                            "previous_title": "SQL Commands Summary", 
-                            "previous_url": "/docs/sql-commands-summary/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/005-supported-sql-commands.md", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SQL Commands", 
+                            "previous_url": "/docs/sql-commands/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/005-supported-sql-commands.md", 
                             "title": "Supported SQL Commands", 
                             "url": "/docs/supported-sql-commands/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6759,18 +6696,18 @@
                             "children": [], 
                             "next_title": "ALTER SYSTEM Command", 
                             "next_url": "/docs/alter-system-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/010-alter-session-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session-command.md", 
                             "title": "ALTER SESSION Command", 
                             "url": "/docs/alter-session-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6780,18 +6717,18 @@
                             "children": [], 
                             "next_title": "CREATE TABLE AS (CTAS) command", 
                             "next_url": "/docs/create-table-as-ctas-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "ALTER SESSION Command", 
                             "previous_url": "/docs/alter-session-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/020-alter-system.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
                             "title": "ALTER SYSTEM Command", 
                             "url": "/docs/alter-system-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6801,18 +6738,18 @@
                             "children": [], 
                             "next_title": "CREATE VIEW command", 
                             "next_url": "/docs/create-view-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM Command", 
                             "previous_url": "/docs/alter-system-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/030-create-table-as-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
                             "title": "CREATE TABLE AS (CTAS) command", 
                             "url": "/docs/create-table-as-ctas-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6822,18 +6759,18 @@
                             "children": [], 
                             "next_title": "DESCRIBE Command", 
                             "next_url": "/docs/describe-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "CREATE TABLE AS (CTAS) command", 
                             "previous_url": "/docs/create-table-as-ctas-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/050-create-view-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
                             "title": "CREATE VIEW command", 
                             "url": "/docs/create-view-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6843,18 +6780,18 @@
                             "children": [], 
                             "next_title": "EXPLAIN commands", 
                             "next_url": "/docs/explain-commands/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "CREATE VIEW command", 
                             "previous_url": "/docs/create-view-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/060-describe-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
                             "title": "DESCRIBE Command", 
                             "url": "/docs/describe-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6864,18 +6801,18 @@
                             "children": [], 
                             "next_title": "SELECT Statements", 
                             "next_url": "/docs/select-statements/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "DESCRIBE Command", 
                             "previous_url": "/docs/describe-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/070-explain-commands.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
                             "title": "EXPLAIN commands", 
                             "url": "/docs/explain-commands/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6885,18 +6822,18 @@
                             "children": [], 
                             "next_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "next_url": "/docs/show-databases-and-show-schemas-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "EXPLAIN commands", 
                             "previous_url": "/docs/explain-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/080-select.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
                             "title": "SELECT Statements", 
                             "url": "/docs/select-statements/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6906,18 +6843,18 @@
                             "children": [], 
                             "next_title": "SHOW FILES Command", 
                             "next_url": "/docs/show-files-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "SELECT Statements", 
                             "previous_url": "/docs/select-statements/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/090-show-databases-and-show-schemas.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
                             "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "url": "/docs/show-databases-and-show-schemas-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6927,18 +6864,18 @@
                             "children": [], 
                             "next_title": "SHOW TABLES Command", 
                             "next_url": "/docs/show-tables-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/100-show-files.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
                             "title": "SHOW FILES Command", 
                             "url": "/docs/show-files-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6948,18 +6885,18 @@
                             "children": [], 
                             "next_title": "USE Command", 
                             "next_url": "/docs/use-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "SHOW FILES Command", 
                             "previous_url": "/docs/show-files-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/110-show-tables-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables-command.md", 
                             "title": "SHOW TABLES Command", 
                             "url": "/docs/show-tables-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -6969,10 +6906,10 @@
                             "children": [], 
                             "next_title": "SQL Conditional Expressions", 
                             "next_url": "/docs/sql-conditional-expressions/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "SHOW TABLES Command", 
                             "previous_url": "/docs/show-tables-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/120-use-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/120-use-command.md", 
                             "title": "USE Command", 
                             "url": "/docs/use-command/"
                         }
@@ -6983,8 +6920,8 @@
                     "previous_title": "Query Directory Functions", 
                     "previous_url": "/docs/query-directory-functions/", 
                     "relative_path": "_docs/sql-reference/070-sql-commands-summary.md", 
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7249,8 +7186,8 @@
             "next_title": "Planning and Execution Options", 
             "next_url": "/docs/planning-and-execution-options/", 
             "parent": "Configuration Options", 
-            "previous_title": "Configuring a Cluster for Different Workloads", 
-            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+            "previous_title": "Configuration Options Introduction", 
+            "previous_url": "/docs/configuration-options-introduction/", 
             "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
             "title": "Start-Up Options", 
             "url": "/docs/start-up-options/"
@@ -7520,8 +7457,8 @@
         "Supported SQL Commands": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -7531,10 +7468,10 @@
             "children": [], 
             "next_title": "ALTER SESSION Command", 
             "next_url": "/docs/alter-session-command/", 
-            "parent": "SQL Commands Summary", 
-            "previous_title": "SQL Commands Summary", 
-            "previous_url": "/docs/sql-commands-summary/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/005-supported-sql-commands.md", 
+            "parent": "SQL Commands", 
+            "previous_title": "SQL Commands", 
+            "previous_url": "/docs/sql-commands/", 
+            "relative_path": "_docs/sql-reference/sql-commands/005-supported-sql-commands.md", 
             "title": "Supported SQL Commands", 
             "url": "/docs/supported-sql-commands/"
         }, 
@@ -7846,8 +7783,8 @@
         "USE Command": {
             "breadcrumbs": [
                 {
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "title": "SQL Reference", 
@@ -7857,10 +7794,10 @@
             "children": [], 
             "next_title": "SQL Conditional Expressions", 
             "next_url": "/docs/sql-conditional-expressions/", 
-            "parent": "SQL Commands Summary", 
+            "parent": "SQL Commands", 
             "previous_title": "SHOW TABLES Command", 
             "previous_url": "/docs/show-tables-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands-summary/120-use-command.md", 
+            "relative_path": "_docs/sql-reference/sql-commands/120-use-command.md", 
             "title": "USE Command", 
             "url": "/docs/use-command/"
         }, 
@@ -10363,8 +10300,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Commands Summary", 
-                    "next_url": "/docs/sql-commands-summary/", 
+                    "next_title": "SQL Commands", 
+                    "next_url": "/docs/sql-commands/", 
                     "parent": "SQL Reference", 
                     "previous_title": "REPEATED_CONTAINS", 
                     "previous_url": "/docs/repeated-contains/", 
@@ -10383,8 +10320,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10394,18 +10331,18 @@
                             "children": [], 
                             "next_title": "ALTER SESSION Command", 
                             "next_url": "/docs/alter-session-command/", 
-                            "parent": "SQL Commands Summary", 
-                            "previous_title": "SQL Commands Summary", 
-                            "previous_url": "/docs/sql-commands-summary/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/005-supported-sql-commands.md", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SQL Commands", 
+                            "previous_url": "/docs/sql-commands/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/005-supported-sql-commands.md", 
                             "title": "Supported SQL Commands", 
                             "url": "/docs/supported-sql-commands/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10415,18 +10352,18 @@
                             "children": [], 
                             "next_title": "ALTER SYSTEM Command", 
                             "next_url": "/docs/alter-system-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/010-alter-session-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session-command.md", 
                             "title": "ALTER SESSION Command", 
                             "url": "/docs/alter-session-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10436,18 +10373,18 @@
                             "children": [], 
                             "next_title": "CREATE TABLE AS (CTAS) command", 
                             "next_url": "/docs/create-table-as-ctas-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "ALTER SESSION Command", 
                             "previous_url": "/docs/alter-session-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/020-alter-system.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
                             "title": "ALTER SYSTEM Command", 
                             "url": "/docs/alter-system-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10457,18 +10394,18 @@
                             "children": [], 
                             "next_title": "CREATE VIEW command", 
                             "next_url": "/docs/create-view-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM Command", 
                             "previous_url": "/docs/alter-system-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/030-create-table-as-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
                             "title": "CREATE TABLE AS (CTAS) command", 
                             "url": "/docs/create-table-as-ctas-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10478,18 +10415,18 @@
                             "children": [], 
                             "next_title": "DESCRIBE Command", 
                             "next_url": "/docs/describe-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "CREATE TABLE AS (CTAS) command", 
                             "previous_url": "/docs/create-table-as-ctas-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/050-create-view-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
                             "title": "CREATE VIEW command", 
                             "url": "/docs/create-view-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10499,18 +10436,18 @@
                             "children": [], 
                             "next_title": "EXPLAIN commands", 
                             "next_url": "/docs/explain-commands/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "CREATE VIEW command", 
                             "previous_url": "/docs/create-view-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/060-describe-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
                             "title": "DESCRIBE Command", 
                             "url": "/docs/describe-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10520,18 +10457,18 @@
                             "children": [], 
                             "next_title": "SELECT Statements", 
                             "next_url": "/docs/select-statements/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "DESCRIBE Command", 
                             "previous_url": "/docs/describe-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/070-explain-commands.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
                             "title": "EXPLAIN commands", 
                             "url": "/docs/explain-commands/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10541,18 +10478,18 @@
                             "children": [], 
                             "next_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "next_url": "/docs/show-databases-and-show-schemas-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "EXPLAIN commands", 
                             "previous_url": "/docs/explain-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/080-select.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
                             "title": "SELECT Statements", 
                             "url": "/docs/select-statements/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10562,18 +10499,18 @@
                             "children": [], 
                             "next_title": "SHOW FILES Command", 
                             "next_url": "/docs/show-files-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "SELECT Statements", 
                             "previous_url": "/docs/select-statements/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/090-show-databases-and-show-schemas.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
                             "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "url": "/docs/show-databases-and-show-schemas-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10583,18 +10520,18 @@
                             "children": [], 
                             "next_title": "SHOW TABLES Command", 
                             "next_url": "/docs/show-tables-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
                             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/100-show-files.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
                             "title": "SHOW FILES Command", 
                             "url": "/docs/show-files-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10604,18 +10541,18 @@
                             "children": [], 
                             "next_title": "USE Command", 
                             "next_url": "/docs/use-command/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "SHOW FILES Command", 
                             "previous_url": "/docs/show-files-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/110-show-tables-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables-command.md", 
                             "title": "SHOW TABLES Command", 
                             "url": "/docs/show-tables-command/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "SQL Commands Summary", 
-                                    "url": "/docs/sql-commands-summary/"
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
                                 }, 
                                 {
                                     "title": "SQL Reference", 
@@ -10625,10 +10562,10 @@
                             "children": [], 
                             "next_title": "SQL Conditional Expressions", 
                             "next_url": "/docs/sql-conditional-expressions/", 
-                            "parent": "SQL Commands Summary", 
+                            "parent": "SQL Commands", 
                             "previous_title": "SHOW TABLES Command", 
                             "previous_url": "/docs/show-tables-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands-summary/120-use-command.md", 
+                            "relative_path": "_docs/sql-reference/sql-commands/120-use-command.md", 
                             "title": "USE Command", 
                             "url": "/docs/use-command/"
                         }
@@ -10639,8 +10576,8 @@
                     "previous_title": "Query Directory Functions", 
                     "previous_url": "/docs/query-directory-functions/", 
                     "relative_path": "_docs/sql-reference/070-sql-commands-summary.md", 
-                    "title": "SQL Commands Summary", 
-                    "url": "/docs/sql-commands-summary/"
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10949,8 +10886,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Memory", 
-                    "next_url": "/docs/configuring-memory/", 
+                    "next_title": "Configuring Memory for Drill", 
+                    "next_url": "/docs/configuring-memory-for-drill/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -10966,14 +10903,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Multitenant and Multi-instance Architectures", 
-                    "next_url": "/docs/multitenant-and-multi-instance-architectures/", 
+                    "next_title": "Configuring Different Workloads", 
+                    "next_url": "/docs/configuring-different-workloads/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
                     "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
-                    "title": "Configuring Memory", 
-                    "url": "/docs/configuring-memory/"
+                    "title": "Configuring Memory for Drill", 
+                    "url": "/docs/configuring-memory-for-drill/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10986,8 +10923,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Multitenant and Multi-instance Architectures", 
-                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -10995,20 +10932,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "How to Run Drill in a Cluster", 
-                            "next_url": "/docs/how-to-run-drill-in-a-cluster/", 
-                            "parent": "Multitenant and Multi-instance Architectures", 
-                            "previous_title": "Multitenant and Multi-instance Architectures", 
-                            "previous_url": "/docs/multitenant-and-multi-instance-architectures/", 
-                            "relative_path": "_docs/manage-drill/013-multitenant-and-multi-instance-architecture-introduction.md", 
-                            "title": "Multitenant and Multi-instance Architectures Introduction", 
-                            "url": "/docs/multitenant-and-multi-instance-architectures-introduction/"
+                            "next_title": "Configuring Drill in a Cluster", 
+                            "next_url": "/docs/configuring-drill-in-a-cluster/", 
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Different Workloads", 
+                            "previous_url": "/docs/configuring-different-workloads/", 
+                            "relative_path": "_docs/manage-drill/013-configuring-dfferent-workloads-introduction.md", 
+                            "title": "Configuring Different Workloads Introduction", 
+                            "url": "/docs/configuring-different-workloads-introduction/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Multitenant and Multi-instance Architectures", 
-                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -11016,20 +10953,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "How Multiple Users Share a Drillbit", 
-                            "next_url": "/docs/how-multiple-users-share-a-drillbit/", 
-                            "parent": "Multitenant and Multi-instance Architectures", 
-                            "previous_title": "Multitenant and Multi-instance Architectures Introduction", 
-                            "previous_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
-                            "relative_path": "_docs/manage-drill/015-how-to-run-drill-in-a-cluster.md", 
-                            "title": "How to Run Drill in a Cluster", 
-                            "url": "/docs/how-to-run-drill-in-a-cluster/"
+                            "next_title": "Configuring a Shared Drillbit", 
+                            "next_url": "/docs/configuring-a-shared-drillbit/", 
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Different Workloads Introduction", 
+                            "previous_url": "/docs/configuring-different-workloads-introduction/", 
+                            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
+                            "title": "Configuring Drill in a Cluster", 
+                            "url": "/docs/configuring-drill-in-a-cluster/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Multitenant and Multi-instance Architectures", 
-                                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -11039,22 +10976,22 @@
                             "children": [], 
                             "next_title": "Configuration Options", 
                             "next_url": "/docs/configuration-options/", 
-                            "parent": "Multitenant and Multi-instance Architectures", 
-                            "previous_title": "How to Run Drill in a Cluster", 
-                            "previous_url": "/docs/how-to-run-drill-in-a-cluster/", 
-                            "relative_path": "_docs/manage-drill/017-how-multiple-users-share-a-drillbit.md", 
-                            "title": "How Multiple Users Share a Drillbit", 
-                            "url": "/docs/how-multiple-users-share-a-drillbit/"
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Drill in a Cluster", 
+                            "previous_url": "/docs/configuring-drill-in-a-cluster/", 
+                            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                            "title": "Configuring a Shared Drillbit", 
+                            "url": "/docs/configuring-a-shared-drillbit/"
                         }
                     ], 
-                    "next_title": "Multitenant and Multi-instance Architectures Introduction", 
-                    "next_url": "/docs/multitenant-and-multi-instance-architectures-introduction/", 
+                    "next_title": "Configuring Different Workloads Introduction", 
+                    "next_url": "/docs/configuring-different-workloads-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Memory", 
-                    "previous_url": "/docs/configuring-memory/", 
-                    "relative_path": "_docs/manage-drill/012-multitenant-and-multi-instance-architectures.md", 
-                    "title": "Multitenant and Multi-instance Architectures", 
-                    "url": "/docs/multitenant-and-multi-instance-architectures/"
+                    "previous_title": "Configuring Memory for Drill", 
+                    "previous_url": "/docs/configuring-memory-for-drill/", 
+                    "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
+                    "title": "Configuring Different Workloads", 
+                    "url": "/docs/configuring-different-workloads/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11076,8 +11013,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring a Cluster for Different Workloads", 
-                            "next_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                            "next_title": "Start-Up Options", 
+                            "next_url": "/docs/start-up-options/", 
                             "parent": "Configuration Options", 
                             "previous_title": "Configuration Options", 
                             "previous_url": "/docs/configuration-options/", 
@@ -11097,32 +11034,11 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Start-Up Options", 
-                            "next_url": "/docs/start-up-options/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Configuration Options Introduction", 
-                            "previous_url": "/docs/configuration-options-introduction/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/015-configuring-a-cluster-for-different-workloads.md", 
-                            "title": "Configuring a Cluster for Different Workloads", 
-                            "url": "/docs/configuring-a-cluster-for-different-workloads/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
                             "next_title": "Planning and Execution Options", 
                             "next_url": "/docs/planning-and-execution-options/", 
                             "parent": "Configuration Options", 
-                            "previous_title": "Configuring a Cluster for Different Workloads", 
-                            "previous_url": "/docs/configuring-a-cluster-for-different-workloads/", 
+                            "previous_title": "Configuration Options Introduction", 
+                            "previous_url": "/docs/configuration-options-introduction/", 
                             "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
                             "title": "Start-Up Options", 
                             "url": "/docs/start-up-options/"
@@ -11173,8 +11089,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "How Multiple Users Share a Drillbit", 
-                    "previous_url": "/docs/how-multiple-users-share-a-drillbit/", 
+                    "previous_title": "Configuring a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-a-shared-drillbit/", 
                     "relative_path": "_docs/manage-drill/020-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"

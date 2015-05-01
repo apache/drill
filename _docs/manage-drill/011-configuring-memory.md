@@ -1,5 +1,5 @@
 ---
-title: "Configuring Memory"
+title: "Configuring Memory for Drill"
 parent: "Manage Drill"
 ---
 

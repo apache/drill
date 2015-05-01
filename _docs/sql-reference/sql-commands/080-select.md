@@ -1,6 +1,6 @@
 ---
 title: "SELECT Statements"
-parent: "SQL Commands Summary"
+parent: "SQL Commands"
 ---
 Drill supports the following ANSI standard clauses in the SELECT statement:
 

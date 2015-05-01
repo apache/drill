@@ -1,6 +1,6 @@
 ---
 title: "CREATE VIEW command"
-parent: "SQL Commands Summary"
+parent: "SQL Commands"
 ---
 The CREATE VIEW command creates a virtual structure for the result set of a
 stored query. A view can combine data from multiple underlying data sources

@@ -1,6 +1,6 @@
 ---
 title: "USE Command"
-parent: "SQL Commands Summary"
+parent: "SQL Commands"
 ---
 The USE command changes the schema context to the specified schema. When you
 issue the USE command to switch to a particular schema, Drill queries that

@@ -1,6 +1,6 @@
 ---
 title: "SHOW TABLES Command"
-parent: "SQL Commands Summary"
+parent: "SQL Commands"
 ---
 The SHOW TABLES command returns a list of views created within a schema. It
 also returns the tables that exist in Hive, HBase, and MapR-DB when you have

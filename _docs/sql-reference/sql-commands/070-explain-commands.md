@@ -1,6 +1,6 @@
 ---
 title: "EXPLAIN commands"
-parent: "SQL Commands Summary"
+parent: "SQL Commands"
 ---
 EXPLAIN is a useful tool for examining the steps that a query goes through
 when it is executed. You can use the EXPLAIN output to gain a deeper

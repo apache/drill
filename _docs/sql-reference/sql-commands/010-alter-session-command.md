@@ -1,6 +1,6 @@
 ---
 title: "ALTER SESSION Command"
-parent: "SQL Commands Summary"
+parent: "SQL Commands"
 ---
 The ALTER SESSION command changes a system setting for the duration of a
 session. Session level settings override system level settings.

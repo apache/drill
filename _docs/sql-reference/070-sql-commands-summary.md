@@ -1,4 +1,4 @@
 ---
-title: "SQL Commands Summary"
+title: "SQL Commands"
 parent: "SQL Reference"
 ---

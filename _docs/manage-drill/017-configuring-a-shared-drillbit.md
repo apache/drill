@@ -1,6 +1,6 @@
 ---
-title: "How Multiple Users Share a Drillbit"
-parent: "Multitenant and Multi-instance Architectures"
+title: "Configuring a Shared Drillbit"
+parent: "Configuring Different Workloads"
 ---
 To manage a cluster in which multiple users share a Drillbit, you configure Drill queuing and parallelization.
 
