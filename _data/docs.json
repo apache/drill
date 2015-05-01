@@ -766,8 +766,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "Configuring a Shared Drillbit", 
-            "previous_url": "/docs/configuring-a-shared-drillbit/", 
+            "previous_title": "Configuring Resources for a Shared Drillbit", 
+            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
             "relative_path": "_docs/manage-drill/020-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -855,8 +855,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Drill in a Cluster", 
-                    "next_url": "/docs/configuring-drill-in-a-cluster/", 
+                    "next_title": "Configuring Resources in a Cluster", 
+                    "next_url": "/docs/configuring-resources-in-a-cluster/", 
                     "parent": "Configuring Different Workloads", 
                     "previous_title": "Configuring Different Workloads", 
                     "previous_url": "/docs/configuring-different-workloads/", 
@@ -876,14 +876,56 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring a Shared Drillbit", 
-                    "next_url": "/docs/configuring-a-shared-drillbit/", 
+                    "next_title": "Configuring Resources in a Cluster", 
+                    "next_url": "/docs/configuring-resources-in-a-cluster/", 
                     "parent": "Configuring Different Workloads", 
                     "previous_title": "Configuring Different Workloads Introduction", 
                     "previous_url": "/docs/configuring-different-workloads-introduction/", 
                     "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
-                    "title": "Configuring Drill in a Cluster", 
-                    "url": "/docs/configuring-drill-in-a-cluster/"
+                    "title": "Configuring Resources in a Cluster", 
+                    "url": "/docs/configuring-resources-in-a-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring Different Workloads", 
+                            "url": "/docs/configuring-different-workloads/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Resources for a Shared Drillbit", 
+                    "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                    "parent": "Configuring Different Workloads", 
+                    "previous_title": "Configuring Resources in a Cluster", 
+                    "previous_url": "/docs/configuring-resources-in-a-cluster/", 
+                    "relative_path": "_docs/manage-drill/015-configuring-resources-in-a-cluster.md", 
+                    "title": "Configuring Resources in a Cluster", 
+                    "url": "/docs/configuring-resources-in-a-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring Different Workloads", 
+                            "url": "/docs/configuring-different-workloads/"
+                        }, 
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Resources for a Shared Drillbit", 
+                    "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                    "parent": "Configuring Different Workloads", 
+                    "previous_title": "Configuring Resources in a Cluster", 
+                    "previous_url": "/docs/configuring-resources-in-a-cluster/", 
+                    "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                    "title": "Configuring Resources for a Shared Drillbit", 
+                    "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -900,18 +942,18 @@
                     "next_title": "Configuration Options", 
                     "next_url": "/docs/configuration-options/", 
                     "parent": "Configuring Different Workloads", 
-                    "previous_title": "Configuring Drill in a Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-cluster/", 
-                    "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
-                    "title": "Configuring a Shared Drillbit", 
-                    "url": "/docs/configuring-a-shared-drillbit/"
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                    "relative_path": "_docs/manage-drill/017-configuring-resources-for-a-shared-drillbit.md", 
+                    "title": "Configuring Resources for a Shared Drillbit", 
+                    "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                 }
             ], 
             "next_title": "Configuring Different Workloads Introduction", 
             "next_url": "/docs/configuring-different-workloads-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "Configuring Memory for Drill", 
-            "previous_url": "/docs/configuring-memory-for-drill/", 
+            "previous_title": "Configuring Memory for Drill in a Drill cluster", 
+            "previous_url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/", 
             "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
             "title": "Configuring Different Workloads", 
             "url": "/docs/configuring-different-workloads/"
@@ -928,8 +970,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Drill in a Cluster", 
-            "next_url": "/docs/configuring-drill-in-a-cluster/", 
+            "next_title": "Configuring Resources in a Cluster", 
+            "next_url": "/docs/configuring-resources-in-a-cluster/", 
             "parent": "Configuring Different Workloads", 
             "previous_title": "Configuring Different Workloads", 
             "previous_url": "/docs/configuring-different-workloads/", 
@@ -937,28 +979,7 @@
             "title": "Configuring Different Workloads Introduction", 
             "url": "/docs/configuring-different-workloads-introduction/"
         }, 
-        "Configuring Drill in a Cluster": {
-            "breadcrumbs": [
-                {
-                    "title": "Configuring Different Workloads", 
-                    "url": "/docs/configuring-different-workloads/"
-                }, 
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuring a Shared Drillbit", 
-            "next_url": "/docs/configuring-a-shared-drillbit/", 
-            "parent": "Configuring Different Workloads", 
-            "previous_title": "Configuring Different Workloads Introduction", 
-            "previous_url": "/docs/configuring-different-workloads-introduction/", 
-            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
-            "title": "Configuring Drill in a Cluster", 
-            "url": "/docs/configuring-drill-in-a-cluster/"
-        }, 
-        "Configuring Memory for Drill": {
+        "Configuring Memory for Drill in a Drill cluster": {
             "breadcrumbs": [
                 {
                     "title": "Manage Drill", 
@@ -972,10 +993,10 @@
             "previous_title": "Manage Drill Introduction", 
             "previous_url": "/docs/manage-drill-introduction/", 
             "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
-            "title": "Configuring Memory for Drill", 
-            "url": "/docs/configuring-memory-for-drill/"
+            "title": "Configuring Memory for Drill in a Drill cluster", 
+            "url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/"
         }, 
-        "Configuring a Shared Drillbit": {
+        "Configuring Resources for a Shared Drillbit": {
             "breadcrumbs": [
                 {
                     "title": "Configuring Different Workloads", 
@@ -990,11 +1011,32 @@
             "next_title": "Configuration Options", 
             "next_url": "/docs/configuration-options/", 
             "parent": "Configuring Different Workloads", 
-            "previous_title": "Configuring Drill in a Cluster", 
-            "previous_url": "/docs/configuring-drill-in-a-cluster/", 
-            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
-            "title": "Configuring a Shared Drillbit", 
-            "url": "/docs/configuring-a-shared-drillbit/"
+            "previous_title": "Configuring Resources for a Shared Drillbit", 
+            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+            "relative_path": "_docs/manage-drill/017-configuring-resources-for-a-shared-drillbit.md", 
+            "title": "Configuring Resources for a Shared Drillbit", 
+            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
+        }, 
+        "Configuring Resources in a Cluster": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuring Different Workloads", 
+                    "url": "/docs/configuring-different-workloads/"
+                }, 
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Resources for a Shared Drillbit", 
+            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+            "parent": "Configuring Different Workloads", 
+            "previous_title": "Configuring Resources in a Cluster", 
+            "previous_url": "/docs/configuring-resources-in-a-cluster/", 
+            "relative_path": "_docs/manage-drill/015-configuring-resources-in-a-cluster.md", 
+            "title": "Configuring Resources in a Cluster", 
+            "url": "/docs/configuring-resources-in-a-cluster/"
         }, 
         "Connect a Data Source": {
             "breadcrumbs": [], 
@@ -3458,8 +3500,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Memory for Drill", 
-                    "next_url": "/docs/configuring-memory-for-drill/", 
+                    "next_title": "Configuring Memory for Drill in a Drill cluster", 
+                    "next_url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -3481,8 +3523,8 @@
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
                     "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
-                    "title": "Configuring Memory for Drill", 
-                    "url": "/docs/configuring-memory-for-drill/"
+                    "title": "Configuring Memory for Drill in a Drill cluster", 
+                    "url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3504,8 +3546,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Drill in a Cluster", 
-                            "next_url": "/docs/configuring-drill-in-a-cluster/", 
+                            "next_title": "Configuring Resources in a Cluster", 
+                            "next_url": "/docs/configuring-resources-in-a-cluster/", 
                             "parent": "Configuring Different Workloads", 
                             "previous_title": "Configuring Different Workloads", 
                             "previous_url": "/docs/configuring-different-workloads/", 
@@ -3525,14 +3567,56 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring a Shared Drillbit", 
-                            "next_url": "/docs/configuring-a-shared-drillbit/", 
+                            "next_title": "Configuring Resources in a Cluster", 
+                            "next_url": "/docs/configuring-resources-in-a-cluster/", 
                             "parent": "Configuring Different Workloads", 
                             "previous_title": "Configuring Different Workloads Introduction", 
                             "previous_url": "/docs/configuring-different-workloads-introduction/", 
                             "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
-                            "title": "Configuring Drill in a Cluster", 
-                            "url": "/docs/configuring-drill-in-a-cluster/"
+                            "title": "Configuring Resources in a Cluster", 
+                            "url": "/docs/configuring-resources-in-a-cluster/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Resources for a Shared Drillbit", 
+                            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Resources in a Cluster", 
+                            "previous_url": "/docs/configuring-resources-in-a-cluster/", 
+                            "relative_path": "_docs/manage-drill/015-configuring-resources-in-a-cluster.md", 
+                            "title": "Configuring Resources in a Cluster", 
+                            "url": "/docs/configuring-resources-in-a-cluster/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Resources for a Shared Drillbit", 
+                            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Resources in a Cluster", 
+                            "previous_url": "/docs/configuring-resources-in-a-cluster/", 
+                            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                            "title": "Configuring Resources for a Shared Drillbit", 
+                            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -3549,18 +3633,18 @@
                             "next_title": "Configuration Options", 
                             "next_url": "/docs/configuration-options/", 
                             "parent": "Configuring Different Workloads", 
-                            "previous_title": "Configuring Drill in a Cluster", 
-                            "previous_url": "/docs/configuring-drill-in-a-cluster/", 
-                            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
-                            "title": "Configuring a Shared Drillbit", 
-                            "url": "/docs/configuring-a-shared-drillbit/"
+                            "previous_title": "Configuring Resources for a Shared Drillbit", 
+                            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                            "relative_path": "_docs/manage-drill/017-configuring-resources-for-a-shared-drillbit.md", 
+                            "title": "Configuring Resources for a Shared Drillbit", 
+                            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                         }
                     ], 
                     "next_title": "Configuring Different Workloads Introduction", 
                     "next_url": "/docs/configuring-different-workloads-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Memory for Drill", 
-                    "previous_url": "/docs/configuring-memory-for-drill/", 
+                    "previous_title": "Configuring Memory for Drill in a Drill cluster", 
+                    "previous_url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/", 
                     "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
                     "title": "Configuring Different Workloads", 
                     "url": "/docs/configuring-different-workloads/"
@@ -3661,8 +3745,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-a-shared-drillbit/", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
                     "relative_path": "_docs/manage-drill/020-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -3753,8 +3837,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Memory for Drill", 
-            "next_url": "/docs/configuring-memory-for-drill/", 
+            "next_title": "Configuring Memory for Drill in a Drill cluster", 
+            "next_url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/", 
             "parent": "Manage Drill", 
             "previous_title": "Manage Drill", 
             "previous_url": "/docs/manage-drill/", 
@@ -10886,8 +10970,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Memory for Drill", 
-                    "next_url": "/docs/configuring-memory-for-drill/", 
+                    "next_title": "Configuring Memory for Drill in a Drill cluster", 
+                    "next_url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill", 
                     "previous_url": "/docs/manage-drill/", 
@@ -10909,8 +10993,8 @@
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
                     "relative_path": "_docs/manage-drill/011-configuring-memory.md", 
-                    "title": "Configuring Memory for Drill", 
-                    "url": "/docs/configuring-memory-for-drill/"
+                    "title": "Configuring Memory for Drill in a Drill cluster", 
+                    "url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10932,8 +11016,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Drill in a Cluster", 
-                            "next_url": "/docs/configuring-drill-in-a-cluster/", 
+                            "next_title": "Configuring Resources in a Cluster", 
+                            "next_url": "/docs/configuring-resources-in-a-cluster/", 
                             "parent": "Configuring Different Workloads", 
                             "previous_title": "Configuring Different Workloads", 
                             "previous_url": "/docs/configuring-different-workloads/", 
@@ -10953,14 +11037,56 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring a Shared Drillbit", 
-                            "next_url": "/docs/configuring-a-shared-drillbit/", 
+                            "next_title": "Configuring Resources in a Cluster", 
+                            "next_url": "/docs/configuring-resources-in-a-cluster/", 
                             "parent": "Configuring Different Workloads", 
                             "previous_title": "Configuring Different Workloads Introduction", 
                             "previous_url": "/docs/configuring-different-workloads-introduction/", 
                             "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
-                            "title": "Configuring Drill in a Cluster", 
-                            "url": "/docs/configuring-drill-in-a-cluster/"
+                            "title": "Configuring Resources in a Cluster", 
+                            "url": "/docs/configuring-resources-in-a-cluster/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Resources for a Shared Drillbit", 
+                            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Resources in a Cluster", 
+                            "previous_url": "/docs/configuring-resources-in-a-cluster/", 
+                            "relative_path": "_docs/manage-drill/015-configuring-resources-in-a-cluster.md", 
+                            "title": "Configuring Resources in a Cluster", 
+                            "url": "/docs/configuring-resources-in-a-cluster/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring Different Workloads", 
+                                    "url": "/docs/configuring-different-workloads/"
+                                }, 
+                                {
+                                    "title": "Manage Drill", 
+                                    "url": "/docs/manage-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Resources for a Shared Drillbit", 
+                            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                            "parent": "Configuring Different Workloads", 
+                            "previous_title": "Configuring Resources in a Cluster", 
+                            "previous_url": "/docs/configuring-resources-in-a-cluster/", 
+                            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                            "title": "Configuring Resources for a Shared Drillbit", 
+                            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -10977,18 +11103,18 @@
                             "next_title": "Configuration Options", 
                             "next_url": "/docs/configuration-options/", 
                             "parent": "Configuring Different Workloads", 
-                            "previous_title": "Configuring Drill in a Cluster", 
-                            "previous_url": "/docs/configuring-drill-in-a-cluster/", 
-                            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
-                            "title": "Configuring a Shared Drillbit", 
-                            "url": "/docs/configuring-a-shared-drillbit/"
+                            "previous_title": "Configuring Resources for a Shared Drillbit", 
+                            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                            "relative_path": "_docs/manage-drill/017-configuring-resources-for-a-shared-drillbit.md", 
+                            "title": "Configuring Resources for a Shared Drillbit", 
+                            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                         }
                     ], 
                     "next_title": "Configuring Different Workloads Introduction", 
                     "next_url": "/docs/configuring-different-workloads-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Memory for Drill", 
-                    "previous_url": "/docs/configuring-memory-for-drill/", 
+                    "previous_title": "Configuring Memory for Drill in a Drill cluster", 
+                    "previous_url": "/docs/configuring-memory-for-drill-in-a-drill-cluster/", 
                     "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
                     "title": "Configuring Different Workloads", 
                     "url": "/docs/configuring-different-workloads/"
@@ -11089,8 +11215,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-a-shared-drillbit/", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
                     "relative_path": "_docs/manage-drill/020-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"

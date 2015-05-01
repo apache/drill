@@ -1,62 +1,69 @@
 ---
-title: "Configuring Drill in a Cluster"
+title: "Configuring Resources in a Cluster"
 parent: "Configuring Different Workloads"
 ---
 Drill operations are memory and CPU-intensive. You need to statically partition the cluster to designate which partition handles which workload. 
 
-To reserve memory resources for Drill, you modify the `warden.drill-bits.conf` file in `/opt/mapr/conf/conf.d`. This file is created automatically when you install Drill on a node. 
+## Configuring Drill Memory in a Cluster with other Workloads
+
+To configure memory resources for Drill, you modify the `warden.drill-bits.conf` file in `/opt/mapr/conf/conf.d`. This file is created automatically when you install Drill on a node. 
 
     [root@centos23 conf.d]# pwd
     /opt/mapr/conf/conf.d
     [root@centos23 conf.d]# ls
     warden.drill-bits.conf  warden.nodemanager.conf  warden.resourcemanager.conf
 
-You add the following lines to the file:
+You add the following lines to the wardens.drill-bits.conf file to configure memory resources for Drill:
 
     service.heapsize.min=<some value in MB>
     service.heapsize.max=<some value in MB>
-    service.heapsize.percent=<some whole number value>
+    service.heapsize.percent=<a whole number>
+
+This service.heapsize.percent is the percentage of memory for the service bounded by min and max values.
 
 ## Configuring Drill in a YARN-enabled MapR Cluster
 
-For example, you have 120G of available memory that you allocate to following workloads in a Yarn-enabled cluster:
+To add Drill to a YARN-enabled cluster, you change memory resources depending on your application. For example, you have 120G of available memory that you allocate to following workloads in a Yarn-enabled cluster:
 
 File system = 20G  
 HBase = 20G  
 Yarn = 20G  
 OS = 8G  
 
-To add Drill to the cluster, how do you change memory allocation? It depends on your application. If Yarn does most of the work, give Drill 20G, for example, and give Yarn 60G. If you expect a heavy query load, give Drill 60G and Drill 20G.
+If Yarn does most of the work, give Drill 20G, for example, and give Yarn 60G. If you expect a heavy query load, give Drill 60G and Drill 20G.
 
 {% include startnote.html %}Drill will execute queries within Yarn soon.{% include endnote.html %} [DRILL-142](https://issues.apache.org/jira/browse/DRILL-142)
 
-<!-- YARN consists of 2 main services ResourceManager(one instance in cluster, more if HA is configured) and NodeManager(one instance per node). See mr1.memory.percent, mr1.cpu.percent and 
-mr1.disk.percent in warden.conf. Rest is given to YARN applications.
-Also see /opt/mapr/conf/conf.d/warden.resourcemanager.conf and
- /opt/mapr/conf/conf.d/warden.nodemanager.conf for resources given to ResourceManager and NodeManager respectively.
+YARN consists of two main services:
 
-## Configuring Drill in a MapReduce V1-enabled cluster
+* ResourceManager  
+  There is at least one instance in a cluster, more if you configure high availability.  
+* NodeManager  
+  There is one instance per node. 
 
-Similar files exist for other installed services, as described in [MapR documentation](http://doc.mapr.com/display/MapR/warden.%3Cservicename%3E.conf). For example:
-## What are the memory/resource configurations set in warden in a non-YARN cluster? 
+Configure ResourceManager and NodeManager memory in `/opt/mapr/conf/conf.d/warden.resourcemanager.conf` and
+ `/opt/mapr/conf/conf.d/warden.nodemanager.conf`. Configure the following warden.nodemanager.conf settings. The defaults are:
 
-Every service will have 3 values defined in warden.conf (/opt/mapr/conf)
-service.command.<servicename>.heapsize.percent
-service.command.<servicename>.heapsize.max
-service.command.<servicename>.heapsize.min
-This is percentage of memory for that service bounded by min and max values.
+    service.heapsize.min=64
+    service.heapsize.max=325
+    service.heapsize.percent=2
 
-There will also be additional files in /opt/mapr/conf/conf.d in format 
-warden.<servicename>.conf. They will have entries like
-service.heapsize.min
-service.heapsize.max
-service.heapsize.percent -->
+Memory allocation for NodeManager and ResourceManager is used only to calculate total memory required for all services to run. The -Xmx option is not set, allowing memory on to grow as needed. If you want to place an upper limit on memory set YARN_NODEMANAGER_HEAPSIZE or YARN_RESOURCEMANAGER_HEAPSIZE environment variable in /opt/mapr/hadoop/hadoop-2.5.1/etc/hadoop/yarn-env.sh.
 
-## Managing Memory
+### MapReduce v1 Resources
 
-To run Drill in a cluster with MapReduce, HBase, Spark, and other workloads, manage memory according to your application needs. 
+To configure memory for MapReduce v1 resources set mr1.memory.percent, mr1.cpu.percent and mr1.disk.percent in warden.conf, as described in section ["Resource Allocation for Jobs and Applications"](http://doc.mapr.com/display/MapR/Resource+Allocation+for+Jobs+and+Applications) of the MapR documentation. Remaining memory is given to YARN applications. 
 
-To run Drill in a MapR cluster, allocate memory by configuring settings in warden.conf, as described in the [MapR documentation]().
+
+### MapReduce v2 and other Resources
+
+Similar files exist for other installed services, as described in [MapR documentation](http://doc.mapr.com/display/MapR/warden.%3Cservicename%3E.conf). 
+
+You configure memory for each service by setting three values in `warden.conf`.
+
+    service.command.<servicename>.heapsize.percent
+    service.command.<servicename>.heapsize.max
+    service.command.<servicename>.heapsize.min
 
 ### Drill Memory
 You can configure the amount of direct memory allocated to a Drillbit for
