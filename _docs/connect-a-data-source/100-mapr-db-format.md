@@ -2,33 +2,31 @@
 title: "MapR-DB Format"
 parent: "Connect a Data Source"
 ---
-Drill includes a `maprdb` format plugin for accessing data stored in MapR-DB. The Drill Sandbox also includes the following `maprdb` format plugin on a MapR node:
+Drill includes a `maprdb` format plugin for MapR-DB that is defined within the
+default `dfs` storage plugin instance when you install Drill from the `mapr-drill` package on a MapR node. The `maprdb` format plugin improves the
+estimated number of rows that Drill uses to plan a query. It also enables you
+to query tables like you would query files in a file system because MapR-DB
+and MapR-FS share the same namespace.
 
-    {
-      "type": "hbase",
-      "config": {
-        "hbase.table.namespace.mappings": "*:/tables"
-      },
-      "size.calculator.enabled": false,
-      "enabled": true
-    }
+You can query tables stored across multiple directories. You do not need to
+create a table mapping to a directory before you query a table in the
+directory. You can select from any table in any directory the same way you
+would select from files in MapR-FS, using the same syntax.
 
-Using the Sandbox and this `maprdb` format plugin, you can query HBase tables located in the `/tables` directory, as shown in the ["Query HBase"]({{ site.baseurl }}/docs/querying-hbase) examples.
-
-The `dfs` storage plugin includes the maprdb format when you install Drill from the `mapr-drill` package on a MapR node. Click **Update** next to the `dfs` instance
-in the Web UI of the Drill Sandbox to view the configuration for the `dfs` instance:
-
-![drill query flow]({{ site.baseurl }}/docs/img/18.png)
-
-
-The examples of the [CONVERT_TO/FROM functions]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from) show how to adapt the `dfs` storage plugin to use the `maprdb` format plugin to query HBase tables on the Sandbox.
-
-You modify the `dfs` storage plugin to create a table mapping to a directory in the MapR-FS file system. You then select the table by name.
+Instead of including the name of a file, you include the table name in the
+query.
 
 **Example**
 
-    SELECT * FROM myplugin.`mytable`;
+    SELECT * FROM mfs.`/users/max/mytable`;
 
-The `maprdb` format plugin improves the
-estimated number of rows that Drill uses to plan a query. Using the `dfs` storage plugin, you can query HBase and MapR-DB tables as you would query files in a file system. MapR-DB, MapR-FS, and Hadoop files share the same namespace.
+Drill stores the `maprdb` format plugin in the `dfs` storage plugin instance,
+which you can view in the Drill Web UI. You can access the Web UI at
+[http://localhost:8047/storage](http://localhost:8047/storage). Click **Update** next to the `dfs` instance
+in the Web UI to view the configuration for the `dfs` instance.
+
+The following image shows a portion of the configuration with the `maprdb`
+format plugin for the `dfs` instance:
+
+![drill query flow]({{ site.baseurl }}/docs/img/18.png)
 
