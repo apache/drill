@@ -1,10 +1,10 @@
 ---
-title: "Configuring Resources in a Cluster"
+title: "Configuring Resources in a Mixed Cluster"
 parent: "Configuring Different Workloads"
 ---
 Drill operations are memory and CPU-intensive. You need to statically partition the cluster to designate which partition handles which workload. 
 
-## Configuring Drill Memory in a Cluster with other Workloads
+## Configuring Drill Memory in a Mixed Cluster
 
 To configure memory resources for Drill, you modify the `warden.drill-bits.conf` file in `/opt/mapr/conf/conf.d`. This file is created automatically when you install Drill on a node. 
 
@@ -65,16 +65,6 @@ You configure memory for each service by setting three values in `warden.conf`.
     service.command.<servicename>.heapsize.max
     service.command.<servicename>.heapsize.min
 
-### Drill Memory
-You can configure the amount of direct memory allocated to a Drillbit for
-query processing, as described in the section, ["Configuring Memory"](({{site.baseurl}}/docs/configuring-memory).
-
-### Memory in a MapR Cluster
-Memory and disk for Drill and other services that are not associated with roles on a MapR cluster are shared with other services. You manage the chunk of memory for these services in os heap settings in `warden.conf` and in configuration files of the particular service. The warden os heap settings are:
-
-    service.command.os.heapsize.percent
-    service.command.os.heapsize.max
-    service.command.os.heapsize.min
 
 For more information about managing memory in a MapR cluster, see the following sections in the MapR documentation:
 * [Memory Allocation for Nodes](http://doc.mapr.com/display/MapR40x/Memory+Allocation+for+Nodes)
