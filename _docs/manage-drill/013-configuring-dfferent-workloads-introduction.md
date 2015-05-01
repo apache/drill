@@ -16,7 +16,7 @@ Drill typically runs along side other workloads, including the following:
 You need to plan and configure these resources for use with Drill and other workloads: 
 
 * [Memory]({{site.baseurl}}/docs/configuring-resources-in-a-mixed-cluster)  
-* [CPU]({{site.baseurl}}/docs/configuring-drill-in-a-cluster#how-to-manage-drill-cpu-resources)  
+* [CPU]({{site.baseurl}}/docs/configuring-drill-in-a-mixed-cluster#how-to-manage-drill-cpu-resources)  
 * Disk  
 
 Configure, memory, queues, and parallelization when users [share a Drillbit]({{site.baseurl}}/docs/configuring-resources-for-a-shared-drillbit).
