@@ -22,7 +22,12 @@ layout: default
 
 </div><!-- header -->
 <div class="alertbar">
-  <span class="strong">News:</span> <a href="{{ site.baseurl }}/blog/2015/03/31/drill-0.8-released/">Drill 0.8 Released</a> <span class="hor-bar"></span> <a href="{{ site.baseurl }}/blog/2015/03/23/microstrategy-announces-drill-support/">MicroStrategy Announces Drill Support</a>
+  <span class="strong">News:</span> 
+  {% assign post = site.categories.blog[0] %}<!-- previously: site.posts -->
+  <a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
+  <span class="hor-bar"></span>
+  {% assign post = site.categories.blog[1] %}<!-- previously: site.posts -->
+  <a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
 </div>
 
 <div class="mw introWrapper">
