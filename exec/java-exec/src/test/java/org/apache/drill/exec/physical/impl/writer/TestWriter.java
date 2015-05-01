@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.BigIntVector;
@@ -137,10 +138,19 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void simpleParquetDecimal() throws Exception {
-    final String tableName = "simpleparquetdecimal";
-    final String testQuery = String.format("CREATE TABLE dfs_test.tmp.`%s` AS SELECT cast(salary as " +
-        "decimal(30,2)) * -1 as salary FROM cp.`employee.json`", tableName);
-    testCTASQueryHelper(tableName, testQuery, 1155);
+    try {
+      final String tableName = "simpleparquetdecimal";
+      final String testQuery = String.format("CREATE TABLE dfs_test.tmp.`%s` AS SELECT cast(salary as " +
+          "decimal(30,2)) * -1 as salary FROM cp.`employee.json`", tableName);
+
+      // enable decimal
+      test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+      testCTASQueryHelper(tableName, testQuery, 1155);
+
+      // disable decimal
+    } finally {
+      test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+    }
   }
 
   private void testCTASQueryHelper(String tableName, String testQuery, int expectedOutputCount) throws Exception {

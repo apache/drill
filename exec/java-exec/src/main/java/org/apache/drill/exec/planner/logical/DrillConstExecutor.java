@@ -57,6 +57,7 @@ import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -66,6 +67,8 @@ import java.util.List;
 
 public class DrillConstExecutor implements RelOptPlanner.Executor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConstExecutor.class);
+
+  private final PlannerSettings plannerSettings;
 
   public static ImmutableMap<TypeProtos.MinorType, SqlTypeName> DRILL_TO_CALCITE_TYPE_MAPPING =
       ImmutableMap.<TypeProtos.MinorType, SqlTypeName> builder()
@@ -123,9 +126,10 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
   FunctionImplementationRegistry funcImplReg;
   UdfUtilities udfUtilities;
 
-  public DrillConstExecutor(FunctionImplementationRegistry funcImplReg, UdfUtilities udfUtilities) {
+  public DrillConstExecutor(FunctionImplementationRegistry funcImplReg, UdfUtilities udfUtilities, PlannerSettings plannerSettings) {
     this.funcImplReg = funcImplReg;
     this.udfUtilities = udfUtilities;
+    this.plannerSettings = plannerSettings;
   }
 
   private RelDataType createCalciteTypeWithNullability(RelDataTypeFactory typeFactory,
@@ -155,7 +159,7 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
   @Override
   public void reduce(RexBuilder rexBuilder, List<RexNode> constExps, List<RexNode> reducedValues) {
     for (RexNode newCall : constExps) {
-      LogicalExpression logEx = DrillOptiq.toDrill(new DrillParseContext(), null /* input rel */, newCall);
+      LogicalExpression logEx = DrillOptiq.toDrill(new DrillParseContext(plannerSettings), null /* input rel */, newCall);
 
       ErrorCollectorImpl errors = new ErrorCollectorImpl();
       LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(logEx, null, errors, funcImplReg);

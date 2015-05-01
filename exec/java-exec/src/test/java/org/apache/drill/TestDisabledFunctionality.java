@@ -354,4 +354,14 @@ public class TestDisabledFunctionality extends BaseTestQuery{
       throw ex;
     }
   }
+
+  @Test(expected =  UserException.class) // DRILL-2848
+  public void testDisableDecimalCasts() throws Exception {
+    test("select cast('1.2' as decimal(9, 2)) from cp.`employee.json` limit 1");
+  }
+
+  @Test(expected = UserException.class) // DRILL-2848
+  public void testDisableDecimalFromParquet() throws Exception {
+    test("select * from cp.`parquet/decimal_dictionary.parquet`");
+  }
 }

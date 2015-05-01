@@ -104,6 +104,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private final DirectCodecFactory codecFactory;
   int rowGroupIndex;
   long totalRecordsRead;
+  private final FragmentContext fragmentContext;
 
   public ParquetRecordReader(FragmentContext fragmentContext,
       String path,
@@ -131,6 +132,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     this.rowGroupIndex = rowGroupIndex;
     this.batchSize = batchSize;
     this.footer = footer;
+    this.fragmentContext = fragmentContext;
     setColumns(columns);
   }
 
@@ -240,7 +242,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
       column = columns.get(i);
       logger.debug("name: " + fileMetaData.getSchema().get(i).name);
       SchemaElement se = schemaElements.get(column.getPath()[0]);
-      MajorType mt = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(), getDataMode(column), se);
+      MajorType mt = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(),
+          getDataMode(column), se, fragmentContext.getOptions());
       field = MaterializedField.create(toFieldName(column.getPath()),mt);
       if ( ! fieldSelected(field)) {
         continue;
@@ -280,7 +283,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
         column = columns.get(i);
         columnChunkMetaData = footer.getBlocks().get(rowGroupIndex).getColumns().get(i);
         schemaElement = schemaElements.get(column.getPath()[0]);
-        MajorType type = ParquetToDrillTypeConverter.toMajorType(column.getType(), schemaElement.getType_length(), getDataMode(column), schemaElement);
+        MajorType type = ParquetToDrillTypeConverter.toMajorType(column.getType(), schemaElement.getType_length(),
+            getDataMode(column), schemaElement, fragmentContext.getOptions());
         field = MaterializedField.create(toFieldName(column.getPath()), type);
         // the field was not requested to be read
         if ( ! fieldSelected(field)) {

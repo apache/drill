@@ -100,7 +100,7 @@ public class DrillSqlWorker {
         .context(context.getPlannerSettings()) //
         .ruleSets(getRules(context)) //
         .costFactory(costFactory) //
-        .executor(new DrillConstExecutor(context.getFunctionRegistry(), context))
+        .executor(new DrillConstExecutor(context.getFunctionRegistry(), context, context.getPlannerSettings()))
         .typeSystem(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM) //
         .build();
     this.planner = Frameworks.getPlanner(config);

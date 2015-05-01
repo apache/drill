@@ -15,20 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.logical;
+package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.work.ExecErrorConstants;
 
-public class DrillParseContext {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParseContext.class);
-
-  private final PlannerSettings plannerSettings;
-
-  public DrillParseContext(PlannerSettings plannerSettings) {
-    this.plannerSettings = plannerSettings;
-  }
-
-  public PlannerSettings getPlannerSettings() {
-    return plannerSettings;
+/*
+ * Utility class where we can capture common logic between the two parquet readers
+ */
+public class ParquetReaderUtility {
+  public static void checkDecimalTypeEnabled(OptionManager options) {
+    if (options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
+      throw UserException
+          .unsupportedError()
+          .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
+          .build();
+    }
   }
 }

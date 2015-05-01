@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCallFactory;
@@ -55,6 +56,8 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.NlsString;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.work.ExecErrorConstants;
 
 /**
  * Utilities for Drill's planner.
@@ -252,23 +255,30 @@ public class DrillOptiq {
       case "FLOAT": castType = Types.required(MinorType.FLOAT4); break;
       case "DOUBLE": castType = Types.required(MinorType.FLOAT8); break;
       case "DECIMAL":
+        if (context.getPlannerSettings().getOptions().
+            getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false ) {
+          throw UserException
+              .unsupportedError()
+              .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
+              .build();
+        }
 
-          int precision = call.getType().getPrecision();
-          int scale = call.getType().getScale();
+        int precision = call.getType().getPrecision();
+        int scale = call.getType().getScale();
 
-          if (precision <= 9) {
-            castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setPrecision(precision).setScale(scale).build();
-          } else if (precision <= 18) {
-            castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setPrecision(precision).setScale(scale).build();
-          } else if (precision <= 28) {
-            // Inject a cast to SPARSE before casting to the dense type.
-            castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setPrecision(precision).setScale(scale).build();
-          } else if (precision <= 38) {
-            castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setPrecision(precision).setScale(scale).build();
-          } else {
-            throw new UnsupportedOperationException("Only Decimal types with precision range 0 - 38 is supported");
-          }
-          break;
+        if (precision <= 9) {
+          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setPrecision(precision).setScale(scale).build();
+        } else if (precision <= 18) {
+          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setPrecision(precision).setScale(scale).build();
+        } else if (precision <= 28) {
+          // Inject a cast to SPARSE before casting to the dense type.
+          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setPrecision(precision).setScale(scale).build();
+        } else if (precision <= 38) {
+          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setPrecision(precision).setScale(scale).build();
+        } else {
+          throw new UnsupportedOperationException("Only Decimal types with precision range 0 - 38 is supported");
+        }
+        break;
 
         case "INTERVAL_YEAR_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
         case "INTERVAL_DAY_TIME": castType = Types.required(MinorType.INTERVALDAY); break;

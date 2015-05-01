@@ -54,7 +54,8 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    org.apache.drill.exec.physical.config.Project p = new org.apache.drill.exec.physical.config.Project(this.getProjectExpressions(new DrillParseContext()),  childPOP);
+    org.apache.drill.exec.physical.config.Project p = new org.apache.drill.exec.physical.config.Project(
+        this.getProjectExpressions(new DrillParseContext(PrelUtil.getSettings(getCluster()))),  childPOP);
     return creator.addMetadata(this, p);
   }
 

@@ -18,11 +18,24 @@
 package org.apache.drill.exec.store.parquet2;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
 
 public class TestDrillParquetReader extends BaseTestQuery {
+  // enable decimal data type
+  @BeforeClass
+  public static void enableDecimalDataType() throws Exception {
+    test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  }
+
+  @AfterClass
+  public static void disableDecimalDataType() throws Exception {
+    test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  }
 
   private void testColumn(String columnName) throws Exception {
     testNoResult("alter session set `store.parquet.use_new_reader` = true");

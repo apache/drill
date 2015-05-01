@@ -61,7 +61,7 @@ public class FlattenPrel extends SinglePrel implements Prel {
     Prel child = (Prel) this.getInput();
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    FlattenPOP f = new FlattenPOP(childPOP, (SchemaPath) getFlattenExpression(new DrillParseContext()));
+    FlattenPOP f = new FlattenPOP(childPOP, (SchemaPath) getFlattenExpression(new DrillParseContext(PrelUtil.getSettings(getCluster()))));
     return creator.addMetadata(this, f);
   }
 

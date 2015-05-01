@@ -213,7 +213,7 @@ public abstract class PruneScanRule extends RelOptRule {
 
       // materialize the expression
       logger.debug("Attempting to prune {}", pruneCondition);
-      LogicalExpression expr = DrillOptiq.toDrill(new DrillParseContext(), scanRel, pruneCondition);
+      LogicalExpression expr = DrillOptiq.toDrill(new DrillParseContext(settings), scanRel, pruneCondition);
       ErrorCollectorImpl errors = new ErrorCollectorImpl();
       LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, container, errors, context.getFunctionRegistry());
       if (errors.getErrorCount() != 0) {

@@ -109,7 +109,7 @@ public class ExplainHandler extends DefaultSqlHandler {
 
     public LogicalExplain(RelNode node, SqlExplainLevel level, QueryContext context) {
       this.text = RelOptUtil.toString(node, level);
-      DrillImplementor implementor = new DrillImplementor(new DrillParseContext(), ResultMode.LOGICAL);
+      DrillImplementor implementor = new DrillImplementor(new DrillParseContext(context.getPlannerSettings()), ResultMode.LOGICAL);
       implementor.go( (DrillRel) node);
       LogicalPlan plan = implementor.getPlan();
       this.json = plan.unparse(context.getConfig());

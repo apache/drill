@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import org.apache.drill.exec.hive.HiveTestBase;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -138,11 +139,16 @@ public class TestSampleHiveUDFs extends HiveTestBase {
 
   @Test
   public void decimalInOut() throws Exception{
-    String query = "SELECT " +
-        "testHiveUDFDecimal(cast('1234567891234567891234567891234567891.4' as decimal(38, 1))) as col1 " +
-        "FROM hive.kv LIMIT 1";
+    try {
+      test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+      String query = "SELECT " +
+          "testHiveUDFDecimal(cast('1234567891234567891234567891234567891.4' as decimal(38, 1))) as col1 " +
+          "FROM hive.kv LIMIT 1";
 
-    String expected = "col1\n" + "1234567891234567891234567891234567891.4\n";
-    helper(query, expected);
+      String expected = "col1\n" + "1234567891234567891234567891234567891.4\n";
+      helper(query, expected);
+    } finally {
+      test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+    }
   }
 }

@@ -45,7 +45,7 @@ public class JdbcTestQueryBase extends JdbcTestBase {
 
   }
 
-  protected void testQuery(String sql) throws Exception{
+  protected static void testQuery(String sql) throws Exception{
     boolean success = false;
     try (Connection conn = connect("jdbc:drill:zk=local")) {
       for (int x = 0; x < 1; x++) {

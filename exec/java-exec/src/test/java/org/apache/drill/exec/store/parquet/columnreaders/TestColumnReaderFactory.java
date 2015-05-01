@@ -18,9 +18,22 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestColumnReaderFactory extends BaseTestQuery {
+  // enable decimal data type
+  @BeforeClass
+  public static void enableDecimalDataType() throws Exception {
+    test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  }
+
+  @AfterClass
+  public static void disableDecimalDataType() throws Exception {
+    test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  }
 
   /**
    * check if Time and TimeStamp are read correctly with dictionary encoding.

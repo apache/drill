@@ -21,6 +21,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.hadoop.io.Text;
@@ -71,33 +72,38 @@ public class TestFrameworkTest extends BaseTestQuery{
 
   @Test
   public void testDecimalBaseline() throws  Exception {
-    // type information can be provided explicitly
-    testBuilder()
-        .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
-        .unOrdered()
-        .csvBaselineFile("testframework/decimal_test.tsv")
-        .baselineTypes(Types.withScaleAndPrecision(TypeProtos.MinorType.DECIMAL38SPARSE, TypeProtos.DataMode.REQUIRED, 2, 38))
-        .baselineColumns("dec_col")
-        .build().run();
+    try {
+      test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
 
-    // type information can also be left out, this will prompt the result types of the test query to drive the
-    // interpretation of the test file
-    testBuilder()
-        .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
-        .unOrdered()
-        .csvBaselineFile("testframework/decimal_test.tsv")
-        .baselineColumns("dec_col")
-        .build().run();
+      // type information can be provided explicitly
+      testBuilder()
+          .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
+          .unOrdered()
+          .csvBaselineFile("testframework/decimal_test.tsv")
+          .baselineTypes(Types.withScaleAndPrecision(TypeProtos.MinorType.DECIMAL38SPARSE, TypeProtos.DataMode.REQUIRED, 2, 38))
+          .baselineColumns("dec_col")
+          .build().run();
 
-    // Or you can provide explicit values to the builder itself to avoid going through the drill engine at all to
-    // populate the baseline results
-    testBuilder()
-        .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
-        .unOrdered()
-        .baselineColumns("dec_col")
-        .baselineValues(new BigDecimal("3.70"))
-        .build().run();
+      // type information can also be left out, this will prompt the result types of the test query to drive the
+      // interpretation of the test file
+      testBuilder()
+          .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
+          .unOrdered()
+          .csvBaselineFile("testframework/decimal_test.tsv")
+          .baselineColumns("dec_col")
+          .build().run();
 
+      // Or you can provide explicit values to the builder itself to avoid going through the drill engine at all to
+      // populate the baseline results
+      testBuilder()
+          .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
+          .unOrdered()
+          .baselineColumns("dec_col")
+          .baselineValues(new BigDecimal("3.70"))
+          .build().run();
+    } finally {
+      test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+    }
   }
 
   @Test

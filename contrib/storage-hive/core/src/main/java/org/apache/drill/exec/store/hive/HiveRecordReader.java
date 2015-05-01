@@ -27,6 +27,7 @@ import java.util.Properties;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -41,6 +42,7 @@ import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.store.AbstractRecordReader;
@@ -62,6 +64,7 @@ import org.apache.drill.exec.vector.TinyIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -347,7 +350,7 @@ public class HiveRecordReader extends AbstractRecordReader {
     }
   }
 
-  public static MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo) {
+  private MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo) {
     switch(primitiveTypeInfo.getPrimitiveCategory()) {
       case BINARY:
         return TypeProtos.MinorType.VARBINARY;
@@ -356,6 +359,12 @@ public class HiveRecordReader extends AbstractRecordReader {
       case BYTE:
         return MinorType.TINYINT;
       case DECIMAL: {
+
+        if (context.getOptions().getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
+          throw UserException.unsupportedError()
+              .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
+              .build();
+        }
         DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
         return DecimalUtility.getDecimalDataType(decimalTypeInfo.precision());
       }
@@ -382,7 +391,7 @@ public class HiveRecordReader extends AbstractRecordReader {
     return null;
   }
 
-  public static MajorType getMajorTypeFromHiveTypeInfo(TypeInfo typeInfo, boolean nullable) {
+  public MajorType getMajorTypeFromHiveTypeInfo(TypeInfo typeInfo, boolean nullable) {
     switch (typeInfo.getCategory()) {
       case PRIMITIVE: {
         PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) typeInfo;

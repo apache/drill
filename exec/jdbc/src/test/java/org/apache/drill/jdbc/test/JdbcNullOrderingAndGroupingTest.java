@@ -23,6 +23,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import static org.junit.Assert.assertThat;
+
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,8 +42,14 @@ public class JdbcNullOrderingAndGroupingTest extends JdbcTestQueryBase {
   // TODO:  Move this to where is covers more tests:  HACK: Disable Jetty
   // status(?) server so unit tests run (without Maven setup).
   @BeforeClass
-  public static void setUpClass() {
+  public static void setUpClass() throws Exception {
+    testQuery(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
     System.setProperty( "drill.exec.http.enabled", "false" );
+  }
+
+  @AfterClass
+  public static void resetDefaults() throws Exception {
+    testQuery(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
 
 

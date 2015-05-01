@@ -259,7 +259,8 @@ public class DrillParquetReader extends AbstractRecordReader {
 
       if(!noColumnsFound) {
         writer = new VectorContainerWriter(output);
-        recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, getColumns());
+        recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, getColumns(),
+            fragmentContext.getOptions());
         primitiveVectors = writer.getMapVector().getPrimitiveVectors();
         recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
       }
@@ -269,6 +270,7 @@ public class DrillParquetReader extends AbstractRecordReader {
   }
 
   protected void handleAndRaise(String s, Exception e) {
+    cleanup();
     String message = "Error in drill parquet reader (complex).\nMessage: " + s +
       "\nParquet Metadata: " + footer;
     throw new DrillRuntimeException(message, e);

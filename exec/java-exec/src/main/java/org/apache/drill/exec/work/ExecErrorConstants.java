@@ -15,20 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.logical;
+package org.apache.drill.exec.work;
 
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 
-public class DrillParseContext {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParseContext.class);
+public interface ExecErrorConstants {
 
-  private final PlannerSettings plannerSettings;
-
-  public DrillParseContext(PlannerSettings plannerSettings) {
-    this.plannerSettings = plannerSettings;
-  }
-
-  public PlannerSettings getPlannerSettings() {
-    return plannerSettings;
-  }
+  // Error message when decimal data type is disabled
+  public static final String DECIMAL_DISABLE_ERR_MSG = String.format("Decimal data type is disabled. \n" +
+      "As of this release decimal data type is a beta level feature and should not be used in production \n" +
+      "Use option '%s' to enable decimal data type", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
 }

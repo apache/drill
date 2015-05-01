@@ -55,7 +55,7 @@ public class ProjectAllowDupPrel extends ProjectPrel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    Project p = new Project(this.getProjectExpressions(new DrillParseContext()),  childPOP);
+    Project p = new Project(this.getProjectExpressions(new DrillParseContext(PrelUtil.getSettings(getCluster()))),  childPOP);
     return creator.addMetadata(this, p);
   }
 

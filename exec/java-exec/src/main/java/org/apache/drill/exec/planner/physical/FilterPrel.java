@@ -51,7 +51,7 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    Filter p = new Filter(childPOP, getFilterExpression(new DrillParseContext()), 1.0f);
+    Filter p = new Filter(childPOP, getFilterExpression(new DrillParseContext(PrelUtil.getSettings(getCluster()))), 1.0f);
     return creator.addMetadata(this, p);
   }
 

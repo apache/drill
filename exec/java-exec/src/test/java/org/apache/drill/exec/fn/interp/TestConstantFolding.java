@@ -21,8 +21,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.hadoop.io.Text;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,6 +120,8 @@ public class TestConstantFolding extends PlanTestBase {
   public void testConstantFolding_allTypes() throws Exception {
     try {
       test("alter session set `store.json.all_text_mode` = true;");
+      test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+
       String query2 = "SELECT *  " +
           "FROM   cp.`/parquet/alltypes.json`  " +
           "WHERE  12 = extract(day from (to_timestamp('2014-02-12 03:18:31:07 AM', 'YYYY-MM-dd HH:mm:ss:SS a'))) " +
@@ -162,6 +167,7 @@ public class TestConstantFolding extends PlanTestBase {
           .go();
     } finally {
       test("alter session set `store.json.all_text_mode` = false;");
+      test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
     }
   }
 
