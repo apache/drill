@@ -1,4 +1,4 @@
-    ---
+---
 title: "Configuring Resources in a Mixed Cluster"
 parent: "Configuring Different Workloads"
 ---
